@@ -10,3 +10,11 @@
 	path = deps/mlib
 	url = ../mlib.git
 	branch = master
+[submodule "deps/QCBOR"]
+	path = deps/QCBOR
+	url = ../QCBOR.git
+	branch = master
+[submodule "deps/osal"]
+	path = deps/osal
+	url = ../osal.git
+	branch = main
