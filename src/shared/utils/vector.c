@@ -11,8 +11,9 @@
  *      Author: ebirrane
  */
 
+#include <osapi-error.h>
+#include "shared/platform.h"
 #include "shared/utils/utils.h"
-#include "platform.h"
 #include "vector.h"
 
 
@@ -88,7 +89,7 @@ void vec_clear(vector_t *vec)
 		return;
 	}
 
-	lockResource(&vec->lock);
+	OS_MutSemTake(vec->lock);
 
 	for(i = 0; i < vec->total_slots; i++)
 	{
@@ -105,7 +106,7 @@ void vec_clear(vector_t *vec)
 
 	vec->next_idx = 0;
     vec->num_free = vec->total_slots;
-	unlockResource(&vec->lock);
+	OS_MutSemGive(vec->lock);
 }
 
 vector_t vec_copy(vector_t *src, int *success)
@@ -115,12 +116,12 @@ vector_t vec_copy(vector_t *src, int *success)
 
 	*success = AMP_FAIL;
 
-	lockResource(&(src->lock));
+	OS_MutSemTake(src->lock);
 
 	result = vec_create(src->total_slots, src->delete_fn, src->compare_fn, src->copy_fn, src->flags, success);
 	if(*success != VEC_OK)
 	{
-		unlockResource(&(src->lock));
+		OS_MutSemGive(src->lock);
 		return result;
 	}
 
@@ -137,7 +138,7 @@ vector_t vec_copy(vector_t *src, int *success)
 	result.next_idx = src->next_idx;
 	result.num_free = src->num_free;
 
-	unlockResource(&(src->lock));
+	OS_MutSemGive(src->lock);
 
 	*success = VEC_OK;
 	return result;
@@ -149,7 +150,7 @@ vector_t vec_create(uint8_t num, vec_del_fn delete_fn, vec_comp_fn compare_fn, v
 
 	memset(&result,0, sizeof(vector_t));
 
-	if(initResourceLock(&(result.lock)))
+	if(OS_MutSemCreate(&(result.lock), "vector", 0) != OS_SUCCESS)
 	{
 		*success = VEC_SYSERR;
 		return result;
@@ -195,7 +196,7 @@ vec_idx_t vec_find(vector_t *vec, void *key, int *success)
 
 	*success = VEC_FAIL;
 
-	lockResource(&(vec->lock));
+	OS_MutSemTake(vec->lock);
 	for(result = 0; result < vec->total_slots; result++)
 	{
 		if(vec->data[result].occupied == 1)
@@ -208,7 +209,7 @@ vec_idx_t vec_find(vector_t *vec, void *key, int *success)
 		}
 	}
 
-	unlockResource(&(vec->lock));
+	OS_MutSemGive(vec->lock);
 
 	return result;
 }
@@ -221,7 +222,7 @@ int vec_insert(vector_t *vec, void *value, vec_idx_t *idx)
 	CHKERR(vec);
 
 
-	lockResource(&(vec->lock));
+	OS_MutSemTake(vec->lock);
 	success = vec_make_room(vec, 1);
 
 	if(success == VEC_OK)
@@ -249,7 +250,7 @@ int vec_insert(vector_t *vec, void *value, vec_idx_t *idx)
 		vec->num_free--;
 	}
 
-	unlockResource(&(vec->lock));
+	OS_MutSemGive(vec->lock);
 
 	return success;
 }
@@ -257,7 +258,7 @@ int vec_insert(vector_t *vec, void *value, vec_idx_t *idx)
 void vec_lock(vector_t *vec)
 {
 	CHKVOID(vec);
-	lockResource(&(vec->lock));
+	OS_MutSemTake(vec->lock);
 }
 
 
@@ -349,7 +350,7 @@ void vec_release(vector_t *vec, int destroy)
 
 	if(destroy)
 	{
-		killResourceLock(&(vec->lock));
+		OS_MutSemDelete(vec->lock);
 		SRELEASE(vec);
 	}
 }
@@ -397,7 +398,7 @@ void* vec_set(vector_t *vec, vec_idx_t idx, void *data, int *success)
 {
 	void *result = NULL;
 
-	lockResource(&(vec->lock));
+	OS_MutSemTake(vec->lock);
 
 
 	if( (vec == NULL) ||
@@ -405,7 +406,7 @@ void* vec_set(vector_t *vec, vec_idx_t idx, void *data, int *success)
 	  )
 	{
 		*success = VEC_FAIL;
-		unlockResource(&(vec->lock));
+		OS_MutSemGive(vec->lock);
 		return NULL;
 	}
 
@@ -423,7 +424,7 @@ void* vec_set(vector_t *vec, vec_idx_t idx, void *data, int *success)
     }
     
 	vec->data[idx].value = data;
-	unlockResource(&(vec->lock));
+	OS_MutSemGive(vec->lock);
 
 	return result;
 }
@@ -436,7 +437,7 @@ vec_idx_t   vec_size(vector_t *vec)
 void vec_unlock(vector_t *vec)
 {
 	CHKVOID(vec);
-	unlockResource(&(vec->lock));
+	OS_MutSemGive(vec->lock);
 }
 
 

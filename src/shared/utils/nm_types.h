@@ -28,8 +28,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "platform.h"
-
+#include "shared/platform.h"
 #include "debug.h"
 
 
@@ -91,12 +90,6 @@ typedef enum
 
 
 #define AMP_MAX_EID_LEN (16)
-
-
-/* The AMP relative time cut-off, set as the first second of
- * September 9th, 2017.
- */
-#define AMP_RELATIVE_TIME_EPOCH (1504915200)
 
 
 /*

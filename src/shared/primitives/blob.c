@@ -27,7 +27,9 @@
  **  04/14/16  E. Birrane     Initial Implementation (Secure DTN - NASA: NNX14CS58P)
  **  08/30/18  E. Birrane     CBOR Updates and Structure Optimization (JHU/APL)
  *****************************************************************************/
-#include "platform.h"
+
+#include <inttypes.h>
+#include "shared/platform.h"
 #include "../nm.h"
 #include "../adm/adm.h"
 
@@ -229,7 +231,7 @@ blob_t blob_deserialize(QCBORDecodeContext *it, int *success)
 	QCBORItem item;
 	int status;
 
-	AMP_DEBUG_ENTRY("blob_deserialize","(0x"ADDR_FIELDSPEC",0x"ADDR_FIELDSPEC")", (uaddr) it, (uaddr) success);
+	AMP_DEBUG_ENTRY("blob_deserialize","(0x"PRIdPTR",0x"PRIdPTR")", (uaddr) it, (uaddr) success);
 
 	memset(&result, 0, sizeof(blob_t));
 	*success = AMP_FAIL;
@@ -294,7 +296,7 @@ blob_t blob_deserialize_as_bytes(QCBORDecodeContext *it, int *success, size_t le
 {
 	blob_t result;
 
-    AMP_DEBUG_ENTRY("blob_deserialize_as_bytes","(0x"ADDR_FIELDSPEC",0x"ADDR_FIELDSPEC"), %d", (uaddr) it, (uaddr) success, len);
+    AMP_DEBUG_ENTRY("blob_deserialize_as_bytes","(0x"PRIdPTR",0x"PRIdPTR"), %d", (uaddr) it, (uaddr) success, len);
     
     memset(&result, 0, sizeof(blob_t));
 	*success = AMP_FAIL;
@@ -536,7 +538,7 @@ int blob_serialize(QCBOREncodeContext *it, blob_t *blob)
  */
 int blob_serialize_as_bytes(QCBOREncodeContext *it, blob_t *blob)
 {
-   int i = 0;
+  size_t i;
    int err;
    
 	if(blob == NULL || it == NULL)

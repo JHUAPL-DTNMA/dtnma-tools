@@ -23,6 +23,7 @@
  **  09/01/18  E. Birrane     Updated to encoding and data structures (JHU/APL)
  *****************************************************************************/
 
+#include <inttypes.h>
 #include "ctrl.h"
 
 #include "../primitives/ari.h"
@@ -188,7 +189,7 @@ ctrl_t *ctrl_create(ari_t *ari)
     	result->parms = NULL;
     }
 
-  	AMP_DEBUG_EXIT("ctrl_create","->"ADDR_FIELDSPEC".",(uaddr)result);
+  	AMP_DEBUG_EXIT("ctrl_create","->"PRIdPTR".",(uaddr)result);
 	return result;
 }
 
@@ -197,7 +198,7 @@ ctrl_t *ctrl_db_deserialize(blob_t *data)
 {
 	QCBORDecodeContext it;
 	ctrl_t *result;
-	uvast start;
+	amp_tv_t start;
 	eid_t caller;
 	int success;
 
@@ -213,7 +214,7 @@ ctrl_t *ctrl_db_deserialize(blob_t *data)
 		return NULL;
 	}
 
-	if (cut_get_cbor_numeric(&it, AMP_TYPE_TV, &start) != AMP_OK)
+	if (amp_tv_deserialize(&it, &start) != AMP_OK)
 	{
 		ctrl_release(result, 1);
 		return NULL;
@@ -228,7 +229,7 @@ ctrl_t *ctrl_db_deserialize(blob_t *data)
 }
 
 
-ari_t *ctrl_get_id(ctrl_t *ctrl)
+ari_t *ctrl_get_id(const ctrl_t *ctrl)
 {
 	CHKNULL(ctrl);
 	return (ctrl->type == AMP_TYPE_CTRL) ? ctrl->def.as_ctrl->ari : ctrl->def.as_mac->ari;
@@ -253,7 +254,8 @@ blob_t *ctrl_db_serialize(ctrl_t *ctrl)
 	CHKNULL(result);
 
 	QCBOREncode_Init(&encoder, (UsefulBuf){data,length});
-	QCBOREncode_AddUInt64(&encoder, ctrl->start);
+	amp_tv_t tv = amp_tv_from_ctime(ctrl->start, NULL);
+	amp_tv_serialize(&encoder, &tv);
 	QCBOREncode_AddSZString(&encoder, ctrl->caller.name);
 
 	err = QCBOREncode_Finish(&encoder, &Encoded);
@@ -335,9 +337,8 @@ void ctrl_release(ctrl_t *ctrl, int destroy)
 	}
 }
 
-int ctrl_serialize(QCBOREncodeContext *encoder, void *item)
+int ctrl_serialize(QCBOREncodeContext *encoder, const ctrl_t *ctrl)
 {
-	ctrl_t *ctrl = (ctrl_t *) item;
 	ari_t *ctrl_id = NULL;
 	tnvc_t parms;
 	int err = AMP_FAIL;
@@ -453,18 +454,13 @@ blob_t*   ctrl_serialize_wrapper(ctrl_t *ctrl)
  *  --------  ------------   ---------------------------------------------
  *  10/03/18  E. Birrane     Initial implementation. (JHU/APL)
  *****************************************************************************/
-void ctrl_set_exec(ctrl_t *ctrl, time_t start, eid_t caller)
+void ctrl_set_exec(ctrl_t *ctrl, amp_tv_t start, eid_t caller)
 {
 	CHKVOID(ctrl);
 
-	if(start < AMP_RELATIVE_TIME_EPOCH && start != 0)
-	{
-		ctrl->start = getCtime() + start;
-	}
-	else
-	{
-		ctrl->start = start;
-	}
+	OS_time_t nowtime;
+        OS_GetLocalTime(&nowtime);
+	ctrl->start = amp_tv_to_ctime(start, &nowtime);
 
 	ctrl->caller = caller;
 }

@@ -23,12 +23,11 @@
  **                           implementation of MIDs for earlier AMP spec (JHU/APL)
  *****************************************************************************/
 
-#include "platform.h"
-
-#include "../utils/utils.h"
-#include "../utils/nm_types.h"
-#include "../utils/db.h"
-
+#include <inttypes.h>
+#include "shared/platform.h"
+#include "shared/utils/utils.h"
+#include "shared/utils/nm_types.h"
+#include "shared/utils/db.h"
 #include "ari.h"
 #include "tnv.h"
 
@@ -497,7 +496,7 @@ void ari_cb_ht_del(rh_elt_t *elt)
 
 int ari_compare(ari_t *ari1, ari_t *ari2, int parms)
 {
-    AMP_DEBUG_ENTRY("ari_compare","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
+    AMP_DEBUG_ENTRY("ari_compare","("PRIdPTR","PRIdPTR")",
     		         (uaddr) ari1, (uaddr) ari2);
 
     if((ari1 == NULL) || (ari2 == NULL))
@@ -684,7 +683,7 @@ ari_t ari_deserialize(QCBORDecodeContext *it, int *success)
 {
 	uint8_t flag;
 
-    AMP_DEBUG_ENTRY("ari_deserialize","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")", (uaddr)it, (uaddr)success);
+    AMP_DEBUG_ENTRY("ari_deserialize","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)success);
 
     CHKUSR(it, ari_null());
     CHKUSR(success, ari_null());
@@ -1093,7 +1092,7 @@ ac_t ac_deserialize(QCBORDecodeContext *it, int *success)
 	size_t length;
 	size_t i;
 
-	AMP_DEBUG_ENTRY("ac_deserialize","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")", (uaddr)it, (uaddr)success);
+	AMP_DEBUG_ENTRY("ac_deserialize","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)success);
 
 	memset(&result, 0, sizeof(ac_t));
 

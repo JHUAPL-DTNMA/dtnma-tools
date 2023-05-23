@@ -33,8 +33,8 @@
 #ifndef RHHT_H_
 #define RHHT_H_
 
-#include "stdint.h"
-#include "ion.h"
+#include <stdint.h>
+#include <osapi-mutex.h>
 
 
 #ifdef __cplusplus
@@ -97,7 +97,7 @@ typedef struct rhht {
     rh_idx_t   num_elts;
     rh_idx_t   max_delta;
 
-    ResourceLock lock;
+	osal_id_t lock; ///< Mutex handle
 
     rh_comp_fn compare;
     rh_hash_fn hash;

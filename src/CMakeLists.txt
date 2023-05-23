@@ -47,8 +47,8 @@ file(GLOB_RECURSE CFILES
     ${CMAKE_CURRENT_SOURCE_DIR}/agent/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/agent/*.cpp
 )
-add_library(nm_agent ${CFILES} ${HFILES})
-target_link_libraries(nm_agent PUBLIC nmcommon)
-target_include_directories(nm_agent PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/agent
-)
+#add_library(nm_agent ${CFILES} ${HFILES})
+#target_link_libraries(nm_agent PUBLIC nmcommon)
+#target_include_directories(nm_agent PUBLIC
+#    ${CMAKE_CURRENT_SOURCE_DIR}/agent
+#)

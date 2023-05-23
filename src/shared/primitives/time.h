@@ -1,0 +1,40 @@
+#ifndef AMP_PRIMITIVES_TIME_H_
+#define AMP_PRIMITIVES_TIME_H_
+
+#include <osapi-clock.h>
+#include <qcbor/qcbor.h>
+#include "../utils/nm_types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// Seconds to DTN epoch from the POSIX epoch
+#define	EPOCH_DTN_POSIX 946684800
+
+/** The AMP relative time cut-off, set as the first second of
+ * September 9th, 2012 in the DTN epoch.
+ */
+#define EPOCH_ABSTIME_DTN 558230400
+
+/// Timestamp (TS) value
+typedef struct {
+    /// Time from the DTN epoch
+    OS_time_t secs;
+} amp_tv_t;
+
+int amp_tv_deserialize(QCBORDecodeContext *dec, amp_tv_t *item);
+
+int amp_tv_serialize(QCBOREncodeContext *enc, const amp_tv_t *item);
+
+#define AMP_TV_ZERO (amp_tv_t){0}
+
+OS_time_t amp_tv_to_ctime(amp_tv_t val, const OS_time_t *event_time);
+
+amp_tv_t amp_tv_from_ctime(OS_time_t val, const OS_time_t *event_time);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* AMP_PRIMITIVES_TIME_H_ */

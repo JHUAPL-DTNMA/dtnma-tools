@@ -28,9 +28,9 @@
 #ifndef __CBOR_UTILS__
 #define __CBOR_UTILS__
 
+#include <qcbor/qcbor.h>
 #include "nm_types.h"
 #include "vector.h"
-#include "qcbor.h"
 
 
 #ifdef __cplusplus

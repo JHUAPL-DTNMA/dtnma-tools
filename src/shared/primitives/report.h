@@ -31,9 +31,11 @@
 #ifndef _REPORT_H_
 #define _REPORT_H_
 
+#include <osapi-mutex.h>
 #include "../utils/nm_types.h"
 #include "../utils/db.h"
 #include "tnv.h"
+#include "time.h"
 #include "ari.h"
 
 
@@ -87,7 +89,7 @@ typedef struct
 
 typedef struct {
 
-	time_t time;        /**> Time the report entries were generated. */
+	OS_time_t time;        /**> Time the report entries were generated. */
 	ari_t *id;
 	tnvc_t *entries;
 
@@ -114,7 +116,7 @@ void     rpt_clear(rpt_t *rpt);
 
 rpt_t*   rpt_copy_ptr(rpt_t *src);
 
-rpt_t*   rpt_create(ari_t *id, time_t time, tnvc_t *entries);
+rpt_t*   rpt_create(ari_t *id, OS_time_t time, tnvc_t *entries);
 
 void*    rpt_deserialize_ptr(QCBORDecodeContext *it, int *success);
 

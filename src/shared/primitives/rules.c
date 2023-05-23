@@ -24,7 +24,9 @@
  **  07/05/16  E. Birrane     Fixed time offsets when creating TRL & SRL (Secure DTN - NASA: NNX14CS58P)
  **  09/29/18  E. Birrane     Updated to AMPv0.5 (JHU/APL)
  *****************************************************************************/
-#include "platform.h"
+
+#include <inttypes.h>
+#include "shared/platform.h"
 
 #include "rules.h"
 
@@ -91,7 +93,7 @@ rule_t*   rule_copy_ptr(rule_t *src)
 	}
 
 	/* Shallow copy the easy things. */
-	result->ticks_left = src->ticks_left;
+	result->eval_at = src->eval_at;
 	result->flags = src->flags;
 	result->num_eval = src->num_eval;
 	result->num_fire = src->num_fire;
@@ -101,7 +103,7 @@ rule_t*   rule_copy_ptr(rule_t *src)
 }
 
 
-rule_t*  rule_create_sbr(ari_t id, uvast start, sbr_def_t def, ac_t action)
+rule_t*  rule_create_sbr(ari_t id, OS_time_t start, sbr_def_t def, ac_t action)
 {
 	rule_t *result = NULL;
 	int success;
@@ -123,22 +125,24 @@ rule_t*  rule_create_sbr(ari_t id, uvast start, sbr_def_t def, ac_t action)
 
 	RULE_SET_ACTIVE(result->flags);
 
-	if(start < AMP_RELATIVE_TIME_EPOCH)
+	if(OS_TimeGetTotalSeconds(start) < EPOCH_ABSTIME_DTN + EPOCH_DTN_POSIX)
 	{
-		result->ticks_left = start;
+          OS_time_t now;
+          OS_GetLocalTime(&now);
+          result->eval_at = OS_TimeAdd(start, now);
 	}
 	else
 	{
-		result->ticks_left = (start - getCtime());
+          result->eval_at = start;
 	}
 
 
-	AMP_DEBUG_EXIT("rule_create_sbr", ADDR_FIELDSPEC, (uaddr) result);
+	AMP_DEBUG_EXIT("rule_create_sbr", PRIdPTR, (uaddr) result);
 
 	return result;
 }
 
-rule_t*  rule_create_tbr(ari_t id, uvast start, tbr_def_t def, ac_t action)
+rule_t*  rule_create_tbr(ari_t id, OS_time_t start, tbr_def_t def, ac_t action)
 {
 	rule_t *result = NULL;
 	int success;
@@ -167,17 +171,19 @@ rule_t*  rule_create_tbr(ari_t id, uvast start, tbr_def_t def, ac_t action)
 
 	RULE_SET_ACTIVE(result->flags);
 
-	if(start < AMP_RELATIVE_TIME_EPOCH)
+	if(OS_TimeGetTotalSeconds(start) < EPOCH_ABSTIME_DTN + EPOCH_DTN_POSIX)
 	{
-		result->ticks_left = start + def.period;
+          OS_time_t now;
+          OS_GetLocalTime(&now);
+          result->eval_at = OS_TimeAdd(OS_TimeAdd(start, now), def.period);
 	}
 	else
 	{
-		result->ticks_left = (start - getCtime()) + def.period;
+          result->eval_at = OS_TimeAdd(start, def.period);
 	}
 
 
-	AMP_DEBUG_EXIT("rule_create_tbr", ADDR_FIELDSPEC, (uaddr) result);
+	AMP_DEBUG_EXIT("rule_create_tbr", PRIdPTR, (uaddr) result);
 
 	return result;
 }
@@ -188,7 +194,7 @@ rule_t*  rule_deserialize_helper(QCBORDecodeContext *array_it, int *success)
 {
 	rule_t *result = NULL;
 	ari_t *id;
-	uvast start;
+	OS_time_t start;
 	ac_t action;
 	sbr_def_t as_sbr;
 	tbr_def_t as_tbr;
@@ -278,7 +284,7 @@ rule_t*  rule_deserialize_ptr(QCBORDecodeContext *it, int *success)
 	rule_t *result = NULL;
 	QCBORError err;
 
-	AMP_DEBUG_ENTRY("rule_deserialize_ptr","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
+	AMP_DEBUG_ENTRY("rule_deserialize_ptr","("PRIdPTR","PRIdPTR")",
 						(uaddr)it, (uaddr)success);
 
 	CHKNULL(success);
@@ -351,7 +357,7 @@ rule_t*  rule_db_deserialize_ptr(QCBORDecodeContext *it, int *success)
 	rule_t *result = NULL;
 	QCBORError err;
 
-	AMP_DEBUG_ENTRY("rule_db_deserialize_ptr","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
+	AMP_DEBUG_ENTRY("rule_db_deserialize_ptr","("PRIdPTR","PRIdPTR")",
 					(uaddr)it, (uaddr)success);
 
 	CHKNULL(success);
@@ -393,7 +399,7 @@ rule_t*  rule_db_deserialize_ptr(QCBORDecodeContext *it, int *success)
 		return NULL;
 	}
 
-	*success = cut_get_cbor_numeric(it, AMP_TYPE_UINT, &(result->ticks_left));
+	*success = cut_get_cbor_numeric(it, AMP_TYPE_UINT, &(result->eval_at));
 	if(*success != AMP_OK)
 	{
 		rule_release(result, 1);
@@ -474,7 +480,8 @@ int rule_db_serialize(QCBOREncodeContext *encoder, void *item)
 	}
 
 	/* Step 2: Encode the ticks left. */
-	QCBOREncode_AddUInt64(encoder, rule->ticks_left);
+        amp_tv_t tv = amp_tv_from_ctime(rule->eval_at, NULL);
+        amp_tv_serialize(encoder, &tv);
 	QCBOREncode_AddUInt64(encoder, rule->num_eval);
 	QCBOREncode_AddUInt64(encoder, rule->num_fire);
 
@@ -559,7 +566,8 @@ int rule_serialize_helper(QCBOREncodeContext *array_enc, rule_t *rule)
 	}
 
 	/* Step 2: the start time. */
-	QCBOREncode_AddUInt64(array_enc, rule->start);
+        amp_tv_t tv = amp_tv_from_ctime(rule->start, NULL);
+        amp_tv_serialize(array_enc, &tv);
 
 	/* Step 3: Encode def. */
 	if(rule->id.type == AMP_TYPE_SBR)
@@ -612,6 +620,7 @@ int sbr_should_fire(rule_t *rule)
 	{
 	   	result = tnv_to_int(*eval_result, &success);
 	   	result = (success != AMP_OK) ? 0 : result;
+		AMP_DEBUG_INFO("sbr_should_fire", "Final result %d.", result);
 	}
 
    	tnv_release(eval_result, 1);
@@ -710,7 +719,8 @@ tbr_def_t tbrdef_deserialize(QCBORDecodeContext *array_it, int *success)
 int tbrdef_serialize(QCBOREncodeContext *array_enc, tbr_def_t *def)
 {
 	/* Step 1: Encode period. */
-	QCBOREncode_AddUInt64(array_enc, def->period);
+        amp_tv_t tv = amp_tv_from_ctime(def->period, NULL);
+        amp_tv_serialize(array_enc, &tv);
 
 	/* Step 2: Encode max num fires. */
 	QCBOREncode_AddUInt64(array_enc, def->max_fire);

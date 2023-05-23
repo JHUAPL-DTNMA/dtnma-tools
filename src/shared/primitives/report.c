@@ -25,7 +25,8 @@
  **  09/28/18  E. Birrane     Update to latest AMP v0.5. (JHU/APL)
  *****************************************************************************/
 
-#include "platform.h"
+#include <inttypes.h>
+#include "shared/platform.h"
 
 #include "../utils/utils.h"
 
@@ -105,7 +106,7 @@ void rpt_cb_del_fn(void *item)
 
 void  rpt_clear(rpt_t *rpt)
 {
-    AMP_DEBUG_ENTRY("rpt_clear_lyst","("ADDR_FIELDSPEC")", (uaddr) rpt);
+    AMP_DEBUG_ENTRY("rpt_clear_lyst","("PRIdPTR")", (uaddr) rpt);
     CHKVOID(rpt);
     tnvc_clear(rpt->entries);
 }
@@ -157,12 +158,12 @@ rpt_t* rpt_copy_ptr(rpt_t *src)
  *  09/28/18  E. Birrane     Switched to vectors for entries.
  *****************************************************************************/
 
-rpt_t* rpt_create(ari_t *id, time_t timestamp, tnvc_t *entries)
+rpt_t* rpt_create(ari_t *id, OS_time_t timestamp, tnvc_t *entries)
 {
 	rpt_t *result = NULL;
 
-	AMP_DEBUG_ENTRY("rpt_create","("ADDR_FIELDSPEC",%d,entries)",
-			        (uaddr) id, time);
+	AMP_DEBUG_ENTRY("rpt_create","("PRIdPTR",%d,entries)",
+			        (uaddr) id, timestamp);
 
 	/* Step 1: Allocate the message. */
 	if((result = (rpt_t*) STAKE(sizeof(rpt_t))) == NULL)
@@ -220,14 +221,14 @@ void* rpt_deserialize_ptr(QCBORDecodeContext *it, int *success)
 {
 	rpt_t *result = NULL;
 	size_t len;
-	time_t timestamp;
+	OS_time_t timestamp;
 	ari_t *id;
 	tnvc_t *entries;
 	QCBORError err;
 	QCBORItem item;
 
 	AMP_DEBUG_ENTRY("rpt_deserialize_ptr",
-			        "("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
+			        "("PRIdPTR","PRIdPTR")",
 					(uaddr)it, (uaddr)success);
 
 	/* Sanity Checks. */
@@ -270,7 +271,7 @@ void* rpt_deserialize_ptr(QCBORDecodeContext *it, int *success)
 	}
 	else
 	{
-		timestamp = 0;
+          timestamp = OS_TimeAssembleFromMilliseconds(0, 0);
 	}
 
 #if AMP_VERSION < 7
@@ -373,7 +374,7 @@ int rpt_serialize(QCBOREncodeContext *encoder, void *item)
 	CHKUSR(encoder, AMP_FAIL);
 	CHKUSR(rpt, AMP_FAIL);
 
-	num = (rpt->time == 0) ? 2 : 3;
+	num = (OS_TimeGetTotalMilliseconds(rpt->time) == 0) ? 2 : 3;
 
 	/* Start a container. */
 	QCBOREncode_OpenArray(encoder);
@@ -396,7 +397,8 @@ int rpt_serialize(QCBOREncodeContext *encoder, void *item)
 	
 	if(num == 3)
 	{
-	   QCBOREncode_AddUInt64(encoder, rpt->time);
+          amp_tv_t tv = amp_tv_from_ctime(rpt->time, NULL);
+          amp_tv_serialize(encoder, &tv);
 	}
 
 	/* Step 3: Encode the entries. */

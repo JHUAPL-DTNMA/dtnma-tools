@@ -28,6 +28,7 @@
 #include "../utils/nm_types.h"
 #include "../utils/db.h"
 #include "tnv.h"
+#include "time.h"
 #include "ari.h"
 
 
@@ -94,7 +95,7 @@ typedef struct
 
 typedef struct
 {
-	time_t start;   /**> ALways kept as an absolute time once rx.*/
+	OS_time_t start;   /**> ALways kept as an absolute time once rx.*/
 	eid_t caller;   /**> EID of entity that created the control. */
 	tnvc_t *parms;
 	amp_type_e type;
@@ -131,12 +132,12 @@ blob_t *ctrl_db_serialize(ctrl_t *ctrl);
 
 void*   ctrl_deserialize_ptr(QCBORDecodeContext *it, int *success);
 ctrl_t* ctrl_deserialize_raw(blob_t *data, int *success);
-ari_t*  ctrl_get_id(ctrl_t *ctrl);
+ari_t*  ctrl_get_id(const ctrl_t *ctrl);
 
 void    ctrl_release(ctrl_t *ctrl, int destroy);
-int     ctrl_serialize(QCBOREncodeContext *encoder, void *item);
+int     ctrl_serialize(QCBOREncodeContext *encoder, const ctrl_t *ctrl);
 blob_t* ctrl_serialize_wrapper(ctrl_t *ctrl);
-void    ctrl_set_exec(ctrl_t *ctrl, time_t start, eid_t caller);
+void    ctrl_set_exec(ctrl_t *ctrl, amp_tv_t start, eid_t caller);
 
 ctrldef_t *ctrldef_create(ari_t *ari, uint8_t num, ctrldef_run_fn run);
 void       ctrldef_del_fn(rh_elt_t *elt);

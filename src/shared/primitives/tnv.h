@@ -30,12 +30,10 @@
 #ifndef TNV_H_
 #define TNV_H_
 
-#include "stdint.h"
-
-
+#include <stdint.h>
+#include <osapi-clock.h>
 #include "../utils/nm_types.h"
 #include "../utils/cbor_utils.h"
-
 #include "../utils/vector.h"
 
 
@@ -177,8 +175,8 @@ tnv_t*    tnv_from_real64(double val);
 tnv_t*    tnv_from_str(const char *str);
 tnv_t*    tnv_from_uint(uint32_t val);
 tnv_t*    tnv_from_uvast(uvast val);
-tnv_t*    tnv_from_tv(time_t val);
 tnv_t*    tnv_from_vast(vast val);
+tnv_t*    tnv_from_tv(OS_time_t val);
 void      tnv_init(tnv_t *val, amp_type_e type);
 int       tnv_serialize(QCBOREncodeContext *encoder, void *item);
 int       tnv_serialize_value(QCBOREncodeContext *encoder, void *item);
@@ -192,6 +190,7 @@ double	  tnv_to_real64(tnv_t val, int *success);
 uint32_t  tnv_to_uint(tnv_t val, int *success);
 uvast 	  tnv_to_uvast(tnv_t val, int *success);
 vast 	  tnv_to_vast(tnv_t val, int *success);
+OS_time_t tnv_to_tv(tnv_t val, int *success);
 
 
 /*** TNVC Functions ***/
@@ -228,7 +227,7 @@ void     tnvc_release(tnvc_t *tnvc, int destroy);
 int      tnvc_serialize(QCBOREncodeContext *encoder, void *item);
 blob_t*  tnvc_serialize_wrapper(tnvc_t *tnvc);
 
-int      tnvc_size(tnvc_t *tnvc);
+size_t      tnvc_size(tnvc_t *tnvc);
 
 int      tnvc_update(tnvc_t *tnvc, uint8_t idx, tnv_t *src_tnv);
 

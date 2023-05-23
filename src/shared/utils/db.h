@@ -29,12 +29,10 @@
 #ifndef DB_H_
 #define DB_H_
 
-#include "platform.h"
-#include "sdr.h"
-
-#include "nm_types.h"
+#include "shared/platform.h"
 #include "rhht.h"
 #include "vector.h"
+#include "nm_types.h"
 
 
 #ifdef __cplusplus
@@ -173,12 +171,12 @@ extern "C" {
 
 typedef struct
 {
-   Object  ctrls;
-   Object  macdefs;
-   Object  rpttpls;
-   Object  rules;
-   Object  vars;
-   Object  descObj;  /**> The pointer to the store object in the SDR. */
+  //Object  ctrls;
+  //Object  macdefs;
+  //Object  rpttpls;
+  //Object  rules;
+  //Object  vars;
+  //Object  descObj;  /**> The pointer to the store object in the SDR. */
 } db_store_t;
 
 
@@ -212,11 +210,11 @@ typedef struct
  */
 typedef struct
 {
-	Object itemObj;     /**> Serialized object in an SDR. */
+  //Object itemObj;     /**> Serialized object in an SDR. */
 	uint32_t itemSize;  /**> Size of object in itemObj.   */
 
     /* Below is not kept in the SDR. */
-	Object descObj;     /**> This descriptor in SDR.      */
+  //Object descObj;     /**> This descriptor in SDR.      */
 } db_desc_t;
 
 
@@ -235,11 +233,11 @@ extern db_store_t  gDB;
  */
 
 
-
+#if 0
 int  db_forget(db_desc_t *desc, Object list);
 
-
 int  db_persist(blob_t *blob, db_desc_t *desc, Object list);
+#endif
 
 int  db_persist_ctrl(void* item);
 int  db_persist_macdef(void* item);
@@ -254,7 +252,7 @@ void db_destroy();
 int db_init(char *name, void (*adm_init_cb)());
 
 
-int vdb_obj_init(Object sdr_list, vdb_init_cb_fn init_cb);
+//int vdb_obj_init(Object sdr_list, vdb_init_cb_fn init_cb);
 
 int vdb_db_init_ctrl(blob_t *data, db_desc_t desc);
 

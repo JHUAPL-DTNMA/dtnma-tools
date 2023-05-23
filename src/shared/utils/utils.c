@@ -30,25 +30,41 @@
  **  09/02/18  E. Birrane     Removed Serialize/Deserialize functions (JHU/APL)
  *****************************************************************************/
 
-#include "platform.h"
-#include "ion.h"
-
-#include "../utils/debug.h"
-#include "../utils/utils.h"
+#include <stdlib.h>
+#include <stdarg.h>
+#include <osapi-mutex.h>
+#include <osapi-error.h>
+#include "shared/platform.h"
+#include "shared/utils/debug.h"
+#include "shared/utils/utils.h"
 #include "vector.h"
 
-static ResourceLock gMemMutex;
+static osal_id_t gMemMutex;
 
 
 #if AMP_DEBUGGING == 1
-char gAmpMsg[AMP_GMSG_BUFLEN];
+void amp_log(int level, char label, const char *file, int line, const char *func, const char *fmt, ...)
+{
+  if (level < AMP_DEBUG_LVL)
+  {
+    return;
+  }
+
+  va_list valist;
+  char gAmpMsg[AMP_GMSG_BUFLEN];
+  va_start(valist, fmt);
+  vsnprintf(gAmpMsg, AMP_GMSG_BUFLEN, (char *) fmt, valist);
+  va_end(valist);
+  fprintf(stderr, "[%s:%d] %c %s %s\n", file, line, label, func, gAmpMsg);
+}
+
 #endif
 
 int8_t utils_mem_int()
 {
-	if(initResourceLock(&gMemMutex))
+	if(OS_MutSemCreate(&gMemMutex, "utils", 0) != OS_SUCCESS)
 	{
-		AMP_DEBUG_ERR("utils_mem_int", "Cannot allocate memory mutex.", NULL);
+		AMP_DEBUG_ERR("utils_mem_int", "Cannot allocate memory mutex.");
 		return AMP_SYSERR;
 
 	}
@@ -57,7 +73,7 @@ int8_t utils_mem_int()
 
 void utils_mem_teardown()
 {
-	killResourceLock(&gMemMutex);
+	OS_MutSemDelete(gMemMutex);
 }
 
 
@@ -65,7 +81,7 @@ void* utils_safe_take(size_t size)
 {
 	void *result;
 
-	lockResource(&gMemMutex);
+	OS_MutSemTake(gMemMutex);
 #ifndef USE_MALLOC
 	result = MTAKE(size);
 #else
@@ -75,7 +91,7 @@ void* utils_safe_take(size_t size)
 	{
 		memset(result,0,size);
 	}
-	unlockResource(&gMemMutex);
+	OS_MutSemGive(gMemMutex);
 	return result;
 }
 
@@ -86,13 +102,13 @@ void utils_safe_release(void* ptr)
 		return;
 	}
 
-	lockResource(&gMemMutex);
+	OS_MutSemTake(gMemMutex);
 #ifndef USE_MALLOC
 	MRELEASE(ptr);
 #else
 	free(ptr); /* Use this when memory debugging with valgrind. */
 #endif
-	unlockResource(&gMemMutex);
+	OS_MutSemGive(gMemMutex);
 }
 
 /******************************************************************************
@@ -116,7 +132,7 @@ void utils_safe_release(void* ptr)
  *  09/02/18  E. Birrane     Updated to not hard-code success values. (JHU/APL)
  *****************************************************************************/
 
-unsigned long utils_atox(char *s, int *success)
+unsigned long utils_atox(const char *s, int *success)
 {
 	unsigned long result = 0;
 	int i = 0;
@@ -124,21 +140,21 @@ unsigned long utils_atox(char *s, int *success)
 	int j = 0;
 	int temp = 0;
 
-	AMP_DEBUG_ENTRY("utils_atox","(%#llx, %#llx)", s, success);
+	AMP_DEBUG_ENTRY("utils_atox","(%p, %p)", s, success);
 
 	/* Step 0 - Sanity Check. */
 	if (success == NULL)
 	{
-		AMP_DEBUG_ERR("utils_atox","Bad Args.",NULL);
-		AMP_DEBUG_ENTRY("utils_atox","->0.",NULL);
+		AMP_DEBUG_ERR("utils_atox","Bad Args.");
+		AMP_DEBUG_ENTRY("utils_atox","->0.");
 		return AMP_FAIL;
 	}
 
 	*success = AMP_FAIL;
 	if(s == NULL)
 	{
-		AMP_DEBUG_ERR("utils_atox","Bad Args.",NULL);
-		AMP_DEBUG_ENTRY("utils_atox","->0.",NULL);
+		AMP_DEBUG_ERR("utils_atox","Bad Args.");
+		AMP_DEBUG_ENTRY("utils_atox","->0.");
 		return AMP_FAIL;
 	}
 
@@ -162,7 +178,7 @@ unsigned long utils_atox(char *s, int *success)
 	{
 		AMP_DEBUG_ERR("utils_atox","x UI: String %s too long to convert to hex unsigned long.", s);
 		*success = AMP_FAIL;
-		AMP_DEBUG_ENTRY("utils_atox","->0.",NULL);
+		AMP_DEBUG_ENTRY("utils_atox","->0.");
 		return AMP_FAIL;
 	}
 
@@ -225,13 +241,13 @@ unsigned long utils_atox(char *s, int *success)
  *  10/14/12  E. Birrane     Initial implementation (JHU/APL)
  *****************************************************************************/
 
-char *utils_hex_to_string(uint8_t *buffer, uint32_t size)
+char *utils_hex_to_string(const uint8_t *buffer, size_t size)
 {
     char *result = NULL;
     uint32_t char_size = 0;
 
     char temp[3];
-    int i = 0;
+    size_t i = 0;
     int r = 0;
 
     AMP_DEBUG_ENTRY("utils_hex_to_string","(%x,%d)",
@@ -288,9 +304,9 @@ char *utils_hex_to_string(uint8_t *buffer, uint32_t size)
  *  10/14/12  E. Birrane     Initial implementation (JHU/APL)
  *****************************************************************************/
 
-void utils_print_hex(unsigned char *s, uint32_t len)
+void utils_print_hex(const unsigned char *s, size_t len)
 {
-	int i;
+	size_t i;
 
 	printf("0x");
 	for(i = 0; i < len; i++)
@@ -334,7 +350,7 @@ uint8_t getNibble(char c)
 
 
 
-blob_t* utils_string_to_hex(char *value)
+blob_t* utils_string_to_hex(const char *value)
 {
 	blob_t *result = NULL;
 	char tmp_s[3];
@@ -342,8 +358,6 @@ blob_t* utils_string_to_hex(char *value)
 	int success = 0;
 	int pad = 0; 
 	size_t size = 0;
-
-	CHKNULL(value);
 
 	/*
 	 * Step 0.5 Handle case where string starts with "0x" by simply
@@ -416,61 +430,25 @@ blob_t* utils_string_to_hex(char *value)
 	return result;
 }
 
-
-
-
-/*
- * THis software adapted from:
- * http://www.gnu.org/software/libc/manual/html_node/Elapsed-Time.html
- *
- * performs: result = t1 - t2.
- */
-int utils_time_delta(struct timeval *result, struct timeval *t1, struct timeval *t2)
+int utils_time_delta(OS_time_t *result, const OS_time_t *t1, const OS_time_t *t2)
 {
-	/* Perform the carry for the later subtraction by updating t2. */
-	if (t1->tv_usec < t2->tv_usec) {
-		int nsec = (t2->tv_usec - t1->tv_usec) / 1000000 + 1;
-		t2->tv_usec -= 1000000 * nsec;
-		t2->tv_sec += nsec;
-	}
-	if (t1->tv_usec - t2->tv_usec > 1000000) {
-		int nsec = (t1->tv_usec - t2->tv_usec) / 1000000;
-		t2->tv_usec += 1000000 * nsec;
-		t2->tv_sec -= nsec;
-	}
-
-	/* Compute the time remaining to wait.
-	          tv_usec is certainly positive. */
-	result->tv_sec = t1->tv_sec - t2->tv_sec;
-	result->tv_usec = t1->tv_usec - t2->tv_usec;
-
-	/* Return 1 if result is negative. */
-	return t1->tv_sec < t2->tv_sec;
+  *result = OS_TimeSubtract(*t1, *t2);
+  return result->ticks < 0;
 }
 
-
-
 /* Return number of micro-seconds that have elapsed since the passed-in time.*/
-vast    utils_time_cur_delta(struct timeval *t1)
+vast    utils_time_cur_delta(const OS_time_t *t1)
 {
-	vast result = 0;
+	OS_time_t cur;
+	OS_time_t delta;
 
-	struct timeval cur;
-	struct timeval delta;
-	int neg = 0;
-
-	getCurrentTime(&cur);
-	neg = utils_time_delta(&delta, &cur, t1);
-
-	result = delta.tv_usec;
-	result += delta.tv_sec * 1000000;
-
-	if(neg)
-	{
-		result *= -1;
-	}
-
-	return result;
+        if (OS_GetLocalTime(&cur) != OS_SUCCESS)
+        {
+          return 0;
+        }
+          
+	utils_time_delta(&delta, &cur, t1);
+        return OS_TimeGetTotalMicroseconds(delta);
 }
 
 

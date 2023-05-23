@@ -29,12 +29,10 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include "stdint.h"
-#include "platform.h"
-#include "bp.h"
-#include "lyst.h"
-
-#include "../primitives/blob.h"
+#include <stdint.h>
+#include <osapi-clock.h>
+#include "shared/platform.h"
+#include "shared/primitives/blob.h"
 
 
 #ifdef __cplusplus
@@ -67,12 +65,8 @@ extern "C" {
  * |							  	MACROS  								  +
  * +--------------------------------------------------------------------------+
  */
-//#define USE_MALLOC  // If set, utils_safe_* will use MALLOC instead of ION MTAKE/MRELEASE
-
 #define STAKE(size) utils_safe_take(size)
 #define SRELEASE(ptr) utils_safe_release(ptr)
-
-#define CHKUSR(e,usr)    		if (!(e) && iEnd(#e)) return usr
 
 /*
  * +--------------------------------------------------------------------------+
@@ -93,14 +87,14 @@ void   utils_safe_release(void* ptr);
 void*  utils_safe_take(size_t size);
 
 //unsigned long utils_atox(char *s);
-unsigned long utils_atox(char *s, int *success);
+unsigned long utils_atox(const char *s, int *success);
 
-char*    utils_hex_to_string(uint8_t *buffer, uint32_t size);
-void     utils_print_hex(unsigned char *s, uint32_t len);
+char*    utils_hex_to_string(const uint8_t *buffer, size_t size);
+void     utils_print_hex(const unsigned char *s, size_t len);
 
-blob_t*  utils_string_to_hex(char *value);
-int      utils_time_delta(struct timeval *result, struct timeval *t1, struct timeval *t2);
-vast     utils_time_cur_delta(struct timeval *t1);
+blob_t*  utils_string_to_hex(const char *value);
+int      utils_time_delta(OS_time_t *result, const OS_time_t *t1, const OS_time_t *t2);
+vast     utils_time_cur_delta(const OS_time_t *t1);
 
 
 #ifdef __cplusplus

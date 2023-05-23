@@ -20,11 +20,9 @@
  **  09/30/18  E. Birrane    Updated to AMP v0.5. (JHU/APL)
  *****************************************************************************/
 
-#include "platform.h"
-
-#include "ion.h"
+#include <inttypes.h>
+#include "shared/platform.h"
 #include "../utils/utils.h"
-
 #include "../primitives/table.h"
 #include "tnv.h"
 
@@ -144,7 +142,7 @@ void* tbl_deserialize_ptr(QCBORDecodeContext *it, int *success)
 	QCBORItem item;
 
 	AMP_DEBUG_ENTRY("tbl_deserialize_ptr",
-					"("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
+					"("PRIdPTR","PRIdPTR")",
 					(uaddr)it, (uaddr)success);
 
 	/* Sanity Checks. */

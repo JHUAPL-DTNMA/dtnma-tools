@@ -23,6 +23,7 @@
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,11 +44,7 @@ extern "C" {
 #define AMP_DEBUG_LVL_ERR  4 /** Error and above debugging */
 
 #define AMP_DEBUG_LVL	AMP_DEBUG_LVL_WARN
-
 #define	AMP_GMSG_BUFLEN	256
-#if AMP_DEBUGGING == 1
-extern char		gAmpMsg[];		/*	Debug message buffer.	*/
-#endif
 
 /**
  * \def AMP_DEBUG
@@ -77,39 +74,24 @@ extern char		gAmpMsg[];		/*	Debug message buffer.	*/
  * AMP_DEBUGGING #define.
  */
 
-#if defined (ION_LWT)
-
-#define AMP_DEBUG(level, type, func, format,...) if(level >= AMP_DEBUG_LVL) \
-{_isprintf(gAmpMsg, AMP_GMSG_BUFLEN, format, __VA_ARGS__); putErrmsg(func, gAmpMsg);}
+#if AMP_DEBUGGING == 1
+#define AMP_DEBUG_ENTRY(func, format, ...)  amp_log(AMP_DEBUG_LVL_PROC,'+', __FILE__, __LINE__, func, format, ##__VA_ARGS__)
+#define AMP_DEBUG_EXIT(func, format, ...)   amp_log(AMP_DEBUG_LVL_PROC,'-', __FILE__, __LINE__, func, format, ##__VA_ARGS__)
+#define AMP_DEBUG_INFO(func, format, ...)   amp_log(AMP_DEBUG_LVL_INFO,'i', __FILE__, __LINE__, func, format, ##__VA_ARGS__)
+#define AMP_DEBUG_WARN(func, format, ...)   amp_log(AMP_DEBUG_LVL_WARN,'w', __FILE__, __LINE__, func, format, ##__VA_ARGS__)
+#define AMP_DEBUG_ERR(func, format, ...)    amp_log(AMP_DEBUG_LVL_ERR, 'x', __FILE__, __LINE__, func, format, ##__VA_ARGS__)
+#define AMP_DEBUG_ALWAYS(func, format, ...) amp_log(AMP_DEBUG_LVL,     ':', __FILE__, __LINE__, func, format, ##__VA_ARGS__)
+void amp_log(int level, char label, const char *file, int line, const char *func, const char *fmt, ...);
 
 #else
-
-#define AMP_DEBUG(level, type, func, format,...) if(level >= AMP_DEBUG_LVL) \
-{isprintf(gAmpMsg, AMP_GMSG_BUFLEN, (char *) format, __VA_ARGS__); \
-fprintf(stderr, "[%s:%d] %c %s %s\n",__FILE__,__LINE__,type, func, gAmpMsg);}
+#define AMP_DEBUG_ENTRY(func, format, ...)
+#define AMP_DEBUG_EXIT(func, format, ...)
+#define AMP_DEBUG_INFO(func, format, ...)
+#define AMP_DEBUG_WARN(func, format, ...)
+#define AMP_DEBUG_ERR(func, format, ...)
+#define AMP_DEBUG_ALWAYS(func, format, ...)
 
 #endif
-
-#define AMP_DEBUG_ENTRY(func, format,...) \
-AMP_DEBUG(AMP_DEBUG_LVL_PROC,'+',func,format, __VA_ARGS__)
-
-#define AMP_DEBUG_EXIT(func, format,...) \
-AMP_DEBUG(AMP_DEBUG_LVL_PROC,'-',func,format, __VA_ARGS__)
-
-#define AMP_DEBUG_INFO(func, format,...) \
-AMP_DEBUG(AMP_DEBUG_LVL_INFO,'i',func,format, __VA_ARGS__)
-
-#define AMP_DEBUG_WARN(func, format,...) \
-AMP_DEBUG(AMP_DEBUG_LVL_WARN,'w',func,format, __VA_ARGS__)
-
-#define AMP_DEBUG_ERR(func, format,...) \
-AMP_DEBUG(AMP_DEBUG_LVL_ERR,'x',func,format, __VA_ARGS__)
-
-#define AMP_DEBUG_ALWAYS(func, format,...) \
-AMP_DEBUG(AMP_DEBUG_LVL,':',func,format, __VA_ARGS__)
-
-#define AMP_DBG_ERR(format,...) AMP_DEBUG_ERR(__func__,format,__VA_ARGS__)
-
 
 #ifdef __cplusplus
 }

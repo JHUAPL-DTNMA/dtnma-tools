@@ -77,7 +77,7 @@ typedef struct
 
 typedef struct
 {
-	uvast period;   /**> # ticks between rule firings.           */
+	OS_time_t period;   /**> # ticks between rule firings.           */
 	uvast max_fire; /**> # times action can be run.              */
 } tbr_def_t;
 
@@ -95,7 +95,7 @@ typedef struct
  */
 typedef struct {
 	ari_t id;          /**> The identifier for the SBR definition.  */
-	uvast start;       /**> When to start the evaluation.           */
+	OS_time_t start;       /**> When to start the evaluation.           */
 
 	union {
 		sbr_def_t as_sbr;
@@ -106,7 +106,7 @@ typedef struct {
 
 	/** Everything below is not part of a rule definition. **/
 
-	uint32_t ticks_left; /**> Number of ticks until next eval.      */
+	OS_time_t eval_at;   /**> Time of next eval.      */
 	uvast    num_eval;   /**> Number of times rule evaluated.       */
 	uvast    num_fire;   /**> Number of times a rule action was run. */
 	uint8_t  flags;      /**> Status of rule: Active or not.        */
@@ -132,9 +132,9 @@ void      rule_cb_ht_del_fn(rh_elt_t *elt);
 
 rule_t*   rule_copy_ptr(rule_t *rule);
 
-rule_t*   rule_create_sbr(ari_t id, uvast start, sbr_def_t def, ac_t action);
+rule_t*   rule_create_sbr(ari_t id, OS_time_t start, sbr_def_t def, ac_t action);
 
-rule_t*   rule_create_tbr(ari_t id, uvast start, tbr_def_t def, ac_t action);
+rule_t*   rule_create_tbr(ari_t id, OS_time_t start, tbr_def_t def, ac_t action);
 
 rule_t*   rule_deserialize_helper(QCBORDecodeContext *it, int *success);
 

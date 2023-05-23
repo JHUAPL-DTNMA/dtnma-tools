@@ -14,7 +14,8 @@
 #ifndef NM_SHARED_PRIMITIVES_VECTOR_H_
 #define NM_SHARED_PRIMITIVES_VECTOR_H_
 
-#include "platform.h"
+#include <osapi-mutex.h>
+#include "shared/platform.h"
 #include "../primitives/blob.h"
 
 
@@ -58,7 +59,7 @@ typedef struct
 	vec_idx_t num_free;     // Number of free elements in the vector.
 	vec_idx_t total_slots;  // Slots allocated
 
-	ResourceLock lock;
+	osal_id_t lock; ///< Mutex handle
 
 	vec_comp_fn compare_fn;
 	vec_del_fn  delete_fn;

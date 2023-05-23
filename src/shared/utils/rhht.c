@@ -226,7 +226,7 @@ rhht_t rhht_create(rh_idx_t buckets, rh_comp_fn compare, rh_hash_fn hash, rh_del
 		ht.num_elts = ht.max_delta = 0;
                 ht.num_bkts = buckets;
 
-		if(initResourceLock(&(ht.lock)))
+                if(OS_MutSemCreate(&(ht.lock), "vector", 0) != OS_SUCCESS)
 		{
 	        AMP_DEBUG_ERR("rhht_create","Unable to initialize mutex, errno = %s",
 	        		        strerror(errno));
@@ -249,7 +249,7 @@ void rhht_del_idx(rhht_t *ht, rh_idx_t idx)
 	CHKVOID(ht);
 	CHKVOID(idx < ht->num_bkts);
 
-	lockResource(&(ht->lock));
+	OS_MutSemTake(ht->lock);
 
 	if((ht->buckets[idx].value != NULL) && (ht->delete != NULL))
 	{
@@ -261,9 +261,9 @@ void rhht_del_idx(rhht_t *ht, rh_idx_t idx)
 	ht->buckets[idx].delta = 0;
 	ht->num_elts--;
 
-    p_rhht_bkwrd_shft(ht, idx);
+        p_rhht_bkwrd_shft(ht, idx);
 
-    unlockResource(&(ht->lock));
+	OS_MutSemGive(ht->lock);
 }
 
 void rhht_del_key(rhht_t *ht, void *item)
@@ -319,12 +319,12 @@ int rhht_find(rhht_t *ht, void *key, rh_idx_t *idx)
 	/* Step 1: Hash the item. */
 	tmp = ht->hash(ht, key);
 
-	lockResource(&(ht->lock));
+	OS_MutSemTake(ht->lock);
 
 	/* Step 2: If nothing is there, it.. isn't there. */
 	if(ht->buckets[tmp].value == NULL)
 	{
-		unlockResource(&(ht->lock));
+        	OS_MutSemGive(ht->lock);
 		return RH_NOT_FOUND;
 	}
 
@@ -337,7 +337,7 @@ int rhht_find(rhht_t *ht, void *key, rh_idx_t *idx)
 				*idx = tmp;
 			}
 
-			unlockResource(&(ht->lock));
+        	OS_MutSemGive(ht->lock);
 			return RH_OK;
 		}
 
@@ -359,7 +359,7 @@ int rhht_find(rhht_t *ht, void *key, rh_idx_t *idx)
 		*idx = tmp;
 	}
 
-	unlockResource(&(ht->lock));
+        OS_MutSemGive(ht->lock);
 
 	return RH_NOT_FOUND;
 }
@@ -373,7 +373,7 @@ void rhht_foreach(rhht_t *ht, rh_foreach_fn for_fn, void *tag)
 	CHKVOID(ht);
 	CHKVOID(for_fn);
 
-	lockResource(&(ht->lock));
+	OS_MutSemTake(ht->lock);
 	for(i = 0; i < ht->num_bkts; i++)
 	{
 		if(ht->buckets[i].value != NULL)
@@ -381,7 +381,7 @@ void rhht_foreach(rhht_t *ht, rh_foreach_fn for_fn, void *tag)
 			for_fn(&(ht->buckets[i]), tag);
 		}
 	}
-	unlockResource(&(ht->lock));
+        OS_MutSemGive(ht->lock);
 }
 
 
@@ -429,7 +429,7 @@ int rhht_insert(rhht_t *ht, void *key, void *value, rh_idx_t *idx)
 	elt.delta = 0;
 	ideal_idx = ht->hash(ht, key);
 
-	lockResource(&(ht->lock));
+	OS_MutSemTake(ht->lock);
 
 	for(iter = 0; (iter < ht->num_bkts) && (elt.value != NULL); iter++)
 	{
@@ -471,7 +471,7 @@ int rhht_insert(rhht_t *ht, void *key, void *value, rh_idx_t *idx)
 
 	ht->num_elts++;
 
-	unlockResource(&(ht->lock));
+        OS_MutSemGive(ht->lock);
 
     return RH_OK;
 }

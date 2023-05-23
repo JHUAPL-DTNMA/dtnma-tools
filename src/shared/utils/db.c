@@ -43,7 +43,7 @@ vdb_store_t gVDB;
 db_store_t  gDB;
 
 
-
+#if 0
 int  db_forget(db_desc_t *desc, Object list)
 {
 	Sdr sdr = getIonsdr();
@@ -86,7 +86,7 @@ int  db_forget(db_desc_t *desc, Object list)
 
 	return AMP_OK;
 }
-
+#endif
 
 int  db_read_objs(char *name)
 {
@@ -144,6 +144,7 @@ int  db_read_objs(char *name)
 	return 1;
 }
 
+#if 0
 /*
  * This function writes an item and its associated descriptor into the SDR,
  * allocating space for each, and adding the SDR descriptor pointer to a
@@ -230,7 +231,6 @@ int  db_persist(blob_t *blob, db_desc_t *desc, Object list)
 
    return AMP_OK;
 }
-
 
 int  db_persist_ctrl(void* item)
 {
@@ -354,6 +354,7 @@ int vdb_obj_init(Object sdr_list, vdb_init_cb_fn init_cb)
 
 	return num;
 }
+#endif
 
 
 int vdb_db_init_ctrl(blob_t *data, db_desc_t desc)

@@ -30,8 +30,8 @@
 #ifndef BLOB_H_
 #define BLOB_H_
 
-#include "stdint.h"
-#include "qcbor.h"
+#include <stdint.h>
+#include <qcbor/qcbor.h>
 
 
 #ifdef __cplusplus
@@ -51,6 +51,12 @@ extern "C" {
  * +--------------------------------------------------------------------------+
  */
 
+#ifndef SMALL_SIZES
+#define SMALL_SIZES 100
+#endif
+#ifndef WORD_SIZE
+#define WORD_SIZE 8
+#endif
 #define BLOB_DEFAULT_ENC_SIZE (SMALL_SIZES * WORD_SIZE)
 
 /*

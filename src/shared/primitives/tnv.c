@@ -25,9 +25,8 @@
  **  08/28/18  E. Birrane     Update to latest spec and TNVs (JHU/APL)
  *****************************************************************************/
 
-#include "platform.h"
-
-#include "ion.h"
+#include <inttypes.h>
+#include "shared/platform.h"
 #include "../utils/utils.h"
 
 #include "tnv.h"
@@ -98,7 +97,7 @@ tnv_t* tnv_cast(tnv_t *tnv, amp_type_e type)
 		case AMP_TYPE_INT:   result = tnv_from_int(tnv_to_int(*tnv, &success)); break;
 		case AMP_TYPE_UINT:  result = tnv_from_uint(tnv_to_uint(*tnv, &success)); break;
 		case AMP_TYPE_VAST:  result = tnv_from_vast(tnv_to_vast(*tnv, &success)); break;
-		case AMP_TYPE_TV:    result = tnv_from_tv(tnv_to_uvast(*tnv, &success)); break;
+		case AMP_TYPE_TV:    result = tnv_from_tv(tnv_to_tv(*tnv, &success)); break;
 		case AMP_TYPE_TS:
 		case AMP_TYPE_UVAST:  result = tnv_from_uvast(tnv_to_uvast(*tnv, &success)); break;
 		case AMP_TYPE_REAL32:  result = tnv_from_real32(tnv_to_real32(*tnv, &success)); break;
@@ -350,7 +349,7 @@ tnv_t tnv_deserialize(QCBORDecodeContext *it, int *success)
     QCBORError err;
     tnv_t result;
 
-    AMP_DEBUG_ENTRY("tnv_deserialize","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")", (uaddr)it, (uaddr)success);
+    AMP_DEBUG_ENTRY("tnv_deserialize","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)success);
 
     tnv_init(&result, AMP_TYPE_UNK);
 
@@ -833,12 +832,12 @@ tnv_t*  tnv_from_uvast(uvast val)
  *   1. Result must be freed with tnv_release(<item>, 1);
  *****************************************************************************/
 
-tnv_t*  tnv_from_tv(time_t val)
+tnv_t*  tnv_from_tv(OS_time_t val)
 {
 	tnv_t *result = tnv_create();
 	CHKNULL(result);
 	tnv_init(result, AMP_TYPE_TV);
-	result->value.as_uvast = val;
+	result->value.as_uvast = OS_TimeGetTotalSeconds(val);
 	return result;
 }
 
@@ -1387,6 +1386,11 @@ vast  tnv_to_vast(tnv_t val, int *success)
 }
 
 
+OS_time_t tnv_to_tv(tnv_t val, int *success)
+{
+  vast secs = tnv_to_vast(val, success);
+  return OS_TimeAssembleFromMilliseconds(secs, 0);
+}
 
 
 
@@ -1831,7 +1835,7 @@ static tnvc_t tnvc_deserialize_tvc(QCBORDecodeContext *array_it, size_t array_le
 	blob_t types;
 	int i;
 
-	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"ADDR_FIELDSPEC",0x"ADDR_FIELDSPEC")", (uaddr) array_it, (uaddr) success);
+	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"PRIdPTR",0x"PRIdPTR")", (uaddr) array_it, (uaddr) success);
 	memset(&result,0,sizeof(result));
 	*success = AMP_OK;
 
@@ -1905,7 +1909,7 @@ static tnvc_t tnvc_deserialize_tvc(QCBORDecodeContext *array_it, size_t array_le
 	blob_t types;
 	int i;
 
-	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"ADDR_FIELDSPEC",0x"ADDR_FIELDSPEC")", (uaddr) array_it, (uaddr) success);
+	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"PRIdPTR",0x"PRIdPTR")", (uaddr) array_it, (uaddr) success);
 	memset(&result,0,sizeof(result));
 	*success = AMP_OK;
 
@@ -2338,7 +2342,7 @@ static int tnvc_serialize_tvc(QCBOREncodeContext *encoder, tnvc_t *tnvc)
 
 
 /* 09/30/2018) */
-int  tnvc_size(tnvc_t *tnvc)
+size_t  tnvc_size(tnvc_t *tnvc)
 {
 	CHKZERO(tnvc);
 	return vec_num_entries(tnvc->values);

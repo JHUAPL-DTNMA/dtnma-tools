@@ -23,14 +23,14 @@
  **  09/21/18  E. Birrane     Updated to AMP v5. Added EDDs. (JHU/APL)
  *****************************************************************************/
 
-#include "platform.h"
-
-#include "edd_var.h"
+#include <inttypes.h>
+#include "shared/platform.h"
 #include "../utils/utils.h"
 #include "../utils/nm_types.h"
-
-
 #include "../utils/db.h"
+#include "edd_var.h"
+
+
 
 int       edd_cb_comp_fn(void *i1, void *i2)
 {
@@ -320,7 +320,7 @@ var_t *var_deserialize_ptr(QCBORDecodeContext *it, int *success)
 {
 	var_t *result = NULL;
 
-    AMP_DEBUG_ENTRY("var_deserialize","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")", (uaddr)it, (uaddr)success);
+    AMP_DEBUG_ENTRY("var_deserialize","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)success);
 
     CHKNULL(success);
     *success = AMP_FAIL;
@@ -500,7 +500,7 @@ var_def_t  vardef_deserialize(QCBORDecodeContext *it, int *success)
 {
 	var_def_t result;
 
-	AMP_DEBUG_ENTRY("vardef_deserialize","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")", (uaddr)it, (uaddr)success);
+	AMP_DEBUG_ENTRY("vardef_deserialize","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)success);
 	memset(&result,0,sizeof(var_def_t));
 	result.type = AMP_TYPE_UNK;
 
