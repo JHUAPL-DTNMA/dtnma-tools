@@ -1,0 +1,12 @@
+[submodule "deps/unity"]
+	path = deps/unity
+	url = ../unity.git
+	branch = master
+[submodule "deps/ion"]
+	path = deps/ion
+	url = ../ion-sf.git
+	branch = stable
+[submodule "deps/mlib"]
+	path = deps/mlib
+	url = ../mlib.git
+	branch = master
