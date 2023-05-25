@@ -35,6 +35,16 @@ then
   popd
 fi
 
+#if [ ! -e ${SELFDIR}/testroot/usr/include/unity ]
+#then
+#  pushd ${SELFDIR}/deps/unity
+#  cmake -S . -B build \
+#    -DCMAKE_INSTALL_PREFIX=${SELFDIR}/testroot/usr
+#  cmake --build build
+#  cmake --install build
+#  popd
+#fi
+
 cmake -S ${SELFDIR} -B ${SELFDIR}/build/default \
   -DCMAKE_PREFIX_PATH=${SELFDIR}/testroot/usr \
   -DCMAKE_INSTALL_PREFIX=${SELFDIR}/testroot/usr \

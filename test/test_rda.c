@@ -1,4 +1,5 @@
-#include <ion.h>
+#include <osapi-task.h>
+#include <osapi-error.h>
 #include <shared/utils/daemon_run.h>
 #include <shared/adm/adm.h>
 #include <shared/adm/adm_amp_agent.h>
@@ -98,20 +99,6 @@ static blob_t * _test_receive(msg_metadata_t *meta, int *success, void *ctx)
 
 
 void setUp(void) {
-  IonParms      params;
-  memset(&params, 0, sizeof(IonParms));
-  istrcpy(params.sdrName, "ion", sizeof params.sdrName);
-  params.wmSize = 5000000;
-  params.wmAddress = 0;         /*      Dyamically allocated.   */
-  params.sdrWmSize = 1000000;
-  params.configFlags = SDR_IN_DRAM;
-  params.heapWords = 250000;
-  params.heapKey = SM_NO_KEY;
-  params.logSize = 0;           /*      Log is in file.         */
-  params.logKey = SM_NO_KEY;
-  //istrcpy(params.pathName, "/tmp", sizeof params.pathName);
-  ionInitialize(&params, 1);
-
   TEST_ASSERT_EQUAL_INT(AMP_OK, utils_mem_int());
   TEST_ASSERT_EQUAL_INT(AMP_OK, db_init("nmagent_db", &adm_init));
   agent_instr_init();
@@ -168,7 +155,7 @@ void test_rda_ctrls(void)
 
   pthread_t thr;
   TEST_ASSERT_EQUAL_INT(0, pthread_create(&thr, NULL, rda_ctrls, &agent));
-  microsnooze(1000);
+  TEST_ASSERT_EQUAL_INT(OS_SUCCESS, OS_TaskDelay(1));
   test_count = 1;
 
   // Inject the run-control directly after thread start
@@ -204,7 +191,7 @@ void test_rda_ctrls_report(void)
 
   pthread_t thr;
   TEST_ASSERT_EQUAL_INT(0, pthread_create(&thr, NULL, rda_ctrls, &agent));
-  microsnooze(1000);
+  TEST_ASSERT_EQUAL_INT(OS_SUCCESS, OS_TaskDelay(1));
   test_count = 1;
 
   // Inject the run-control directly after thread start
@@ -253,7 +240,7 @@ void test_rda_rules_tbr(void)
 {
   pthread_t thr;
   TEST_ASSERT_EQUAL_INT(0, pthread_create(&thr, NULL, rda_rules, &agent));
-  microsnooze(1000);
+  TEST_ASSERT_EQUAL_INT(OS_SUCCESS, OS_TaskDelay(1));
   test_count = 2;
 
   // Define the TBR after thread start
@@ -288,7 +275,7 @@ void test_rda_reports(void)
 {
   pthread_t thr;
   TEST_ASSERT_EQUAL_INT(0, pthread_create(&thr, NULL, rda_reports, &agent));
-  microsnooze(1000);
+  TEST_ASSERT_EQUAL_INT(OS_SUCCESS, OS_TaskDelay(1));
   test_count = 1;
 
   // Inject the report directly after thread start
@@ -341,7 +328,7 @@ void test_rx_thread(void)
 {
   pthread_t thr;
   TEST_ASSERT_EQUAL_INT(0, pthread_create(&thr, NULL, rx_thread, &agent));
-  microsnooze(1000);
+  TEST_ASSERT_EQUAL_INT(OS_SUCCESS, OS_TaskDelay(1));
   test_count = 1;
 
   // Inject the run-control directly after thread start
@@ -367,14 +354,4 @@ void test_rx_thread(void)
   TEST_ASSERT_EQUAL_INT(0, pthread_mutex_lock(&(gAgentDb.rpt_msgs.lock)));
   TEST_ASSERT_EQUAL_INT(0, vec_num_entries(gAgentDb.rpt_msgs));
   TEST_ASSERT_EQUAL_INT(0, pthread_mutex_unlock(&(gAgentDb.rpt_msgs.lock)));
-}
-
-#include <osapi-common.h>
-#include <osapi-bsp.h>
-
-int unity_main(void);
-
-void OS_Application_Run()
-{
-  OS_BSP_SetExitCode(unity_main());
 }

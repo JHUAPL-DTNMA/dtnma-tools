@@ -1,13 +1,73 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
-stages:
-- test
-sast:
-  stage: test
+default:
+  image: ubuntu:22.04
+
 include:
-- template: Security/SAST.gitlab-ci.yml
+  # Run pipeline only on branches, not MRs
+  - template: 'Workflows/Branch-Pipelines.gitlab-ci.yml'
+  # auto-static-analysis
+#  - template: Security/SAST.gitlab-ci.yml
+#  - template: Code-Quality.gitlab-ci.yml
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  DOCKER_BUILDKIT: 1
+  DEBIAN_FRONTEND: "noninteractive"
+  # for Python/PIP
+  PIP_CERT: /etc/ssl/certs/ca-certificates.crt
+  PIP_DEFAULT_TIMEOUT: "300"
+  # for Ruby/bolt
+  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+
+stages:
+  - build
+  - test
+  - deploy
+
+.prep-install-ca: &prep-install-ca |
+  apt-get update && apt-get install -y ca-certificates curl
+  mkdir -p /usr/local/share/ca-certificates
+  curl -svL http://apllinuxdepot.jhuapl.edu/linux/APL-root-cert/JHUAPL-MS-Root-CA-05-21-2038-B64-text.cer -o /usr/local/share/ca-certificates/JHUAPL-MS-Root-CA-05-21-2038-B64-text.crt
+  update-ca-certificates
+
+.prep-install-ext: &prep-install-ext |
+    apt-get update && apt-get install -y \
+        build-essential autoconf libtool \
+        cmake ninja-build ruby
+
+#sast:
+#  stage: test
+
+#code_quality:
+#  variables:
+#    SOURCE_CODE: src
+
+build:
+  stage: build
+  needs: []
+  before_script:
+    - *prep-install-ca
+    - *prep-install-ext
+  script:
+    - ./prep.sh
+    - ./build.sh
+    - ./build.sh install
+  artifacts:
+    paths:
+      - testroot
+      - build
+
+unit-test:
+  stage: test
+  needs:
+    - build
+  allow_failure: false
+  before_script:
+    - *prep-install-ca
+    - *prep-install-ext
+  script:
+    - ./build.sh check
+  artifacts:
+    when: always
+    reports:
+      junit: build/default/testresults.xml
+
