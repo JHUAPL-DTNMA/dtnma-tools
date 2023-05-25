@@ -89,7 +89,7 @@ void vec_clear(vector_t *vec)
 		return;
 	}
 
-	OS_MutSemTake(vec->lock);
+	pthread_mutex_lock(&vec->lock);
 
 	for(i = 0; i < vec->total_slots; i++)
 	{
@@ -106,7 +106,7 @@ void vec_clear(vector_t *vec)
 
 	vec->next_idx = 0;
     vec->num_free = vec->total_slots;
-	OS_MutSemGive(vec->lock);
+	pthread_mutex_unlock(&vec->lock);
 }
 
 vector_t vec_copy(vector_t *src, int *success)
@@ -116,12 +116,12 @@ vector_t vec_copy(vector_t *src, int *success)
 
 	*success = AMP_FAIL;
 
-	OS_MutSemTake(src->lock);
+	pthread_mutex_lock(&src->lock);
 
 	result = vec_create(src->total_slots, src->delete_fn, src->compare_fn, src->copy_fn, src->flags, success);
 	if(*success != VEC_OK)
 	{
-		OS_MutSemGive(src->lock);
+	  pthread_mutex_unlock(&src->lock);
 		return result;
 	}
 
@@ -138,7 +138,7 @@ vector_t vec_copy(vector_t *src, int *success)
 	result.next_idx = src->next_idx;
 	result.num_free = src->num_free;
 
-	OS_MutSemGive(src->lock);
+	pthread_mutex_unlock(&src->lock);
 
 	*success = VEC_OK;
 	return result;
@@ -150,10 +150,18 @@ vector_t vec_create(uint8_t num, vec_del_fn delete_fn, vec_comp_fn compare_fn, v
 
 	memset(&result,0, sizeof(vector_t));
 
-	if(OS_MutSemCreate(&(result.lock), "vector", 0) != OS_SUCCESS)
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	if(pthread_mutex_init(&result.lock, &attr))
 	{
 		*success = VEC_SYSERR;
 		return result;
+	}
+	if (pthread_cond_init(&result.cond_ins_mod, NULL))
+	{
+          *success = VEC_SYSERR;
+          return result;
 	}
 
 	result.flags = flags;
@@ -196,7 +204,7 @@ vec_idx_t vec_find(vector_t *vec, void *key, int *success)
 
 	*success = VEC_FAIL;
 
-	OS_MutSemTake(vec->lock);
+	pthread_mutex_lock(&vec->lock);
 	for(result = 0; result < vec->total_slots; result++)
 	{
 		if(vec->data[result].occupied == 1)
@@ -209,7 +217,7 @@ vec_idx_t vec_find(vector_t *vec, void *key, int *success)
 		}
 	}
 
-	OS_MutSemGive(vec->lock);
+	pthread_mutex_unlock(&vec->lock);
 
 	return result;
 }
@@ -222,7 +230,7 @@ int vec_insert(vector_t *vec, void *value, vec_idx_t *idx)
 	CHKERR(vec);
 
 
-	OS_MutSemTake(vec->lock);
+	pthread_mutex_lock(&vec->lock);
 	success = vec_make_room(vec, 1);
 
 	if(success == VEC_OK)
@@ -248,9 +256,11 @@ int vec_insert(vector_t *vec, void *value, vec_idx_t *idx)
 		}
 		vec->next_idx = i;
 		vec->num_free--;
+
+		pthread_cond_signal(&vec->cond_ins_mod);
 	}
 
-	OS_MutSemGive(vec->lock);
+	pthread_mutex_unlock(&vec->lock);
 
 	return success;
 }
@@ -258,7 +268,7 @@ int vec_insert(vector_t *vec, void *value, vec_idx_t *idx)
 void vec_lock(vector_t *vec)
 {
 	CHKVOID(vec);
-	OS_MutSemTake(vec->lock);
+	pthread_mutex_lock(&vec->lock);
 }
 
 
@@ -347,10 +357,11 @@ void vec_release(vector_t *vec, int destroy)
        vec->data = NULL;
     }
 
+    pthread_cond_destroy(&vec->cond_ins_mod);
+    pthread_mutex_destroy(&vec->lock);
 
 	if(destroy)
 	{
-		OS_MutSemDelete(vec->lock);
 		SRELEASE(vec);
 	}
 }
@@ -398,7 +409,7 @@ void* vec_set(vector_t *vec, vec_idx_t idx, void *data, int *success)
 {
 	void *result = NULL;
 
-	OS_MutSemTake(vec->lock);
+	pthread_mutex_lock(&vec->lock);
 
 
 	if( (vec == NULL) ||
@@ -406,7 +417,7 @@ void* vec_set(vector_t *vec, vec_idx_t idx, void *data, int *success)
 	  )
 	{
 		*success = VEC_FAIL;
-		OS_MutSemGive(vec->lock);
+		pthread_mutex_unlock(&vec->lock);
 		return NULL;
 	}
 
@@ -424,7 +435,7 @@ void* vec_set(vector_t *vec, vec_idx_t idx, void *data, int *success)
     }
     
 	vec->data[idx].value = data;
-	OS_MutSemGive(vec->lock);
+	pthread_mutex_unlock(&vec->lock);
 
 	return result;
 }
@@ -437,7 +448,7 @@ vec_idx_t   vec_size(vector_t *vec)
 void vec_unlock(vector_t *vec)
 {
 	CHKVOID(vec);
-	OS_MutSemGive(vec->lock);
+	pthread_mutex_unlock(&vec->lock);
 }
 
 

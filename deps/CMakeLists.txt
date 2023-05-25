@@ -1,9 +1,11 @@
 
 # OSAL has its own CMake target
-#set(OSAL_SYSTEM_OSTYPE "generic-linux")
+set(OSAL_SYSTEM_OSTYPE "posix")
 set(OSAL_SYSTEM_BSPTYPE "generic-linux")
+set(OSAL_CONFIG_DEBUG_PRINTF ON)
 #set(OSAL_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/osal/src/bsp/pc-linux/config/")
 add_subdirectory(osal)
+target_compile_definitions(osal_posix_impl PRIVATE OSAL_CONFIG_DEBUG_PERMISSIVE_MODE)
 
 # QCBOR has its own CMake target
 add_subdirectory(QCBOR)
@@ -45,7 +47,7 @@ if(BUILD_TESTING)
     add_custom_command(
       OUTPUT "${RUNNER_FILE}"
       DEPENDS "${ABSOLUTE_SOURCE}"
-      COMMAND ${RUBY_BIN} ${UNITY_GENERATOR_BIN} "${ABSOLUTE_SOURCE}" "${RUNNER_FILE}"
+      COMMAND ${RUBY_BIN} ${UNITY_GENERATOR_BIN} "${ABSOLUTE_SOURCE}" "${RUNNER_FILE}" --main_name=unity_main
     )
     add_executable(${BASENAME} ${ABSOLUTE_SOURCE} ${RUNNER_FILE})
     target_link_libraries(${BASENAME} PUBLIC unity)

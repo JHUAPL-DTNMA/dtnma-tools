@@ -1104,6 +1104,7 @@ tnv_t *amp_agent_get_num_controls(tnvc_t *parms)
 	 * |START CUSTOM FUNCTION get_num_controls BODY
 	 * +-------------------------------------------------------------------------+
 	 */
+	//FIXME: not thread safe
 	result = tnv_from_uint(gVDB.ctrls.total_slots - gVDB.ctrls.num_free);
 
 	/*

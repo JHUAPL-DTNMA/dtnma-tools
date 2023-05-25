@@ -1,0 +1,15 @@
+[Unit]
+Description=ION NM Agent
+After=network-online.target ion.service ion-nm-mgr.service
+Wants=network-online.target ion-nm-mgr.service
+Requires=ion.service
+
+[Service]
+Type=notify
+PassEnvironment=ION_NODE_NUM MGR_NODE_NUM
+EnvironmentFile=-/etc/ion/environment
+ExecStart=ion_nm_wrap --listen /var/run/nm_agent.socket -- \
+    nm_agent ipn:${ION_NODE_NUM}.6 ipn:${MGR_NODE_NUM}.7
+
+[Install]
+WantedBy=multi-user.target

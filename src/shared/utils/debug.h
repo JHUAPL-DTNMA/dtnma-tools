@@ -43,7 +43,7 @@ extern "C" {
 #define AMP_DEBUG_LVL_WARN 3 /** Warning and above debugging */
 #define AMP_DEBUG_LVL_ERR  4 /** Error and above debugging */
 
-#define AMP_DEBUG_LVL	AMP_DEBUG_LVL_WARN
+#define AMP_DEBUG_LVL	AMP_DEBUG_LVL_PROC
 #define	AMP_GMSG_BUFLEN	256
 
 /**

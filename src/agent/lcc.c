@@ -23,6 +23,7 @@
  **  05/17/15  E. Birrane     Add Macro support, updated to DTNMP v0.1 (Secure DTN - NASA: NNX14CS58P)
  *****************************************************************************/
 
+#include <inttypes.h>
 #include "lcc.h"
 
 #include "../shared/primitives/rules.h"
@@ -94,7 +95,7 @@ int lcc_run_ctrl(ctrl_t *ctrl, tnvc_t *parent_parms)
     tnvc_t *new_parms = NULL;
     eid_t rx_eid;
 
-	AMP_DEBUG_ENTRY("lcc_run_ctrl","("ADDR_FIELDSPEC")", (uaddr) ctrl);
+	AMP_DEBUG_ENTRY("lcc_run_ctrl","("PRIdPTR")", (uaddr) ctrl);
 
 	if(ctrl == NULL)
 	{
@@ -103,7 +104,7 @@ int lcc_run_ctrl(ctrl_t *ctrl, tnvc_t *parent_parms)
 
 	if(strlen(ctrl->caller.name) <= 0)
 	{
-		rx_eid = manager_eid;
+		strcpy(rx_eid.name, "dtn:none");// = manager_eid;
 	}
 	else
 	{
@@ -220,7 +221,10 @@ void lcc_send_retval(eid_t *rx, tnv_t *retval, ctrl_t *ctrl, tnvc_t *parms)
 	ari_t *ctrl_ari = ctrl_get_id(ctrl);
 	ari = ari_copy_ptr(ctrl_ari);
 	ari_replace_parms(ari, parms);
-	report = rpt_create(ari, getCtime(), NULL);
+
+	OS_time_t timestamp;
+	OS_GetLocalTime(&timestamp);
+	report = rpt_create(ari, timestamp, NULL);
 	CHKVOID(report);
 
 	/* Add the single entry to this report. */

@@ -25,10 +25,14 @@
  **  10/04/18  E. Birrane      Updated to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
+#include <inttypes.h>
+#include <pthread.h>
 #include "ingest.h"
 #include "instr.h"
-#include "nmagent.h"
 #include "lcc.h"
+#include "nmagent.h"
+#include "../shared/msg/msg_if.h"
+#include "../shared/utils/daemon_run.h"
 #include "../shared/utils/db.h"
 #include "../shared/primitives/ctrl.h"
 
@@ -53,11 +57,12 @@
  *  10/04/18  E. Birrane     Update to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
-void *rx_thread(int *running) {
+void *rx_thread(void *arg) {
+    nmagent_t *agent = arg;
 #ifndef mingw
-    AMP_DEBUG_ENTRY("rx_thread","(0x%X)",(unsigned long) pthread_self());
+    AMP_DEBUG_ENTRY("rx_thread","agent(%p)", agent);;
 #endif
-    AMP_DEBUG_INFO("rx_thread","Receiver thread running...", NULL);
+    AMP_DEBUG_INFO("rx_thread","Receiver thread running...");
     
 
     vecit_t it;
@@ -71,13 +76,14 @@ void *rx_thread(int *running) {
      * g_running controls the overall execution of threads in the
      * NM Agent.
      */
-    while(*running)
+    while(daemon_run_get(&agent->running))
     {
-        
-    	result = iif_receive(&ion_ptr, &meta, NM_RECEIVE_TIMEOUT_SEC, &success);
+    	result = mif_receive(&agent->mif, &meta, &success);
     	if(success != AMP_OK)
     	{
-    		*running = 0;
+                AMP_DEBUG_INFO("rx_thread","Got mif_receive success=%d, stopping.", success);
+                daemon_run_stop(&agent->running);
+                continue;
     	}
     	else if(result != NULL)
         {
@@ -88,11 +94,11 @@ void *rx_thread(int *running) {
     		if((grp == NULL) || (success != AMP_OK))
     		{
     			AMP_DEBUG_ERR("rx_thread","Discarding invalid message.", NULL);
-    			break;
+    			continue;
     		}
 
             AMP_DEBUG_ALWAYS("rx_thread","Group had %d msgs", vec_num_entries(grp->msgs));
-            AMP_DEBUG_ALWAYS("rx_thread","Group timestamp %lu", grp->time);
+            AMP_DEBUG_ALWAYS("rx_thread","Group timestamp %lu", grp->timestamp);
 
             /* For each message in the bundle. */
             for(it = vecit_first(&grp->msgs); vecit_valid(it); it = vecit_next(it))
@@ -119,8 +125,8 @@ void *rx_thread(int *running) {
    
     AMP_DEBUG_ALWAYS("rx_thread","Shutting Down Agent Receive Thread.",NULL);
     AMP_DEBUG_EXIT("rx_thread","->.", NULL);
-    pthread_exit(NULL);
-    return NULL; /* Defensive. */
+
+    return NULL;
 }
 
 
@@ -156,7 +162,7 @@ void rx_handle_perf_ctrl(msg_metadata_t *meta, blob_t *contents)
 	int success;
 	vec_idx_t i;
 
-	AMP_DEBUG_ENTRY("rx_handle_perf_ctrl","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
+	AMP_DEBUG_ENTRY("rx_handle_perf_ctrl","("PRIdPTR","PRIdPTR")",
 					(uaddr)meta, (uaddr) contents);
 
 	if((meta == NULL) || (contents == NULL))
@@ -189,14 +195,14 @@ void rx_handle_perf_ctrl(msg_metadata_t *meta, blob_t *contents)
 		ctrl_set_exec(ctrl, msg->start, meta->senderEid);
 
 
-		if(ctrl->start == 0)
+		if(OS_TimeGetTotalSeconds(ctrl->start) == 0)
 		{
 			lcc_run_ctrl(ctrl, NULL);
 			ctrl_release(ctrl, 1);
 		}
 		else
 		{
-
+#if 0
 			if(db_persist_ctrl(ctrl) != AMP_OK)
 			{
 				AMP_DEBUG_ERR("rx_ingest_ctrl", "Cannot persist ctrl.", NULL);
@@ -213,6 +219,7 @@ void rx_handle_perf_ctrl(msg_metadata_t *meta, blob_t *contents)
 				ctrl_release(ctrl, 1);
 				break;
 			}
+#endif
 		}
 	}
 

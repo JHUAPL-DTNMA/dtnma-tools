@@ -1,0 +1,50 @@
+# ION Configuration File for Node N1, ipn:1
+## begin ionadmin
+1 1 ''
+s
+
+m production 10000000
+m consumption 10000000
+m horizon +0
+
+## end ionadmin
+
+## begin bpadmin
+1
+e 1
+a scheme ipn 'ipnfw' 'ipnadminep'
+a endpoint ipn:1.0 x
+a endpoint ipn:1.1 x
+a endpoint ipn:1.4 x
+a endpoint ipn:1.6 x
+a endpoint ipn:1.7 x
+
+
+# Protocols
+a protocol udp 1400 100
+a protocol tcp 1400 100
+
+# Inducts
+a induct udp 0.0.0.0:4556 udpcli
+
+# Outducts
+a outduct udp localhost:4556 udpclo
+
+s
+## end bpadmin
+
+## begin ipnadmin
+a plan 1 udp/localhost:4556
+
+## end ipnadmin
+
+## begin ltpadmin
+1 1000
+## end ltpadmin
+
+## begin ionsecadmin
+1
+## end ionsecadmin
+
+## begin bpsecadmin
+## end bpsecadmin

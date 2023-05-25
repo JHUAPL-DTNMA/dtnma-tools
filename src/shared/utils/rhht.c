@@ -37,6 +37,8 @@
  **  09/14/18  E. Birrane     Updates for data structures, logging, reentrance,
  **                           coding standards and documentation. (JHU/APL)
  *****************************************************************************/
+
+#include <errno.h>
 #include "utils.h"
 #include "rhht.h"
 
@@ -226,18 +228,27 @@ rhht_t rhht_create(rh_idx_t buckets, rh_comp_fn compare, rh_hash_fn hash, rh_del
 		ht.num_elts = ht.max_delta = 0;
                 ht.num_bkts = buckets;
 
-                if(OS_MutSemCreate(&(ht.lock), "vector", 0) != OS_SUCCESS)
-		{
-	        AMP_DEBUG_ERR("rhht_create","Unable to initialize mutex, errno = %s",
-	        		        strerror(errno));
-	        *success = RH_SYSERR;
-		}
-		else
-		{
-			ht.compare = (compare == NULL) ? p_rh_default_compare : compare;
-			ht.hash = (hash == NULL) ? p_rh_default_hash : hash;
-			ht.delete = del;
-		}
+                pthread_mutexattr_t attr;
+                pthread_mutexattr_init(&attr);
+                pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+                if(pthread_mutex_init(&ht.lock, &attr))
+                {
+                  AMP_DEBUG_ERR("rhht_create","Unable to initialize mutex, errno = %s",
+                                strerror(errno));
+                  *success = RH_SYSERR;
+                  return ht;
+                }
+                if(pthread_cond_init(&ht.cond_ins_mod, NULL))
+                {
+                  AMP_DEBUG_ERR("rhht_create","Unable to initialize condvar, errno = %s",
+                                strerror(errno));
+                  *success = RH_SYSERR;
+                  return ht;
+                }
+
+                ht.compare = (compare == NULL) ? p_rh_default_compare : compare;
+                ht.hash = (hash == NULL) ? p_rh_default_hash : hash;
+                ht.delete = del;
 	}
 
 	return ht;
@@ -249,7 +260,7 @@ void rhht_del_idx(rhht_t *ht, rh_idx_t idx)
 	CHKVOID(ht);
 	CHKVOID(idx < ht->num_bkts);
 
-	OS_MutSemTake(ht->lock);
+	pthread_mutex_lock(&ht->lock);
 
 	if((ht->buckets[idx].value != NULL) && (ht->delete != NULL))
 	{
@@ -263,7 +274,7 @@ void rhht_del_idx(rhht_t *ht, rh_idx_t idx)
 
         p_rhht_bkwrd_shft(ht, idx);
 
-	OS_MutSemGive(ht->lock);
+	pthread_mutex_unlock(&ht->lock);
 }
 
 void rhht_del_key(rhht_t *ht, void *item)
@@ -319,12 +330,12 @@ int rhht_find(rhht_t *ht, void *key, rh_idx_t *idx)
 	/* Step 1: Hash the item. */
 	tmp = ht->hash(ht, key);
 
-	OS_MutSemTake(ht->lock);
+	pthread_mutex_lock(&ht->lock);
 
 	/* Step 2: If nothing is there, it.. isn't there. */
 	if(ht->buckets[tmp].value == NULL)
 	{
-        	OS_MutSemGive(ht->lock);
+        	pthread_mutex_unlock(&ht->lock);
 		return RH_NOT_FOUND;
 	}
 
@@ -337,7 +348,7 @@ int rhht_find(rhht_t *ht, void *key, rh_idx_t *idx)
 				*idx = tmp;
 			}
 
-        	OS_MutSemGive(ht->lock);
+        	pthread_mutex_unlock(&ht->lock);
 			return RH_OK;
 		}
 
@@ -359,7 +370,7 @@ int rhht_find(rhht_t *ht, void *key, rh_idx_t *idx)
 		*idx = tmp;
 	}
 
-        OS_MutSemGive(ht->lock);
+        pthread_mutex_unlock(&ht->lock);
 
 	return RH_NOT_FOUND;
 }
@@ -373,7 +384,7 @@ void rhht_foreach(rhht_t *ht, rh_foreach_fn for_fn, void *tag)
 	CHKVOID(ht);
 	CHKVOID(for_fn);
 
-	OS_MutSemTake(ht->lock);
+	pthread_mutex_lock(&ht->lock);
 	for(i = 0; i < ht->num_bkts; i++)
 	{
 		if(ht->buckets[i].value != NULL)
@@ -381,7 +392,7 @@ void rhht_foreach(rhht_t *ht, rh_foreach_fn for_fn, void *tag)
 			for_fn(&(ht->buckets[i]), tag);
 		}
 	}
-        OS_MutSemGive(ht->lock);
+        pthread_mutex_unlock(&ht->lock);
 }
 
 
@@ -429,7 +440,7 @@ int rhht_insert(rhht_t *ht, void *key, void *value, rh_idx_t *idx)
 	elt.delta = 0;
 	ideal_idx = ht->hash(ht, key);
 
-	OS_MutSemTake(ht->lock);
+	pthread_mutex_lock(&ht->lock);
 
 	for(iter = 0; (iter < ht->num_bkts) && (elt.value != NULL); iter++)
 	{
@@ -471,7 +482,8 @@ int rhht_insert(rhht_t *ht, void *key, void *value, rh_idx_t *idx)
 
 	ht->num_elts++;
 
-        OS_MutSemGive(ht->lock);
+        pthread_cond_signal(&ht->cond_ins_mod);
+        pthread_mutex_unlock(&ht->lock);
 
     return RH_OK;
 }
@@ -508,9 +520,11 @@ void rhht_release(rhht_t *ht, int destroy)
 
     SRELEASE(ht->buckets);
 
+    pthread_cond_destroy(&ht->cond_ins_mod);
+    pthread_mutex_destroy(&ht->lock);
+
     if(destroy)
     {
-    	killResourceLock(&(ht->lock));
     	SRELEASE(ht);
     }
 }

@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 project(nm LANGUAGES C)
 
 # Language options
@@ -42,4 +43,12 @@ option(BUILD_TESTING "Enable test fixtures and libraries" ON)
 include(CTest)
 
 add_subdirectory(deps)
+find_package(ION)
+find_package(MLIB)
+
+#set(BUILD_SHARED_LIBS ON)
 add_subdirectory(src)
+
+if(BUILD_TESTING)
+add_subdirectory(test)
+endif(BUILD_TESTING)

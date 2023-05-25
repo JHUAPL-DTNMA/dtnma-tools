@@ -28,21 +28,19 @@
 #define DEBUG 1
 
 // Standard includes
-#include "stdint.h"
-#include "pthread.h"
-
-// ION includes
-#include "platform.h"
+#include <stdint.h>
+#include <pthread.h>
+#include <m-list.h>
 
 // Application includes
+#include "shared/platform.h"
 
-#include "../shared/utils/nm_types.h"
-#include "../shared/msg/ion_if.h"
-
-#include "../shared/primitives/ari.h"
-#include "../shared/primitives/rules.h"
-
-#include "../shared/msg/msg.h"
+#include "shared/utils/nm_types.h"
+#include "shared/utils/daemon_run.h"
+#include "shared/primitives/ari.h"
+#include "shared/primitives/rules.h"
+#include "shared/msg/msg.h"
+#include "shared/msg/msg_if.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,9 +52,6 @@ extern "C" {
  * +--------------------------------------------------------------------------+
  */
 
-static const int32_t NM_RECEIVE_TIMEOUT_SEC = 1;
-
-
 
 /*
  * +--------------------------------------------------------------------------+
@@ -64,12 +59,22 @@ static const int32_t NM_RECEIVE_TIMEOUT_SEC = 1;
  * +--------------------------------------------------------------------------+
  */
 
+LIST_DEF(list_thread, pthread_t)
 
 /*
  * +--------------------------------------------------------------------------+
  * |							  DATA TYPES  								  +
  * +--------------------------------------------------------------------------+
  */
+typedef struct {
+  /// Running state
+  daemon_run_t running;
+  /// Messaging configuration
+  mif_cfg_t mif;
+  /// Threads associated with the agent
+  list_thread_t threads;
+
+} nmagent_t;
 
 /*
  * +--------------------------------------------------------------------------+
@@ -77,15 +82,13 @@ static const int32_t NM_RECEIVE_TIMEOUT_SEC = 1;
  * +--------------------------------------------------------------------------+
  */
 
-#if defined (ION_LWT)
-int	nmagent(saddr a1, saddr a2, saddr a3, saddr a4, saddr a5,
-		saddr a6, saddr a7, saddr a8, saddr a9, saddr a10);
-#else
-	int	main(int argc, char *argv[]);
-#endif
+bool nmagent_init(nmagent_t *agent);
 
-void agent_register();
+bool nmagent_destroy(nmagent_t *agent);
 
+bool agent_start(nmagent_t *agent);
+
+bool agent_stop(nmagent_t *agent);
 
 
 
@@ -96,29 +99,6 @@ void agent_register();
  * +--------------------------------------------------------------------------+
  */
 
-/**
- * Indicates if the thread loops should continue to run. This
- * value is updated by the main() and read by the subordinate
- * threads.
- **/
- extern uint8_t g_running;
-
-
-/**
- * The endpoint identifier (EID) of the network manager node.
- * TODO: Make this a vector and handle multiple managers.
- **/
-extern eid_t manager_eid;
-
-/**
- * The endpoint identifier (EID) of this agent node.
- **/
-extern eid_t agent_eid;
-
-/**
- * The interface object the ION system.
- **/
-extern iif_t ion_ptr;
 
 
 #ifdef __cplusplus

@@ -1,0 +1,18 @@
+[Unit]
+Description=ION daemons
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PassEnvironment=ION_NODE_NUM
+EnvironmentFile=-/etc/ion/environment
+# ION writes logs in the CWD
+WorkingDirectory=/var/run/ion
+ExecStartPre=touch ion.log
+ExecStartPre=chmod 666 ion.log
+ExecStart=ionstart -I /etc/ion/node-${ION_NODE_NUM}.rc
+ExecStop=ionstop
+
+[Install]
+WantedBy=multi-user.target

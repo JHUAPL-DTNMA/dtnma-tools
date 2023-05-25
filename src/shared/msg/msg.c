@@ -25,9 +25,7 @@
  **  10/01/18  E. Birrane     Updated to AMP v0.5. Migrate from pdu.h. (JHU/APL)
  *****************************************************************************/
 
-#include "platform.h"
-#include "ion.h"
-
+#include "shared/platform.h"
 #include "../adm/adm.h"
 #include "../msg/msg.h"
 #include "../utils/utils.h"
@@ -254,7 +252,7 @@ int msg_ctrl_serialize(QCBOREncodeContext *encoder, void *item)
 	}
 
 
-	QCBOREncode_AddUInt64(encoder, msg->start);
+        amp_tv_serialize(encoder, &(msg->start));
 
 	return ac_serialize(encoder, msg->ac);
 }
@@ -735,7 +733,7 @@ msg_grp_t* msg_grp_deserialize(blob_t *data, int *success)
 	result = msg_grp_create(length-1);
 	CHKNULL(result);
 
-	if((*success = cut_get_cbor_numeric(&decoder, AMP_TYPE_TS, &(result->time))) != AMP_OK)
+	if((*success = cut_get_cbor_numeric(&decoder, AMP_TYPE_TS, &(result->timestamp))) != AMP_OK)
 	{
 		msg_grp_release(result, 1);
 		return NULL;
@@ -744,10 +742,16 @@ msg_grp_t* msg_grp_deserialize(blob_t *data, int *success)
 	for(i = 1; i < length; i++)
 	{
 		blob_t *cur_item = blob_deserialize_ptr(&decoder, success);
-		int msg_type;
+		if ((*success != AMP_OK) || !cur_item)
+		{
+			AMP_DEBUG_ERR("msg_grp_deserialize",
+                                      "Message index %d is not a BLOB, code %d", i, *success);
+			msg_grp_release(result, 1);
+			return NULL;
+		}
 
 		/* Get the type of the message.*/
-		msg_type = MSG_HDR_GET_OPCODE(cur_item->value[0]);
+		int msg_type = MSG_HDR_GET_OPCODE(cur_item->value[0]);
 
 		if((*success = msg_grp_add_msg(result, cur_item, msg_type)) != AMP_OK)
 		{
@@ -764,7 +768,7 @@ msg_grp_t* msg_grp_deserialize(blob_t *data, int *success)
 }
 
 
-int msg_grp_get_type(msg_grp_t *grp, int idx)
+int msg_grp_get_type(msg_grp_t *grp, size_t idx)
 {
 	CHKUSR(grp, MSG_TYPE_UNK);
 	CHKUSR(idx < grp->types.length, MSG_TYPE_UNK);
@@ -798,7 +802,7 @@ int msg_grp_serialize(QCBOREncodeContext *encoder, void *item)
 
 	max = vec_num_entries(msg_grp->msgs);
 
-	QCBOREncode_AddUInt64(encoder, msg_grp->time);
+	amp_tv_serialize(encoder, &(msg_grp->timestamp));
 
 	for(i = 0; i < max; i++)
 	{

@@ -22,6 +22,7 @@
  **  09/02/18  E. Birrane   Cleanup and update to latest spec. (JHU/APL)
  *****************************************************************************/
 #include "nm_types.h"
+#include <strings.h>
 
 const char * const amp_type_str[] = {
 										 "CNST",    /* AMP_TYPE_CNST    */

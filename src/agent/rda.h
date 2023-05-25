@@ -29,6 +29,7 @@
 #include "../shared/primitives/rules.h"
 #include "../shared/primitives/report.h"
 #include "../shared/msg/msg.h"
+#include "nmagent.h"
 
 
 #ifdef __cplusplus
@@ -57,23 +58,27 @@ extern agent_db_t gAgentDb;
 
 int rda_init();
 
+void rda_signal_shutdown();
 void         rda_cleanup();
+
 msg_rpt_t*   rda_get_msg_rpt(eid_t recipient);
 msg_tbl_t*   rda_get_msg_tbl(eid_t recipient);
 
-int          rda_process_ctrls();
+OS_time_t rda_earliest_ctrl();
+int rda_process_ctrls(OS_time_t nowtime);
+void * rda_ctrls(void *arg);
 
 void rda_scan_tbrs_cb(rh_elt_t *elt, void *tag);
 void rda_scan_sbrs_cb(rh_elt_t *elt, void *tag);
 
-int          rda_process_rules();
+OS_time_t rda_earliest_rule();
+int rda_process_rules (OS_time_t nowtime);
+void * rda_rules(void *arg);
 
 
-int          rda_send_reports();
-int          rda_send_tables();
-
-void*        rda_thread(int* running);
-
+int          rda_send_reports(nmagent_t *agent);
+int          rda_send_tables(nmagent_t *agent);
+void * rda_reports(void *arg);
 
 #ifdef __cplusplus
 }

@@ -40,15 +40,6 @@ OS_time_t amp_tv_to_ctime(amp_tv_t val, const OS_time_t *event_time)
     return res;
 }
 
-int TimeCompare(OS_time_t time1, OS_time_t time2)
-{
-  if (time1.ticks == time2.ticks)
-  {
-    return 0;
-  }
-  return time1.ticks < time2.ticks ? -1 : 1;
-}
-
 amp_tv_t amp_tv_from_ctime(OS_time_t val, const OS_time_t *event_time)
 {
     amp_tv_t res;
@@ -78,4 +69,33 @@ amp_tv_t amp_tv_from_ctime(OS_time_t val, const OS_time_t *event_time)
         }
     }
     return res;
+}
+
+int TimeCompare(OS_time_t time1, OS_time_t time2)
+{
+  if (time1.ticks == time2.ticks)
+  {
+    return 0;
+  }
+  return time1.ticks < time2.ticks ? -1 : 1;
+}
+
+OS_time_t TimeMin(OS_time_t time1, OS_time_t time2)
+{
+  if (time1.ticks < time2.ticks)
+  {
+    return time1;
+  }
+  else
+  {
+    return time2;
+  }
+}
+
+struct timespec TimeToTimespec(OS_time_t time)
+{
+  return (struct timespec){
+    .tv_sec = OS_TimeGetTotalSeconds(time),
+    .tv_nsec = OS_TimeGetNanosecondsPart(time),
+  };
 }

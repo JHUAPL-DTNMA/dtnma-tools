@@ -26,7 +26,8 @@
  **  08/31/18  E. Birrane     Initial Implementation (JHU/APL)
  *****************************************************************************/
  
-#include "platform.h"
+#include <inttypes.h>
+#include "shared/platform.h"
 #include "cbor_utils.h"
 #include "utils.h"
 
@@ -110,7 +111,7 @@ int cut_enc_bytes(QCBOREncodeContext *encoder, uint8_t *buf, size_t len)
                            len,
                            UsefulOutBuf_GetEndPosition(&(encoder->OutBuf))
       );
-   encoder->uError = Nesting_Increment(&(encoder->nesting));
+//   encoder->uError = Nesting_Increment(&(encoder->nesting));
    if (encoder->uError != QCBOR_SUCCESS)
    {
       return AMP_FAIL;
@@ -146,7 +147,7 @@ int cut_dec_bytes(QCBORDecodeContext *it, uint8_t *buf, size_t len)
    memcpy(buf, tmp, len);
 
    // Decrement the nesting level
-   DecodeNesting_DecrementCount(&(it->nesting)); // VERIFY
+//   DecodeNesting_DecrementCount(&(it->nesting)); // VERIFY
 
    // And check for errors
    if (UsefulInputBuf_GetError(inbuf) == 0) {
@@ -233,7 +234,7 @@ int cut_get_cbor_numeric(QCBORDecodeContext *it, amp_type_e type, void *val)
 		*((uint8_t*)val) = UsefulInputBuf_GetByte(buf);
 
         // Decrement the nesting level
-        DecodeNesting_DecrementCount(&(it->nesting));
+//        DecodeNesting_DecrementCount(&(it->nesting));
 
 		// And check for errors
 		if (UsefulInputBuf_GetError(buf) == 0) {
@@ -412,7 +413,7 @@ int cut_deserialize_vector(vector_t *vec, QCBORDecodeContext *it, vec_des_fn des
 	size_t length;
 	size_t i;
 
-	AMP_DEBUG_ENTRY("cut_deserialize_vector","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")", (uaddr)it, (uaddr)des_fn);
+	AMP_DEBUG_ENTRY("cut_deserialize_vector","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)des_fn);
 
 	// Sanity checks
 	if((vec == NULL) || (it == NULL))

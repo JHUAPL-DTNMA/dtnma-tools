@@ -34,7 +34,7 @@
 #define RHHT_H_
 
 #include <stdint.h>
-#include <osapi-mutex.h>
+#include <pthread.h>
 
 
 #ifdef __cplusplus
@@ -97,7 +97,10 @@ typedef struct rhht {
     rh_idx_t   num_elts;
     rh_idx_t   max_delta;
 
-	osal_id_t lock; ///< Mutex handle
+    /// Mutex handle
+    pthread_mutex_t lock;
+    /// Condition when a value is inserted or updated
+    pthread_cond_t cond_ins_mod;
 
     rh_comp_fn compare;
     rh_hash_fn hash;

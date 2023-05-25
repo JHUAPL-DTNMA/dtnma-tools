@@ -135,6 +135,7 @@ vast adm_get_parm_vast(tnvc_t *parms, uint8_t idx, int *success);
 void adm_init();
 void adm_common_init();
 
+void adm_common_destroy();
 
 #ifdef __cplusplus
 }

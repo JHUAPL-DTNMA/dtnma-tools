@@ -1,0 +1,14 @@
+[Unit]
+Description=Run bpecho for IPN service number %I
+After=network-online.target ion.service
+Wants=network-online.target
+Requires=ion.service
+
+[Service]
+Type=simple
+PassEnvironment=ION_NODE_NUM
+EnvironmentFile=-/etc/ion/environment
+ExecStart=bpecho ipn:${ION_NODE_NUM}.%i
+
+[Install]
+WantedBy=multi-user.target

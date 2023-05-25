@@ -25,6 +25,7 @@
  **  10/04/18  E. Birrane     UPdate to AMP V0.5. (JHU/APL)
  *****************************************************************************/
 
+#include <inttypes.h>
 #include "../shared/adm/adm.h"
 #include "../shared/primitives/report.h"
 #include "../shared/primitives/expr.h"
@@ -116,7 +117,10 @@ tnv_t *ldc_collect_rpt(ari_t *id, tnvc_t *parms)
 
 	/* Build a report for this template. */
 	new_id = ari_copy_ptr(new_tpl->id);
-	if((rpt = rpt_create(new_id, getCtime(), NULL)) == NULL)
+
+        OS_time_t timestamp;
+        OS_GetLocalTime(&timestamp);
+	if((rpt = rpt_create(new_id, timestamp, NULL)) == NULL)
 	{
 		rpttpl_release(new_tpl, 1);
 		ari_release(new_id, 1);
@@ -195,7 +199,7 @@ int ldc_fill_rpt(rpttpl_t *rpttpl, rpt_t *rpt)
 	uint8_t i;
 	int success;
 
-	AMP_DEBUG_ENTRY("ldc_fill_rpt","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
+	AMP_DEBUG_ENTRY("ldc_fill_rpt","("PRIdPTR","PRIdPTR")",
 			          (uaddr) rpttpl, (uaddr) rpt);
 
 	CHKUSR(rpttpl, AMP_FAIL);

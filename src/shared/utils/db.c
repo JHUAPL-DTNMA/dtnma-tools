@@ -43,9 +43,9 @@ vdb_store_t gVDB;
 db_store_t  gDB;
 
 
-#if 0
-int  db_forget(db_desc_t *desc, Object list)
+int  db_forget(db_desc_t *desc, void* list)
 {
+#if 0
 	Sdr sdr = getIonsdr();
 	Object elt;
 
@@ -84,12 +84,13 @@ int  db_forget(db_desc_t *desc, Object list)
 
 	sdr_end_xn(sdr);
 
+#endif
 	return AMP_OK;
 }
-#endif
 
 int  db_read_objs(char *name)
 {
+#if 0
 	Sdr sdr = getIonsdr();
 
 	CHKUSR(name, AMP_FAIL);
@@ -141,10 +142,10 @@ int  db_read_objs(char *name)
 		return -1;
 	}
 
+#endif
 	return 1;
 }
 
-#if 0
 /*
  * This function writes an item and its associated descriptor into the SDR,
  * allocating space for each, and adding the SDR descriptor pointer to a
@@ -154,8 +155,9 @@ int  db_read_objs(char *name)
  * desc    : The db descriptor holding where this should live
  * list    : The SDR list holding the item descriptor (at *descrObj).
  */
-int  db_persist(blob_t *blob, db_desc_t *desc, Object list)
+int  db_persist(blob_t *blob, db_desc_t *desc, void* list)
 {
+#if 0
 	Sdr sdr = getIonsdr();
 
 	CHKUSR(blob, AMP_FAIL);
@@ -229,6 +231,7 @@ int  db_persist(blob_t *blob, db_desc_t *desc, Object list)
 	   return AMP_SYSERR;
    }
 
+#endif
    return AMP_OK;
 }
 
@@ -239,7 +242,7 @@ int  db_persist_ctrl(void* item)
 	blob_t *blob = ctrl_db_serialize(ctrl);
 
 	CHKERR(blob);
-	result = db_persist(blob, &(ctrl->desc), gDB.ctrls);
+//	result = db_persist(blob, &(ctrl->desc), gDB.ctrls);
 	blob_release(blob, 1);
 	return result;
 }
@@ -252,7 +255,7 @@ int  db_persist_macdef(void* item)
 	blob_t *blob = macdef_serialize_wrapper(def);
 
 	CHKERR(blob);
-	result = db_persist(blob, &(def->desc), gDB.macdefs);
+//	result = db_persist(blob, &(def->desc), gDB.macdefs);
 	blob_release(blob, 1);
 	return result;
 }
@@ -264,7 +267,7 @@ int  db_persist_rpttpl(void *item)
 	blob_t *blob = rpttpl_serialize_wrapper(rpttpl);
 
 	CHKERR(blob);
-	result = db_persist(blob, &(rpttpl->desc), gDB.rpttpls);
+//	result = db_persist(blob, &(rpttpl->desc), gDB.rpttpls);
 	blob_release(blob, 1);
 	return result;
 }
@@ -276,7 +279,7 @@ int  db_persist_rule(void* item)
 	blob_t *blob = rule_db_serialize_wrapper(rule);
 
 	CHKERR(blob);
-	result = db_persist(blob, &(rule->desc), gDB.rules);
+//	result = db_persist(blob, &(rule->desc), gDB.rules);
 	blob_release(blob, 1);
 	return result;
 }
@@ -292,7 +295,7 @@ int  db_persist_var(void* item)
 	{
 		return AMP_FAIL;
 	}
-	result = db_persist(blob, &(var->desc), gDB.vars);
+//	result = db_persist(blob, &(var->desc), gDB.vars);
 	blob_release(blob, 1);
 	return result;
 }
@@ -303,8 +306,9 @@ int  db_persist_var(void* item)
  * Initialize VDB list from a list in the SDR.
  */
 
-int vdb_obj_init(Object sdr_list, vdb_init_cb_fn init_cb)
+int vdb_obj_init(void* sdr_list, vdb_init_cb_fn init_cb)
 {
+#if 0
 	Object elt;
 	Object descObj;
 	db_desc_t cur_desc;
@@ -353,8 +357,10 @@ int vdb_obj_init(Object sdr_list, vdb_init_cb_fn init_cb)
 	sdr_end_xn(sdr);
 
 	return num;
-}
+#else
+	return 0;
 #endif
+}
 
 
 int vdb_db_init_ctrl(blob_t *data, db_desc_t desc)
@@ -569,6 +575,7 @@ int db_init(char *name, void (*adm_init_cb)())
 
 	success = db_read_objs(name);
 
+#if 0
 	num = vdb_obj_init(gDB.ctrls, vdb_db_init_ctrl);
 	AMP_DEBUG_ALWAYS("vdb_init", "Added %d Controls from DB.", num);
 
@@ -583,6 +590,7 @@ int db_init(char *name, void (*adm_init_cb)())
 
 	num = vdb_obj_init(gDB.vars,    vdb_db_init_var);
 	AMP_DEBUG_ALWAYS("vdb_init", "Added %d Variable Definitions from DB.", num);
+#endif
 
 	return success;
 }

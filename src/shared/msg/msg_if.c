@@ -1,0 +1,169 @@
+/******************************************************************************
+ **                           COPYRIGHT NOTICE
+ **      (c) 2011 The Johns Hopkins University Applied Physics Laboratory
+ **                         All rights reserved.
+ ******************************************************************************/
+
+/*****************************************************************************
+ **
+ ** File Name: msg_if.c
+ **
+ ** Description: This file contains the definitions, prototypes, constants, and
+ **              other information necessary for DTNMP actors to connect to
+ **              some messaging service.
+ **
+ ** Notes:
+ **
+ ** Assumptions:
+ **
+ **
+ ** Modification History:
+ **  MM/DD/YY  AUTHOR         DESCRIPTION
+ **  --------  ------------   ---------------------------------------------
+ **  08/10/11  V.Ramachandran Initial Implementation (JHU/APL)
+ **  11/13/12  E. Birrane     Technical review, comment updates. (JHU/APL)
+ **  06/25/13  E. Birrane     Renamed message "bundle" message "group". (JHU/APL)
+ **  06/30/16  E. Birrane     Doc. Updates and Bug Fixes (Secure DTN - NASA: NNX14CS58P)
+ **  10/02/18  E. Birrane     Update to AMP v0.5 (JHUAPL)
+ *****************************************************************************/
+
+#include <inttypes.h>
+#include "../utils/nm_types.h"
+#include "../utils/utils.h"
+#include "msg.h"
+#include "msg_if.h"
+
+
+/******************************************************************************
+ *
+ * \par Function Name: mif_receive
+ *
+ * \par Blocking receive. Receives a message from the BPA.
+ *
+ * \retval NULL - Error
+ *         !NULL - The received serialized payload.
+ *
+ * \param[out] meta    The sender information from the convergence layer for all msgs.
+ * \param[in]  timeout The # seconds to wait on a receive before timing out
+ *
+ * \par Notes:
+ *   - The returned data must be freed via zco_destroy_reference()
+ *
+ * \todo
+ *   - Use ZCOs and handle large message sizes.
+ *
+ * Modification History:
+ *  MM/DD/YY  AUTHOR         DESCRIPTION
+ *  --------  ------------   ---------------------------------------------
+ *  08/10/11  V.Ramachandran Initial implementation (JHU/APL)
+ *  10/04/18  E. Birrane     Updated to AMP v0.5 (JHU/APL)
+ *****************************************************************************/
+
+blob_t *mif_receive(mif_cfg_t *cfg, msg_metadata_t *meta, int *success)
+{
+  CHKNULL(cfg);
+  CHKNULL(cfg->receive);
+  CHKNULL(meta);
+  CHKNULL(success);
+  return (cfg->receive)(meta, success, cfg->ctx);
+}
+
+
+/******************************************************************************
+ *
+ * \par Function Name: mif_send
+ *
+ * \par Sends a text string to the recipient node.
+ *
+ * \retval Whether the send succeeded (1) or failed (0)
+ *
+ * \param[in] iif     The registered interface
+ * \param[in] data    The data to send.
+ * \param[in] len     The length of data to send, in bytes.
+ * \param[in] rx_eid  The EID of the recipient of the data.
+ *
+ * \par Notes:
+ *
+ * Modification History:
+ *  MM/DD/YY  AUTHOR         DESCRIPTION
+ *  --------  ------------   ---------------------------------------------
+ *  08/10/11  V.Ramachandran Initial implementation. (JHU/APL)
+ *  06/25/13  E. Birrane     Renamed message "bundle" message "group". (JHU/APL)
+ *  03/??/16  E. Birrane     Fix BP Send to latest ION version. (Secure DTN - NASA: NNX14CS58P)
+ *  10/02/18  E. Birrane     Update to AMP v0.5 (JHU/APL)
+ *****************************************************************************/
+
+int mif_send_grp(mif_cfg_t *cfg, msg_grp_t *group, char *rx)
+{
+    blob_t *data = NULL;
+
+    AMP_DEBUG_ENTRY("mif_send","("PRIdPTR","PRIdPTR")", group, rx);
+    CHKZERO(cfg);
+    CHKZERO(cfg->send);
+    CHKZERO(group);
+    CHKZERO(rx);
+
+    /* Step 1 - Serialize the bundle. */
+    if((data = msg_grp_serialize_wrapper(group)) == NULL)
+    {
+    	AMP_DEBUG_ERR("mif_send","Bad message of length 0.", NULL);
+    	AMP_DEBUG_EXIT("mif_send", "->0.", NULL);
+    	return 0;
+    }
+
+    if(data->length == 0)
+    {
+    	AMP_DEBUG_ERR("mif_send","Cannot send empty data.", NULL);
+    	blob_release(data, 1);
+    	return AMP_FAIL;
+    }
+
+    /* Information on bitstream we are sending. */
+    char *msg_str = utils_hex_to_string(data->value, data->length);
+    AMP_DEBUG_ALWAYS("mif_send","Sending msgs:%s to %s:", msg_str, rx);
+    SRELEASE(msg_str);
+
+    (cfg->send)(data, cfg->ctx);
+
+    blob_release(data, 1);
+    AMP_DEBUG_EXIT("mif_send", "->1.", NULL);
+    return 1;
+}
+
+// Caller MUST release msg.
+int mif_send_msg(mif_cfg_t *cfg, int msg_type, void *msg, char *recipient, amp_tv_t timestamp)
+{
+	msg_grp_t *grp = msg_grp_create(1);
+	grp->timestamp = timestamp;
+	int success;
+
+	CHKERR(msg);
+	CHKERR(grp);
+
+	switch(msg_type)
+	{
+		case MSG_TYPE_REG_AGENT:
+			success = msg_grp_add_msg_agent(grp, msg);
+			break;
+		case MSG_TYPE_RPT_SET:
+			success = msg_grp_add_msg_rpt(grp, msg);
+			break;
+		case MSG_TYPE_PERF_CTRL:
+			success = msg_grp_add_msg_ctrl(grp, msg);
+			break;
+		case MSG_TYPE_TBL_SET:
+            success = msg_grp_add_msg_tbl(grp, msg);
+            break;
+		default:
+			success = AMP_FAIL;
+			break;
+	}
+
+	if(success == AMP_OK)
+	{
+            success = mif_send_grp(cfg, grp, recipient);
+	}
+
+	msg_grp_release(grp, 1);
+	return success;
+}

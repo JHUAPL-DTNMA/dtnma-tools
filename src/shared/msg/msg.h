@@ -28,12 +28,13 @@
 #ifndef _PDU_H_
 #define _PDU_H_
 
-#include "stdint.h"
+#include <stdint.h>
 #include "../utils/nm_types.h"
 #include "../utils/vector.h"
 #include "../primitives/ari.h"
 #include "../primitives/report.h"
 #include "../primitives/table.h"
+#include "../primitives/time.h"
 
 
 #ifdef __cplusplus
@@ -79,7 +80,7 @@ typedef struct
 typedef struct
 {
 	msg_hdr_t hdr;
-	time_t start;
+	amp_tv_t start;
 	ac_t *ac;
 } msg_ctrl_t;
 
@@ -113,7 +114,7 @@ typedef struct
 {
 	vector_t msgs;  /* (blob_t *) - serialized messages. */
 	blob_t types;
-	time_t time;
+	amp_tv_t timestamp;
 } msg_grp_t;
 
 
@@ -197,7 +198,7 @@ msg_grp_t* msg_grp_create(uint8_t length);
 
 msg_grp_t* msg_grp_deserialize(blob_t *data, int *success);
 
-int        msg_grp_get_type(msg_grp_t *grp, int idx);
+int        msg_grp_get_type(msg_grp_t *grp, size_t idx);
 
 void       msg_grp_release(msg_grp_t *group, int destroy);
 

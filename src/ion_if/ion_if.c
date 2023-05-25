@@ -29,11 +29,10 @@
 
 #include "bp.h"
 
-#include "../utils/nm_types.h"
+#include "shared/utils/nm_types.h"
+#include "shared/utils/utils.h"
+#include "shared/msg/msg.h"
 #include "ion_if.h"
-#include "../utils/utils.h"
-
-#include "msg.h"
 
 
 

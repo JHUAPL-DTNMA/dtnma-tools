@@ -33,6 +33,14 @@ OS_time_t amp_tv_to_ctime(amp_tv_t val, const OS_time_t *event_time);
 
 amp_tv_t amp_tv_from_ctime(OS_time_t val, const OS_time_t *event_time);
 
+// Non-standard OS_time operators
+#define OS_TIME_ZERO (OS_time_t){.ticks = 0}
+#define OS_TIME_MAX (OS_time_t){.ticks = INT64_MAX}
+int TimeCompare(OS_time_t time1, OS_time_t time2);
+OS_time_t TimeMin(OS_time_t time1, OS_time_t time2);
+
+struct timespec TimeToTimespec(OS_time_t time);
+
 #ifdef __cplusplus
 }
 #endif

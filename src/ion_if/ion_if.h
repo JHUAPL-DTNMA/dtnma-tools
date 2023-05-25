@@ -30,7 +30,7 @@
 #define ION_IF_H_
 
 #include "bp.h"
-#include "msg.h"
+#include "shared/msg/msg.h"
 
 
 #ifdef __cplusplus

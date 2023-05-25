@@ -27,8 +27,7 @@
  **  01/10/18  E. Birrane     CLean up reports, added report parameter maps. (JHU/APL)
  *****************************************************************************/
 
-#include "ion.h"
-#include "platform.h"
+#include "shared/platform.h"
 
 #include "adm.h"
 
@@ -654,9 +653,15 @@ void adm_common_init()
 
 	AMP_DEBUG_ENTRY("adm_init","()", NULL);
 
+	//FIXME: memory leak in the vector elements
 	g_adm_info = vec_create(8, NULL, NULL, NULL, 0, &success);
 
 	adm_add_adm_info("ALL", 0);
 
 	AMP_DEBUG_EXIT("adm_init","->.", NULL);
+}
+
+void adm_common_destroy()
+{
+  vec_release(&g_adm_info, false);
 }
