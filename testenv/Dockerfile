@@ -37,6 +37,7 @@ COPY deps/ion /usr/src/nm/deps/ion
 COPY deps/ion*.patch /usr/src/nm/deps/
 RUN cd /usr/src/nm/deps/ion && \
     patch -p1 <../ion-4.1.2-remove-nm.patch && \
+    patch -p1 <../ion-4.1.2-local-deliver.patch && \
     autoreconf -vif && \
     ./configure && \
     make -j$(nproc) && \
@@ -68,12 +69,13 @@ RUN apt-get update && apt-get install -y \
     gcc python3-dev libsystemd-dev pkg-config && \
     pip3 install systemd-python
 COPY --chmod=755 testenv/ion_nm_wrap.py /usr/local/bin/ion_nm_wrap
+COPY --chmod=755 testenv/ion_ping_peers.sh /usr/local/bin/ion_ping_peers
 COPY --chmod=755 testenv/service_is_running.sh /usr/local/bin/service_is_running
 
 # Agent to test
 RUN apt-get update && apt-get install -y \
     cmake ninja-build ruby \
-    civetweb libcivetweb-dev libcjson-dev
+    civetweb libcivetweb-dev libssl-dev libcjson-dev
 COPY deps /usr/src/nm/deps
 COPY cmake /usr/src/nm/cmake
 COPY src /usr/src/nm/src
@@ -90,7 +92,7 @@ RUN cd /usr/src/nm && \
 # Systemd services
 COPY testenv/tmpfiles.conf /etc/tmpfiles.d/ion.conf
 COPY --chmod=644 systemd/ion.service systemd/ion-nm-*.service systemd/bpecho@.service /usr/local/lib/systemd/system/
-RUN systemctl enable ion ion-nm-mgr ion-nm-agent && \
+RUN systemctl enable ion bpecho@4 ion-nm-mgr ion-nm-agent && \
     mkdir -p /var/run/ion
 
 # Runtime config for this container

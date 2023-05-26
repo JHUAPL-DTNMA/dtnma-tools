@@ -69,7 +69,7 @@ bool nmagent_destroy(nmagent_t *agent)
  **  02/23/15  E. Birrane      Updated to support ION_LWT targets
  **  10/04/18  E. Birrane      Updated to AMP v0.5 (JHU/APL)
  *****************************************************************************/
-bool nmagent_start(nmagent_t *agent)
+bool nmagent_start(nmagent_t *agent, const eid_t *agent_eid, const eid_t *mgr_eid)
 {
     int rc;
     AMP_DEBUG_ENTRY("nmagent_start","("PRIdPTR")", agent);
@@ -97,10 +97,8 @@ bool nmagent_start(nmagent_t *agent)
 		AMP_DEBUG_ERR("agent_register","Unable to create agent registration.",NULL);
 		return false;
 	}
-
-//	msg_agent_set_agent(msg, agent_eid);
-
-	if(mif_send_msg(&agent->mif, MSG_TYPE_REG_AGENT, msg, "dtn:none", AMP_TV_ZERO) != AMP_OK)
+	msg_agent_set_agent(msg, *agent_eid);
+	if(mif_send_msg(&agent->mif, MSG_TYPE_REG_AGENT, msg, mgr_eid, AMP_TV_ZERO) != AMP_OK)
 	{
 		AMP_DEBUG_ERR("agent_register","Couldn't send agent reg.", NULL);
 	}

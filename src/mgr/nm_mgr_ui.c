@@ -239,7 +239,7 @@ int ui_build_control(agent_t* agent)
 	  OS_time_t timestamp = OS_TimeFromTotalSeconds(ts);
 		msg->start = amp_tv_from_ctime(timestamp, NULL);
         ui_log_transmit_msg(agent, msg);
-		rtv = mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, agent->eid.name, AMP_TV_ZERO);
+		rtv = mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, &agent->eid, AMP_TV_ZERO);
 		msg_ctrl_release(msg, 1);
         return rtv;
 	}
@@ -640,7 +640,7 @@ int ui_automator_parse_input(char *str)
       }
       msg->start = amp_tv_from_ctime(OS_TimeFromTotalSeconds(ts), NULL);
       ui_log_transmit_msg(agent, msg);
-      mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, agent->eid.name, AMP_TV_ZERO);
+      mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, &agent->eid, AMP_TV_ZERO);
       msg_ctrl_release(msg, 1);
       break;
    case 'L': // List Agents
@@ -1140,7 +1140,7 @@ void ui_register_agent(char* msg)
 #else
     memset(line,0, AMP_MAX_EID_LEN);
 	/* Grab the new agent's EID. */
-	if(ui_input_get_line("Enter EID of new agent:", (char **)&line, AMP_MAX_EID_LEN-1) == 0)
+	if(ui_input_get_line("Enter EID of new agent:", line, AMP_MAX_EID_LEN-1) == 0)
 	{
 #endif
 		AMP_DEBUG_ERR("register_agent","Unable to read user input.", NULL);
@@ -1335,7 +1335,7 @@ void ui_send_file(agent_t* agent, uint8_t enter_ts)
 
 		msg->start = amp_tv_from_ctime(OS_TimeFromTotalSeconds(ts), NULL);
         ui_log_transmit_msg(agent, msg);
-        mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, agent->eid.name, AMP_TV_ZERO);
+        mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, &agent->eid, AMP_TV_ZERO);
 
 		msg_ctrl_release(msg, 1);
 		cursor = strtok_r(NULL, "\n", &saveptr);
@@ -1376,7 +1376,7 @@ void ui_send_raw(agent_t* agent, uint8_t enter_ts)
 	}
 	msg->start = amp_tv_from_ctime(OS_TimeFromTotalSeconds(ts), NULL);
     ui_log_transmit_msg(agent, msg);
-    mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, agent->eid.name, AMP_TV_ZERO);
+    mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, &agent->eid, AMP_TV_ZERO);
 
 	msg_ctrl_release(msg, 1);
 }
@@ -1759,7 +1759,7 @@ void ui_fprintf(ui_print_cfg_t *fd, const char* format, ...)
       {
          vfprintf(fd->fd, format, args);
       }
-#ifdef USE_CIVETWEB
+#if defined(USE_CIVETWEB) && 0
       else if (fd->conn != NULL)
       {
          mg_vprintf(fd->conn, format, args);

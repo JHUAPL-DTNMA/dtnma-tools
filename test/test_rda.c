@@ -50,9 +50,9 @@ tnv_t * _test_ctrl(eid_t *def_mgr, tnvc_t *params, int8_t *status)
   return tnv_copy_ptr(param0);
 }
 
-static int _test_send(const blob_t *data, void *ctx)
+static int _test_send(const blob_t *data, const eid_t *dest, void *ctx)
 {
-  printf("Called send!\n");
+  printf("Called send to %s!\n", dest);
   --test_count;
   if(test_count <= 0)
   {

@@ -33,7 +33,6 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <unistd.h>
-#include <m-list.h>
 
 
 // Application includes
@@ -49,7 +48,6 @@
 #include "shared/primitives/report.h"
 
 #include "shared/msg/msg.h"
-#include "nm_mgr_ui.h"
 
 
 #ifdef __cplusplus

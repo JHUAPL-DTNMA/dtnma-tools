@@ -8,6 +8,10 @@ int threadset_start(list_thread_t *tset, const threadinfo_t *info, size_t count,
 {
   for (const threadinfo_t *it = info; it < info + count; ++it)
   {
+    if (!(it->func))
+    {
+      continue;
+    }
     pthread_t thr;
     int res = pthread_create(&thr, NULL, it->func, arg);
     if (res)
@@ -17,7 +21,12 @@ int threadset_start(list_thread_t *tset, const threadinfo_t *info, size_t count,
       return AMP_SYSERR;
     }
     list_thread_push_back(*tset, thr);
-    pthread_setname_np(thr, it->name);
+    AMP_DEBUG_INFO("threadset_start", "Started thread %s", it->name);
+
+    if (it->name)
+    {
+      pthread_setname_np(thr, it->name);
+    }
   }
 
   return AMP_OK;

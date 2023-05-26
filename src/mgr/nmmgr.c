@@ -34,12 +34,12 @@
 #include "nm_mgr_rx.h"
 #include "nm_mgr_ui.h"
 #include "metadata.h"
-#include "nmmgr.h"
 
 #ifdef USE_CIVETWEB
 #include "nm_rest.h"
 #endif
 #include "agents.h"
+#include "nmmgr.h"
 
 
 mgr_db_t gMgrDB;
@@ -165,8 +165,9 @@ int nmmgr_start(nmmgr_t *mgr)
   }
 
   #ifdef USE_CIVETWEB
-  nm_rest_start();
+  nm_rest_start(mgr);
   #endif
+
   return AMP_OK;
 }
 
@@ -175,6 +176,10 @@ int nmmgr_stop(nmmgr_t *mgr)
   /* Notify threads */
   daemon_run_stop(&mgr->running);
   threadset_join(&mgr->threads);
+
+#ifdef USE_CIVETWEB
+  nm_rest_stop();
+#endif
 
   return AMP_OK;
 }

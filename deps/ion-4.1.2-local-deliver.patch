@@ -1,0 +1,171 @@
+diff --git a/bpv7/library/libbpP.c b/bpv7/library/libbpP.c
+index 2a086dd8..cbc1a476 100644
+--- a/bpv7/library/libbpP.c
++++ b/bpv7/library/libbpP.c
+@@ -74,6 +74,8 @@ extern void	zco_increase_heap_occupancy(Sdr sdr, vast delta, ZcoAcct acct);
+ extern void	zco_reduce_heap_occupancy(Sdr sdr, vast delta, ZcoAcct acct);
+ 
+ static BpVdb	*_bpvdb(char **);
++static int tryDeliverBundle(Object bundleObj, Bundle *bundle,
++                            VEndpoint *vpoint);
+ 
+ /*	*	*	Helpful utility functions	*	*	*/
+ 
+@@ -6537,11 +6539,34 @@ when asking for status reports.");
+ 	/*	Here's where we finally write bundle to the database.	*/
+ 
+ 	sdr_write(sdr, bundleAddr, (char *) &bundle, sizeof(Bundle));
+-	if (forwardBundle(bundleAddr, &bundle, destEidString) < 0)
+ 	{
+-		putErrmsg("Can't queue bundle for forwarding.", NULL);
+-		sdr_cancel_xn(sdr);
+-		return -1;
++		VEndpoint *localVpoint = NULL;
++		lookUpEidScheme(&bundle.destination, &vscheme);
++		if (vscheme != NULL)	/*	Destination might be local.	*/
++		{
++			lookUpEndpoint(&bundle.destination, vscheme, &localVpoint);
++		}
++
++		int deliv = 1;
++		if (localVpoint != NULL)	/*	Destination is here.	*/
++		{
++			deliv = tryDeliverBundle(bundleAddr, &bundle, localVpoint);
++			if (deliv < 0)
++			{
++				sdr_cancel_xn(sdr);
++				return -1;
++			}
++		}
++    
++		if (deliv > 0) /* The destination isn't local or it's multicast */
++		{
++			if (forwardBundle(bundleAddr, &bundle, destEidString) < 0)
++			{
++				putErrmsg("Can't queue bundle for forwarding.", NULL);
++				sdr_cancel_xn(sdr);
++				return -1;
++			}
++		}
+ 	}
+ 
+ 	if (vpoint)
+@@ -6884,6 +6909,64 @@ int	deliverBundle(Object bundleObj, Bundle *bundle, VEndpoint *vpoint)
+ 	return enqueueForDelivery(bundleObj, bundle, vpoint);
+ }
+ 
++/* Attempt to look up and delivery the bundle to a local endpoint
++ * Return zero if successful and finished, one if successful and further
++ * processing is needed (e.g. a multicast destination),
++ * or negative if failed.
++ */
++static int tryDeliverBundle(Object bundleObj, Bundle *bundle,
++		VEndpoint *vpoint)
++{
++	if (deliverBundle(bundleObj, bundle, vpoint) < 0)
++	{
++		putErrmsg("Bundle delivery failed.", NULL);
++		return -1;
++	}
++
++	/*	Bundle delivery did not fail.		*/
++
++	if ((_bpvdb(NULL))->watching & WATCH_z)
++	{
++		iwatch('z');
++	}
++
++	if (bundle->destination.schemeCodeNbr != imc)
++	{
++		/*	This is not a multicast bundle.
++		 *	So we now write the bundle state
++		 *	object to the SDR and authorize
++		 *	destruction of the bundle.  If
++		 *	deliverBundle() enqueued the
++		 *	bundle at an endpoint or
++		 *	retained it as a fragment
++		 *	needed for bundle reassembly,
++		 *	then the bundle will not be
++		 *	destroyed.  But in the event
++		 *	that the endpoint is not
++		 *	currently active (i.e., is
++		 *	not currently opened by any
++		 *	application) and the delivery
++		 *	failure action for this
++		 *	endpoint is DiscardBundle,
++		 *	now the the time to destroy
++		 *	the bundle.			*/
++    Sdr		sdr = getIonsdr();
++
++		sdr_write(sdr, bundleObj, (char *) bundle,
++				sizeof(Bundle));
++		if (bpDestroyBundle(bundleObj, 0) < 0)
++		{
++			putErrmsg("Can't destroy bundle.",
++					NULL);
++			return -1;
++		}
++		return 0;
++	}
++	else {
++		return 1;
++	}
++}
++
+ static int	dispatchBundle(Object bundleObj, Bundle *bundle,
+ 			VEndpoint **vpoint)
+ {
+@@ -6901,50 +6984,10 @@ static int	dispatchBundle(Object bundleObj, Bundle *bundle,
+ 		lookUpEndpoint(&bundle->destination, vscheme, vpoint);
+ 		if (*vpoint != NULL)	/*	Destination is here.	*/
+ 		{
+-			if (deliverBundle(bundleObj, bundle, *vpoint) < 0)
++			int deliv = tryDeliverBundle(bundleObj, bundle, *vpoint);
++			if (deliv <= 0)
+ 			{
+-				putErrmsg("Bundle delivery failed.", NULL);
+-				return -1;
+-			}
+-
+-			/*	Bundle delivery did not fail.		*/
+-
+-			if ((_bpvdb(NULL))->watching & WATCH_z)
+-			{
+-				iwatch('z');
+-			}
+-
+-			if (bundle->destination.schemeCodeNbr != imc)
+-			{
+-				/*	This is not a multicast bundle.
+-				 *	So we now write the bundle state
+-				 *	object to the SDR and authorize
+-				 *	destruction of the bundle.  If
+-				 *	deliverBundle() enqueued the
+-				 *	bundle at an endpoint or
+-				 *	retained it as a fragment
+-				 *	needed for bundle reassembly,
+-				 *	then the bundle will not be
+-				 *	destroyed.  But in the event
+-				 *	that the endpoint is not
+-				 *	currently active (i.e., is
+-				 *	not currently opened by any
+-				 *	application) and the delivery
+-				 *	failure action for this
+-				 *	endpoint is DiscardBundle,
+-				 *	now the the time to destroy
+-				 *	the bundle.			*/
+-
+-				sdr_write(sdr, bundleObj, (char *) bundle,
+-						sizeof(Bundle));
+-				if (bpDestroyBundle(bundleObj, 0) < 0)
+-				{
+-					putErrmsg("Can't destroy bundle.",
+-							NULL);
+-					return -1;
+-				}
+-
+-				return 0;
++				return deliv;
+ 			}
+ 		}
+ 		else	/*	Not deliverable at this node.		*/

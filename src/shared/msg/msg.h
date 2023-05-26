@@ -120,9 +120,8 @@ typedef struct
 
 typedef struct
 {
-	eid_t senderEid;
-	eid_t originatorEid;
-	eid_t recipientEid;
+	eid_t source;
+	eid_t destination;
 } msg_metadata_t;
 
 msg_hdr_t msg_hdr_deserialize(QCBORDecodeContext *it, int *success);

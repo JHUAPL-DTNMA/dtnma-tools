@@ -58,7 +58,6 @@ extern "C" {
 typedef struct
 {
 	eid_t local_eid;
-        eid_t peer_eid;
 	BpSAP sap;
 } iif_t;
 
@@ -82,7 +81,7 @@ int     iif_deregister_node(iif_t *iif);
 eid_t   iif_get_local_eid(iif_t *iif);
 int     iif_is_registered(iif_t *iif);
 
-int msg_bp_send(const blob_t *data, void *ctx);
+int msg_bp_send(const blob_t *data, const eid_t *dest, void *ctx);
 
 blob_t * msg_bp_recv(msg_metadata_t *meta, int *success, void *ctx);
 

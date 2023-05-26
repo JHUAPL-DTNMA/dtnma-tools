@@ -53,17 +53,22 @@ extern nmmgr_t *global_mgr;
  *  01/18/13  E. Birrane     Initial Implementation
  *****************************************************************************/
 
-int ui_input_get_line(char *prompt, char **line, int max_len)
+int ui_input_get_line(const char *prompt, char *line, int max_len)
 {
 	while(daemon_run_get(&global_mgr->running))
 	{
 		printf("%s\n", prompt);
 
-		if (fgets((char *)line, max_len, stdin) == NULL)
+		if (fgets(line, max_len, stdin) == NULL)
 		{
 		  AMP_DEBUG_ERR("ui_input_get_line","igets failed.", NULL);
 		  AMP_DEBUG_EXIT("ui_input_get_line","->0.",NULL);
 		  return 0;
+		}
+		size_t len = strlen(line);
+		if (len > 0)
+		{
+		  break;
 		}
 	}
     
@@ -73,7 +78,7 @@ int ui_input_get_line(char *prompt, char **line, int max_len)
 	return 1;
 }
 
-blob_t *ui_input_file_contents(char *prompt)
+blob_t *ui_input_file_contents(const char *prompt)
 {
 	blob_t *result = NULL;
 	char *filename = NULL;
@@ -173,7 +178,7 @@ uint8_t ui_input_adm_id()
 }
 
 
-blob_t* ui_input_blob(char *prompt, uint8_t no_file)
+blob_t* ui_input_blob(const char *prompt, uint8_t no_file)
 {
 	blob_t *result = NULL;
 	uint32_t len = 0;
@@ -207,12 +212,12 @@ blob_t* ui_input_blob(char *prompt, uint8_t no_file)
 }
 
 
-uint8_t  ui_input_byte(char *prompt)
+uint8_t  ui_input_byte(const char *prompt)
 {
 	uint8_t result = 0;
 	char line[3];
 	memset(line,0,3);
-	ui_input_get_line(prompt, (char**)&line, 3);
+	ui_input_get_line(prompt, line, 3);
 
 	blob_t *blob = utils_string_to_hex(line);
 	if(blob == NULL)
@@ -230,24 +235,24 @@ uint8_t  ui_input_byte(char *prompt)
 	return result;
 }
 
-double   ui_input_real64(char *prompt)
+double   ui_input_real64(const char *prompt)
 {
 	double result = 0;
 	char line[20];
 
-	ui_input_get_line(prompt, (char**)&line, 20);
+	ui_input_get_line(prompt, line, 20);
 
 	sscanf(line, "%lf", &result);
 
 	return result;
 }
 
-float    ui_input_real32(char *prompt)
+float    ui_input_real32(const char *prompt)
 {
 	float result = 0;
 	char line[20];
 
-	ui_input_get_line(prompt, (char**)&line, 20);
+	ui_input_get_line(prompt, line, 20);
 
 	sscanf(line, "%f", &result);
 
@@ -256,7 +261,7 @@ float    ui_input_real32(char *prompt)
 
 
 #ifdef USE_NCURSES
-char *   ui_input_string(char *prompt)
+char *   ui_input_string(const char *prompt)
 {
    char line[MAX_INPUT_BYTES] = "";
    char *result;
@@ -277,12 +282,12 @@ char *   ui_input_string(char *prompt)
    }   
 }
 #else
-char *   ui_input_string(char *prompt)
+char *   ui_input_string(const char *prompt)
 {
 	char *result = NULL;
 	char line[MAX_INPUT_BYTES];
 	memset(line, 0, MAX_INPUT_BYTES);
-	ui_input_get_line(prompt, (char**)&line, MAX_INPUT_BYTES-1);
+	ui_input_get_line(prompt, line, MAX_INPUT_BYTES-1);
 
 	result = (char *) STAKE(strlen(line) + 1);
 
@@ -292,48 +297,48 @@ char *   ui_input_string(char *prompt)
 }
 #endif
 
-int32_t     ui_input_int(char *prompt)
+int32_t     ui_input_int(const char *prompt)
 {
 	int32_t result = 0;
 	char line[20];
 
-	ui_input_get_line(prompt, (char**)&line, 20);
+	ui_input_get_line(prompt, line, 20);
 
 	sscanf(line, "%d", &result);
 
 	return result;
 }
 
-uint32_t     ui_input_uint(char *prompt)
+uint32_t     ui_input_uint(const char *prompt)
 {
 	uint32_t result = 0;
 	char line[20];
 
-	ui_input_get_line(prompt, (char**)&line, 20);
+	ui_input_get_line(prompt, line, 20);
 
 	sscanf(line, "%u", &result);
 
 	return result;
 }
 
-uvast     ui_input_uvast(char *prompt)
+uvast     ui_input_uvast(const char *prompt)
 {
 	uvast result = 0;
 	char line[MAX_INPUT_BYTES];
 
-	ui_input_get_line(prompt, (char**)&line, MAX_INPUT_BYTES);
+	ui_input_get_line(prompt, line, MAX_INPUT_BYTES);
 
 	sscanf(line, PRIu64, &result);
 
 	return result;
 }
 
-vast     ui_input_vast(char *prompt)
+vast     ui_input_vast(const char *prompt)
 {
 	vast result = 0;
 	char line[MAX_INPUT_BYTES];
 
-	ui_input_get_line(prompt, (char**)&line, MAX_INPUT_BYTES);
+	ui_input_get_line(prompt, line, MAX_INPUT_BYTES);
 
 	sscanf(line, PRId64, &result);
 
@@ -341,7 +346,7 @@ vast     ui_input_vast(char *prompt)
 }
 
 
-ac_t *ui_input_ac(char *prompt)
+ac_t *ui_input_ac(const char *prompt)
 {
 	uint32_t i = 0;
 	uint32_t num = 0;
@@ -405,7 +410,7 @@ ac_t *ui_input_ac(char *prompt)
  *  07/05/16  E. Birrane     Check for NULL result. Add File input.
  *****************************************************************************/
 
-ari_t *ui_input_ari(char *prompt, uint8_t adm_id, uvast mask)
+ari_t *ui_input_ari(const char *prompt, uint8_t adm_id, uvast mask)
 {
 	ari_t *result = NULL;
 	metadata_t *meta = NULL;
@@ -728,7 +733,7 @@ ari_t *ui_input_ari_list(uint8_t adm_id, uvast mask)
 	return result;
 }
 
-ari_t*  ui_input_ari_lit(char *prompt)
+ari_t*  ui_input_ari_lit(const char *prompt)
 {
 	ari_t *result = NULL;
 	uvast mask = 0;
@@ -957,7 +962,7 @@ tnv_t *ui_input_tnv(int type, char *prompt)
 }
 
 
-tnvc_t* ui_input_tnvc(char *prompt)
+tnvc_t* ui_input_tnvc(const char *prompt)
 {
 	tnvc_t *result = NULL;
 	int num;
@@ -986,7 +991,7 @@ tnvc_t* ui_input_tnvc(char *prompt)
 
 
 
-ctrl_t* ui_input_ctrl(char * prompt)
+ctrl_t* ui_input_ctrl(const char *prompt)
 {
 
    
@@ -994,7 +999,7 @@ ctrl_t* ui_input_ctrl(char * prompt)
 	return NULL;
 }
 
-expr_t* ui_input_expr(char* prompt)
+expr_t* ui_input_expr(const char *prompt)
 {
    expr_t* expr = NULL;
    ari_t *val = NULL;
@@ -1039,50 +1044,50 @@ expr_t* ui_input_expr(char* prompt)
    return expr;
 }
 
-op_t* ui_input_oper(char* prompt)
+op_t* ui_input_oper(const char *prompt)
 {
 	AMP_DEBUG_ERR("ui_input_oper", "Not implemented yet.", NULL);
 	return NULL;
 }
 
-rpt_t* ui_input_rpt(char* prompt)
+rpt_t* ui_input_rpt(const char *prompt)
 {
 	AMP_DEBUG_ERR("ui_input_rpt", "Not implemented yet.", NULL);
 	return NULL;
 }
 
-rpttpl_t* ui_input_rpttpl(char* prompt)
+rpttpl_t* ui_input_rpttpl(const char *prompt)
 {
 	AMP_DEBUG_ERR("ui_input_rpttpl", "Not implemented yet.", NULL);
 	return NULL;
 }
 
-rule_t *ui_input_rule(char* prompt)
+rule_t *ui_input_rule(const char *prompt)
 {
 	AMP_DEBUG_ERR("ui_input_rule", "Not implemented yet.", NULL);
 	return NULL;
 }
 
-tbl_t* ui_input_tbl(char* prompt)
+tbl_t* ui_input_tbl(const char *prompt)
 {
 	AMP_DEBUG_ERR("ui_input_tbl", "Not implemented yet.", NULL);
 	return NULL;
 }
 
-tblt_t* ui_input_tblt(char* prompt)
+tblt_t* ui_input_tblt(const char *prompt)
 {
 	AMP_DEBUG_ERR("ui_input_tblt", "Not implemented yet.", NULL);
 	return NULL;
 }
 
 
-var_t* ui_input_var(char* prompt)
+var_t* ui_input_var(const char *prompt)
 {
 	AMP_DEBUG_ERR("ui_input_var", "Not implemented yet.", NULL);
 	return NULL;
 }
 
-macdef_t *ui_input_mac(char *prompt)
+macdef_t *ui_input_mac(const char *prompt)
 {
 	AMP_DEBUG_ERR("ui_input_var", "Not implemented yet.", NULL);
 	return NULL;

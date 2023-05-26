@@ -83,11 +83,11 @@ void rx_data_rpt(msg_metadata_t *meta, msg_rpt_t *msg)
     // TODO: Check to see if we are listed as a recipient for this report.
 
 	/* Step 1: Retrieve stored information about this agent. */
-	if((agent = agent_get(&(meta->senderEid))) == NULL)
+	if((agent = agent_get(&(meta->source))) == NULL)
 	{
 		AMP_DEBUG_WARN("msg_rx_data_rpt",
 				        "Received group is from an unknown sender (%s); ignoring it.",
-						meta->senderEid.name);
+						meta->source.name);
         agent_t *agent = (agent_t*) vec_at(&gMgrDB.agents, 0);
 	}
 	else
@@ -177,11 +177,11 @@ void rx_data_tbl(msg_metadata_t *meta, msg_tbl_t *msg)
     // TODO: Check to see if we are listed as a recipient for this report.
 
 	/* Step 1: Retrieve stored information about this agent. */
-	if((agent = agent_get(&(meta->senderEid))) == NULL)
+	if((agent = agent_get(&(meta->source))) == NULL)
 	{
 		AMP_DEBUG_WARN("msg_rx_data_tbl",
 				        "Received group is from an unknown sender (%s); ignoring it.",
-						meta->senderEid);
+						meta->source);
 	}
 	else
 	{
@@ -296,7 +296,7 @@ void *mgr_rx_thread(void *arg)
         else if(buf != NULL)
         {
             if (agent_log_cfg.rx_cbor == 1) {
-                agent_t *agent = agent_get(&(meta.senderEid));
+                agent_t *agent = agent_get(&(meta.source));
                 if (agent && agent->log_fd) {
                     char *tmp = utils_hex_to_string(buf->value, buf->length);
                     fprintf(agent->log_fd, "RX: msgs:%s\n", tmp);
@@ -307,7 +307,7 @@ void *mgr_rx_thread(void *arg)
 
             // Convert to HEX for logging (DB & Shell)
             char *tmp = utils_hex_to_string(buf->value, buf->length);
-            printf("RX from %s: msgs:%s\n", meta.senderEid.name, tmp);
+            printf("RX from %s: msgs:%s\n", meta.source.name, tmp);
 
         	grp = msg_grp_deserialize(buf, &success);
         	blob_release(buf, 1);
@@ -316,7 +316,7 @@ void *mgr_rx_thread(void *arg)
     		{
 #ifdef HAVE_MYSQL
                 // Log discarded message in DB
-                db_incoming_finalize(0, AMP_FAIL, meta.senderEid.name, tmp);
+                db_incoming_finalize(0, AMP_FAIL, meta.source.name, tmp);
 #endif
                 SRELEASE(tmp);
     			AMP_DEBUG_ERR("mgr_rx_thread","Discarding invalid message.", NULL);
@@ -328,7 +328,7 @@ void *mgr_rx_thread(void *arg)
 
 #ifdef HAVE_MYSQL
             /* Copy the message group to the database tables */
-            uint32_t incoming_idx = db_incoming_initialize(grp->time, meta.senderEid);
+            uint32_t incoming_idx = db_incoming_initialize(grp->time, meta.source);
             int32_t db_status = AMP_OK;
 #endif
 
@@ -383,7 +383,7 @@ void *mgr_rx_thread(void *arg)
 
 #ifdef HAVE_MYSQL
             // Commit transaction and log as applicable
-            db_incoming_finalize(incoming_idx, db_status, meta.senderEid.name, tmp);
+            db_incoming_finalize(incoming_idx, db_status, meta.source.name, tmp);
 #endif
             msg_grp_release(grp, 1);
             SRELEASE(tmp);

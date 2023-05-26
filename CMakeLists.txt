@@ -54,7 +54,7 @@ find_package(QCBOR)
 find_package(MLIB)
 if(BUILD_MANAGER)
   pkg_search_module(MYSQLCLIENT mysqlclient)
-#   find_package(civetweb)
+  find_package(civetweb)
   find_package(cJSON)
 endif(BUILD_MANAGER)
 

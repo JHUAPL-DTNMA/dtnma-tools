@@ -22,8 +22,7 @@ static void
 daemon_signal_handler(int signum)
 {
   AMP_DEBUG_INFO("daemon_signal_handler", "Received signal %d", signum);
-  OS_ApplicationShutdown(true);
-  bp_close(ion_ptr.sap);
+  daemon_run_stop(&mgr.running);
 }
 
 void
@@ -63,28 +62,29 @@ OS_Application_Startup()
   }
   eid_t mgr_eid;
   strncpy(mgr_eid.name, arg_eid, AMP_MAX_EID_LEN);
+  AMP_DEBUG_INFO("main","Manager EID: %s", mgr_eid.name);
 
   if (ionAttach() < 0)
   {
-    AMP_DEBUG_ERR("mgr_init", "Manager can't attach to ION.", NULL);
+    AMP_DEBUG_ERR("main", "Manager can't attach to ION.", NULL);
     OS_ApplicationExit(EXIT_FAILURE);
   }
 
   /* Step 2:  Attach to ION. */
-  if(iif_register_node(&ion_ptr, mgr_eid) == 0)
+  if (iif_register_node(&ion_ptr, mgr_eid) != 1)
   {
-      AMP_DEBUG_ERR("mgr_init","Unable to register BP Node. Exiting.", NULL);
-      OS_ApplicationExit(EXIT_FAILURE);
+    AMP_DEBUG_ERR("main", "Unable to register BP Node. Exiting.", NULL);
+    OS_ApplicationExit(EXIT_FAILURE);
   }
 
   if (iif_is_registered(&ion_ptr))
   {
-      AMP_DEBUG_INFO("mgr_init", "Mgr registered with ION, EID: %s",
+      AMP_DEBUG_INFO("main", "Mgr registered with ION, EID: %s",
                                iif_get_local_eid(&ion_ptr).name);
   }
   else
   {
-      AMP_DEBUG_ERR("mgr_init","Failed to register mgr with ION, EID %s",
+      AMP_DEBUG_ERR("main","Failed to register mgr with ION, EID %s",
                                        iif_get_local_eid(&ion_ptr).name);
       AMP_DEBUG_EXIT("mgr_init","->-1.",NULL);
       OS_ApplicationExit(EXIT_FAILURE);
@@ -96,8 +96,9 @@ OS_Application_Startup()
       AMP_DEBUG_ERR("main","Can't init Manager.", NULL);
       OS_ApplicationExit(EXIT_FAILURE);
   }
-
-  AMP_DEBUG_INFO("main","Manager EID: %s", argv[1]);
+  mgr.mif.send = msg_bp_send;
+  mgr.mif.receive = msg_bp_recv;
+  mgr.mif.ctx = &ion_ptr;
 
   struct sigaction act;
   memset(&act, 0, sizeof(struct sigaction));
@@ -113,13 +114,12 @@ OS_Application_Startup()
 
 void OS_Application_Run()
 {
-  OS_IdleLoop();
+  // Block until stopped
+  daemon_run_wait(&mgr.running);
+  OS_ApplicationShutdown(true);
+  bp_close(ion_ptr.sap);
 
   nmmgr_stop(&mgr);
-
-#ifdef USE_CIVETWEB
-  nm_rest_stop();
-#endif
 
   AMP_DEBUG_ALWAYS("main","Shutting down manager.", NULL);
   nmmgr_destroy(&mgr);
@@ -127,7 +127,7 @@ void OS_Application_Run()
   AMP_DEBUG_INFO("main","Exiting Manager after cleanup.", NULL);
 
   AMP_DEBUG_ALWAYS("agent_main", "Stopping Agent.", NULL);
-  ionDetach();
+  iif_deregister_node(&ion_ptr);
 }
 
 /**

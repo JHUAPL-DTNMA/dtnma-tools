@@ -192,7 +192,7 @@ void rx_handle_perf_ctrl(msg_metadata_t *meta, blob_t *contents)
 			break;
 		}
 
-		ctrl_set_exec(ctrl, msg->start, meta->senderEid);
+		ctrl_set_exec(ctrl, msg->start, meta->source);
 
 
 		if(OS_TimeGetTotalSeconds(ctrl->start) == 0)

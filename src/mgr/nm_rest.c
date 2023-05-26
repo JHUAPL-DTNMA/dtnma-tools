@@ -17,6 +17,7 @@
 
 // NM Includes
 #include "shared/nm.h"
+#include "shared/utils/debug.h"
 #include "agents.h"
 #include "nmmgr.h"
 #include "nm_mgr_ui.h"
@@ -58,27 +59,24 @@ SendJSON(struct mg_connection *conn, cJSON *json_obj)
 	return (int)json_str_len;
 }
 
-static void start_text_page(struct mg_connection *conn, char* msg, ...)
+static void start_text_page(struct mg_connection *conn)
 {
-   va_list args;
-   va_start(args, msg);
    mg_printf(conn,
-             "HTTP/1.1 200 OK\r\nContent-Type: "
-             "text/plain\r\nConnection: close\r\n\r\n");
-   mg_vprintf(conn, msg, args);
-   va_end(args);
+             "HTTP/1.1 200 OK\r\n"
+             "Content-Type: text/plain\r\n"
+             "Connection: close\r\n"
+             "\r\n");
 }
 
 
 int
 log_message(const struct mg_connection *conn, const char *message)
 {
-   // TODO: Wrap with AMP macro for logging
-	puts(message);
-	return 1;
+  AMP_DEBUG_INFO("nm_rest", message);
+  return 1;
 }
 
-int nm_rest_start()
+int nm_rest_start(nmmgr_t *mgr)
 {
 	const char *options[] = {"listening_ports",
 	                         PORT,
@@ -128,7 +126,7 @@ int nm_rest_start()
 	callbacks.log_message = log_message;
 
 	/* Start CivetWeb web server */
-	ctx = mg_start(&callbacks, 0, options);
+	ctx = mg_start(&callbacks, mgr, options);
 
 	/* Check return value: */
 	if (ctx == NULL) {
@@ -331,12 +329,15 @@ static int agentSendRaw(struct mg_connection *conn, time_t ts, agent_t *agent, c
                          "Error creating ARI from input");
       return HTTP_INTERNAL_ERROR;
    }
-   msg->start = ts;
-   iif_send_msg(&ion_ptr, MSG_TYPE_PERF_CTRL, msg, agent->eid.name);
+   msg->start = amp_tv_from_ctime(OS_TimeFromTotalSeconds(ts), NULL);
+
+   nmmgr_t *mgr = mg_get_user_data(mg_get_context(conn));
+   mif_send_msg(&mgr->mif, MSG_TYPE_PERF_CTRL, msg, &agent->eid, AMP_TV_ZERO);
    ui_log_transmit_msg(agent, msg);
    msg_ctrl_release(msg, 1);
 
-   start_text_page(conn, "Successfully sent Raw ARI Control");
+   start_text_page(conn);
+   mg_printf(conn, "Successfully sent Raw ARI Control");
    return HTTP_OK;
 }
 
@@ -350,8 +351,8 @@ static int agentShowTextReports(struct mg_connection *conn, agent_t *agent)
       return HTTP_INTERNAL_ERROR;
    }
 
-   start_text_page(conn,
-                   "Showing %d reports for agent %s",
+   start_text_page(conn);
+   mg_printf(conn, "Showing %d reports for agent %s",
                    vec_num_entries_ptr(&(agent->rpts)),
                    agent->eid.name);
 
@@ -375,8 +376,8 @@ static int agentShowTextTables(struct mg_connection *conn, agent_t *agent)
       return HTTP_INTERNAL_ERROR;
    }
 
-   start_text_page(conn,
-                   "Showing %d tables for agent %s \n",
+   start_text_page(conn);
+   mg_printf(conn, "Showing %d tables for agent %s \n",
                    vec_num_entries_ptr(&(agent->tbls)),
                    agent->eid.name);
    
@@ -581,13 +582,15 @@ static int agentEidHandler(struct mg_connection *conn, void *cbdata)
       else if (0 == strcmp(cmd, "clear_reports"))
       {
          ui_clear_reports(agent);
-         start_text_page(conn, "Successfully cleared reports");
+         start_text_page(conn);
+         mg_printf(conn, "Successfully cleared reports");
          return HTTP_OK;
       }
       else if (0 == strcmp(cmd, "clear_tables"))
       {
          ui_clear_tables(agent);
-         start_text_page(conn, "Successfully cleared tables");
+         start_text_page(conn);
+         mg_printf(conn, "Successfully cleared tables");
          return HTTP_OK;
       }
    }
@@ -681,13 +684,15 @@ static int agentIdxHandler(struct mg_connection *conn, void *cbdata)
       else if (0 == strcmp(cmd, "clear_reports"))
       {
          ui_clear_reports(agent);
-         start_text_page(conn, "Successfully cleared reports");
+         start_text_page(conn);
+         mg_printf(conn, "Successfully cleared reports");
          return HTTP_OK;
       }
       else if (0 == strcmp(cmd, "clear_tables"))
       {
          ui_clear_tables(agent);
-         start_text_page(conn, "Successfully cleared tables");
+         start_text_page(conn);
+         mg_printf(conn, "Successfully cleared tables");
          return HTTP_OK;
       }
    }

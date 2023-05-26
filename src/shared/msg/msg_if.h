@@ -50,10 +50,11 @@ extern "C" {
 
 /** Message sending function.
  * @param data The data to send.
+ * @param dest The destination EID.
  * @param ctx The user context, which may be NULL.
  * @return AMP_OK if successful.
  */
-typedef int (*mif_send_t)(const blob_t *data, void *ctx);
+typedef int (*mif_send_t)(const blob_t *data, const eid_t *dest, void *ctx);
 
 /** Message receiving function.
  * @param meta Pointer to reception metadata, which is never NULL.
@@ -91,8 +92,8 @@ typedef struct
  */
 
 blob_t *mif_receive(mif_cfg_t *cfg, msg_metadata_t *meta, int *success);
-int     mif_send_grp(mif_cfg_t *cfg, msg_grp_t *group, char *recipient);
-int     mif_send_msg(mif_cfg_t *cfg, int msg_type, void *msg, char *recipient, amp_tv_t timestamp);
+int     mif_send_grp(mif_cfg_t *cfg, const msg_grp_t *group, const eid_t *destination);
+int     mif_send_msg(mif_cfg_t *cfg, int msg_type, const void *msg, const eid_t *destination, amp_tv_t timestamp);
 
 #ifdef __cplusplus
 }

@@ -16,8 +16,8 @@ a scheme ipn 'ipnfw' 'ipnadminep'
 a endpoint ipn:1.0 x
 a endpoint ipn:1.1 x
 a endpoint ipn:1.4 x
-a endpoint ipn:1.6 x
-a endpoint ipn:1.7 x
+a endpoint ipn:1.6 q
+a endpoint ipn:1.7 q
 
 
 # Protocols

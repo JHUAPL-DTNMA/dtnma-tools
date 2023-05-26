@@ -217,8 +217,11 @@ int iif_register_node(iif_t *iif, eid_t eid)
 
 
 int
-msg_bp_send(const blob_t *data, void *ctx)
+msg_bp_send(const blob_t *data, const eid_t *dest, void *ctx)
 {
+  CHKERR(data);
+  CHKERR(dest);
+  CHKERR(ctx);
   iif_t *iif = ctx;
 
   Sdr sdr = bp_get_sdr();
@@ -255,7 +258,7 @@ msg_bp_send(const blob_t *data, void *ctx)
   Object newBundle = 0;
   int res = bp_send(
     iif->sap,
-    iif->peer_eid.name,       // recipient
+    dest->name,       // recipient
     NULL,                   // report-to
     300,                    // lifespan (?)
     BP_STD_PRIORITY,        // Class-of-Service / Priority
@@ -268,7 +271,7 @@ msg_bp_send(const blob_t *data, void *ctx)
   );
   if (res != 1)
   {
-    AMP_DEBUG_ERR("iif_send","Send failed (%d) to %s", res, iif->peer_eid.name);
+    AMP_DEBUG_ERR("iif_send","Send failed (%d) to %s", res, dest->name);
     AMP_DEBUG_EXIT("iif_send", "->0.", NULL);
     return AMP_FAIL;
   }
@@ -288,11 +291,11 @@ msg_bp_recv(msg_metadata_t *meta, int *success, void *ctx)
   BpDelivery dlv;
   memset(&dlv, 0, sizeof(BpDelivery));
 
-  while (true)
+  while (dlv.result != BpPayloadPresent)
   {
-    // Timeout is required to check agent running status
+    //FIXME Timeout is required to check agent running status
     static const int timeout = 5;
-    if((res = bp_receive(iif->sap, &dlv, timeout)) < 0)
+    if((res = bp_receive(iif->sap, &dlv, BP_BLOCKING)) < 0)
     {
       AMP_DEBUG_INFO("iif_receive","bp_receive failed. Result: %d.", res);
       *success = AMP_SYSERR;
@@ -352,12 +355,10 @@ msg_bp_recv(msg_metadata_t *meta, int *success, void *ctx)
       return NULL;
   }
 
-  istrcpy(meta->senderEid.name, dlv.bundleSourceEid,
-                  sizeof meta->senderEid.name);
-  istrcpy(meta->originatorEid.name, dlv.bundleSourceEid,
-                  sizeof meta->originatorEid.name);
-  istrcpy(meta->recipientEid.name, iif->local_eid.name,
-                  sizeof meta->recipientEid.name);
+  istrcpy(meta->source.name, dlv.bundleSourceEid,
+                  sizeof meta->source.name);
+  istrcpy(meta->destination.name, iif->local_eid.name,
+                  sizeof meta->destination.name);
   bp_release_delivery(&dlv, 1);
 
   *success = AMP_OK;

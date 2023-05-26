@@ -93,15 +93,15 @@ blob_t *mif_receive(mif_cfg_t *cfg, msg_metadata_t *meta, int *success)
  *  10/02/18  E. Birrane     Update to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
-int mif_send_grp(mif_cfg_t *cfg, msg_grp_t *group, char *rx)
+int mif_send_grp(mif_cfg_t *cfg, const msg_grp_t *group, const eid_t *destination)
 {
     blob_t *data = NULL;
 
-    AMP_DEBUG_ENTRY("mif_send","("PRIdPTR","PRIdPTR")", group, rx);
     CHKZERO(cfg);
     CHKZERO(cfg->send);
     CHKZERO(group);
-    CHKZERO(rx);
+    CHKZERO(destination);
+    AMP_DEBUG_ENTRY("mif_send","("PRIdPTR",%s)", group, destination->name);
 
     /* Step 1 - Serialize the bundle. */
     if((data = msg_grp_serialize_wrapper(group)) == NULL)
@@ -120,10 +120,10 @@ int mif_send_grp(mif_cfg_t *cfg, msg_grp_t *group, char *rx)
 
     /* Information on bitstream we are sending. */
     char *msg_str = utils_hex_to_string(data->value, data->length);
-    AMP_DEBUG_ALWAYS("mif_send","Sending msgs:%s to %s:", msg_str, rx);
+    AMP_DEBUG_ALWAYS("mif_send","Sending msgs:%s to %s:", msg_str, destination->name);
     SRELEASE(msg_str);
 
-    (cfg->send)(data, cfg->ctx);
+    (cfg->send)(data, destination, cfg->ctx);
 
     blob_release(data, 1);
     AMP_DEBUG_EXIT("mif_send", "->1.", NULL);
@@ -131,7 +131,7 @@ int mif_send_grp(mif_cfg_t *cfg, msg_grp_t *group, char *rx)
 }
 
 // Caller MUST release msg.
-int mif_send_msg(mif_cfg_t *cfg, int msg_type, void *msg, char *recipient, amp_tv_t timestamp)
+int mif_send_msg(mif_cfg_t *cfg, int msg_type, const void *msg, const eid_t *destination, amp_tv_t timestamp)
 {
 	msg_grp_t *grp = msg_grp_create(1);
 	grp->timestamp = timestamp;
@@ -161,7 +161,7 @@ int mif_send_msg(mif_cfg_t *cfg, int msg_type, void *msg, char *recipient, amp_t
 
 	if(success == AMP_OK)
 	{
-            success = mif_send_grp(cfg, grp, recipient);
+            success = mif_send_grp(cfg, grp, destination);
 	}
 
 	msg_grp_release(grp, 1);

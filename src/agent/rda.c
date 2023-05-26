@@ -584,7 +584,9 @@ int rda_send_reports(nmagent_t *agent)
                         AMP_DEBUG_ERR("rda_send_reports", "NULL rx", NULL);
                         continue;
                 }
-                if(mif_send_msg(&agent->mif, MSG_TYPE_RPT_SET, msg_rpt, rx, amp_tv_from_ctime(nowtime, NULL)) == AMP_OK)
+                eid_t destination;
+                strncpy(destination.name, rx, AMP_MAX_EID_LEN);
+                if(mif_send_msg(&agent->mif, MSG_TYPE_RPT_SET, msg_rpt, &destination, amp_tv_from_ctime(nowtime, NULL)) == AMP_OK)
                 {
                         gAgentInstr.num_sent_rpts += vec_num_entries(msg_rpt->rpts);
                 }
