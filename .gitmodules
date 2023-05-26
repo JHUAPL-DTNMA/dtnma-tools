@@ -18,3 +18,7 @@
 	path = deps/osal
 	url = ../osal.git
 	branch = main
+[submodule "deps/civetweb"]
+	path = deps/civetweb
+	url = https://github.com/civetweb/civetweb.git
+	branch = master

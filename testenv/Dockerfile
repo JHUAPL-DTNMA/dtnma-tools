@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y \
 
 
 FROM ubuntu:22.04 as deps-local
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     autoconf libtool
@@ -41,6 +42,20 @@ RUN cd /usr/src/nm/deps/ion && \
     make -j$(nproc) && \
     make install && \
     make -j$(nproc) clean
+
+RUN apt-get update && apt-get install -y \
+    build-essential cmake ninja-build
+COPY deps/civetweb /usr/src/nm/deps/civetweb
+RUN cd /usr/src/nm/deps/civetweb && \
+    cmake -S . -B builddir \
+      -DBUILD_SHARED_LIBS=YES \
+      -DCIVETWEB_ENABLE_SERVER_EXECUTABLE=NO \
+      -DCIVETWEB_BUILD_TESTING=NO \
+      -DCMAKE_BUILD_TYPE=Release \
+      -G Ninja && \
+    cmake --build builddir && \
+    cmake --install builddir && \
+    cmake --build builddir --target clean
 
 COPY deps/mlib /usr/src/nm/deps/mlib
 RUN cd /usr/src/nm/deps/mlib && \
@@ -79,7 +94,7 @@ RUN cd /usr/src/nm && \
 # Systemd services
 COPY testenv/tmpfiles.conf /etc/tmpfiles.d/ion.conf
 COPY --chmod=644 systemd/ion.service systemd/ion-nm-*.service systemd/bpecho@.service /usr/local/lib/systemd/system/
-RUN systemctl enable ion ion-nm-mgr  && \
+RUN systemctl enable ion ion-nm-mgr ion-nm-agent && \
     mkdir -p /var/run/ion
 
 # Runtime config for this container

@@ -1,7 +1,10 @@
 #!/bin/bash
 set -e
 
+SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+cd "${SELFDIR}"
+
 export DOCKER_BUILDKIT=1
-COMPOSEOPTS="-f testenv/docker-compose.yml"
-docker-compose ${COMPOSEOPTS} build
-docker-compose ${COMPOSEOPTS} up -d
+
+docker-compose build
+docker-compose up -d

@@ -7,16 +7,15 @@ set -e
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 source setenv.sh
 
+mkdir -p ${SELFDIR}/deps/build
+
 if [ ! -e ${SELFDIR}/testroot/usr/include/ion.h ]
 then
-  pushd ${SELFDIR}/deps/ion
+#   rm -rf ${SELFDIR}/deps/build/ion
+  rsync --recursive ${SELFDIR}/deps/ion/ ${SELFDIR}/deps/build/ion/
+  pushd ${SELFDIR}/deps/build/ion
 
-#  git restore .
-  if grep nmrest configure.ac >/dev/null
-  then
-    patch -p1 <../ion-4.1.2-remove-nm.patch
-  fi
-  
+  patch -p1 <${SELFDIR}/deps/ion-4.1.2-remove-nm.patch
   autoreconf -vif
   ./configure --prefix=/usr
   make -j$(nproc) clean
@@ -26,9 +25,29 @@ then
   popd
 fi
 
+if [ ! -e ${SELFDIR}/testroot/usr/include/civetweb.h ]
+then
+  rsync --recursive ${SELFDIR}/deps/civetweb/ ${SELFDIR}/deps/build/civetweb/
+  pushd ${SELFDIR}/deps/build/civetweb
+
+  cmake -S . -B builddir \
+    -DCMAKE_INSTALL_PREFIX=${SELFDIR}/testroot/usr \
+    -DBUILD_SHARED_LIBS=YES \
+    -DCIVETWEB_ENABLE_SERVER_EXECUTABLE=NO \
+    -DCIVETWEB_BUILD_TESTING=NO \
+    -DCMAKE_BUILD_TYPE=Release \
+    -G Ninja
+  cmake --build builddir
+  cmake --install builddir
+  cmake --build builddir --target clean
+  popd
+fi
+
 if [ ! -e ${SELFDIR}/testroot/usr/include/m-lib ]
 then
-  pushd ${SELFDIR}/deps/mlib
+  rsync --recursive ${SELFDIR}/deps/mlib/ ${SELFDIR}/deps/build/mlib/
+  pushd ${SELFDIR}/deps/build/mlib
+  
   make -j$(nproc)
   make install PREFIX=/usr DESTDIR=${SELFDIR}/testroot
   make -j$(nproc) clean

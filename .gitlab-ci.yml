@@ -31,7 +31,7 @@ stages:
 
 .prep-install-ext: &prep-install-ext |
     apt-get update && apt-get install -y \
-        build-essential autoconf libtool \
+        build-essential rsync autoconf libtool \
         cmake ninja-build ruby
 
 #sast:

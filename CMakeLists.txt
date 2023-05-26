@@ -43,8 +43,10 @@ option(BUILD_TESTING "Enable test fixtures and libraries" ON)
 include(CTest)
 
 add_subdirectory(deps)
+# Libaries in deps but built separately
 find_package(ION)
 find_package(MLIB)
+find_package(civetweb)
 
 #set(BUILD_SHARED_LIBS ON)
 add_subdirectory(src)
