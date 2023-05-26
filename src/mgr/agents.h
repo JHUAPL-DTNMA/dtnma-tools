@@ -28,8 +28,7 @@
 // Standard includes
 
 // ION includes
-#include "platform.h"
-#include "sdr.h"
+#include "shared/platform.h"
 #include "../shared/utils/nm_types.h"
 #include "../shared/utils/utils.h"
 

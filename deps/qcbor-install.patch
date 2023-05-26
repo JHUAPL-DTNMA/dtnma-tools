@@ -1,0 +1,31 @@
+diff --git a/Makefile b/Makefile
+index 919c4c1..fac0c5b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -7,6 +7,13 @@
+ # See BSD-3-Clause license in README.md
+ #
+ 
++MKDIR=mkdir -p
++INSTALL=install
++INSTALL_BIN=${INSTALL} -m755
++INSTALL_DATA=${INSTALL} -m644
++# Installation directory
++PREFIX=/usr/local
++DESTDIR=
+ 
+ CFLAGS=-I inc -I test -Os -Wcast-align -Wall -Werror -pedantic-errors -Wextra -Wshadow -Wparentheses -xc -std=c99
+ 
+@@ -41,5 +48,12 @@ cmd_line_main.o:	test/run_tests.h inc/qcbor.h
+ 
+ min_use_main.o:		inc/qcbor.h inc/UsefulBuf.h
+ 
++install:
++	$(MKDIR) "$(DESTDIR)$(PREFIX)/include/qcbor"
++	$(INSTALL_DATA) inc/UsefulBuf.h "$(DESTDIR)$(PREFIX)/include/qcbor/"
++	$(INSTALL_DATA) inc/qcbor.h "$(DESTDIR)$(PREFIX)/include/qcbor/"
++	$(MKDIR) "$(DESTDIR)$(PREFIX)/lib"
++	$(INSTALL_BIN) libqcbor.a "$(DESTDIR)$(PREFIX)/lib/"
++
+ clean:
+ 	rm -f $(QCBOR_OBJ) $(TEST_OBJ) libqcbor.a min_use_main.o cmd_line_main.o

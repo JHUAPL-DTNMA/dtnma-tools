@@ -22,13 +22,13 @@
  **  11/01/18  E. Birrane     Update to latest AMP. (JHU/APL)
  *****************************************************************************/
 
+#include <inttypes.h>
 #include "nm_mgr_ui.h"
 #include "nm_mgr_print.h"
 #include "agents.h"
 #include "ui_input.h"
 
 #ifdef USE_JSON
-#include "cJSON.h"
 
 // JSON Prototypes (TODO: Move to header and/or discrete file)
 cJSON* ui_json_from_tnvc(tnvc_t *tnvc);
@@ -426,7 +426,8 @@ void ui_fprint_report(ui_print_cfg_t *fd, rpt_t *rpt)
     		ui_fprintf(fd,"\nRpt Name  : %s", rpt_info->name);
     	}
     }
-    ui_fprintf(fd,"\nTimestamp : %s", ctime(&(rpt->time)));
+    time_t secs = OS_TimeGetTotalSeconds(rpt->time);
+    ui_fprintf(fd,"\nTimestamp : %s", ctime(&secs));
     ui_fprintf(fd,"\n# Entries : %d", num_entries);
     ui_fprintf(fd,"\n----------------------------------------\n");
 
@@ -574,7 +575,8 @@ cJSON* ui_json_report(rpt_t *rpt)
           }
        }
     }
-    cJSON_AddStringToObject(rtv, "timestamp", ctime(&(rpt->time)));
+    time_t secs = OS_TimeGetTotalSeconds(rpt->time);
+    cJSON_AddStringToObject(rtv, "timestamp", ctime(&secs));
 
     /* Step 2: Print individual entries, based on type. */
 	if(rpt->id->type == AMP_TYPE_RPTTPL)
@@ -1055,12 +1057,12 @@ char *ui_str_from_sbr(rule_t *sbr)
 
 		snprintf(str,
 				1023,
-				"SBR: ID=%s, S=0x"ADDR_FIELDSPEC", E=%s, M=0x"ADDR_FIELDSPEC", C=0x"ADDR_FIELDSPEC", A=%s\n",
+				"SBR: ID=%s, S="PRId64", E=%s, M="PRId64", C="PRId64", A=%s\n",
 				(id_str == NULL) ? "null" :id_str,
-				(uaddr)sbr->start,
+				OS_TimeGetTotalSeconds(sbr->start),
 				(expr_str == NULL) ? "null" : expr_str,
-				(uaddr)sbr->def.as_sbr.max_eval,
-				(uaddr)sbr->def.as_sbr.max_fire,
+				sbr->def.as_sbr.max_eval,
+				sbr->def.as_sbr.max_fire,
 				(ac_str == NULL) ? "null" : ac_str);
 
 		SRELEASE(id_str);
@@ -1219,9 +1221,9 @@ char *ui_str_from_tbr(rule_t *tbr)
 		snprintf(str,
 				1024,
 				"TBR: ID=%s, S=" \
-				UVAST_FIELDSPEC ", P=" \
-				UVAST_FIELDSPEC ", C=" \
-				UVAST_FIELDSPEC ", A=%s\n",
+				PRId64 ", P=" \
+				PRId64 ", C=" \
+				PRId64 ", A=%s\n",
 				(id_str == NULL) ? "null" :id_str,
 				tbr->start,
 			    tbr->def.as_tbr.period,
@@ -1310,10 +1312,10 @@ char *ui_str_from_tnv(tnv_t *tnv)
 		case AMP_TYPE_STR:   snprintf(str, 1023, "%s", (char*) tnv->value.as_ptr); break;
 		case AMP_TYPE_INT:   sprintf(str,"%d", tnv->value.as_int);     break;
 		case AMP_TYPE_UINT:  sprintf(str,"%d", tnv->value.as_uint);    break;
-		case AMP_TYPE_VAST:  sprintf(str, VAST_FIELDSPEC , tnv->value.as_vast);   break;
+		case AMP_TYPE_VAST:  sprintf(str, PRId64, tnv->value.as_vast);   break;
 		case AMP_TYPE_TV:
 		case AMP_TYPE_TS:
-		case AMP_TYPE_UVAST: sprintf(str, UVAST_FIELDSPEC , tnv->value.as_uvast);  break;
+		case AMP_TYPE_UVAST: sprintf(str, PRIu64, tnv->value.as_uvast);  break;
 		case AMP_TYPE_REAL32:sprintf(str,"%f", tnv->value.as_real32);  break;
 		case AMP_TYPE_REAL64:sprintf(str,"%lf", tnv->value.as_real64); break;
 

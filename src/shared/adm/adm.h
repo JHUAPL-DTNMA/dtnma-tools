@@ -36,6 +36,7 @@
 #include "../primitives/report.h"
 #include "../primitives/ctrl.h"
 #include "../primitives/table.h"
+#include "../primitives/time.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -131,6 +132,7 @@ double adm_get_parm_real64(tnvc_t *parms, uint8_t idx, int *success);
 uint32_t adm_get_parm_uint(tnvc_t *parms, uint8_t idx, int *success);
 uvast adm_get_parm_uvast(tnvc_t *parms, uint8_t idx, int *success);
 vast adm_get_parm_vast(tnvc_t *parms, uint8_t idx, int *success);
+amp_tv_t adm_get_parm_tv(tnvc_t *parms, uint8_t idx, int *success);
 
 void adm_init();
 void adm_common_init();

@@ -11,18 +11,17 @@
 #include <time.h>
 
 // CivetWeb includes
-#include "cJSON.h"
-#include "civetweb.h"
+#include <cjson/cJSON.h>
+#include <civetweb.h>
 #include "nm_rest.h"
 
 // NM Includes
-#include "../shared/nm.h"
+#include "shared/nm.h"
 #include "agents.h"
-#include "nm_mgr.h"
+#include "nmmgr.h"
 #include "nm_mgr_ui.h"
 #include "nm_mgr_print.h"
 
-#include "ion.h" // Used only to retrieve IONVERSIONNUMBER for reference
 
 struct mg_context *ctx;
 

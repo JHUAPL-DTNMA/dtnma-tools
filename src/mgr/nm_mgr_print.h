@@ -36,15 +36,15 @@
 #include "../shared/primitives/expr.h"
 #include "../shared/adm/adm.h"
 #include "nm_mgr_ui.h"
-#include "nm_mgr.h"
 #include "metadata.h"
+#include "nmmgr.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifdef USE_JSON
-#include "cJSON.h"
+#include <cjson/cJSON.h>
 #endif
 
 // ASCII Color Codes & Macros for formatting stdout

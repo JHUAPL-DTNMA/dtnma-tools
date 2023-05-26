@@ -832,12 +832,12 @@ tnv_t*  tnv_from_uvast(uvast val)
  *   1. Result must be freed with tnv_release(<item>, 1);
  *****************************************************************************/
 
-tnv_t*  tnv_from_tv(OS_time_t val)
+tnv_t*  tnv_from_tv(amp_tv_t val)
 {
 	tnv_t *result = tnv_create();
 	CHKNULL(result);
 	tnv_init(result, AMP_TYPE_TV);
-	result->value.as_uvast = OS_TimeGetTotalSeconds(val);
+	result->value.as_uvast = OS_TimeGetTotalSeconds(val.secs);
 	return result;
 }
 
@@ -1386,10 +1386,10 @@ vast  tnv_to_vast(tnv_t val, int *success)
 }
 
 
-OS_time_t tnv_to_tv(tnv_t val, int *success)
+amp_tv_t tnv_to_tv(tnv_t val, int *success)
 {
   vast secs = tnv_to_vast(val, success);
-  return OS_TimeAssembleFromMilliseconds(secs, 0);
+  return (amp_tv_t){ .secs = OS_TimeFromTotalSeconds(secs) };
 }
 
 

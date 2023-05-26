@@ -43,19 +43,14 @@ RUN cd /usr/src/nm/deps/ion && \
     make install && \
     make -j$(nproc) clean
 
-RUN apt-get update && apt-get install -y \
-    build-essential cmake ninja-build
-COPY deps/civetweb /usr/src/nm/deps/civetweb
-RUN cd /usr/src/nm/deps/civetweb && \
-    cmake -S . -B builddir \
-      -DBUILD_SHARED_LIBS=YES \
-      -DCIVETWEB_ENABLE_SERVER_EXECUTABLE=NO \
-      -DCIVETWEB_BUILD_TESTING=NO \
-      -DCMAKE_BUILD_TYPE=Release \
-      -G Ninja && \
-    cmake --build builddir && \
-    cmake --install builddir && \
-    cmake --build builddir --target clean
+COPY deps/QCBOR /usr/src/nm/deps/QCBOR
+COPY deps/qcbor*.patch /usr/src/nm/deps/
+RUN cd /usr/src/nm/deps/QCBOR && \
+    patch -p1 <../qcbor-install.patch && \
+    patch -p2 <../qcbor-expose-private.patch && \
+    make -j$(nproc) && \
+    make install && \
+    make -j$(nproc) clean
 
 COPY deps/mlib /usr/src/nm/deps/mlib
 RUN cd /usr/src/nm/deps/mlib && \
@@ -77,7 +72,8 @@ COPY --chmod=755 testenv/service_is_running.sh /usr/local/bin/service_is_running
 
 # Agent to test
 RUN apt-get update && apt-get install -y \
-    cmake ninja-build ruby
+    cmake ninja-build ruby \
+    civetweb libcivetweb-dev libcjson-dev
 COPY deps /usr/src/nm/deps
 COPY cmake /usr/src/nm/cmake
 COPY src /usr/src/nm/src

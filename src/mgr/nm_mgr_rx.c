@@ -29,13 +29,12 @@
  **  10/07/18  E. Birrane      Update to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
-#include "nm_mgr.h"
-#include "platform.h"
+#include "shared/platform.h"
 #include "agents.h"
 
+#include <inttypes.h>
 #include <pthread.h>
 
-#include "../shared/msg/ion_if.h"
 #include "../shared/utils/nm_types.h"
 #include "../shared/utils/utils.h"
 #include "../shared/utils/debug.h"
@@ -266,10 +265,10 @@ void rx_agent_reg(msg_metadata_t *meta, msg_agent_t *msg)
  *  08/20/13  E. Birrane     Code cleanup and documentation.
  *****************************************************************************/
 
-void *mgr_rx_thread(int *running)
+void *mgr_rx_thread(void *arg)
 {
-
-    AMP_DEBUG_ENTRY("mgr_rx_thread","(0x%x)", (size_t) running);
+  nmmgr_t *mgr = arg;
+  AMP_DEBUG_ENTRY("mgr_rx_thread","mgr (" PRIdPTR ")", mgr);
     
     AMP_DEBUG_INFO("mgr_rx_thread","Receiver thread running...", NULL);
     
@@ -286,13 +285,13 @@ void *mgr_rx_thread(int *running)
      * g_running controls the overall execution of threads in the
      * NM Agent.
      */
-    while(*running) {
+    while(daemon_run_get(&mgr->running)) {
 
         /* Step 1: Receive a message from the Bundle Protocol Agent. */
-        buf = iif_receive(&ion_ptr, &meta, NM_RECEIVE_TIMEOUT_SEC, &success);
+        buf = mif_receive(&mgr->mif, &meta, &success);
         if(success != AMP_OK)
         {
-        	*running = 0;
+          daemon_run_stop(&mgr->running);
         }
         else if(buf != NULL)
         {
@@ -325,7 +324,7 @@ void *mgr_rx_thread(int *running)
     		}
 
     		AMP_DEBUG_INFO("mgr_rx_thread","Group had %d msgs", vec_num_entries(grp->msgs));
-    		AMP_DEBUG_INFO("mgr_rx_thread","Group timestamp %lu", grp->time);
+//FIXME:	AMP_DEBUG_INFO("mgr_rx_thread","Group timestamp %lu", grp->timestamp);
 
 #ifdef HAVE_MYSQL
             /* Copy the message group to the database tables */

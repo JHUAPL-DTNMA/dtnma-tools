@@ -30,8 +30,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <inttypes.h>
 
-#include "platform.h"
+#include "shared/platform.h"
 #include "../shared/nm.h"
 #include "../shared/utils/utils.h"
 #include "../shared/adm/adm.h"
@@ -40,6 +41,7 @@
 #include "../shared/msg/msg.h"
 
 #include "nm_mgr_ui.h"
+#include "nmmgr.h"
 #include "ui_input.h"
 #include "nm_mgr_print.h"
 #include "metadata.h"
@@ -142,19 +144,12 @@ form_fields_t db_conn_form_fields[] = {
 
 #endif
 
-#ifdef USE_NCURSES
-#define MGR_UI_DEFAULT MGR_UI_NCURSES
-#else
-#define MGR_UI_DEFAULT MGR_UI_STANDARD
-#endif
-
-int gContext;
-int *global_nm_running = NULL;
-mgr_ui_mode_enum mgr_ui_mode = MGR_UI_DEFAULT;
+//FIXME clean this up
+nmmgr_t *global_mgr = NULL;
 
 /* Prototypes */
-void ui_eventLoop(int *running);
-void ui_ctrl_list_menu(int *running);
+static void ui_eventLoop(nmmgr_t *mgr);
+static void ui_ctrl_list_menu(nmmgr_t *mgr);
 
 #ifdef HAVE_MYSQL
 void ui_db_menu(int *running);
@@ -196,7 +191,7 @@ int ui_build_control(agent_t* agent)
 	msg_ctrl_t *msg;
     int rtv;
 
-	AMP_DEBUG_ENTRY("ui_build_control","("ADDR_FIELDSPEC")", (uaddr)agent);
+	AMP_DEBUG_ENTRY("ui_build_control","("PRIdPTR")", (uaddr)agent);
 
     if (agent == NULL)
     {
@@ -241,9 +236,10 @@ int ui_build_control(agent_t* agent)
 
 	if((msg = msg_ctrl_create_ari(id)) != NULL)
 	{
-		msg->start = ts;
+	  OS_time_t timestamp = OS_TimeFromTotalSeconds(ts);
+		msg->start = amp_tv_from_ctime(timestamp, NULL);
         ui_log_transmit_msg(agent, msg);
-		rtv = iif_send_msg(&ion_ptr, MSG_TYPE_PERF_CTRL, msg, agent->eid.name);
+		rtv = mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, agent->eid.name, AMP_TV_ZERO);
 		msg_ctrl_release(msg, 1);
         return rtv;
 	}
@@ -390,8 +386,8 @@ rule_t *ui_create_tbr_from_parms(tnvc_t parms)
 	int success;
 
 	ari_t *id = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
-	uvast start = adm_get_parm_uvast(&parms, 1, &success);
-	def.period = adm_get_parm_uvast(&parms, 2, &success);
+	OS_time_t start = amp_tv_to_ctime(adm_get_parm_tv(&parms, 1, &success), NULL);
+	def.period = amp_tv_to_ctime(adm_get_parm_tv(&parms, 2, &success), NULL);
 	def.max_fire = adm_get_parm_uvast(&parms, 3, &success);
 	ac_t action = ac_copy(adm_get_parm_obj(&parms, 4, AMP_TYPE_AC));
 
@@ -411,7 +407,7 @@ rule_t *ui_create_sbr_from_parms(tnvc_t parms)
 	int success;
 
 	ari_t *id = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
-	uvast start = adm_get_parm_uvast(&parms, 1, &success);
+        OS_time_t start = amp_tv_to_ctime(adm_get_parm_tv(&parms, 1, &success), NULL);
 	expr_t *state = adm_get_parm_obj(&parms, 2, AMP_TYPE_EXPR);
 	def.expr = *state;
 	SRELEASE(state);
@@ -598,13 +594,13 @@ int ui_automator_parse_input(char *str)
       if (strncmp(token, "EXIT_UI", 8) == 0)
       {
          // To minimize errors in automation, the full string must match to exit to standard UI
-         mgr_ui_mode = MGR_UI_DEFAULT;
+         global_mgr->mgr_ui_mode = MGR_UI_DEFAULT;
          return 1;
       }
       else if (strncmp(token, "EXIT_SHUTDOWN", 16) == 0)
       {
          printf("Signaling Manager Shutdown . . . \n");
-         *global_nm_running = 0;
+         daemon_run_stop(&global_mgr->running);
          return 1;
       }
       break;
@@ -642,9 +638,9 @@ int ui_automator_parse_input(char *str)
          ari_release(id, 1);
          return 0;
       }
-      msg->start = ts;
+      msg->start = amp_tv_from_ctime(OS_TimeFromTotalSeconds(ts), NULL);
       ui_log_transmit_msg(agent, msg);
-      iif_send_msg(&ion_ptr, MSG_TYPE_PERF_CTRL, msg, agent->eid.name);
+      mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, agent->eid.name, AMP_TV_ZERO);
       msg_ctrl_release(msg, 1);
       break;
    case 'L': // List Agents
@@ -692,25 +688,27 @@ int ui_automator_parse_input(char *str)
    
    return 1;
 }
-void ui_automator_run(int *running)
+
+static void ui_automator_run(nmmgr_t *mgr)
 {
    char line[MAX_INPUT_BYTES];
-   int len;
+   size_t len;
 
-   while(mgr_ui_mode == MGR_UI_AUTOMATOR && *running)
+   while((mgr->mgr_ui_mode == MGR_UI_AUTOMATOR) && daemon_run_get(&mgr->running))
    {
       // Print prompt
       printf("\n#-NM->");
       fflush(stdout); // Show the prompt without a newline
 
       // Read Input Line
-      if(igets(fileno(stdin), line, MAX_INPUT_BYTES, &len) == NULL)
+      if(fgets(line, MAX_INPUT_BYTES, stdin) == NULL)
       {
-         AMP_DEBUG_ERR("ui_automator_run", "igets failed.", NULL);
+         AMP_DEBUG_ERR("ui_automator_run", "fgets failed.", NULL);
          return;
       }
 
       // Parse & Execute Line
+      len = strlen(line);
       if (len > 0)
       {
          if (ui_automator_parse_input(line) != 1)
@@ -734,7 +732,7 @@ void ui_automator_run(int *running)
  *  --------  ------------   ---------------------------------------------
  *  10/15/18  D.Edell        Initial NCURSES implementation based on original UI
  *****************************************************************************/
-void ui_eventLoop(int *running)
+void ui_eventLoop(nmmgr_t *mgr)
 {
    int choice; // Last user menu selection
    char msg[128] = ""; // User (error) message to append to menu
@@ -743,11 +741,11 @@ void ui_eventLoop(int *running)
    
    ui_init();
    
-   while(*running)
+   while(daemon_run_get(&mgr->running))
    {
-      if (mgr_ui_mode == MGR_UI_AUTOMATOR)
+      if (mgr->mgr_ui_mode == MGR_UI_AUTOMATOR)
       {
-         ui_automator_run(running);
+         ui_automator_run(mgr);
       }
       else
       {
@@ -756,7 +754,7 @@ void ui_eventLoop(int *running)
       
          if (choice == MAIN_MENU_EXIT)
          {
-            *running = 0;
+            daemon_run_stop(&mgr->running);
             break;
          } else {
             switch(choice)
@@ -778,7 +776,7 @@ void ui_eventLoop(int *running)
                }
                break;
             case MAIN_MENU_LIST_AMM: // List Object Information (old Control Menu merged with Admmin Menu's List Agents)
-               ui_ctrl_list_menu(running);
+               ui_ctrl_list_menu(mgr);
                break;
 #ifdef HAVE_MYSQL
             case MAIN_MENU_DB: // DB
@@ -795,7 +793,7 @@ void ui_eventLoop(int *running)
                ui_log_cfg_menu();
                break;
             case MAIN_MENU_AUTOMATOR_UI:
-               mgr_ui_mode = MGR_UI_AUTOMATOR;
+              global_mgr->mgr_ui_mode = MGR_UI_AUTOMATOR;
                printf("Switching to alternate AUTOMATOR interface. Type 'EXIT_UI' to return to this menu, '?' for usage.");
                break;
             default:
@@ -970,7 +968,7 @@ void ui_postprocess_ctrl(ari_t *id)
 
 			if(var != NULL)
 			{
-				db_forget(&(var->desc), gDB.vars);
+//FIXME:			db_forget(&(var->desc), gDB.vars);
 				VDB_DELKEY_VAR(id);
 			}
 			else
@@ -1006,7 +1004,7 @@ void ui_postprocess_ctrl(ari_t *id)
 
 			if(def != NULL)
 			{
-				db_forget(&(def->desc), gDB.rpttpls);
+//FIXME				db_forget(&(def->desc), gDB.rpttpls);
 				VDB_DELKEY_RPTT(id);
 			}
 			else
@@ -1041,7 +1039,7 @@ void ui_postprocess_ctrl(ari_t *id)
 
 			if(def != NULL)
 			{
-				db_forget(&(def->desc), gDB.macdefs);
+//FIXME				db_forget(&(def->desc), gDB.macdefs);
 				VDB_DELKEY_MACDEF(mac_id);
 			}
 			else
@@ -1095,7 +1093,7 @@ void ui_postprocess_ctrl(ari_t *id)
 
 			if(def != NULL)
 			{
-				db_forget(&(def->desc), gDB.rules);
+//FIXME				db_forget(&(def->desc), gDB.rules);
 				VDB_DELKEY_RULE(rule_id);
 			}
 			else
@@ -1335,9 +1333,9 @@ void ui_send_file(agent_t* agent, uint8_t enter_ts)
            return;
 		}
 
-		msg->start = ts;
+		msg->start = amp_tv_from_ctime(OS_TimeFromTotalSeconds(ts), NULL);
         ui_log_transmit_msg(agent, msg);
-		iif_send_msg(&ion_ptr, MSG_TYPE_PERF_CTRL, msg, agent->eid.name);
+        mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, agent->eid.name, AMP_TV_ZERO);
 
 		msg_ctrl_release(msg, 1);
 		cursor = strtok_r(NULL, "\n", &saveptr);
@@ -1376,22 +1374,23 @@ void ui_send_raw(agent_t* agent, uint8_t enter_ts)
 		ari_release(id, 1);
 		return;
 	}
-	msg->start = ts;
+	msg->start = amp_tv_from_ctime(OS_TimeFromTotalSeconds(ts), NULL);
     ui_log_transmit_msg(agent, msg);
-	iif_send_msg(&ion_ptr, MSG_TYPE_PERF_CTRL, msg, agent->eid.name);
+    mif_send_msg(&global_mgr->mif, MSG_TYPE_PERF_CTRL, msg, agent->eid.name, AMP_TV_ZERO);
 
 	msg_ctrl_release(msg, 1);
 }
 
 
-void *ui_thread(int *running)
+void *ui_thread(void *arg)
 {
-	AMP_DEBUG_ENTRY("ui_thread","(0x%x)", (size_t) running);
+  nmmgr_t *mgr = arg;
+  AMP_DEBUG_ENTRY("ui_thread","mgr (" PRIdPTR ")", mgr);
 
     // Cache running as an NM UI Global for simplicity. This is always the entrypoint to ui
-    global_nm_running = running;
+    global_mgr = mgr;
 
-	ui_eventLoop(running);
+	ui_eventLoop(mgr);
 
 	AMP_DEBUG_ALWAYS("ui_thread","Exiting.", NULL);
 
@@ -1631,7 +1630,7 @@ int ui_db_clear_rpt()
 
 #endif
 
-void ui_ctrl_list_menu(int *running)
+void ui_ctrl_list_menu(nmmgr_t *mgr)
 {
    int choice;
    int n_choices = ARRAY_SIZE(ctrl_menu_list_choices);
@@ -1656,7 +1655,7 @@ void ui_ctrl_list_menu(int *running)
    sprintf(ctrl_menu_list_descriptions[9], "(%d known)",  gVDB.vars.num_elts);
    
 
-   while(*running)
+   while(daemon_run_get(&mgr->running))
    {
       choice = ui_menu("ADM Object Information Lists", ctrl_menu_list_choices, ctrl_menu_list_descriptions, n_choices, 
                        ((new_msg==0) ? NULL : msg)
@@ -2487,7 +2486,7 @@ int ui_menu(char* title, char** choices, char** descriptions, int n_choices, cha
 	post_menu(my_menu);
 	wrefresh(my_menu_win);
 
-	while(*global_nm_running && running && (c = wgetch(my_menu_win)) != KEY_F(1))
+	while(daemon_run_get(&global_mgr->running) && running && (c = wgetch(my_menu_win)) != KEY_F(1))
 	{
        show_panel(my_pan);
        update_panels();
@@ -2636,7 +2635,7 @@ int ui_menu_listing(
        set_current_item(my_menu, my_items[i]);
     }
 
-	while(running && *global_nm_running)
+	while(running && daemon_run_get(&global_mgr->running))
 	{
        i = item_index(current_item(my_menu));
 
@@ -2903,7 +2902,7 @@ int ui_menu(char* title, char** choices, char** descriptions, int n_choices, cha
    int i;
    ui_display_init(title);
 
-   while(*global_nm_running) {
+   while(daemon_run_get(&global_mgr->running)) {
 
       for(i = 0; i < n_choices; i++)
       {
@@ -2945,7 +2944,7 @@ int ui_menu_listing(
    int running = 1;
    char line[20];
 
-   while(running && *global_nm_running)
+   while(running && daemon_run_get(&global_mgr->running))
    {
       ui_display_init(title);
 
@@ -3299,7 +3298,7 @@ static int do_ui_form(char* title, char* msg, form_fields_t *fields, int num_fie
 
       // Prompt User for input
       while(1) {
-         int len;
+         size_t len;
          
          switch(field->type) {
             case TYPE_CHECK_INT:
@@ -3313,7 +3312,7 @@ static int do_ui_form(char* title, char* msg, form_fields_t *fields, int num_fie
             printf(":->");
          }
          fflush(stdout);
-         if (igets(STDIN_FILENO, in, UI_FORM_LEN, &len) == NULL || len == 0)
+         if (fgets(in, UI_FORM_LEN, stdin) == NULL || (len = strlen(in)) == 0)
          {          
             if (field->parsed_value != NULL || (field->value != NULL && strlen(field->value) > 0) )
             {

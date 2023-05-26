@@ -69,39 +69,22 @@ bool nmagent_destroy(nmagent_t *agent)
  **  02/23/15  E. Birrane      Updated to support ION_LWT targets
  **  10/04/18  E. Birrane      Updated to AMP v0.5 (JHU/APL)
  *****************************************************************************/
-bool agent_start(nmagent_t *agent)
+bool nmagent_start(nmagent_t *agent)
 {
     int rc;
-
-    AMP_DEBUG_ENTRY("agent_main","("PRIdPTR")", agent);
+    AMP_DEBUG_ENTRY("nmagent_start","("PRIdPTR")", agent);
 
     rda_init();
 
     /* Step 5: Start agent threads. */
-    struct threadinfo {
-      void* (*func)(void*);
-      const char *name;
-    } threads[] = {
+    threadinfo_t threadinfo[] = {
         {&rx_thread, "rx_thread"},
     };
-
-    for (struct threadinfo *it = threads;
-	 it < threads + sizeof(threads)/sizeof(struct threadinfo); ++it)
+    if (threadset_start(&agent->threads, threadinfo, sizeof(threadinfo)/sizeof(threadinfo_t), agent) != AMP_OK)
     {
-      pthread_t thr;
-      rc = pthread_create(&thr, NULL, it->func, agent);
-      if (rc)
-      {
-        AMP_DEBUG_ERR("agent_main","Unable to create pthread %s, errno = %s",
-                      it->name, strerror(errno));
-
-        db_destroy();
-
-        AMP_DEBUG_EXIT("agent_main","->-1",NULL);
-        return false;
-      }
-      list_thread_push_back(agent->threads, thr);
-      pthread_setname_np(thr, it->name);
+      db_destroy();
+      AMP_DEBUG_EXIT("agent_main","->-1",NULL);
+      return false;
     }
     AMP_DEBUG_ALWAYS("agent_main","Threads started...", NULL);
 
@@ -144,23 +127,11 @@ bool agent_start(nmagent_t *agent)
  **  08/18/13  E. Birrane    Initial Implementation
  *****************************************************************************/
 
-bool agent_stop(nmagent_t *agent)
+bool nmagent_stop(nmagent_t *agent)
 {
   /* Notify threads */
   daemon_run_stop(&agent->running);
-
-  list_thread_it_t it;
-  for (list_thread_it(it, agent->threads);
-      !list_thread_end_p(it);
-      list_thread_next(it))
-  {
-    pthread_t *thr = list_thread_ref(it);
-    if (pthread_join(*thr, NULL))
-    {
-        AMP_DEBUG_ERR("agent_main","Unable to join pthread %s, errno = %s",
-                      "name", strerror(errno));
-    }
-  }
+  threadset_join(&agent->threads);
 
   /* Step 8: Cleanup. */
   AMP_DEBUG_ALWAYS("agent_main","Cleaning Agent Resources.",NULL);

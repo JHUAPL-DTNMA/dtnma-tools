@@ -631,6 +631,12 @@ vast adm_get_parm_vast(tnvc_t *parms, uint8_t idx, int *success)
 	return (val == NULL) ? 0 : tnv_to_vast(*val, success);
 }
 
+amp_tv_t adm_get_parm_tv(tnvc_t *parms, uint8_t idx, int *success)
+{
+  tnv_t *val = tnvc_get(parms, idx);
+  return (val == NULL) ? AMP_TV_ZERO : tnv_to_tv(*val, success);
+}
+
 /******************************************************************************
  *
  * \par Function Name: adm_common_init

@@ -9,7 +9,7 @@ Type=notify
 PassEnvironment=ION_NODE_NUM
 EnvironmentFile=-/etc/ion/environment
 ExecStart=ion_nm_wrap --listen /var/run/nm_mgr.socket -- \
-    nm_mgr -A ipn:${ION_NODE_NUM}.7
+    ion_nm_mgr -A ipn:${ION_NODE_NUM}.7
 
 [Install]
 WantedBy=multi-user.target

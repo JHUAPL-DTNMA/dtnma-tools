@@ -58,6 +58,7 @@ extern "C" {
 typedef struct
 {
 	eid_t local_eid;
+        eid_t peer_eid;
 	BpSAP sap;
 } iif_t;
 
@@ -76,13 +77,14 @@ typedef struct
  */
 
 
+int     iif_register_node(iif_t *iif, eid_t eid);
 int     iif_deregister_node(iif_t *iif);
 eid_t   iif_get_local_eid(iif_t *iif);
 int     iif_is_registered(iif_t *iif);
-blob_t *iif_receive(iif_t *iif, msg_metadata_t *meta, int timeout, int *success);
-int     iif_register_node(iif_t *iif, eid_t eid);
-int     iif_send_grp(iif_t *iif, msg_grp_t *group, char *recipient);
-int     iif_send_msg(iif_t *iif, int msg_type, void *msg, char *recipient);
+
+int msg_bp_send(const blob_t *data, void *ctx);
+
+blob_t * msg_bp_recv(msg_metadata_t *meta, int *success, void *ctx);
 
 
 #ifdef __cplusplus

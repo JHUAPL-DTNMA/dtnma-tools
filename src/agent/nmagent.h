@@ -29,14 +29,13 @@
 
 // Standard includes
 #include <stdint.h>
-#include <pthread.h>
-#include <m-list.h>
 
 // Application includes
 #include "shared/platform.h"
-
+#include "shared/utils/daemon_run.h"
 #include "shared/utils/nm_types.h"
 #include "shared/utils/daemon_run.h"
+#include "shared/utils/threadset.h"
 #include "shared/primitives/ari.h"
 #include "shared/primitives/rules.h"
 #include "shared/msg/msg.h"
@@ -59,7 +58,6 @@ extern "C" {
  * +--------------------------------------------------------------------------+
  */
 
-LIST_DEF(list_thread, pthread_t)
 
 /*
  * +--------------------------------------------------------------------------+
@@ -86,9 +84,9 @@ bool nmagent_init(nmagent_t *agent);
 
 bool nmagent_destroy(nmagent_t *agent);
 
-bool agent_start(nmagent_t *agent);
+bool nmagent_start(nmagent_t *agent);
 
-bool agent_stop(nmagent_t *agent);
+bool nmagent_stop(nmagent_t *agent);
 
 
 

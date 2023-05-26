@@ -23,12 +23,13 @@
  **  10/06/18  E. Birrane      Initial Implementation (JHU/APL)
  *****************************************************************************/
 
+#include <sys/stat.h>
 // Application headers.
 #include "agents.h"
 
 
 #include "../shared/utils/debug.h"
-#include "nm_mgr.h"
+#include "nmmgr.h"
 
 agent_autologging_cfg_t agent_log_cfg = {
  // Defaults (nominal, disabled on startup)

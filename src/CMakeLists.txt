@@ -1,3 +1,4 @@
+
 # Shared library for agent and manager
 set(HFILES
   "shared/nm.h"
@@ -9,6 +10,7 @@ set(HFILES
   "shared/utils/daemon_run.h"
   "shared/utils/nm_types.h"
   "shared/utils/rhht.h"
+  "shared/utils/threadset.h"
   "shared/utils/utils.h"
   "shared/utils/vector.h"
   "shared/primitives/ari.h"
@@ -32,6 +34,7 @@ set(CFILES
   "shared/utils/nm_types.c"
   "shared/utils/db.c"
   "shared/utils/rhht.c"
+  "shared/utils/threadset.c"
   "shared/utils/utils.c"
   "shared/utils/vector.c"
   "shared/primitives/ari.c"
@@ -53,47 +56,116 @@ target_include_directories(nmcommon PUBLIC
 )
 target_compile_definitions(nmcommon PUBLIC
   USE_MALLOC=1
+  _GNU_SOURCE
+  AMP_VERSION=8
 )
 target_link_libraries(nmcommon PUBLIC m)
 target_link_libraries(nmcommon PUBLIC osal)
 target_link_libraries(nmcommon PUBLIC MLIB::mlib)
 target_link_libraries(nmcommon PUBLIC qcbor)
-
-set(HFILES
-  agent/ingest.h
-  agent/instr.h
-  agent/lcc.h
-  agent/ldc.h
-  agent/nmagent.h
-  agent/rda.h
-)
-set(CFILES
-  agent/ingest.c
-  agent/instr.c
-  agent/lcc.c
-  agent/ldc.c
-  agent/nmagent.c
-  agent/rda.c
-)
-add_library(nmagent ${CFILES} ${HFILES})
-target_compile_definitions(nmagent PRIVATE _GNU_SOURCE)
-target_link_libraries(nmagent PUBLIC nmcommon)
-target_include_directories(nmagent PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/agent
-)
-
-set(HFILES
-  "ion_if/ion_if.h"
-)
-set(CFILES
-  "ion_if/ion_if.c"
-  ion_if/nmagent.c
-)
-add_executable(nm_agent ${CFILES} ${HFILES})
-target_link_libraries(nm_agent nmagent)
-target_link_libraries(nm_agent ION::BP)
-
 install(
-  TARGETS nm_agent
+  TARGETS nmcommon
   RUNTIME
 )
+
+if(BUILD_AGENT)
+  # NM Agent library without concrete messaging interface
+  set(HFILES
+    agent/ingest.h
+    agent/instr.h
+    agent/lcc.h
+    agent/ldc.h
+    agent/nmagent.h
+    agent/rda.h
+  )
+  set(CFILES
+    agent/ingest.c
+    agent/instr.c
+    agent/lcc.c
+    agent/ldc.c
+    agent/nmagent.c
+    agent/rda.c
+  )
+  add_library(nmagent ${CFILES} ${HFILES})
+  target_link_libraries(nmagent PUBLIC nmcommon)
+  target_include_directories(nmagent PUBLIC
+      ${CMAKE_CURRENT_SOURCE_DIR}/agent
+  )
+
+  set(HFILES
+    ion_if/ion_if.h
+  )
+  set(CFILES
+    ion_if/ion_if.c
+    ion_if/nm_agent.c
+  )
+  add_executable(ion_nm_agent ${CFILES} ${HFILES})
+  target_link_libraries(ion_nm_agent nmagent)
+  target_link_libraries(ion_nm_agent ION::BP)
+
+  install(
+    TARGETS nmagent ion_nm_agent
+    RUNTIME
+  )
+endif(BUILD_AGENT)
+
+if(BUILD_MANAGER)
+  # NM Manager library without concrete messaging interface
+  set(HFILES
+    mgr/agents.h
+    mgr/metadata.h
+    mgr/nm_mgr_print.h
+    mgr/nm_mgr_rx.h
+    mgr/nm_mgr_ui.h
+    mgr/nmmgr.h
+    mgr/ui_input.h
+  )
+  set(CFILES
+    mgr/agents.c
+    mgr/metadata.c
+    mgr/nm_mgr_print.c
+    mgr/nm_mgr_rx.c
+    mgr/nm_mgr_ui.c
+    mgr/nmmgr.c
+    mgr/ui_input.c
+  )
+  if(civetweb_FOUND)
+    list(APPEND HFILES mgr/nm_rest.h)
+    list(APPEND CFILES mgr/nm_rest.c)
+  endif(civetweb_FOUND)
+  
+  add_library(nmmgr ${CFILES} ${HFILES})
+  if(MYSQLCLIENT_FOUND)
+    message(STATUS "Manager using MySQL client")
+    target_compile_definitions(nmmgr PUBLIC HAVE_MYSQL)
+  endif(MYSQLCLIENT_FOUND)
+  if(cJSON_FOUND)
+    message(STATUS "Manager using cJSON")
+    target_compile_definitions(nmmgr PUBLIC USE_JSON)
+    target_link_libraries(nmmgr PUBLIC cjson)
+  endif(cJSON_FOUND)
+  if(civetweb_FOUND)
+    message(STATUS "Manager using civetweb")
+    target_compile_definitions(nmmgr PUBLIC USE_CIVETWEB)
+  endif(civetweb_FOUND)
+  target_link_libraries(nmmgr PUBLIC nmcommon)
+  target_include_directories(nmmgr PUBLIC
+      ${CMAKE_CURRENT_SOURCE_DIR}/mgr
+  )
+
+  set(HFILES
+    ion_if/ion_if.h
+  )
+  set(CFILES
+    ion_if/ion_if.c
+    ion_if/nm_mgr.c
+  )
+  add_executable(ion_nm_mgr ${CFILES} ${HFILES})
+  target_link_libraries(ion_nm_mgr nmmgr)
+  target_link_libraries(ion_nm_mgr ION::BP)
+
+  install(
+    TARGETS nmmgr ion_nm_mgr
+    RUNTIME
+  )
+endif(BUILD_MANAGER)

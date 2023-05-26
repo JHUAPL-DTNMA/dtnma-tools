@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 project(nm LANGUAGES C)
 
+option(BUILD_TESTING "Enable test fixtures and libraries" ON)
+option(BUILD_AGENT "Build the Agent library and executable" ON)
+option(BUILD_MANAGER "Build the Manager library and executable" ON)
+
 # Language options
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -38,19 +42,25 @@ add_definitions(
   -DHAVE_MEMALIGN=${HAVE_MEMALIGN}
 )
 
-# Testing options
-option(BUILD_TESTING "Enable test fixtures and libraries" ON)
+# Testing config
 include(CTest)
 
+include(FindPkgConfig)
 add_subdirectory(deps)
+
 # Libaries in deps but built separately
 find_package(ION)
+find_package(QCBOR)
 find_package(MLIB)
-find_package(civetweb)
+if(BUILD_MANAGER)
+  pkg_search_module(MYSQLCLIENT mysqlclient)
+#   find_package(civetweb)
+  find_package(cJSON)
+endif(BUILD_MANAGER)
 
 #set(BUILD_SHARED_LIBS ON)
 add_subdirectory(src)
 
 if(BUILD_TESTING)
-add_subdirectory(test)
+  add_subdirectory(test)
 endif(BUILD_TESTING)

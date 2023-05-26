@@ -1,0 +1,200 @@
+--- deps/QCBOR/inc/qcbor.h	2023-05-26 12:48:58.671881150 -0400
++++ new/QCBOR/inc/qcbor.h	2023-05-26 09:05:47.545230517 -0400
+@@ -2287,6 +2287,46 @@
+  */
+ QCBORError QCBORDecode_GetNextWithTags(QCBORDecodeContext *pCtx, QCBORItem *pDecodedItem, QCBORTagListOut *pTagList);
+ 
++/**
++ @brief Start decoding of an OCTETS array sequence, an extension of the CBOR specification.
++ @param[in] pCtx    The decoder context.
++
++ @return QCBOR_ERR_NO_MORE_ITEMS if maximum nesting level has been exceeded, QCBOR_SUCCESS otherwise.
++
++ This function implements an extension to the CBOR specification that shall be referred to as OCTETS.  An OCTETS sequence is equivalent to an indefinite-length CBOR Array wherein the typical headers delineating the start and end of the array are omitted from the binary encoding.  This permits the CBOR encoded values within this section to be decoded normally without adversely affecting any enclosing standard CBOR containers (for purposes of error checking).
++
++ This function emulates decoding of an opening marker for an indifinite length array in QCBORDecode_GetNext() and results in the appropriate data structures for tracking and validating nesting levels to be incremented.
++
++ On completion of the OCTETS sequence, execute QCBORDecode_EndOctets() to emulate a CBOR BREAK header and increment nesting levels appropriately to satisfy erorr checking.
++
++ */
++QCBORError QCBORDecode_StartOctets(QCBORDecodeContext *me);
++
++/**
++ @brief End an OCTETS sequence encoding started with QCBORDecode_StartOctets.
++ @see QCBORDecode_StartOctets
++ @param[in] pCtx    The decoder context.
++
++ */
++QCBORError QCBORDecode_EndOctets(QCBORDecodeContext *me);
++
++/**
++ @brief Close an array as an OCTETS sequence, bypassing nominal encoding headers
++ @see QCBORDecode_StartOctets
++ @param[in] pCtx    The decoder context.
++
++See QCBORDecode_StartOctets() for the main description of OCTETS
++handling.  An OCTETS sequence shall be started by opening an array as
++usual with QCBOREncode_OpenArray().
++
++This function ends encoding of the OCTETS sequence by setting internal
++accounting accordingly, but does NOT encode any additional markers in
++the resulting CBOR encoding. This API allows consistent behavior when
++a single element in an encapsulating array may consist of multiple
++CBOR elements in a pre-defined or otherwise de-lineating fashion.  In
++the process 1-2 header bytes are bypassed in the encoded data.
++ */
++void QCBOREncode_CloseArrayOctet(QCBOREncodeContext *me);
+ 
+ /**
+  @brief Determine if a CBOR item was tagged with a particular tag
+@@ -3130,6 +3170,12 @@
+ 
+  =========================================================================== */
+ 
++/** The following are formerly inline static functions made public for non-standard BYTE support
++ *    TODO: Consider Moving logic for handling BYTE into QCBOR library such that these can be returned to inline static
++ */
++void DecodeNesting_DecrementCount(QCBORDecodeNesting *pNesting);
++QCBORError Nesting_Increment(QCBORTrackNesting *pNesting);
++
+ #ifdef __cplusplus
+ }
+ #endif
+--- deps/QCBOR/src/qcbor_decode.c	2023-05-26 12:49:24.846786252 -0400
++++ new/QCBOR/src/qcbor_decode.c	2023-05-26 09:05:47.545230517 -0400
+@@ -127,7 +127,7 @@
+ }
+ 
+ // Called on every single item except breaks including the opening of a map/array
+-inline static void DecodeNesting_DecrementCount(QCBORDecodeNesting *pNesting)
++/*inline static*/ void DecodeNesting_DecrementCount(QCBORDecodeNesting *pNesting)
+ {
+    if(!DecodeNesting_IsNested(pNesting)) {
+       // at top level where there is no tracking
+@@ -141,7 +141,7 @@
+ 
+    // Decrement the count of items in this array/map
+    pNesting->pCurrent->uCount--;
+-
++   
+    // Pop up nesting levels if the counts at the levels are zero
+    while(DecodeNesting_IsNested(pNesting) && 0 == pNesting->pCurrent->uCount) {
+       pNesting->pCurrent--;
+@@ -895,7 +898,8 @@
+    }
+ 
+ Done:
+-   if(nReturn != QCBOR_SUCCESS && !UsefulBuf_IsNULLC(FullString)) {
++   if(nReturn != QCBOR_SUCCESS && !UsefulBuf_IsNULLC(FullString)
++		   && pAllocator) {
+       // Getting the item failed, clean up the allocated memory
+       StringAllocator_Free(pAllocator, UNCONST_POINTER(FullString.ptr));
+    }
+@@ -1056,6 +1060,58 @@
+    return nReturn;
+ }
+ 
++QCBORError QCBORDecode_StartOctets(QCBORDecodeContext *me) {
++
++   QCBORDecodeNesting *pNesting = &(me->nesting);
++
++   // Check if there are any bytes left in bufer
++   if(UsefulInputBuf_BytesUnconsumed(&(me->InBuf)) == 0) {
++      return QCBOR_ERR_NO_MORE_ITEMS;
++   }
++
++   // Error out if nesting is too deep
++   if(pNesting->pCurrent >= &(pNesting->pMapsAndArrays[QCBOR_MAX_ARRAY_NESTING])) {
++      return QCBOR_ERR_ARRAY_NESTING_TOO_DEEP;
++   }
++
++   // The actual descend
++   pNesting->pCurrent++;
++
++   // Pretend we saw a CBOR array
++   pNesting->pCurrent->uMajorType = CBOR_MAJOR_TYPE_ARRAY; // majorType is uint8, so we can't add a custom type
++   pNesting->pCurrent->uCount     = UINT16_MAX; // of indefinite length
++
++   return QCBOR_SUCCESS;
++}
++
++QCBORError QCBORDecode_EndOctets(QCBORDecodeContext *me) {
++   QCBORDecodeNesting *pNesting = &(me->nesting);
++
++   // Close Nesting Level
++   QCBORError err = DecodeNesting_BreakAscend(&(me->nesting));  
++   if (err != QCBOR_SUCCESS) {
++      return err;
++   }
++
++   // If parent level is an IndefiniteLength array (or Octets sequence), we are done
++   if (DecodeNesting_IsIndefiniteLength(pNesting)) {
++      return err;
++   }
++
++   // Otherwise adjust count and pop nesting level as needed
++   pNesting->pCurrent->uCount--;
++   
++   // Pop up nesting levels if the counts at the levels are zero
++   while(DecodeNesting_IsNested(pNesting) && 0 == pNesting->pCurrent->uCount) {
++      pNesting->pCurrent--;
++      if(!DecodeNesting_IsIndefiniteLength(pNesting)) {
++         pNesting->pCurrent->uCount--;
++      }
++   }
++
++   return err;
++}
++
+ 
+ /*
+  Public function, see header qcbor.h file
+--- deps/QCBOR/src/qcbor_encode.c	2023-05-26 12:47:36.776851944 -0400
++++ new/QCBOR/src/qcbor_encode.c	2023-05-26 09:05:47.545230517 -0400
+@@ -116,7 +116,7 @@
+    pNesting->pCurrentNesting--;
+ }
+ 
+-inline static QCBORError Nesting_Increment(QCBORTrackNesting *pNesting)
++/*inline static*/ QCBORError Nesting_Increment(QCBORTrackNesting *pNesting)
+ {
+    if(1 >= QCBOR_MAX_ITEMS_IN_ARRAY - pNesting->pCurrentNesting->uCount) {
+       return QCBOR_ERR_ARRAY_TOO_LONG;
+@@ -331,9 +331,10 @@
+        */
+       static const uint8_t aIterate[] = {1,1,2,4};
+       uint8_t i;
++      int j;
+       for(i = 0; uNumber || nMinLen > 0; i++) {
+          const uint8_t uIterations = aIterate[i];
+-         for(int j = 0; j < uIterations; j++) {
++         for(j = 0; j < uIterations; j++) {
+             *--pByte = uNumber & 0xff;
+             uNumber = uNumber >> 8;
+          }
+@@ -599,6 +600,25 @@
+    }
+ }
+ 
++
++void QCBOREncode_CloseArrayOctet(QCBOREncodeContext *me)
++{
++   if(me->uError == QCBOR_SUCCESS) {
++      if(!Nesting_IsInNest(&(me->nesting))) {
++         me->uError = QCBOR_ERR_TOO_MANY_CLOSES;
++      } else if(Nesting_GetMajorType(&(me->nesting)) != CBOR_MAJOR_TYPE_ARRAY) {
++         me->uError = QCBOR_ERR_CLOSE_MISMATCH;
++      } else {
++         // When the array, map or bstr wrap was started, nothing was done
++         // except note the position of the start of it. This code goes back
++         // and inserts the actual CBOR array, map or bstr but omits the length
++         // per the OCTETS defintion.
++         Nesting_Decrease(&(me->nesting));
++      }
++   }
++
++}
++
+ /*
+  Public functions for closing arrays and maps. See header qcbor.h
+  */

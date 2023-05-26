@@ -8,7 +8,7 @@ add_subdirectory(osal)
 target_compile_definitions(osal_posix_impl PRIVATE OSAL_CONFIG_DEBUG_PERMISSIVE_MODE)
 
 # QCBOR has its own CMake target
-add_subdirectory(QCBOR)
+#add_subdirectory(QCBOR)
 
 # Unity has its own CMake target, and we add testing functions to that
 if(BUILD_TESTING)

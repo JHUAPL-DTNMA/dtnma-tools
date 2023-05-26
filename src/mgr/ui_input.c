@@ -23,12 +23,13 @@
  **  10/06/18  E. Birrane     Updated to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
+#include <inttypes.h>
 #include "ui_input.h"
 #include "metadata.h"
 
 #include "../shared/adm/adm.h"
 
-extern int *global_nm_running;
+extern nmmgr_t *global_mgr;
 
 
 /******************************************************************************
@@ -54,20 +55,15 @@ extern int *global_nm_running;
 
 int ui_input_get_line(char *prompt, char **line, int max_len)
 {
-	int len = 0;
-
-	while(*global_nm_running && len == 0)
+	while(daemon_run_get(&global_mgr->running))
 	{
 		printf("%s\n", prompt);
 
-		if (igets(STDIN_FILENO, (char *)line, max_len, &len) == NULL)
+		if (fgets((char *)line, max_len, stdin) == NULL)
 		{
-			if (len != 0)
-			{
-				AMP_DEBUG_ERR("ui_input_get_line","igets failed.", NULL);
-				AMP_DEBUG_EXIT("ui_input_get_line","->0.",NULL);
-				return 0;
-			}
+		  AMP_DEBUG_ERR("ui_input_get_line","igets failed.", NULL);
+		  AMP_DEBUG_EXIT("ui_input_get_line","->0.",NULL);
+		  return 0;
 		}
 	}
     
@@ -259,16 +255,6 @@ float    ui_input_real32(char *prompt)
 }
 
 
-Sdnv     ui_input_sdnv(char *prompt)
-{
-	Sdnv val_sdnv;
-	uvast val = ui_input_uvast(prompt);
-
-	encodeSdnv(&val_sdnv, val);
-
-	return val_sdnv;
-}
-
 #ifdef USE_NCURSES
 char *   ui_input_string(char *prompt)
 {
@@ -337,7 +323,7 @@ uvast     ui_input_uvast(char *prompt)
 
 	ui_input_get_line(prompt, (char**)&line, MAX_INPUT_BYTES);
 
-	sscanf(line, UVAST_FIELDSPEC, &result);
+	sscanf(line, PRIu64, &result);
 
 	return result;
 }
@@ -349,7 +335,7 @@ vast     ui_input_vast(char *prompt)
 
 	ui_input_get_line(prompt, (char**)&line, MAX_INPUT_BYTES);
 
-	sscanf(line, VAST_FIELDSPEC, &result);
+	sscanf(line, PRId64, &result);
 
 	return result;
 }

@@ -32,13 +32,13 @@
 #ifndef _NM_MGR_UI_H
 #define _NM_MGR_UI_H
 
-#include "nm_mgr.h"
 #include "agents.h"
 
 #include "../shared/utils/nm_types.h"
 #include "../shared/adm/adm.h"
 #include "../shared/primitives/report.h"
 #include "../shared/primitives/rules.h"
+#include "nmmgr.h"
 
 
 #ifdef __cplusplus
@@ -68,15 +68,6 @@ extern "C" {
 #define UI_CTRL_MENU  2
 #define UI_DB_MENU	  3
 
-
-typedef enum mgr_ui_mode_enum {
-   MGR_UI_STANDARD, // Standard Shell-Based UI
-   MGR_UI_NCURSES, // NCURSES-Based UI (currently a compile-time flag mutually exclusive with MGR_UI_STANDARD)
-   MGR_UI_AUTOMATOR, // Special Altenrative UI Optimized for Automation
-} mgr_ui_mode_enum;
-extern mgr_ui_mode_enum mgr_ui_mode;
-
-extern int gContext;
 
 int ui_build_control(agent_t* agent);
 void ui_clear_reports(agent_t* agent);
@@ -111,7 +102,7 @@ int ui_menu_ctrl_do(uint8_t choice);
 void ui_menu_ctrl_show();
 
 void ui_print_nop();
-void *ui_thread(int *running);
+void *ui_thread(void *arg);
 
 #ifdef HAVE_MYSQL
 int ui_menu_sql_do(uint8_t choice);
