@@ -6,7 +6,7 @@ cd "${SELFDIR}"
 
 docker-compose ps
 
-DEXEC="docker-compose exec nm-mgr"
+DEXEC="docker-compose exec -T nm-mgr"
 
 # Wait a few seconds for ION to start
 for IX in $(seq 10)
