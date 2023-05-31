@@ -116,6 +116,7 @@ if(BUILD_MANAGER)
     mgr/metadata.h
     mgr/nm_mgr_print.h
     mgr/nm_mgr_rx.h
+    mgr/nm_mgr_sql.h
     mgr/nm_mgr_ui.h
     mgr/nmmgr.h
     mgr/ui_input.h
@@ -125,6 +126,7 @@ if(BUILD_MANAGER)
     mgr/metadata.c
     mgr/nm_mgr_print.c
     mgr/nm_mgr_rx.c
+    mgr/nm_mgr_sql.c
     mgr/nm_mgr_ui.c
     mgr/nmmgr.c
     mgr/ui_input.c
@@ -138,6 +140,7 @@ if(BUILD_MANAGER)
   if(MYSQLCLIENT_FOUND)
     message(STATUS "Manager using MySQL client")
     target_compile_definitions(nmmgr PUBLIC HAVE_MYSQL)
+    target_link_libraries(nmmgr PUBLIC PkgConfig::MYSQLCLIENT)
   endif(MYSQLCLIENT_FOUND)
   if(cJSON_FOUND)
     message(STATUS "Manager using cJSON")

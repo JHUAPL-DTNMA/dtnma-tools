@@ -36,10 +36,9 @@
 #ifdef HAVE_MYSQL
 
 #include <string.h>
+#include <osapi-task.h>
 
-#include "ion.h"
-
-#include "nm_mgr.h"
+#include "nmmgr.h"
 #include "nm_mgr_sql.h"
 
 /* Number of threads interacting with the database.
@@ -61,7 +60,7 @@ int db_log_always = 1; // If set, always log raw CBOR of incoming messages for d
 
 // Private functions
 static MYSQL_STMT* db_mgr_sql_prepare(size_t idx, const char* query);
-void db_process_outgoing(void);
+void db_process_outgoing(nmmgr_t *mgr);
 ac_t* db_query_ac(size_t dbidx, int ac_id);
 int db_query_tnvc(size_t dbidx, int tnvc_id, tnvc_t *parms);
 uint32_t db_insert_tnvc(db_con_t dbidx, tnvc_t *tnvc, int *status);
@@ -199,7 +198,7 @@ static MYSQL_STMT* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
 #define DB_CHKNULL(status) if(status!=0) { query_log_err(status); return NULL; }
 #define DB_CHKUSR(status,usr) if(status!=0) { query_log_err(status); usr; }
 
-#define query_log_err(status) AMP_DBG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__,__LINE__, mysql_stmt_error(stmt), mysql_stmt_errno(stmt));
+#define query_log_err(status) AMP_DEBUG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__,__LINE__, mysql_stmt_error(stmt), mysql_stmt_errno(stmt));
 
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.
@@ -217,10 +216,10 @@ void db_logf_msg(size_t dbidx, const char* msg, const char* details, int level, 
 }
 void db_log_msg(size_t dbidx, const char* msg, const char* details, int level, const char *fun, const char* file, size_t line)
 {
-	AMP_DEBUG(level, 'd', fun, "%s \t %s",
-			  msg,
-			  ( (details == NULL) ? "" : details )
-		);
+  amp_log(level, 'd', file, line, fun, "%s \t %s",
+          msg,
+          ( (details == NULL) ? "" : details )
+  );
 	if (dbidx >= MGR_NUM_SQL_CONNECTIONS || gConn[dbidx] == NULL) {
 		// DB Not connected or invalid idx
 		return;
@@ -283,7 +282,7 @@ static inline void db_mgt_txn_commit(int dbidx)
  *  08/29/15  E. Birrane     Added sender EID.
  *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
  *****************************************************************************/
-uint32_t db_incoming_initialize(time_t timestamp, eid_t sender_eid)
+uint32_t db_incoming_initialize(amp_tv_t timestamp, eid_t sender_eid)
 {
 	uint32_t rtv = 0; // Note: An ID of 0 is reserved as an error condition. MySQL will never create a new entry for this table with a value of 0.
 	char *name = sender_eid.name;
@@ -367,30 +366,35 @@ int32_t db_incoming_finalize(uint32_t id, uint32_t grp_status, char* src_eid, ch
  *  01/26/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
  *****************************************************************************/
 
-void *db_mgt_daemon(int *running)
+void *db_mgt_daemon(void *arg)
 {
-	struct timeval start_time;
-	vast delta = 0;
+  nmmgr_t *mgr = arg;
+	OS_time_t start_time, now_time;
+	OS_time_t delta, remain;
 
 
 	AMP_DEBUG_ALWAYS("db_mgt_daemon","Starting Manager Database Daemon",NULL);
 
-	while (*running)
+	while (daemon_run_get(&mgr->running))
 	{
-    	getCurrentTime(&start_time);
+	  OS_GetLocalTime(&start_time);
 
-    	if(db_mgt_connected(DB_CTRL_CON) == 0)
-    	{
-			db_process_outgoing();
-    	}
+	  if(db_mgt_connected(DB_CTRL_CON) == 0)
+	  {
+	    db_process_outgoing(mgr);
+	  }
 
-        delta = utils_time_cur_delta(&start_time);
+	  OS_GetLocalTime(&now_time);
 
-        // Sleep for 1 second (10^6 microsec) subtracting the processing time.
-        if((delta < 2000000) && (delta > 0))
-        {
-        	microsnooze((unsigned int)(2000000 - delta));
-        }
+	  delta = OS_TimeSubtract(now_time, start_time);
+	  remain = OS_TimeSubtract(OS_TimeFromTotalSeconds(2), remain);
+
+	  // Sleep for 1 second (10^6 microsec) subtracting the processing time.
+	  if((TimeCompare(remain, OS_TimeFromTotalSeconds(0)) > 0)
+	      && (TimeCompare(delta, OS_TimeFromTotalSeconds(0)) > 0))
+	  {
+	    OS_TaskDelay(OS_TimeGetTotalMilliseconds(remain));
+	  }
 	}
 
 	AMP_DEBUG_ALWAYS("db_mgt_daemon","Cleaning up Manager Database Daemon", NULL);
@@ -463,10 +467,8 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
 				mysql_close(gConn[idx]);
 			}
 			gConn[idx] = NULL;
-			if(log > 0)
-            {
-				AMP_DEBUG_WARN("db_mgt_init", "SQL Error: %s", mysql_error(gConn[idx]));
-            }
+			AMP_DEBUG_WARN("db_mgt_init", "SQL Error: %s", mysql_error(gConn[idx]));
+
 			AMP_DEBUG_EXIT("db_mgt_init", "-->0", NULL);
 			return 0;
 		}
@@ -759,7 +761,7 @@ int   db_mgt_connected(size_t idx)
 				return 0;
 			}
 
-			microsnooze(SQL_RECONN_TIME_MSEC);
+			OS_TaskDelay(SQL_RECONN_TIME_MSEC);
 			num_tries++;
 		}
 	}
@@ -770,13 +772,13 @@ int   db_mgt_connected(size_t idx)
 static MYSQL_STMT* db_mgr_sql_prepare(size_t idx, const char* query) {
 	MYSQL_STMT* rtv = mysql_stmt_init(gConn[idx]);
 	if (rtv == NULL) {
-		AMP_DBG_ERR("Failed to allocate statement", NULL);
+		AMP_DEBUG_ERR("Failed to allocate statement", NULL);
 		return rtv;
 	}
 
 	if (mysql_stmt_prepare(rtv, query, strlen(query) ) != 0)
 	{
-		AMP_DBG_ERR("Failed to prepare %s: errno %d, error= %s", query, mysql_stmt_errno(rtv),mysql_stmt_error(rtv));
+		AMP_DEBUG_ERR("Failed to prepare %s: errno %d, error= %s", query, mysql_stmt_errno(rtv),mysql_stmt_error(rtv));
 		mysql_stmt_close(rtv);
 		return NULL;
 	}
@@ -787,6 +789,8 @@ static MYSQL_STMT* db_mgr_sql_prepare(size_t idx, const char* query) {
 int  db_mgr_sql_persist()
 {
 	int success = AMP_OK;
+#if 0
+	//FIXME: persistance
 	Sdr sdr = getIonsdr();
 
 	if(gMgrDB.sql_info.desc.descObj == 0)
@@ -812,6 +816,7 @@ int  db_mgr_sql_persist()
 	sdr_end_xn(sdr);
 
 	blob_release(data, 1);
+#endif
 	return success;
 }
 
@@ -880,16 +885,23 @@ blob_t*	  db_mgr_sql_info_serialize(sql_db_t *item)
 
 int  db_mgr_sql_init()
 {
-
+#if 0
+  //FIXME persistance
 	Sdr sdr = getIonsdr();
 	char *name = "mgr_sql";
+#endif
 
 	// * Initialize the non-volatile database. * /
 	// Note: Moved to main() to allow connection parameters to be specified on the command-line.
 	//memset((char*) &(gMgrDB.sql_info), 0, sizeof(gMgrDB.sql_info));
 
-	initResourceLock(&(gMgrDB.sql_info.lock));
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&(gMgrDB.sql_info.lock), &attr);
 
+#if 0
+  //FIXME persistance
 	/* Recover the Agent database, creating it if necessary. */
 	CHKERR(sdr_begin_xn(sdr));
 
@@ -941,8 +953,9 @@ int  db_mgr_sql_init()
 		AMP_DEBUG_ERR("db_mgr_sql_init", "Can't create Agent database.", NULL);
 		return -1;
 	}
+#endif
 
-	return 1;
+	return AMP_OK;
 }
 
 
@@ -979,8 +992,8 @@ int32_t db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
 	char query[1024];
 	size_t idx = DB_RPT_CON; // TODO
 
-	AMP_DEBUG_ENTRY("db_mgt_query_fetch","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
-			        (uaddr)res, (uaddr)format);
+	AMP_DEBUG_ENTRY("db_mgt_query_fetch","(%p,%p)",
+			        res, format);
 
 	/* Step 0: Sanity check. */
 	if(format == NULL)
@@ -1059,7 +1072,7 @@ int32_t db_mgt_query_insert(uint32_t *idx, char *format, ...)
 	char query[SQL_MAX_QUERY];
 	size_t db_idx = DB_RPT_CON; // TODO
 
-	AMP_DEBUG_ENTRY("db_mgt_query_insert","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",(uaddr)idx, (uaddr)format);
+	AMP_DEBUG_ENTRY("db_mgt_query_insert","(%p,%p)",idx, format);
 /*EJB
 	if(idx == NULL)
 	{
@@ -1195,15 +1208,15 @@ void db_mgt_txn_rollback()
  *  08/27/15  E. Birrane      Update to new data model, schema
  *  01/26/17  E. Birrane      Update to AMP 3.5.0 (JHU/APL)
  *****************************************************************************/
-int32_t db_tx_msg_group_agents(int group_id, msg_grp_t *msg_group)
+static int32_t db_tx_msg_group_agents(nmmgr_t *mgr, int group_id, msg_grp_t *msg_group)
 {
 	int rtv = AMP_OK;
 	dbprep_declare(DB_CTRL_CON, MSGS_GET_AGENTS, 1, 1);
 	dbprep_bind_param_int(0,group_id);
 	mysql_stmt_bind_param(stmt, bind_param);
 
-	char agent_name[AMP_MAX_EID_LEN];
-	dbprep_bind_res_str(0, agent_name,AMP_MAX_EID_LEN);
+        eid_t destination;
+	dbprep_bind_res_str(0, destination.name, AMP_MAX_EID_LEN);
 	
 	// Execute Get Number of results
 	mysql_stmt_execute(stmt);
@@ -1212,9 +1225,9 @@ int32_t db_tx_msg_group_agents(int group_id, msg_grp_t *msg_group)
 
 	while(!mysql_stmt_fetch(stmt) )
 	{
-		if (iif_send_grp(&ion_ptr, msg_group, agent_name) != AMP_OK) {
+		if (mif_send_grp(&mgr->mif, msg_group, &destination) != AMP_OK) {
 			rtv = AMP_FAIL;
-			DB_LOG_MSG(DB_CTRL_CON, "Failed to send group to agent", agent_name, AMP_FAIL); 
+			DB_LOG_MSG(DB_CTRL_CON, "Failed to send group to agent", destination.name, AMP_FAIL);
 		}
 	}
 	mysql_stmt_free_result(stmt);
@@ -1363,13 +1376,13 @@ ari_t* db_query_ari(size_t dbidx, int ari_id)
 	DB_CHKNULL(mysql_stmt_store_result(stmt)); // Results must be buffered to allow execution of nested queries
 
 	if (mysql_stmt_num_rows(stmt) != 1) {
-		AMP_DBG_ERR("Unable to retrieve ARI ID %i", ari_id);
+		AMP_DEBUG_ERR(__FUNCTION__, "Unable to retrieve ARI ID %i", ari_id);
 		return NULL;
 	}
 
 	// Retrieve single row, or abort with error
 	if (mysql_stmt_fetch(stmt) != 0) {
-		AMP_DBG_ERR("Unable to retrieve ARI row for %i", ari_id);
+		AMP_DEBUG_ERR(__FUNCTION__, "Unable to retrieve ARI row for %i", ari_id);
 		return NULL;
 	}
 
@@ -1380,7 +1393,7 @@ ari_t* db_query_ari(size_t dbidx, int ari_id)
 	
 	if (ari_type == AMP_TYPE_LIT) // TODO
 	{
-		AMP_DBG_ERR("TODO: ARI LIT", NULL);
+		AMP_DEBUG_ERR(__FUNCTION__, "TODO: ARI LIT", NULL);
 		return NULL;
 	}
 
@@ -1580,8 +1593,8 @@ int32_t db_tx_build_group(int32_t grp_idx, msg_grp_t *msg_group)
 
 	
 	AMP_DEBUG_ENTRY("db_tx_build_group",
-					  "(%d, "ADDR_FIELDSPEC")",
-			          grp_idx, (uaddr) msg_group);
+					  "(%d, %p)",
+			          grp_idx, msg_group);
 
 	/* Step 0: Sanity check. */
 	if(msg_group == NULL)
@@ -1767,7 +1780,7 @@ agent_t *db_fetch_agent(int32_t id)
 
 	mysql_free_result(res);
 
-	AMP_DEBUG_EXIT("db_fetch_agent", "-->"ADDR_FIELDSPEC, (uaddr) result);
+	AMP_DEBUG_EXIT("db_fetch_agent", "-->%p", result);
 	return result;
 }
 
@@ -1797,7 +1810,7 @@ int32_t db_fetch_agent_idx(eid_t *eid)
 	MYSQL_RES *res = NULL;
 	MYSQL_ROW row;
 
-	AMP_DEBUG_ENTRY("db_fetch_agent_idx","("ADDR_FIELDSPEC")", (uaddr) eid);
+	AMP_DEBUG_ENTRY("db_fetch_agent_idx","(%p)", eid);
 
 	/* Step 0: Sanity Check.*/
 	if(eid == NULL)
@@ -1884,8 +1897,8 @@ int32_t db_add_adm(char *name, char *version, char *oid_root)
 	uint32_t oid_idx = 0;
 	uint32_t row_idx = 0;
 
-	AMP_DEBUG_ENTRY("db_add_adm,"ADDR_FIELDSPEC","ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
-			        (uaddr)name, (uaddr)version, (uaddr)oid_root);
+	AMP_DEBUG_ENTRY("db_add_adm,%p,%p,%p)",
+			        name, version, oid_root);
 
 	/* Step 0: Sanity check. */
 	if((name == NULL) || (version == NULL) || (oid_root == NULL))
@@ -2121,7 +2134,7 @@ int32_t db_add_mid(mid_t *mid)
 	int32_t num_parms = 0;
 	uint32_t mid_idx = 0;
 
-	AMP_DEBUG_ENTRY("db_add_mid", "("ADDR_FIELDSPEC",%d)", (uaddr)mid);
+	AMP_DEBUG_ENTRY("db_add_mid", "(%p)", mid);
 
 	/* Step 0: Sanity check arguments. */
 	if(mid == NULL)
@@ -2275,7 +2288,7 @@ int32_t db_add_mc(Lyst mc)
 	uint32_t i = 0;
 	int32_t mid_idx = 0;
 
-	AMP_DEBUG_ENTRY("db_add_mc", "("ADDR_FIELDSPEC")", (uaddr)mc);
+	AMP_DEBUG_ENTRY("db_add_mc", "(%p)", mc);
 
 	/* Step 0 - Sanity check arguments. */
 	if(mc == NULL)
@@ -2389,7 +2402,7 @@ int32_t db_add_nn(oid_nn_t *nn)
 	int32_t oid_idx = 0;
 	int32_t adm_idx = 0;
 
-	AMP_DEBUG_ENTRY("db_add_nn", "("ADDR_FIELDSPEC")", (uaddr)nn);
+	AMP_DEBUG_ENTRY("db_add_nn", "(%p)", nn);
 
 	/* Step 0 - Sanity check arguments. */
 	if(nn == NULL)
@@ -2481,7 +2494,7 @@ int32_t db_add_oid_str(char *oid_str)
 	int32_t result = 0;
 	oid_t oid;
 
-	AMP_DEBUG_ENTRY("db_add_oid_str", "("ADDR_FIELDSPEC")", (uaddr)oid_str);
+	AMP_DEBUG_ENTRY("db_add_oid_str", "(%p)", oid_str);
 
 	/* Step 1: Sanity checks. */
 	if(oid_str == NULL)
@@ -2717,8 +2730,8 @@ int32_t db_add_protomid(mid_t *mid, ui_parm_spec_t *spec, amp_type_e type)
 	uint32_t parm_idx = 0;
 	uint32_t num_parms = 0;
 
-	AMP_DEBUG_ENTRY("db_add_protomid", "("ADDR_FIELDSPEC","ADDR_FIELDSPEC",%d)",
-			       (uaddr)mid, (uaddr)spec, type);
+	AMP_DEBUG_ENTRY("db_add_protomid", "(%p,%p,%d)",
+			       mid, spec, type);
 
 	/* Step 0: Sanity check arguments. */
 	if((mid == NULL) || (spec==NULL))
@@ -2849,8 +2862,8 @@ int32_t db_add_protoparms(ui_parm_spec_t *spec)
 	uint32_t result = 0;
 	uint32_t parm_idx = 0;
 
-	AMP_DEBUG_ENTRY("db_add_protoparms", "("ADDR_FIELDSPEC")",
-					  (uaddr) spec);
+	AMP_DEBUG_ENTRY("db_add_protoparms", "(%p)",
+					  spec);
 
 	/* Step 0: Sanity check arguments. */
 	if(spec == NULL)
@@ -2936,8 +2949,8 @@ int32_t db_fetch_adm_idx(char *name, char *version)
 	MYSQL_RES *res = NULL;
 	MYSQL_ROW row;
 
-	AMP_DEBUG_ENTRY("db_fetch_adm_idx","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
-					  (uaddr)name, (uaddr) version);
+	AMP_DEBUG_ENTRY("db_fetch_adm_idx","(%s,%s)",
+					  name, version);
 
 	if((name == NULL) || (version == NULL))
 	{
@@ -3067,8 +3080,8 @@ blob_t* db_fetch_tdc_entry_from_row(MYSQL_ROW row, amp_type_e *type)
 	uint8_t *value = NULL;
 	uint32_t length = 0;
 
-	AMP_DEBUG_ENTRY("db_fetch_tdc_entry_from_row","("ADDR_FIELDSPEC","ADDR_FIELDSPEC")",
-					  (uaddr)row, (uaddr)type);
+	AMP_DEBUG_ENTRY("db_fetch_tdc_entry_from_row","(%p,%p)",
+					  row, type);
 
 	/* Step 1: grab data from the row. */
 	value = utils_string_to_hex(row[3], &length);
@@ -3091,7 +3104,7 @@ blob_t* db_fetch_tdc_entry_from_row(MYSQL_ROW row, amp_type_e *type)
 	/* Step 3: Store the type. */
 	*type = atoi(row[2]);
 
-	AMP_DEBUG_EXIT("db_fetch_tdc_entry_from_row", "-->"ADDR_FIELDSPEC, (uaddr) result);
+	AMP_DEBUG_EXIT("db_fetch_tdc_entry_from_row", "-->%p", result);
 	return result;
 }
 
@@ -3155,7 +3168,7 @@ mid_t *db_fetch_mid(int32_t idx)
 
 	mysql_free_result(res);
 
-	AMP_DEBUG_EXIT("db_fetch_mid", "-->"ADDR_FIELDSPEC, (uaddr) result);
+	AMP_DEBUG_EXIT("db_fetch_mid", "-->%p", result);
 	return result;
 }
 
@@ -3224,7 +3237,7 @@ Lyst db_fetch_mid_col(int idx)
 	/* Step 3: Free database resources. */
 	mysql_free_result(res);
 
-	AMP_DEBUG_EXIT("db_fetch_mid_col", "-->"ADDR_FIELDSPEC, (uaddr) result);
+	AMP_DEBUG_EXIT("db_fetch_mid_col", "-->%p", result);
 	return result;
 }
 
@@ -3251,7 +3264,7 @@ mid_t* db_fetch_mid_from_row(MYSQL_ROW row)
 	oid_t oid;
 	mid_t *result = NULL;
 
-	AMP_DEBUG_ENTRY("db_fetch_mid_from_row", "("ADDR_FIELDSPEC")", (uaddr)row);
+	AMP_DEBUG_ENTRY("db_fetch_mid_from_row", "(%p)", row);
 
 	/* Step 0: Sanity check. */
 	if(row == NULL)
@@ -3323,7 +3336,7 @@ mid_t* db_fetch_mid_from_row(MYSQL_ROW row)
 		result = NULL;
 	}
 
-	AMP_DEBUG_EXIT("db_fetch_mid_from_row","-->"ADDR_FIELDSPEC, (uaddr)result);
+	AMP_DEBUG_EXIT("db_fetch_mid_from_row","-->%p", result);
 	return result;
 }
 
@@ -3356,7 +3369,7 @@ int32_t db_fetch_mid_idx(mid_t *mid)
 	MYSQL_RES *res = NULL;
 	MYSQL_ROW row;
 
-	AMP_DEBUG_ENTRY("db_fetch_mid_idx","("ADDR_FIELDSPEC")", (uaddr)mid);
+	AMP_DEBUG_ENTRY("db_fetch_mid_idx","(%p)", mid);
 
 	/* Step 0: Sanity check arguments. */
 	if(mid == NULL)
@@ -3555,8 +3568,8 @@ uint8_t* db_fetch_oid_val(uint32_t idx, uint32_t *size)
 	MYSQL_RES *res = NULL;
 	MYSQL_ROW row;
 
-	AMP_DEBUG_ENTRY("db_fetch_oid_val","(%d,"ADDR_FIELDSPEC")",
-			          idx, (uaddr)size);
+	AMP_DEBUG_ENTRY("db_fetch_oid_val","(%d,%p)",
+			          idx, size);
 
 	/* Step 0: Sanity check. */
 	if((idx == 0) || (size == NULL))
@@ -3838,7 +3851,7 @@ Lyst db_fetch_parms(uint32_t idx)
 	/* Step 4: Free results. */
 	mysql_free_result(res);
 
-	AMP_DEBUG_EXIT("db_fetch_parms", "-->"ADDR_FIELDSPEC, (uaddr)result);
+	AMP_DEBUG_EXIT("db_fetch_parms", "-->%p", result);
 	return result;
 }
 
@@ -3870,7 +3883,7 @@ int32_t db_fetch_protomid_idx(mid_t *mid)
 	MYSQL_RES *res = NULL;
 	MYSQL_ROW row;
 
-	AMP_DEBUG_ENTRY("db_fetch_protomid_idx","("ADDR_FIELDSPEC")", (uaddr)mid);
+	AMP_DEBUG_ENTRY("db_fetch_protomid_idx","(%p)", mid);
 
 	/* Step 0: Sanity check arguments. */
 	if(mid == NULL)
@@ -3936,7 +3949,7 @@ void query_update_msg_group_state(size_t dbidx, int group_id, int is_error) {
    return;
 }
 
-void db_process_outgoing(void) {
+void db_process_outgoing(nmmgr_t *mgr) {
 	msg_grp_t *msg_group = NULL;
 	int group_id;
 	int ts; // TODO: UVAST? TODO: change this to an output (update record) instead of input from record
@@ -3960,7 +3973,7 @@ void db_process_outgoing(void) {
 		}
 
 		// Set timestamp
-		msg_group->time = ts;
+		msg_group->timestamp = amp_tv_from_ctime(OS_TimeFromTotalSeconds(ts), NULL);
 				
 		// Query Group Contents & Build
 		if((db_tx_build_group(group_id, msg_group)) != AMP_OK)
@@ -3973,7 +3986,7 @@ void db_process_outgoing(void) {
 		}
 
 		// Send Group
-		int status = db_tx_msg_group_agents(group_id, msg_group);
+		int status = db_tx_msg_group_agents(mgr, group_id, msg_group);
 		
 		// Update Status (note: outgoing thread does not use transactions)
 		query_update_msg_group_state(DB_CTRL_CON, group_id, status);
@@ -4127,7 +4140,7 @@ void db_insert_ac_entry(db_con_t dbidx, uint32_t ac_id, size_t idx, uint32_t ari
 	// In the case of an error, it will remain at the default error value of 0
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
-		AMP_DBG_ERR("Failed to Insert AC Entry: %s", mysql_stmt_error(stmt));
+		AMP_DEBUG_ERR("Failed to Insert AC Entry: %s", mysql_stmt_error(stmt));
 		CHKVOID(status);
 		*status = AMP_FAIL;
 		return;
@@ -4158,7 +4171,7 @@ uint32_t db_insert_ac(db_con_t dbidx, ac_t *ac, int *status)
 	// In the case of an error, it will remain at the default error value of 0
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
-		AMP_DBG_ERR("Failed to Create AC: %s", mysql_stmt_error(stmt));
+		AMP_DEBUG_ERR("Failed to Create AC: %s", mysql_stmt_error(stmt));
 		CHKZERO(status);
 		*status = AMP_FAIL;
 		return 0;
@@ -4306,7 +4319,7 @@ void db_insert_tnv(db_con_t dbidx, uint32_t tnvc_id, tnv_t *tnv, int *status)
 	// In the case of an error, it will remain at the default error value of 0
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
-		AMP_DBG_ERR("Failed to Create TNV: %s", mysql_stmt_error(stmt));
+		AMP_DEBUG_ERR("Failed to Create TNV: %s", mysql_stmt_error(stmt));
 		CHKVOID(status);
 		*status = AMP_FAIL;
 		return;
@@ -4368,7 +4381,7 @@ uint32_t db_insert_tnvc(db_con_t dbidx, tnvc_t *tnvc, int *status)
 	// In the case of an error, it will remain at the default error value of 0
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
-		AMP_DBG_ERR("Failed to Create TNVC: %s", mysql_stmt_error(stmt));
+		AMP_DEBUG_ERR("Failed to Create TNVC: %s", mysql_stmt_error(stmt));
 		CHKZERO(status);
 		*status = AMP_FAIL;
 		return 0;
@@ -4431,7 +4444,7 @@ void db_insert_msg_rpt_set_rpt(db_con_t dbidx, uint32_t entry_id, rpt_t* rpt, in
 	// In the case of an error, it will remain at the default error value of 0
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
-		AMP_DBG_ERR("Failed to Create Entry: %s", mysql_stmt_error(stmt));
+		AMP_DEBUG_ERR("Failed to Create Entry: %s", mysql_stmt_error(stmt));
 		CHKVOID(status);
 		*status = AMP_FAIL;
 		return;
@@ -4496,7 +4509,7 @@ uint32_t db_insert_msg_reg_agent(uint32_t grp_id, msg_agent_t *msg, int *status)
 	// In the case of an error, it will remain at the default error value of 0
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
-		AMP_DBG_ERR("Failed to Create Entry: %s", mysql_stmt_error(stmt));
+		AMP_DEBUG_ERR("Failed to Create Entry: %s", mysql_stmt_error(stmt));
 		CHKZERO(status);
 		*status = AMP_FAIL;
 		return 0;

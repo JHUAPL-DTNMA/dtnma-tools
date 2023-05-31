@@ -157,7 +157,7 @@ int nmmgr_start(nmmgr_t *mgr)
       {NULL, NULL},
   };
 #ifdef HAVE_MYSQL
-  threadinfo[2] = {&db_mgt_daemon, "nm_mgr_db"};
+  threadinfo[2] = (threadinfo_t){&db_mgt_daemon, "nm_mgr_db"};
 #endif
   if (threadset_start(&mgr->threads, threadinfo, sizeof(threadinfo)/sizeof(threadinfo_t), mgr) != AMP_OK)
   {

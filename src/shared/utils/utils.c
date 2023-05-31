@@ -429,30 +429,3 @@ blob_t* utils_string_to_hex(const char *value)
 	AMP_DEBUG_EXIT("utils_string_to_hex", "->%#llx.", result);
 	return result;
 }
-
-int utils_time_delta(OS_time_t *result, const OS_time_t *t1, const OS_time_t *t2)
-{
-  *result = OS_TimeSubtract(*t1, *t2);
-  return result->ticks < 0;
-}
-
-/* Return number of micro-seconds that have elapsed since the passed-in time.*/
-vast    utils_time_cur_delta(const OS_time_t *t1)
-{
-	OS_time_t cur;
-	OS_time_t delta;
-
-        if (OS_GetLocalTime(&cur) != OS_SUCCESS)
-        {
-          return 0;
-        }
-          
-	utils_time_delta(&delta, &cur, t1);
-        return OS_TimeGetTotalMicroseconds(delta);
-}
-
-
-
-
-
-

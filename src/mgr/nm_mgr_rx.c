@@ -328,7 +328,7 @@ void *mgr_rx_thread(void *arg)
 
 #ifdef HAVE_MYSQL
             /* Copy the message group to the database tables */
-            uint32_t incoming_idx = db_incoming_initialize(grp->time, meta.source);
+            uint32_t incoming_idx = db_incoming_initialize(grp->timestamp, meta.source);
             int32_t db_status = AMP_OK;
 #endif
 

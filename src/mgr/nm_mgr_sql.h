@@ -29,30 +29,29 @@
  *****************************************************************************/
 #ifdef HAVE_MYSQL
 
-#ifndef NM_MGR_DB_H
-#define NM_MGR_DB_H
+#ifndef NM_MGR_SQL_H
+#define NM_MGR_SQL_H
 
 /* System Headers */
-#include "stdio.h"
-#include "unistd.h"
+#include <stdio.h>
+#include <unistd.h>
 #include <mysql.h>
 
-/* ION headers. */
-#include "platform.h"
+#include "shared/platform.h"
 
 /* Application headers. */
-#include "../shared/adm/adm.h"
-#include "../shared/msg/ion_if.h"
-#include "../shared/msg/msg.h"
-#include "../shared/primitives/report.h"
-#include "../shared/primitives/rules.h"
-#include "../shared/primitives/ctrl.h"
+#include "shared/adm/adm.h"
+#include "shared/msg/msg_if.h"
+#include "shared/msg/msg.h"
+#include "shared/primitives/report.h"
+#include "shared/primitives/rules.h"
+#include "shared/primitives/ctrl.h"
 
-#include "../shared/utils/db.h"
-#include "../shared/utils/utils.h"
-#include "../shared/utils/vector.h"
+#include "shared/utils/db.h"
+#include "shared/utils/utils.h"
+#include "shared/utils/vector.h"
 
-#include "nm_mgr_ui.h"
+//#include "nm_mgr_ui.h"
 #include "agents.h"
 
 
@@ -131,7 +130,7 @@ extern "C" {
  */
 typedef struct
 {
-    ResourceLock lock;
+    pthread_mutex_t lock;
 
 	char server[UI_SQL_SERVERLEN];
 	char username[UI_SQL_ACCTLEN];
@@ -151,7 +150,7 @@ typedef struct
 int32_t db_add_agent(eid_t agent_eid);
 
 /* Database Management Functions. */
-void    *db_mgt_daemon(int *running);
+void    *db_mgt_daemon(void *arg);
 uint32_t db_mgt_init(sql_db_t parms, uint32_t clear, uint32_t log);
 uint32_t db_mgt_init_con(size_t idx, sql_db_t parms);
 
@@ -180,7 +179,7 @@ int      db_tx_collect_agents(int32_t grp_idx, vector_t *vec);
 
 
 /* Functions to process incoming messages. */
-uint32_t db_incoming_initialize(time_t timestamp, eid_t sender_eid);
+uint32_t db_incoming_initialize(amp_tv_t timestamp, eid_t sender_eid);
 int32_t db_incoming_finalize(uint32_t incomingID, uint32_t grp_status, char* src_eid, char* raw_input);
 uint32_t db_insert_msg_reg_agent(uint32_t grp_id, msg_agent_t *msg, int *status);
 uint32_t db_insert_msg_rpt_set(uint32_t grp_id, msg_rpt_t *rpt, int *status);
@@ -252,7 +251,7 @@ void db_logf_msg(size_t dbidx, const char* msg, const char* details, int level, 
 }
 #endif
 
-#endif  /* _BPSEC_H_ */
+#endif  /* NM_MGR_SQL_H */
 
 #endif // HAVE_MYSQL
 

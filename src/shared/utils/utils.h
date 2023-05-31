@@ -93,8 +93,6 @@ char*    utils_hex_to_string(const uint8_t *buffer, size_t size);
 void     utils_print_hex(const unsigned char *s, size_t len);
 
 blob_t*  utils_string_to_hex(const char *value);
-int      utils_time_delta(OS_time_t *result, const OS_time_t *t1, const OS_time_t *t2);
-vast     utils_time_cur_delta(const OS_time_t *t1);
 
 
 #ifdef __cplusplus

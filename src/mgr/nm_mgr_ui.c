@@ -136,10 +136,10 @@ char *db_menu_choices[] = {
    "Read DB Info from file"
 };
 form_fields_t db_conn_form_fields[] = {
-   {"Database Server", gMgrDB.sql_info.server, UI_SQL_SERVERLEN-1, 0, 0},
-   {"Database Name", gMgrDB.sql_info.database, UI_SQL_DBLEN-1, 0, 0},
-   {"Database Username", gMgrDB.sql_info.username, UI_SQL_ACCTLEN-1, 0, 0},
-   {"Database Password", gMgrDB.sql_info.password, UI_SQL_ACCTLEN-1, 0, 0}
+   {"Database Server", gMgrDB.sql_info.server, UI_SQL_SERVERLEN-1, 0, 0, NULL},
+   {"Database Name", gMgrDB.sql_info.database, UI_SQL_DBLEN-1, 0, 0, NULL},
+   {"Database Username", gMgrDB.sql_info.username, UI_SQL_ACCTLEN-1, 0, 0, NULL},
+   {"Database Password", gMgrDB.sql_info.password, UI_SQL_ACCTLEN-1, 0, 0, NULL}
 };
 
 #endif
@@ -152,8 +152,8 @@ static void ui_eventLoop(nmmgr_t *mgr);
 static void ui_ctrl_list_menu(nmmgr_t *mgr);
 
 #ifdef HAVE_MYSQL
-void ui_db_menu(int *running);
-void ui_db_parms(int do_edit);
+static void ui_db_menu(nmmgr_t *mgr);
+static void ui_db_parms(int do_edit);
 #endif
 
 #ifdef USE_NCURSES
@@ -780,7 +780,7 @@ void ui_eventLoop(nmmgr_t *mgr)
                break;
 #ifdef HAVE_MYSQL
             case MAIN_MENU_DB: // DB
-               ui_db_menu(running);
+               ui_db_menu(mgr);
                break;
 #endif
 #ifdef USE_NCURSES // Log file is currently written to only when NCURSES is enabled
@@ -1409,14 +1409,14 @@ void *ui_thread(void *arg)
 
 #ifdef HAVE_MYSQL
 
-void ui_db_menu(int *running)
+void ui_db_menu(nmmgr_t *mgr)
 {
    int n_choices = ARRAY_SIZE(db_menu_choices);
    int choice;
    int new_msg = 0;
    char msg[128] = "";
    
-   while(*running)
+   while(daemon_run_get(&mgr->running))
    {
       choice = ui_menu("Database Menu", db_menu_choices, NULL, n_choices,
                        ((new_msg==0) ? NULL : msg)
@@ -1488,11 +1488,11 @@ int ui_db_conn()
 
 	memset(&parms, 0, sizeof(sql_db_t));
 
-	lockResource(&(gMgrDB.sql_info.lock));
+	pthread_mutex_lock(&(gMgrDB.sql_info.lock));
 
 	memcpy(&parms, &(gMgrDB.sql_info), sizeof(sql_db_t));
 
-	unlockResource(&(gMgrDB.sql_info.lock));
+	pthread_mutex_unlock(&(gMgrDB.sql_info.lock));
 
 	return db_mgt_init(parms, 0, 1);
 }
@@ -1518,14 +1518,14 @@ void ui_db_write()
   }
 
 
- lockResource(&(gMgrDB.sql_info.lock));
+ pthread_mutex_lock(&(gMgrDB.sql_info.lock));
 
  fwrite(&(gMgrDB.sql_info.server), UI_SQL_SERVERLEN-1, 1, fp);
  fwrite(&(gMgrDB.sql_info.database), UI_SQL_DBLEN-1, 1, fp);
  fwrite(&(gMgrDB.sql_info.username), UI_SQL_ACCTLEN-1,1, fp);
  fwrite(&(gMgrDB.sql_info.password), UI_SQL_ACCTLEN-1,1, fp);
 
- unlockResource(&(gMgrDB.sql_info.lock));
+ pthread_mutex_unlock(&(gMgrDB.sql_info.lock));
 
 fclose(fp);
   printf("Database infor written to %s.\n", tmp);
@@ -1552,7 +1552,7 @@ void ui_db_read()
     return;
   }
 
-  lockResource(&(gMgrDB.sql_info.lock));
+  pthread_mutex_lock(&(gMgrDB.sql_info.lock));
 
   if(fread(&(gMgrDB.sql_info.server), UI_SQL_SERVERLEN-1, 1, fp) <= 0)
     printf("Error reading server.\n");
@@ -1568,7 +1568,7 @@ void ui_db_read()
  
   db_mgr_sql_persist();
 
-  unlockResource(&(gMgrDB.sql_info.lock));
+  pthread_mutex_unlock(&(gMgrDB.sql_info.lock));
   fclose(fp);
 
   printf("Read from %s.\n", tmp);
@@ -1582,7 +1582,7 @@ void ui_db_parms(int do_edit)
    int n_choices = ARRAY_SIZE(db_conn_form_fields);
    if (do_edit)
    {
-      lockResource(&(gMgrDB.sql_info.lock));
+      pthread_mutex_lock(&(gMgrDB.sql_info.lock));
    }
 
    for(i = 0; i < n_choices; i++)
@@ -1608,7 +1608,7 @@ void ui_db_parms(int do_edit)
    if (do_edit)
    {
       db_mgr_sql_persist();
-      unlockResource(&(gMgrDB.sql_info.lock));
+      pthread_mutex_unlock(&(gMgrDB.sql_info.lock));
    }
 
 }
