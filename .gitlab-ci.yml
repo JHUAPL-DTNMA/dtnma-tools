@@ -33,7 +33,7 @@ stages:
     apt-get update && apt-get install -y \
         build-essential rsync autoconf libtool \
         cmake ninja-build ruby \
-        libmysqlclient-dev libcivetweb-dev libcjson-dev
+        libmysqlclient-dev libcivetweb-dev civetweb libcjson-dev
 
 #sast:
 #  stage: test
