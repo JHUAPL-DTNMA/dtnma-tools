@@ -199,8 +199,7 @@ int ldc_fill_rpt(rpttpl_t *rpttpl, rpt_t *rpt)
 	uint8_t i;
 	int success;
 
-	AMP_DEBUG_ENTRY("ldc_fill_rpt","("PRIdPTR","PRIdPTR")",
-			          (uaddr) rpttpl, (uaddr) rpt);
+	AMP_DEBUG_ENTRY("ldc_fill_rpt","(%p,%p)", rpttpl, rpt);
 
 	CHKUSR(rpttpl, AMP_FAIL);
 	CHKUSR(rpt, AMP_FAIL);

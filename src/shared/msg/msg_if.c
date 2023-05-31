@@ -101,7 +101,7 @@ int mif_send_grp(mif_cfg_t *cfg, const msg_grp_t *group, const eid_t *destinatio
     CHKZERO(cfg->send);
     CHKZERO(group);
     CHKZERO(destination);
-    AMP_DEBUG_ENTRY("mif_send","("PRIdPTR",%s)", group, destination->name);
+    AMP_DEBUG_ENTRY("mif_send","(%p,%s)", group, destination->name);
 
     /* Step 1 - Serialize the bundle. */
     if((data = msg_grp_serialize_wrapper(group)) == NULL)

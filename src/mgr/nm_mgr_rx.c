@@ -268,7 +268,7 @@ void rx_agent_reg(msg_metadata_t *meta, msg_agent_t *msg)
 void *mgr_rx_thread(void *arg)
 {
   nmmgr_t *mgr = arg;
-  AMP_DEBUG_ENTRY("mgr_rx_thread","mgr (" PRIdPTR ")", mgr);
+  AMP_DEBUG_ENTRY("mgr_rx_thread","mgr (%p)", mgr);
     
     AMP_DEBUG_INFO("mgr_rx_thread","Receiver thread running...", NULL);
     

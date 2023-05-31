@@ -1057,7 +1057,7 @@ char *ui_str_from_sbr(rule_t *sbr)
 
 		snprintf(str,
 				1023,
-				"SBR: ID=%s, S="PRId64", E=%s, M="PRId64", C="PRId64", A=%s\n",
+				"SBR: ID=%s, S=%"PRId64", E=%s, M=%"PRId64", C=%"PRId64", A=%s\n",
 				(id_str == NULL) ? "null" :id_str,
 				OS_TimeGetTotalSeconds(sbr->start),
 				(expr_str == NULL) ? "null" : expr_str,

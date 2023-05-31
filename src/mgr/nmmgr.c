@@ -99,7 +99,7 @@ int nmmgr_destroy(nmmgr_t *mgr)
 int nmmgr_init(nmmgr_t *mgr)
 {
 	int success;
-	AMP_DEBUG_ENTRY("mgr_init","mgr("PRIdPTR")", mgr);
+	AMP_DEBUG_ENTRY("mgr_init","mgr(%p)", mgr);
 
 	memset(mgr, 0, sizeof(nmmgr_t));
 	mgr->mgr_ui_mode = MGR_UI_DEFAULT;

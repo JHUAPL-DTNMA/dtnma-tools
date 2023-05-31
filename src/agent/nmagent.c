@@ -72,7 +72,7 @@ bool nmagent_destroy(nmagent_t *agent)
 bool nmagent_start(nmagent_t *agent, const eid_t *agent_eid, const eid_t *mgr_eid)
 {
     int rc;
-    AMP_DEBUG_ENTRY("nmagent_start","("PRIdPTR")", agent);
+    AMP_DEBUG_ENTRY("nmagent_start","(%p)", agent);
 
     rda_init();
 

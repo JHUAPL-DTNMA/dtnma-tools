@@ -413,7 +413,7 @@ int cut_deserialize_vector(vector_t *vec, QCBORDecodeContext *it, vec_des_fn des
 	size_t length;
 	size_t i;
 
-	AMP_DEBUG_ENTRY("cut_deserialize_vector","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)des_fn);
+	AMP_DEBUG_ENTRY("cut_deserialize_vector","(%p,%p)", it, des_fn);
 
 	// Sanity checks
 	if((vec == NULL) || (it == NULL))

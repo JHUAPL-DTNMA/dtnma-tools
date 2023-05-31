@@ -191,7 +191,7 @@ int ui_build_control(agent_t* agent)
 	msg_ctrl_t *msg;
     int rtv;
 
-	AMP_DEBUG_ENTRY("ui_build_control","("PRIdPTR")", (uaddr)agent);
+	AMP_DEBUG_ENTRY("ui_build_control","(%p)", agent);
 
     if (agent == NULL)
     {
@@ -1385,7 +1385,7 @@ void ui_send_raw(agent_t* agent, uint8_t enter_ts)
 void *ui_thread(void *arg)
 {
   nmmgr_t *mgr = arg;
-  AMP_DEBUG_ENTRY("ui_thread","mgr (" PRIdPTR ")", mgr);
+  AMP_DEBUG_ENTRY("ui_thread","mgr (%p)", mgr);
 
     // Cache running as an NM UI Global for simplicity. This is always the entrypoint to ui
     global_mgr = mgr;
