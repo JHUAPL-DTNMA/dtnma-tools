@@ -293,9 +293,9 @@ msg_bp_recv(msg_metadata_t *meta, int *success, void *ctx)
 
   while (dlv.result != BpPayloadPresent)
   {
-    //FIXME Timeout is required to check agent running status
+    //FIXME Timeout is required to check agent running status periodically
     static const int timeout = 5;
-    if((res = bp_receive(iif->sap, &dlv, BP_BLOCKING)) < 0)
+    if((res = bp_receive(iif->sap, &dlv, timeout)) < 0)
     {
       AMP_DEBUG_INFO("iif_receive","bp_receive failed. Result: %d.", res);
       *success = AMP_SYSERR;

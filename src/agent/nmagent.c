@@ -79,8 +79,12 @@ bool nmagent_start(nmagent_t *agent, const eid_t *agent_eid, const eid_t *mgr_ei
     /* Step 5: Start agent threads. */
     threadinfo_t threadinfo[] = {
         {&rx_thread, "rx_thread"},
+        {&rda_ctrls, "rda_ctrls"},
+        {&rda_reports, "rda_reports"},
+        {&rda_rules, "rda_rules"},
     };
-    if (threadset_start(&agent->threads, threadinfo, sizeof(threadinfo)/sizeof(threadinfo_t), agent) != AMP_OK)
+    rc = threadset_start(&agent->threads, threadinfo, sizeof(threadinfo)/sizeof(threadinfo_t), agent);
+    if (rc != AMP_OK)
     {
       db_destroy();
       AMP_DEBUG_EXIT("agent_main","->-1",NULL);
@@ -129,6 +133,7 @@ bool nmagent_stop(nmagent_t *agent)
 {
   /* Notify threads */
   daemon_run_stop(&agent->running);
+  rda_signal_shutdown();
   threadset_join(&agent->threads);
 
   /* Step 8: Cleanup. */
