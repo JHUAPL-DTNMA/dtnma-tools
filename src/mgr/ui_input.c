@@ -321,9 +321,9 @@ uint32_t     ui_input_uint(const char *prompt)
 	return result;
 }
 
-uvast     ui_input_uvast(const char *prompt)
+amp_uvast     ui_input_uvast(const char *prompt)
 {
-	uvast result = 0;
+	amp_uvast result = 0;
 	char line[MAX_INPUT_BYTES];
 
 	ui_input_get_line(prompt, line, MAX_INPUT_BYTES);
@@ -333,9 +333,9 @@ uvast     ui_input_uvast(const char *prompt)
 	return result;
 }
 
-vast     ui_input_vast(const char *prompt)
+amp_vast     ui_input_vast(const char *prompt)
 {
-	vast result = 0;
+	amp_vast result = 0;
 	char line[MAX_INPUT_BYTES];
 
 	ui_input_get_line(prompt, line, MAX_INPUT_BYTES);
@@ -410,7 +410,7 @@ ac_t *ui_input_ac(const char *prompt)
  *  07/05/16  E. Birrane     Check for NULL result. Add File input.
  *****************************************************************************/
 
-ari_t *ui_input_ari(const char *prompt, uint8_t adm_id, uvast mask)
+ari_t *ui_input_ari(const char *prompt, uint8_t adm_id, amp_uvast mask)
 {
 	ari_t *result = NULL;
 	metadata_t *meta = NULL;
@@ -464,7 +464,7 @@ ari_t *ui_input_ari(const char *prompt, uint8_t adm_id, uvast mask)
 	return result;
 }
 
-ari_t* ui_input_ari_build(uvast mask)
+ari_t* ui_input_ari_build(amp_uvast mask)
 {
 	ari_t *result = NULL;
 	uint8_t flags;
@@ -513,7 +513,7 @@ ari_t* ui_input_ari_build(uvast mask)
 
 	if(ARI_GET_FLAG_NN(flags))
 	{
-		uvast nn = ui_input_uvast("ARI Nickname:");
+		amp_uvast nn = ui_input_uvast("ARI Nickname:");
 		if(VDB_ADD_NN(nn, &(result->as_reg.nn_idx)) != VEC_OK)
 		{
 			AMP_DEBUG_ERR("ui_input_ari","Unable to add nickname.", NULL);
@@ -525,7 +525,7 @@ ari_t* ui_input_ari_build(uvast mask)
 	if(ARI_GET_FLAG_ISS(flags))
 	{
 #if AMP_VERSION < 7
-		uvast iss = ui_input_uvast("ARI Issuer:");
+		amp_uvast iss = ui_input_uvast("ARI Issuer:");
 		if(VDB_ADD_ISS(iss, &(result->as_reg.iss_idx)) != VEC_OK)
 		{
 			AMP_DEBUG_ERR("ui_input_ari","Unable to add issuer.", NULL);
@@ -721,7 +721,7 @@ int ui_input_ari_flags(uint8_t *flag)
 	return AMP_OK;
 }
 
-ari_t *ui_input_ari_list(uint8_t adm_id, uvast mask)
+ari_t *ui_input_ari_list(uint8_t adm_id, amp_uvast mask)
 {
 	ari_t *result = NULL;
 	int idx = 0;
@@ -736,7 +736,7 @@ ari_t *ui_input_ari_list(uint8_t adm_id, uvast mask)
 ari_t*  ui_input_ari_lit(const char *prompt)
 {
 	ari_t *result = NULL;
-	uvast mask = 0;
+	amp_uvast mask = 0;
 	amp_type_e type;
 
 	if(prompt != NULL)
@@ -821,7 +821,7 @@ ari_t* ui_input_ari_raw(uint8_t no_file)
 }
 
 
-int ui_input_ari_type(uvast mask)
+int ui_input_ari_type(amp_uvast mask)
 {
 	int i= 0;
 	int idx = 0;
@@ -1004,7 +1004,7 @@ expr_t* ui_input_expr(const char *prompt)
    expr_t* expr = NULL;
    ari_t *val = NULL;
    amp_type_e type = AMP_TYPE_UNK;
-   uvast mask;
+   amp_uvast mask;
 
    ui_printf("\n\n");
    ui_printf("Expression Builder\n");

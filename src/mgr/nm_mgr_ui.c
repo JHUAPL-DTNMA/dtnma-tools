@@ -187,7 +187,7 @@ void ui_log_transmit_msg(agent_t* agent, msg_ctrl_t *msg) {
 int ui_build_control(agent_t* agent)
 {
 	ari_t *id = NULL;
-	uvast ts;
+	amp_uvast ts;
 	msg_ctrl_t *msg;
     int rtv;
 
@@ -808,7 +808,7 @@ void ui_eventLoop(nmmgr_t *mgr)
 }
 
 // this is a mess. clean it up.
-void ui_list_objs(uint8_t adm_id, uvast mask, ari_t **result)
+void ui_list_objs(uint8_t adm_id, amp_uvast mask, ari_t **result)
 {
    char title[100];
    ui_menu_list_t *list;
@@ -1637,7 +1637,7 @@ void ui_ctrl_list_menu(nmmgr_t *mgr)
    char msg[128] = "";
    int new_msg = 0, i;
    char *ctrl_menu_list_descriptions[10];
-   uvast mask = 0;
+   amp_uvast mask = 0;
 
    ctrl_menu_list_descriptions[0] = NULL;
    for(i = 1; i < 10; i++)

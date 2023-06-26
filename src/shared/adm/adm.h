@@ -105,14 +105,14 @@ typedef struct
 int adm_add_adm_info(char *name, int id);
 
 int adm_add_cnst(ari_t *id, edd_collect_fn collect);
-int adm_add_ctrldef(uint8_t nn, uvast id, uint8_t num, ctrldef_run_fn run);
+int adm_add_ctrldef(uint8_t nn, amp_uvast id, uint8_t num, ctrldef_run_fn run);
 int adm_add_ctrldef_ari(ari_t *id, uint8_t num, ctrldef_run_fn run);
 
 int adm_add_edd(ari_t *id, edd_collect_fn collect);
 int adm_add_lit(ari_t *id);
 int adm_add_macdef(macdef_t *def);
 int adm_add_macdef_ctrl(macdef_t *def, ari_t *id);
-int adm_add_op(vec_idx_t nn, uvast name, uint8_t num_parm, op_fn apply_fn);
+int adm_add_op(vec_idx_t nn, amp_uvast name, uint8_t num_parm, op_fn apply_fn);
 int adm_add_op_ari(ari_t *id, uint8_t num_parm, op_fn apply_fn);
 
 int adm_add_rpttpl(rpttpl_t *def);
@@ -121,8 +121,8 @@ int	adm_add_var_from_expr(ari_t *id, amp_type_e type, expr_t *expr);
 int adm_add_var_from_tnv(ari_t *id, tnv_t value)
 ;
 
-ari_t* adm_build_ari(amp_type_e type, uint8_t has_parms, vec_idx_t nn, uvast id);
-ari_t *adm_build_ari_parm_6(amp_type_e type, vec_idx_t nn, uvast id, tnv_t *p1, tnv_t *p2, tnv_t* p3, tnv_t *p4, tnv_t *p5, tnv_t *p6);
+ari_t* adm_build_ari(amp_type_e type, uint8_t has_parms, vec_idx_t nn, amp_uvast id);
+ari_t *adm_build_ari_parm_6(amp_type_e type, vec_idx_t nn, amp_uvast id, tnv_t *p1, tnv_t *p2, tnv_t* p3, tnv_t *p4, tnv_t *p5, tnv_t *p6);
 
 
 int32_t adm_get_parm_int(tnvc_t *parms, uint8_t idx, int *success);
@@ -130,8 +130,8 @@ void *adm_get_parm_obj(tnvc_t *parms, uint8_t idx, amp_type_e type);
 float adm_get_parm_real32(tnvc_t *parms, uint8_t idx, int *success);
 double adm_get_parm_real64(tnvc_t *parms, uint8_t idx, int *success);
 uint32_t adm_get_parm_uint(tnvc_t *parms, uint8_t idx, int *success);
-uvast adm_get_parm_uvast(tnvc_t *parms, uint8_t idx, int *success);
-vast adm_get_parm_vast(tnvc_t *parms, uint8_t idx, int *success);
+amp_uvast adm_get_parm_uvast(tnvc_t *parms, uint8_t idx, int *success);
+amp_vast adm_get_parm_vast(tnvc_t *parms, uint8_t idx, int *success);
 amp_tv_t adm_get_parm_tv(tnvc_t *parms, uint8_t idx, int *success);
 
 void adm_init();

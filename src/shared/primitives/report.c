@@ -106,7 +106,7 @@ void rpt_cb_del_fn(void *item)
 
 void  rpt_clear(rpt_t *rpt)
 {
-    AMP_DEBUG_ENTRY("rpt_clear_lyst","("PRIdPTR")", (uaddr) rpt);
+    AMP_DEBUG_ENTRY("rpt_clear_lyst","("PRIdPTR")", (amp_uaddr) rpt);
     CHKVOID(rpt);
     tnvc_clear(rpt->entries);
 }
@@ -163,7 +163,7 @@ rpt_t* rpt_create(ari_t *id, OS_time_t timestamp, tnvc_t *entries)
 	rpt_t *result = NULL;
 
 	AMP_DEBUG_ENTRY("rpt_create","("PRIdPTR",%d,entries)",
-			        (uaddr) id, timestamp);
+			        (amp_uaddr) id, timestamp);
 
 	/* Step 1: Allocate the message. */
 	if((result = (rpt_t*) STAKE(sizeof(rpt_t))) == NULL)
@@ -229,7 +229,7 @@ void* rpt_deserialize_ptr(QCBORDecodeContext *it, int *success)
 
 	AMP_DEBUG_ENTRY("rpt_deserialize_ptr",
 			        "("PRIdPTR","PRIdPTR")",
-					(uaddr)it, (uaddr)success);
+					(amp_uaddr)it, (amp_uaddr)success);
 
 	/* Sanity Checks. */
 	CHKNULL(success);

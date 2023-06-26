@@ -159,7 +159,7 @@ int adm_add_ctrldef_ari(ari_t *id, uint8_t num, ctrldef_run_fn run)
 	return ((rh_code == RH_OK) || (rh_code == RH_DUPLICATE)) ? AMP_OK : AMP_FAIL;
 }
 
-int adm_add_ctrldef(uint8_t nn, uvast name, uint8_t num, ctrldef_run_fn run)
+int adm_add_ctrldef(uint8_t nn, amp_uvast name, uint8_t num, ctrldef_run_fn run)
 {
 	ari_t *id = adm_build_ari(AMP_TYPE_CTRL, (num > 0) ? 1 : 0, nn, name);
 
@@ -386,7 +386,7 @@ int adm_add_op_ari(ari_t *id, uint8_t num_parm, op_fn apply_fn)
 	return ((rh_code == RH_OK) || (rh_code == RH_DUPLICATE)) ? AMP_OK : AMP_FAIL;
 }
 
-int adm_add_op(vec_idx_t nn, uvast name, uint8_t num_parm, op_fn apply_fn)
+int adm_add_op(vec_idx_t nn, amp_uvast name, uint8_t num_parm, op_fn apply_fn)
 {
 	// The OPER ARI itself has no parameters, but the operator consumes stack items
 	return adm_add_op_ari(adm_build_ari(AMP_TYPE_OPER, 1, nn, name),num_parm, apply_fn);
@@ -534,7 +534,7 @@ int adm_add_var_from_tnv(ari_t *id, tnv_t value)
 
 
 // Takes over name and parms, no matter what.
-ari_t* adm_build_ari(amp_type_e type, uint8_t has_parms, vec_idx_t nn, uvast id)
+ari_t* adm_build_ari(amp_type_e type, uint8_t has_parms, vec_idx_t nn, amp_uvast id)
 {
 	ari_t *result = ari_create(type);
 	CHKNULL(result);
@@ -569,7 +569,7 @@ ari_t* adm_build_ari(amp_type_e type, uint8_t has_parms, vec_idx_t nn, uvast id)
 }
 
 
-ari_t *adm_build_ari_parm_6(amp_type_e type, vec_idx_t nn, uvast id, tnv_t *p1, tnv_t *p2, tnv_t* p3, tnv_t *p4, tnv_t *p5, tnv_t *p6)
+ari_t *adm_build_ari_parm_6(amp_type_e type, vec_idx_t nn, amp_uvast id, tnv_t *p1, tnv_t *p2, tnv_t* p3, tnv_t *p4, tnv_t *p5, tnv_t *p6)
 {
 	ari_t *ari = adm_build_ari(type, 1, nn, id);
 
@@ -620,12 +620,12 @@ uint32_t adm_get_parm_uint(tnvc_t *parms, uint8_t idx, int *success)
 	tnv_t *val = tnvc_get(parms, idx);
 	return (val == NULL) ? 0 : tnv_to_uint(*val, success);}
 
-uvast adm_get_parm_uvast(tnvc_t *parms, uint8_t idx, int *success)
+amp_uvast adm_get_parm_uvast(tnvc_t *parms, uint8_t idx, int *success)
 {
 	tnv_t *val = tnvc_get(parms, idx);
 	return (val == NULL) ? 0 : tnv_to_uvast(*val, success);}
 
-vast adm_get_parm_vast(tnvc_t *parms, uint8_t idx, int *success)
+amp_vast adm_get_parm_vast(tnvc_t *parms, uint8_t idx, int *success)
 {
 	tnv_t *val = tnvc_get(parms, idx);
 	return (val == NULL) ? 0 : tnv_to_vast(*val, success);

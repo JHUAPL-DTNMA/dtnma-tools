@@ -188,6 +188,71 @@ msg_rpt_t *rda_get_msg_rpt(eid_t recipient)
 }
 
 
+/******************************************************************************
+ *
+ * \par Function Name: rda_get_msg_tbl
+ *
+ * \par Purpose: Find the table set intended for a given recipient. The
+ *               agent will, when possible, combine table sets for a single
+ *               recipient.
+ *
+ * \param[in]  recipient     - The recipient for which we are searching for
+ *                             a table set.
+ *
+ * \par Notes:
+ *
+ * \return !NULL - Report for this recipient.
+ *         NULL  - Error.
+ *
+ * Modification History:
+ *  MM/DD/YY  AUTHOR         DESCRIPTION
+ *  --------  ------------   ---------------------------------------------
+ *  11/23/21  E. Birrane     Initial Implementation (JHU/APL)
+ *****************************************************************************/
+
+msg_tbl_t *rda_get_msg_tbl(eid_t recipient)
+{
+    vecit_t it;
+    msg_tbl_t *msg_tbl;
+
+    AMP_DEBUG_ENTRY("rda_get_msg_tbl","(%s)", recipient.name);
+
+    /* Step 0: Sanity check. */
+    if(strlen(recipient.name) <= 0)
+    {
+        AMP_DEBUG_ERR("rda_get_msg_tbl","Bad parms.",NULL);
+        return NULL;
+    }
+
+    /* Step 1: See if we already have a report message going to
+     * that recipient. If so, return it.
+     */
+    for(it = vecit_first(&(gAgentDb.tbl_msgs)); vecit_valid(it); it = vecit_next(it))
+    {
+        int success;
+        msg_tbl_t *cur = vecit_data(it);
+
+        vec_find(&(cur->rx), recipient.name, &success);
+        if(success == AMP_OK)
+        {
+            return cur;
+        }
+    }
+
+    /* Step 2; If we get here, create a new report for that recipient. */
+    if((msg_tbl = msg_tbl_create(recipient.name)) != NULL)
+    {
+        if(vec_push(&(gAgentDb.tbl_msgs), msg_tbl) != VEC_OK)
+        {
+            msg_tbl_release(msg_tbl, 1);
+            return NULL;
+        }
+    }
+
+    return msg_tbl;
+}
+
+
 OS_time_t rda_earliest_ctrl()
 {
   OS_time_t earliest = OS_TIME_MAX;

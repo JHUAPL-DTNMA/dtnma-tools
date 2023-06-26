@@ -16,7 +16,7 @@
  ****************************************************************************/
 
 /*   START CUSTOM INCLUDES HERE  */
-#include "ipn/ipnfw.h"
+#include "ipnfw.h"
 
 /*   STOP CUSTOM INCLUDES HERE  */
 
@@ -271,8 +271,8 @@ tnv_t *dtn_ion_ipnadmin_ctrl_exit_add(eid_t *def_mgr, tnvc_t *parms, int8_t *sta
 	 * +-------------------------------------------------------------------------+
 	 */
 	int success = 0;
-	uvast firstNodeNbr = 0;
-	uvast lastNodeNbr = 0;
+	amp_uvast firstNodeNbr = 0;
+	amp_uvast lastNodeNbr = 0;
 	char *endpointId = NULL;
 
 	firstNodeNbr = adm_get_parm_uvast(parms,0,&success);
@@ -312,8 +312,8 @@ tnv_t *dtn_ion_ipnadmin_ctrl_exit_change(eid_t *def_mgr, tnvc_t *parms, int8_t *
 	 * +-------------------------------------------------------------------------+
 	 */
 	int success = 0;
-	uvast firstNodeNbr = 0;
-	uvast lastNodeNbr = 0;
+	amp_uvast firstNodeNbr = 0;
+	amp_uvast lastNodeNbr = 0;
 	char *endpointId = NULL;
 
 	firstNodeNbr = adm_get_parm_uvast(parms,0,&success);
@@ -351,8 +351,8 @@ tnv_t *dtn_ion_ipnadmin_ctrl_exit_del(eid_t *def_mgr, tnvc_t *parms, int8_t *sta
 	 * +-------------------------------------------------------------------------+
 	 */
 	int success = 0;
-	uvast firstNodeNbr = 0;
-	uvast lastNodeNbr = 0;
+	amp_uvast firstNodeNbr = 0;
+	amp_uvast lastNodeNbr = 0;
 
 	firstNodeNbr = adm_get_parm_uvast(parms,0,&success);
 	if(success){
@@ -387,7 +387,7 @@ tnv_t *dtn_ion_ipnadmin_ctrl_plan_add(eid_t *def_mgr, tnvc_t *parms, int8_t *sta
 	 * +-------------------------------------------------------------------------+
 	 */
 	int success = 0;
-	uvast nodeNbr = 0;
+	amp_uvast nodeNbr = 0;
 	unsigned int xmitRate = 0;
 
 	nodeNbr = adm_get_parm_uvast(parms,0,&success);
@@ -422,7 +422,7 @@ tnv_t *dtn_ion_ipnadmin_ctrl_plan_change(eid_t *def_mgr, tnvc_t *parms, int8_t *
 	 * +-------------------------------------------------------------------------+
 	 */
 	int success = 0;
-	uvast nodeNbr = 0;
+	amp_uvast nodeNbr = 0;
 	unsigned int xmitRate = 0;
 
 	nodeNbr = adm_get_parm_uvast(parms,0,&success);
@@ -458,7 +458,7 @@ tnv_t *dtn_ion_ipnadmin_ctrl_plan_del(eid_t *def_mgr, tnvc_t *parms, int8_t *sta
 	 * +-------------------------------------------------------------------------+
 	 */
 	int success;
-	uvast nodeNbr = 0;
+	amp_uvast nodeNbr = 0;
 
 	nodeNbr = adm_get_parm_uvast(parms,0,&success);
 	if(success){

@@ -86,7 +86,7 @@ static ari_t p_ari_deserialize_lit(QCBORDecodeContext *it, uint8_t byte, int *su
 static ari_t p_ari_deserialize_reg(QCBORDecodeContext *it, uint8_t flags, int *success)
 {
 	ari_t result;
-	uvast temp;
+	amp_uvast temp;
 
 	ari_init(&result);
 
@@ -238,7 +238,7 @@ static int p_ari_serialize_reg(QCBOREncodeContext *encoder, ari_t *ari)
 	// Encode Nickname (if defined)
 	if(ARI_GET_FLAG_NN(ari->as_reg.flags))
 	{
-		uvast *nn = (uvast *) VDB_FINDIDX_NN(ari->as_reg.nn_idx);
+		amp_uvast *nn = (amp_uvast *) VDB_FINDIDX_NN(ari->as_reg.nn_idx);
 
 		if (nn != NULL)
 		{
@@ -271,7 +271,7 @@ static int p_ari_serialize_reg(QCBOREncodeContext *encoder, ari_t *ari)
 	if(ARI_GET_FLAG_ISS(ari->as_reg.flags))
 	{
 #if AMP_VERSION < 8
-		uvast *iss = (uvast *)VDB_FINDIDX_ISS(ari->as_reg.iss_idx);
+		amp_uvast *iss = (amp_uvast *)VDB_FINDIDX_ISS(ari->as_reg.iss_idx);
 
 		if (iss != NULL)
 		{
@@ -497,7 +497,7 @@ void ari_cb_ht_del(rh_elt_t *elt)
 int ari_compare(ari_t *ari1, ari_t *ari2, int parms)
 {
     AMP_DEBUG_ENTRY("ari_compare","("PRIdPTR","PRIdPTR")",
-    		         (uaddr) ari1, (uaddr) ari2);
+    		         (amp_uaddr) ari1, (amp_uaddr) ari2);
 
     if((ari1 == NULL) || (ari2 == NULL))
     {
@@ -683,7 +683,7 @@ ari_t ari_deserialize(QCBORDecodeContext *it, int *success)
 {
 	uint8_t flag;
 
-    AMP_DEBUG_ENTRY("ari_deserialize","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)success);
+    AMP_DEBUG_ENTRY("ari_deserialize","("PRIdPTR","PRIdPTR")", (amp_uaddr)it, (amp_uaddr)success);
 
     CHKUSR(it, ari_null());
     CHKUSR(success, ari_null());
@@ -757,14 +757,14 @@ ari_t* ari_deserialize_raw(blob_t *data, int *success)
  *to ARI 9/19/18
  */
 
-ari_t*   ari_from_uvast(uvast val)
+ari_t*   ari_from_uvast(amp_uvast val)
 {
 	QCBORDecodeContext it;
 	int success = AMP_FAIL;
 	ari_t *result = NULL;
     
 	QCBORDecode_Init(&it,
-					 (UsefulBufC){&val,sizeof(uvast)},
+					 (UsefulBufC){&val,sizeof(amp_uvast)},
 					 QCBOR_DECODE_MODE_NORMAL);
 
 	result = ari_deserialize_ptr(&it, &success);
@@ -1092,7 +1092,7 @@ ac_t ac_deserialize(QCBORDecodeContext *it, int *success)
 	size_t length;
 	size_t i;
 
-	AMP_DEBUG_ENTRY("ac_deserialize","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)success);
+	AMP_DEBUG_ENTRY("ac_deserialize","("PRIdPTR","PRIdPTR")", (amp_uaddr)it, (amp_uaddr)success);
 
 	memset(&result, 0, sizeof(ac_t));
 

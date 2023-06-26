@@ -62,7 +62,7 @@ tnv_t *expr_apply_op(ari_t *id, vector_t *stack)
 	tnv_t *result = NULL;
 
 	AMP_DEBUG_ENTRY("expr_apply_op","("PRIdPTR", "PRIdPTR")",
-			        (uaddr) id, (uaddr) stack);
+			        (amp_uaddr) id, (amp_uaddr) stack);
 
 	if((id == NULL) || (stack == NULL))
 	{
@@ -181,7 +181,7 @@ expr_t expr_deserialize(QCBORDecodeContext *it, int *success)
 	uint8_t expr_type;
 #endif
 
-	AMP_DEBUG_ENTRY("expr_deserialize","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)success);
+	AMP_DEBUG_ENTRY("expr_deserialize","("PRIdPTR","PRIdPTR")", (amp_uaddr)it, (amp_uaddr)success);
 
 	result.type = AMP_TYPE_UNK;
 	CHKUSR(success, result);
@@ -320,7 +320,7 @@ tnv_t *expr_eval(expr_t *expr)
 	vecit_t it;
 	int success;
 
-	AMP_DEBUG_ENTRY("expr_eval","(0x"PRIdPTR")", (uaddr) expr);
+	AMP_DEBUG_ENTRY("expr_eval","(0x"PRIdPTR")", (amp_uaddr) expr);
 
 	/* Sanity Checks. */
 	if((expr == NULL) || ((max = vec_num_entries(expr->rpn.values)) == 0))
@@ -422,7 +422,7 @@ tnv_t *expr_get_atomic(ari_t *ari)
 {
 	tnv_t *result = NULL;
 
-    AMP_DEBUG_ENTRY("expr_get_edd","("PRIdPTR")", (uaddr) ari);
+    AMP_DEBUG_ENTRY("expr_get_edd","("PRIdPTR")", (amp_uaddr) ari);
 
 	CHKNULL(ari);
 
@@ -459,7 +459,7 @@ tnv_t *expr_get_atomic(ari_t *ari)
 	    result = edd->def.collect(&(ari->as_reg.parms));
 	}
 
-	AMP_DEBUG_EXIT("expr_get_edd", "("PRIdPTR")", (uaddr) result);
+	AMP_DEBUG_EXIT("expr_get_edd", "("PRIdPTR")", (amp_uaddr) result);
 
 	return result;
 }
@@ -498,7 +498,7 @@ tnv_t *expr_get_var(ari_t *ari)
 	tnv_t *result = NULL;
 	var_t *var = NULL;
 
-    AMP_DEBUG_ENTRY("expr_get_var","("PRIdPTR")", (uaddr) ari);
+    AMP_DEBUG_ENTRY("expr_get_var","("PRIdPTR")", (amp_uaddr) ari);
 
     CHKNULL(ari);
 

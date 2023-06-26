@@ -38,6 +38,7 @@ COPY deps/ion*.patch /usr/src/nm/deps/
 RUN cd /usr/src/nm/deps/ion && \
     patch -p1 <../ion-4.1.2-remove-nm.patch && \
     patch -p1 <../ion-4.1.2-local-deliver.patch && \
+    patch -p1 <../ion-4.1.2-private-headers.patch && \
     autoreconf -vif && \
     ./configure && \
     make -j$(nproc) && \

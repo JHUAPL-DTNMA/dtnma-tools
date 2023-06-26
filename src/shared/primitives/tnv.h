@@ -120,8 +120,8 @@ typedef struct
 		uint8_t  as_byte;
 		uint32_t as_uint;
 		int32_t  as_int;
-		vast     as_vast;
-		uvast    as_uvast;
+		amp_vast     as_vast;
+		amp_uvast    as_uvast;
 		float    as_real32;
 		double   as_real64;
 	} value;
@@ -174,8 +174,8 @@ tnv_t*    tnv_from_real32(float val);
 tnv_t*    tnv_from_real64(double val);
 tnv_t*    tnv_from_str(const char *str);
 tnv_t*    tnv_from_uint(uint32_t val);
-tnv_t*    tnv_from_uvast(uvast val);
-tnv_t*    tnv_from_vast(vast val);
+tnv_t*    tnv_from_uvast(amp_uvast val);
+tnv_t*    tnv_from_vast(amp_vast val);
 tnv_t*    tnv_from_tv(amp_tv_t val);
 void      tnv_init(tnv_t *val, amp_type_e type);
 int       tnv_serialize(QCBOREncodeContext *encoder, void *item);
@@ -188,8 +188,8 @@ int32_t   tnv_to_int(tnv_t val, int *success);
 float     tnv_to_real32(tnv_t val, int *success);
 double	  tnv_to_real64(tnv_t val, int *success);
 uint32_t  tnv_to_uint(tnv_t val, int *success);
-uvast 	  tnv_to_uvast(tnv_t val, int *success);
-vast 	  tnv_to_vast(tnv_t val, int *success);
+amp_uvast 	  tnv_to_uvast(tnv_t val, int *success);
+amp_vast 	  tnv_to_vast(tnv_t val, int *success);
 amp_tv_t tnv_to_tv(tnv_t val, int *success);
 
 

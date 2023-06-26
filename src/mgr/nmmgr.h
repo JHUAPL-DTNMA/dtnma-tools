@@ -93,8 +93,8 @@ typedef struct
 {
 	vector_t agents;  /* (agent_t *) */
 	rhht_t metadata; /* (metadata_t*) */
-	uvast tot_rpts;
-	uvast tot_tbls;
+	amp_uvast tot_rpts;
+	amp_uvast tot_tbls;
 
 #ifdef HAVE_MYSQL
 	sql_db_t sql_info;

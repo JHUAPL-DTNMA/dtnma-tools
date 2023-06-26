@@ -189,7 +189,7 @@ ctrl_t *ctrl_create(ari_t *ari)
     	result->parms = NULL;
     }
 
-  	AMP_DEBUG_EXIT("ctrl_create","->"PRIdPTR".",(uaddr)result);
+  	AMP_DEBUG_EXIT("ctrl_create","->"PRIdPTR".",(amp_uaddr)result);
 	return result;
 }
 
@@ -237,7 +237,7 @@ ari_t *ctrl_get_id(const ctrl_t *ctrl)
 
 /*
  * 16 bytes for bytestring encoding.
- * 8 bytes for uvast time
+ * 8 bytes for amp_uvast time
  * AMP_MAX_EID_LEN for caller
  * 1 for null terminator.
  */

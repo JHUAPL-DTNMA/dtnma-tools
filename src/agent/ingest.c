@@ -163,7 +163,7 @@ void rx_handle_perf_ctrl(msg_metadata_t *meta, blob_t *contents)
 	vec_idx_t i;
 
 	AMP_DEBUG_ENTRY("rx_handle_perf_ctrl","("PRIdPTR","PRIdPTR")",
-					(uaddr)meta, (uaddr) contents);
+					(amp_uaddr)meta, (amp_uaddr) contents);
 
 	if((meta == NULL) || (contents == NULL))
 	{

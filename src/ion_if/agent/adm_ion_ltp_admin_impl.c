@@ -401,7 +401,7 @@ tnv_t *dtn_ion_ltpadmin_ctrl_span_add(eid_t *def_mgr, tnvc_t *parms, int8_t *sta
 	 * +-------------------------------------------------------------------------+
 	 */
 	int success;
-	uvast engineId = adm_get_parm_uvast(parms, 0, &success);
+	amp_uvast engineId = adm_get_parm_uvast(parms, 0, &success);
 	unsigned int maxExportSessions = adm_get_parm_uint(parms, 1, &success);
 	unsigned int maxImportSessions = adm_get_parm_uint(parms, 2, &success);
 	unsigned int maxSegmentSize = adm_get_parm_uint(parms, 3, &success);
@@ -445,7 +445,7 @@ tnv_t *dtn_ion_ltpadmin_ctrl_span_change(eid_t *def_mgr, tnvc_t *parms, int8_t *
 	 */
 
 	int success;
-	uvast engineId = adm_get_parm_uvast(parms, 0, &success);
+	amp_uvast engineId = adm_get_parm_uvast(parms, 0, &success);
 	unsigned int maxExportSessions = adm_get_parm_uint(parms, 1, &success);
 	unsigned int maxImportSessions = adm_get_parm_uint(parms, 2, &success);
 	unsigned int maxSegmentSize = adm_get_parm_uint(parms, 3, &success);
@@ -493,7 +493,7 @@ tnv_t *dtn_ion_ltpadmin_ctrl_span_del(eid_t *def_mgr, tnvc_t *parms, int8_t *sta
 	 */
 
 	int success;
-	uvast engineId = adm_get_parm_uvast(parms, 0, &success);
+	amp_uvast engineId = adm_get_parm_uvast(parms, 0, &success);
 	if(removeSpan(engineId) > 0)
 	{
 		*status = CTRL_SUCCESS;

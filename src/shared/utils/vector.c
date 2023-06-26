@@ -605,16 +605,16 @@ int   vec_str_init(vector_t *vec, uint8_t num)
 
 
 
-int vec_uvast_add(vector_t *vec, uvast value, vec_idx_t *idx)
+int vec_uvast_add(vector_t *vec, amp_uvast value, vec_idx_t *idx)
 {
 	int success = VEC_OK;
 	vecit_t it;
-	uvast *new_entry;
+	amp_uvast *new_entry;
 
 	/* First, make sure we don't already have an entry. */
 	for(it = vecit_first(vec); vecit_valid(it); it = vecit_next(it))
 	{
-		new_entry = (uvast *) vecit_data(it);
+		new_entry = (amp_uvast *) vecit_data(it);
 		if(*new_entry == value)
 		{
 			*idx = vecit_idx(it);
@@ -622,7 +622,7 @@ int vec_uvast_add(vector_t *vec, uvast value, vec_idx_t *idx)
 		}
 	}
 
-	if((new_entry = STAKE(sizeof(uvast))) == NULL)
+	if((new_entry = STAKE(sizeof(amp_uvast))) == NULL)
 	{
 		return VEC_SYSERR;
 	}
@@ -650,8 +650,8 @@ int vec_uvast_init(vector_t *vec, uint8_t num)
 
 int vec_uvast_comp(void *i1, void *i2)
 {
-	uvast *v1 = (uvast *) i1;
-	uvast *v2 = (uvast *) i2;
+	amp_uvast *v1 = (amp_uvast *) i1;
+	amp_uvast *v2 = (amp_uvast *) i2;
 
 	CHKERR(v1);
 	CHKERR(v2);
@@ -664,16 +664,16 @@ void* vec_uvast_copy(void* item)
 	void *new_item = NULL;
 	CHKNULL(item);
 
-	if((new_item = STAKE(sizeof(uvast))) == NULL)
+	if((new_item = STAKE(sizeof(amp_uvast))) == NULL)
 	{
 		return NULL;
 	}
-	memcpy(new_item, item, sizeof(uvast));
+	memcpy(new_item, item, sizeof(amp_uvast));
 	return new_item;
 }
 
 
-int vec_uvast_find_idx(vector_t *vec, uvast value, vec_idx_t *idx)
+int vec_uvast_find_idx(vector_t *vec, amp_uvast value, vec_idx_t *idx)
 {
 	vecit_t it;
 
@@ -684,7 +684,7 @@ int vec_uvast_find_idx(vector_t *vec, uvast value, vec_idx_t *idx)
 
 	for(it = vecit_first(vec); vecit_valid(it); it=vecit_next(it))
 	{
-		uvast *data = (uvast *) vecit_data(it);
+		amp_uvast *data = (amp_uvast *) vecit_data(it);
 		if(data != NULL)
 		{
 			if(*data == value)

@@ -128,8 +128,8 @@ tbl_t *dtn_ion_ionadmin_tblt_contacts(ari_t *id)
 		 /* Table is: (TV)Start, (TV)Stop, (UINT)Src Node, (UINT)Dest Node, (UVAST)Xmit, (UVAST)Confidence */
 		if((cur_row = tnvc_create(6)) != NULL)
 		{
-		  tnvc_insert(cur_row, tnv_from_tv(contact->fromTime));
-		  tnvc_insert(cur_row, tnv_from_tv(contact->toTime));
+		  tnvc_insert(cur_row, tnv_from_tv(amp_tv_from_ctime(OS_TimeFromTotalSeconds(contact->fromTime), NULL)));
+		  tnvc_insert(cur_row, tnv_from_tv(amp_tv_from_ctime(OS_TimeFromTotalSeconds(contact->toTime), NULL)));
 		  tnvc_insert(cur_row, tnv_from_uint(contact->fromNode));
 		  tnvc_insert(cur_row, tnv_from_uint(contact->toNode));
 		  tnvc_insert(cur_row, tnv_from_uvast(contact->xmitRate));
@@ -197,8 +197,8 @@ tbl_t *dtn_ion_ionadmin_tblt_ranges(ari_t *id)
 		 /* Table is: (TV)Start, (TV)Stop, (UINT) Node, (UINT)Other Node, (UINT) Dist */
 		if((cur_row = tnvc_create(5)) != NULL)
 		{
-			tnvc_insert(cur_row, tnv_from_tv(range->fromTime));
-			tnvc_insert(cur_row, tnv_from_tv(range->toTime));
+			tnvc_insert(cur_row, tnv_from_tv(amp_tv_from_ctime(OS_TimeFromTotalSeconds(range->fromTime), NULL)));
+			tnvc_insert(cur_row, tnv_from_tv(amp_tv_from_ctime(OS_TimeFromTotalSeconds(range->toTime), NULL)));
 			tnvc_insert(cur_row, tnv_from_uint(range->fromNode));
 			tnvc_insert(cur_row, tnv_from_uint(range->toNode));
 			tnvc_insert(cur_row, tnv_from_uint(range->owlt));
@@ -401,7 +401,7 @@ tnv_t *dtn_ion_ionadmin_get_inbound_file_system_occupancy_limit(tnvc_t *parms)
 	Sdr     sdr = getIonsdr();
 	Object  iondbObj = getIonDbObject();
 	IonDB   iondb;
-	vast    fileLimit;
+	amp_vast    fileLimit;
 
 	CHKNULL(sdr_begin_xn(sdr));
 	fileLimit = zco_get_max_file_occupancy(sdr, ZcoInbound);
@@ -434,7 +434,7 @@ tnv_t *dtn_ion_ionadmin_get_inbound_heap_occupancy_limit(tnvc_t *parms)
 	Sdr     sdr = getIonsdr();
 	Object  iondbObj = getIonDbObject();
 	IonDB   iondb;
-	vast    heapLimit;
+	amp_vast    heapLimit;
 
 	CHKNULL(sdr_begin_xn(sdr));
 	heapLimit = zco_get_max_heap_occupancy(sdr, ZcoInbound);
@@ -496,7 +496,7 @@ tnv_t *dtn_ion_ionadmin_get_outbound_file_system_occupancy_limit(tnvc_t *parms)
 	Sdr     sdr = getIonsdr();
 	Object  iondbObj = getIonDbObject();
 	IonDB   iondb;
-	vast    fileLimit;
+	amp_vast    fileLimit;
 
 	CHKNULL(sdr_begin_xn(sdr));
 	fileLimit = zco_get_max_file_occupancy(sdr, ZcoOutbound);
@@ -529,7 +529,7 @@ tnv_t *dtn_ion_ionadmin_get_outbound_heap_occupancy_limit(tnvc_t *parms)
 	Sdr     sdr = getIonsdr();
 	Object  iondbObj = getIonDbObject();
 	IonDB   iondb;
-	vast    heapLimit;
+	amp_vast    heapLimit;
 
 	CHKNULL(sdr_begin_xn(sdr));
 	heapLimit = zco_get_max_heap_occupancy(sdr, ZcoOutbound);
@@ -942,12 +942,12 @@ tnv_t *dtn_ion_ionadmin_ctrl_node_contact_add(eid_t *def_mgr, tnvc_t *parms, int
 
 	time_t      fromTime = 0;
 	time_t      toTime = 0;
-	uvast       fromNodeNbr = 0;
-	uvast       toNodeNbr = 0;
+	amp_uvast       fromNodeNbr = 0;
+	amp_uvast       toNodeNbr = 0;
 	uint32_t       regionNbr;
 	PsmAddress  xaddr;
-	uvast    	xmitRate;
-	uvast       confidence;
+	amp_uvast    	xmitRate;
+	amp_uvast       confidence;
 	int     	success = 0;
 
 	fromTime = adm_get_parm_uvast(parms, 0, &success);
@@ -1033,8 +1033,8 @@ tnv_t *dtn_ion_ionadmin_ctrl_node_contact_del(eid_t *def_mgr, tnvc_t *parms, int
 	 */
 
 	time_t  timestamp = 0;
-	uvast   fromNodeNbr = 0;
-	uvast   toNodeNbr = 0;
+	amp_uvast   fromNodeNbr = 0;
+	amp_uvast   toNodeNbr = 0;
 	int 	success = 0;
 	uint32_t	regionNbr;
 

@@ -2,7 +2,6 @@
 #include <osapi-error.h>
 #include <shared/utils/daemon_run.h>
 #include <shared/adm/adm.h>
-#include <shared/adm/adm_amp_agent.h>
 #include <shared/msg/msg_if.h>
 #include <agent/instr.h>
 #include <agent/ldc.h>
@@ -100,7 +99,7 @@ static blob_t * _test_receive(msg_metadata_t *meta, int *success, void *ctx)
 
 void setUp(void) {
   TEST_ASSERT_EQUAL_INT(AMP_OK, utils_mem_int());
-  TEST_ASSERT_EQUAL_INT(AMP_OK, db_init("nmagent_db", &adm_init));
+  TEST_ASSERT_EQUAL_INT(AMP_OK, db_init("nmagent_db", &adm_common_init));
   agent_instr_init();
 
   test_count = 0;

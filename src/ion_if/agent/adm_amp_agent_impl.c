@@ -16,6 +16,8 @@
  ****************************************************************************/
 
 /*   START CUSTOM INCLUDES HERE  */
+#include <math.h>
+#include <platform.h>
 #include "../shared/primitives/expr.h"
 #include "../shared/primitives/tnv.h"
 #include "instr.h"
@@ -181,7 +183,7 @@ tnv_t *amp_agent_binary_num_op(amp_agent_op_e op, vector_t *stack, amp_type_e re
 		case MULT:   result->value.as_vast = tnv_to_vast(*lval, &ls) * tnv_to_vast(*rval, &rs); break;
 		case DIV:    result->value.as_vast = AMP_SAFE_DIV(tnv_to_vast(*lval, &ls), tnv_to_vast(*rval, &rs)); break;
 		case MOD:    result->value.as_vast = AMP_SAFE_MOD(tnv_to_vast(*lval, &ls), tnv_to_vast(*rval, &rs)); break;
-		case EXP:    result->value.as_vast = (vast) pow(tnv_to_vast(*lval, &ls), tnv_to_vast(*rval, &rs)); break;
+		case EXP:    result->value.as_vast = (amp_vast) pow(tnv_to_vast(*lval, &ls), tnv_to_vast(*rval, &rs)); break;
 		case BITAND: result->value.as_vast = tnv_to_vast(*lval, &ls) & tnv_to_vast(*rval, &rs); break;
 		case BITOR:  result->value.as_vast = tnv_to_vast(*lval, &ls) | tnv_to_vast(*rval, &rs); break;
 		case BITXOR: result->value.as_vast = tnv_to_vast(*lval, &ls) ^ tnv_to_vast(*rval, &rs); break;
@@ -199,7 +201,7 @@ tnv_t *amp_agent_binary_num_op(amp_agent_op_e op, vector_t *stack, amp_type_e re
 		case MULT:   result->value.as_uvast = tnv_to_uvast(*lval, &ls) * tnv_to_uvast(*rval, &rs); break;
 		case DIV:    result->value.as_uvast = AMP_SAFE_DIV(tnv_to_uvast(*lval, &ls), tnv_to_uvast(*rval, &rs)); break;
 		case MOD:    result->value.as_uvast = AMP_SAFE_MOD(tnv_to_uvast(*lval, &ls), tnv_to_uvast(*rval, &rs)); break;
-		case EXP:    result->value.as_uvast = (uvast) pow(tnv_to_uvast(*lval, &ls), tnv_to_uvast(*rval, &rs)); break;
+		case EXP:    result->value.as_uvast = (amp_uvast) pow(tnv_to_uvast(*lval, &ls), tnv_to_uvast(*rval, &rs)); break;
 		case BITAND: result->value.as_uvast = tnv_to_uvast(*lval, &ls) & tnv_to_uvast(*rval, &rs); break;
 		case BITOR:  result->value.as_uvast = tnv_to_uvast(*lval, &ls) | tnv_to_uvast(*rval, &rs); break;
 		case BITXOR: result->value.as_uvast = tnv_to_uvast(*lval, &ls) ^ tnv_to_uvast(*rval, &rs); break;
@@ -1261,7 +1263,7 @@ tnv_t *amp_agent_ctrl_del_var(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 		}
 		else
 		{
-			db_forget(&(var->desc), gDB.vars);
+//			db_forget(&(var->desc), gDB.vars);
 			VDB_DELKEY_VAR(cur_id);
 		}
 	}
@@ -1365,7 +1367,7 @@ tnv_t *amp_agent_ctrl_del_rptt(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 		}
 		else
 		{
-			db_forget(&(def->desc), gDB.rpttpls);
+//			db_forget(&(def->desc), gDB.rpttpls);
 			VDB_DELKEY_RPTT(cur_id);
 		}
 	}
@@ -1493,7 +1495,9 @@ tnv_t *amp_agent_ctrl_gen_rpts(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 		for(ac_it = vecit_first(&(ids->values)); vecit_valid(ac_it); ac_it = vecit_next(ac_it))
 		{
 			ari_t *cur_id = vecit_data(ac_it);
-			rpt_t *rpt = rpt_create(ari_copy_ptr(cur_id), getCtime(), NULL);
+			OS_time_t timestamp;
+			OS_GetLocalTime(&timestamp);
+			rpt_t *rpt = rpt_create(ari_copy_ptr(cur_id), timestamp, NULL);
 
 			if(cur_id->type == AMP_TYPE_RPTTPL)
 			{
@@ -1705,7 +1709,7 @@ tnv_t *amp_agent_ctrl_del_macro(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 		}
 		else
 		{
-			db_forget(&(def->desc), gDB.macdefs);
+//			db_forget(&(def->desc), gDB.macdefs);
 			VDB_DELKEY_MACDEF(cur_id);
 		}
 	}
@@ -1797,8 +1801,8 @@ tnv_t *amp_agent_ctrl_add_tbr(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 	rule_t *tbr = NULL;
 
 	ari_t *id = adm_get_parm_obj(parms, 0, AMP_TYPE_ARI);
-	uvast start = adm_get_parm_uvast(parms, 1, &success);
-	def.period = adm_get_parm_uvast(parms, 2, &success);
+	OS_time_t start = amp_tv_to_ctime(adm_get_parm_tv(parms, 1, &success), NULL);
+	def.period = amp_tv_to_ctime(adm_get_parm_tv(parms, 2, &success), NULL);
 	def.max_fire = adm_get_parm_uvast(parms, 3, &success);
 	ac_t action = ac_copy(adm_get_parm_obj(parms, 4, AMP_TYPE_AC));
 
@@ -1865,7 +1869,7 @@ tnv_t *amp_agent_ctrl_add_sbr(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 	int rh_code;
 
 	ari_t *id = adm_get_parm_obj(parms, 0, AMP_TYPE_ARI);
-	uvast start = adm_get_parm_uvast(parms, 1, &success);
+	OS_time_t start = amp_tv_to_ctime(adm_get_parm_tv(parms, 1, &success), NULL);
 	expr_t *state = adm_get_parm_obj(parms, 2, AMP_TYPE_EXPR);
 	def.expr = expr_copy(*state);
 	def.max_eval = adm_get_parm_uvast(parms, 3, &success);
@@ -1948,7 +1952,7 @@ tnv_t *amp_agent_ctrl_del_rule(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 		}
 		else
 		{
-			db_forget(&(rule->desc), gDB.rules);
+//			db_forget(&(rule->desc), gDB.rules);
 			VDB_DELKEY_RULE(cur_id);
 		}
 	}

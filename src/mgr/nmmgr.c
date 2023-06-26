@@ -99,7 +99,7 @@ int nmmgr_destroy(nmmgr_t *mgr)
 int nmmgr_init(nmmgr_t *mgr)
 {
 	int success;
-	AMP_DEBUG_ENTRY("mgr_init","mgr(%p)", mgr);
+	AMP_DEBUG_ENTRY("nmmgr_init","mgr(%p)", mgr);
 
 	memset(mgr, 0, sizeof(nmmgr_t));
 	mgr->mgr_ui_mode = MGR_UI_DEFAULT;
@@ -114,14 +114,14 @@ int nmmgr_init(nmmgr_t *mgr)
 	gMgrDB.agents = vec_create(AGENT_DEF_NUM_AGTS, agent_cb_del,agent_cb_comp, NULL, 0, &success);
 	if(success != VEC_OK)
 	{
-		AMP_DEBUG_ERR("mgr_init", "Can't make agents vec.", NULL);
+		AMP_DEBUG_ERR("nmmgr_init", "Can't make agents vec.", NULL);
 		return AMP_FAIL;
 	}
 
 	gMgrDB.metadata = rhht_create(NM_MGR_MAX_META, ari_cb_comp_no_parm_fn, ari_cb_hash, meta_cb_del, &success);
 	if(success != RH_OK)
 	{
-		AMP_DEBUG_ERR("mgr_init", "Can't make parmspec ht.", NULL);
+		AMP_DEBUG_ERR("nmmgr_init", "Can't make parmspec ht.", NULL);
 		return AMP_FAIL;
 	}
 
@@ -129,11 +129,11 @@ int nmmgr_init(nmmgr_t *mgr)
 	gMgrDB.tot_rpts = 0;
     gMgrDB.tot_tbls = 0;
 
-    if((utils_mem_int()       != AMP_OK) ||
-       (db_init("nmmgr_db", &adm_init) != AMP_OK))
+    if((utils_mem_int() != AMP_OK) ||
+       (db_init("nmmgr_db", &adm_common_init) != AMP_OK))
     {
     	db_destroy();
-    	AMP_DEBUG_ERR("mgr_init","Unable to initialize DB.", NULL);
+    	AMP_DEBUG_ERR("nmmgr_init","Unable to initialize DB.", NULL);
     	return AMP_FAIL;
     }
 

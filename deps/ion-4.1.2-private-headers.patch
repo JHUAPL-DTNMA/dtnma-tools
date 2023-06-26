@@ -1,0 +1,72 @@
+diff --git a/Makefile.am b/Makefile.am
+index ebb7f67d..5a7a1087 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -361,7 +361,10 @@ icilib = \
+ 	libici.la
+ 
+ iciinclude = \
++	ici/include/cbor.h \
++	ici/include/crc.h \
+ 	ici/include/crypto.h \
++	ici/include/csi.h \
+ 	ici/include/icinm.h \
+ 	ici/include/ion.h \
+ 	ici/include/ionsec.h \
+@@ -640,12 +643,13 @@ ltplib = \
+ 
+ ltpinclude = \
+ 	ltp/include/ltp.h \
++	ltp/library/ltpP.h \
++	ltp/library/ltpnm.h \
++	ltp/library/ltpsec.h \
+ 	ltp/include/sda.h
+ 
+ ltpnoinst = \
+ 	ltp/dccp/dccplsa.h \
+-	ltp/library/ltpP.h \
+-	ltp/library/ltpsec.h \
+ 	ltp/udp/udplsa.h
+ 
+ ltpextra = \
+@@ -1056,8 +1060,7 @@ bpextra = \
+ 	bpv6/library/ext/sbsp/sbsp_instr.c \
+ 	bpv6/library/ext/sbsp/sbsp_util.h \
+ 	bpv6/library/ext/sbsp/sbsp_util.c \
+-	ici/include/crypto.h \
+-	ici/include/csi.h
++	ici/include/crypto.h
+ 
+ if ENABLE_IMC
+ bpextra += \
+@@ -1828,6 +1831,10 @@ bplib = \
+ bpinclude = \
+ 	bpv7/include/bp.h \
+ 	bpv7/include/eureka.h \
++	bpv7/ipn/ipnfw.h \
++	bpv7/library/bpP.h \
++	bpv7/library/bpnm.h \
++	bpv7/library/cgr.h \
+ 	bpv7/bpsec/sci/sci.h \
+ 	bpv7/bpsec/sci/ion_test_sc.h \
+ 	bpv7/bpsec/sci/bib_hmac_sha2_sc.h \
+@@ -1841,9 +1848,7 @@ bpnoinst = \
+ 	bpv7/brs/brscla.h \
+ 	bpv7/dccp/dccpcla.h \
+ 	bpv7/dtn2/dtn2fw.h \
+-	bpv7/ipn/ipnfw.h \
+ 	bpv7/ipnd/ipndP.h \
+-	bpv7/library/bpP.h \
+ 	bpv7/ltp/ltpcla.h \
+ 	bpv7/saga/saga.h \
+ 	bpv7/stcp/stcpcla.h \
+@@ -1937,8 +1942,7 @@ bpextra = \
+ 	bpv7/library/ext/meb/meb.c \
+ 	bpv7/library/ext/bae/bae.h \
+ 	bpv7/library/ext/bae/bae.c \
+-	ici/include/crypto.h \
+-	ici/include/csi.h
++	ici/include/crypto.h
+ 
+ if ENABLE_IMC
+ bpextra += \

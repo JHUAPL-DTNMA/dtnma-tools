@@ -10,6 +10,20 @@
 #include "agent/nmagent.h"
 #include "ion_if.h"
 
+// ADMs
+#include "shared/adm/adm_amp_agent.h"
+#include "shared/adm/adm_ion_admin.h"
+#include "shared/adm/adm_ion_ipn_admin.h"
+#include "shared/adm/adm_ion_ltp_admin.h"
+#include "shared/adm/adm_ionsec_admin.h"
+#include "shared/adm/adm_ltp_agent.h"
+#ifdef BUILD_BPv6
+#else
+#include "bpv7/adm/adm_bp_agent.h"
+#include "bpv7/adm/adm_bpsec.h"
+#include "bpv7/adm/adm_ion_bp_admin.h"
+#endif
+
 static nmagent_t agent;
 static iif_t ion_ptr;
 static eid_t manager_eid;
@@ -91,16 +105,22 @@ OS_Application_Startup()
   agent.mif.ctx = &ion_ptr;
 
   /* Step 3: Initialize objects and instrumentation. */
+  agent_instr_init();
 
-  if ((utils_mem_int () != AMP_OK)
-      || (db_init ("nmagent_db", &adm_common_init) != AMP_OK))
-  {
-    db_destroy ();
-    AMP_DEBUG_ERR("agent_main", "Unable to initialize DB.", NULL);
-    OS_ApplicationExit(-1);
-  }
-
-  agent_instr_init ();
+  // ADM initialization
+  amp_agent_init();
+  dtn_bp_agent_init();
+  dtn_ion_ionadmin_init();
+  dtn_ion_ipnadmin_init();
+  dtn_ion_ionsecadmin_init();
+  dtn_ion_ltpadmin_init();
+  dtn_ltp_agent_init();
+  dtn_ion_bpadmin_init();
+#ifdef BUILD_BPv6
+  dtn_sbsp_init();
+#else
+//  dtn_bpsec_init();
+#endif
 
   /* Step 4: Register signal handlers. */
   struct sigaction act;

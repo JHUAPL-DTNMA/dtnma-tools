@@ -39,7 +39,7 @@ extern "C" {
 
 #define MAX_INPUT_BYTES 1024
 
-#define TYPE_AS_MASK(type) (((uvast)1) << ((uvast)type))
+#define TYPE_AS_MASK(type) (((amp_uvast)1) << ((amp_uvast)type))
 #define TYPE_MATCHES_MASK(type, mask) (TYPE_AS_MASK(type) & mask)
 
 #if (LONG_LONG_OKAY)
@@ -65,8 +65,8 @@ float    ui_input_real32(const char *prompt);
 double   ui_input_real64(const char *prompt);
 char *   ui_input_string(const char *prompt);
 uint32_t ui_input_uint(const char *prompt);
-uvast    ui_input_uvast(const char *prompt);
-vast     ui_input_vast(const char *prompt);
+amp_uvast    ui_input_uvast(const char *prompt);
+amp_vast     ui_input_vast(const char *prompt);
 
 /*
  * User input for compound object types.
@@ -74,13 +74,13 @@ vast     ui_input_vast(const char *prompt);
 
 ac_t*   ui_input_ac(const char *prompt);
 
-ari_t*  ui_input_ari(const char *prompt, uint8_t adm_id, uvast mask);
-ari_t*  ui_input_ari_build(uvast mask);
+ari_t*  ui_input_ari(const char *prompt, uint8_t adm_id, amp_uvast mask);
+ari_t*  ui_input_ari_build(amp_uvast mask);
 int     ui_input_ari_flags(uint8_t *flag);
-ari_t*  ui_input_ari_list(uint8_t adm_id, uvast mask);
+ari_t*  ui_input_ari_list(uint8_t adm_id, amp_uvast mask);
 ari_t*  ui_input_ari_lit(const char *prompt);
 ari_t*  ui_input_ari_raw(uint8_t no_file);
-int     ui_input_ari_type(uvast mask);
+int     ui_input_ari_type(amp_uvast mask);
 int     ui_input_parms(ari_t *id);
 
 tnv_t*  ui_input_tnv(int type, char *prompt);

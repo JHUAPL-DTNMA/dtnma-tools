@@ -143,7 +143,7 @@ void* tbl_deserialize_ptr(QCBORDecodeContext *it, int *success)
 
 	AMP_DEBUG_ENTRY("tbl_deserialize_ptr",
 					"("PRIdPTR","PRIdPTR")",
-					(uaddr)it, (uaddr)success);
+					(amp_uaddr)it, (amp_uaddr)success);
 
 	/* Sanity Checks. */
 	CHKNULL(success);

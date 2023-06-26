@@ -36,13 +36,22 @@
 #include "nmagent.h"
 #include "ingest.h"
 #include "rda.h"
-
 #include "instr.h"
+
 
 bool nmagent_init(nmagent_t *agent)
 {
   memset(agent, 0, sizeof(nmagent_t));
   daemon_run_init(&agent->running);
+
+  if ((utils_mem_int() != AMP_OK)
+      || (db_init("nmagent_db", &adm_common_init) != AMP_OK))
+  {
+    db_destroy();
+    AMP_DEBUG_ERR("nmagent_init", "Unable to initialize DB.", NULL);
+    return false;
+  }
+
   return true;
 }
 

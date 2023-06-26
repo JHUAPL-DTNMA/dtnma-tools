@@ -1262,8 +1262,8 @@ int db_query_tnvc(size_t dbidx, int tnvc_id, tnvc_t *parms)
 	mysql_stmt_bind_param(stmt, bind_param);
 
 	// Bind results
-	uvast uvast_val;
-	vast vast_val;
+	amp_uvast uvast_val;
+	amp_vast vast_val;
 	dbprep_dec_res_int(C_DATA_TYPE_ID, tnv_type);
 	dbprep_bind_res_int(C_INT_VALUE, vast_val);
 	dbprep_bind_res_int(C_UINT_VALUE, uvast_val);
@@ -1337,7 +1337,7 @@ int db_query_tnvc(size_t dbidx, int tnvc_id, tnvc_t *parms)
 ari_t* db_query_ari(size_t dbidx, int ari_id)
 {
 	ari_t *ari;
-	uvast temp;
+	amp_uvast temp;
 
 	// Query ARI
 	enum cols { C_ARI_TYPE=0, // data_type_id
@@ -3283,8 +3283,8 @@ mid_t* db_fetch_mid_from_row(MYSQL_ROW row)
 	uint8_t issFlag   = (row[6] == NULL) ? 0 : atoi(row[6]);
 	uint8_t tagFlag   = (row[7] == NULL) ? 0 : atoi(row[7]);
 	uint8_t oidType   = (row[8] == NULL) ? 0 : atoi(row[8]);
-	uvast issuer      = (uvast) (row[9] == NULL) ? 0 : atoll(row[9]);
-	uvast tag         = (uvast) (row[10] == NULL) ? 0 : atoll(row[10]);
+	amp_uvast issuer      = (amp_uvast) (row[9] == NULL) ? 0 : atoll(row[9]);
+	amp_uvast tag         = (amp_uvast) (row[10] == NULL) ? 0 : atoll(row[10]);
 	uint32_t dtype    = (row[11] == NULL) ? 0 : atoi(row[11]);
  	uint32_t mid_type = 0;
 
@@ -4013,14 +4013,14 @@ int db_query_ari_metadata(db_con_t dbidx, ari_t *ari, uint32_t *metadata_id, uin
 
 	/** Decode values **/
 
-	// Convert name from blob_t to uvast
-	uvast name_idx;
+	// Convert name from blob_t to amp_uvast
+	amp_uvast name_idx;
 
 	// VERIFY: Is this correct? optimal? Do we need to handle cases where name is not numeric?
 	cut_get_cbor_numeric_raw(&(ari->as_reg.name), AMP_TYPE_UVAST, &name_idx);
 
 	//vec_idx_t nn = ari->as_reg.nn_idx;
-	uvast *nn = (uvast *) VDB_FINDIDX_NN(ari->as_reg.nn_idx);
+	amp_uvast *nn = (amp_uvast *) VDB_FINDIDX_NN(ari->as_reg.nn_idx);
 	CHKZERO(nn);
 	int namespace = *nn/20;
 	int adm_type = *nn % 20;

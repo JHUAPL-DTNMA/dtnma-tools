@@ -349,7 +349,7 @@ tnv_t tnv_deserialize(QCBORDecodeContext *it, int *success)
     QCBORError err;
     tnv_t result;
 
-    AMP_DEBUG_ENTRY("tnv_deserialize","("PRIdPTR","PRIdPTR")", (uaddr)it, (uaddr)success);
+    AMP_DEBUG_ENTRY("tnv_deserialize","("PRIdPTR","PRIdPTR")", (amp_uaddr)it, (amp_uaddr)success);
 
     tnv_init(&result, AMP_TYPE_UNK);
 
@@ -502,10 +502,10 @@ int tnv_deserialize_val_by_type(QCBORDecodeContext *it, tnv_t *result)
 	   	case AMP_TYPE_BYTE:   success = cut_get_cbor_numeric(it, result->type, (uint8_t*) &(result->value.as_byte));  break;
 	   	case AMP_TYPE_INT:    success = cut_get_cbor_numeric(it, result->type, (int32_t*) &(result->value.as_int));   break;
 	   	case AMP_TYPE_UINT:   success = cut_get_cbor_numeric(it, result->type, (uint32_t*) &(result->value.as_uint)); break;
-	   	case AMP_TYPE_VAST:   success = cut_get_cbor_numeric(it, result->type, (vast*) &(result->value.as_vast));     break;
+	   	case AMP_TYPE_VAST:   success = cut_get_cbor_numeric(it, result->type, (amp_vast*) &(result->value.as_vast));     break;
 	   	case AMP_TYPE_TV:
 	   	case AMP_TYPE_TS:
-	   	case AMP_TYPE_UVAST:  success = cut_get_cbor_numeric(it, result->type, (uvast*) &(result->value.as_uvast));   break;
+	   	case AMP_TYPE_UVAST:  success = cut_get_cbor_numeric(it, result->type, (amp_uvast*) &(result->value.as_uvast));   break;
 	   	case AMP_TYPE_REAL32: success = cut_get_cbor_numeric(it, result->type, (float*) &(result->value.as_real32));  break;
 	   	case AMP_TYPE_REAL64: success = cut_get_cbor_numeric(it, result->type, (double*) &(result->value.as_real64)); break;
 
@@ -810,7 +810,7 @@ tnv_t*  tnv_from_uint(uint32_t val)
  *   1. Result must be freed with tnv_release(<item>, 1);
  *****************************************************************************/
 
-tnv_t*  tnv_from_uvast(uvast val)
+tnv_t*  tnv_from_uvast(amp_uvast val)
 {
 	tnv_t *result = tnv_create();
 	CHKNULL(result);
@@ -854,7 +854,7 @@ tnv_t*  tnv_from_tv(amp_tv_t val)
  *   1. Result must be freed with tnv_release(<item>, 1);
  *****************************************************************************/
 
-tnv_t*  tnv_from_vast(vast val)
+tnv_t*  tnv_from_vast(amp_vast val)
 {
 	tnv_t *result = tnv_create();
 	CHKNULL(result);
@@ -1312,9 +1312,9 @@ uint32_t  tnv_to_uint(tnv_t val, int *success)
  *   1. Mapped values cannot be converted.
  *****************************************************************************/
 
-uvast  tnv_to_uvast(tnv_t val, int *success)
+amp_uvast  tnv_to_uvast(tnv_t val, int *success)
 {
-	uvast result = 0;
+	amp_uvast result = 0;
 
 	if(TNV_IS_MAP(val.flags))
 	{
@@ -1327,15 +1327,15 @@ uvast  tnv_to_uvast(tnv_t val, int *success)
 	switch(val.type)
 	{
 		case AMP_TYPE_BOOL:
-		case AMP_TYPE_BYTE:   result = (uvast) val.value.as_byte;   break;
-		case AMP_TYPE_INT:    result = (uvast) val.value.as_int;    break;
-		case AMP_TYPE_UINT:   result = (uvast) val.value.as_uint;   break;
-		case AMP_TYPE_VAST:   result = (uvast) val.value.as_vast;   break;
+		case AMP_TYPE_BYTE:   result = (amp_uvast) val.value.as_byte;   break;
+		case AMP_TYPE_INT:    result = (amp_uvast) val.value.as_int;    break;
+		case AMP_TYPE_UINT:   result = (amp_uvast) val.value.as_uint;   break;
+		case AMP_TYPE_VAST:   result = (amp_uvast) val.value.as_vast;   break;
 		case AMP_TYPE_TV:
 		case AMP_TYPE_TS:
 		case AMP_TYPE_UVAST:  result =  val.value.as_uvast;         break;
-		case AMP_TYPE_REAL32: result = (uvast) val.value.as_real32; break;
-		case AMP_TYPE_REAL64: result = (uvast) val.value.as_real64; break;
+		case AMP_TYPE_REAL32: result = (amp_uvast) val.value.as_real32; break;
+		case AMP_TYPE_REAL64: result = (amp_uvast) val.value.as_real64; break;
 		default: *success = AMP_FAIL; break;
 	}
 	return result;
@@ -1356,9 +1356,9 @@ uvast  tnv_to_uvast(tnv_t val, int *success)
  *   1. Mapped values cannot be converted.
  *****************************************************************************/
 
-vast  tnv_to_vast(tnv_t val, int *success)
+amp_vast  tnv_to_vast(tnv_t val, int *success)
 {
-	vast result = 0;
+	amp_vast result = 0;
 
 	if(TNV_IS_MAP(val.flags))
 	{
@@ -1371,15 +1371,15 @@ vast  tnv_to_vast(tnv_t val, int *success)
 	switch(val.type)
 	{
 		case AMP_TYPE_BOOL:
-		case AMP_TYPE_BYTE:   result = (vast) val.value.as_byte;   break;
-		case AMP_TYPE_INT:    result = (vast) val.value.as_int;    break;
-		case AMP_TYPE_UINT:   result = (vast) val.value.as_uint;   break;
+		case AMP_TYPE_BYTE:   result = (amp_vast) val.value.as_byte;   break;
+		case AMP_TYPE_INT:    result = (amp_vast) val.value.as_int;    break;
+		case AMP_TYPE_UINT:   result = (amp_vast) val.value.as_uint;   break;
 		case AMP_TYPE_VAST:   result = val.value.as_vast;          break;
         case AMP_TYPE_TV:
         case AMP_TYPE_TS:
-		case AMP_TYPE_UVAST:  result = (vast) val.value.as_uvast;  break;
-		case AMP_TYPE_REAL32: result = (vast) val.value.as_real32; break;
-		case AMP_TYPE_REAL64: result = (vast) val.value.as_real64; break;
+		case AMP_TYPE_UVAST:  result = (amp_vast) val.value.as_uvast;  break;
+		case AMP_TYPE_REAL32: result = (amp_vast) val.value.as_real32; break;
+		case AMP_TYPE_REAL64: result = (amp_vast) val.value.as_real64; break;
 		default: *success = AMP_FAIL; break;
 	}
 	return result;
@@ -1388,7 +1388,7 @@ vast  tnv_to_vast(tnv_t val, int *success)
 
 amp_tv_t tnv_to_tv(tnv_t val, int *success)
 {
-  vast secs = tnv_to_vast(val, success);
+  amp_vast secs = tnv_to_vast(val, success);
   return (amp_tv_t){ .secs = OS_TimeFromTotalSeconds(secs) };
 }
 
@@ -1835,7 +1835,7 @@ static tnvc_t tnvc_deserialize_tvc(QCBORDecodeContext *array_it, size_t array_le
 	blob_t types;
 	int i;
 
-	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"PRIdPTR",0x"PRIdPTR")", (uaddr) array_it, (uaddr) success);
+	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"PRIdPTR",0x"PRIdPTR")", (amp_uaddr) array_it, (amp_uaddr) success);
 	memset(&result,0,sizeof(result));
 	*success = AMP_OK;
 
@@ -1909,7 +1909,7 @@ static tnvc_t tnvc_deserialize_tvc(QCBORDecodeContext *array_it, size_t array_le
 	blob_t types;
 	int i;
 
-	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"PRIdPTR",0x"PRIdPTR")", (uaddr) array_it, (uaddr) success);
+	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"PRIdPTR",0x"PRIdPTR")", (amp_uaddr) array_it, (amp_uaddr) success);
 	memset(&result,0,sizeof(result));
 	*success = AMP_OK;
 

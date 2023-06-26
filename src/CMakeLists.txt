@@ -28,7 +28,6 @@ set(HFILES
 )
 set(CFILES
   "shared/adm/adm.c"
-  "shared/adm/adm_init.c"
   "shared/utils/cbor_utils.c"
   "shared/utils/daemon_run.c"
   "shared/utils/nm_types.c"
@@ -98,10 +97,32 @@ if(BUILD_AGENT)
   set(CFILES
     ion_if/ion_if.c
     ion_if/nm_agent.c
+    ion_if/agent/adm_amp_agent_agent.c
+    ion_if/agent/adm_amp_agent_impl.c
+    ion_if/agent/adm_ion_admin_agent.c
+    ion_if/agent/adm_ion_admin_impl.c
+    ion_if/agent/adm_ion_ipn_admin_agent.c
+    ion_if/agent/adm_ion_ipn_admin_impl.c
+    ion_if/agent/adm_ion_ltp_admin_agent.c
+    ion_if/agent/adm_ion_ltp_admin_impl.c
+    ion_if/agent/adm_ionsec_admin_agent.c
+    ion_if/agent/adm_ionsec_admin_impl.c
+    ion_if/agent/adm_ltp_agent_agent.c
+    ion_if/agent/adm_ltp_agent_impl.c
+    ion_if/bpv7/adm/adm_bp_agent_agent.c
+    ion_if/bpv7/adm/adm_bp_agent_impl.c
+#    ion_if/bpv7/adm/adm_bpsec_agent.c
+#    ion_if/bpv7/adm/adm_bpsec_impl.c
+    ion_if/bpv7/adm/adm_ion_bp_admin_agent.c
+    ion_if/bpv7/adm/adm_ion_bp_admin_impl.c
   )
   add_executable(ion_nm_agent ${CFILES} ${HFILES})
   target_link_libraries(ion_nm_agent nmagent)
   target_link_libraries(ion_nm_agent ION::BP)
+  target_link_libraries(ion_nm_agent ION::LTP)
+  target_include_directories(ion_nm_agent PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/ion_if/shared/adm
+  )
 
   install(
     TARGETS nmagent ion_nm_agent

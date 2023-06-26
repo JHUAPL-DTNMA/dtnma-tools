@@ -70,15 +70,15 @@ extern "C" {
 typedef struct
 {
 	expr_t expr;       /**> If this evals to true, run action.      */
-	uvast max_fire; /**> # times to run action.                  */
-	uvast max_eval; /**> # times to eval expression.             */
+	amp_uvast max_fire; /**> # times to run action.                  */
+	amp_uvast max_eval; /**> # times to eval expression.             */
 } sbr_def_t;
 
 
 typedef struct
 {
 	OS_time_t period;   /**> # ticks between rule firings.           */
-	uvast max_fire; /**> # times action can be run.              */
+	amp_uvast max_fire; /**> # times action can be run.              */
 } tbr_def_t;
 
 
@@ -107,8 +107,8 @@ typedef struct {
 	/** Everything below is not part of a rule definition. **/
 
 	OS_time_t eval_at;   /**> Time of next eval.      */
-	uvast    num_eval;   /**> Number of times rule evaluated.       */
-	uvast    num_fire;   /**> Number of times a rule action was run. */
+	amp_uvast    num_eval;   /**> Number of times rule evaluated.       */
+	amp_uvast    num_fire;   /**> Number of times a rule action was run. */
 	uint8_t  flags;      /**> Status of rule: Active or not.        */
 
 	db_desc_t desc;      /**> SDR info. for persistent storage.     */

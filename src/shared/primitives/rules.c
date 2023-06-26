@@ -137,7 +137,7 @@ rule_t*  rule_create_sbr(ari_t id, OS_time_t start, sbr_def_t def, ac_t action)
 	}
 
 
-	AMP_DEBUG_EXIT("rule_create_sbr", PRIdPTR, (uaddr) result);
+	AMP_DEBUG_EXIT("rule_create_sbr", PRIdPTR, (amp_uaddr) result);
 
 	return result;
 }
@@ -183,7 +183,7 @@ rule_t*  rule_create_tbr(ari_t id, OS_time_t start, tbr_def_t def, ac_t action)
 	}
 
 
-	AMP_DEBUG_EXIT("rule_create_tbr", PRIdPTR, (uaddr) result);
+	AMP_DEBUG_EXIT("rule_create_tbr", PRIdPTR, (amp_uaddr) result);
 
 	return result;
 }
@@ -285,7 +285,7 @@ rule_t*  rule_deserialize_ptr(QCBORDecodeContext *it, int *success)
 	QCBORError err;
 
 	AMP_DEBUG_ENTRY("rule_deserialize_ptr","("PRIdPTR","PRIdPTR")",
-						(uaddr)it, (uaddr)success);
+						(amp_uaddr)it, (amp_uaddr)success);
 
 	CHKNULL(success);
 	*success = AMP_FAIL;
@@ -358,7 +358,7 @@ rule_t*  rule_db_deserialize_ptr(QCBORDecodeContext *it, int *success)
 	QCBORError err;
 
 	AMP_DEBUG_ENTRY("rule_db_deserialize_ptr","("PRIdPTR","PRIdPTR")",
-					(uaddr)it, (uaddr)success);
+					(amp_uaddr)it, (amp_uaddr)success);
 
 	CHKNULL(success);
 	*success = AMP_FAIL;

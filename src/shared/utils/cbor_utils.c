@@ -163,7 +163,7 @@ int cut_dec_bytes(QCBORDecodeContext *it, uint8_t *buf, size_t len)
 
 /** Encode a UVAST into CBOR-encoding and return as a blob
  */
-int cut_enc_uvast(uvast num, blob_t *result)
+int cut_enc_uvast(amp_uvast num, blob_t *result)
 {
 	QCBOREncodeContext encoder;
 

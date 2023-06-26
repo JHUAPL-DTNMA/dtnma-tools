@@ -137,11 +137,11 @@ int   vec_str_comp(void *i1, void *i2);
 void* vec_str_copy(void* item);
 int   vec_str_init(vector_t *vec, uint8_t num);
 
-int   vec_uvast_add(vector_t *vec, uvast value, vec_idx_t *idx);
+int   vec_uvast_add(vector_t *vec, amp_uvast value, vec_idx_t *idx);
 int   vec_uvast_init(vector_t *vec, uint8_t num);
 int   vec_uvast_comp(void *i1, void *i2);
 void* vec_uvast_copy(void* item);
-int vec_uvast_find_idx(vector_t *vec, uvast value, vec_idx_t *idx);
+int vec_uvast_find_idx(vector_t *vec, amp_uvast value, vec_idx_t *idx);
 
 
 
