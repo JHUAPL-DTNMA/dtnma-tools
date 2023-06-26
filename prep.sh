@@ -16,6 +16,8 @@ then
   pushd ${SELFDIR}/deps/build/ion
 
   patch -p1 <${SELFDIR}/deps/ion-4.1.2-remove-nm.patch
+  patch -p1 <${SELFDIR}/deps/ion-4.1.2-local-deliver.patch
+  patch -p1 <${SELFDIR}/deps/ion-4.1.2-private-headers.patch
   autoreconf -vif
   ./configure --prefix=/usr
   make -j$(nproc) clean
