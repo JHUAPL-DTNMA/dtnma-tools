@@ -84,4 +84,5 @@ cmake -S ${SELFDIR} -B ${SELFDIR}/build/default \
   -DCMAKE_INSTALL_PREFIX=${SELFDIR}/testroot/usr \
   -DBUILD_MANAGER=YES \
   -DCMAKE_BUILD_TYPE=Debug \
-  -G Ninja
+  -G Ninja \
+  $@

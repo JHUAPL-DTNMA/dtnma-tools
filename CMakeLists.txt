@@ -17,10 +17,28 @@ limitations under the License.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-project(nm LANGUAGES C)
 
+# Ingest the git tag as project version name
+find_package(Git)
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} describe
+    RESULT_VARIABLE GIT_TAG_EXIT
+    OUTPUT_VARIABLE GIT_TAG_REV
+)
+if(NOT GIT_TAG_EXIT EQUAL 0)
+    set(GIT_TAG_REV "v0.0.0")
+    message(WARNING "No git tag found, marking as ${GIT_TAG_REV}")
+endif()
+# Make version compatible with CMake needs
+STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+)]] [[\1]] GIT_TAG_VERS ${GIT_TAG_REV})
+
+project(nm
+    LANGUAGES C
+    VERSION ${GIT_TAG_VERS}
+)
+
+option(BUILD_DOCS "Enable autodoc building" OFF)
 option(BUILD_TESTING "Enable test fixtures and libraries" ON)
 option(BUILD_AGENT "Build the Agent library and executable" ON)
 option(BUILD_MANAGER "Build the Manager library and executable" ON)
@@ -83,3 +101,7 @@ add_subdirectory(src)
 if(BUILD_TESTING)
   add_subdirectory(test)
 endif(BUILD_TESTING)
+
+if(BUILD_DOCS)
+  add_subdirectory(docs)
+endif(BUILD_DOCS)
