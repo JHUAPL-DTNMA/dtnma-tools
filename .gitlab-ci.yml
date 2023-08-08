@@ -35,6 +35,11 @@ stages:
         cmake ninja-build ruby \
         libmysqlclient-dev libcivetweb-dev civetweb libcjson-dev
 
+.prep-install-docs: &prep-install-docs |
+    apt-get update && apt-get install -y \
+        cmake ninja-build \
+        doxygen graphviz plantuml
+
 .prep-install-docker: &prep-install-docker |
     apt-get update && apt-get install -y \
       docker.io python3-pip && \
@@ -61,6 +66,20 @@ build:
     paths:
       - testroot
       - build
+
+docs:
+  stage: build
+  needs: []
+  before_script:
+    - *prep-install-ca
+    - *prep-install-ext
+    - *prep-install-docs
+  script:
+    - ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_DOCS=ON
+    - ./build.sh docs
+  artifacts:
+    paths:
+      - build/default/docs/doxygen
 
 unit-test:
   stage: test

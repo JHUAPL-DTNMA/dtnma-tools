@@ -8,7 +8,13 @@ SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 source setenv.sh
 
 cmake -S ${SELFDIR} -B ${SELFDIR}/build/default
-cmake --build ${SELFDIR}/build/default
+
+if [ "$1" = "docs" ]
+then
+    cmake --build ${SELFDIR}/build/default --target docs
+else
+    cmake --build ${SELFDIR}/build/default
+fi
 
 if [ "$1" = "install" ]
 then
