@@ -1,20 +1,20 @@
 [submodule "deps/unity"]
 	path = deps/unity
-	url = ../unity.git
+	url = https://github.com/ThrowTheSwitch/Unity.git
 	branch = master
 [submodule "deps/ion"]
 	path = deps/ion
-	url = ../ion-sf.git
+	url = https://git.code.sf.net/p/ion-dtn/code
 	branch = stable
 [submodule "deps/mlib"]
 	path = deps/mlib
-	url = ../mlib.git
+	url = https://github.com/P-p-H-d/mlib.git
 	branch = master
 [submodule "deps/QCBOR"]
 	path = deps/QCBOR
-	url = ../QCBOR.git
+	url = https://github.com/laurencelundblade/QCBOR.git
 	branch = master
 [submodule "deps/osal"]
 	path = deps/osal
-	url = ../osal.git
+	url = https://github.com/nasa/osal.git
 	branch = main

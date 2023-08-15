@@ -17,6 +17,7 @@
  */
 #include <osapi-task.h>
 #include <osapi-error.h>
+#include <osapi-common.h>
 #include <shared/utils/daemon_run.h>
 #include <shared/adm/adm.h>
 #include <shared/msg/msg_if.h>
@@ -115,8 +116,7 @@ static blob_t * _test_receive(msg_metadata_t *meta, int *success, void *ctx)
 
 
 void setUp(void) {
-  TEST_ASSERT_EQUAL_INT(AMP_OK, utils_mem_int());
-  TEST_ASSERT_EQUAL_INT(AMP_OK, db_init("nmagent_db", &adm_common_init));
+  TEST_ASSERT_TRUE(nmagent_init(&agent));
   agent_instr_init();
 
   test_count = 0;
@@ -138,13 +138,12 @@ void setUp(void) {
       TEST_ASSERT_EQUAL_INT(AMP_OK, ret);
   }
 
-  nmagent_init(&agent);
   agent.mif = (mif_cfg_t){
     .send = _test_send,
     .receive = _test_receive,
     .ctx = NULL
   };
-  rda_init();
+  TEST_ASSERT_EQUAL_INT(AMP_OK, rda_init());
 }
 
 void tearDown(void) {
