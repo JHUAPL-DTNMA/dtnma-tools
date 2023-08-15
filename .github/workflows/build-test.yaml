@@ -45,7 +45,7 @@ jobs:
         run: ./testenv/check.sh
       - name: Stop
         if: always()
-      - run: ./testenv/stop.sh
+        run: ./testenv/stop.sh
 
   apidoc:
     runs-on: ubuntu-22.04
