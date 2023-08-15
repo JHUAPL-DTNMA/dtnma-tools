@@ -7,6 +7,7 @@ on:
       - cmake
       - src
       - test
+      - testenv
       - docs
 
 jobs:
@@ -65,8 +66,3 @@ jobs:
         run: ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_DOCS=ON
       - name: Build
         run: ./build.sh docs
-      - name: Archive
-        uses: actions/upload-artifact@v3
-        with:
-          name: doxygen
-          path: build/default/docs/doxygen
