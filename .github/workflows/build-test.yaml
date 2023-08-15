@@ -10,8 +10,11 @@ jobs:
         with:
           submodules: recursive
       - name: Set up OS
-        run: |
-	  apt-get update && apt-get install -y cmake ninja-build ruby build-essential autoconf libtool civetweb libcivetweb-dev libssl-dev libcjson-dev
+        run: >
+          apt-get update && apt-get install -y
+          cmake ninja-build
+          ruby build-essential autoconf libtool
+          civetweb libcivetweb-dev libssl-dev libcjson-dev
       - name: Prep
         run: ./prep.sh
       - name: Build
