@@ -1,5 +1,13 @@
 name: Build and run unit tests
-on: [push]
+on:
+  push:
+    paths:
+      - .github/workflows/build-test.yaml
+      - deps
+      - cmake
+      - src
+      - test
+      - docs
 
 jobs:
   test:
@@ -28,7 +36,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          submodules: false
+          submodules: recursive
       - name: Set up OS
         run: >
           sudo apt-get update && sudo apt-get install -y
