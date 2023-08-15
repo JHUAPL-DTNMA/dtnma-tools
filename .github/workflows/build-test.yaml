@@ -21,3 +21,27 @@ jobs:
         run: ./build.sh
       - name: Test
         run: ./build.sh check
+
+  apidoc:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+      - name: Set up OS
+        run: >
+          sudo apt-get update && sudo apt-get install -y
+          cmake ninja-build
+          ruby build-essential autoconf libtool
+          civetweb libcivetweb-dev libssl-dev libcjson-dev
+          doxygen graphviz plantuml
+      - name: Prep
+        run: ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_DOCS=ON
+      - name: Build
+        run: ./build.sh docs
+      - name: Archive
+        uses: actions/upload-artifact@v3
+        with:
+          name: doxygen
+          path: build/default/docs/doxygen
