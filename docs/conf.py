@@ -1,10 +1,11 @@
-#
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file does only contain a selection of the most common options. For a
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 import os
+import re
 import subprocess
 
 # -- Project information -----------------------------------------------------
@@ -13,10 +14,17 @@ project = 'DTNMA Tools'
 copyright = '2023'
 author = 'The Johns Hopkins University Applied Physics Laboratory LLC'
 
-# The short X.Y version
-version = '1.0.0'
-# The full version, including alpha/beta/rc tags
-release = '{}'.format(version)
+try:
+    name = subprocess.check_output(['git', 'describe', '--tags'])
+    match = re.match(r'v(\S+)(.*)?', name)
+
+    # The short X.Y version
+    version = match.group(1)
+    # The full version, including alpha/beta/rc tags
+    release = match.group(1) + match.group(2)
+except subprocess.CalledProcessError:
+    version = '0.0.0'
+    release = version
 
 
 # -- General configuration ---------------------------------------------------
@@ -63,7 +71,13 @@ pygments_style = None
 # on_rtd is whether we are on readthedocs.org
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
-subprocess.call('doxygen', shell=True)
+with open('doxygen/Doxyfile.in', 'r') as doxin, open('doxygen/Doxyfile', 'w') as doxout:
+    for line in doxin:
+        # Text must have special form for this to work, but that's okay here
+        line = line.replace('@PROJECT_VERSION@', version)
+        line = line.replace('@CMAKE_CURRENT_BINARY_DIR@', '..')
+        doxout.write(line)
+subprocess.call(['doxygen'], cwd='./doxygen')
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -170,4 +184,5 @@ epub_exclude_files = ['search.html']
 
 # -- Extension configuration -------------------------------------------------
 
-breathe_projects = { 'stream': '_doxygen/xml' }
+breathe_projects = { 'dtnma': 'doxygen/xml/' }
+breathe_default_project = 'dtnma'

@@ -1,0 +1,4 @@
+doxygen/Doxyfile
+doxygen/html
+doxygen/xml
+doxygen/*.doxytags
