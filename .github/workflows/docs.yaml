@@ -41,7 +41,7 @@ jobs:
       - name: Build
         run: ./build.sh docs
       - name: Compress
-        run: tar -C build/default/docs/doxygen -zf docs.tar.gz html xml
+        run: tar -C build/default/docs/doxygen -czf docs.tar.gz html xml
       - name: Archive
         uses: actions/upload-artifact@v3
         with:
