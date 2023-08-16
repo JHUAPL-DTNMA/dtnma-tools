@@ -1,4 +1,4 @@
-name: Build API documentation
+name: API documentation
 on:
   push:
     paths:
