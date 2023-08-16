@@ -60,6 +60,8 @@ jobs:
         with:
           name: doxygen
           path: build/default/docs/doxygen/
+      - name: Decompress
+        run: cd build/default/docs/doxygen && tar -xf html.tar
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
