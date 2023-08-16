@@ -41,19 +41,19 @@ jobs:
       - name: Build
         run: ./build.sh docs
       - name: Compress
-        run: cd build/default/docs/doxygen && tar -czf docs.tar.gz html xml
+        run: cd build/default/docs/doxygen && tar -cf html.tar html
       - name: Archive
         uses: actions/upload-artifact@v3
         with:
           name: doxygen
-          path: build/default/docs/doxygen/docs.tar.gz
+          path: build/default/docs/doxygen/html.tar
 
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: apidoc
-#    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
