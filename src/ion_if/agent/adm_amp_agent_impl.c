@@ -1151,11 +1151,11 @@ tnv_t *amp_agent_get_cur_time(tnvc_t *parms)
 	 * |START CUSTOM FUNCTION get_cur_time BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-	struct timeval cur_time;
+	OS_time_t cur_time;
 
-	getCurrentTime(&cur_time);
+	OS_GetLocalTime(&cur_time);
 
-	result = tnv_from_uvast(cur_time.tv_sec);
+	result = tnv_from_uvast(OS_TimeGetTotalSeconds(cur_time));
 
 	/*
 	 * +-------------------------------------------------------------------------+

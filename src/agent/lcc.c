@@ -106,7 +106,7 @@ int lcc_run_ctrl(ctrl_t *ctrl, tnvc_t *parent_parms)
     tnvc_t *new_parms = NULL;
     eid_t rx_eid;
 
-	AMP_DEBUG_ENTRY("lcc_run_ctrl","("PRIdPTR")", (amp_uaddr) ctrl);
+	AMP_DEBUG_ENTRY("lcc_run_ctrl","(%"PRIxPTR")", ctrl);
 
 	if(ctrl == NULL)
 	{

@@ -508,8 +508,8 @@ void ari_cb_ht_del(rh_elt_t *elt)
 
 int ari_compare(ari_t *ari1, ari_t *ari2, int parms)
 {
-    AMP_DEBUG_ENTRY("ari_compare","("PRIdPTR","PRIdPTR")",
-    		         (amp_uaddr) ari1, (amp_uaddr) ari2);
+    AMP_DEBUG_ENTRY("ari_compare","(%"PRIxPTR",%"PRIxPTR")",
+    		         ari1, ari2);
 
     if((ari1 == NULL) || (ari2 == NULL))
     {
@@ -695,7 +695,7 @@ ari_t ari_deserialize(QCBORDecodeContext *it, int *success)
 {
 	uint8_t flag;
 
-    AMP_DEBUG_ENTRY("ari_deserialize","("PRIdPTR","PRIdPTR")", (amp_uaddr)it, (amp_uaddr)success);
+    AMP_DEBUG_ENTRY("ari_deserialize","(%"PRIxPTR",%"PRIxPTR")", it, success);
 
     CHKUSR(it, ari_null());
     CHKUSR(success, ari_null());
@@ -1104,7 +1104,7 @@ ac_t ac_deserialize(QCBORDecodeContext *it, int *success)
 	size_t length;
 	size_t i;
 
-	AMP_DEBUG_ENTRY("ac_deserialize","("PRIdPTR","PRIdPTR")", (amp_uaddr)it, (amp_uaddr)success);
+	AMP_DEBUG_ENTRY("ac_deserialize","(%"PRIxPTR",%"PRIxPTR")", it, success);
 
 	memset(&result, 0, sizeof(ac_t));
 

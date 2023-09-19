@@ -243,7 +243,7 @@ blob_t blob_deserialize(QCBORDecodeContext *it, int *success)
 	QCBORItem item;
 	int status;
 
-	AMP_DEBUG_ENTRY("blob_deserialize","(0x"PRIdPTR",0x"PRIdPTR")", (amp_uaddr) it, (amp_uaddr) success);
+	AMP_DEBUG_ENTRY("blob_deserialize","(0x%"PRIxPTR",0x%"PRIxPTR")", it, success);
 
 	memset(&result, 0, sizeof(blob_t));
 	*success = AMP_FAIL;
@@ -308,7 +308,7 @@ blob_t blob_deserialize_as_bytes(QCBORDecodeContext *it, int *success, size_t le
 {
 	blob_t result;
 
-    AMP_DEBUG_ENTRY("blob_deserialize_as_bytes","(0x"PRIdPTR",0x"PRIdPTR"), %d", (amp_uaddr) it, (amp_uaddr) success, len);
+    AMP_DEBUG_ENTRY("blob_deserialize_as_bytes","(0x%"PRIxPTR",0x%"PRIxPTR"), %d", it, success, len);
     
     memset(&result, 0, sizeof(blob_t));
 	*success = AMP_FAIL;
