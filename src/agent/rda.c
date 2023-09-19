@@ -47,6 +47,7 @@
  **  10/04/18  E. Birrane     Update to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
+#include <inttypes.h>
 #include "shared/platform.h"
 #include "shared/primitives/time.h"
 
@@ -331,6 +332,7 @@ int rda_process_ctrls(OS_time_t nowtime)
 void* rda_ctrls(void *arg)
 {
   nmagent_t *agent = arg;
+  bool running = true;
 #ifndef mingw
     AMP_DEBUG_ENTRY("rda_ctrls","(0x%X)", (unsigned long) pthread_self()); //threadId);
 #endif
@@ -338,7 +340,7 @@ void* rda_ctrls(void *arg)
     AMP_DEBUG_INFO("rda_ctrls","Running Remote Data Aggregator Thread.", NULL);
 
     /* While the DTNMP Agent is running...*/
-    while(true)
+    while(running)
     {
         OS_time_t nowtime;
 
@@ -350,7 +352,8 @@ void* rda_ctrls(void *arg)
         if (!daemon_run_get(&agent->running))
         {
           pthread_mutex_unlock(&gVDB.ctrls.lock);
-          break;
+          // exit thread after queued items are handled
+          running = false;
         }
 
         OS_GetLocalTime(&nowtime);
@@ -688,14 +691,15 @@ int rda_send_reports(nmagent_t *agent)
 void* rda_reports(void *arg)
 {
     nmagent_t *agent = arg;
+    bool running = true;
 #ifndef mingw
-    AMP_DEBUG_ENTRY("rda_reports","(0x%X)", (unsigned long) pthread_self()); //threadId);
+    AMP_DEBUG_ENTRY("rda_reports","(0x%"PRIxPTR")", pthread_self());
 #endif
 
     AMP_DEBUG_INFO("rda_reports","Running Remote Data Aggregator Thread.", NULL);
 
     /* While the DTNMP Agent is running...*/
-    while(true)
+    while(running)
     {
       int ret;
       if (pthread_mutex_lock(&gAgentDb.rpt_msgs.lock))
@@ -706,7 +710,8 @@ void* rda_reports(void *arg)
       if (!daemon_run_get(&agent->running))
       {
         pthread_mutex_unlock(&gAgentDb.rpt_msgs.lock);
-        break;
+        // exit thread after queued items are handled
+        running = false;
       }
       ret = pthread_cond_wait(&gAgentDb.rpt_msgs.cond_ins_mod, &(gAgentDb.rpt_msgs.lock));
       if (pthread_mutex_unlock(&(gAgentDb.rpt_msgs.lock)))

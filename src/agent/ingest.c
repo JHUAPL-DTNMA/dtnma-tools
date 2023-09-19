@@ -205,8 +205,10 @@ void rx_handle_perf_ctrl(msg_metadata_t *meta, blob_t *contents)
 
 		ctrl_set_exec(ctrl, msg->start, meta->source);
 
-
-		if(OS_TimeGetTotalSeconds(ctrl->start) == 0)
+                AMP_DEBUG_ERR("rx_handle_perf_ctrl","Executing ctrl at time %d (from %d start TV)", OS_TimeGetTotalSeconds(ctrl->start), msg->start);
+                OS_time_t nowtime;
+                OS_GetLocalTime(&nowtime);
+		if(TimeCompare(ctrl->start, nowtime) <= 0)
 		{
 			lcc_run_ctrl(ctrl, NULL);
 			ctrl_release(ctrl, 1);
