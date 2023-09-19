@@ -142,8 +142,23 @@ if(BUILD_AGENT)
       ${CMAKE_CURRENT_SOURCE_DIR}/ion_if/shared/adm
   )
 
+  # Agent that uses hex-strings in stdin/stdout as transport
+  set(HFILES
+    stdio_if/shared/adm/adm_amp_agent.h
+  )
+  set(CFILES
+    stdio_if/stdio_agent.c
+    stdio_if/agent/adm_amp_agent_agent.c
+    stdio_if/agent/adm_amp_agent_impl.c
+  )
+  add_executable(stdio_agent ${CFILES} ${HFILES})
+  target_link_libraries(stdio_agent nmagent)
+  target_include_directories(stdio_agent PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/stdio_if/shared/adm
+  )
+
   install(
-    TARGETS nmagent ion_nm_agent
+    TARGETS nmagent ion_nm_agent stdio_agent
     RUNTIME
   )
 endif(BUILD_AGENT)
