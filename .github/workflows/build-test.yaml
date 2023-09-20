@@ -3,11 +3,11 @@ on:
   push:
     paths:
       - .github/workflows/build-test.yaml
-      - deps
-      - cmake
-      - src
-      - test
-      - testenv
+      - deps/**
+      - cmake/**
+      - src/**
+      - test/**
+      - testenv/**
 
 jobs:
   unit-test:
