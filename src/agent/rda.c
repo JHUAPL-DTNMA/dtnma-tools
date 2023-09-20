@@ -351,26 +351,29 @@ void* rda_ctrls(void *arg)
         }
         if (!daemon_run_get(&agent->running))
         {
-          pthread_mutex_unlock(&gVDB.ctrls.lock);
           // exit thread after queued items are handled
+          AMP_DEBUG_INFO("rda_ctrls","Daemon shutdown", NULL);
           running = false;
         }
 
-        OS_GetLocalTime(&nowtime);
-        OS_time_t next_ctrl = rda_earliest_ctrl();
-        AMP_DEBUG_INFO("rda_ctrls", "next CTRL start at %lld", next_ctrl.ticks);
-        if (TimeCompare(next_ctrl, nowtime) > 0)
+        if (running)
         {
-          int ret;
-          OS_time_t delta;
-          delta = OS_TimeSubtract(next_ctrl, nowtime);
-          AMP_DEBUG_INFO("rda_ctrls", "sleeping up to %lld", delta.ticks);
-
-          const struct timespec abstime = TimeToTimespec(next_ctrl);
-          ret = pthread_cond_timedwait(&gVDB.ctrls.cond_ins_mod, &gVDB.ctrls.lock, &abstime);
-          // return may have been earlier than the timeout
           OS_GetLocalTime(&nowtime);
-          AMP_DEBUG_INFO("rda_ctrls", "running at %lld from %d (%s)", nowtime.ticks, ret, strerror(ret));
+          OS_time_t next_ctrl = rda_earliest_ctrl();
+          AMP_DEBUG_INFO("rda_ctrls", "next CTRL start at %lld", next_ctrl.ticks);
+          if (TimeCompare(next_ctrl, nowtime) > 0)
+          {
+            int ret;
+            OS_time_t delta;
+            delta = OS_TimeSubtract(next_ctrl, nowtime);
+            AMP_DEBUG_INFO("rda_ctrls", "sleeping up to %lld", delta.ticks);
+
+            const struct timespec abstime = TimeToTimespec(next_ctrl);
+            ret = pthread_cond_timedwait(&gVDB.ctrls.cond_ins_mod, &gVDB.ctrls.lock, &abstime);
+            // return may have been earlier than the timeout
+            OS_GetLocalTime(&nowtime);
+            AMP_DEBUG_INFO("rda_ctrls", "running at %lld from %d (%s)", nowtime.ticks, ret, strerror(ret));
+          }
         }
         if (pthread_mutex_unlock(&gVDB.ctrls.lock))
         {
@@ -701,7 +704,6 @@ void* rda_reports(void *arg)
     /* While the DTNMP Agent is running...*/
     while(running)
     {
-      int ret;
       if (pthread_mutex_lock(&gAgentDb.rpt_msgs.lock))
       {
         AMP_DEBUG_ERR("rda_reports", "failed mutex %p lock", &gAgentDb.rpt_msgs.lock);
@@ -709,11 +711,14 @@ void* rda_reports(void *arg)
       }
       if (!daemon_run_get(&agent->running))
       {
-        pthread_mutex_unlock(&gAgentDb.rpt_msgs.lock);
         // exit thread after queued items are handled
+        AMP_DEBUG_INFO("rda_reports","Daemon shutdown", NULL);
         running = false;
       }
-      ret = pthread_cond_wait(&gAgentDb.rpt_msgs.cond_ins_mod, &(gAgentDb.rpt_msgs.lock));
+      if (running)
+      {
+        pthread_cond_wait(&gAgentDb.rpt_msgs.cond_ins_mod, &(gAgentDb.rpt_msgs.lock));
+      }
       if (pthread_mutex_unlock(&(gAgentDb.rpt_msgs.lock)))
       {
         AMP_DEBUG_ERR("rda_reports", "failed mutex %p unlock", &(gAgentDb.rpt_msgs.lock));

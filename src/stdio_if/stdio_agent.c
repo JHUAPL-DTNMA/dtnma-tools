@@ -40,6 +40,7 @@ daemon_signal_handler(int signum)
 {
   AMP_DEBUG_INFO("daemon_signal_handler", "Received signal %d", signum);
   daemon_run_stop(&agent.running);
+  fclose(stdin);
 }
 
 
@@ -48,14 +49,17 @@ static int stdout_send(const blob_t *data, const eid_t *dest, void *ctx)
   char *buf = utils_hex_to_string(data->value, data->length);
   if (fputs(buf, stdout) <= 0)
   {
+    SRELEASE(buf);
     return AMP_SYSERR;
   }
+  SRELEASE(buf);
+
   if (fputs("\n", stdout) <= 0)
   {
     return AMP_SYSERR;
   }
+  fflush(stdout);
 
-  SRELEASE(buf);
   return AMP_OK;
 }
 
@@ -146,6 +150,9 @@ OS_Application_Startup()
   {
     OS_ApplicationExit(2);
   }
+
+  fprintf(stdout, "READY\n");
+  fflush(stdout);
 }
 
 void OS_Application_Run()
@@ -153,6 +160,9 @@ void OS_Application_Run()
   // Block until stopped
   daemon_run_wait(&agent.running);
   OS_ApplicationShutdown(true);
+
+  fprintf(stdout, "SHUTDOWN\n");
+  fflush(stdout);
 
   /* Step 7: Join threads and wait for them to complete. */
   if (!nmagent_stop(&agent))
