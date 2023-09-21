@@ -90,6 +90,10 @@ COPY --chmod=755 testenv/ion_nm_wrap.py /usr/local/bin/ion_nm_wrap
 COPY --chmod=755 testenv/ion_ping_peers.sh /usr/local/bin/ion_ping_peers
 COPY --chmod=755 testenv/service_is_running.sh /usr/local/bin/service_is_running
 
+# Test tools
+RUN apt-get update && apt-get install -y \
+    curl tshark
+
 # Agent to test
 RUN apt-get update && apt-get install -y \
     cmake ninja-build ruby \

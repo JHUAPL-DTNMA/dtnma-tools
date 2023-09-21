@@ -62,6 +62,10 @@ jobs:
           submodules: recursive
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+      - name: Set up OS
+        run: >
+          sudo apt-get update && sudo apt-get install -y
+          jq
       - name: Run
         run: ./testenv/start.sh
       - name: Test

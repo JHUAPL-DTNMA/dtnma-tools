@@ -298,11 +298,12 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata)
       return agentsGETHandler(conn);
    } else if (0 == strcmp(ri->request_method, "POST")) {
       char buffer[AMP_MAX_EID_LEN+1];
-      int dlen = mg_read(conn, buffer, sizeof(buffer));
+      int dlen = mg_read(conn, buffer, sizeof(buffer) - 1);
       if ( dlen < 1 ) {
          mg_send_http_error(conn, HTTP_BAD_REQUEST, "Invalid request body data (expect EID name) %d", dlen);
          return HTTP_BAD_REQUEST;
       } else {
+         buffer[dlen] = '\0';
          return agentsCreateHandler(conn, buffer);
       }
    } else {
@@ -314,41 +315,69 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata)
 
 }
 
-static int agentSendRaw(struct mg_connection *conn, time_t ts, agent_t *agent, char *hex)
+static int agentSendRaw(struct mg_connection *conn, time_t ts, agent_t *agent, char *hex_sep)
 {
    ari_t *id = NULL;
    msg_ctrl_t *msg = NULL;
    int success;
 
-   blob_t *data = utils_string_to_hex(hex);
-   if (data == NULL) {
-      mg_send_http_error(conn,
-                         HTTP_INTERNAL_ERROR,
-                         "Error creating blob from input");
-      return HTTP_INTERNAL_ERROR;
-   }
-   id = ari_deserialize_raw(data, &success);
-   blob_release(data, 1);
-   if (id == NULL) {
-      mg_send_http_error(conn,
-                         HTTP_INTERNAL_ERROR,
-                         "Error creating blob from input");
-      return HTTP_INTERNAL_ERROR;
-   }
-
-   
-   ui_postprocess_ctrl(id);
-
-   if((msg = msg_ctrl_create_ari(id)) == NULL)
+   if((msg = msg_ctrl_create()) == NULL)
    {
-      ari_release(id, 1);
       mg_send_http_error(conn,
                          HTTP_INTERNAL_ERROR,
-                         "Error creating ARI from input");
+                         "Error creating message");
       return HTTP_INTERNAL_ERROR;
    }
+   if((msg->ac = ac_create()) == NULL)
+   {
+      msg_ctrl_release(msg, 1);
+      mg_send_http_error(conn,
+                         HTTP_INTERNAL_ERROR,
+                         "Error creating AC");
+      return HTTP_INTERNAL_ERROR;
+   }
+
    msg->start = amp_tv_from_ctime(OS_TimeFromTotalSeconds(ts), NULL);
 
+   char *part = NULL;
+   const char *ctrlsep = " \f\n\r\t\v"; // Identical to isspace()
+   char *saveptr = NULL;
+   part = strtok_r(hex_sep, ctrlsep, &saveptr);
+   while(part != NULL) {
+      fprintf(stderr, "Handling message part %s\n", part);
+
+      blob_t *data = utils_string_to_hex(part);
+      if (data == NULL) {
+         mg_send_http_error(conn,
+                            HTTP_INTERNAL_ERROR,
+                            "Error creating blob from input");
+         msg_ctrl_release(msg, 1);
+         return HTTP_INTERNAL_ERROR;
+      }
+      id = ari_deserialize_raw(data, &success);
+      blob_release(data, 1);
+      if (id == NULL) {
+         mg_send_http_error(conn,
+                            HTTP_INTERNAL_ERROR,
+                            "Error decoding CTRL");
+         msg_ctrl_release(msg, 1);
+         return HTTP_INTERNAL_ERROR;
+      }
+
+      ui_postprocess_ctrl(id);
+      if(vec_push(&(msg->ac->values), id) != VEC_OK) {
+         mg_send_http_error(conn,
+                            HTTP_INTERNAL_ERROR,
+                            "Error adding CTRL to message");
+         ari_release(id, 1);
+         msg_ctrl_release(msg, 1);
+         return HTTP_INTERNAL_ERROR;
+      }
+
+      part = strtok_r(NULL, ctrlsep, &saveptr);
+   }
+
+   fprintf(stderr, "Sending message with %d controls\n", ac_get_count(msg->ac));
    nmmgr_t *mgr = mg_get_user_data(mg_get_context(conn));
    mif_send_msg(&mgr->mif, MSG_TYPE_PERF_CTRL, msg, &agent->eid, AMP_TV_ZERO);
    ui_log_transmit_msg(agent, msg);
@@ -577,21 +606,23 @@ static int agentEidHandler(struct mg_connection *conn, void *cbdata)
       }
       else if (0 == strcmp(cmd, "hex"))
       {
-         // URL idx field translates to agent name
-         // Optional query parameter "ts" will translate to timestamp (TODO: Always 0 for initial cut)
-         // Request body contains CBOR-encoded HEX string
-         char buffer[MAX_INPUT_BYTES];
-         int dlen = mg_read(conn, buffer, sizeof(buffer));
-         if (dlen <= 0) {
-            return HTTP_BAD_REQUEST;
-         }
-         buffer[dlen] = 0; // Ensure string is NULL-terminated
-         int ts = 0;
-         if (cnt == 3) {
-            // Optional Timestamp as last element of URL path
-            ts = atoi(cmd2);
-         }
-         return agentSendRaw(conn,
+        // URL idx field translates to agent name
+        // Optional query parameter "ts" will translate to timestamp (TODO: Always 0 for initial cut)
+        // Request body contains CBOR-encoded HEX string
+        char buffer[MAX_INPUT_BYTES];
+        int dlen = mg_read(conn, buffer, sizeof(buffer) - 1);
+        if (dlen <= 0) {
+          return HTTP_BAD_REQUEST;
+        }
+        buffer[dlen] = '\0';
+
+        int ts = 0;
+        if (cnt == 3) {
+          // Optional Timestamp as last element of URL path
+          ts = atoi(cmd2);
+        }
+
+        return agentSendRaw(conn,
                             ts,
                             agent,
                             buffer
@@ -692,7 +723,12 @@ static int agentIdxHandler(struct mg_connection *conn, void *cbdata)
          // Optional query parameter "ts" will translate to timestamp (TODO: Always 0 for initial cut)
          // Request body contains CBOR-encoded HEX string
          char buffer[MAX_INPUT_BYTES];
-         int dlen = mg_read(conn, buffer, sizeof(buffer));
+         int dlen = mg_read(conn, buffer, sizeof(buffer) - 1);
+         if (dlen <= 0) {
+           return HTTP_BAD_REQUEST;
+         }
+         buffer[dlen] = '\0';
+
          return agentSendRaw(conn,
                             0, // Timestamp TODO. This will be an optional query param
                             agent,
