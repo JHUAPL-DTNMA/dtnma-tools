@@ -147,7 +147,12 @@ OS_Application_Startup()
   sigaction(SIGTERM, &act, NULL);
 
   /* Step 5: Start agent threads. */
-  if (!nmagent_start(&agent, &agent_eid, &manager_eid))
+  if (!nmagent_start(&agent))
+  {
+    OS_ApplicationExit(2);
+  }
+
+  if (!nmagent_register(&agent, &agent_eid, &manager_eid))
   {
     OS_ApplicationExit(2);
   }

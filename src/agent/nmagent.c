@@ -89,7 +89,7 @@ bool nmagent_destroy(nmagent_t *agent)
  **  02/23/15  E. Birrane      Updated to support ION_LWT targets
  **  10/04/18  E. Birrane      Updated to AMP v0.5 (JHU/APL)
  *****************************************************************************/
-bool nmagent_start(nmagent_t *agent, const eid_t *agent_eid, const eid_t *mgr_eid)
+bool nmagent_start(nmagent_t *agent)
 {
     int rc;
     AMP_DEBUG_ENTRY("nmagent_start","(%p)", agent);
@@ -110,30 +110,10 @@ bool nmagent_start(nmagent_t *agent, const eid_t *agent_eid, const eid_t *mgr_ei
       AMP_DEBUG_EXIT("agent_main","->-1",NULL);
       return false;
     }
+
     AMP_DEBUG_ALWAYS("agent_main","Threads started...", NULL);
-
-
-    /* Step 6: Send out agent broadcast message. */
-    {
-      	msg_agent_t *msg = NULL;
-	if((msg = msg_agent_create()) == NULL)
-	{
-		AMP_DEBUG_ERR("agent_register","Unable to create agent registration.",NULL);
-		return false;
-	}
-	msg_agent_set_agent(msg, *agent_eid);
-	if(mif_send_msg(&agent->mif, MSG_TYPE_REG_AGENT, msg, mgr_eid, AMP_TV_ZERO) != AMP_OK)
-	{
-		AMP_DEBUG_ERR("agent_register","Couldn't send agent reg.", NULL);
-	}
-
-	msg_agent_release(msg, 1);
-    }
-
     return true;
 }
-
-
 
 /******************************************************************************
  *
@@ -164,4 +144,25 @@ bool nmagent_stop(nmagent_t *agent)
   AMP_DEBUG_ALWAYS("agent_main","Stopping Agent.",NULL);
   
   return true;
+}
+
+bool nmagent_register(nmagent_t *agent, const eid_t *agent_eid, const eid_t *mgr_eid)
+{
+  bool valid = true;
+  msg_agent_t *msg = NULL;
+
+  if((msg = msg_agent_create()) == NULL)
+  {
+    AMP_DEBUG_ERR("agent_register","Unable to create agent registration.",NULL);
+    return false;
+  }
+  msg_agent_set_agent(msg, *agent_eid);
+  if(mif_send_msg(&agent->mif, MSG_TYPE_REG_AGENT, msg, mgr_eid, AMP_TV_ZERO) != AMP_OK)
+  {
+    AMP_DEBUG_ERR("agent_register","Couldn't send agent reg.", NULL);
+    valid = false;
+  }
+
+  msg_agent_release(msg, 1);
+  return valid;
 }

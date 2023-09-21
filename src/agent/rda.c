@@ -638,6 +638,7 @@ int rda_send_reports(nmagent_t *agent)
     vecit_t it2;
     OS_time_t nowtime;
     OS_GetLocalTime(&nowtime);
+    unsigned long num_rpts = 0;
 
     AMP_DEBUG_ENTRY("rda_send_reports","()", NULL);
 
@@ -654,6 +655,7 @@ int rda_send_reports(nmagent_t *agent)
         }
         if (vec_num_entries(msg_rpt->rpts) < 1)
         {
+            AMP_DEBUG_WARN("rda_send_reports", "Vector has no reports");
             continue;
         }
 
@@ -670,7 +672,7 @@ int rda_send_reports(nmagent_t *agent)
                 strncpy(destination.name, rx, AMP_MAX_EID_LEN);
                 if(mif_send_msg(&agent->mif, MSG_TYPE_RPT_SET, msg_rpt, &destination, amp_tv_from_ctime(nowtime, NULL)) == AMP_OK)
                 {
-                        gAgentInstr.num_sent_rpts += vec_num_entries(msg_rpt->rpts);
+                        num_rpts += vec_num_entries(msg_rpt->rpts);
                 }
                 else
                 {
@@ -681,12 +683,15 @@ int rda_send_reports(nmagent_t *agent)
         msg_rpt_release(msg_rpt, 1);
         */
     }
+    AMP_DEBUG_INFO("rda_send_reports","Sent %u reports", num_rpts);
+    gAgentInstr.num_sent_rpts += num_rpts;
 
     /* Sent successfully or not, clear the reports. */
     vec_clear(&(gAgentDb.rpt_msgs));
 
     vec_unlock(&(gAgentDb.rpt_msgs));
 
+    AMP_DEBUG_EXIT("rda_send_reports","()", NULL);
     return AMP_OK;
 }
 
@@ -715,8 +720,9 @@ void* rda_reports(void *arg)
         AMP_DEBUG_INFO("rda_reports","Daemon shutdown", NULL);
         running = false;
       }
-      if (running)
+      if (running && (vec_num_entries_ptr(&gAgentDb.rpt_msgs) == 0))
       {
+        AMP_DEBUG_INFO("rda_reports","Waiting for reports", NULL);
         pthread_cond_wait(&gAgentDb.rpt_msgs.cond_ins_mod, &(gAgentDb.rpt_msgs.lock));
       }
       if (pthread_mutex_unlock(&(gAgentDb.rpt_msgs.lock)))

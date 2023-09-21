@@ -300,7 +300,7 @@ void *mgr_rx_thread(void *arg)
     while(daemon_run_get(&mgr->running)) {
 
         /* Step 1: Receive a message from the Bundle Protocol Agent. */
-        buf = mif_receive(&mgr->mif, &meta, &success);
+        buf = mif_receive(&mgr->mif, &meta, &mgr->running, &success);
         if(success != AMP_OK)
         {
           daemon_run_stop(&mgr->running);

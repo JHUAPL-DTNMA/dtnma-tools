@@ -291,7 +291,7 @@ msg_bp_send(const blob_t *data, const eid_t *dest, void *ctx)
 }
 
 blob_t *
-msg_bp_recv(msg_metadata_t *meta, int *success, void *ctx)
+msg_bp_recv(msg_metadata_t *meta, daemon_run_t *running, int *success, void *ctx)
 {
   iif_t *iif = ctx;
 

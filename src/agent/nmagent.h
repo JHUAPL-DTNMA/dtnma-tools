@@ -95,11 +95,14 @@ bool nmagent_init(nmagent_t *agent);
 
 bool nmagent_destroy(nmagent_t *agent);
 
-bool nmagent_start(nmagent_t *agent, const eid_t *agent_eid, const eid_t *mgr_eid);
+bool nmagent_start(nmagent_t *agent);
 
 bool nmagent_stop(nmagent_t *agent);
 
-
+/** Once the agent is running, send a registration message
+ * @sa nmagent_start
+ */
+bool nmagent_register(nmagent_t *agent, const eid_t *agent_eid, const eid_t *mgr_eid);
 
 
 /*

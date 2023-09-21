@@ -43,7 +43,7 @@
 
 #include "bp.h"
 #include "shared/msg/msg.h"
-
+#include "shared/utils/daemon_run.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -95,7 +95,7 @@ int     iif_is_registered(iif_t *iif);
 
 int msg_bp_send(const blob_t *data, const eid_t *dest, void *ctx);
 
-blob_t * msg_bp_recv(msg_metadata_t *meta, int *success, void *ctx);
+blob_t * msg_bp_recv(msg_metadata_t *meta, daemon_run_t *running, int *success, void *ctx);
 
 
 #ifdef __cplusplus

@@ -1488,6 +1488,7 @@ tnv_t *amp_agent_ctrl_gen_rpts(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 			return result;
 		}
 
+                pthread_mutex_lock(&gAgentDb.rpt_msgs.lock);
 		strncpy(mgr_eid.name, cur_mgr->value.as_ptr, AMP_MAX_EID_LEN-1);
 		msg_rpt = rda_get_msg_rpt(mgr_eid);
 
@@ -1512,8 +1513,11 @@ tnv_t *amp_agent_ctrl_gen_rpts(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 
 			msg_rpt_add_rpt(msg_rpt, rpt);
 		}
-	}
 
+                AMP_DEBUG_ERR("GEN_RPTT","Finished adding %d reports for: %s", vec_num_entries(msg_rpt->rpts), mgr_eid.name);
+                pthread_cond_signal(&gAgentDb.rpt_msgs.cond_ins_mod);
+                pthread_mutex_unlock(&gAgentDb.rpt_msgs.lock);
+	}
 
 	*status = CTRL_SUCCESS;
 

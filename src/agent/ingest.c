@@ -89,7 +89,7 @@ void *rx_thread(void *arg) {
      */
     while(daemon_run_get(&agent->running))
     {
-    	result = mif_receive(&agent->mif, &meta, &success);
+    	result = mif_receive(&agent->mif, &meta, &agent->running, &success);
     	if(success != AMP_OK)
     	{
                 AMP_DEBUG_INFO("rx_thread","Got mif_receive success=%d, stopping.", success);

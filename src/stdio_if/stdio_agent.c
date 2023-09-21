@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <sys/select.h>
 #include <signal.h>
 #include <osapi-common.h>
 #include <osapi-bsp.h>
@@ -40,7 +41,6 @@ daemon_signal_handler(int signum)
 {
   AMP_DEBUG_INFO("daemon_signal_handler", "Received signal %d", signum);
   daemon_run_stop(&agent.running);
-  fclose(stdin);
 }
 
 
@@ -63,13 +63,41 @@ static int stdout_send(const blob_t *data, const eid_t *dest, void *ctx)
   return AMP_OK;
 }
 
-static blob_t * stdin_recv(msg_metadata_t *meta, int *success, void *ctx)
+static blob_t * stdin_recv(msg_metadata_t *meta, daemon_run_t *running, int *success, void *ctx)
 {
   blob_t *res = NULL;
   char buf[MAX_HEXMSG_SIZE];
+  fd_set rfds;
+  struct timeval timeout;
+  int ret;
 
   while (true)
   {
+    // Watch stdin (fd 0) for input, assuming whole-lines are given
+    FD_ZERO(&rfds);
+    FD_SET(0, &rfds);
+
+    // Wait up to 1 second
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    ret = select(1, &rfds, NULL, NULL, &timeout);
+    if (ret == -1)
+    {
+      *success = AMP_SYSERR;
+      return res;
+    }
+    else if (ret == 0)
+    {
+      // nothing ready, but maybe daemon is shutting down
+      if (!daemon_run_get(running))
+      {
+        *success = AMP_FAIL;
+        return res;
+      }
+      continue;
+    }
+
+    // assume that if something is ready to read that a whole line will come
     if (!fgets(buf, MAX_HEXMSG_SIZE, stdin))
     {
       *success = AMP_SYSERR;
@@ -146,13 +174,18 @@ OS_Application_Startup()
   sigaction(SIGTERM, &act, NULL);
 
   /* Step 5: Start agent threads. */
-  if (!nmagent_start(&agent, &agent_eid, &manager_eid))
+  if (!nmagent_start(&agent))
   {
     OS_ApplicationExit(2);
   }
 
   fprintf(stdout, "READY\n");
   fflush(stdout);
+
+  if (!nmagent_register(&agent, &agent_eid, &manager_eid))
+  {
+    OS_ApplicationExit(2);
+  }
 }
 
 void OS_Application_Run()

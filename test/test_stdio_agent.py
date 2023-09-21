@@ -17,6 +17,9 @@ OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
 
 
+class Timeout(RuntimeError):
+    ''' Represent a timeout for the CmdRunner class '''
+
 class CmdRunner:
     def __init__(self, args):
         self.proc = None
@@ -61,7 +64,7 @@ class CmdRunner:
 
         if self.proc.returncode is None:
             LOGGER.debug('Stopping process: %s', self._fmt_args())
-            self.proc.terminate()
+            self.proc.send_signal(signal.SIGINT)
             try:
                 self.proc.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
@@ -83,7 +86,7 @@ class CmdRunner:
     def _read_stdout(self, stream):
         LOGGER.debug('Starting stdout thread')
         for line in iter(stream.readline, ''):
-            LOGGER.debug('Got line: %s', line)
+            LOGGER.debug('Got line: %s', line.strip())
             self._stdout_lines.put(line)
         LOGGER.debug('Stopping stdout thread')
 
@@ -99,8 +102,10 @@ class CmdRunner:
         LOGGER.debug('Stopping stdin thread')
 
     def wait_for_line(self, timeout=5):
-        text = self._stdout_lines.get(timeout=timeout)
-        self._stdout_lines.task_done()
+        try:
+            text = self._stdout_lines.get(timeout=timeout)
+        except queue.Empty:
+            raise Timeout()
         return text
 
     def wait_for_text(self, pattern, timeout=5):
@@ -113,7 +118,10 @@ class CmdRunner:
             if remain_time <= 0:
                 break
             LOGGER.debug('Waiting for new line up to %s s', remain_time)
-            text = self._stdout_lines.get(timeout=remain_time)
+            try:
+                text = self._stdout_lines.get(timeout=remain_time)
+            except queue.Empty:
+                raise Timeout()
 
             if expr.match(text) is not None:
                 return text
