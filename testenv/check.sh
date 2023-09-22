@@ -45,3 +45,27 @@ do
     ${DEXEC} journalctl --unit ${SVC}
   fi
 done
+
+${DEXEC} curl -sv -XPUT http://localhost:8089/nm/api/agents/eid/ipn:1.6/clear_reports
+
+echo 0xc11541050502252381871819410000 | \
+    ${DEXEC} curl -sv -XPUT http://localhost:8089/nm/api/agents/eid/ipn:1.6/hex -H 'Content-Type: text/plain' --data-binary @-
+
+RPTOBJ=""
+for IX in $(seq 10)
+do
+  sleep 1
+  RPTOBJ=$(${DEXEC} curl -sv -XGET http://localhost:8089/nm/api/agents/eid/ipn:1.6/reports/json | jq .reports[0])
+  if [ -n "$RPTOBJ" ]
+  then
+    break
+  fi
+done
+
+if [ -n "$RPTOBJ" ]
+then
+  echo "Got Report:"
+  echo ${RPTOBJ} | jq
+else
+  exit 1
+fi

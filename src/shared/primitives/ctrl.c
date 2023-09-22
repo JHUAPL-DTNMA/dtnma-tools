@@ -201,7 +201,7 @@ ctrl_t *ctrl_create(ari_t *ari)
     	result->parms = NULL;
     }
 
-  	AMP_DEBUG_EXIT("ctrl_create","->"PRIdPTR".",(amp_uaddr)result);
+  	AMP_DEBUG_EXIT("ctrl_create","->%"PRIxPTR".", result);
 	return result;
 }
 

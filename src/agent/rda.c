@@ -47,6 +47,7 @@
  **  10/04/18  E. Birrane     Update to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
+#include <inttypes.h>
 #include "shared/platform.h"
 #include "shared/primitives/time.h"
 
@@ -331,6 +332,7 @@ int rda_process_ctrls(OS_time_t nowtime)
 void* rda_ctrls(void *arg)
 {
   nmagent_t *agent = arg;
+  bool running = true;
 #ifndef mingw
     AMP_DEBUG_ENTRY("rda_ctrls","(0x%X)", (unsigned long) pthread_self()); //threadId);
 #endif
@@ -338,7 +340,7 @@ void* rda_ctrls(void *arg)
     AMP_DEBUG_INFO("rda_ctrls","Running Remote Data Aggregator Thread.", NULL);
 
     /* While the DTNMP Agent is running...*/
-    while(true)
+    while(running)
     {
         OS_time_t nowtime;
 
@@ -349,25 +351,29 @@ void* rda_ctrls(void *arg)
         }
         if (!daemon_run_get(&agent->running))
         {
-          pthread_mutex_unlock(&gVDB.ctrls.lock);
-          break;
+          // exit thread after queued items are handled
+          AMP_DEBUG_INFO("rda_ctrls","Daemon shutdown", NULL);
+          running = false;
         }
 
-        OS_GetLocalTime(&nowtime);
-        OS_time_t next_ctrl = rda_earliest_ctrl();
-        AMP_DEBUG_INFO("rda_ctrls", "next CTRL start at %lld", next_ctrl.ticks);
-        if (TimeCompare(next_ctrl, nowtime) > 0)
+        if (running)
         {
-          int ret;
-          OS_time_t delta;
-          delta = OS_TimeSubtract(next_ctrl, nowtime);
-          AMP_DEBUG_INFO("rda_ctrls", "sleeping up to %lld", delta.ticks);
-
-          const struct timespec abstime = TimeToTimespec(next_ctrl);
-          ret = pthread_cond_timedwait(&gVDB.ctrls.cond_ins_mod, &gVDB.ctrls.lock, &abstime);
-          // return may have been earlier than the timeout
           OS_GetLocalTime(&nowtime);
-          AMP_DEBUG_INFO("rda_ctrls", "running at %lld from %d (%s)", nowtime.ticks, ret, strerror(ret));
+          OS_time_t next_ctrl = rda_earliest_ctrl();
+          AMP_DEBUG_INFO("rda_ctrls", "next CTRL start at %lld", next_ctrl.ticks);
+          if (TimeCompare(next_ctrl, nowtime) > 0)
+          {
+            int ret;
+            OS_time_t delta;
+            delta = OS_TimeSubtract(next_ctrl, nowtime);
+            AMP_DEBUG_INFO("rda_ctrls", "sleeping up to %lld", delta.ticks);
+
+            const struct timespec abstime = TimeToTimespec(next_ctrl);
+            ret = pthread_cond_timedwait(&gVDB.ctrls.cond_ins_mod, &gVDB.ctrls.lock, &abstime);
+            // return may have been earlier than the timeout
+            OS_GetLocalTime(&nowtime);
+            AMP_DEBUG_INFO("rda_ctrls", "running at %lld from %d (%s)", nowtime.ticks, ret, strerror(ret));
+          }
         }
         if (pthread_mutex_unlock(&gVDB.ctrls.lock))
         {
@@ -632,6 +638,7 @@ int rda_send_reports(nmagent_t *agent)
     vecit_t it2;
     OS_time_t nowtime;
     OS_GetLocalTime(&nowtime);
+    unsigned long num_rpts = 0;
 
     AMP_DEBUG_ENTRY("rda_send_reports","()", NULL);
 
@@ -648,6 +655,7 @@ int rda_send_reports(nmagent_t *agent)
         }
         if (vec_num_entries(msg_rpt->rpts) < 1)
         {
+            AMP_DEBUG_WARN("rda_send_reports", "Vector has no reports");
             continue;
         }
 
@@ -664,7 +672,7 @@ int rda_send_reports(nmagent_t *agent)
                 strncpy(destination.name, rx, AMP_MAX_EID_LEN);
                 if(mif_send_msg(&agent->mif, MSG_TYPE_RPT_SET, msg_rpt, &destination, amp_tv_from_ctime(nowtime, NULL)) == AMP_OK)
                 {
-                        gAgentInstr.num_sent_rpts += vec_num_entries(msg_rpt->rpts);
+                        num_rpts += vec_num_entries(msg_rpt->rpts);
                 }
                 else
                 {
@@ -675,12 +683,15 @@ int rda_send_reports(nmagent_t *agent)
         msg_rpt_release(msg_rpt, 1);
         */
     }
+    AMP_DEBUG_INFO("rda_send_reports","Sent %u reports", num_rpts);
+    gAgentInstr.num_sent_rpts += num_rpts;
 
     /* Sent successfully or not, clear the reports. */
     vec_clear(&(gAgentDb.rpt_msgs));
 
     vec_unlock(&(gAgentDb.rpt_msgs));
 
+    AMP_DEBUG_EXIT("rda_send_reports","()", NULL);
     return AMP_OK;
 }
 
@@ -688,16 +699,16 @@ int rda_send_reports(nmagent_t *agent)
 void* rda_reports(void *arg)
 {
     nmagent_t *agent = arg;
+    bool running = true;
 #ifndef mingw
-    AMP_DEBUG_ENTRY("rda_reports","(0x%X)", (unsigned long) pthread_self()); //threadId);
+    AMP_DEBUG_ENTRY("rda_reports","(0x%"PRIxPTR")", pthread_self());
 #endif
 
     AMP_DEBUG_INFO("rda_reports","Running Remote Data Aggregator Thread.", NULL);
 
     /* While the DTNMP Agent is running...*/
-    while(true)
+    while(running)
     {
-      int ret;
       if (pthread_mutex_lock(&gAgentDb.rpt_msgs.lock))
       {
         AMP_DEBUG_ERR("rda_reports", "failed mutex %p lock", &gAgentDb.rpt_msgs.lock);
@@ -705,10 +716,15 @@ void* rda_reports(void *arg)
       }
       if (!daemon_run_get(&agent->running))
       {
-        pthread_mutex_unlock(&gAgentDb.rpt_msgs.lock);
-        break;
+        // exit thread after queued items are handled
+        AMP_DEBUG_INFO("rda_reports","Daemon shutdown", NULL);
+        running = false;
       }
-      ret = pthread_cond_wait(&gAgentDb.rpt_msgs.cond_ins_mod, &(gAgentDb.rpt_msgs.lock));
+      if (running && (vec_num_entries_ptr(&gAgentDb.rpt_msgs) == 0))
+      {
+        AMP_DEBUG_INFO("rda_reports","Waiting for reports", NULL);
+        pthread_cond_wait(&gAgentDb.rpt_msgs.cond_ins_mod, &(gAgentDb.rpt_msgs.lock));
+      }
       if (pthread_mutex_unlock(&(gAgentDb.rpt_msgs.lock)))
       {
         AMP_DEBUG_ERR("rda_reports", "failed mutex %p unlock", &(gAgentDb.rpt_msgs.lock));

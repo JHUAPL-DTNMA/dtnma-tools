@@ -161,7 +161,7 @@ int nmmgr_init(nmmgr_t *mgr)
 
 int nmmgr_start(nmmgr_t *mgr)
 {
-  AMP_DEBUG_ENTRY("nmmgr_start","("PRIdPTR")", mgr);
+  AMP_DEBUG_ENTRY("nmmgr_start","(%"PRIxPTR")", mgr);
 
   threadinfo_t threadinfo[] = {
       {&mgr_rx_thread, "nm_mgr_rx"},

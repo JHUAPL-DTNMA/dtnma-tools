@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <sys/select.h>
 #include <signal.h>
 #include <osapi-common.h>
 #include <osapi-bsp.h>
@@ -25,24 +26,13 @@
 #include "shared/primitives/blob.h"
 #include "agent/instr.h"
 #include "agent/nmagent.h"
-#include "ion_if.h"
 
 // ADMs
 #include "shared/adm/adm_amp_agent.h"
-#include "shared/adm/adm_ion_admin.h"
-#include "shared/adm/adm_ion_ipn_admin.h"
-#include "shared/adm/adm_ion_ltp_admin.h"
-#include "shared/adm/adm_ionsec_admin.h"
-#include "shared/adm/adm_ltp_agent.h"
-#ifdef BUILD_BPv6
-#else
-#include "bpv7/adm/adm_bp_agent.h"
-#include "bpv7/adm/adm_bpsec.h"
-#include "bpv7/adm/adm_ion_bp_admin.h"
-#endif
+
+#define MAX_HEXMSG_SIZE 10240
 
 static nmagent_t agent;
-static iif_t ion_ptr;
 static eid_t manager_eid;
 static eid_t agent_eid;
 
@@ -51,6 +41,88 @@ daemon_signal_handler(int signum)
 {
   AMP_DEBUG_INFO("daemon_signal_handler", "Received signal %d", signum);
   daemon_run_stop(&agent.running);
+}
+
+
+static int stdout_send(const blob_t *data, const eid_t *dest, void *ctx)
+{
+  char *buf = utils_hex_to_string(data->value, data->length);
+  if (fputs(buf, stdout) <= 0)
+  {
+    SRELEASE(buf);
+    return AMP_SYSERR;
+  }
+  SRELEASE(buf);
+
+  if (fputs("\n", stdout) <= 0)
+  {
+    return AMP_SYSERR;
+  }
+  fflush(stdout);
+
+  return AMP_OK;
+}
+
+static blob_t * stdin_recv(msg_metadata_t *meta, daemon_run_t *running, int *success, void *ctx)
+{
+  blob_t *res = NULL;
+  char buf[MAX_HEXMSG_SIZE];
+  fd_set rfds;
+  struct timeval timeout;
+  int ret;
+
+  while (true)
+  {
+    // Watch stdin (fd 0) for input, assuming whole-lines are given
+    FD_ZERO(&rfds);
+    FD_SET(0, &rfds);
+
+    // Wait up to 1 second
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    ret = select(1, &rfds, NULL, NULL, &timeout);
+    if (ret == -1)
+    {
+      *success = AMP_SYSERR;
+      return res;
+    }
+    else if (ret == 0)
+    {
+      // nothing ready, but maybe daemon is shutting down
+      if (!daemon_run_get(running))
+      {
+        *success = AMP_FAIL;
+        return res;
+      }
+      continue;
+    }
+
+    // assume that if something is ready to read that a whole line will come
+    if (!fgets(buf, MAX_HEXMSG_SIZE, stdin))
+    {
+      *success = AMP_SYSERR;
+      return res;
+    }
+
+    // strip the text
+    size_t len = strnlen(buf, MAX_HEXMSG_SIZE);
+    while ((len > 0) && isspace(buf[len - 1]))
+    {
+      fprintf(stderr, "strip 1\n");
+      buf[--len] = '\0';
+    }
+    if (len == 0){
+      AMP_DEBUG_WARN("stdin_recv", "Received empty line");
+      continue;
+    }
+
+    break;
+  }
+
+  res = utils_string_to_hex(buf);
+  AMP_DEBUG_INFO("stdin_recv", "Received message: %s, dehex %d", buf, !!res);
+  *success = (res ? AMP_OK : AMP_FAIL);
+  return res;
 }
 
 void
@@ -63,69 +135,23 @@ OS_Application_Startup()
   }
 
   /* Step 1: Process Command Line Arguments. */
-  const int argc = OS_BSP_GetArgC();
-  char *const *argv = OS_BSP_GetArgV();
-  if (argc != 3)
-  {
-    printf("Usage: nmagent <agent eid> <manager eid>\n");
-    printf("AMP Protocol Version %d - %s, built on %s %s\n", AMP_VERSION,
-           AMP_PROTOCOL_URL, __DATE__, __TIME__);
-    OS_ApplicationExit(0);
-  }
-
-  if (((argv[0] == NULL) || (strlen (argv[0]) <= 0))
-      || ((argv[1] == NULL) || (strlen (argv[1]) <= 0)
-          || (strlen (argv[1]) >= AMP_MAX_EID_LEN))
-      || ((argv[2] == NULL) || (strlen (argv[2]) <= 0)
-          || (strlen (argv[2]) >= AMP_MAX_EID_LEN)))
-  {
-    AMP_DEBUG_ERR("agent_main", "Invalid Parameters (NULL or 0).", NULL);
-    OS_ApplicationExit(-1);
-  }
-
-  strncpy(agent_eid.name, argv[1], AMP_MAX_EID_LEN);
-  strncpy(manager_eid.name, argv[2], AMP_MAX_EID_LEN);
-  AMP_DEBUG_INFO("main", "Agent EID: %s, Mgr EID: %s", argv[1], argv[2]);
-
-  /* Step 2: Make sure that ION is running and we can attach. */
-  if (ionAttach() < 0)
-  {
-    AMP_DEBUG_ERR("main", "Agent can't attach to ION.", NULL);
-    OS_ApplicationExit(EXIT_FAILURE);
-  }
-
-  if (iif_register_node(&ion_ptr, agent_eid) != 1)
-  {
-    AMP_DEBUG_ERR("main", "Unable to register BP Node. Exiting.", NULL);
-    OS_ApplicationExit(EXIT_FAILURE);
-  }
-
-  if (iif_is_registered(&ion_ptr))
-  {
-    AMP_DEBUG_INFO("main", "Agent registered with ION, EID: %s",
-                   iif_get_local_eid (&ion_ptr).name);
-  }
-  else
-  {
-    AMP_DEBUG_ERR("main", "Failed to register agent with ION, EID %s",
-                  iif_get_local_eid(&ion_ptr).name);
-    OS_ApplicationExit(EXIT_FAILURE);
-  }
+  strncpy(agent_eid.name, "", AMP_MAX_EID_LEN);
+  strncpy(manager_eid.name, "", AMP_MAX_EID_LEN);
 
   if (nmagent_init(&agent) != AMP_OK)
   {
       AMP_DEBUG_ERR("main","Can't init Agent.", NULL);
       OS_ApplicationExit(EXIT_FAILURE);
   }
-  agent.mif.send = msg_bp_send;
-  agent.mif.receive = msg_bp_recv;
-  agent.mif.ctx = &ion_ptr;
+  agent.mif.send = stdout_send;
+  agent.mif.receive = stdin_recv;
 
   /* Step 3: Initialize objects and instrumentation. */
   agent_instr_init();
 
   // ADM initialization
   amp_agent_init();
+#if 0
   dtn_bp_agent_init();
   dtn_ion_ionadmin_init();
   dtn_ion_ipnadmin_init();
@@ -137,6 +163,7 @@ OS_Application_Startup()
   dtn_sbsp_init();
 #else
 //  dtn_bpsec_init();
+#endif
 #endif
 
   /* Step 4: Register signal handlers. */
@@ -152,6 +179,9 @@ OS_Application_Startup()
     OS_ApplicationExit(2);
   }
 
+  fprintf(stdout, "READY\n");
+  fflush(stdout);
+
   if (!nmagent_register(&agent, &agent_eid, &manager_eid))
   {
     OS_ApplicationExit(2);
@@ -163,7 +193,9 @@ void OS_Application_Run()
   // Block until stopped
   daemon_run_wait(&agent.running);
   OS_ApplicationShutdown(true);
-  bp_close(ion_ptr.sap);
+
+  fprintf(stdout, "SHUTDOWN\n");
+  fflush(stdout);
 
   /* Step 7: Join threads and wait for them to complete. */
   if (!nmagent_stop(&agent))
@@ -179,5 +211,4 @@ void OS_Application_Run()
   utils_mem_teardown();
 
   AMP_DEBUG_ALWAYS("agent_main", "Stopping Agent.", NULL);
-  iif_deregister_node(&ion_ptr);
 }

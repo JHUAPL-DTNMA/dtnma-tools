@@ -89,7 +89,7 @@ void *rx_thread(void *arg) {
      */
     while(daemon_run_get(&agent->running))
     {
-    	result = mif_receive(&agent->mif, &meta, &success);
+    	result = mif_receive(&agent->mif, &meta, &agent->running, &success);
     	if(success != AMP_OK)
     	{
                 AMP_DEBUG_INFO("rx_thread","Got mif_receive success=%d, stopping.", success);
@@ -173,8 +173,8 @@ void rx_handle_perf_ctrl(msg_metadata_t *meta, blob_t *contents)
 	int success;
 	vec_idx_t i;
 
-	AMP_DEBUG_ENTRY("rx_handle_perf_ctrl","("PRIdPTR","PRIdPTR")",
-					(amp_uaddr)meta, (amp_uaddr) contents);
+	AMP_DEBUG_ENTRY("rx_handle_perf_ctrl","(%"PRIxPTR",%"PRIxPTR")",
+					meta, contents);
 
 	if((meta == NULL) || (contents == NULL))
 	{
@@ -205,8 +205,10 @@ void rx_handle_perf_ctrl(msg_metadata_t *meta, blob_t *contents)
 
 		ctrl_set_exec(ctrl, msg->start, meta->source);
 
-
-		if(OS_TimeGetTotalSeconds(ctrl->start) == 0)
+                AMP_DEBUG_ERR("rx_handle_perf_ctrl","Executing ctrl at time %d (from %d start TV)", OS_TimeGetTotalSeconds(ctrl->start), msg->start);
+                OS_time_t nowtime;
+                OS_GetLocalTime(&nowtime);
+		if(TimeCompare(ctrl->start, nowtime) <= 0)
 		{
 			lcc_run_ctrl(ctrl, NULL);
 			ctrl_release(ctrl, 1);

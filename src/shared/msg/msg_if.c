@@ -71,13 +71,13 @@
  *  10/04/18  E. Birrane     Updated to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
-blob_t *mif_receive(mif_cfg_t *cfg, msg_metadata_t *meta, int *success)
+blob_t *mif_receive(mif_cfg_t *cfg, msg_metadata_t *meta, daemon_run_t *running, int *success)
 {
   CHKNULL(cfg);
   CHKNULL(cfg->receive);
   CHKNULL(meta);
   CHKNULL(success);
-  return (cfg->receive)(meta, success, cfg->ctx);
+  return (cfg->receive)(meta, running, success, cfg->ctx);
 }
 
 

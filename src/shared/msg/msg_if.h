@@ -42,6 +42,7 @@
 #define MSG_IF_H_
 
 #include "msg.h"
+#include "shared/utils/daemon_run.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,12 +71,14 @@ typedef int (*mif_send_t)(const blob_t *data, const eid_t *dest, void *ctx);
 
 /** Message receiving function.
  * @param meta Pointer to reception metadata, which is never NULL.
+ * @param running Pointer to the daemon run state, which can be checked to know
+ * when to shut down the reading thread.
  * @param success Result success indicator, which is never NULL.
  * If the result is not AMP_OK it is a signal to the reader to stop reading.
  * @param ctx The user context, which may be NULL.
  * @return A non-null pointer if successful.
  */
-typedef blob_t * (*mif_receive_t)(msg_metadata_t *meta, int *success, void *ctx);
+typedef blob_t * (*mif_receive_t)(msg_metadata_t *meta, daemon_run_t *running, int *success, void *ctx);
 
 /**
  * The MSG Interface structure captures state necessary to communicate with
@@ -103,7 +106,7 @@ typedef struct
  * +--------------------------------------------------------------------------+
  */
 
-blob_t *mif_receive(mif_cfg_t *cfg, msg_metadata_t *meta, int *success);
+blob_t *mif_receive(mif_cfg_t *cfg, msg_metadata_t *meta, daemon_run_t *running, int *success);
 int     mif_send_grp(mif_cfg_t *cfg, const msg_grp_t *group, const eid_t *destination);
 int     mif_send_msg(mif_cfg_t *cfg, int msg_type, const void *msg, const eid_t *destination, amp_tv_t timestamp);
 

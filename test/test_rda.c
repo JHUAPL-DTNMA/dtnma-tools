@@ -84,7 +84,7 @@ sem_t rx_blob_write;
 // Lock for #rx_blob
 sem_t rx_blob_read;
 
-static blob_t * _test_receive(msg_metadata_t *meta, int *success, void *ctx)
+static blob_t * _test_receive(msg_metadata_t *meta, daemon_run_t *running, int *success, void *ctx)
 {
   printf("Called receive!\n");
   blob_t *res = NULL;

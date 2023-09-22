@@ -109,14 +109,29 @@ if(BUILD_AGENT)
       ${CMAKE_CURRENT_SOURCE_DIR}/agent
   )
 
+  # ION-independent ADM implementation
+  set(HFILES
+    indep_adms/shared/adm/adm_amp_agent.h
+  )
+  set(CFILES
+    indep_adms/agent/adm_amp_agent_agent.c
+    indep_adms/agent/adm_amp_agent_impl.c
+  )
+  add_library(indep_adms ${CFILES} ${HFILES})
+  target_link_libraries(indep_adms nmagent)
+  target_include_directories(indep_adms PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/indep_adms/shared/adm
+  )
+  target_include_directories(indep_adms PUBLIC
+      ${CMAKE_CURRENT_SOURCE_DIR}/indep_adms
+  )
+
   set(HFILES
     ion_if/ion_if.h
   )
   set(CFILES
     ion_if/ion_if.c
     ion_if/nm_agent.c
-    ion_if/agent/adm_amp_agent_agent.c
-    ion_if/agent/adm_amp_agent_impl.c
     ion_if/agent/adm_ion_admin_agent.c
     ion_if/agent/adm_ion_admin_impl.c
     ion_if/agent/adm_ion_ipn_admin_agent.c
@@ -136,14 +151,25 @@ if(BUILD_AGENT)
   )
   add_executable(ion_nm_agent ${CFILES} ${HFILES})
   target_link_libraries(ion_nm_agent nmagent)
+  target_link_libraries(ion_nm_agent indep_adms)
   target_link_libraries(ion_nm_agent ION::BP)
   target_link_libraries(ion_nm_agent ION::LTP)
   target_include_directories(ion_nm_agent PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/ion_if/shared/adm
   )
 
+  # Agent that uses hex-strings in stdin/stdout as transport
+  set(HFILES
+  )
+  set(CFILES
+    stdio_if/stdio_agent.c
+  )
+  add_executable(stdio_agent ${CFILES} ${HFILES})
+  target_link_libraries(stdio_agent nmagent)
+  target_link_libraries(stdio_agent indep_adms)
+
   install(
-    TARGETS nmagent ion_nm_agent
+    TARGETS nmagent ion_nm_agent stdio_agent
     RUNTIME
   )
 endif(BUILD_AGENT)

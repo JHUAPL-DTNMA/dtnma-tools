@@ -361,7 +361,7 @@ tnv_t tnv_deserialize(QCBORDecodeContext *it, int *success)
     QCBORError err;
     tnv_t result;
 
-    AMP_DEBUG_ENTRY("tnv_deserialize","("PRIdPTR","PRIdPTR")", (amp_uaddr)it, (amp_uaddr)success);
+    AMP_DEBUG_ENTRY("tnv_deserialize","(%"PRIxPTR",%"PRIxPTR")", it, success);
 
     tnv_init(&result, AMP_TYPE_UNK);
 
@@ -1847,7 +1847,7 @@ static tnvc_t tnvc_deserialize_tvc(QCBORDecodeContext *array_it, size_t array_le
 	blob_t types;
 	int i;
 
-	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"PRIdPTR",0x"PRIdPTR")", (amp_uaddr) array_it, (amp_uaddr) success);
+	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x%"PRIxPTR",0x%"PRIxPTR")", array_it, success);
 	memset(&result,0,sizeof(result));
 	*success = AMP_OK;
 
@@ -1921,7 +1921,7 @@ static tnvc_t tnvc_deserialize_tvc(QCBORDecodeContext *array_it, size_t array_le
 	blob_t types;
 	int i;
 
-	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x"PRIdPTR",0x"PRIdPTR")", (amp_uaddr) array_it, (amp_uaddr) success);
+	AMP_DEBUG_ENTRY("tnvc_deserialize_tvc","(0x%"PRIxPTR",0x%"PRIxPTR")", array_it, success);
 	memset(&result,0,sizeof(result));
 	*success = AMP_OK;
 

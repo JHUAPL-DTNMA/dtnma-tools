@@ -154,8 +154,7 @@ void* tbl_deserialize_ptr(QCBORDecodeContext *it, int *success)
 	QCBORItem item;
 
 	AMP_DEBUG_ENTRY("tbl_deserialize_ptr",
-					"("PRIdPTR","PRIdPTR")",
-					(amp_uaddr)it, (amp_uaddr)success);
+					"(%"PRIxPTR",%"PRIxPTR")", it, success);
 
 	/* Sanity Checks. */
 	CHKNULL(success);

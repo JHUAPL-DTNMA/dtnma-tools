@@ -332,7 +332,7 @@ var_t *var_deserialize_ptr(QCBORDecodeContext *it, int *success)
 {
 	var_t *result = NULL;
 
-    AMP_DEBUG_ENTRY("var_deserialize","("PRIdPTR","PRIdPTR")", (amp_uaddr)it, (amp_uaddr)success);
+    AMP_DEBUG_ENTRY("var_deserialize","(%"PRIxPTR",%"PRIxPTR")", it, success);
 
     CHKNULL(success);
     *success = AMP_FAIL;
@@ -512,7 +512,7 @@ var_def_t  vardef_deserialize(QCBORDecodeContext *it, int *success)
 {
 	var_def_t result;
 
-	AMP_DEBUG_ENTRY("vardef_deserialize","("PRIdPTR","PRIdPTR")", (amp_uaddr)it, (amp_uaddr)success);
+	AMP_DEBUG_ENTRY("vardef_deserialize","(%"PRIxPTR",%"PRIxPTR")", it, success);
 	memset(&result,0,sizeof(var_def_t));
 	result.type = AMP_TYPE_UNK;
 
