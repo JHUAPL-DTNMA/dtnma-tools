@@ -50,6 +50,28 @@ For further details, see the example in [testenv/Dockerfile](testenv/Dockerfile)
 The example agent and manager both rely on ION for message transport, so a prerequisite for both is a running ION BPA instance.
 An example of all of this, including the use of `systemd` scripts, is under the [testenv](testenv) directory.
 
+To run the integrated test environment, the docker engine and compose must be installed per the [Docker installation instructions](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) and typically the user will need to be added to the `docker` system group for access.
+The installation can be validated by the ability to run simple introspection commands like `docker ps` and see a successful result.
+
+Once that is done, the images can be built and containers started with:
+```
+./testenv/start.sh
+```
+A checkout test can be run to ensure services are running and round-trip AMP control-to-report loop is closed with:
+```
+./testenv/check.sh
+```
+Finally, after test anything in the containers is finished they can be stopped and cleaned up with:
+```
+./testenv/stop.sh
+```
+
+## Stand-Alone Agent
+As both a demonstration and a useful test fixture for AMP and ADMs, a stand-alone Agent which uses [stdio](https://en.cppreference.com/w/c/io) (`stdin` for commands and `stdout` for reporting) with hex-encoded AMP messages is included as the [stdio_agent](src/stdio_if/stdio_agent.c).
+This provides a minimum implementation of an Agent executable without requriring a specific underlying transport for AMP messages.
+This is not a recommended way to use AMP in a networked environemnt but makes it easier to do things like exercising the Agent in a simple test fixture like what is done with [test_stdio_agent.py](test/test_stdio_agent.py).
+
+
 ## Support
 The wiki for this project contains additional details outside of the source and API documentation, and the issue tracker for this project is used for defect reports and enhancement requests.
 Additional details are in the [Contributing](CONTRIBUTING.md) document.
