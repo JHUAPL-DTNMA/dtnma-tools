@@ -52,9 +52,9 @@ jobs:
       - name: Test Prep
         run: >
           sudo apt-get update && sudo apt-get install -y
-	  python3 python3-pip &&
-	  pip3 install --upgrade pip &&
-	  pip3 install -r agent-test/requirements.txt
+          python3 python3-pip &&
+          pip3 install --upgrade pip &&
+          pip3 install -r agent-test/requirements.txt
       - name: Test
         run: python3 -m pytest agent-test --capture=no --log-cli-level=debug
 
