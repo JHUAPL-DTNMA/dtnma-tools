@@ -50,10 +50,13 @@ done
 URIBASE="http://localhost:8089/nm/api/agents/eid/ipn:1.6"
 
 ${DEXEC} curl -sv -XPUT ${URIBASE}/clear_reports
+echo
 
-echo 'ari:/IANA:amp_agent/CTRL.gen_rpts([ari:/IANA:amp_agent/RPTT.full_report],[])' | \
-    ${DEXEC} ace_ari --inform text --outform cborhex | \
-    ${DEXEC} curl -sv -XPUT ${URIBASE}/hex -H 'Content-Type: text/plain' --data-binary @-
+CMD="echo 'ari:/IANA:amp_agent/CTRL.gen_rpts([ari:/IANA:amp_agent/RPTT.full_report],[])' | \
+    ace_ari --inform text --outform cborhex | \
+    curl -sv -XPUT ${URIBASE}/hex -H 'Content-Type: text/plain' --data-binary @-; echo"
+echo $CMD
+echo $CMD | ${DEXEC} bash
 
 RPTOBJ=""
 for IX in $(seq 10)
