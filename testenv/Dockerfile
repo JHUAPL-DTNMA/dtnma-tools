@@ -85,6 +85,7 @@ COPY --from=deps-local /usr/local /usr/local
 RUN apt-get update && apt-get install -y \
     python3 python3-pip \
     gcc python3-dev libsystemd-dev pkg-config && \
+    pip3 install --upgrade pip && \
     pip3 install systemd-python
 COPY --chmod=755 testenv/ion_nm_wrap.py /usr/local/bin/ion_nm_wrap
 COPY --chmod=755 testenv/ion_ping_peers.sh /usr/local/bin/ion_ping_peers
@@ -92,7 +93,8 @@ COPY --chmod=755 testenv/service_is_running.sh /usr/local/bin/service_is_running
 
 # Test tools
 RUN apt-get update && apt-get install -y \
-    curl tshark
+    curl git tshark && \
+    pip3 install git+https://github.com/NASA-AMMOS/anms-ace.git
 
 # Agent to test
 RUN apt-get update && apt-get install -y \
@@ -119,5 +121,6 @@ RUN systemctl enable ion bpecho@4 ion-nm-mgr ion-nm-agent && \
 
 # Runtime config for this container
 COPY testenv/node-1.rc /etc/ion/
+COPY adms /usr/local/share/ace/adms
 
 ENV ION_NODE_NUM=1
