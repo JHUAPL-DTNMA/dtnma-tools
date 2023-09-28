@@ -43,15 +43,20 @@ jobs:
           cmake ninja-build
           ruby build-essential autoconf libtool
           civetweb libcivetweb-dev libssl-dev libcjson-dev
-          python3 python3-pytest python3-cbor2
       - name: Prep
         run: ./prep.sh
       - name: Build
         run: ./build.sh
       - name: Install
         run: ./build.sh install
+      - name: Test Prep
+        run: >
+          sudo apt-get update && sudo apt-get install -y
+          python3 python3-pip &&
+          pip3 install --upgrade pip &&
+          pip3 install -r agent-test/requirements.txt
       - name: Test
-        run: python3 -m pytest test --capture=no --log-cli-level=debug
+        run: python3 -m pytest agent-test --capture=no --log-cli-level=debug
 
   integration-test:
     runs-on: ubuntu-22.04

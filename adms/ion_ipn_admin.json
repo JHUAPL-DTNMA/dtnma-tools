@@ -6,6 +6,11 @@
       "description": "The human-readable name of the ADM."
     },
     {
+      "name": "enum",
+      "type": "INT",
+      "value": 6
+    },
+    {
       "name": "namespace",
       "type": "STR",
       "value": "DTN/ION/ipnadmin",

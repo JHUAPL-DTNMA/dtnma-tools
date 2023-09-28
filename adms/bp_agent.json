@@ -6,6 +6,11 @@
       "description": "The human-readable name of the ADM."
     },
     {
+      "name": "enum",
+      "type": "INT",
+      "value": 2
+    },
+    {
       "name": "namespace",
       "type": "STR",
       "value": "DTN/bp_agent",

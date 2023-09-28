@@ -46,16 +46,23 @@ do
   fi
 done
 
-${DEXEC} curl -sv -XPUT http://localhost:8089/nm/api/agents/eid/ipn:1.6/clear_reports
+# All manager actions operate with this base
+URIBASE="http://localhost:8089/nm/api/agents/eid/ipn:1.6"
 
-echo 0xc11541050502252381871819410000 | \
-    ${DEXEC} curl -sv -XPUT http://localhost:8089/nm/api/agents/eid/ipn:1.6/hex -H 'Content-Type: text/plain' --data-binary @-
+${DEXEC} curl -sv -XPUT ${URIBASE}/clear_reports
+echo
+
+CMD="echo 'ari:/IANA:amp_agent/CTRL.gen_rpts([ari:/IANA:amp_agent/RPTT.full_report],[])' | \
+    ace_ari --inform text --outform cborhex | \
+    curl -sv -XPUT ${URIBASE}/hex -H 'Content-Type: text/plain' --data-binary @-; echo"
+echo $CMD
+echo $CMD | ${DEXEC} bash
 
 RPTOBJ=""
 for IX in $(seq 10)
 do
   sleep 1
-  RPTOBJ=$(${DEXEC} curl -sv -XGET http://localhost:8089/nm/api/agents/eid/ipn:1.6/reports/json | jq .reports[0])
+  RPTOBJ=$(${DEXEC} curl -sv -XGET ${URIBASE}/reports/json | jq .reports[0])
   if [ -n "$RPTOBJ" ]
   then
     break

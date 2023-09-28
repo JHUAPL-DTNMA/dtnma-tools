@@ -6,6 +6,11 @@
       "description": "The human-readable name of the ADM."
     },
     {
+      "name": "enum",
+      "type": "INT",
+      "value": 1
+    },
+    {
       "name": "namespace",
       "type": "STR",
       "value": "Amp/Agent",
