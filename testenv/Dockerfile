@@ -122,5 +122,3 @@ RUN systemctl enable ion bpecho@4 ion-nm-mgr ion-nm-agent && \
 # Runtime config for this container
 COPY testenv/node-1.rc /etc/ion/
 COPY adms /usr/local/share/ace/adms
-
-ENV ION_NODE_NUM=1
