@@ -8,6 +8,9 @@ on:
       - src/**
       - test/**
       - testenv/**
+  pull_request:
+    branches:
+    - main
 
 jobs:
   unit-test:
@@ -23,6 +26,10 @@ jobs:
           cmake ninja-build
           ruby build-essential autoconf libtool
           civetweb libcivetweb-dev libssl-dev libcjson-dev
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
       - name: Prep
         run: ./prep.sh
       - name: Build
@@ -43,6 +50,10 @@ jobs:
           cmake ninja-build
           ruby build-essential autoconf libtool
           civetweb libcivetweb-dev libssl-dev libcjson-dev
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
       - name: Prep
         run: ./prep.sh
       - name: Build
