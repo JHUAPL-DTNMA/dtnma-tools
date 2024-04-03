@@ -1,0 +1,871 @@
+@@ -44,7 +44,7 @@
+ #include "nm_mgr_print.h"
+ #include "metadata.h"
+ 
+-#ifdef HAVE_MYSQL
++#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+ #include "nm_mgr_sql.h"
+ #endif
+ 
+@@ -81,7 +81,7 @@
+    "List & Manage Registered Agent(s)",
+    "List AMM Object Information",
+    "Activate Automator UI Prompt (limited functionality, optimized for scripting)",
+-#ifdef HAVE_MYSQL
++#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    "Database Menu",
+ #endif
+ #ifdef USE_NCURSES
+@@ -97,7 +97,7 @@
+    MAIN_MENU_LIST_AGENTS,
+    MAIN_MENU_LIST_AMM,
+    MAIN_MENU_AUTOMATOR_UI,
+-#ifdef HAVE_MYSQL
++#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    MAIN_MENU_DB,
+ #endif
+ #ifdef USE_NCURSES
+@@ -122,7 +122,7 @@
+ 
+ char *bool_menu_choices[] = { "Yes", "No" };
+ 
+-#ifdef HAVE_MYSQL
++#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+ char *db_menu_choices[] = {
+    "Set Database Connection Information",
+    "Print Database Connection Information",
+@@ -156,7 +156,7 @@
+ void ui_eventLoop(int *running);
+ void ui_ctrl_list_menu(int *running);
+ 
+-#ifdef HAVE_MYSQL
++#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+ void ui_db_menu(int *running);
+ void ui_db_parms(int do_edit);
+ #endif
+@@ -174,7 +174,7 @@
+ void ui_log_transmit_msg(agent_t* agent, msg_ctrl_t *msg) {
+    blob_t *data;
+    char *msg_str;
+-   
++
+    if (agent_log_cfg.tx_cbor && agent->log_fd) {
+       data = msg_ctrl_serialize_wrapper(msg);
+       if (data) {
+@@ -213,8 +213,8 @@
+     fields[0].args.num.padding = 0;
+     fields[0].args.num.vmin = 0;
+     fields[0].args.num.vmax = 0xFFFFFFFF;
+-    
+-    
++
++
+     sprintf(title, "Build Control for agent %s", agent->eid.name);
+     ui_form(title, NULL, fields, ARRAY_SIZE(fields) );
+     ts = atoi(tsc);
+@@ -453,7 +453,7 @@
+ {
+    FILE *fp;
+    char str[80];
+-   
++
+    ui_display_init(title);
+    fp = fopen(fn, "r");
+    if (fp==NULL)
+@@ -466,7 +466,7 @@
+       ui_printf("%s", str);
+    }
+    fclose(fp);
+-   
++
+    ui_display_exec();
+ }
+ 
+@@ -474,7 +474,7 @@
+ {
+    int status;
+    vecit_t it;
+-   
++
+    // Build Form
+    form_fields_t log_cfg_fields[] = {
+       {"Enable logging to files", NULL, 8, 0, TYPE_CHECK_BOOL, &agent_log_cfg.enabled},
+@@ -577,7 +577,7 @@
+          printf("Invalid command %s\n", token);
+          return -1;
+       }
+-      
++
+       AUT_GET_NEXT();
+       strcpy(agent_eid.name, token);
+       agent = agent_get((eid_t*)token);
+@@ -675,7 +675,7 @@
+       printf("VERSION: Built on %s %s\nAMP Protocol Version %s\nBP Version %s",
+              __DATE__, __TIME__,
+              AMP_VERSION_STR,
+-             
++
+ #ifdef BUILD_BPv6
+                             "6"
+ #elif defined(BUILD_BPv7)
+@@ -684,12 +684,12 @@
+                             "?"
+ #endif
+          );
+-      return 1; 
++      return 1;
+    default:
+       printf("Unrecognized Command\n");
+       return -1;
+    }
+-   
++
+    return 1;
+ }
+ void ui_automator_run(int *running)
+@@ -740,9 +740,9 @@
+    char msg[128] = ""; // User (error) message to append to menu
+    int n_choices = ARRAY_SIZE(main_menu_choices);
+    int new_msg = 0;
+-   
++
+    ui_init();
+-   
++
+    while(*running)
+    {
+       if (mgr_ui_mode == MGR_UI_AUTOMATOR)
+@@ -753,7 +753,7 @@
+       {
+          choice = ui_menu("Main Menu", main_menu_choices, NULL, n_choices, ((new_msg==0) ? NULL : msg) );
+          new_msg = 0;
+-      
++
+          if (choice == MAIN_MENU_EXIT)
+          {
+             *running = 0;
+@@ -764,7 +764,7 @@
+             case MAIN_MENU_VERSION:
+                sprintf(msg, "VERSION: Built on %s %s\nAMP Protocol Version %d - %s/%02d",
+                        __DATE__, __TIME__, AMP_VERSION, AMP_PROTOCOL_URL, AMP_VERSION);
+-               new_msg = 1;            
++               new_msg = 1;
+                break;
+             case MAIN_MENU_REGISTER: // Register new Agent
+                ui_register_agent(msg);
+@@ -780,7 +780,7 @@
+             case MAIN_MENU_LIST_AMM: // List Object Information (old Control Menu merged with Admmin Menu's List Agents)
+                ui_ctrl_list_menu(running);
+                break;
+-#ifdef HAVE_MYSQL
++#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+             case MAIN_MENU_DB: // DB
+                ui_db_menu(running);
+                break;
+@@ -805,7 +805,7 @@
+          }
+       }
+    }
+-   
++
+    ui_shutdown();
+ }
+ 
+@@ -822,7 +822,7 @@
+    amp_type_e type = AMP_TYPE_UNK;
+ 
+    type = ui_input_ari_type(mask);
+-   
++
+    /* Unknown type means cancel. This selects ARIs, so no numerics. */
+    if((type == AMP_TYPE_UNK) || type_is_numeric(type))
+    {
+@@ -845,7 +845,7 @@
+     }
+ 
+     col =  meta_filter(adm_id, type);
+-    
++
+     num_objs = vec_num_entries(col->results);
+     if (num_objs == 0)
+     {
+@@ -862,7 +862,7 @@
+        list[i].name = malloc(META_DESCR_MAX); // NAME + Parameters should be less than the description length
+        list[i].description = malloc(META_DESCR_MAX);
+        list[i].data = (char*)(meta->id);
+-       
++
+        strncpy(list[i].description, meta->descr, META_DESCR_MAX);
+        strncpy(list[i].name, meta->name, META_NAME_MAX);
+        num_parms = vec_num_entries(meta->parmspec);
+@@ -870,7 +870,7 @@
+        {
+           vecit_t itp;
+           int j = 0;
+-          
++
+           strcat( list[i].name, "(");
+           for(j=0, itp = vecit_first(&(meta->parmspec)); vecit_valid(itp); itp = vecit_next(itp), j++)
+           {
+@@ -887,9 +887,9 @@
+           }
+           strcat( list[i].name, ")");
+        }
+-       
++
+     }
+-   
++
+ 
+     rtv = ui_menu_listing(title,
+                    list,
+@@ -1397,7 +1397,7 @@
+ 
+ 	AMP_DEBUG_EXIT("ui_thread","->.", NULL);
+ 
+-#ifdef HAVE_MYSQL
++#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+ 	db_mgt_close();
+ #endif
+ 
+@@ -1408,7 +1408,7 @@
+ }
+ 
+ 
+-#ifdef HAVE_MYSQL
++#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+ 
+ void ui_db_menu(int *running)
+ {
+@@ -1416,7 +1416,7 @@
+    int choice;
+    int new_msg = 0;
+    char msg[128] = "";
+-   
++
+    while(*running)
+    {
+       choice = ui_menu("Database Menu", db_menu_choices, NULL, n_choices,
+@@ -1443,7 +1443,7 @@
+                sprintf(msg, "Unable to clear tables. See error log for details.");
+             }
+             new_msg = 1;
+-            break; 
++            break;
+          case 3 :
+             // Clear Received Reports
+             if (ui_db_clear_rpt())
+@@ -1455,13 +1455,13 @@
+                sprintf(msg, "Unable to clear reports. See error log for details.");
+             }
+             new_msg = 1;
+-            break; 
++            break;
+          case 4 :
+             // Disconnect from DB
+             ui_db_disconn();
+             new_msg = 1;
+             sprintf(msg, "Database Disconnected");
+-            break; 
++            break;
+          case 5 :
+             // Connect to DB
+             if (ui_db_conn())
+@@ -1473,7 +1473,7 @@
+                sprintf(msg, "Connection failed. See error log for details.");
+             }
+             new_msg = 1;
+-            break; 
++            break;
+          case 6 : ui_db_write(); break; // Write DB info to file.
+          case 7 : ui_db_read(); break; // Read DB infor from file.
+          }
+@@ -1508,14 +1508,14 @@
+ {
+   FILE *fp = 0;
+   char *tmp = NULL;
+-  
++
+   tmp = ui_input_string("Enter file name.");
+ 
+   if((fp = fopen(tmp, "w+")) == NULL)
+   {
+     printf("Can't open or create %s.\n", tmp);
+     SRELEASE(tmp);
+-    return; 
++    return;
+   }
+ 
+ 
+@@ -1530,7 +1530,7 @@
+ 
+ fclose(fp);
+   printf("Database infor written to %s.\n", tmp);
+- 
++
+  SRELEASE(tmp);
+ }
+ 
+@@ -1544,7 +1544,7 @@
+   if(tmp == NULL)
+   {
+     printf("Error reading string.\n");
+-    return;  
++    return;
+   }
+   if ((fp = fopen(tmp, "r")) == NULL)
+   {
+@@ -1566,7 +1566,7 @@
+ 
+   if(fread(&(gMgrDB.sql_info.password), UI_SQL_ACCTLEN-1,1, fp) <= 0)
+     printf("Error reading password.r\n");
+- 
++
+   db_mgr_sql_persist();
+ 
+   unlockResource(&(gMgrDB.sql_info.lock));
+@@ -1599,7 +1599,7 @@
+          db_conn_form_fields[i].opts_off |= O_EDIT;
+       }
+    }
+-   
++
+    ui_form("SQL Database Connection Information",
+            ((do_edit) ? "Update Connection Information" : "This form is read-only"),
+            db_conn_form_fields,
+@@ -1654,15 +1654,15 @@
+    sprintf(ctrl_menu_list_descriptions[7], "(%d known)",  gVDB.rules.num_elts);
+    sprintf(ctrl_menu_list_descriptions[8], "(%d known)",  gVDB.adm_tblts.num_elts);
+    sprintf(ctrl_menu_list_descriptions[9], "(%d known)",  gVDB.vars.num_elts);
+-   
++
+ 
+    while(*running)
+    {
+-      choice = ui_menu("ADM Object Information Lists", ctrl_menu_list_choices, ctrl_menu_list_descriptions, n_choices, 
++      choice = ui_menu("ADM Object Information Lists", ctrl_menu_list_choices, ctrl_menu_list_descriptions, n_choices,
+                        ((new_msg==0) ? NULL : msg)
+       );
+       new_msg = 0;
+-      
++
+       if (choice < 0 || choice > (n_choices-1))
+       {
+          break;
+@@ -1726,14 +1726,14 @@
+    if (display_fd != NULL)
+    {
+       fclose(display_fd);
+-      
++
+       display_fd = NULL;
+    }
+ }
+-   
++
+ /** ui_display_to_file
+  *  Redirect subsequent ui_init() and ui_printf() output to the specified file.
+- *  The file will be closed and normal behavior restored when ui_display_exec() 
++ *  The file will be closed and normal behavior restored when ui_display_exec()
+  *  is called.
+  */
+ int ui_display_to_file(char* filename)
+@@ -1793,7 +1793,7 @@
+     {
+        printf("WARNING: stderr file redirection failed (%i). Warning messages may interfere with NCURSES menus", errno);
+     }
+-   
++
+     /* Initialize curses */
+ 	initscr();
+     start_color();
+@@ -1841,7 +1841,7 @@
+    }
+ }
+ 
+-/** Displays default dialog window (populated with ui_printf). 
++/** Displays default dialog window (populated with ui_printf).
+  *   The first non-navigation keyboard input will cause the window
+  *   to be hidden and the input character returned to the user.
+  *
+@@ -1859,11 +1859,11 @@
+       ui_display_to_file_close();
+       return AMP_OK;
+    }
+-   
++
+    show_panel(ui_dialog_pan);
+    update_panels();
+    doupdate();
+-   
++
+    while(running)
+    {
+       refresh();
+@@ -1912,7 +1912,7 @@
+ {
+    wmove(win,line,2); // Move to start of line
+    wclrtoeol(win); // Clear the line
+-   
++
+    // Write updated status message
+    wattron(win, color);
+    mvwprintw(win,line, 2, msg);
+@@ -1956,7 +1956,7 @@
+ 
+    // Build first menu item
+    my_items[0] = new_item(choiceA, NULL);
+-   
++
+    // Calculate Dialog Width
+    if (choiceB == NULL)
+    {
+@@ -1974,7 +1974,7 @@
+          maxChoiceLen = MAX(maxChoiceLen, strlen(choiceC));
+          ncols += maxChoiceLen + 4;
+          my_items[2] = new_item(choiceC, NULL);
+-         my_items[3] = NULL;         
++         my_items[3] = NULL;
+       }
+       else
+       {
+@@ -1993,7 +1993,7 @@
+                    LINES/2, // start y
+                    (COLS-ncols)/2); // start x
+    my_panel = new_panel(my_win);
+-   
++
+    keypad(my_win, TRUE);
+    set_menu_win(my_menu, my_win);
+    set_menu_sub(my_menu, derwin(my_win, 0, 0, 3, 2)); // Menu position within window
+@@ -2004,13 +2004,13 @@
+    // Add a title and optional border
+    box(my_win, 0, 0);
+    print_in_middle(my_win, 1, 0, ncols, title, COLOR_PAIR(1));
+-   
++
+    post_menu(my_menu);
+    wrefresh(my_win);
+ 
+    update_panels();
+    doupdate();
+-   
++
+    while(running)
+    {
+       c = wgetch(my_win);
+@@ -2045,9 +2045,9 @@
+    if (choiceC != NULL)
+    {
+       free_item(my_items[2]);
+-   }   
++   }
+    delwin(my_win);
+-   endwin();             
++   endwin();
+    return rtv;
+ }
+ 
+@@ -2090,7 +2090,7 @@
+     int running = 1;
+     int status = 0;
+     char tmp[32];
+-	
++
+     /* Initialize the fields */
+ 	for(i = 0; i < num_fields; ++i)
+     {
+@@ -2117,7 +2117,7 @@
+        {
+           field_opts_off(field[i], fields[i].opts_off);
+        }
+-       
++
+     }
+ 	field[num_fields] = NULL;
+ 
+@@ -2149,7 +2149,7 @@
+           default:
+              tmp[0] = 0; // Leave it blank / unimplemented
+           }
+-          
++
+           // Set it
+           set_field_buffer(field[i], 0, tmp);
+ 
+@@ -2184,11 +2184,11 @@
+        case TYPE_CHECK_INT:
+           set_field_type(field[i], TYPE_INTEGER,
+                          fields[i].args.num.padding, fields[i].args.num.vmin, fields[i].args.num.vmax);
+-          break;          
++          break;
+        case TYPE_CHECK_NUM:
+           set_field_type(field[i], TYPE_NUMERIC,
+                          fields[i].args.num.padding, fields[i].args.num.vmin, fields[i].args.num.vmax);
+-          break;          
++          break;
+ 
+        case TYPE_CHECK_REGEXP:
+           set_field_type(field[i], TYPE_REGEXP, fields[i].args.regex);
+@@ -2220,12 +2220,12 @@
+     // NOTE: In example, this is done before refresh - but here doing so prevents title from appearing
+     box(my_form_win, 0, 0);
+     print_in_middle(my_form_win, 1, 0, cols + 4, title, COLOR_PAIR(1));
+-    
++
+     // Print footer
+     mvwprintw(my_form_win,LINES - 3, 4, "F1 to Cancel, F2 to Submit");
+     if (msg != NULL)
+     {
+-       wattron(my_form_win, COLOR_PAIR(2));       
++       wattron(my_form_win, COLOR_PAIR(2));
+        mvwprintw(my_form_win,LINES - 2, 4, msg);
+        wattroff(my_form_win, COLOR_PAIR(2));
+     }
+@@ -2247,7 +2247,7 @@
+        show_panel(my_pan);
+        update_panels();
+        doupdate();
+-       
++
+        switch(ch)
+ 		{
+         case KEY_LEFT:
+@@ -2349,17 +2349,17 @@
+            {
+               break; // At least one field did not validate
+            }
+-           
++
+            // Stop the loop
+            running = 0;
+            status = 1;
+-           
++
+            // Retrieve content (do not copy back static fields)
+            for(i = 0; i < num_fields; i++)
+            {
+               if ( !(fields[i].opts_off & O_EDIT) )
+               {
+-                 /* Copy value back from primary buffer. 
++                 /* Copy value back from primary buffer.
+                   *   Additional buffers (seocnd arg) not currently used.
+                   *   NCurses automatically pads all fields with spaces, so we trim it before copying back
+                   */
+@@ -2392,7 +2392,7 @@
+                           // (Alternatively, default case could fail validation ... but that seems unnecessary for BOOL)
+                           *((int*)fields[i].parsed_value)=0;
+                           break;
+-            
++
+                        }
+                     default:
+                        break; // Unsupported
+@@ -2413,7 +2413,7 @@
+     hide_panel(my_pan);
+     update_panels();
+     doupdate();
+-    
++
+ 	/* Un post form and free the memory */
+ 	unpost_form(my_form);
+ 	free_form(my_form);
+@@ -2435,14 +2435,14 @@
+    WINDOW *my_menu_win;
+    PANEL *my_pan;
+    ITEM **my_items;
+-	int c;				
++	int c;
+ 	MENU *my_menu;
+ 	int i;
+ 	ITEM *cur_item;
+ 	int running = 1;
+     int rtv = -1;
+     char label[4];
+-		
++
+ 	my_items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
+ 
+ 	for(i = 0; i < n_choices; ++i)
+@@ -2466,7 +2466,7 @@
+     // Add a title and optional border
+     box(my_menu_win, 0, 0);
+     print_in_middle(my_menu_win, 1, 0, COLS + 4, title, COLOR_PAIR(1));
+-    
++
+     // Menu Formatting
+     set_menu_mark(my_menu, " * ");
+ 
+@@ -2476,7 +2476,7 @@
+        sprintf(label,"%hd.",i);
+        mvwprintw(my_menu_win, MENU_START_LINE+i, 1, label);
+     }
+-    
++
+ 	mvwprintw(my_menu_win,LINES - 3, 2, "F1 or 'e' to Exit");
+     if (msg != NULL)
+     {
+@@ -2547,7 +2547,7 @@
+    WINDOW *my_menu_win, *my_subwin=NULL;
+    PANEL * my_pan;
+     ITEM **my_items;
+-	int c;				
++	int c;
+ 	MENU *my_menu;
+ 	int i, status;
+ 	ITEM *cur_item;
+@@ -2555,7 +2555,7 @@
+     int rtv = -1;
+     char label[4];
+     int menu_height = LINES-8;
+-		
++
+ 	my_items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
+ 
+ 	for(i = 0; i < n_choices; ++i)
+@@ -2604,7 +2604,7 @@
+     // Add a title and optional border
+     box(my_menu_win, 0, 0);
+     print_in_middle(my_menu_win, 1, 0, COLS + 4, title, COLOR_PAIR(1));
+-    
++
+     // Menu Formatting
+     set_menu_mark(my_menu, " * ");
+ 
+@@ -2646,7 +2646,7 @@
+ 
+           // Add a border
+           box(my_subwin, 0, 0);
+-          
++
+           // Title - echo current selection
+           print_in_middle(my_subwin, 1, 0, COLS, list[i].name, COLOR_PAIR(1) );
+ 
+@@ -2655,7 +2655,7 @@
+           {
+              mvwprintw(my_subwin, 3,4, list[i].description);
+           }
+-          
++
+           touchwin(my_menu_win);
+           wrefresh(my_menu_win);
+           wrefresh(my_subwin);
+@@ -2667,9 +2667,9 @@
+        }
+        show_panel(my_pan);
+        update_panels();
+-              
++
+        c = wgetch(my_menu_win);
+-       
++
+        switch(c)
+        {
+        case KEY_F(1):
+@@ -2728,7 +2728,7 @@
+              // else continue
+           }
+        }
+-       
++
+        //wrefresh(my_menu_win);
+        //refresh();
+ 	}
+@@ -2737,7 +2737,7 @@
+     update_panels();
+     doupdate();
+ 
+-    
++
+     unpost_menu(my_menu);
+     free_menu(my_menu);
+     for(i = 0; i < n_choices; i++)
+@@ -2759,14 +2759,14 @@
+    WINDOW *my_menu_win;
+    PANEL *my_pan;
+    ITEM **my_items;
+-	int c;				
++	int c;
+ 	MENU *my_menu;
+ 	int i;
+ 	ITEM *cur_item;
+ 	int running =1;
+     int rtv = -1;
+     char label[4];
+-		
++
+ 	my_items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
+ 
+ 	for(i = 0; i < n_choices; ++i)
+@@ -2789,11 +2789,11 @@
+ 
+     /* Set menu option not to show the description */
+ 	menu_opts_off(my_menu, O_SHOWDESC | O_NONCYCLIC);
+-   
++
+     // Add a title and optional border
+     box(my_menu_win, 0, 0);
+     print_in_middle(my_menu_win, 1, 0, COLS + 4, title, COLOR_PAIR(1));
+-    
++
+     // Menu Formatting
+     set_menu_mark(my_menu, " * ");
+ 	set_menu_format(my_menu, LINES-8, menu_cols);
+@@ -2917,7 +2917,7 @@
+             printf("\n");
+          }
+       }
+-      
++
+       if (msg != NULL)
+       {
+          printf("\n %s \n\n" ,msg);
+@@ -2929,7 +2929,7 @@
+          break;
+       }
+    }
+-   
++
+    ui_display_exec();
+ 
+    return i;
+@@ -3090,12 +3090,12 @@
+          // If there is no callback, then we always exit after a selection
+          running = 0;
+       }
+-   
++
+       ui_display_exec();
+ 
+    }
+ 
+-   return i;   
++   return i;
+ 
+ }
+ 
+@@ -3151,7 +3151,7 @@
+ static int ui_form_field_validate(form_fields_t *field, char *value)
+ {
+    int tmp, j, len;
+-         
++
+    if (field == NULL)
+    {
+       return -1;
+@@ -3163,7 +3163,7 @@
+       return 0;
+    }
+ 
+-               
++
+    // Check for validation (not all validation options shall be implemented)
+    switch(field->type) {
+       // TODO: What was the difference between these in ncurses?
+@@ -3180,7 +3180,7 @@
+       if (field->parsed_value != NULL)
+       {
+          *((int*)field->parsed_value) = atoi(value);
+-      }      
++      }
+       break;
+    case TYPE_CHECK_BOOL:
+       if (strlen(value) == 0) {
+@@ -3202,7 +3202,7 @@
+             // (Alternatively, default case could fail validation ... but that seems unnecessary for BOOL)
+             tmp=0;
+             break;
+-            
++
+          }
+       }
+       if (field->parsed_value != NULL) {
+@@ -3216,10 +3216,10 @@
+          }
+       }
+       return 1; // BOOL is a special case where we bypass nominal copying
+-      
++
+    default:
+       break; // Nothing to be done
+-      
++
+    }
+    if (field->value != NULL)
+    {
+@@ -3232,11 +3232,11 @@
+ {
+    int i;
+    char tmp;
+-   
++
+    // Print recap of all fields.  TODO: Check if any fields fail validation
+    printf("-------\n" KGRN "%s (summary)\n" RST "-----\n", title);
+ 
+-  
++
+    // If validation fails, prevent submission.
+    for(i = 0; i < num_fields; i++)
+    {
+@@ -3275,18 +3275,18 @@
+    if (msg != NULL) {
+       printf(KGRN "%s\n" RST "%s\n-----\n", title, msg);
+    }
+-      
++
+    if (do_ui_form_confirm(title, status, fields, num_fields) != -1)
+    {
+       // User does not wish to edit settings
+       return 0;
+    }
+-   
++
+    for(i = 0; i < num_fields && status; i++)
+    {
+       form_fields_t *field = &fields[i];
+       int skipFlag = 0;
+-      
++
+       // (Re-)Print Title Line and prompt
+       // TODO: Update prompt
+       printf(KGRN "%s (field %i of %i)\n" RST "-----\n%s: ",
+@@ -3300,7 +3300,7 @@
+       // Prompt User for input
+       while(1) {
+          int len;
+-         
++
+          switch(field->type) {
+             case TYPE_CHECK_INT:
+             case TYPE_CHECK_NUM:
+@@ -3314,7 +3314,7 @@
+          }
+          fflush(stdout);
+          if (igets(STDIN_FILENO, in, UI_FORM_LEN, &len) == NULL || len == 0)
+-         {          
++         {
+             if (field->parsed_value != NULL || (field->value != NULL && strlen(field->value) > 0) )
+             {
+                // Use default value
+@@ -3322,7 +3322,7 @@
+                 * If only field->value is defined with non-0 length, it shall have a valid default value
+                 * If parsed_value is defined, it is assummed to contain a valid default value.
+                 *  TODO: Additional validation options may be added in future if needed.
+-               */ 
++               */
+                break;
+             }
+             else if (skipFlag==0)
+@@ -3355,10 +3355,10 @@
+          }
+ 
+       }
+-      
++
+    }
+    // 1 for succcess, 0 for failure or user-cancelled input.
+-   return do_ui_form_confirm(title, status, fields, num_fields); 
++   return do_ui_form_confirm(title, status, fields, num_fields);
+ }
+ int ui_form(char* title, char* msg, form_fields_t *fields, int num_fields)
+ {

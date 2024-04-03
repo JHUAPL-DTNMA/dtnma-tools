@@ -58,7 +58,7 @@
 #include "nm_mgr_print.h"
 #include "metadata.h"
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 #include "nm_mgr_sql.h"
 #endif
 
@@ -95,7 +95,7 @@ char *main_menu_choices[] = {
    "List & Manage Registered Agent(s)",
    "List AMM Object Information",
    "Activate Automator UI Prompt (limited functionality, optimized for scripting)",
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
    "Database Menu",
 #endif
 #ifdef USE_NCURSES
@@ -111,7 +111,7 @@ typedef enum main_menu_t {
    MAIN_MENU_LIST_AGENTS,
    MAIN_MENU_LIST_AMM,
    MAIN_MENU_AUTOMATOR_UI,
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
    MAIN_MENU_DB,
 #endif
 #ifdef USE_NCURSES
@@ -136,7 +136,7 @@ char *ctrl_menu_list_choices[] = {
 
 char *bool_menu_choices[] = { "Yes", "No" };
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 char *db_menu_choices[] = {
    "Set Database Connection Information",
    "Print Database Connection Information",
@@ -163,7 +163,7 @@ nmmgr_t *global_mgr = NULL;
 static void ui_eventLoop(nmmgr_t *mgr);
 static void ui_ctrl_list_menu(nmmgr_t *mgr);
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 static void ui_db_menu(nmmgr_t *mgr);
 static void ui_db_parms(int do_edit);
 #endif
@@ -790,7 +790,7 @@ void ui_eventLoop(nmmgr_t *mgr)
             case MAIN_MENU_LIST_AMM: // List Object Information (old Control Menu merged with Admmin Menu's List Agents)
                ui_ctrl_list_menu(mgr);
                break;
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
             case MAIN_MENU_DB: // DB
                ui_db_menu(mgr);
                break;
@@ -1408,7 +1408,7 @@ void *ui_thread(void *arg)
 
 	AMP_DEBUG_EXIT("ui_thread","->.", NULL);
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 	db_mgt_close();
 #endif
 
@@ -1419,7 +1419,7 @@ void *ui_thread(void *arg)
 }
 
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 
 void ui_db_menu(nmmgr_t *mgr)
 {

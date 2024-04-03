@@ -53,7 +53,7 @@
 
 #include "../shared/msg/msg.h"
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 #include "nm_mgr_sql.h"
 #endif
 
@@ -326,7 +326,7 @@ void *mgr_rx_thread(void *arg)
 
     		if((grp == NULL) || (success != AMP_OK))
     		{
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
                 // Log discarded message in DB
                 db_incoming_finalize(0, AMP_FAIL, meta.source.name, tmp);
 #endif
@@ -338,7 +338,7 @@ void *mgr_rx_thread(void *arg)
     		AMP_DEBUG_INFO("mgr_rx_thread","Group had %d msgs", vec_num_entries(grp->msgs));
 //FIXME:	AMP_DEBUG_INFO("mgr_rx_thread","Group timestamp %lu", grp->timestamp);
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
             /* Copy the message group to the database tables */
             uint32_t incoming_idx = db_incoming_initialize(grp->timestamp, meta.source);
             int32_t db_status = AMP_OK;
@@ -358,10 +358,10 @@ void *mgr_rx_thread(void *arg)
             		case MSG_TYPE_RPT_SET:
             		{
             			msg_rpt_t *rpt_msg = msg_rpt_deserialize(msg_data, &success);
-            			rx_data_rpt(&meta, rpt_msg);
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
                         db_insert_msg_rpt_set(incoming_idx, rpt_msg, &db_status);
 #endif
+            			rx_data_rpt(&meta, rpt_msg);
                         msg_rpt_release(rpt_msg, 1);
             			break;
             		}
@@ -369,7 +369,7 @@ void *mgr_rx_thread(void *arg)
             		{
             			msg_tbl_t *tbl_msg = msg_tbl_deserialize(msg_data, &success);
             			rx_data_tbl(&meta, tbl_msg);
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
                         db_insert_msg_tbl_set(incoming_idx, tbl_msg, &db_status);
 #endif
                         msg_tbl_release(tbl_msg, 1);
@@ -380,7 +380,7 @@ void *mgr_rx_thread(void *arg)
             		{
             			msg_agent_t *agent_msg = msg_agent_deserialize(msg_data, &success);
             			rx_agent_reg(&meta, agent_msg);
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
                         db_insert_msg_reg_agent(incoming_idx, agent_msg, &db_status);
 #endif
                         msg_agent_release(agent_msg, 1);
@@ -393,7 +393,7 @@ void *mgr_rx_thread(void *arg)
 
             }
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
             // Commit transaction and log as applicable
             db_incoming_finalize(incoming_idx, db_status, meta.source.name, tmp);
 #endif

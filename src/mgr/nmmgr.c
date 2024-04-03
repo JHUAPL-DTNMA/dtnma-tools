@@ -77,7 +77,7 @@ mgr_db_t gMgrDB;
 int nmmgr_destroy(nmmgr_t *mgr)
 {
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 	db_mgt_close();
 #endif
 
@@ -149,7 +149,7 @@ int nmmgr_init(nmmgr_t *mgr)
     	return AMP_FAIL;
     }
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 	db_mgr_sql_init();
 	success = db_mgt_init(gMgrDB.sql_info, 0, 1);
 #endif
@@ -168,7 +168,7 @@ int nmmgr_start(nmmgr_t *mgr)
       {&ui_thread, "nm_mgr_ui"},
       {NULL, NULL},
   };
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
   threadinfo[2] = (threadinfo_t){&db_mgt_daemon, "nm_mgr_db"};
 #endif
   if (threadset_start(&mgr->threads, threadinfo, sizeof(threadinfo)/sizeof(threadinfo_t), mgr) != AMP_OK)

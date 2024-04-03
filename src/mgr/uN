@@ -1,0 +1,38 @@
+@@ -463,6 +463,23 @@
+ AM_CONDITIONAL([ENABLE_MYSQL], [test "x$mysql" = "xyes"])
+ 
+ 
++AC_ARG_WITH([postgresql],
++[AS_HELP_STRING([--with-postgresql], [Enable PostgreSQL support for NM MGR])],
++[postgresql=yes;],
++[])
++if test "x$postgresql" = "xyes" ; then
++	echo "Build against libpq... yes"
++	CFLAGS="$CFLAGS -DHAVE_POSTGRESQL"
++	if test "x$mysql" = "xyes" ; then
++		echo "Enabling both mysql and postgresql not supported."
++		exit -1
++	fi
++else
++	echo "Build against libpq... no"
++fi
++AM_CONDITIONAL([ENABLE_POSTGRESQL], [test "x$postgresql" = "xyes"])
++
++
+ AC_ARG_WITH([ncurses],
+ [AS_HELP_STRING([--with-ncurses], [Enable NCURSES support for NM MGR])],
+ [ncurses=yes;],
+@@ -510,6 +527,13 @@
+ )
+ 
+ AC_CHECK_LIB(
++	[pq],
++	[PQconnectdb],
++	[ AC_SUBST( [POSTGRESQL_LIBS], ["-lpq"] ) ],
++	[ AM_COND_IF([ENABLE_POSTGRESQL], AC_MSG_ERROR([You need to install the pq library to build with PostgreSQL.  Run configure with --with-postgresql to turn on this feature.]), AC_MSG_WARN([If you wish to use PostgreSQL for NM you will need to install the libpq.]) )]
++)
++
++AC_CHECK_LIB(
+ 	[ncurses],
+ 	[initscr],
+ 	[ AC_SUBST( [NCURSES_LIBS], ["-lncurses -lform -lmenu -lpanel"] ) ],

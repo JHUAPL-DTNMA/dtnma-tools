@@ -1,0 +1,43 @@
+@@ -2,7 +2,7 @@
+ IONDIR = ../../
+ OPTS = -Wno-write-strings -g 
+ 
+-all:with-db
++all:with-mysql
+ 
+ without-db:
+ 	gcc ${OPTS} \
+@@ -22,7 +22,7 @@
+ 
+ 	gcc -o nm_mgr *.o -lltp -lbp -lici -lpthread
+ 
+-with-db:
++with-mysql:
+ 	gcc ${OPTS} \
+ 	-I. -I.. \
+ 	-I${IONDIR}/ici/include \
+@@ -43,5 +43,23 @@
+ 
+ 	gcc -o nm_mgr *.o -lltp -lbp -lici -lmysqlclient -lpthread
+ 
++with-postgresql:
++	gcc ${OPTS} \
++	-I. -I.. \
++	-I${IONDIR}/ici/include \
++	-I${IONDIR}/ltp/include \
++	-I${IONDIR}/ltp/library \
++	-I${IONDIR}/bp/include \
++	-I${IONDIR}/bp/library \
++	-I${IONDIR}/ici/library \
++	-I/usr/local/include \
++	-I/usr/include/postgresql \
++	-L${IONDIR}/ \
++	-L/usr/local/lib \
++	-L/usr/lib \
++	-lbp -lici -lltp -lpq \
++	-DMAXPATHLEN=2048 \
++	-DHAVE_POSTGRESQL=1 \
++	-c ${SOURCES}
+ 
+-
++	gcc -o nm_mgr *.o -lltp -lbp -lici -lpq -lpthread

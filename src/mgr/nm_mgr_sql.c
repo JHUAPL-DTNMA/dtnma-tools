@@ -45,7 +45,7 @@
  **  10/20/18  E. Birrane     Updates for AMPv0.5 (JHU/APL)
  *****************************************************************************/
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || 	defined(HAVE_POSTGRESQL)
 
 #include <string.h>
 #include <osapi-task.h>
@@ -65,13 +65,23 @@ typedef enum db_con_t {
 } db_con_t;
 
 /* Global connection to the MYSQL Server. */
+#ifdef HAVE_MYSQL
 static MYSQL *gConn[MGR_NUM_SQL_CONNECTIONS];
-static sql_db_t gParms;
-static uint8_t gInTxn;
-int db_log_always = 1; // If set, always log raw CBOR of incoming messages for debug purposes, otherwise log errors only. TODO: Add UI or command-line option to change setting at runtime
-
-// Private functions
-static MYSQL_STMT* db_mgr_sql_prepare(size_t idx, const char* query);
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+static PGconn *gConn[MGR_NUM_SQL_CONNECTIONS];
+#endif // HAVE_POSTGRESQL
+ static sql_db_t gParms;
+ static uint8_t gInTxn;
+ int db_log_always = 1; // If set, always log raw CBOR of incoming messages for debug purposes, otherwise log errors only. TODO: Add UI or command-line option to change setting at runtime
+ 
+ // Private functions
+#ifdef HAVE_MYSQL
+ static MYSQL_STMT* db_mgr_sql_prepare(size_t idx, const char* query);
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+static char* db_mgr_sql_prepare(size_t idx, const char* query, char *stmtName, int nParams, const Oid *paramTypes);
+#endif // HAVE_POSTGRESQL
 void db_process_outgoing(nmmgr_t *mgr);
 ac_t* db_query_ac(size_t dbidx, int ac_id);
 int db_query_tnvc(size_t dbidx, int tnvc_id, tnvc_t *parms);
@@ -142,32 +152,93 @@ enum queries {
 	MGR_NUM_QUERIES
 };
 
-static MYSQL_STMT* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
+#ifdef HAVE_MYSQL
+ static MYSQL_STMT* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+static char* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
+#endif // HAVE_POSTGRESQL
+ 
+ /******** SQL Utility Macros ******************/
+#ifdef HAVE_MYSQL
+ #define dbprep_bind_res_cmn(idx,var,type) \
+ 	bind_res[idx].buffer_type = type; \
+ 	bind_res[idx].buffer = (char*)var; \
+    bind_res[idx].is_null = &is_null[idx];        \
+    bind_res[idx].error = &is_err[idx];
+#endif // HAVE_MYSQL
+ 
+#ifdef HAVE_MYSQL
+ #define dbprep_bind_param_cmn(idx,var,type) \
+ 	bind_param[idx].buffer_type = type; \
+ 	bind_param[idx].buffer = (char*)&var; \
+     bind_param[idx].is_null = 0;          \
+     bind_param[idx].error = 0;
+#endif // HAVE_MYSQL
 
-/******** SQL Utility Macros ******************/
-#define dbprep_bind_res_cmn(idx,var,type) \
-	bind_res[idx].buffer_type = type; \
-	bind_res[idx].buffer = (char*)var; \
-   bind_res[idx].is_null = &is_null[idx];        \
-   bind_res[idx].error = &is_err[idx];
+ 
+#ifdef HAVE_POSTGRESQL
+static void double_to_nbo(double in, double *out) {
+    uint64_t *i = (uint64_t *)&in;
+    uint32_t *r = (uint32_t *)out;
+ 
+    /* convert input to network byte order */
+    r[0] = htonl((uint32_t)((*i) >> 32));
+    r[1] = htonl((uint32_t)*i);
+}
+static void vast_to_nbo(vast in, vast *out) {
+    uint64_t *i = (uint64_t *)&in;
+    uint32_t *r = (uint32_t *)out;
 
-#define dbprep_bind_param_cmn(idx,var,type) \
-	bind_param[idx].buffer_type = type; \
-	bind_param[idx].buffer = (char*)&var; \
-    bind_param[idx].is_null = 0;          \
-    bind_param[idx].error = 0;
+    /* convert input to network byte order */
+    r[0] = htonl((uint32_t)((*i) >> 32));
+    r[1] = htonl((uint32_t)*i);
+}
+#endif // HAVE_POSTGRESQL
 
 
-#define dbprep_bind_param_int(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_LONG);
-#define dbprep_bind_param_short(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_SHORT);
-#define dbprep_bind_param_float(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_FLOAT);
-#define dbprep_bind_param_double(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_DOUBLE);
-
-//skywalker adds from anms patch
+#ifdef HAVE_MYSQL
+#define dbprep_bind_param_bool(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_LONG);
+ #define dbprep_bind_param_int(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_LONG);
+ #define dbprep_bind_param_short(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_SHORT);
+ #define dbprep_bind_param_float(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_FLOAT);
+ #define dbprep_bind_param_double(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_DOUBLE);
 #define dbprep_bind_param_bigint(idx,var) dbprep_bind_param_cmn(idx,var,MYSQL_TYPE_LONGLONG);
-
-
-
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+#define dbprep_bind_param_bool(idx,var) 									\
+	net8Vals[idx] = (uint8_t)var;										\
+	paramValues[idx] = (char *) &net8Vals[idx];								\
+	paramLengths[idx] = sizeof(net8Vals[idx]);								\
+	paramFormats[idx] = 1; /* binary */							
+#define dbprep_bind_param_int(idx,var) 										\
+	net32Vals[idx] = htonl((uint32_t) var); 								\
+	paramValues[idx] = (char *) &net32Vals[idx];								\
+	paramLengths[idx] = sizeof(net32Vals[idx]);								\
+	paramFormats[idx] = 1; /* binary */							
+#define dbprep_bind_param_short(idx,var)  									\
+	net16Vals[idx] = htons((uint16_t) var); 								\
+	paramValues[idx] = (char *) &net16Vals[idx];								\
+	paramLengths[idx] = sizeof(net16Vals[idx]);								\
+	paramFormats[idx] = 1; /* binary */							
+#define dbprep_bind_param_float(idx,var) 									\
+	net32Vals[idx] = htonl(* ( (uint32_t*) &var ));								\
+	paramValues[idx] = (char *) &net32Vals[idx];								\
+	paramLengths[idx] = sizeof(net32Vals[idx]);								\
+	paramFormats[idx] = 1; /* binary */			
+#define dbprep_bind_param_double(idx,var) 									\
+	double_to_nbo(var, (double *) &net64Vals[idx]); 							\
+	paramValues[idx] = (char *) &net64Vals[idx];								\
+	paramLengths[idx] = sizeof(net64Vals[idx]);								\
+	paramFormats[idx] = 1; /* binary */				
+#define dbprep_bind_param_bigint(idx,var) 									\
+	vast_to_nbo(var, (vast *) &net64Vals[idx]); 								\
+	paramValues[idx] = (char *) &net64Vals[idx];								\
+	paramLengths[idx] = sizeof(net64Vals[idx]);								\
+	paramFormats[idx] = 1; /* binary */				
+#endif // HAVE_POSTGRESQL
+ 
+#ifdef HAVE_MYSQL
 #define dbprep_bind_param_str(idx,var) \
 	size_t len_##var = (var==NULL) ? 0 : strlen(var);					\
 	bind_param[idx].buffer_length = len_##var;							\
@@ -182,8 +253,16 @@ static MYSQL_STMT* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
 	bind_param[idx].buffer = 0;						  \
     bind_param[idx].is_null = 0;					  \
     bind_param[idx].error = 0;
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+#define dbprep_bind_param_null(idx)					  	\
+	paramValues[idx] = NULL;							\
+	paramLengths[idx] = 0;								\
+	paramFormats[idx] = 1;
+#endif // HAVE_POSTGRESQL
+ 
 
-
+#ifdef HAVE_MYSQL
 #define dbprep_bind_res_int(idx,var) dbprep_bind_res_cmn(idx,&var,MYSQL_TYPE_LONG);
 #define dbprep_bind_res_short(idx,var) dbprep_bind_res_cmn(idx,&var,MYSQL_TYPE_SHORT);
 #define dbprep_bind_res_str(idx,var, len) dbprep_bind_res_cmn(idx,&var,MYSQL_TYPE_STRING); \
@@ -191,7 +270,9 @@ static MYSQL_STMT* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
 #define dbprep_bind_res_int_ptr(idx,var) dbprep_bind_res_cmn(idx,var,MYSQL_TYPE_LONG);
 
 #define dbprep_dec_res_int(idx,var) int var; dbprep_bind_res_int(idx,var);
+#endif // HAVE_MYSQL
 
+#ifdef HAVE_MYSQL
 /* NOTE: my_bool is replaceed with 'bool' for MySQL 8.0.1+, but is still used for MariaDB
  *  A build flag may be needed to switch between them based on My/Maria-SQL version to support both.
  */
@@ -203,14 +284,49 @@ static MYSQL_STMT* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
 	bool is_err[cols];										\
 	unsigned long lengths[params];							\
 	memset(bind_res,0,sizeof(bind_res));					\
-	memset(bind_param,0,sizeof(bind_param));
+	memset(bind_param,0,sizeof(bind_param));       \
+	int return_status;
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+#define dbprep_declare(dbidx,idx, params, cols)								\
+	PGconn *conn = gConn[dbidx];									\
+	char* stmtName = queries[dbidx][idx];								\
+	int nParams = params;										\
+	const char *paramValues[nParams];								\
+	int paramLengths[nParams];									\
+	int paramFormats[nParams];									\
+    	int resultFormat = 1; /* binary results */							\
+	PGresult   *res;										\
+	uint8_t  net8Vals[nParams];									\
+	uint16_t net16Vals[nParams];									\
+	uint32_t net32Vals[nParams];									\
+	uint64_t net64Vals[nParams];
+#endif // HAVE_POSTGRESQL
 
+#ifdef HAVE_POSTGRESQL
+#define dbexec_prepared	res = PQexecPrepared(conn, stmtName, nParams, paramValues, paramLengths, paramFormats, resultFormat); 
+#define dbtest_result(expected) ((PQresultStatus(res) == expected) ? 0 : 1)
+#endif // HAVE_POSTGRESQL
+ 
+#ifdef HAVE_MYSQL
 #define DB_CHKVOID(status) if(status!=0) { query_log_err(status); return; }
 #define DB_CHKINT(status) if (status!=0) { query_log_err(status); return AMP_FAIL; }
 #define DB_CHKNULL(status) if(status!=0) { query_log_err(status); return NULL; }
 #define DB_CHKUSR(status,usr) if(status!=0) { query_log_err(status); usr; }
-
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+#define DB_CHKVOID(status) if(status!=0) { query_log_err(status); PQclear(res); return; }
+#define DB_CHKINT(status) if (status!=0) { query_log_err(status); PQclear(res); return AMP_FAIL; }
+#define DB_CHKNULL(status) if(status!=0) { query_log_err(status); PQclear(res); return NULL; }
+#define DB_CHKUSR(status,usr) if(status!=0) { query_log_err(status); PQclear(res); usr; }
+#endif // HAVE_POSTGRESQL
+ 
+#ifdef HAVE_MYSQL
 #define query_log_err(status) AMP_DEBUG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__,__LINE__, mysql_stmt_error(stmt), mysql_stmt_errno(stmt));
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+#define query_log_err(status) AMP_DBG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__,__LINE__, PQresultErrorMessage(res), status);
+#endif // HAVE_POSTGRESQL
 
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.
@@ -243,8 +359,15 @@ void db_log_msg(size_t dbidx, const char* msg, const char* details, int level, c
 	dbprep_bind_param_str(3,fun);
 	dbprep_bind_param_str(4,file);
 	dbprep_bind_param_int(5,line);
-	DB_CHKVOID(mysql_stmt_bind_param(stmt, bind_param));
-	DB_CHKVOID(mysql_stmt_execute(stmt));
+	#ifdef HAVE_MYSQL
+ 	DB_CHKVOID(mysql_stmt_bind_param(stmt, bind_param));
+ 	DB_CHKVOID(mysql_stmt_execute(stmt));
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKVOID(dbtest_result(PGRES_COMMAND_OK))
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 }
 
 /******************************************************************************
@@ -267,8 +390,14 @@ void db_log_msg(size_t dbidx, const char* msg, const char* details, int level, c
 
 static inline void db_mgt_txn_commit(int dbidx)
 {
-	if (dbidx < MGR_NUM_SQL_CONNECTIONS && gConn[dbidx] != NULL) {
-		mysql_commit(gConn[dbidx]);
+	 	if (dbidx < MGR_NUM_SQL_CONNECTIONS && gConn[dbidx] != NULL) {
+		#ifdef HAVE_MYSQL
+ 		mysql_commit(gConn[dbidx]);
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		PGresult *res = PQexec(gConn[dbidx], "END");
+    	PQclear(res);
+		#endif // HAVE_POSTGRESQL]);
 	}
 }
 
@@ -296,13 +425,14 @@ static inline void db_mgt_txn_commit(int dbidx)
  *****************************************************************************/
 uint32_t db_incoming_initialize(amp_tv_t timestamp, eid_t sender_eid)
 {
-	uint32_t rtv = 0; // Note: An ID of 0 is reserved as an error condition. MySQL will never create a new entry for this table with a value of 0.
+	uint32_t rtv = 0; // Note: An ID of 0 is reserved as an error condition. MySQL will never create a new entry for this table with a value of 0. // TODO postgresql is that true for postgresql too?
 	char *name = sender_eid.name;
 	CHKZERO(!db_mgt_connected(DB_RPT_CON));
 
 	dbprep_declare(DB_RPT_CON, MSGS_INCOMING_CREATE, 2, 1);
 	dbprep_bind_param_int(0,timestamp);
 	dbprep_bind_param_str(1,name);
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 
 	dbprep_bind_res_int(0, rtv);
@@ -315,6 +445,14 @@ uint32_t db_incoming_initialize(amp_tv_t timestamp, eid_t sender_eid)
 	mysql_stmt_fetch(stmt);
 
 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
+	char *iptr = PQgetvalue(res, 0, 0);
+	rtv = ntohl(*((uint32_t *) iptr));
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 	return rtv;
 }
@@ -450,7 +588,12 @@ uint32_t db_mgt_init(sql_db_t parms, uint32_t clear, uint32_t log)
 	// A mysql_commit or mysql_rollback will automatically start a new transaction as the old one is closed
 	if (gConn[DB_RPT_CON] != NULL)
 	{
-		mysql_autocommit(gConn[DB_RPT_CON], 0);
+		#ifdef HAVE_MYSQL
+ 		mysql_autocommit(gConn[DB_RPT_CON], 0);
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		//TODO postgresql : turn off autocommit
+		#endif // HAVE_POSTGRESQL
 		DB_LOG_INFO(DB_CTRL_CON, "NM Manager Connections Initialized"); 
 	}
 	
@@ -467,20 +610,43 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
 	
 	if(gConn[idx] == NULL)
 	{
+		#ifdef HAVE_MYSQL
 		gConn[idx] = mysql_init(NULL);
+		#endif // HAVE_MYSQL
 		gParms = parms;
 		gInTxn = 0;
 
 		AMP_DEBUG_INFO("db_mgt_init", "(%s,%s,%s,%s)", parms.server, parms.username, parms.password, parms.database);
+		#ifdef HAVE_MYSQL
 		if (!mysql_real_connect(gConn[idx], parms.server, parms.username, parms.password, parms.database, 0, NULL, 0))
 		{
 			if (gConn[idx] != NULL)
 			{
 				mysql_close(gConn[idx]);
 			}
-			gConn[idx] = NULL;
+			
 			AMP_DEBUG_WARN("db_mgt_init", "SQL Error: %s", mysql_error(gConn[idx]));
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		gConn[idx] = PQsetdbLogin(parms.server, NULL, NULL, NULL, parms.database, parms.username, parms.password);
+		if(gConn[idx] == NULL)
+		{
+			if(log > 0)
+            {
+				AMP_DEBUG_WARN("db_mgt_init", "SQL Error: Null connection object returned", NULL);
+            }
+		}
+		else if(PQstatus(gConn[idx]) != CONNECTION_OK)
+		{
+			if(log > 0)
+            {
+				AMP_DEBUG_WARN("db_mgt_init", "SQL Error: %s", PQerrorMessage(gConn[idx]));
+            }
+			PQfinish(gConn[idx]);
 
+		#endif // HAVE_POSTGRESQL
+		
+			gConn[idx] = NULL;  // This was previously before the log entry which is likely a mistake
 			AMP_DEBUG_EXIT("db_mgt_init", "-->0", NULL);
 			return 0;
 		}
@@ -488,6 +654,7 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
 		AMP_DEBUG_INFO("db_mgt_init", "Connected to Database.", NULL);
 
 		// Initialize prepared queries
+		#ifdef HAVE_MYSQL
 		queries[idx][AC_CREATE]         = db_mgr_sql_prepare(idx,"SELECT create_ac(?,?)"); // num_entries, use_desc
 		queries[idx][AC_INSERT]         = db_mgr_sql_prepare(idx,"SELECT insert_ac_actual_entry(?,?, ?)"); // ac_id, obj_actual_definition_id, idx
 
@@ -552,7 +719,7 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
 
 
 		queries[idx][MSGS_AGENT_GROUP_ADD_NAME] = db_mgr_sql_prepare(idx,"SELECT insert_message_group_agent_name(?, ?)"); // group_id, agent_name
-//		queries[idx][MSGS_AGENT_GROUP_ADD_ID] = db_mgr_sql_prepare(idx,"SELECT insert_message_group_agent_id(?, ?)"); // group_id, agent_id
+	//		queries[idx][MSGS_AGENT_GROUP_ADD_ID] = db_mgr_sql_prepare(idx,"SELECT insert_message_group_agent_id(?, ?)"); // group_id, agent_id
 		queries[idx][MSGS_AGENT_MSG_ADD] = db_mgr_sql_prepare(idx,"CALL SP__insert_message_entry_agent(?, ?)"); // message_id, agent_name
 
 		//skywalker uses anms patch to fix these reported issues
@@ -570,12 +737,90 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
 		// TODO MSGS_TABLE_SET_INSERT/GET
 
 		queries[idx][DB_LOG_MSG] = db_mgr_sql_prepare(idx, "INSERT INTO nm_mgr_log (msg,details,level,source,file,line) VALUES(?,?,?,?,?,?)");
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL 
+		queries[idx][AC_CREATE]         = db_mgr_sql_prepare(idx,"SELECT create_ac($1::int4,$2::varchar)", "AC_CREATE", 2, NULL); // num_entries, use_desc
+		queries[idx][AC_INSERT]         = db_mgr_sql_prepare(idx,"SELECT insert_ac_actual_entry($1::int4, $2::int4, $3::int4)", "AC_INSERT", 3, NULL); // ac_id, obj_actual_definition_id, idx
+
+		queries[idx][AC_GET] = db_mgr_sql_prepare(idx, "SELECT ace.obj_actual_definition_id "
+												  "FROM ari_collection_entry ac "
+												  "LEFT JOIN ari_collection_actual_entry ace ON ace.ac_entry_id=ac.ac_entry_id "
+												  "WHERE ac.ac_id=$1::int4 "
+												  "ORDER BY ac.order_num ASC", 
+												  //"SELECT obj_actual_definition_id FROM vw_ac WHERE ac_id=$2"
+												  "AC_GET", 1, NULL
+			);
+
+
+		queries[idx][ARI_GET]           = db_mgr_sql_prepare(idx,"SELECT data_type_id, adm_type, adm_enum, obj_enum, tnvc_id, issuing_org FROM vw_ari WHERE obj_actual_definition_id=$1::int4", "ARI_GET", 1, NULL);
+		queries[idx][ARI_GET_META]      = db_mgr_sql_prepare(idx, "SELECT vof.obj_metadata_id, cfd.fp_spec_id "
+															 "FROM vw_obj_formal_def vof "
+															 "LEFT JOIN control_formal_definition cfd ON cfd.obj_formal_definition_id=vof.obj_formal_definition_id "
+															 "WHERE vof.obj_enum=$1::int4 AND vof.data_type_id=$2::int4 AND vof.adm_enum=$3::int4",
+															 "ARI_GET_META", 3, NULL
+			);
 		
+		queries[idx][ARI_INSERT_CTRL]   = db_mgr_sql_prepare(idx,"SELECT insert_ari_ctrl($1::int4,$2::int4,NULL)", "ARI_INSERT_CTRL", 2, NULL); // obj_metadata_id, actual_parmspec_id, description
+		
+		queries[idx][TNVC_CREATE]       = db_mgr_sql_prepare(idx,"SELECT create_tnvc(NULL)", "TNVC_CREATE", 0, NULL); // use_desc
+		queries[idx][TNVC_INSERT_AC]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_ac_entry($1::int4,NULL,NULL,$2::int4) ", "TNVC_INSERT_AC", 2, NULL); // tnvc_id, integer val
+		queries[idx][TNVC_INSERT_ARI]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_obj_entry($1::int4,NULL,NULL,$2::int4) ", "TNVC_INSERT_ARI", 2, NULL); // tnvc_id, integer val	
+		queries[idx][TNVC_INSERT_TNVC]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_tnvc_entry($1::int4,NULL,NULL,$2::int4) ", "TNVC_INSERT_TNVC", 2, NULL); // tnvc_id, integer val
+
+		queries[idx][TNVC_INSERT_STR]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_str_entry($1::int4,NULL,NULL,$2::varchar) ", "TNVC_INSERT_STR", 2, NULL); // tnvc_id, varchar val
+		queries[idx][TNVC_INSERT_BOOL]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_bool_entry($1::int4,NULL,NULL,$2::boolean) ", "TNVC_INSERT_BOOL", 2, NULL); // tnvc_id, boolean val
+		queries[idx][TNVC_INSERT_BYTE]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_byte_entry($1::int4,NULL,NULL,$2::int2) ", "TNVC_INSERT_BYTE", 2, NULL); // tnvc_id, smallint val
+		queries[idx][TNVC_INSERT_UINT]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_uint_entry($1::int4,NULL,NULL,$2::int4) ", "TNVC_INSERT_UINT", 2, NULL); // tnvc_id, integer val
+		queries[idx][TNVC_INSERT_VAST]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_vast_entry($1::int4,NULL,NULL,$2::bigint) ", "TNVC_INSERT_VAST", 2, NULL); // tnvc_id, bigint val
+		queries[idx][TNVC_INSERT_TV]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_tv_entry($1::int4,NULL,NULL,$2::int4) ", "TNVC_INSERT_TV", 2, NULL); // tnvc_id, integer val
+		queries[idx][TNVC_INSERT_TS]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_ts_entry($1::int4,NULL,NULL,$2::int4) ", "TNVC_INSERT_TS", 2, NULL); // tnvc_id, integer val
+		queries[idx][TNVC_INSERT_UVAST]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_uvast_entry($1::int4,NULL,NULL,$2::bigint) ", "TNVC_INSERT_UVAST", 2, NULL); // tnvc_id, bigint val
+		queries[idx][TNVC_INSERT_REAL32]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_real32_entry($1::int4,NULL,NULL,$2::float8) ", "TNVC_INSERT_REAL32", 2, NULL); // tnvc_id, double val
+		queries[idx][TNVC_INSERT_REAL64]    = db_mgr_sql_prepare(idx,"SELECT insert_tnvc_real64_entry($1::int4,NULL,NULL,$2::float8) ", "TNVC_INSERT_REAL64", 2, NULL); // tnvc_id, double val
+
+		
+ 		
+		queries[idx][TNVC_VIEW]         = db_mgr_sql_prepare(idx,"SELECT * FROM type_name_value_collection WHERE tnvc_id = $1::int4", "TNVC_VIEW", 1, NULL);
+		queries[idx][TNVC_ENTRIES] = db_mgr_sql_prepare(idx,"SELECT data_type_id, int_value, uint_value, obj_value, str_value, ac_value, tnvc_value FROM vw_tnvc_entries WHERE tnvc_id = $1::int4 ORDER BY order_num ASC",
+																"TNVC_ENTRIES", 1, NULL);
+		
+		queries[idx][TNVC_PARMSPEC_INSERT_AC]   = db_mgr_sql_prepare(idx,"CALL SP__insert_actual_parms_ac($1::int4,$2::int4,$3::int4)", "TNVC_PARMSPEC_INSERT_AC", 3, NULL); // ap_spec_id, order_num, ac_id
+		queries[idx][TNVC_PARMSPEC_INSERT_TNVC] = db_mgr_sql_prepare(idx,"CALL SP__insert_actual_parms_tnvc($1::int4,$2::int4,$3::int4)", "TNVC_PARMSPEC_INSERT_TNVC", 3, NULL); // ap_spec_id, order_num, tnvc_id
+		queries[idx][TNVC_PARMSPEC_CREATE]      = db_mgr_sql_prepare(idx,"SELECT create_actual_parmspec_tnvc($1::int4,$2::int4,NULL)", "TNVC_PARMSPEC_CREATE", 2, NULL); // formal_def_id, tnvc_id, description
+
+		queries[idx][MSGS_GET]         = db_mgr_sql_prepare(idx,"SELECT * FROM message_group WHERE group_id=$1::int4", "MSGS_GET", 1, NULL);
+		queries[idx][MSG_GET_AGENTS]  = db_mgr_sql_prepare(idx,"SELECT agent_id_string FROM vw_message_agents WHERE message_id=$1::int4", "MSG_GET_AGENTS", 1, NULL);
+		queries[idx][MSGS_GET_AGENTS]  = db_mgr_sql_prepare(idx,"SELECT agent_id_string FROM vw_message_group_agents WHERE group_id=$1::int4", "MSGS_GET_AGENTS", 1, NULL);
+		queries[idx][MSGS_ENTRIES_GET] = db_mgr_sql_prepare(idx,"SELECT * FROM message_group_entry WHERE group_id=$1::int4 ORDER BY order_num ASC", "MSGS_ENTRIES_GET", 1, NULL);
+		queries[idx][MSGS_ENTRIES_GET_AGENTS] = db_mgr_sql_prepare(idx,"SELECT * FROM vw_message_agents WHERE message_id=$1::int4", "MSGS_ENTRIES_GET_AGENTS", 1, NULL);
+		queries[idx][MSGS_UPDATE_GROUP_STATE] = db_mgr_sql_prepare(idx,"UPDATE message_group mg SET state_id=$1::int4 WHERE group_id=$2::int4", "MSGS_UPDATE_GROUP_STATE", 2, NULL);
+		queries[idx][MSGS_OUTGOING_GET]    = db_mgr_sql_prepare(idx,"SELECT group_id, ts FROM vw_ready_outgoing_message_groups", "MSGS_OUTGOING_GET", 0, NULL);
+		queries[idx][MSGS_OUTGOING_CREATE] = db_mgr_sql_prepare(idx,"INSERT INTO message_group (state_id, is_outgoing) VALUES(1, TRUE)", "MSGS_OUTGOING_CREATE", 0, NULL);
+		queries[idx][MSGS_INCOMING_GET]    = db_mgr_sql_prepare(idx,"SELECT * FROM vw_ready_incoming_message_groups", "MSGS_INCOMING_GET", 0, NULL);
+		queries[idx][MSGS_INCOMING_CREATE] = db_mgr_sql_prepare(idx,"SELECT create_incoming_message_group($1::int4, $2::varchar)", "MSGS_INCOMING_CREATE", 2, NULL); // Received timestamp, From Agent name (ie: ipn:2.1)
+		
+		queries[idx][MSGS_AGENT_GROUP_ADD_NAME] = db_mgr_sql_prepare(idx,"SELECT insert_message_group_agent_name($1::int4, $2::varchar)", "MSGS_AGENT_GROUP_ADD_NAME", 2, NULL); // group_id, agent_name
+	//		queries[idx][MSGS_AGENT_GROUP_ADD_ID] = db_mgr_sql_prepare(idx,"SELECT insert_message_group_agent_id($1, $2)", "MSGS_AGENT_GROUP_ADD_ID", 2, NULL); // group_id, agent_id
+		queries[idx][MSGS_AGENT_MSG_ADD] = db_mgr_sql_prepare(idx,"CALL SP__insert_message_entry_agent($1::int4, $2::varchar)", "MSGS_AGENT_MSG_ADD", 2, NULL); // message_id, agent_name
+		queries[idx][MSGS_ADD_REPORT_SET_ENTRY] = db_mgr_sql_prepare(idx,"SELECT insert_message_report_entry($1::int4, NULL, $2::int4, $3::int4, $4::int4)", "MSGS_ADD_REPORT_SET_ENTRY", 4, NULL); // message_id, order_num, ari_id, tnvc_id, ts
+
+		queries[idx][MSGS_REGISTER_AGENT_INSERT] = db_mgr_sql_prepare(idx,"SELECT add_message_register_entry($1::int4,$2::boolean,$3::boolean,$4::boolean,NULL,$5::varchar)", "MSGS_REGISTER_AGENT_INSERT", 5, NULL); // group_id, ack, nak, acl, idx, agent_name
+		queries[idx][MSGS_REGISTER_AGENT_GET] = db_mgr_sql_prepare(idx,"SELECT * FROM message_agents WHERE message_id = $1::int4", "MSGS_REGISTER_AGENT_GET", 1, NULL);
+		queries[idx][MSGS_PERF_CTRL_INSERT] = db_mgr_sql_prepare(idx,"SELECT add_message_ctrl_entry($1::int4, $2::boolean, $3::boolean, $4::boolean, $5::int4, $6::int4, $7::int4)", "MSGS_PERF_CTRL_INSERT", 7, NULL); // group_id, ack, nak, acl, idx, timevalue or NULL, ac_id
+		queries[idx][MSGS_PERF_CTRL_GET] = db_mgr_sql_prepare(idx,"SELECT tv, ac_id FROM message_perform_control WHERE message_id=$1::int4", "MSGS_PERF_CTRL_GET", 1, NULL);
+		queries[idx][MSGS_REPORT_SET_INSERT] = db_mgr_sql_prepare(idx,"SELECT add_message_report_set($1::int4,$2::boolean,$3::boolean,$4::boolean,NULL)", "MSGS_REPORT_SET_INSERT", 4, NULL); // group_id, ack, nak, acl, idx
+		queries[idx][MSGS_REPORT_SET_GET] = db_mgr_sql_prepare(idx,"SELECT * FROM report_template_actual_definition WHERE obj_actual_definition_id=$1::int4", "MSGS_REPORT_SET_GET", 1, NULL);
+		
+		// TODO MSGS_TABLE_SET_INSERT/GET
+
+		queries[idx][DB_LOG_MSG] = db_mgr_sql_prepare(idx, "INSERT INTO nm_mgr_log (msg,details,level,source,file,line) VALUES($1::varchar,$2::text,$3::int4,$4::varchar,$5::varchar,$6::int4)", "DB_LOG_MSG", 6, NULL);
+	#endif // HAVE_POSTGRESQL
+	
 	}
 
 	AMP_DEBUG_EXIT("db_mgt_init", "-->1", NULL);
 	return 1;
-}
+	}
 
 
 
@@ -659,23 +904,55 @@ int db_mgt_clear_table(char *table)
 		return 1;
 	}
 
-	if (db_mgt_query_insert(NULL,"SET FOREIGN_KEY_CHECKS=0",NULL) != AMP_OK)
+	#ifdef HAVE_MYSQL
+	char *disableChecksQ = "SET FOREIGN_KEY_CHECKS=0";
+	char *enableChecksQ = "SET FOREIGN_KEY_CHECKS=1";
+	char *checksArgs = NULL;
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	char *disableChecksQ = "ALTER TABLE %s DISABLE TRIGGER ALL";
+	char *enableChecksQ = "ALTER TABLE %s ENABLE TRIGGER ALL";
+	char *checksArgs = table;
+	#endif // HAVE_POSTGRESQL
+
+	if (db_mgt_query_insert(NULL,disableChecksQ,checksArgs) != AMP_OK)
 	{
-		AMP_DEBUG_ERR("db_mgt_clear_table", "SQL Error: %s", mysql_error(gConn[0]));
+		AMP_DEBUG_ERR("db_mgt_clear_table", "SQL Error: %s", 
+			#ifdef HAVE_MYSQL
+			mysql_error(gConn[0])
+			#endif // HAVE_MYSQL
+			#ifdef HAVE_POSTGRESQL
+			PQerrorMessage(gConn[0])
+			#endif // HAVE_POSTGRESQL
+		);
 		AMP_DEBUG_EXIT("db_mgt_clear_table", "--> 0", NULL);
 		return 1;
 	}
 
 	if (db_mgt_query_insert(NULL,"TRUNCATE %s", table) != AMP_OK)
 	{
-		AMP_DEBUG_ERR("db_mgt_clear_table", "SQL Error: %s", mysql_error(gConn[0]));
+		AMP_DEBUG_ERR("db_mgt_clear_table", "SQL Error: %s",  
+			#ifdef HAVE_MYSQL
+			mysql_error(gConn[0])
+			#endif // HAVE_MYSQL
+			#ifdef HAVE_POSTGRESQL
+			PQerrorMessage(gConn[0])
+			#endif // HAVE_POSTGRESQL
+		);
 		AMP_DEBUG_EXIT("db_mgt_clear_table", "--> 0", NULL);
 		return 1;
 	}
 
-	if (db_mgt_query_insert(NULL,"SET FOREIGN_KEY_CHECKS=1", NULL) != AMP_OK)
+	if (db_mgt_query_insert(NULL,enableChecksQ,checksArgs) != AMP_OK)
 	{
-		AMP_DEBUG_ERR("db_mgt_clear_table", "SQL Error: %s", mysql_error(gConn[0]));
+		AMP_DEBUG_ERR("db_mgt_clear_table", "SQL Error: %s",  
+			#ifdef HAVE_MYSQL
+			mysql_error(gConn[0])
+			#endif // HAVE_MYSQL
+			#ifdef HAVE_POSTGRESQL
+			PQerrorMessage(gConn[0])
+			#endif // HAVE_POSTGRESQL
+		);
 		AMP_DEBUG_EXIT("db_mgt_clear_table", "--> 0", NULL);
 		return 1;
 	}
@@ -710,13 +987,27 @@ void db_mgt_close_conn(size_t idx) {
 	if(gConn[idx] != NULL)
 	{
 		// Free prepared queries (mysql_stmt_close())
+		#ifdef HAVE_MYSQL
 		for(int i = 0; i < MGR_NUM_QUERIES; i++) {
 			mysql_stmt_close(queries[idx][i]);
 		}
-
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		/*  There is no libpq function for deleting a prepared statement, 
+			the SQL DEALLOCATE statement can be used for that purpose but 
+			if you do not explicitly deallocate a prepared statement, it is deallocated when the session ends. 
+			So no actuaion should be needed*/
+		#endif // HAVE_POSTGRESQL
 		// Close the connection
+		#ifdef HAVE_MYSQL
 		mysql_close(gConn[idx]);
 		mysql_library_end();
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		/* close the connection to the database and cleanup */
+	    PQfinish(gConn[idx]);
+		#endif // HAVE_POSTGRESQL
+
 		gConn[idx] = NULL;
 	}
 
@@ -752,7 +1043,12 @@ int   db_mgt_connected(size_t idx)
 		return -1;
 	}
 
-	result = mysql_ping(gConn[idx]);
+	#ifdef HAVE_MYSQL
+ 	result = mysql_ping(gConn[idx]);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	result = (PQstatus(gConn[idx]) == CONNECTION_OK) ? 0 : 1;
+	#endif // HAVE_POSTGRESQL
 	if(result != 0)
 	{
 		while(num_tries < SQL_CONN_TRIES)
@@ -762,12 +1058,22 @@ int   db_mgt_connected(size_t idx)
 			 * nm_mgr.c HAVE_MYSQL passes gMgrDB.sql_info to db_mgt_init which does the connection
 			 */
 			db_mgt_init_con(idx, gParms);
-			if((result = mysql_ping(gConn[idx])) == 0)
+			#ifdef HAVE_MYSQL
+ 			if((result = mysql_ping(gConn[idx])) == 0)
+			#endif // HAVE_MYSQL
+			#ifdef HAVE_POSTGRESQL
+			if((result = (PQstatus(gConn[idx]) == CONNECTION_OK) ? 0 : 1) == 0)
+ 			#endif // HAVE_POSTGRESQL
 			{
 				if (idx == DB_RPT_CON) {
 					// Disable autocommit to ensure all queries are executed within a transaction to ensure consistency
 					// A mysql_commit or mysql_rollback will automatically start a new transaction as the old one is closed
-					mysql_autocommit(gConn[DB_RPT_CON], 0);
+					#ifdef HAVE_MYSQL
+ 					mysql_autocommit(gConn[DB_RPT_CON], 0);
+					#endif // HAVE_MYSQL
+					#ifdef HAVE_POSTGRESQL
+					//TODO postgresql : turn off autocommit
+					#endif // HAVE_POSTGRESQL
 				}
 				DB_LOG_MSG(idx, "NM DB Connection Restored", NULL, AMP_OK); 
 				return 0;
@@ -781,6 +1087,7 @@ int   db_mgt_connected(size_t idx)
 	return result;
 }
 
+#ifdef HAVE_MYSQL
 static MYSQL_STMT* db_mgr_sql_prepare(size_t idx, const char* query) {
 	MYSQL_STMT* rtv = mysql_stmt_init(gConn[idx]);
 	if (rtv == NULL) {
@@ -796,6 +1103,27 @@ static MYSQL_STMT* db_mgr_sql_prepare(size_t idx, const char* query) {
 	}
 	return rtv;
 }
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+static char* db_mgr_sql_prepare(size_t idx, const char* query, char *stmtName, int nParams, const Oid *paramTypes) {
+	PGresult *pgresult = PQprepare(gConn[idx], stmtName, query, nParams, paramTypes);
+
+	if (pgresult == NULL) { // out of memory or failure to send the conmmand at all
+		AMP_DBG_ERR("Failed to allocate statement %s", query);
+	}
+
+	if(PQresultStatus(pgresult) != PGRES_COMMAND_OK)
+	{
+		AMP_DBG_ERR("Failed to prepare %s: errno %d, error= %s", query, PQresultStatus(pgresult),PQresultErrorMessage(pgresult));
+		/* there is no libpq function for deleting a prepared statement, the SQL DEALLOCATE statement can be used for that purpose but 
+			if you do not explicitly deallocate a prepared statement, it is deallocated when the session ends. 
+			So no actuaion should be needed*/
+	}
+
+	PQclear(pgresult);
+	return stmtName;
+}
+#endif // HAVE_POSTGRESQL
 
 
 int  db_mgr_sql_persist()
@@ -999,7 +1327,12 @@ int  db_mgr_sql_init()
  *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
  *****************************************************************************/
 
-int32_t db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
+#ifdef HAVE_MYSQL
+ int32_t db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+int32_t db_mgt_query_fetch(PGresult **res, char *format, ...)
+#endif // HAVE_POSTGRESQL
 {
 	char query[1024];
 	size_t idx = DB_RPT_CON; // TODO
@@ -1027,20 +1360,39 @@ int32_t db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
 		vsnprintf(query, 1024, format, args);
 		va_end(args);
 
-		if (mysql_query(gConn[idx], query))
+#ifdef HAVE_MYSQL
+ 		if (mysql_query(gConn[idx], query))
+ 		{
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		*res = PQexec(gConn[idx], query);
+		if((PQresultStatus(*res) != PGRES_TUPLES_OK) && (PQresultStatus(*res) != PGRES_COMMAND_OK))
 		{
-			AMP_DEBUG_ERR("db_mgt_query_fetch", "Database Error: %s",
-					mysql_error(gConn[idx]));
+			PQclear(*res);
+		#endif // HAVE_POSTGRESQL
+ 			AMP_DEBUG_ERR("db_mgt_query_fetch", "Database Error: %s",
+					#ifdef HAVE_MYSQL
+					mysql_error(gConn[idx])
+					#endif // HAVE_MYSQL
+					#ifdef HAVE_POSTGRESQL
+					PQerrorMessage(gConn[idx])
+					#endif // HAVE_POSTGRESQL
+			);
 			AMP_DEBUG_EXIT("db_mgt_query_fetch", "-->%d", AMP_FAIL);
 			return AMP_FAIL;
 		}
 
+		#ifdef HAVE_MYSQL
 		if((*res = mysql_store_result(gConn[idx])) == NULL)
 		{
 			AMP_DEBUG_ERR("db_mgt_query_fetch", "Can't get result.", NULL);
 			AMP_DEBUG_EXIT("db_mgt_query_fetch", "-->%d", AMP_FAIL);
 			return AMP_FAIL;
 		}
+			#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		PQclear(*res);
+		#endif // HAVE_POSTGRESQL
 	}
 	else
 	{
@@ -1104,32 +1456,57 @@ int32_t db_mgt_query_insert(uint32_t *idx, char *format, ...)
 		}
 		va_end(args);
 
-		if (mysql_query(gConn[db_idx], query))
+	#ifdef HAVE_MYSQL
+ 		if (mysql_query(gConn[db_idx], query))
+ 		{
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		PGresult *res = PQexec(gConn[db_idx], query);
+		if(dbtest_result(PGRES_COMMAND_OK) != 0 && dbtest_result(PGRES_TUPLES_OK) != 0)
 		{
-			AMP_DEBUG_ERR("db_mgt_query_insert", "Database Error: %s",
-					mysql_error(gConn[db_idx]));
+			PQclear(res);
+		#endif // HAVE_POSTGRESQL
+ 			AMP_DEBUG_ERR("db_mgt_query_insert", "Database Error: %s",
+					#ifdef HAVE_MYSQL
+					mysql_error(gConn[db_idx])
+					#endif // HAVE_MYSQL
+					#ifdef HAVE_POSTGRESQL
+					PQerrorMessage(gConn[db_idx])
+					#endif // HAVE_POSTGRESQL
+			);
 			AMP_DEBUG_EXIT("db_mgt_query_insert", "-->%d", AMP_FAIL);
 			return AMP_FAIL;
 		}
 
 		if(idx != NULL)
 		{
-			if((*idx = (uint32_t) mysql_insert_id(gConn[db_idx])) == 0)
+			#ifdef HAVE_MYSQL
+ 			if((*idx = (uint32_t) mysql_insert_id(gConn[db_idx])) == 0)
+			#endif // HAVE_MYSQL
+			#ifdef HAVE_POSTGRESQL
+			//requires query string to include "RETURNING id"
+			char *iptr = PQgetvalue(res, 0, 0);
+			*idx = ntohl(*((uint32_t *) iptr));
+			if(*idx == 0)
+			#endif // HAVE_POSTGRESQL
 			{
 				AMP_DEBUG_ERR("db_mgt_query_insert", "Unknown last inserted row.", NULL);
 				AMP_DEBUG_EXIT("db_mgt_query_insert", "-->%d", AMP_FAIL);
 				return AMP_FAIL;
 			}
 		}
+		#ifdef HAVE_POSTGRESQL
+		PQclear(res);
+		#endif // HAVE_POSTGRESQL
 	}
 	else
 	{
-		AMP_DEBUG_ERR("db_mgt_query_fetch", "DB not connected.", NULL);
-		AMP_DEBUG_EXIT("db_mgt_query_fetch", "-->%d", AMP_SYSERR);
+		AMP_DEBUG_ERR("db_mgt_query_insert", "DB not connected.", NULL);
+		AMP_DEBUG_EXIT("db_mgt_query_insert", "-->%d", AMP_SYSERR);
 		return AMP_SYSERR;
 	}
 
-	AMP_DEBUG_EXIT("db_mgt_query_fetch", "-->%d", AMP_OK);
+	AMP_DEBUG_EXIT("db_mgt_query_insert", "-->%d", AMP_OK);
 	return AMP_OK;
 }
 
@@ -1225,6 +1602,8 @@ static int32_t db_tx_msg_group_agents(nmmgr_t *mgr, int group_id, msg_grp_t *msg
 	int rtv = AMP_OK;
 	dbprep_declare(DB_CTRL_CON, MSGS_GET_AGENTS, 1, 1);
 	dbprep_bind_param_int(0,group_id);
+	
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 
         eid_t destination;
@@ -1237,12 +1616,28 @@ static int32_t db_tx_msg_group_agents(nmmgr_t *mgr, int group_id, msg_grp_t *msg
 
 	while(!mysql_stmt_fetch(stmt) )
 	{
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+  eid_t destination;
+  dbprep_bind_res_str(0, destination.name, AMP_MAX_EID_LEN);
+	dbexec_prepared;
+	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
+	for (int i = 0; i < PQntuples(res); i++)
+	{
+	#endif // HAVE_POSTGRESQL
 		if (mif_send_grp(&mgr->mif, msg_group, &destination) != AMP_OK) {
 			rtv = AMP_FAIL;
 			DB_LOG_MSG(DB_CTRL_CON, "Failed to send group to agent", destination.name, AMP_FAIL);
 		}
 	}
-	mysql_stmt_free_result(stmt);
+
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
+
 	return rtv;
 
 }
@@ -1271,6 +1666,8 @@ int db_query_tnvc(size_t dbidx, int tnvc_id, tnvc_t *parms)
 
 	dbprep_declare(dbidx, TNVC_ENTRIES, 1, NUM_RES_COLS);
 	dbprep_bind_param_int(0,tnvc_id);
+
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 
 	// Bind results
@@ -1292,16 +1689,58 @@ int db_query_tnvc(size_t dbidx, int tnvc_id, tnvc_t *parms)
 	mysql_stmt_bind_result(stmt, bind_res);
 	mysql_stmt_store_result(stmt);
 	int array_len = mysql_stmt_num_rows(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
+	int array_len = PQntuples(res);
+	#endif // HAVE_POSTGRESQL
 	int *cache_ids = STAKE(array_len * sizeof(int) );
 	
 	// Create vector
 	parms->values = vec_create(array_len, tnv_cb_del,tnv_cb_comp,tnv_cb_copy, VEC_FLAG_AS_STACK, &rtv);
 	if (rtv != AMP_OK) {
-		mysql_stmt_free_result(stmt);
+		#ifdef HAVE_MYSQL
+ 		mysql_stmt_free_result(stmt);
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		PQclear(res);
+		#endif // HAVE_POSTGRESQL
+	
 		return rtv;
 	}
 
-	for(int i = 0; !mysql_stmt_fetch(stmt) && rtv == AMP_OK; i++)
+	#ifdef HAVE_MYSQL
+ 	for(int i = 0; !mysql_stmt_fetch(stmt) && rtv == AMP_OK; i++)
+ 	{
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	/* Use PQfnumber to avoid assumptions about field order in result */
+	int tnv_type_fnum = PQfnumber(res, "data_type_id");
+    int vast_val_fnum = PQfnumber(res, "int_value");
+    int uvast_val_fnum = PQfnumber(res, "uint_value");
+    int obj_val_fnum = PQfnumber(res, "obj_value");
+    int str_val_fnum = PQfnumber(res, "str_value");
+    int ac_val_fnum = PQfnumber(res, "ac_value");
+    int tnvc_val_fnum = PQfnumber(res, "tnvc_value");
+	for (int i = 0; i < array_len && rtv == AMP_OK; i++)
+	{
+		int tnv_type;
+		char *iptr = PQgetvalue(res, i, tnv_type_fnum);
+		tnv_type = ntohl(*((uint32_t *) iptr));
+		//TODO postgresql : read result vast_val
+		//TODO postgresql : read result uvast_val
+		//TODO postgresql : read result obj_val
+		//TODO postgresql : read result str_val
+		int ac_val;
+		iptr = PQgetvalue(res, i, ac_val_fnum);
+		ac_val = ntohl(*((uint32_t *) iptr));
+		
+		int tnvc_val;
+		iptr = PQgetvalue(res, i, tnvc_val_fnum);
+		tnvc_val = ntohl(*((uint32_t *) iptr));
+
+	#endif // HAVE_POSTGRESQL
 	{
 		tnv_t *val = tnv_create();
 		val->type = tnv_type;
@@ -1319,7 +1758,13 @@ int db_query_tnvc(size_t dbidx, int tnvc_id, tnvc_t *parms)
 		}
 		vec_insert(&(parms->values), val, NULL);
 	}
-	mysql_stmt_free_result(stmt);
+
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 	for(int i = 0; i < array_len && rtv == AMP_OK; i++) {
 		tnv_t *val = (tnv_t*)vec_at(&(parms->values), i);
@@ -1364,6 +1809,8 @@ ari_t* db_query_ari(size_t dbidx, int ari_id)
 
 	dbprep_declare(dbidx, ARI_GET, 1, NUM_RES_COLS);
 	dbprep_bind_param_int(0,ari_id);
+
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 
 	// Declare result fields
@@ -1400,6 +1847,76 @@ ari_t* db_query_ari(size_t dbidx, int ari_id)
 
 	// Free result (all data is already retrieveed)
 	mysql_stmt_free_result(stmt);
+
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKNULL(dbtest_result(PGRES_TUPLES_OK))
+	int num_rows = PQntuples(res);
+	if (num_rows != 1) {
+		AMP_DBG_ERR("Unable to retrieve ARI ID %i", ari_id);
+		PQclear(res);
+		return NULL;
+	}
+	/* Use PQfnumber to avoid assumptions about field order in result */
+	int ari_type_fnum = PQfnumber(res, "data_type_id");
+        int adm_type_fnum = PQfnumber(res, "adm_type");
+        int adm_enum_fnum = PQfnumber(res, "adm_enum");
+        int obj_enum_fnum = PQfnumber(res, "obj_enum");
+        int tnvc_id_fnum = PQfnumber(res, "tnvc_id");
+        int obj_name_fnum = PQfnumber(res, "obj_name");
+        int issuing_org_fnum = PQfnumber(res, "issuing_org");
+	int ari_type;
+	int adm_type = 0;
+	int adm_enum = 0;
+	int obj_enum;
+	int tnvc_id;
+	char obj_name[255];
+	char issuing_org[255];
+	int adm_type_null = 1;
+	int adm_enum_null = 1;
+	int issuing_org_null = 1;
+	//int obj_name_null = 1;
+	int obj_enum_null = 1;
+	int tnvc_id_null = 1;
+
+
+	char *iptr = PQgetvalue(res, 0, ari_type_fnum);
+	ari_type = ntohl(*((uint32_t *) iptr));
+	
+	if(PQgetisnull(res, 0, adm_type_fnum)){
+		iptr = PQgetvalue(res, 0, adm_type_fnum);
+		adm_type = ntohl(*((uint32_t *) iptr));
+		adm_type_null = 0;
+	}
+	
+	if(PQgetisnull(res, 0, adm_enum_fnum)){
+		iptr = PQgetvalue(res, 0, adm_enum_fnum);
+		adm_enum = ntohl(*((uint32_t *) iptr));
+		adm_enum_null = 0;
+	}
+
+	if(PQgetisnull(res, 0, obj_enum_fnum)){
+		iptr = PQgetvalue(res, 0, obj_enum_fnum);
+		obj_enum = ntohl(*((uint32_t *) iptr));
+		obj_enum_null = 0;
+	}
+
+	if(PQgetisnull(res, 0, tnvc_id_fnum)){
+		iptr = PQgetvalue(res, 0, tnvc_id_fnum);
+		tnvc_id = ntohl(*((uint32_t *) iptr));
+		tnvc_id_null = 0;
+	}
+
+	strncpy(obj_name, PQgetvalue(res, 0, obj_name_fnum), 254); // -1 to accomodate NULL-character
+
+	if(PQgetisnull(res, 0, issuing_org_fnum)){
+		strncpy(issuing_org, PQgetvalue(res, 0, issuing_org_fnum), 254); // -1 to accomodate NULL-character
+		issuing_org_null = 0;
+	}
+
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 		
 	// Build ARI	
 	
@@ -1419,13 +1936,23 @@ ari_t* db_query_ari(size_t dbidx, int ari_id)
 	// Nickname
 	// namespace/20 + adm_type
 	// adm_enum    adm_Type
-	if (!is_null[C_ADM_TYPE] && !is_null[C_ADM_ENUM])
+	#ifdef HAVE_MYSQL
+ 	if (!is_null[C_ADM_TYPE] && !is_null[C_ADM_ENUM])
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (!adm_type_null && !adm_enum_null)
+	#endif // HAVE_POSTGRESQL
 	{
 		temp = (adm_enum*20) + adm_type;
 
 		VDB_ADD_NN(temp, &(ari->as_reg.nn_idx));
 		ARI_SET_FLAG_NN(ari->as_reg.flags);
-	} else if (!is_null[C_ISSUING_ORG] ) {
+	#ifdef HAVE_MYSQL
+ 	} else if (!is_null[C_ISSUING_ORG] ) {
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	} else if (!issuing_org_null) {
+	#endif // HAVE_POSTGRESQL
 		// Issuer is only set if Nickname is excluded
 		blob_t *issuer = utils_string_to_hex(issuing_org);
 		ARI_SET_FLAG_ISS(ari->as_reg.flags);
@@ -1434,7 +1961,12 @@ ari_t* db_query_ari(size_t dbidx, int ari_id)
 	}
 
 	// Name
+	#ifdef HAVE_MYSQL
 	if (!is_null[C_OBJ_ENUM]) {
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+if (!obj_enum_null) {
+#endif // HAVE_POSTGRESQL
 
 		cut_enc_uvast(obj_enum, &(ari->as_reg.name));
 	} else {
@@ -1448,7 +1980,12 @@ ari_t* db_query_ari(size_t dbidx, int ari_id)
 	// TODO
 
 	// Parameters
-	if (!is_null[C_TNVC_ID])
+	#ifdef HAVE_MYSQL
+ 	if (!is_null[C_TNVC_ID])
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (!tnvc_id_null)
+	#endif // HAVE_POSTGRESQL
 	{
 		ARI_SET_FLAG_PARM(ari->as_reg.flags);
 		if (db_query_tnvc(dbidx, tnvc_id, &(ari->as_reg.parms)) != AMP_OK) {
@@ -1471,6 +2008,8 @@ ac_t* db_query_ac(size_t dbidx, int ac_id)
 	// single ARI may need to be retrieved
 	dbprep_declare(dbidx, AC_GET, 1, 1);
 	dbprep_bind_param_int(0,ac_id);
+
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 
 	dbprep_dec_res_int(0, ari_id);
@@ -1479,21 +2018,46 @@ ac_t* db_query_ac(size_t dbidx, int ac_id)
 	mysql_stmt_bind_result(stmt, bind_res);
 	mysql_stmt_store_result(stmt); // Results must be buffered to allow execution of nested queries
 	size_t nrows = mysql_stmt_num_rows(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKNULL(dbtest_result(PGRES_TUPLES_OK))
+	int nrows = PQntuples(res);
+	#endif // HAVE_POSTGRESQL
+
 	int *ari_ids = STAKE(nrows * sizeof(int) );
 
 	// Buffer ARI IDs (to avoid recursion issues with prepared statements)
-	for(int i = 0; !mysql_stmt_fetch(stmt); i++)
+	#ifdef HAVE_MYSQL
+ 	for(int i = 0; !mysql_stmt_fetch(stmt); i++)
+ 	{
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	for(int i = 0; i < nrows; i++)
 	{
+		char *iptr = PQgetvalue(res, i, 0);
+		int ari_id = ntohl(*((uint32_t *) iptr)); 
+	#endif // HAVE_POSTGRESQL
 		ari_ids[i] = ari_id;
 	}
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 	// Query details
 	for(int i = 0; i < nrows; i++)
 	{
 		ari_t *ari = db_query_ari(dbidx, ari_ids[i]);
 		if (ari == NULL) {
-			mysql_stmt_free_result(stmt);
+			#ifdef HAVE_MYSQL
+ 			mysql_stmt_free_result(stmt);
+			#endif // HAVE_MYSQL
+			#ifdef HAVE_POSTGRESQL		
+			PQclear(res);  // TODO postgresql : unclear why this is here as the mysql_stmt_free_result and PQclear 
+			#endif // HAVE_POSTGRESQL
 			ac_release(ac,1);
 			return NULL;
 		}
@@ -1512,6 +2076,7 @@ msg_ctrl_t* db_tx_build_perf_ctrl(int msg_id, int ack, int nak, int acl)
 	// Query PerfCtrl Record
 	dbprep_declare(DB_CTRL_CON, MSGS_PERF_CTRL_GET, 1, 2);
 	dbprep_bind_param_int(0,msg_id);
+	#ifdef HAVE_MYSQL
 	DB_CHKINT(mysql_stmt_bind_param(stmt, bind_param));
 
 	dbprep_dec_res_int(0,tv);
@@ -1519,16 +2084,41 @@ msg_ctrl_t* db_tx_build_perf_ctrl(int msg_id, int ack, int nak, int acl)
 	
 	DB_CHKINT(mysql_stmt_execute(stmt));
 	DB_CHKINT(mysql_stmt_bind_result(stmt, bind_res));
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKNULL(dbtest_result(PGRES_TUPLES_OK))
+	int nrows = PQntuples(res);
+	#endif // HAVE_POSTGRESQL
 
+	#ifdef HAVE_MYSQL
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
 		// Failed to retrieve resullt (single row expected here)
 		AMP_DEBUG_ERR("db_tx_msg_groups","Failed to query PerfCtrl",NULL);
 		return NULL;
 	}
-
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (nrows == 0)
+	{
+		// Failed to retrieve resullt (single row expected here)
+		AMP_DEBUG_ERR("db_tx_msg_groups","Failed to query PerfCtrl",NULL);
+		PQclear(res);
+		return NULL;
+	}
+	#endif // HAVE_POSTGRESQL
+ 
 	// Free result now that we retrieved row
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	char *iptr = PQgetvalue(res, 0, 0);
+	int ac_id = ntohl(*((uint32_t *) iptr));
+	//TODO postgresql : read result tv
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 	// Build Control
 	ctrl = msg_ctrl_create();
@@ -1592,6 +2182,7 @@ int32_t db_tx_build_group(int32_t grp_idx, msg_grp_t *msg_group)
 
 	// Bind parameters
 	dbprep_bind_param_int(0,grp_idx);
+	#ifdef HAVE_MYSQL
 	DB_CHKINT(mysql_stmt_bind_param(stmt, bind_param));
 
     // Declare result columns	
@@ -1602,7 +2193,7 @@ int32_t db_tx_build_group(int32_t grp_idx, msg_grp_t *msg_group)
 	dbprep_bind_res_int(4,r_acl);
 	dbprep_bind_res_int(5,r_order_num);
 	dbprep_bind_res_int(6,r_type_id);
-
+	#endif // HAVE_MYSQL
 	
 	AMP_DEBUG_ENTRY("db_tx_build_group",
 					  "(%d, %p)",
@@ -1617,17 +2208,50 @@ int32_t db_tx_build_group(int32_t grp_idx, msg_grp_t *msg_group)
 	}
 
 	/* Step 1: Find all messages for this outgoing group. */
+	#ifdef HAVE_MYSQL
 	// Execute
 	DB_CHKINT(mysql_stmt_execute(stmt));
 
 	// Bind results
 	DB_CHKINT(mysql_stmt_bind_result(stmt, bind_res));
 	DB_CHKINT(mysql_stmt_store_result(stmt)); // Results must be buffered to allow execution of nested queries
-
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
+	int nrows = PQntuples(res);
+	/* Use PQfnumber to avoid assumptions about field order in result */
+	int grp_id_fnum = PQfnumber(res, "group_id");
+    int msg_id_fnum = PQfnumber(res, "message_id");
+    int ack_fnum = PQfnumber(res, "ack");
+    int nak_fnum = PQfnumber(res, "nack");
+    int acl_fnum = PQfnumber(res, "acl");
+    int order_num_fnum = PQfnumber(res, "order_num");
+    int type_id_fnum = PQfnumber(res, "type_id");
+	#endif // HAVE_POSTGRESQL
 
 	/* Step 2: For each message that belongs in this group....*/
-	while(!mysql_stmt_fetch(stmt))
-    {
+		#ifdef HAVE_MYSQL
+ 	while(!mysql_stmt_fetch(stmt))
+	{
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	for(int i = 0; i < nrows; i++)
+	{
+		//TODO postgresql : read result r_grp_id
+		char *iptr = PQgetvalue(res, i, msg_id_fnum);
+		r_msg_id = ntohl(*((uint32_t *) iptr));
+		iptr = PQgetvalue(res, i, ack_fnum);
+		r_ack = ntohl(*((uint32_t *) iptr)); 
+		iptr = PQgetvalue(res, i, nak_fnum);
+		r_nak = ntohl(*((uint32_t *) iptr)); 
+		iptr = PQgetvalue(res, i, acl_fnum);
+		r_acl = ntohl(*((uint32_t *) iptr)); 
+		//TODO postgresql : read result r_order_num
+		iptr = PQgetvalue(res, i, type_id_fnum);
+		r_type_id = ntohl(*((uint32_t *) iptr)); 
+	#endif // HAVE_POSTGRESQL
+
 		// NOTE: Support for other types can be added here in the future if needed, for debugging or other uses.
 		switch(r_type_id) {
 		case MSG_TYPE_PERF_CTRL:
@@ -1652,7 +2276,12 @@ int32_t db_tx_build_group(int32_t grp_idx, msg_grp_t *msg_group)
 		result = AMP_FAIL;
 	}
 	
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 	AMP_DEBUG_EXIT("db_tx_build_group","-->%d", result);
 	return result;
@@ -1680,8 +2309,13 @@ int32_t db_tx_build_group(int32_t grp_idx, msg_grp_t *msg_group)
 
 int db_tx_collect_agents(int32_t grp_idx, vector_t *vec)
 {
-	MYSQL_RES *res = NULL;
-	MYSQL_ROW row;
+  #ifdef HAVE_MYSQL
+ 	MYSQL_RES *res = NULL;
+ 	MYSQL_ROW row;
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PGresult * res = NULL;
+	#endif // HAVE_POSTGRESQL
 	agent_t *agent = NULL;
 	int cur_row = 0;
 	int max_row = 0;
@@ -1706,14 +2340,25 @@ int db_tx_collect_agents(int32_t grp_idx, vector_t *vec)
 
 
 	/* Step 3: For each row returned.... */
-	max_row = mysql_num_rows(res);
+	#ifdef HAVE_MYSQL
+ 	max_row = mysql_num_rows(res);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	max_row = PQntuples(res);
+	#endif // HAVE_POSTGRESQL
 	*vec = vec_create(1, NULL, NULL, NULL, 0, &success);
 	for(cur_row = 0; cur_row < max_row; cur_row++)
 	{
+		#ifdef HAVE_MYSQL
 		if ((row = mysql_fetch_row(res)) != NULL)
 		{
 			/* Step 3.1: Grab the agent information.. */
 			if((agent = db_fetch_agent(atoi(row[0]))) != NULL)
+		#endif // HAVE_MYSQL
+ 		#ifdef HAVE_POSTGRESQL
+			/* Step 3.1: Grab the agent information.. */
+			if((agent = db_fetch_agent(atoi(PQgetvalue(res, cur_row, 0)))) != NULL)
+		#endif // HAVE POSTGRESQL
 			{
 				AMP_DEBUG_INFO("db_outgoing_process_recipients",
 						         "Adding agent name %s.",
@@ -1726,10 +2371,17 @@ int db_tx_collect_agents(int32_t grp_idx, vector_t *vec)
 				AMP_DEBUG_ERR("db_outgoing_process_recipients",
 						        "Cannot fetch registered agent",NULL);
 			}
+			#ifdef HAVE_MYSQL
 		}
+		#endif // HAVE_MYSQL
 	}
 
-	mysql_free_result(res);
+	#ifdef HAVE_MYSQL
+ 	mysql_free_result(res);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 	AMP_DEBUG_EXIT("db_outgoing_process_recipients","-->0x%#llx",
 			         vec_num_entries(*vec));
@@ -1760,8 +2412,13 @@ int db_tx_collect_agents(int32_t grp_idx, vector_t *vec)
 agent_t *db_fetch_agent(int32_t id)
 {
 	agent_t *result = NULL;
-	MYSQL_RES *res = NULL;
-	MYSQL_ROW row;
+	#ifdef HAVE_MYSQL
+ 	MYSQL_RES *res = NULL;
+ 	MYSQL_ROW row;
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PGresult * res = NULL;
+	#endif // HAVE_POSTGRESQL
 
 	AMP_DEBUG_ENTRY("db_fetch_agent","(%d)", id);
 
@@ -1775,22 +2432,43 @@ agent_t *db_fetch_agent(int32_t id)
 		return NULL;
 	}
 
-	if ((row = mysql_fetch_row(res)) != NULL)
-	{
-		eid_t eid;
-		strncpy(eid.name, row[1], AMP_MAX_EID_LEN-1); // -1 to accomodate NULL-character
+	#ifdef HAVE_MYSQL
+ 	if ((row = mysql_fetch_row(res)) != NULL)
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+    int name_fnum = PQfnumber(res, "agent_id_string");
+	if (PQntuples(res) != 0)
+	#endif // HAVE_POSTGRESQL
+ 	{
+ 		eid_t eid;
+		#ifdef HAVE_MYSQL
+ 		strncpy(eid.name, row[1], AMP_MAX_EID_LEN-1); // -1 to accomodate NULL-character
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		strncpy(eid.name, PQgetvalue(res, 0, name_fnum), AMP_MAX_EID_LEN-1); // -1 to accomodate NULL-character
+		#endif // HAVE POSTGRESQL
 
 		/* Step 3: Create structure for agent */
 		if((result = agent_create(&eid)) == NULL)
 		{
 			AMP_DEBUG_ERR("db_fetch_agent","Cannot create a registered agent",NULL);
-			mysql_free_result(res);
+			#ifdef HAVE_MYSQL
+ 			mysql_free_result(res);
+			#endif // HAVE_MYSQL
+			#ifdef HAVE_POSTGRESQL
+			PQclear(res);
+			#endif // HAVE_POSTGRESQL
 			AMP_DEBUG_EXIT("db_fetch_agent","-->NULL", NULL);
 			return NULL;
 		}
 	}
 
-	mysql_free_result(res);
+	#ifdef HAVE_MYSQL
+ 			mysql_free_result(res);
+			#endif // HAVE_MYSQL
+			#ifdef HAVE_POSTGRESQL
+			PQclear(res);
+			#endif // HAVE_POSTGRESQL
 
 	AMP_DEBUG_EXIT("db_fetch_agent", "-->%p", result);
 	return result;
@@ -1819,8 +2497,13 @@ agent_t *db_fetch_agent(int32_t id)
 int32_t db_fetch_agent_idx(eid_t *eid)
 {
 	int32_t result = AMP_FAIL;
-	MYSQL_RES *res = NULL;
-	MYSQL_ROW row;
+	#ifdef HAVE_MYSQL
+ 	MYSQL_RES *res = NULL;
+ 	MYSQL_ROW row;
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PGresult * res = NULL;
+	#endif // HAVE_POSTGRESQL
 
 	AMP_DEBUG_ENTRY("db_fetch_agent_idx","(%p)", eid);
 
@@ -1843,9 +2526,17 @@ int32_t db_fetch_agent_idx(eid_t *eid)
 	}
 
 	/* Step 2: Parse information out of the returned row. */
-	if ((row = mysql_fetch_row(res)) != NULL)
+	#ifdef HAVE_MYSQL
+ 	if ((row = mysql_fetch_row(res)) != NULL)
+ 	{
+ 		result = atoi(row[0]);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+    int agent_id_fnum = PQfnumber(res, "registered_agents_id");
+	if (PQntuples(res) != 0)
 	{
-		result = atoi(row[0]);
+		result = atoi(PQgetvalue(res, 0, agent_id_fnum));
+	#endif // HAVE_POSTGRESQL
 	}
 	else
 	{
@@ -1853,7 +2544,12 @@ int32_t db_fetch_agent_idx(eid_t *eid)
 	}
 
 	/* Step 3: Free database resources. */
-	mysql_free_result(res);
+	#ifdef HAVE_MYSQL
+ 			mysql_free_result(res);
+			#endif // HAVE_MYSQL
+			#ifdef HAVE_POSTGRESQL
+			PQclear(res);
+			#endif // HAVE_POSTGRESQL
 
 	AMP_DEBUG_EXIT("db_fetch_agent_idx","-->%d", result);
 	return result;
@@ -3966,15 +4662,35 @@ void db_process_outgoing(nmmgr_t *mgr) {
 	int group_id;
 	int ts; // TODO: UVAST? TODO: change this to an output (update record) instead of input from record
 	dbprep_declare(DB_CTRL_CON, MSGS_OUTGOING_GET, 0, 2); // FUTURE: May add MgrEid parameter to allow a single DB to serve multiple managers
+	
+	#ifdef HAVE_MYSQL
 	dbprep_bind_res_int(0,group_id);
 	dbprep_bind_res_int(1,ts);
 	
 	DB_CHKVOID(mysql_stmt_execute(stmt));
 	DB_CHKVOID(mysql_stmt_bind_result(stmt, bind_res));
 	DB_CHKVOID(mysql_stmt_store_result(stmt)); // Results must be buffered to allow execution of nested queries
-		
+		#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKVOID(dbtest_result(PGRES_TUPLES_OK))
+    int grp_id_fnum = PQfnumber(res, "group_id");
+    int ts_fnum = PQfnumber(res, "ts");
+	int nrows = PQntuples(res);
+	#endif // HAVE_POSTGRESQL
+
 	// Fetch all rows
-	while(!mysql_stmt_fetch(stmt)) {
+	#ifdef HAVE_MYSQL
+ 	while(!mysql_stmt_fetch(stmt)) {
+ 
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	for(int i = 0; i < nrows; i++){
+		char *iptr = PQgetvalue(res, i, grp_id_fnum);
+		group_id = ntohl(*((uint32_t *) iptr));
+		iptr = PQgetvalue(res, i, ts_fnum);
+		ts = ntohl(*((uint32_t *) iptr)); 
+	#endif // HAVE_POSTGRESQL
 
 		/* Create an AMP PDU for this outgoing message. */
 		if((msg_group = msg_grp_create(1)) == NULL)
@@ -4008,7 +4724,12 @@ void db_process_outgoing(nmmgr_t *mgr) {
 		msg_grp_release(msg_group, 1);
 
 	}
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 }
 
 uint32_t db_insert_ari_lit(db_con_t dbidx, ari_t *ari, int *status)
@@ -4043,6 +4764,8 @@ int db_query_ari_metadata(db_con_t dbidx, ari_t *ari, uint32_t *metadata_id, uin
 	dbprep_bind_param_int(0, name_idx);
 	dbprep_bind_param_int(1, ari->type);
 	dbprep_bind_param_int(2, namespace);	
+	
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 	
 	dbprep_bind_res_int_ptr(0, metadata_id);
@@ -4050,8 +4773,24 @@ int db_query_ari_metadata(db_con_t dbidx, ari_t *ari, uint32_t *metadata_id, uin
 	mysql_stmt_bind_result(stmt, bind_res);
 	
 	mysql_stmt_execute(stmt);
+  #endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
+    int metadata_id_fnum = PQfnumber(res, "obj_metadata_id");
+    int fp_spec_id_fnum = PQfnumber(res, "fp_spec_id");
+	int nrows = PQntuples(res);
+	#endif // HAVE_POSTGRESQL
 
-	if (mysql_stmt_fetch(stmt) != 0)
+	#ifdef HAVE_MYSQL
+	if (mysql_stmt_fetch(stmt) != 0) 
+	{
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (nrows == 0)
+ 	{
+		PQclear(res);
+	#endif // HAVE_POSTGRESQL
 	{
 		DB_LOGF_WARN(dbidx,"ARI Unrecognized Nickname",
 					 "query(name_idx=%d, ari->type=%d, namespace=%d)",
@@ -4061,7 +4800,12 @@ int db_query_ari_metadata(db_con_t dbidx, ari_t *ari, uint32_t *metadata_id, uin
 		return AMP_FAIL;
 	}
 
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 	return AMP_OK;
 }
 /** @returns 0 on error, obj_actual_definition/ari id on success */
@@ -4111,19 +4855,39 @@ uint32_t db_insert_ari_reg(db_con_t dbidx, ari_t *ari, int *status)
 	{
 		dbprep_bind_param_int(1, params_id);
 	}
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 	
 	dbprep_bind_res_int(0, rtv);
 	mysql_stmt_bind_result(stmt, bind_res);
 	
 	mysql_stmt_execute(stmt);
+  #endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
+	int nrows = PQntuples(res);
+	#endif // HAVE_POSTGRESQL
 
-	if (mysql_stmt_fetch(stmt) != 0)
+
+  #ifdef HAVE_MYSQL
+ 	if (mysql_stmt_fetch(stmt) != 0)
+ 	{
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (nrows == 0)
 	{
+		PQclear(res);
+	#endif // HAVE_POSTGRESQL
 		return 0;
 	}
 
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 	return rtv;
 }
 
@@ -4144,21 +4908,41 @@ void db_insert_ac_entry(db_con_t dbidx, uint32_t ac_id, size_t idx, uint32_t ari
 	dbprep_bind_param_int(0, ac_id);
 	dbprep_bind_param_int(1, ari_id);
 	dbprep_bind_param_int(2, idx);	
+
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 	mysql_stmt_execute(stmt);
-
+  #endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	int nrows = PQntuples(res);
+	#endif // HAVE_POSTGRESQL
 	// Fetch results (Note: Because we are using a stored procedure, we can't depend on LAST_INSERT_ID)
 	// We fetch the (single) row, which will automatically populate our rtv.
 	// In the case of an error, it will remain at the default error value of 0
+	#ifdef HAVE_MYSQL
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
 		AMP_DEBUG_ERR("Failed to Insert AC Entry: %s", mysql_stmt_error(stmt));
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (dbtest_result(PGRES_TUPLES_OK) != 0)
+	{
+		AMP_DBG_ERR("Failed to Insert AC Entry: %s", PQresultErrorMessage(res));
+		PQclear(res);
+
+	#endif // HAVE_POSTGRESQL
 		CHKVOID(status);
 		*status = AMP_FAIL;
 		return;
 	}
 
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 }
 uint32_t db_insert_ac(db_con_t dbidx, ac_t *ac, int *status)
 {
@@ -4174,22 +4958,42 @@ uint32_t db_insert_ac(db_con_t dbidx, ac_t *ac, int *status)
 	/* Create AC */
 	dbprep_declare(dbidx, AC_CREATE, 0, 1);
 
+	#ifdef HAVE_MYSQL
 	dbprep_bind_res_int(0, rtv);
 	mysql_stmt_execute(stmt);
 	mysql_stmt_bind_result(stmt, bind_res);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
+	int nrows = PQntuples(res);
+  #endif // HAVE_POSTGRESQL
 
 	// Fetch results (Note: Because we are using a stored procedure, we can't depend on LAST_INSERT_ID)
 	// We fetch the (single) row, which will automatically populate our rtv.
 	// In the case of an error, it will remain at the default error value of 0
+	#ifdef HAVE_MYSQL
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
 		AMP_DEBUG_ERR("Failed to Create AC: %s", mysql_stmt_error(stmt));
+			#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if(nrows == 0)
+	{
+		AMP_DBG_ERR("Failed to Create AC: %s", PQresultErrorMessage(res));
+		PQclear(res);
+	#endif // HAVE_POSTGRESQL
 		CHKZERO(status);
 		*status = AMP_FAIL;
 		return 0;
 	}
 
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 	/* Add entries */
 	for(int i = 0; i < num; i++)
@@ -4228,6 +5032,7 @@ void db_insert_tnv(db_con_t dbidx, uint32_t tnvc_id, tnv_t *tnv, int *status)
 	{
     // Primitives
 	case AMP_TYPE_STR:
+		#ifdef HAVE_MYSQL
 		stmt = queries[dbidx][TNVC_INSERT_STR];
 
 		id = strlen( (char*) tnv->value.as_ptr );
@@ -4237,56 +5042,105 @@ void db_insert_tnv(db_con_t dbidx, uint32_t tnvc_id, tnv_t *tnv, int *status)
 		bind_param[dbidx].buffer = (char*)tnv->value.as_ptr;
 		bind_param[dbidx].is_null = 0;
 		bind_param[dbidx].error = 0;
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_STR];
+		paramValues[dbidx] = (char*)tnv->value.as_ptr;								\
+		paramLengths[dbidx] = 0; /* ignored for text format */\
+		paramFormats[dbidx] = 0; /* text */
+		#endif // HAVE_POSTGRESQL
 
 		break;
 	case AMP_TYPE_BOOL:
+		#ifdef HAVE_MYSQL
 		stmt = queries[dbidx][TNVC_INSERT_BOOL];
-		dbprep_bind_param_int(C_VAL, tnv->value.as_byte);
-		break;
-	case AMP_TYPE_BYTE:
-		stmt = queries[dbidx][TNVC_INSERT_BYTE];
-		dbprep_bind_param_int(C_VAL, tnv->value.as_byte);
-		break;
-	case AMP_TYPE_INT:
-		stmt = queries[dbidx][TNVC_INSERT_INT];
-		dbprep_bind_param_int(C_VAL, tnv->value.as_int);
-		break;
-	case AMP_TYPE_UINT:
-		stmt = queries[dbidx][TNVC_INSERT_UINT];
-		dbprep_bind_param_int(C_VAL, tnv->value.as_uint);
-		break;
-	case AMP_TYPE_VAST:
-		stmt = queries[dbidx][TNVC_INSERT_VAST];
-		//skywalker
-		//dbprep_bind_param_int(C_VAL, tnv->value.as_vast);
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_BOOL];
+		#endif // HAVE_POSTGRESQL
+		dbprep_bind_param_bool(C_VAL, tnv->value.as_byte);
+ 		break;
+ 	case AMP_TYPE_BYTE:
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_BYTE];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_BYTE];
+		#endif // HAVE_POSTGRESQL
+ 		dbprep_bind_param_int(C_VAL, tnv->value.as_byte);
+ 		break;
+ 	case AMP_TYPE_INT:
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_INT];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_INT];
+		#endif // HAVE_POSTGRESQL
+ 		dbprep_bind_param_int(C_VAL, tnv->value.as_int);
+ 		break;
+ 	case AMP_TYPE_UINT:
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_UINT];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_UINT];
+		#endif // HAVE_POSTGRESQL
+ 		dbprep_bind_param_int(C_VAL, tnv->value.as_uint);
+ 		break;
+ 	case AMP_TYPE_VAST:
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_VAST];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_VAST];
+		#endif // HAVE_POSTGRESQL
 		dbprep_bind_param_bigint(C_VAL, tnv->value.as_vast);
-		break;
-	case AMP_TYPE_TV:
-		stmt = queries[dbidx][TNVC_INSERT_TV];
-		//skywalker
-		//dbprep_bind_param_int(C_VAL, tnv->value.as_uvast);
+ 		break;
+ 	case AMP_TYPE_TV:
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_TV];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_TV];
+		#endif // HAVE_POSTGRESQL
 		dbprep_bind_param_bigint(C_VAL, tnv->value.as_uvast);
-		break;
-	case AMP_TYPE_TS:
-		stmt = queries[dbidx][TNVC_INSERT_TS];
-		//skywalker
-		//dbprep_bind_param_int(C_VAL, tnv->value.as_uvast);
+ 		break;
+ 	case AMP_TYPE_TS:
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_TS];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_TS];
+		#endif // HAVE_POSTGRESQL
 		dbprep_bind_param_bigint(C_VAL, tnv->value.as_uvast);
-		break;
-	case AMP_TYPE_UVAST:
-		stmt = queries[dbidx][TNVC_INSERT_UVAST];
-		//skywalker
-		//dbprep_bind_param_int(C_VAL, tnv->value.as_uvast);
+ 		break;
+ 	case AMP_TYPE_UVAST:
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_UVAST];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_UVAST];
+		#endif // HAVE_POSTGRESQL
 		dbprep_bind_param_bigint(C_VAL, tnv->value.as_uvast);
-		break;
-	case AMP_TYPE_REAL32:
-		stmt = queries[dbidx][TNVC_INSERT_REAL32];
-		dbprep_bind_param_float(C_VAL, tnv->value.as_real32);
-		break;
-	case AMP_TYPE_REAL64:
-		stmt = queries[dbidx][TNVC_INSERT_REAL64];
-		dbprep_bind_param_double(C_VAL, tnv->value.as_real64);
-		break;
+ 		break;
+ 	case AMP_TYPE_REAL32:
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_REAL32];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_REAL32];
+		#endif // HAVE_POSTGRESQL
+ 		dbprep_bind_param_float(C_VAL, tnv->value.as_real32);
+ 		break;
+ 	case AMP_TYPE_REAL64:
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_REAL64];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_REAL64];
+		#endif // HAVE_POSTGRESQL
+ 		dbprep_bind_param_double(C_VAL, tnv->value.as_real64);
+ 		break;
 
 		// Object Types
 	case AMP_TYPE_EDD:
@@ -4294,18 +5148,32 @@ void db_insert_tnv(db_con_t dbidx, uint32_t tnvc_id, tnv_t *tnv, int *status)
 	case AMP_TYPE_ARI:
 	case AMP_TYPE_LIT:
 		id = db_insert_ari(dbidx, (ari_t*)tnv->value.as_ptr, status);
-		stmt = queries[dbidx][TNVC_INSERT_ARI];
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_ARI];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_ARI];
+		#endif // HAVE_POSTGRESQL
 		do_bind_id=1;
 		break;
 
 	case AMP_TYPE_AC:
 		id = db_insert_ac(dbidx, (ac_t*)tnv->value.as_ptr, status);
-		stmt = queries[dbidx][TNVC_INSERT_AC];
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_AC];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_AC];
+		#endif // HAVE_POSTGRESQL
 		do_bind_id=1;
 		break;
 	case AMP_TYPE_TNVC:
-		id = db_insert_tnvc(dbidx, (tnvc_t*)tnv->value.as_ptr, status);
-		stmt = queries[dbidx][TNVC_INSERT_TNVC];
+		#ifdef HAVE_MYSQL
+ 		stmt = queries[dbidx][TNVC_INSERT_TNVC];
+		#endif // HAVE_MYSQL
+		#ifdef HAVE_POSTGRESQL
+		stmtName = queries[dbidx][TNVC_INSERT_TNVC];
+		#endif // HAVE_POSTGRESQL
 		do_bind_id=1;
 		break;
 	default:
@@ -4322,22 +5190,40 @@ void db_insert_tnv(db_con_t dbidx, uint32_t tnvc_id, tnv_t *tnv, int *status)
 		}
 	}
 
-	mysql_stmt_bind_param(stmt, bind_param);
-	mysql_stmt_execute(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_bind_param(stmt, bind_param);
+ 	mysql_stmt_execute(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	#endif // HAVE_POSTGRESQL
 
 
 	// Fetch results (Note: Because we are using a stored procedure, we can't depend on LAST_INSERT_ID)
 	// We fetch the (single) row, which will automatically populate our rtv.
 	// In the case of an error, it will remain at the default error value of 0
+	#ifdef HAVE_MYSQL
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
 		AMP_DEBUG_ERR("Failed to Create TNV: %s", mysql_stmt_error(stmt));
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (dbtest_result(PGRES_TUPLES_OK) != 0)
+	{
+		AMP_DBG_ERR("Failed to Create TNV: %s", PQresultErrorMessage(res));
+		PQclear(res);
+	#endif // HAVE_POSTGRESQL
 		CHKVOID(status);
 		*status = AMP_FAIL;
 		return;
 	}
 
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 	
 }
 uint32_t db_insert_tnvc_params(db_con_t dbidx, uint32_t fp_spec_id, tnvc_t *tnvc, int *status)
@@ -4353,20 +5239,38 @@ uint32_t db_insert_tnvc_params(db_con_t dbidx, uint32_t fp_spec_id, tnvc_t *tnvc
 	
 	dbprep_bind_param_int(0, fp_spec_id);
 	dbprep_bind_param_int(1, tnvc_id);
+	
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 	
 	dbprep_bind_res_int(0, rtv);
 	mysql_stmt_bind_result(stmt, bind_res);
 	
 	mysql_stmt_execute(stmt);
-
+  #endif //HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	#endif // HAVE_POSTGRESQL
+ 
+  #ifdef HAVE_MYSQL
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
+		#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (dbtest_result(PGRES_TUPLES_OK) != 0)
+	{
+		PQclear(res);
+	#endif // HAVE_POSTGRESQL
 		// Note: Caller determines if failure here is cause for error
 		return 0;
 	}
 
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 	return rtv;
 }
 
@@ -4384,22 +5288,40 @@ uint32_t db_insert_tnvc(db_con_t dbidx, tnvc_t *tnvc, int *status)
 	uint32_t rtv = 0;
 	dbprep_declare(dbidx, TNVC_CREATE, 0, 1);
 
+  #ifdef HAVE_MYSQL
 	dbprep_bind_res_int(0, rtv);
 	mysql_stmt_execute(stmt);
 	mysql_stmt_bind_result(stmt, bind_res);
+  #endif //HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	#endif // HAVE_POSTGRESQL
 
 	// Fetch results (Note: Because we are using a stored procedure, we can't depend on LAST_INSERT_ID)
 	// We fetch the (single) row, which will automatically populate our rtv.
 	// In the case of an error, it will remain at the default error value of 0
-	if (mysql_stmt_fetch(stmt) != 0)
+	#ifdef HAVE_MYSQL
+ 	if (mysql_stmt_fetch(stmt) != 0)
+ 	{
+ 		AMP_DBG_ERR("Failed to Create TNVC: %s", mysql_stmt_error(stmt));
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (dbtest_result(PGRES_TUPLES_OK) != 0)
 	{
-		AMP_DEBUG_ERR("Failed to Create TNVC: %s", mysql_stmt_error(stmt));
+		AMP_DBG_ERR("Failed to Create TNVC: %s", PQresultErrorMessage(res));
+		PQclear(res);
+	#endif // HAVE_POSTGRESQL
 		CHKZERO(status);
 		*status = AMP_FAIL;
 		return 0;
 	}
 
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 	/* Add entries */
 	for(int i = 0; i < num; i++)
@@ -4444,24 +5366,44 @@ void db_insert_msg_rpt_set_rpt(db_con_t dbidx, uint32_t entry_id, rpt_t* rpt, in
 		dbprep_bind_param_null(C_PARMS_ID);
 	}
 	/** Insert Report **/	
+	#ifdef HAVE_MYSQ
 	mysql_stmt_bind_param(stmt, bind_param);
 #if 0 // We don't need ID at this time
 	dbprep_bind_res_int(0, rtv);
 	mysql_stmt_bind_result(stmt, bind_res);
 #endif
 	mysql_stmt_execute(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	#endif // HAVE_POSTGRESQL
 
 	// Fetch results (Note: Because we are using a stored procedure, we can't depend on LAST_INSERT_ID)
 	// We fetch the (single) row, which will automatically populate our rtv.
 	// In the case of an error, it will remain at the default error value of 0
-	if (mysql_stmt_fetch(stmt) != 0)
+  #ifdef HAVE_MYSQL
+ 	if (mysql_stmt_fetch(stmt) != 0)
+ 	{
+ 		AMP_DBG_ERR("Failed to Create Entry: %s", mysql_stmt_error(stmt));
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (dbtest_result(PGRES_TUPLES_OK) != 0)
 	{
-		AMP_DEBUG_ERR("Failed to Create Entry: %s", mysql_stmt_error(stmt));
+		AMP_DBG_ERR("Failed to Create Entry: %s", PQresultErrorMessage(res));
+		PQclear(res);
+	#endif // HAVE_POSTGRESQL
+
 		CHKVOID(status);
 		*status = AMP_FAIL;
 		return;
 	}
-	mysql_stmt_free_result(stmt);
+
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 	
 	return;
 }
@@ -4473,10 +5415,16 @@ void db_insert_msg_rpt_set_name(db_con_t dbidx, uint32_t entry_id, char* name, i
 	dbprep_bind_param_int(0,entry_id);
 	dbprep_bind_param_str(1,name);
 	
+	#ifdef HAVE_MYSQL
 	DB_CHKUSR(mysql_stmt_bind_param(stmt, bind_param), {*status = AMP_FAIL; return;});
 
 	DB_CHKUSR(mysql_stmt_execute(stmt), {*status = AMP_FAIL; return;});
-
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	DB_CHKUSR(dbtest_result(PGRES_COMMAND_OK), {*status = AMP_FAIL; return; });
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 }
 
 /**
@@ -4503,31 +5451,50 @@ uint32_t db_insert_msg_reg_agent(uint32_t grp_id, msg_agent_t *msg, int *status)
 	int is_acl = MSG_HDR_GET_ACL(msg->hdr.flags);
 	dbprep_declare(DB_RPT_CON, MSGS_REGISTER_AGENT_INSERT, C_NUM_COLS, 1);
 	dbprep_bind_param_int(C_GRP_ID,grp_id);
-	dbprep_bind_param_int(C_ACK,is_ack);
-	dbprep_bind_param_int(C_NAK,is_nak);
-	dbprep_bind_param_int(C_ACL,is_acl);
+  dbprep_bind_param_bool(C_ACK,is_ack);
+	dbprep_bind_param_bool(C_NAK,is_nak);
+	dbprep_bind_param_bool(C_ACL,is_acl);
 
 	char *name = msg->agent_id.name;
 	dbprep_bind_param_str(C_EID, name);
 	
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 
 	dbprep_bind_res_int(0, rtv);
 	mysql_stmt_execute(stmt);
 	mysql_stmt_bind_result(stmt, bind_res);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	#endif // HAVE_POSTGRESQL
 
 	// Fetch results (Note: Because we are using a stored procedure, we can't depend on LAST_INSERT_ID)
 	// We fetch the (single) row, which will automatically populate our rtv.
 	// In the case of an error, it will remain at the default error value of 0
+	#ifdef HAVE_MYSQL
 	if (mysql_stmt_fetch(stmt) != 0)
 	{
 		AMP_DEBUG_ERR("Failed to Create Entry: %s", mysql_stmt_error(stmt));
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (dbtest_result(PGRES_TUPLES_OK) != 0)
+	{
+		AMP_DBG_ERR("Failed to Create Entry: %s", PQresultErrorMessage(res));
+		PQclear(res);
+	#endif // HAVE_POSTGRESQL
 		CHKZERO(status);
 		*status = AMP_FAIL;
 		return 0;
 	}
 
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
+
 	return rtv;
 }
 uint32_t db_insert_msg_tbl_set(uint32_t grp_id, msg_tbl_t *rpt, int *status)
@@ -4562,19 +5529,25 @@ uint32_t db_insert_msg_rpt_set(uint32_t grp_id, msg_rpt_t *rpt, int *status)
 	
 	dbprep_declare(DB_RPT_CON, MSGS_REPORT_SET_INSERT, C_NUM_COLS, 1);
 	dbprep_bind_param_int(C_GRP_ID,grp_id);
-	dbprep_bind_param_int(C_ACK,is_ack);
-	dbprep_bind_param_int(C_NAK,is_nak);
-	dbprep_bind_param_int(C_ACL,is_acl);
+	dbprep_bind_param_bool(C_ACK,is_ack);
+	dbprep_bind_param_bool(C_NAK,is_nak);
+	dbprep_bind_param_bool(C_ACL,is_acl);
 	
+	#ifdef HAVE_MYSQL
 	DB_CHKINT(mysql_stmt_bind_param(stmt, bind_param));
 
 	dbprep_bind_res_int(0, rtv);
 	DB_CHKINT(mysql_stmt_bind_result(stmt, bind_res));
 	DB_CHKINT(mysql_stmt_execute(stmt));
-	
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	dbexec_prepared;
+	#endif // HAVE_POSTGRESQL
+
 	// Fetch results (Note: Because we are using a stored procedure, we can't depend on LAST_INSERT_ID)
 	// We fetch the (single) row, which will automatically populate our rtv.
 	// In the case of an error, it will remain at the default error value of 0
+	#ifdef HAVE_MYSQL
 	dbstatus = mysql_stmt_fetch(stmt);
 	if (dbstatus != 0)
 	{
@@ -4582,13 +5555,28 @@ uint32_t db_insert_msg_rpt_set(uint32_t grp_id, msg_rpt_t *rpt, int *status)
 					dbstatus, mysql_stmt_error(stmt),
 					grp_id, is_ack, is_nak, is_acl
 			);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	if (dbtest_result(PGRES_TUPLES_OK) != 0)
+	{
+		DB_LOGF_ERR(DB_RPT_CON, "Failed to Create MSG_RPT_SET Entry", "status=%d, msg=%s, MSGS_REPORT_SET_INSERT(%i,%i,%i,%i)",
+					PQresStatus(PQresultStatus(res)), PQresultErrorMessage(res),
+					grp_id, is_ack, is_nak, is_acl
+			);
+		PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 		CHKZERO(status);
 		*status = AMP_FAIL;
 		return 0;
 	}
 
-	mysql_stmt_free_result(stmt);
+	#ifdef HAVE_MYSQL
+ 	mysql_stmt_free_result(stmt);
+	#endif // HAVE_MYSQL
+	#ifdef HAVE_POSTGRESQL
+	PQclear(res);
+	#endif // HAVE_POSTGRESQL
 
 	// Parse Recipients
 	if (vec_num_entries(rpt->rx) > 0)
@@ -4616,5 +5604,5 @@ uint32_t db_insert_msg_rpt_set(uint32_t grp_id, msg_rpt_t *rpt, int *status)
 		
 }
 
-#endif /* ifdef HAVE_MYSQL */
+#endif /* ifdef HAVE_MYSQL  or HAVE_POSTGRESQL*/
 
