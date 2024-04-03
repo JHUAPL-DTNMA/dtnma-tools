@@ -191,7 +191,7 @@ class TestStdioAgent(unittest.TestCase):
         LOGGER.debug('Got msg %s', msg)
 
         buf = io.BytesIO(msg[1])
-        dec = cbor2.decoder.CBORDecoder(buf)
+        dec = cbor2.CBORDecoder(buf)
         head = dec.decode()
         self.assertEqual(0x01, head)
         mgrs = dec.decode()
