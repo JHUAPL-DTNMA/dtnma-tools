@@ -8,6 +8,9 @@ on:
       - src/**
       - test/**
       - testenv/**
+  pull_request:
+    branches:
+    - main
 
 jobs:
   unit-test:
