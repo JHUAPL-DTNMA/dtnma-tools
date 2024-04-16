@@ -49,13 +49,13 @@
 #include <unistd.h>
 
 #ifdef HAVE_MYSQL
-∂#include <mysql.h>
+#include <mysql.h>
 #endif //HAVE_MYSQL
 
 #ifdef HAVE_POSTGRESQL
 #include <libpq-fe.h>
 #endif // HAVE_POSTGRESQL
-∂
+
 #include "shared/platform.h"
 
 /* Application headers. */
@@ -72,7 +72,7 @@
 
 //#include "nm_mgr_ui.h"
 #include "agents.h"
-
+// #include "nmmgr.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -197,7 +197,6 @@ int      db_mgr_sql_init();
 
 
 /* Functions to process outgoing message tables. */
-int32_t  db_tx_msg_group_agents(int group_id, msg_grp_t *msg_group);
 int32_t  db_tx_build_group(int32_t grp_idx, msg_grp_t *msg_group);
 int      db_tx_collect_agents(int32_t grp_idx, vector_t *vec);
 

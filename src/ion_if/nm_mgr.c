@@ -206,7 +206,7 @@ char* mgr_parse_args(int argc, char *const argv[])
             agent_log_cfg.rx_json_tbl = 1;
             break;
 #endif
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
         case 's': // MySQL Server
             strncpy(gMgrDB.sql_info.server, optarg, UI_SQL_SERVERLEN-1);
             break;
@@ -275,7 +275,7 @@ void mgr_print_usage(void)
     printf("-t       Log all received tables to file in text format (as shown in UI)\n");
     printf("-T       Log all transmitted message as ASCII-encoded CBOR HEX strings\n");
     printf("-R       Log all received messages as ASCII-encoded CBOR HEX strings\n");
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     printf("--sql-user MySQL Username\n");
     printf("--sql-pass MySQL Password\n");
     printf("--sql-db MySQL Datbase Name\n");

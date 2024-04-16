@@ -229,12 +229,17 @@ if(BUILD_MANAGER)
     ion_if/ion_if.c
     ion_if/nm_mgr.c
   )
+  
+
+  find_package(PostgreSQL REQUIRED)
   add_executable(ion_nm_mgr ${CFILES} ${HFILES})
   target_link_libraries(ion_nm_mgr nmmgr)
   target_link_libraries(ion_nm_mgr ION::BP)
+  target_link_libraries(ion_nm_mgr PostgreSQL::PostgreSQL)
 
   install(
     TARGETS nmmgr ion_nm_mgr
     RUNTIME
   )
+  add_definitions(-DHAVE_POSTGRESQL=1)
 endif(BUILD_MANAGER)

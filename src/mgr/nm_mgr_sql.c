@@ -49,6 +49,7 @@
 
 #include <string.h>
 #include <osapi-task.h>
+#include <arpa/inet.h>
 
 #include "nmmgr.h"
 #include "nm_mgr_sql.h"
@@ -186,7 +187,7 @@ static void double_to_nbo(double in, double *out) {
     r[0] = htonl((uint32_t)((*i) >> 32));
     r[1] = htonl((uint32_t)*i);
 }
-static void vast_to_nbo(vast in, vast *out) {
+static void vast_to_nbo(amp_vast in, amp_vast *out) {
     uint64_t *i = (uint64_t *)&in;
     uint32_t *r = (uint32_t *)out;
 
@@ -232,7 +233,7 @@ static void vast_to_nbo(vast in, vast *out) {
 	paramLengths[idx] = sizeof(net64Vals[idx]);								\
 	paramFormats[idx] = 1; /* binary */				
 #define dbprep_bind_param_bigint(idx,var) 									\
-	vast_to_nbo(var, (vast *) &net64Vals[idx]); 								\
+	vast_to_nbo(var, (amp_vast *) &net64Vals[idx]); 								\
 	paramValues[idx] = (char *) &net64Vals[idx];								\
 	paramLengths[idx] = sizeof(net64Vals[idx]);								\
 	paramFormats[idx] = 1; /* binary */				
@@ -255,6 +256,10 @@ static void vast_to_nbo(vast in, vast *out) {
     bind_param[idx].error = 0;
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
+#define dbprep_bind_param_str(idx,var)					\
+	paramValues[idx] = var;								\
+	paramLengths[idx] = 0; /* ignored for text format */\
+	paramFormats[idx] = 0; /* text */
 #define dbprep_bind_param_null(idx)					  	\
 	paramValues[idx] = NULL;							\
 	paramLengths[idx] = 0;								\
@@ -325,7 +330,7 @@ static void vast_to_nbo(vast in, vast *out) {
 #define query_log_err(status) AMP_DEBUG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__,__LINE__, mysql_stmt_error(stmt), mysql_stmt_errno(stmt));
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-#define query_log_err(status) AMP_DBG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__,__LINE__, PQresultErrorMessage(res), status);
+#define query_log_err(status) AMP_DEBUG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__,__LINE__, PQresultErrorMessage(res), status);
 #endif // HAVE_POSTGRESQL
 
 /** Utility function to insert debug or error informational messages into the database.
@@ -430,7 +435,7 @@ uint32_t db_incoming_initialize(amp_tv_t timestamp, eid_t sender_eid)
 	CHKZERO(!db_mgt_connected(DB_RPT_CON));
 
 	dbprep_declare(DB_RPT_CON, MSGS_INCOMING_CREATE, 2, 1);
-	dbprep_bind_param_int(0,timestamp);
+	dbprep_bind_param_int(0,timestamp.secs.ticks);
 	dbprep_bind_param_str(1,name);
 	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
@@ -631,17 +636,17 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
 		gConn[idx] = PQsetdbLogin(parms.server, NULL, NULL, NULL, parms.database, parms.username, parms.password);
 		if(gConn[idx] == NULL)
 		{
-			if(log > 0)
-            {
-				AMP_DEBUG_WARN("db_mgt_init", "SQL Error: Null connection object returned", NULL);
-            }
+			// if(log > 0)
+      //       {
+			// 	AMP_DEBUG_WARN("db_mgt_init", "SQL Error: Null connection object returned", NULL);
+      //       }
 		}
 		else if(PQstatus(gConn[idx]) != CONNECTION_OK)
 		{
-			if(log > 0)
-            {
-				AMP_DEBUG_WARN("db_mgt_init", "SQL Error: %s", PQerrorMessage(gConn[idx]));
-            }
+			// if(log > 0)
+      //       {
+			// 	AMP_DEBUG_WARN("db_mgt_init", "SQL Error: %s", PQerrorMessage(gConn[idx]));
+      //       }
 			PQfinish(gConn[idx]);
 
 		#endif // HAVE_POSTGRESQL
@@ -1109,12 +1114,12 @@ static char* db_mgr_sql_prepare(size_t idx, const char* query, char *stmtName, i
 	PGresult *pgresult = PQprepare(gConn[idx], stmtName, query, nParams, paramTypes);
 
 	if (pgresult == NULL) { // out of memory or failure to send the conmmand at all
-		AMP_DBG_ERR("Failed to allocate statement %s", query);
+		AMP_DEBUG_ERR("Failed to allocate statement %s", query);
 	}
 
 	if(PQresultStatus(pgresult) != PGRES_COMMAND_OK)
 	{
-		AMP_DBG_ERR("Failed to prepare %s: errno %d, error= %s", query, PQresultStatus(pgresult),PQresultErrorMessage(pgresult));
+		AMP_DEBUG_ERR("Failed to prepare %s: errno %d, error= %s", query, PQresultStatus(pgresult),PQresultErrorMessage(pgresult));
 		/* there is no libpq function for deleting a prepared statement, the SQL DEALLOCATE statement can be used for that purpose but 
 			if you do not explicitly deallocate a prepared statement, it is deallocated when the session ends. 
 			So no actuaion should be needed*/
@@ -1597,7 +1602,7 @@ void db_mgt_txn_rollback()
  *  08/27/15  E. Birrane      Update to new data model, schema
  *  01/26/17  E. Birrane      Update to AMP 3.5.0 (JHU/APL)
  *****************************************************************************/
-static int32_t db_tx_msg_group_agents(nmmgr_t *mgr, int group_id, msg_grp_t *msg_group)
+static int32_t db_tx_msg_group_agents(nmmgr_t *mgr, int group_id,  msg_grp_t *msg_group)
 {
 	int rtv = AMP_OK;
 	dbprep_declare(DB_CTRL_CON, MSGS_GET_AGENTS, 1, 1);
@@ -1619,7 +1624,6 @@ static int32_t db_tx_msg_group_agents(nmmgr_t *mgr, int group_id, msg_grp_t *msg
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
   eid_t destination;
-  dbprep_bind_res_str(0, destination.name, AMP_MAX_EID_LEN);
 	dbexec_prepared;
 	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
 	for (int i = 0; i < PQntuples(res); i++)
@@ -1741,7 +1745,7 @@ int db_query_tnvc(size_t dbidx, int tnvc_id, tnvc_t *parms)
 		tnvc_val = ntohl(*((uint32_t *) iptr));
 
 	#endif // HAVE_POSTGRESQL
-	{
+	
 		tnv_t *val = tnv_create();
 		val->type = tnv_type;
 		
@@ -1854,7 +1858,7 @@ ari_t* db_query_ari(size_t dbidx, int ari_id)
 	DB_CHKNULL(dbtest_result(PGRES_TUPLES_OK))
 	int num_rows = PQntuples(res);
 	if (num_rows != 1) {
-		AMP_DBG_ERR("Unable to retrieve ARI ID %i", ari_id);
+		AMP_DEBUG_ERR("Unable to retrieve ARI ID %i", ari_id);
 		PQclear(res);
 		return NULL;
 	}
@@ -4650,9 +4654,16 @@ void query_update_msg_group_state(size_t dbidx, int group_id, int is_error) {
    
    dbprep_bind_param_int(0,state);
    dbprep_bind_param_int(1,group_id);
-   DB_CHKVOID(mysql_stmt_bind_param(stmt, bind_param));
-
-   DB_CHKVOID(mysql_stmt_execute(stmt));
+		#ifdef HAVE_MYSQL
+    DB_CHKVOID(mysql_stmt_bind_param(stmt, bind_param));
+ 
+    DB_CHKVOID(mysql_stmt_execute(stmt));
+   #endif // HAVE_MYSQL
+   #ifdef HAVE_POSTGRESQL
+   dbexec_prepared;
+   DB_CHKVOID(dbtest_result(PGRES_TUPLES_OK))
+   PQclear(res);
+   #endif // HAVE_POSTGRESQL
 
    return;
 }
@@ -4791,7 +4802,6 @@ int db_query_ari_metadata(db_con_t dbidx, ari_t *ari, uint32_t *metadata_id, uin
  	{
 		PQclear(res);
 	#endif // HAVE_POSTGRESQL
-	{
 		DB_LOGF_WARN(dbidx,"ARI Unrecognized Nickname",
 					 "query(name_idx=%d, ari->type=%d, namespace=%d)",
 					 name_idx, ari->type, namespace);
@@ -4928,7 +4938,7 @@ void db_insert_ac_entry(db_con_t dbidx, uint32_t ac_id, size_t idx, uint32_t ari
 	#ifdef HAVE_POSTGRESQL
 	if (dbtest_result(PGRES_TUPLES_OK) != 0)
 	{
-		AMP_DBG_ERR("Failed to Insert AC Entry: %s", PQresultErrorMessage(res));
+		AMP_DEBUG_ERR("Failed to Insert AC Entry: %s", PQresultErrorMessage(res));
 		PQclear(res);
 
 	#endif // HAVE_POSTGRESQL
@@ -4980,7 +4990,7 @@ uint32_t db_insert_ac(db_con_t dbidx, ac_t *ac, int *status)
 	#ifdef HAVE_POSTGRESQL
 	if(nrows == 0)
 	{
-		AMP_DBG_ERR("Failed to Create AC: %s", PQresultErrorMessage(res));
+		AMP_DEBUG_ERR("Failed to Create AC: %s", PQresultErrorMessage(res));
 		PQclear(res);
 	#endif // HAVE_POSTGRESQL
 		CHKZERO(status);
@@ -5210,7 +5220,7 @@ void db_insert_tnv(db_con_t dbidx, uint32_t tnvc_id, tnv_t *tnv, int *status)
 	#ifdef HAVE_POSTGRESQL
 	if (dbtest_result(PGRES_TUPLES_OK) != 0)
 	{
-		AMP_DBG_ERR("Failed to Create TNV: %s", PQresultErrorMessage(res));
+		AMP_DEBUG_ERR("Failed to Create TNV: %s", PQresultErrorMessage(res));
 		PQclear(res);
 	#endif // HAVE_POSTGRESQL
 		CHKVOID(status);
@@ -5303,12 +5313,12 @@ uint32_t db_insert_tnvc(db_con_t dbidx, tnvc_t *tnvc, int *status)
 	#ifdef HAVE_MYSQL
  	if (mysql_stmt_fetch(stmt) != 0)
  	{
- 		AMP_DBG_ERR("Failed to Create TNVC: %s", mysql_stmt_error(stmt));
+ 		AMP_DEBUG_ERR("Failed to Create TNVC: %s", mysql_stmt_error(stmt));
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
 	if (dbtest_result(PGRES_TUPLES_OK) != 0)
 	{
-		AMP_DBG_ERR("Failed to Create TNVC: %s", PQresultErrorMessage(res));
+		AMP_DEBUG_ERR("Failed to Create TNVC: %s", PQresultErrorMessage(res));
 		PQclear(res);
 	#endif // HAVE_POSTGRESQL
 		CHKZERO(status);
@@ -5347,7 +5357,7 @@ void db_insert_msg_rpt_set_rpt(db_con_t dbidx, uint32_t entry_id, rpt_t* rpt, in
 	};
 	dbprep_declare(DB_RPT_CON, MSGS_ADD_REPORT_SET_ENTRY, C_NUM_COLS, 1);
 	dbprep_bind_param_int(C_ENTRY_ID,entry_id);
-	dbprep_bind_param_int(C_TS,rpt->time);
+	dbprep_bind_param_int(C_TS,rpt->time.ticks);
 
 	/** Prepare Dependent Fields **/
 	uint32_t ari_id=db_insert_ari(dbidx, rpt->id, status);
@@ -5366,7 +5376,7 @@ void db_insert_msg_rpt_set_rpt(db_con_t dbidx, uint32_t entry_id, rpt_t* rpt, in
 		dbprep_bind_param_null(C_PARMS_ID);
 	}
 	/** Insert Report **/	
-	#ifdef HAVE_MYSQ
+	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
 #if 0 // We don't need ID at this time
 	dbprep_bind_res_int(0, rtv);
@@ -5384,12 +5394,12 @@ void db_insert_msg_rpt_set_rpt(db_con_t dbidx, uint32_t entry_id, rpt_t* rpt, in
   #ifdef HAVE_MYSQL
  	if (mysql_stmt_fetch(stmt) != 0)
  	{
- 		AMP_DBG_ERR("Failed to Create Entry: %s", mysql_stmt_error(stmt));
+ 		AMP_DEBUG_ERR("Failed to Create Entry: %s", mysql_stmt_error(stmt));
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
 	if (dbtest_result(PGRES_TUPLES_OK) != 0)
 	{
-		AMP_DBG_ERR("Failed to Create Entry: %s", PQresultErrorMessage(res));
+		AMP_DEBUG_ERR("Failed to Create Entry: %s", PQresultErrorMessage(res));
 		PQclear(res);
 	#endif // HAVE_POSTGRESQL
 
@@ -5480,7 +5490,7 @@ uint32_t db_insert_msg_reg_agent(uint32_t grp_id, msg_agent_t *msg, int *status)
 	#ifdef HAVE_POSTGRESQL
 	if (dbtest_result(PGRES_TUPLES_OK) != 0)
 	{
-		AMP_DBG_ERR("Failed to Create Entry: %s", PQresultErrorMessage(res));
+		AMP_DEBUG_ERR("Failed to Create Entry: %s", PQresultErrorMessage(res));
 		PQclear(res);
 	#endif // HAVE_POSTGRESQL
 		CHKZERO(status);
