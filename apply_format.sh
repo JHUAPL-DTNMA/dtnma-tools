@@ -1,10 +1,9 @@
 #!/bin/bash
 ##
-## Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+## Copyright (c) 2024 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
-## This file is part of the Delay-Tolerant Networking Management
-## Architecture (DTNMA) Tools package.
+## This file is part of the BPSec Library (BSL).
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -16,28 +15,25 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ##
+## This work was performed for the Jet Propulsion Laboratory, California
+## Institute of Technology, sponsored by the United States Government under
+## the prime contract 80NM0018D0004 between the Caltech and NASA under
+## subcontract 1700763.
+##
 
 #
-# From a fresh checkout perform a full build
+# From a fresh checkout perform pre-build steps
 #
 set -e
 
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
-source setenv.sh
+cd ${SELFDIR}
 
-if [ "$1" = "docs" ]
+if [[ "$#" -ne 0 ]]
 then
-    cmake --build ${SELFDIR}/build/default --target docs
+    ARGS="$@"
 else
-    cmake --build ${SELFDIR}/build/default
+    ARGS="src/ari/*.h src/ari/*.c test/*.h test/*.c"
 fi
 
-if [ "$1" = "install" ]
-then
-    cmake --install ${SELFDIR}/build/default
-elif [ "$1" = "check" ]
-then
-    ctest --test-dir ${SELFDIR}/build/default \
-	  --output-junit testresults.xml \
-	  --verbose
-fi
+clang-format --style=file -i $ARGS

@@ -25,13 +25,13 @@ jobs:
           sudo apt-get update && sudo apt-get install -y
           cmake ninja-build
           ruby build-essential autoconf libtool
-          civetweb libcivetweb-dev libssl-dev libcjson-dev
+          flex bison civetweb libcivetweb-dev libssl-dev libcjson-dev
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
       - name: Prep
-        run: ./prep.sh
+        run: ./deps.sh && ./prep.sh
       - name: Build
         run: ./build.sh
       - name: Test
@@ -49,13 +49,13 @@ jobs:
           sudo apt-get update && sudo apt-get install -y
           cmake ninja-build
           ruby build-essential autoconf libtool
-          civetweb libcivetweb-dev libssl-dev libcjson-dev
+          flex bison civetweb libcivetweb-dev libssl-dev libcjson-dev
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
       - name: Prep
-        run: ./prep.sh
+        run: ./deps.sh && ./prep.sh
       - name: Build
         run: ./build.sh
       - name: Install

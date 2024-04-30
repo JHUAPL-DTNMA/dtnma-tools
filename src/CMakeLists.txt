@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2023 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -16,6 +16,91 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
+# ARI handling library
+configure_file("ari/ari_config.h.in" "ari/ari_config.h")
+set(HFILES
+  "${CMAKE_CURRENT_BINARY_DIR}/ari/ari_config.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_type.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_data.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_base.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_algo.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_containers.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_access.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_cbor.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_util.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/typing.h"
+)
+set(CFILES
+  "ari/ari_type.c"
+  "ari/ari_data.c"
+  "ari/ari_base.c"
+  "ari/ari_algo.c"
+  "ari/ari_containers.c"
+  "ari/ari_access.c"
+  "ari/ari_cbor.c"
+  "ari/ari_text_util.c"
+  "ari/ari_text_enc.c"
+  "ari/typing.c"
+)
+if(ARI_TEXT_PARSE)
+    BISON_TARGET(
+        AriStrParse ${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_str.yac
+        ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_str_parse.c
+        COMPILE_FLAGS "-p ari_str_"
+    )
+    FLEX_TARGET(
+        AriStrScan ${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_str.lex
+        ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_str_scan.c
+        DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_str_scan.h
+    )
+    ADD_FLEX_BISON_DEPENDENCY(AriStrScan AriStrParse)
+    list(APPEND CFILES ${BISON_AriStrParse_OUTPUT_SOURCE} ${FLEX_AriStrScan_OUTPUTS})
+
+    BISON_TARGET(
+        AriValParse ${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_val.yac
+        ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_val_parse.c
+        COMPILE_FLAGS "-p ari_val_"
+    )
+    FLEX_TARGET(
+        AriValScan ${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_val.lex
+        ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_val_scan.c
+        DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_val_scan.h
+    )
+    ADD_FLEX_BISON_DEPENDENCY(AriValScan AriValParse)
+
+    #FIXME generated headers
+    # list(APPEND HFILES ${BISON_AriValParse_OUTPUT_HEADER} ${FLEX_AriValScan_OUTPUT_HEADER})
+    list(APPEND CFILES ${BISON_AriValParse_OUTPUT_SOURCE} ${FLEX_AriValScan_OUTPUTS})
+endif(ARI_TEXT_PARSE)
+
+add_library(ari)
+target_sources(ari PUBLIC ${HFILES})
+target_sources(ari PRIVATE ${CFILES})
+target_include_directories(
+  ari PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/ari>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ari>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/nm>
+)
+target_compile_definitions(ari PRIVATE
+  -D_XOPEN_SOURCE
+  -D_POSIX_C_SOURCE=200809L
+)
+target_link_libraries(ari PUBLIC ${FLEX_LIBRARIES})
+target_link_libraries(ari PUBLIC MLIB::mlib)
+target_link_libraries(ari PUBLIC qcbor)
+target_link_libraries(ari PUBLIC m)
+
+add_executable(case_ari)
+target_sources(case_ari PRIVATE ari/case_ari.c)
+target_link_libraries(case_ari PUBLIC ari)
+
+
+if(FALSE) # Disabled for test
 
 # Shared library for agent and manager
 set(HFILES
@@ -246,3 +331,5 @@ if(BUILD_MANAGER)
   )
   
 endif(BUILD_MANAGER)
+
+endif(FALSE)

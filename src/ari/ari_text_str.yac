@@ -1,0 +1,519 @@
+%define api.pure full
+%lex-param {void *scanner}
+%parse-param {void *scanner}{ari_text_str_t *input}
+
+%define parse.trace
+%define parse.error verbose
+
+%{
+#include "ari_text_str_parse.h"
+#include "ari_text_str_scan.h"
+#include "ari_text_val_parse.h"
+#include "ari_text_util.h"
+#include "ari_config.h"
+#include <stdlib.h>
+
+#define YYMALLOC(size) ARI_MALLOC(size)
+#define YYFREE(ptr) ARI_FREE(ptr)
+
+static int ari_lit_from_text(yyscan_t *scanner, ari_text_str_t *input, ari_lit_t *lit, ari_type_t *typ, string_t val);
+
+int yydebug = 0;
+%}
+
+%code requires
+{
+#include "ari_base.h"
+#include "ari_containers.h"
+#include <m-string.h>
+#include <m-dict.h>
+
+M_DICT_DEF2(lit_param_dict, string_t, M_STRING_OPLIST, ari_a1_t, ARI_PTR_OPLIST)
+
+typedef struct {
+    /// The input stream
+    FILE *src;
+    /// The final result ARI
+    ari_t *ari;
+    /// Optional error text storage
+    const char **errm;
+    
+    /// Storage for container parameters
+    size_t tbl_c;
+} ari_text_str_t;
+
+// Match the definition in generated C file
+typedef void * yyscan_t;
+
+/** Handle an error in ARI text decoding.
+ *
+ * @param scanner The scanner state at error.
+ * @param[in,out] input The input struct to update.
+ * @param msg The specific error message.
+ */
+void ari_str_error(yyscan_t *scanner, ari_text_str_t *input, char const *msg);
+
+}
+
+/* Generate YYSTYPE from these types: */
+%union {
+  ari_t ari;
+  
+  ari_lit_t lit;
+  ari_type_t ari_type;
+  lit_param_dict_t litparams;
+  struct ari_report_s *report;
+  
+  ari_ref_t objref;
+  ari_objpath_t objpath;
+  ari_idseg_t idseg;
+  ari_params_t params;
+  
+  string_t text;
+}
+
+%token T_ARI_PREFIX
+%token T_COMMA
+%token T_LPAREN
+%token T_RPAREN
+%token T_EQ
+%token T_SC
+
+%type <lit> ssp-literal
+%type <lit> acbracket
+%type <lit> aclist
+%type <lit> ambracket
+%type <lit> amlist
+%type <litparams> litparamlist
+%type <lit> tblrowlist
+%type <lit> reportlist
+%type <report> report
+%token <ari_type> T_LITTYPE
+%token T_LITTYPE_AC
+%token T_LITTYPE_AM
+%token T_LITTYPE_TBL
+%token T_LITTYPE_EXECSET
+%token T_LITTYPE_RPTSET
+
+%token <text> T_VALSEG
+
+%type <objref> ssp-objref
+%type <objpath> objpath
+%token <idseg> T_IDSEG
+%type <params> params
+
+%type <ari> ari
+%type <ari> ssp
+
+%destructor { string_clear($$); } <text>
+%destructor { lit_param_dict_clear($$); } <litparams>
+%destructor { ari_lit_deinit(&$$); } <lit>
+%destructor { if ($$) { ari_report_deinit($$); M_MEMORY_DEL($$); } } <report>
+%destructor { ari_ref_deinit(&$$); } <objref>
+%destructor { ari_objpath_deinit(&$$); } <objpath>
+%destructor { ari_idseg_deinit(&$$); } <idseg>
+%destructor { ari_deinit(&$$); } <ari>
+
+%start setinput
+
+%%
+
+setinput : ari YYEOF {
+    ari_init_move(input->ari, &$1);
+}
+
+ari:
+    T_ARI_PREFIX ssp { $$ = $2; }
+    | ssp { $$ = $1; }
+;
+
+ssp:
+    ssp-objref { *ari_init_objref(&$$) = $1; }
+    | ssp-literal { *ari_init_lit(&$$) = $1; }
+;
+
+ssp-literal:
+    T_VALSEG {
+        int res = ari_lit_from_text(scanner, input, &$$, NULL, $1);
+        string_clear($1);
+        if (res) { YYERROR; }
+    }
+    | T_LITTYPE T_VALSEG {
+        int res = ari_lit_from_text(scanner, input, &$$, &$1, $2);
+        string_clear($2);
+        if (res) { YYERROR; }
+    }
+    | T_LITTYPE_AC acbracket {
+        $$ = $2;
+    }
+    | T_LITTYPE_AM ambracket {
+        $$ = $2;
+    }
+    | T_LITTYPE_TBL litparamlist {
+        string_t key;
+        string_init_set_str(key, "c");
+        ari_a1_t *found_c = lit_param_dict_get($2, key);
+        string_clear(key);
+
+        bool valid = false;
+        size_t ncols = 0;
+        if (found_c)
+        {
+            valid = (ari_get_uvast(*found_c, &ncols) == 0);
+        }
+        if (!valid)
+        {
+            ari_str_error(scanner, input, "TBL has invalid key \"c\"");
+            YYERROR;
+        }
+        input->tbl_c = ncols;
+    } tblrowlist {
+        lit_param_dict_clear($2); // parameter still kept up to this point
+        $$ = $4;
+    }
+    | T_LITTYPE_EXECSET litparamlist acbracket {
+        string_t key;
+        string_init_set_str(key, "n");
+        ari_a1_t *found_n = lit_param_dict_get($2, key);
+        string_clear(key);
+
+        if (found_n)
+        {
+            if ((*found_n)->is_ref)
+            {
+                ari_deinit(*found_n);
+                found_n = NULL;
+            }
+            else
+            {
+                switch ((*found_n)->as_lit.prim_type)
+                {
+                    case ARI_PRIM_NULL:
+                    case ARI_PRIM_INT64:
+                    case ARI_PRIM_UINT64:
+                    case ARI_PRIM_BSTR:
+                        break;
+                    default:
+                        ari_deinit(*found_n);
+                        found_n = NULL;
+                }
+            }
+        }
+        if (!found_n)
+        {
+            lit_param_dict_clear($2);
+            ari_lit_deinit(&$3);
+            ari_str_error(scanner, input, "EXECSET has invalid key \"n\"");
+            YYERROR;
+        }
+
+        ari_lit_init_container(&$$, ARI_TYPE_EXECSET);
+        ari_init_move(&($$.value.as_execset->nonce), *found_n);
+        lit_param_dict_clear($2);
+
+        ari_list_move($$.value.as_execset->targets, $3.value.as_ac->items);
+        ari_list_init($3.value.as_ac->items);
+        ari_lit_deinit(&$3);
+    }
+    | T_LITTYPE_RPTSET litparamlist reportlist {
+        string_t key;
+        string_init_set_str(key, "n");
+        ari_a1_t *found_n = lit_param_dict_get($2, key);
+        string_clear(key);
+
+        string_init_set_str(key, "r");
+        ari_a1_t *found_r = lit_param_dict_get($2, key);
+        string_clear(key);
+
+        if (found_n)
+        {
+            if ((*found_n)->is_ref)
+            {
+                ari_deinit(*found_n);
+                found_n = NULL;
+            }
+            else
+            {
+                switch ((*found_n)->as_lit.prim_type)
+                {
+                    case ARI_PRIM_NULL:
+                    case ARI_PRIM_INT64:
+                    case ARI_PRIM_UINT64:
+                    case ARI_PRIM_BSTR:
+                        break;
+                    default:
+                        ari_deinit(*found_n);
+                        found_n = NULL;
+                }
+            }
+        }
+        if (!found_n)
+        {
+            lit_param_dict_clear($2);
+            ari_lit_deinit(&$3);
+            ari_str_error(scanner, input, "RPTSET has invalid key \"n\"");
+            YYERROR;
+        }
+
+        if (found_r)
+        {
+            if ((*found_r)->is_ref)
+            {
+                ari_deinit(*found_r);
+                found_r = NULL;
+            }
+            else
+            {
+                //FIXME where to convert (and check) type?
+            }
+        }
+        if (!found_r)
+        {
+            lit_param_dict_clear($2);
+            ari_lit_deinit(&$3);
+            ari_str_error(scanner, input, "RPTSET has invalid key \"r\"");
+            YYERROR;
+        }
+
+        $$ = $3;
+        ari_init_move(&($$.value.as_rptset->nonce), *found_n);
+        ari_init_move(&($$.value.as_rptset->reftime), *found_r);
+        lit_param_dict_clear($2);
+    }
+;
+
+acbracket:
+    T_LPAREN T_RPAREN {
+        ari_lit_init_container(&$$, ARI_TYPE_AC);
+    }
+    | T_LPAREN aclist T_RPAREN {
+        $$ = $2;
+    }
+;
+
+aclist:
+    ari {
+        ari_lit_init_container(&$$, ARI_TYPE_AC);
+        ari_t *item = *ari_list_push_back_new($$.value.as_ac->items);
+        *item = $1;
+    }
+    | aclist T_COMMA ari {
+        $$ = $1;
+        ari_t *item = *ari_list_push_back_new($$.value.as_ac->items);
+        *item = $3;
+    }
+;
+
+ambracket:
+    T_LPAREN T_RPAREN {
+        ari_lit_init_container(&$$, ARI_TYPE_AM);
+    }
+    | T_LPAREN amlist T_RPAREN {
+        $$ = $2;
+    }
+;
+
+amlist:
+    ari T_EQ ari {
+        ari_lit_init_container(&$$, ARI_TYPE_AM);
+        ari_t *val = *ari_dict_safe_get($$.value.as_am->items, &$1);
+        ari_set_move(val, &$3);
+        ari_deinit(&$1);
+    }
+    | amlist T_COMMA ari T_EQ ari {
+        $$ = $1;
+        ari_t *val = *ari_dict_safe_get($$.value.as_am->items, &$3);
+        ari_set_move(val, &$5);
+        ari_deinit(&$3);
+    }
+;
+
+litparamlist:
+    %empty {
+        lit_param_dict_init($$);
+    }
+    | litparamlist T_VALSEG T_EQ ari T_SC {
+        lit_param_dict_init_move($$, $1);
+        ari_a1_t *val = lit_param_dict_safe_get($$, $2);
+        ari_set_move(*val, &$4);
+        string_clear($2);
+    }
+;
+
+tblrowlist:
+    %empty {
+        ari_lit_init_container(&$$, ARI_TYPE_TBL);
+        // count taken from "litparamlist" rule
+        $$.value.as_tbl->ncols = input->tbl_c;
+    }
+    | tblrowlist acbracket {
+        $$ = $1;
+
+        int res = ari_tbl_move_row($$.value.as_tbl, $2.value.as_ac);
+        ari_lit_deinit(&$2);
+        if (res)
+        {
+            ari_lit_deinit(&$$);
+            ari_str_error(scanner, input, "Table row size is mismatched from table");
+            YYERROR;
+        }
+    }
+;
+
+reportlist:
+    %empty {
+        ari_lit_init_container(&$$, ARI_TYPE_RPTSET);
+    }
+    | reportlist report {
+        $$ = $1;
+        ari_report_t *rpt = ari_report_list_push_back_new($$.value.as_rptset->reports);
+        ari_report_set_move(*rpt, $2);
+        M_MEMORY_DEL($2);
+    }
+;
+
+report:
+    T_LPAREN litparamlist acbracket T_RPAREN {
+        $$ = M_MEMORY_ALLOC(struct ari_report_s);
+        ari_report_init($$);
+
+        string_t key;
+        string_init_set_str(key, "t");
+        ari_a1_t *found_t = lit_param_dict_get($2, key);
+        string_clear(key);
+
+        string_init_set_str(key, "s");
+        ari_a1_t *found_s = lit_param_dict_get($2, key);
+        string_clear(key);
+
+        if (found_t)
+        {
+            if ((*found_t)->is_ref)
+            {
+                ari_deinit(*found_t);
+                found_t = NULL;
+            }
+            else
+            {
+                //FIXME where to convert (and check) type?
+            }
+        }
+        if (!found_t)
+        {
+            lit_param_dict_clear($2);
+            ari_lit_deinit(&$3);
+            ari_str_error(scanner, input, "RPT has invalid key \"t\"");
+            YYERROR;
+        }
+
+        if (found_s)
+        {
+            if (!((*found_s)->is_ref))
+            {
+                ari_deinit(*found_s);
+                found_s = NULL;
+            }
+            else
+            {
+                //FIXME where to convert (and check) type?
+            }
+        }
+        if (!found_s)
+        {
+            lit_param_dict_clear($2);
+            ari_lit_deinit(&$3);
+            ari_str_error(scanner, input, "RPT has invalid key \"s\"");
+            YYERROR;
+        }
+
+        ari_init_move(&($$->reltime), *found_t);
+        ari_init_move(&($$->source), *found_s);
+        lit_param_dict_clear($2);
+
+        ari_list_move($$->items, $3.value.as_ac->items);
+        ari_list_init($3.value.as_ac->items);
+        ari_lit_deinit(&$3);
+    }
+;
+
+ssp-objref:
+    objpath { $$.objpath = $1; $$.params.state = ARI_PARAMS_NONE; }
+    | objpath params { $$.objpath = $1; $$.params = $2; }
+;
+
+objpath:
+    T_IDSEG T_IDSEG T_IDSEG {
+        ari_objpath_init(&$$);
+        $$.ns_id = $1;
+        $$.type_id = $2;
+        $$.obj_id = $3;
+        ari_objpath_derive_type(&$$);
+    }
+    | T_IDSEG {
+        ari_objpath_init(&$$);
+        $$.ns_id = $1;
+    }
+;
+
+params:
+    T_LPAREN T_RPAREN { $$.state = ARI_PARAMS_NONE; }
+    | T_LPAREN aclist T_RPAREN { $$.state = ARI_PARAMS_AC; $$.as_ac = $2.value.as_ac; }
+    | T_LPAREN amlist T_RPAREN { $$.state = ARI_PARAMS_AM; $$.as_am = $2.value.as_am; }
+;
+
+%%
+
+int ari_text_decode(ari_t *ari, const string_t text, const char **errm)
+{
+    yyscan_t scanner;
+    int res;
+    ari_text_str_t input = {
+      .src = fmemopen((void *)string_get_cstr(text), string_size(text) + 1, "r"),
+      .ari = ari,
+      .errm = errm,
+    };
+
+    ari_str_lex_init_extra(&input, &scanner);
+    ari_str_set_in(input.src, scanner);
+    res = ari_str_parse(scanner, &input);
+    ari_str_lex_destroy(scanner);
+    fclose(input.src);
+
+    return res;
+}
+
+int ari_lit_from_text(yyscan_t *scanner, ari_text_str_t *input, ari_lit_t *lit, ari_type_t *typ, string_t val)
+{
+    *lit = (ari_lit_t){
+        .has_ari_type = (!!typ),
+        .ari_type = (typ ? *typ : ARI_TYPE_NULL),
+    };
+
+    const char *errm = NULL;
+    int res = ari_text_valseg_decode(lit, string_get_cstr(val), &errm);
+    if (res)
+    {
+        ari_str_error(scanner, input, errm);
+        if (errm)
+        {
+            M_MEMORY_FREE((char *)errm);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+void ari_str_error(yyscan_t *scanner, ari_text_str_t *input, char const *msg)
+{
+    if (!input || !(input->errm))
+    {
+        return;
+    }
+
+    string_t str;
+    string_init(str);
+    string_cat_printf(str, "Parse error at %d: %s", 
+                      ari_str_get_column(scanner), msg);
+
+    *(input->errm) = m_string_clear_get_cstr(str);
+}

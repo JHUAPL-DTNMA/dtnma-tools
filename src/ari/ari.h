@@ -15,16 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup ari
+ * This file contains the definitions, prototypes, constants, and
+ * other information necessary for the identification and
+ * processing of AMM Resource Identifiers (ARIs). Every object in
+ * the AMM can be uniquely identified using an ARI.
+ */
+#ifndef ARI_ARI_H_
+#define ARI_ARI_H_
 
-/// Provide a name-mapping thunk between OSAL runtime and Unity test function
-#include <osapi-common.h>
-#include <osapi-bsp.h>
+#include "ari_base.h"
+#include "ari_containers.h"
+#include "ari_access.h"
 
-/// The entrypoint name created by unity
-int unity_main(void);
-
-/// The OSAL entrypoint signature
-void OS_Application_Run(void)
-{
-    OS_BSP_SetExitCode(unity_main());
-}
+#endif /* ARI_ARI_H_ */

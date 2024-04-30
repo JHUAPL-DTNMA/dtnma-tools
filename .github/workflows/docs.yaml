@@ -34,10 +34,10 @@ jobs:
           sudo apt-get update && sudo apt-get install -y
           cmake ninja-build
           ruby build-essential autoconf libtool
-          civetweb libcivetweb-dev libssl-dev libcjson-dev
+          flex bison civetweb libcivetweb-dev libssl-dev libcjson-dev
           doxygen graphviz plantuml
       - name: Prep
-        run: ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_DOCS=ON
+        run: ./deps && ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_DOCS=ON
       - name: Build
         run: ./build.sh docs
       - name: Compress

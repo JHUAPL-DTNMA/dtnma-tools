@@ -65,7 +65,8 @@ jobs:
         sudo apt-get update && sudo apt-get install -y \
           cmake ninja-build \
           ruby build-essential autoconf libtool \
-          civetweb libcivetweb-dev libssl-dev libcjson-dev
+          flex bison civetweb libcivetweb-dev libssl-dev libcjson-dev
+	./deps.sh
         ./prep.sh
 
     # Initializes the CodeQL tools for scanning.

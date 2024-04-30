@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2023 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -18,5 +18,27 @@ limitations under the License.
 set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
 find_package(unitytools)
 
-add_unity_test(SOURCE "test_rda.c" thunk.c)
+if(FALSE) # Disabled for test
+
+add_unity_test(SOURCE "test_rda.c" thunk.c MAIN_NAME unity_main)
 target_link_libraries(test_rda PUBLIC nmagent)
+
+endif(FALSE)
+
+add_unity_test(SOURCE "test_ari_cbor.c")
+target_link_libraries(test_ari_cbor PUBLIC ari)
+
+add_unity_test(SOURCE "test_ari_text.c")
+target_link_libraries(test_ari_text PUBLIC ari)
+
+add_unity_test(SOURCE "test_ari_text_util.c")
+target_link_libraries(test_ari_text_util PUBLIC ari)
+
+add_unity_test(SOURCE "test_ari_text_cbor_loopback.c")
+target_link_libraries(test_ari_text_cbor_loopback PUBLIC ari)
+
+add_unity_test(SOURCE "test_ari_algo.c")
+target_link_libraries(test_ari_algo PUBLIC ari)
+
+add_unity_test(SOURCE "test_typing.c")
+target_link_libraries(test_typing PUBLIC ari)

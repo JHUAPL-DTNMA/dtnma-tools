@@ -1,0 +1,78 @@
+/*
+ * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Delay-Tolerant Networking Management
+ * Architecture (DTNMA) Tools package.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/** @file
+ * @ingroup ari
+ * Configuration items driven by CMake options and user tailoring.
+ */
+#ifndef ARI_ARI_CONFIG_H_
+#define ARI_ARI_CONFIG_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Enable text-form parsing based on lex+yacc configuration. */
+#cmakedefine ARI_TEXT_PARSE
+
+/* Enable look-up table (LUT) caching at runtime. */
+#cmakedefine ENABLE_LUT_CACHE
+
+/* Ablet o use GNU Getopt extensions. */
+#cmakedefine HAVE_GETOPT_LONG
+
+#ifndef ARI_MALLOC
+/** Uses the same function signature as C99 malloc().
+ */
+#define ARI_MALLOC malloc
+#endif /* ARI_MALLOC */
+
+#ifndef ARI_REALLOC
+/** Uses the same function signature as C99 realloc().
+ */
+#define ARI_REALLOC realloc
+#endif /* ARI_REALLOC */
+
+#ifndef ARI_FREE
+/** Uses the same function signature as C99 free().
+ */
+#define ARI_FREE free
+#endif /* ARI_FREE */
+
+/** Define to override value/struct allocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_ALLOC(type) ARI_MALLOC(sizeof(type));
+/** Define to override value/struct deallocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_DEL(ptr) ARI_FREE(ptr);
+
+/** Define to override array allocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? NULL : ARI_REALLOC((ptr), (n)*sizeof (type)))
+/** Define to override array deallocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_FREE(ptr) ARI_FREE(ptr);
+
+#ifdef __cplusplus
+} // extern C
+#endif
+
+#endif  /* ARI_ARI_CONFIG_H_ */
