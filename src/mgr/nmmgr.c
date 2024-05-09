@@ -149,10 +149,10 @@ int nmmgr_init(nmmgr_t *mgr)
     	return AMP_FAIL;
     }
 
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-	db_mgr_sql_init();
-	success = db_mgt_init(gMgrDB.sql_info, 0, 1);
-#endif
+// #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+// 	db_mgr_sql_init();
+// 	success = db_mgt_init(gMgrDB.sql_info, 0, 1);
+// #endif
 
     success = AMP_OK;
 

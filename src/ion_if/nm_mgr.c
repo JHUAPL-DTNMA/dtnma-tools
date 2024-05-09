@@ -106,13 +106,20 @@ OS_Application_Startup()
       AMP_DEBUG_EXIT("mgr_init","->-1.",NULL);
       OS_ApplicationExit(EXIT_FAILURE);
   }
-
+  
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+	db_mgr_sql_init();
+	 db_mgt_init(gMgrDB.sql_info, 0, 1);
+#endif
   /* Initialize the AMP Manager. */
   if(nmmgr_init(&mgr) != AMP_OK)
   {
       AMP_DEBUG_ERR("main","Can't init Manager.", NULL);
       OS_ApplicationExit(EXIT_FAILURE);
   }
+
+
+  
   mgr.mif.send = msg_bp_send;
   mgr.mif.receive = msg_bp_recv;
   mgr.mif.ctx = &ion_ptr;
@@ -253,6 +260,7 @@ char* mgr_parse_args(int argc, char *const argv[])
     {
         return argv[optind];
     }
+
 }
 
 void mgr_print_usage(void)
