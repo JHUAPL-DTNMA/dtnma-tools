@@ -209,17 +209,12 @@ if(BUILD_MANAGER)
   endif(MYSQLCLIENT_FOUND)
   if(PostgreSQL_FOUND)
     message(STATUS "Manager using POSTGRES client")
-    add_definitions(-DHAVE_MYSQL=1)
-    target_compile_definitions(nmmgr HAVE_POSTGRESQL)
-    target_link_libraries(nmmgr PUBLIC PostgreSQL::PostgreSQL)
-  endif(PostgreSQL_FOUND)
-  message(STATUS "Manager using POSTGRES client")
     target_compile_definitions(nmmgr PUBLIC HAVE_POSTGRESQL)
     target_link_libraries(nmmgr PUBLIC PostgreSQL::PostgreSQL)
+  endif(PostgreSQL_FOUND)
   if(cJSON_FOUND)
     message(STATUS "Manager using cJSON")
     target_compile_definitions(nmmgr PUBLIC USE_JSON)
-
     target_link_libraries(nmmgr PUBLIC cjson)
   endif(cJSON_FOUND)
   if(civetweb_FOUND)
@@ -241,16 +236,11 @@ if(BUILD_MANAGER)
   )
   
 
-
-  find_package(PostgreSQL REQUIRED)
-  add_definitions(-DHAVE_POSTGRESQL=1)
+  
   add_executable(ion_nm_mgr ${CFILES} ${HFILES})
   target_link_libraries(ion_nm_mgr nmmgr)
   target_link_libraries(ion_nm_mgr ION::BP)
-  target_link_libraries(ion_nm_mgr PostgreSQL::PostgreSQL)
 
-
- 
   install(
     TARGETS nmmgr ion_nm_mgr
     RUNTIME
