@@ -206,6 +206,10 @@ if(BUILD_MANAGER)
     message(STATUS "Manager using MySQL client")
     target_compile_definitions(nmmgr PUBLIC HAVE_MYSQL)
     target_link_libraries(nmmgr PUBLIC PkgConfig::MYSQLCLIENT)
+  elseif(PostgreSQL_FOUND)
+    message(STATUS "Manager using POSTGRES client")
+    target_compile_definitions(nmmgr PUBLIC HAVE_POSTGRESQL)
+    target_link_libraries(nmmgr PUBLIC PostgreSQL::PostgreSQL)
   endif(MYSQLCLIENT_FOUND)
   if(cJSON_FOUND)
     message(STATUS "Manager using cJSON")
@@ -229,6 +233,9 @@ if(BUILD_MANAGER)
     ion_if/ion_if.c
     ion_if/nm_mgr.c
   )
+  
+
+  
   add_executable(ion_nm_mgr ${CFILES} ${HFILES})
   target_link_libraries(ion_nm_mgr nmmgr)
   target_link_libraries(ion_nm_mgr ION::BP)
@@ -237,4 +244,5 @@ if(BUILD_MANAGER)
     TARGETS nmmgr ion_nm_mgr
     RUNTIME
   )
+  
 endif(BUILD_MANAGER)

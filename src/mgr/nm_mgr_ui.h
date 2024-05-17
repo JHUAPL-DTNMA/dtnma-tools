@@ -116,7 +116,7 @@ void ui_menu_ctrl_show();
 void ui_print_nop();
 void *ui_thread(void *arg);
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 int ui_menu_sql_do(uint8_t choice);
 void ui_menu_sql_show();
 

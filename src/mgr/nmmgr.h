@@ -66,7 +66,7 @@
 extern "C" {
 #endif
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 #include "nm_mgr_sql.h"
 #endif
 
@@ -108,7 +108,7 @@ typedef struct
 	amp_uvast tot_rpts;
 	amp_uvast tot_tbls;
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 	sql_db_t sql_info;
 #endif
 } mgr_db_t;

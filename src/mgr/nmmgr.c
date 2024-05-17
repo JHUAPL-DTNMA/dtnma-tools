@@ -77,7 +77,7 @@ mgr_db_t gMgrDB;
 int nmmgr_destroy(nmmgr_t *mgr)
 {
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 	db_mgt_close();
 #endif
 
@@ -139,24 +139,20 @@ int nmmgr_init(nmmgr_t *mgr)
 
 
 	gMgrDB.tot_rpts = 0;
-    gMgrDB.tot_tbls = 0;
+	gMgrDB.tot_tbls = 0;
 
-    if((utils_mem_int() != AMP_OK) ||
-       (db_init("nmmgr_db", &adm_common_init) != AMP_OK))
-    {
-    	db_destroy();
-    	AMP_DEBUG_ERR("nmmgr_init","Unable to initialize DB.", NULL);
-    	return AMP_FAIL;
-    }
+	if((utils_mem_int() != AMP_OK) ||
+			(db_init("nmmgr_db", &adm_common_init) != AMP_OK))
+	{
+		db_destroy();
+		AMP_DEBUG_ERR("nmmgr_init","Unable to initialize DB.", NULL);
+		return AMP_FAIL;
+	}
 
-#ifdef HAVE_MYSQL
-	db_mgr_sql_init();
-	success = db_mgt_init(gMgrDB.sql_info, 0, 1);
-#endif
 
-    success = AMP_OK;
+	success = AMP_OK;
 
-    return success;
+	return success;
 }
 
 int nmmgr_start(nmmgr_t *mgr)
@@ -168,7 +164,7 @@ int nmmgr_start(nmmgr_t *mgr)
       {&ui_thread, "nm_mgr_ui"},
       {NULL, NULL},
   };
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
   threadinfo[2] = (threadinfo_t){&db_mgt_daemon, "nm_mgr_db"};
 #endif
   if (threadset_start(&mgr->threads, threadinfo, sizeof(threadinfo)/sizeof(threadinfo_t), mgr) != AMP_OK)

@@ -39,7 +39,7 @@
  **  08/22/15  E. Birrane     Updates for new schema and dynamic user permissions. (Secure DTN - NASA: NNX14CS58P)
  **  10/20/18  E. Birrane     Updates for AMPv0.5 (JHU/APL)
  *****************************************************************************/
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 
 #ifndef NM_MGR_SQL_H
 #define NM_MGR_SQL_H
@@ -47,7 +47,14 @@
 /* System Headers */
 #include <stdio.h>
 #include <unistd.h>
+
+#ifdef HAVE_MYSQL
 #include <mysql.h>
+#endif //HAVE_MYSQL
+
+#ifdef HAVE_POSTGRESQL
+#include <libpq-fe.h>
+#endif // HAVE_POSTGRESQL
 
 #include "shared/platform.h"
 
@@ -63,9 +70,7 @@
 #include "shared/utils/utils.h"
 #include "shared/utils/vector.h"
 
-//#include "nm_mgr_ui.h"
 #include "agents.h"
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -171,7 +176,12 @@ int      db_mgt_clear_table(char *table);
 void     db_mgt_close();
 void     db_mgt_close_conn(size_t i);
 int      db_mgt_connected(size_t i);
+#ifdef HAVE_MYSQL
 int32_t  db_mgt_query_fetch(MYSQL_RES **res, char *format, ...);
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+int32_t  db_mgt_query_fetch(PGresult **res, char *format, ...);
+#endif // HAVE_POSTGRESQL
 int32_t  db_mgt_query_insert(uint32_t *idx, char *format, ...);
 void     db_mgt_txn_start();
 //void     db_mgt_txn_commit();
@@ -185,7 +195,6 @@ int      db_mgr_sql_init();
 
 
 /* Functions to process outgoing message tables. */
-int32_t  db_tx_msg_groups(MYSQL_RES *sql_res);
 int32_t  db_tx_build_group(int32_t grp_idx, msg_grp_t *msg_group);
 int      db_tx_collect_agents(int32_t grp_idx, vector_t *vec);
 
@@ -235,7 +244,7 @@ int32_t           db_fetch_protomid_idx(mid_t *mid);
 
 
 
-#endif
+#endif // 0
 
 
 // If set, always log CBOR-encoded inputs and outputs to DB for debug purposes.  Received reports shall always be logged in the event of an error.

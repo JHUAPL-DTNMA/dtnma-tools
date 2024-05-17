@@ -91,6 +91,7 @@ find_package(MLIB)
 if(BUILD_MANAGER)
   # All these are optional
   pkg_search_module(MYSQLCLIENT mysqlclient IMPORTED_TARGET)
+  find_package(PostgreSQL)
   find_package(civetweb)
   find_package(cJSON)
 endif(BUILD_MANAGER)
