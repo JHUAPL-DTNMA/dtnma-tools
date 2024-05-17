@@ -70,9 +70,7 @@
 #include "shared/utils/utils.h"
 #include "shared/utils/vector.h"
 
-//#include "nm_mgr_ui.h"
 #include "agents.h"
-// #include "nmmgr.h"
 
 #ifdef __cplusplus
 extern "C" {

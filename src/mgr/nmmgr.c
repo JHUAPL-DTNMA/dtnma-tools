@@ -139,24 +139,20 @@ int nmmgr_init(nmmgr_t *mgr)
 
 
 	gMgrDB.tot_rpts = 0;
-    gMgrDB.tot_tbls = 0;
+	gMgrDB.tot_tbls = 0;
 
-    if((utils_mem_int() != AMP_OK) ||
-       (db_init("nmmgr_db", &adm_common_init) != AMP_OK))
-    {
-    	db_destroy();
-    	AMP_DEBUG_ERR("nmmgr_init","Unable to initialize DB.", NULL);
-    	return AMP_FAIL;
-    }
+	if((utils_mem_int() != AMP_OK) ||
+			(db_init("nmmgr_db", &adm_common_init) != AMP_OK))
+	{
+		db_destroy();
+		AMP_DEBUG_ERR("nmmgr_init","Unable to initialize DB.", NULL);
+		return AMP_FAIL;
+	}
 
-// #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-// 	db_mgr_sql_init();
-// 	success = db_mgt_init(gMgrDB.sql_info, 0, 1);
-// #endif
 
-    success = AMP_OK;
+	success = AMP_OK;
 
-    return success;
+	return success;
 }
 
 int nmmgr_start(nmmgr_t *mgr)
