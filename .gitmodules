@@ -4,8 +4,7 @@
 	branch = master
 [submodule "deps/ion"]
 	path = deps/ion
-	url = https://git.code.sf.net/p/ion-dtn/code
-	branch = stable
+	url = https://github.com/nasa-jpl/ION-DTN.git
 [submodule "deps/mlib"]
 	path = deps/mlib
 	url = https://github.com/P-p-H-d/mlib.git
