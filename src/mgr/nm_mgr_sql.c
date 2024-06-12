@@ -435,7 +435,7 @@ uint32_t db_incoming_initialize(amp_tv_t timestamp, eid_t sender_eid)
 	CHKZERO(!db_mgt_connected(DB_RPT_CON));
 
 	dbprep_declare(DB_RPT_CON, MSGS_INCOMING_CREATE, 2, 1);
-	dbprep_bind_param_int(0,timestamp.secs.ticks);
+	dbprep_bind_param_int(0,OS_TimeGetTotalSeconds(timestamp.secs));
 	dbprep_bind_param_str(1,name);
 	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
@@ -4814,6 +4814,10 @@ int db_query_ari_metadata(db_con_t dbidx, ari_t *ari, uint32_t *metadata_id, uin
  	mysql_stmt_free_result(stmt);
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
+	char *iptr = PQgetvalue(res, 0, metadata_id_fnum);
+	*metadata_id = ntohl(*((uint32_t *) iptr));
+	iptr = PQgetvalue(res, 0, fp_spec_id_fnum);
+	*fp_spec_id = ntohl(*((uint32_t *) iptr));
 	PQclear(res);
 	#endif // HAVE_POSTGRESQL
 	return AMP_OK;
@@ -4826,11 +4830,12 @@ uint32_t db_insert_ari_reg(db_con_t dbidx, ari_t *ari, int *status)
 	uint32_t params_id = 0;
 	uint32_t rtv = 0;
 	
+	int adm_enum; // ari->as_reg.nn_idx
+	int adm_obj_type;
+		
 	// If Nickname (including Namespace) is defined
 	if(ARI_GET_FLAG_NN(ari->as_reg.flags))
 	{
-		int adm_enum; // ari->as_reg.nn_idx
-		int adm_obj_type;
 		
 		// Query metadata
 		if (db_query_ari_metadata(dbidx, ari, &metadata_id, &fp_spec_id) == AMP_FAIL)
@@ -4842,12 +4847,12 @@ uint32_t db_insert_ari_reg(db_con_t dbidx, ari_t *ari, int *status)
 
 	}
 	// If Namespace is not defined, not supported at present
-	else
-	{
-		DB_LOG_ERR(dbidx,"db_insert ARI CTRL without defined NN not currently supported");
-		*status = AMP_FAIL;
-		return 0;
-	}
+	// else
+	// {
+	// 	DB_LOG_ERR(dbidx,"db_insert ARI CTRL without defined NN not currently supported");
+	// 	*status = AMP_FAIL;
+	// 	return 0;
+	// }
 
 	// Insert Parameters (if any)
 	params_id = db_insert_tnvc_params(dbidx, fp_spec_id, &(ari->as_reg.parms), status);
@@ -4875,7 +4880,7 @@ uint32_t db_insert_ari_reg(db_con_t dbidx, ari_t *ari, int *status)
   #endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
 	dbexec_prepared;
-	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
+	// DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
 	int nrows = PQntuples(res);
 	#endif // HAVE_POSTGRESQL
 
@@ -4896,6 +4901,8 @@ uint32_t db_insert_ari_reg(db_con_t dbidx, ari_t *ari, int *status)
  	mysql_stmt_free_result(stmt);
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
+	char *iptr = PQgetvalue(res, 0, 0);
+  rtv = ntohl(*((uint32_t *) iptr));
 	PQclear(res);
 	#endif // HAVE_POSTGRESQL
 	return rtv;
@@ -5002,6 +5009,8 @@ uint32_t db_insert_ac(db_con_t dbidx, ac_t *ac, int *status)
  	mysql_stmt_free_result(stmt);
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
+	char *iptr = PQgetvalue(res, 0, 0);
+	rtv = ntohl(*((uint32_t *) iptr));
 	PQclear(res);
 	#endif // HAVE_POSTGRESQL
 
@@ -5279,6 +5288,8 @@ uint32_t db_insert_tnvc_params(db_con_t dbidx, uint32_t fp_spec_id, tnvc_t *tnvc
  	mysql_stmt_free_result(stmt);
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
+	char *iptr = PQgetvalue(res, 0, 0);
+	rtv = ntohl(*((uint32_t *) iptr));
 	PQclear(res);
 	#endif // HAVE_POSTGRESQL
 	return rtv;
@@ -5330,6 +5341,8 @@ uint32_t db_insert_tnvc(db_con_t dbidx, tnvc_t *tnvc, int *status)
  	mysql_stmt_free_result(stmt);
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
+	char *iptr = PQgetvalue(res, 0, 0);
+	rtv = ntohl(*((uint32_t *) iptr));
 	PQclear(res);
 	#endif // HAVE_POSTGRESQL
 
@@ -5357,7 +5370,8 @@ void db_insert_msg_rpt_set_rpt(db_con_t dbidx, uint32_t entry_id, rpt_t* rpt, in
 	};
 	dbprep_declare(DB_RPT_CON, MSGS_ADD_REPORT_SET_ENTRY, C_NUM_COLS, 1);
 	dbprep_bind_param_int(C_ENTRY_ID,entry_id);
-	dbprep_bind_param_int(C_TS,rpt->time.ticks);
+	// adding back the AVTIME and the offset to the unixposix for DB storage and display
+	dbprep_bind_param_int(C_TS, (rpt->time.ticks +EPOCH_ABSTIME_DTN + EPOCH_DTN_POSIX));
 
 	/** Prepare Dependent Fields **/
 	uint32_t ari_id=db_insert_ari(dbidx, rpt->id, status);
@@ -5502,6 +5516,8 @@ uint32_t db_insert_msg_reg_agent(uint32_t grp_id, msg_agent_t *msg, int *status)
  	mysql_stmt_free_result(stmt);
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
+	char *iptr = PQgetvalue(res, 0, 0);
+	rtv = ntohl(*((uint32_t *) iptr));
 	PQclear(res);
 	#endif // HAVE_POSTGRESQL
 
@@ -5585,6 +5601,8 @@ uint32_t db_insert_msg_rpt_set(uint32_t grp_id, msg_rpt_t *rpt, int *status)
  	mysql_stmt_free_result(stmt);
 	#endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
+	char *iptr = PQgetvalue(res, 0, 0);
+	rtv = ntohl(*((uint32_t *) iptr));
 	PQclear(res);
 	#endif // HAVE_POSTGRESQL
 

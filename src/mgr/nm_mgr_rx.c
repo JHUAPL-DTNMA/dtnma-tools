@@ -381,6 +381,7 @@ void *mgr_rx_thread(void *arg)
             			msg_agent_t *agent_msg = msg_agent_deserialize(msg_data, &success);
             			rx_agent_reg(&meta, agent_msg);
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+
                         db_insert_msg_reg_agent(incoming_idx, agent_msg, &db_status);
 #endif
                         msg_agent_release(agent_msg, 1);
