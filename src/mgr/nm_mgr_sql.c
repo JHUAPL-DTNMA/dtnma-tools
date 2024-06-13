@@ -162,19 +162,19 @@ static char* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
  
  /******** SQL Utility Macros ******************/
 #ifdef HAVE_MYSQL
-#define dbprep_bind_res_cmn(idx,var,type) \
-			bind_res[idx].buffer_type = type; \
-			bind_res[idx].buffer = (char*)var; \
-   bind_res[idx].is_null = &is_null[idx];        \
-   bind_res[idx].error = &is_err[idx];
-
-#define dbprep_bind_param_cmn(idx,var,type) \
-			bind_param[idx].buffer_type = type; \
-			bind_param[idx].buffer = (char*)&var; \
-    bind_param[idx].is_null = 0;          \
-    bind_param[idx].error = 0;
+ #define dbprep_bind_res_cmn(idx,var,type) \
+ 	bind_res[idx].buffer_type = type; \
+ 	bind_res[idx].buffer = (char*)var; \
+    bind_res[idx].is_null = &is_null[idx];        \
+    bind_res[idx].error = &is_err[idx];
 #endif // HAVE_MYSQL
 
+#ifdef HAVE_MYSQL
+ #define dbprep_bind_param_cmn(idx,var,type) \
+ 	bind_param[idx].buffer_type = type; \
+ 	bind_param[idx].buffer = (char*)&var; \
+     bind_param[idx].is_null = 0;          \
+     bind_param[idx].error = 0;
  
 #ifdef HAVE_POSTGRESQL
 static void double_to_nbo(double in, double *out) {
@@ -4828,13 +4828,13 @@ uint32_t db_insert_ari_reg(db_con_t dbidx, ari_t *ari, int *status)
 	uint32_t params_id = 0;
 	uint32_t rtv = 0;
 	
-	int adm_enum; // ari->as_reg.nn_idx
-	int adm_obj_type;
+	
 		
 	// If Nickname (including Namespace) is defined
 	if(ARI_GET_FLAG_NN(ari->as_reg.flags))
 	{
-		
+		int adm_enum; // ari->as_reg.nn_idx
+		int adm_obj_type;
 		// Query metadata
 		if (db_query_ari_metadata(dbidx, ari, &metadata_id, &fp_spec_id) == AMP_FAIL)
 		{
@@ -4845,12 +4845,12 @@ uint32_t db_insert_ari_reg(db_con_t dbidx, ari_t *ari, int *status)
 
 	}
 	// If Namespace is not defined, not supported at present
-	// else
-	// {
-	// 	DB_LOG_ERR(dbidx,"db_insert ARI CTRL without defined NN not currently supported");
-	// 	*status = AMP_FAIL;
-	// 	return 0;
-	// }
+	else
+	{
+		DB_LOG_ERR(dbidx,"db_insert ARI CTRL without defined NN not currently supported");
+		*status = AMP_FAIL;
+		return 0;
+	}
 
 	// Insert Parameters (if any)
 	params_id = db_insert_tnvc_params(dbidx, fp_spec_id, &(ari->as_reg.parms), status);
