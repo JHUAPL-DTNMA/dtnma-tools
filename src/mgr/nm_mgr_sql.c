@@ -175,7 +175,7 @@ static char* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
  	bind_param[idx].buffer = (char*)&var; \
      bind_param[idx].is_null = 0;          \
      bind_param[idx].error = 0;
- #endif // HAVE_MYSQL
+#endif // HAVE_MYSQL
  
 #ifdef HAVE_POSTGRESQL
 static void double_to_nbo(double in, double *out) {
@@ -5372,7 +5372,8 @@ void db_insert_msg_rpt_set_rpt(db_con_t dbidx, uint32_t entry_id, rpt_t* rpt, in
 	dbprep_declare(DB_RPT_CON, MSGS_ADD_REPORT_SET_ENTRY, C_NUM_COLS, 1);
 	dbprep_bind_param_int(C_ENTRY_ID,entry_id);
 	// adding back the AVTIME and the offset to the unixposix for DB storage and display
-	dbprep_bind_param_int(C_TS, (rpt->time.ticks +EPOCH_ABSTIME_DTN + EPOCH_DTN_POSIX));
+	int64 real_time_stamp = rpt->time.ticks +EPOCH_ABSTIME_DTN + EPOCH_DTN_POSIX;
+	dbprep_bind_param_int(C_TS, real_time_stamp);
 
 	/** Prepare Dependent Fields **/
 	uint32_t ari_id=db_insert_ari(dbidx, rpt->id, status);
