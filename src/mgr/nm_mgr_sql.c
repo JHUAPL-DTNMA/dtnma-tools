@@ -162,19 +162,17 @@ static char* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
  
  /******** SQL Utility Macros ******************/
 #ifdef HAVE_MYSQL
- #define dbprep_bind_res_cmn(idx,var,type) \
- 	bind_res[idx].buffer_type = type; \
- 	bind_res[idx].buffer = (char*)var; \
-    bind_res[idx].is_null = &is_null[idx];        \
-    bind_res[idx].error = &is_err[idx];
-#endif // HAVE_MYSQL
- 
-#ifdef HAVE_MYSQL
- #define dbprep_bind_param_cmn(idx,var,type) \
- 	bind_param[idx].buffer_type = type; \
- 	bind_param[idx].buffer = (char*)&var; \
-     bind_param[idx].is_null = 0;          \
-     bind_param[idx].error = 0;
+#define dbprep_bind_res_cmn(idx,var,type) \
+			bind_res[idx].buffer_type = type; \
+			bind_res[idx].buffer = (char*)var; \
+   bind_res[idx].is_null = &is_null[idx];        \
+   bind_res[idx].error = &is_err[idx];
+
+#define dbprep_bind_param_cmn(idx,var,type) \
+			bind_param[idx].buffer_type = type; \
+			bind_param[idx].buffer = (char*)&var; \
+    bind_param[idx].is_null = 0;          \
+    bind_param[idx].error = 0;
 #endif // HAVE_MYSQL
 
  
@@ -4880,7 +4878,7 @@ uint32_t db_insert_ari_reg(db_con_t dbidx, ari_t *ari, int *status)
   #endif // HAVE_MYSQL
 	#ifdef HAVE_POSTGRESQL
 	dbexec_prepared;
-	// DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
+	DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
 	int nrows = PQntuples(res);
 	#endif // HAVE_POSTGRESQL
 
