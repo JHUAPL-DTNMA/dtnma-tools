@@ -175,6 +175,7 @@ static char* queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
  	bind_param[idx].buffer = (char*)&var; \
      bind_param[idx].is_null = 0;          \
      bind_param[idx].error = 0;
+ #endif // HAVE_MYSQL
  
 #ifdef HAVE_POSTGRESQL
 static void double_to_nbo(double in, double *out) {
