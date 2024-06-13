@@ -431,10 +431,12 @@ uint32_t db_incoming_initialize(amp_tv_t timestamp, eid_t sender_eid)
 {
 	uint32_t rtv = 0; // Note: An ID of 0 is reserved as an error condition. MySQL will never create a new entry for this table with a value of 0. // TODO postgresql is that true for postgresql too?
 	char *name = sender_eid.name;
+	int64 time_stamp_seconds = OS_TimeGetTotalSeconds(timestamp.secs); 
+
 	CHKZERO(!db_mgt_connected(DB_RPT_CON));
 
 	dbprep_declare(DB_RPT_CON, MSGS_INCOMING_CREATE, 2, 1);
-	dbprep_bind_param_int(0,OS_TimeGetTotalSeconds(timestamp.secs));
+	dbprep_bind_param_int(0,time_stamp_seconds);
 	dbprep_bind_param_str(1,name);
 	#ifdef HAVE_MYSQL
 	mysql_stmt_bind_param(stmt, bind_param);
