@@ -1496,6 +1496,7 @@ tnv_t *amp_agent_ctrl_gen_rpts(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 		for(ac_it = vecit_first(&(ids->values)); vecit_valid(ac_it); ac_it = vecit_next(ac_it))
 		{
 			ari_t *cur_id = vecit_data(ac_it);
+			
 			OS_time_t timestamp;
 			OS_GetLocalTime(&timestamp);
 			rpt_t *rpt = rpt_create(ari_copy_ptr(cur_id), timestamp, NULL);

@@ -184,7 +184,6 @@ rpt_t* rpt_create(ari_t *id, OS_time_t timestamp, tnvc_t *entries)
 		AMP_DEBUG_EXIT("rpt_create","->NULL",NULL);
 		return NULL;
 	}
-
 	/* Step 2: Populate the report. */
 	result->id = id;
 	result->time = timestamp;
