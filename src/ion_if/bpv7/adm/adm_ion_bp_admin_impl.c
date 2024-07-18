@@ -8,10 +8,10 @@
  **
  ** Assumptions: TODO
  **
- ** Modification History: 
+ ** Modification History:
  **  YYYY-MM-DD  AUTHOR           DESCRIPTION
  **  ----------  --------------   --------------------------------------------
- **  2020-04-13  AUTO             Auto-generated c file 
+ **  2023-04-12  AUTO             Auto-generated c file
  **
  ****************************************************************************/
 
@@ -66,6 +66,12 @@ void dtn_ion_bpadmin_cleanup()
 tnv_t *dtn_ion_bpadmin_meta_name(tnvc_t *parms)
 {
 	return tnv_from_str("ion_bp_admin");
+}
+
+
+tnv_t *dtn_ion_bpadmin_meta_enum(tnvc_t *parms)
+{
+	return tnv_from_str("5");
 }
 
 
@@ -1021,6 +1027,163 @@ tnv_t *dtn_ion_bpadmin_ctrl_outduct_start(eid_t *def_mgr, tnvc_t *parms, int8_t 
 
 
 /*
+ * Stop the indicated outduct task as defined for the indicated CL protocol on the local node.
+ */
+tnv_t *dtn_ion_bpadmin_ctrl_outduct_stop(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
+{
+	tnv_t *result = NULL;
+	*status = CTRL_FAILURE;
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |START CUSTOM FUNCTION ctrl_outduct_stop BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+
+	char *p_name = adm_get_parm_obj(parms, 0, AMP_TYPE_STR);
+	char *d_name = adm_get_parm_obj(parms, 1, AMP_TYPE_STR);
+
+	bpStopOutduct(p_name, d_name);
+	*status = CTRL_SUCCESS;
+
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |STOP CUSTOM FUNCTION ctrl_outduct_stop BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+	return result;
+}
+
+
+/*
+ * Add an egress plan for a specific peer and outduct.
+ */
+tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_add(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
+{
+	tnv_t *result = NULL;
+	*status = CTRL_FAILURE;
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |START CUSTOM FUNCTION ctrl_egress_plan_add BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+	char *neighbor_eid = adm_get_parm_obj(parms, 0, AMP_TYPE_STR);
+	char *protocol_name = adm_get_parm_obj(parms, 1, AMP_TYPE_STR);
+	char *duct_name = adm_get_parm_obj(parms, 2, AMP_TYPE_STR);
+
+	unsigned int xmitRate = 0;
+	if (addPlan(neighbor_eid, xmitRate) <= 0)
+	{
+		return result;
+	}
+
+	VOutduct	*vduct;
+	PsmAddress	vductElt;
+	findOutduct(protocol_name, duct_name, &vduct, &vductElt);
+	if (vductElt == 0)
+	{
+		return result;
+	}
+	attachPlanDuct(neighbor_eid, vduct->outductElt);
+
+	*status = CTRL_SUCCESS;
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |STOP CUSTOM FUNCTION ctrl_egress_plan_add BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+	return result;
+}
+
+
+/*
+ * Remove an egress plan for a specific peer and outduct.
+ */
+tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_del(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
+{
+	tnv_t *result = NULL;
+	*status = CTRL_FAILURE;
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |START CUSTOM FUNCTION ctrl_egress_plan_del BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+	char *neighbor_eid = adm_get_parm_obj(parms, 0, AMP_TYPE_STR);
+	char *duct_name = adm_get_parm_obj(parms, 1, AMP_TYPE_STR);
+
+	VOutduct	*vduct;
+	PsmAddress	vductElt;
+	findOutduct(neighbor_eid, duct_name, &vduct, &vductElt);
+	if (vductElt == 0)
+	{
+		return result;
+	}
+	detachPlanDuct(vduct->outductElt);
+
+	removePlan(neighbor_eid);
+
+	*status = CTRL_SUCCESS;
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |STOP CUSTOM FUNCTION ctrl_egress_plan_del BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+	return result;
+}
+
+
+/*
+ * Start the indicated egress plan task.
+ */
+tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_start(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
+{
+	tnv_t *result = NULL;
+	*status = CTRL_FAILURE;
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |START CUSTOM FUNCTION ctrl_egress_plan_start BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+	char *name = adm_get_parm_obj(parms, 0, AMP_TYPE_STR);
+
+	if(bpStartPlan(name) >= 0)
+	{
+		*status = CTRL_SUCCESS;
+	}
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |STOP CUSTOM FUNCTION ctrl_egress_plan_start BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+	return result;
+}
+
+
+/*
+ * Stop the indicated egress plan task.
+ */
+tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_stop(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
+{
+	tnv_t *result = NULL;
+	*status = CTRL_FAILURE;
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |START CUSTOM FUNCTION ctrl_egress_plan_stop BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+	char *name = adm_get_parm_obj(parms, 0, AMP_TYPE_STR);
+
+	bpStopPlan(name);
+	*status = CTRL_SUCCESS;
+	/*
+	 * +-------------------------------------------------------------------------+
+	 * |STOP CUSTOM FUNCTION ctrl_egress_plan_stop BODY
+	 * +-------------------------------------------------------------------------+
+	 */
+	return result;
+}
+
+
+/*
  * Disable transmission of bundles queued for transmission to the indicated node and reforwards all non
  * -critical bundles currently queued for transmission to this node. This may result in some or all of 
  * these bundles being enqueued for transmission to the psuedo-node limbo.
@@ -1081,36 +1244,19 @@ tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_unblock(eid_t *def_mgr, tnvc_t *parms, i
 
 
 /*
- * Stop the indicated outduct task as defined for the indicated CL protocol on the local node.
- */
-tnv_t *dtn_ion_bpadmin_ctrl_outduct_stop(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
-{
-	tnv_t *result = NULL;
-	*status = CTRL_FAILURE;
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION ctrl_outduct_stop BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-	char *p_name = adm_get_parm_obj(parms, 0, AMP_TYPE_STR);
-	char *d_name = adm_get_parm_obj(parms, 1, AMP_TYPE_STR);
-
-	bpStopOutduct(p_name, d_name);
-	*status = CTRL_SUCCESS;
-
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION ctrl_outduct_stop BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	return result;
-}
-
-
-/*
- * Establish access to the named convergence layer protocol at the local node.
- * The optional protocolCLass indicates the reliability of the protocol.
+ * Establish access to the named convergence layer protocol at the local node. The payloadBytesPerFrame
+ *  and overheadBytesPerFrame arguments are used in calculating the estimated transmission capacity con
+ * sumption of each bundle, to aid in route computation and congesting forecasting. The optional nomina
+ * lDataRate argument overrides the hard coded default continuous data rate for the indicated protocol 
+ * for purposes of rate control. For all promiscuous prototocols-that is, protocols whose outducts are 
+ * not specifically dedicated to transmission to a single identified convergence-layer protocol endpoin
+ * t- the protocol's applicable nominal continuous data rate is the data rate that is always used for r
+ * ate control over links served by that protocol; data rates are not extracted from contact graph info
+ * rmation. This is because only the induct and outduct throttles for non-promiscuous protocols (LTP, T
+ * CP) can be dynamically adjusted in response to changes in data rate between the local node and its n
+ * eighbors, as enacted per the contact plan. Even for an outduct of a non-promiscuous protocol the nom
+ * inal data rate may be the authority for rate control, in the event that the contact plan lacks ident
+ * ified contacts with the node to which the outduct is mapped.
  */
 tnv_t *dtn_ion_bpadmin_ctrl_protocol_add(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 {

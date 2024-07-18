@@ -343,7 +343,7 @@ tnv_t *dtn_bp_agent_get_bundles_by_priority(tnvc_t *parms)
 	int success = 0;
 
 	bpnm_disposition_get(&state);
-	amp_uvast val = 0;
+	uvast val = 0;
 	uint32_t mask = adm_get_parm_uint(parms, 0, &success);
 
 	if(mask & 0x1)
@@ -386,7 +386,7 @@ tnv_t *dtn_bp_agent_get_bytes_by_priority(tnvc_t *parms)
 	NmbpDisposition state;
 	int success = 0;
 	bpnm_disposition_get(&state);
-	amp_uvast val = 0;
+	uvast val = 0;
 	uint32_t mask = adm_get_parm_uint(parms, 0, &success);
 
 	if(mask & 0x1)
@@ -430,7 +430,7 @@ tnv_t *dtn_bp_agent_get_src_bundles_by_priority(tnvc_t *parms)
 	int success = 0;
 	bpnm_disposition_get(&state);
 
-	amp_uvast val = 0;
+	uvast val = 0;
 	uint32_t mask = adm_get_parm_uint(parms, 0, &success);
 
 	if(mask & 0x1)
@@ -474,7 +474,7 @@ tnv_t *dtn_bp_agent_get_src_bytes_by_priority(tnvc_t *parms)
 	int success = 0;
 	bpnm_disposition_get(&state);
 
-	amp_uvast val = 0;
+	uvast val = 0;
 	uint32_t mask = adm_get_parm_uint(parms, 0, &success);
 
 	if(mask & 0x1)
@@ -569,7 +569,7 @@ tnv_t *dtn_bp_agent_get_num_failed_by_reason(tnvc_t *parms)
 	bpnm_disposition_get(&state);
 
 	uint32_t mask = adm_get_parm_uint(parms, 0, &success);
-	amp_uvast val = 0;
+	uvast val = 0;
 
 	if(mask & 0x01)
 	{

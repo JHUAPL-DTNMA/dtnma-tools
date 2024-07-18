@@ -8,10 +8,10 @@
  **
  ** Assumptions: TODO
  **
- ** Modification History: 
+ ** Modification History:
  **  YYYY-MM-DD  AUTHOR           DESCRIPTION
  **  ----------  --------------   --------------------------------------------
- **  2020-04-13  AUTO             Auto-generated header file 
+ **  2023-04-12  AUTO             Auto-generated header file
  **
  ****************************************************************************/
 
@@ -30,14 +30,16 @@
  * |                                 ADM TEMPLATE DOCUMENTATION                                  +
  * +---------------------------------------------------------------------------------------------+
  *
- * ADM ROOT STRING:DTN/ION/bpadmin
+ * ADM ROOT STRING:dtn_ion_bpadmin
  */
-#define ADM_ENUM_DTN_ION_BPADMIN 5
+extern vec_idx_t g_dtn_ion_bpadmin_idx[11];
+
 /*
  * +---------------------------------------------------------------------------------------------+
  * |                                 AGENT NICKNAME DEFINITIONS                                  +
  * +---------------------------------------------------------------------------------------------+
  */
+#define ADM_ENUM_DTN_ION_BPADMIN 5
 
 /*
  * +---------------------------------------------------------------------------------------------+
@@ -46,6 +48,8 @@
  * |        NAME         |             DESCRIPTION              | TYPE  |         VALUE          |
  * +---------------------+--------------------------------------+-------+------------------------+
  * |name                 |The human-readable name of the ADM.   |STR    |ion_bp_admin            |
+ * +---------------------+--------------------------------------+-------+------------------------+
+ * |enum                 |                                      |INT    |5                       |
  * +---------------------+--------------------------------------+-------+------------------------+
  * |namespace            |The namespace of the ADM              |STR    |DTN/ION/bpadmin         |
  * +---------------------+--------------------------------------+-------+------------------------+
@@ -57,12 +61,14 @@
  */
 // "name"
 #define DTN_ION_BPADMIN_META_NAME 0x00
+// "enum"
+#define DTN_ION_BPADMIN_META_ENUM 0x01
 // "namespace"
-#define DTN_ION_BPADMIN_META_NAMESPACE 0x01
+#define DTN_ION_BPADMIN_META_NAMESPACE 0x02
 // "version"
-#define DTN_ION_BPADMIN_META_VERSION 0x02
+#define DTN_ION_BPADMIN_META_VERSION 0x03
 // "organization"
-#define DTN_ION_BPADMIN_META_ORGANIZATION 0x03
+#define DTN_ION_BPADMIN_META_ORGANIZATION 0x04
 
 
 /*
@@ -226,6 +232,20 @@
  * |                     |fined for the indicated CL protocol on|       |
  * |                     | the local node.                      |       |
  * +---------------------+--------------------------------------+-------+
+ * |outduct_stop         |Stop the indicated outduct task as def|       |
+ * |                     |ined for the indicated CL protocol on |       |
+ * |                     |the local node.                       |       |
+ * +---------------------+--------------------------------------+-------+
+ * |egress_plan_add      |Add an egress plan for a specific peer|       |
+ * |                     | and outduct.                         |       |
+ * +---------------------+--------------------------------------+-------+
+ * |egress_plan_del      |Remove an egress plan for a specific p|       |
+ * |                     |eer and outduct.                      |       |
+ * +---------------------+--------------------------------------+-------+
+ * |egress_plan_start    |Start the indicated egress plan task. |       |
+ * +---------------------+--------------------------------------+-------+
+ * |egress_plan_stop     |Stop the indicated egress plan task.  |       |
+ * +---------------------+--------------------------------------+-------+
  * |egress_plan_block    |Disable transmission of bundles queued|       |
  * |                     | for transmission to the indicated nod|       |
  * |                     |e and reforwards all non-critical bund|       |
@@ -241,14 +261,40 @@
  * |                     |nblocking of this egress plan will ena|       |
  * |                     |ble some of them to be transmitted.   |       |
  * +---------------------+--------------------------------------+-------+
- * |outduct_stop         |Stop the indicated outduct task as def|       |
- * |                     |ined for the indicated CL protocol on |       |
- * |                     |the local node.                       |       |
- * +---------------------+--------------------------------------+-------+
  * |protocol_add         |Establish access to the named converge|       |
  * |                     |nce layer protocol at the local node. |       |
- * |                     |The optional protocolClass argument in|       |
- * |                     |dicates the protocol's reliability.   |       |
+ * |                     |The payloadBytesPerFrame and overheadB|       |
+ * |                     |ytesPerFrame arguments are used in cal|       |
+ * |                     |culating the estimated transmission ca|       |
+ * |                     |pacity consumption of each bundle, to |       |
+ * |                     |aid in route computation and congestin|       |
+ * |                     |g forecasting. The optional nominalDat|       |
+ * |                     |aRate argument overrides the hard code|       |
+ * |                     |d default continuous data rate for the|       |
+ * |                     | indicated protocol for purposes of ra|       |
+ * |                     |te control. For all promiscuous protot|       |
+ * |                     |ocols-that is, protocols whose outduct|       |
+ * |                     |s are not specifically dedicated to tr|       |
+ * |                     |ansmission to a single identified conv|       |
+ * |                     |ergence-layer protocol endpoint- the p|       |
+ * |                     |rotocol's applicable nominal continuou|       |
+ * |                     |s data rate is the data rate that is a|       |
+ * |                     |lways used for rate control over links|       |
+ * |                     | served by that protocol; data rates a|       |
+ * |                     |re not extracted from contact graph in|       |
+ * |                     |formation. This is because only the in|       |
+ * |                     |duct and outduct throttles for non-pro|       |
+ * |                     |miscuous protocols (LTP, TCP) can be d|       |
+ * |                     |ynamically adjusted in response to cha|       |
+ * |                     |nges in data rate between the local no|       |
+ * |                     |de and its neighbors, as enacted per t|       |
+ * |                     |he contact plan. Even for an outduct o|       |
+ * |                     |f a non-promiscuous protocol the nomin|       |
+ * |                     |al data rate may be the authority for |       |
+ * |                     |rate control, in the event that the co|       |
+ * |                     |ntact plan lacks identified contacts w|       |
+ * |                     |ith the node to which the outduct is m|       |
+ * |                     |apped.                                |       |
  * +---------------------+--------------------------------------+-------+
  * |protocol_del         |Delete the convergence layer protocol |       |
  * |                     |identified by protocolName. The contro|       |
@@ -345,19 +391,23 @@
 #define DTN_ION_BPADMIN_CTRL_OUTDUCT_CHANGE 0x0a
 #define DTN_ION_BPADMIN_CTRL_OUTDUCT_DEL 0x0b
 #define DTN_ION_BPADMIN_CTRL_OUTDUCT_START 0x0c
-#define DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_BLOCK 0x0d
-#define DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_UNBLOCK 0x0e
-#define DTN_ION_BPADMIN_CTRL_OUTDUCT_STOP 0x0f
-#define DTN_ION_BPADMIN_CTRL_PROTOCOL_ADD 0x10
-#define DTN_ION_BPADMIN_CTRL_PROTOCOL_DEL 0x11
-#define DTN_ION_BPADMIN_CTRL_PROTOCOL_START 0x12
-#define DTN_ION_BPADMIN_CTRL_PROTOCOL_STOP 0x13
-#define DTN_ION_BPADMIN_CTRL_SCHEME_ADD 0x14
-#define DTN_ION_BPADMIN_CTRL_SCHEME_CHANGE 0x15
-#define DTN_ION_BPADMIN_CTRL_SCHEME_DEL 0x16
-#define DTN_ION_BPADMIN_CTRL_SCHEME_START 0x17
-#define DTN_ION_BPADMIN_CTRL_SCHEME_STOP 0x18
-#define DTN_ION_BPADMIN_CTRL_WATCH 0x19
+#define DTN_ION_BPADMIN_CTRL_OUTDUCT_STOP 0x0d
+#define DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_ADD 0x0e
+#define DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_DEL 0x0f
+#define DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_START 0x10
+#define DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_STOP 0x11
+#define DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_BLOCK 0x12
+#define DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_UNBLOCK 0x13
+#define DTN_ION_BPADMIN_CTRL_PROTOCOL_ADD 0x14
+#define DTN_ION_BPADMIN_CTRL_PROTOCOL_DEL 0x15
+#define DTN_ION_BPADMIN_CTRL_PROTOCOL_START 0x16
+#define DTN_ION_BPADMIN_CTRL_PROTOCOL_STOP 0x17
+#define DTN_ION_BPADMIN_CTRL_SCHEME_ADD 0x18
+#define DTN_ION_BPADMIN_CTRL_SCHEME_CHANGE 0x19
+#define DTN_ION_BPADMIN_CTRL_SCHEME_DEL 0x1a
+#define DTN_ION_BPADMIN_CTRL_SCHEME_START 0x1b
+#define DTN_ION_BPADMIN_CTRL_SCHEME_STOP 0x1c
+#define DTN_ION_BPADMIN_CTRL_WATCH 0x1d
 
 
 /*
@@ -388,14 +438,6 @@
 
 /* Initialization functions. */
 void dtn_ion_bpadmin_init();
-void dtn_ion_bpadmin_init_meta();
-void dtn_ion_bpadmin_init_cnst();
-void dtn_ion_bpadmin_init_edd();
-void dtn_ion_bpadmin_init_op();
-void dtn_ion_bpadmin_init_var();
-void dtn_ion_bpadmin_init_ctrl();
-void dtn_ion_bpadmin_init_mac();
-void dtn_ion_bpadmin_init_rpttpl();
-void dtn_ion_bpadmin_init_tblt();
+
 #endif /* _HAVE_DTN_ION_BPADMIN_ADM_ */
-#endif //ADM_ION_BP_ADMIN_H_
+#endif // ADM_ION_BP_ADMIN_H_

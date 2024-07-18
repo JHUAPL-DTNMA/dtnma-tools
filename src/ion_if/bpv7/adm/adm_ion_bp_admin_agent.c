@@ -8,10 +8,10 @@
  **
  ** Assumptions: TODO
  **
- ** Modification History: 
+ ** Modification History:
  **  YYYY-MM-DD  AUTHOR           DESCRIPTION
  **  ----------  --------------   --------------------------------------------
- **  2020-04-13  AUTO             Auto-generated c file 
+ **  2023-04-12  AUTO             Auto-generated c file
  **
  ****************************************************************************/
 
@@ -25,21 +25,26 @@
 #include "adm_ion_bp_admin_impl.h"
 #include "agent/rda.h"
 
+vec_idx_t g_dtn_ion_bpadmin_idx[11];
 
-
-#define _HAVE_DTN_ION_BPADMIN_ADM_
-#ifdef _HAVE_DTN_ION_BPADMIN_ADM_
-
-static vec_idx_t g_dtn_ion_bpadmin_idx[11];
+static void dtn_ion_bpadmin_init_meta(void);
+static void dtn_ion_bpadmin_init_cnst(void);
+static void dtn_ion_bpadmin_init_edd(void);
+static void dtn_ion_bpadmin_init_op(void);
+static void dtn_ion_bpadmin_init_var(void);
+static void dtn_ion_bpadmin_init_ctrl(void);
+static void dtn_ion_bpadmin_init_mac(void);
+static void dtn_ion_bpadmin_init_rpttpl(void);
+static void dtn_ion_bpadmin_init_tblt(void);
 
 void dtn_ion_bpadmin_init()
 {
 	adm_add_adm_info("dtn_ion_bpadmin", ADM_ENUM_DTN_ION_BPADMIN);
 
 	VDB_ADD_NN(((ADM_ENUM_DTN_ION_BPADMIN * 20) + ADM_META_IDX), &(g_dtn_ion_bpadmin_idx[ADM_META_IDX]));
-	VDB_ADD_NN(((ADM_ENUM_DTN_ION_BPADMIN * 20) + ADM_TBLT_IDX), &(g_dtn_ion_bpadmin_idx[ADM_TBLT_IDX]));
 	VDB_ADD_NN(((ADM_ENUM_DTN_ION_BPADMIN * 20) + ADM_EDD_IDX), &(g_dtn_ion_bpadmin_idx[ADM_EDD_IDX]));
 	VDB_ADD_NN(((ADM_ENUM_DTN_ION_BPADMIN * 20) + ADM_CTRL_IDX), &(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX]));
+	VDB_ADD_NN(((ADM_ENUM_DTN_ION_BPADMIN * 20) + ADM_TBLT_IDX), &(g_dtn_ion_bpadmin_idx[ADM_TBLT_IDX]));
 
 
 	dtn_ion_bpadmin_setup();
@@ -58,6 +63,7 @@ void dtn_ion_bpadmin_init_meta()
 {
 
 	adm_add_cnst(adm_build_ari(AMP_TYPE_CNST, 0, g_dtn_ion_bpadmin_idx[ADM_META_IDX], DTN_ION_BPADMIN_META_NAME), dtn_ion_bpadmin_meta_name);
+	adm_add_cnst(adm_build_ari(AMP_TYPE_CNST, 0, g_dtn_ion_bpadmin_idx[ADM_META_IDX], DTN_ION_BPADMIN_META_ENUM), dtn_ion_bpadmin_meta_enum);
 	adm_add_cnst(adm_build_ari(AMP_TYPE_CNST, 0, g_dtn_ion_bpadmin_idx[ADM_META_IDX], DTN_ION_BPADMIN_META_NAMESPACE), dtn_ion_bpadmin_meta_namespace);
 	adm_add_cnst(adm_build_ari(AMP_TYPE_CNST, 0, g_dtn_ion_bpadmin_idx[ADM_META_IDX], DTN_ION_BPADMIN_META_VERSION), dtn_ion_bpadmin_meta_version);
 	adm_add_cnst(adm_build_ari(AMP_TYPE_CNST, 0, g_dtn_ion_bpadmin_idx[ADM_META_IDX], DTN_ION_BPADMIN_META_ORGANIZATION), dtn_ion_bpadmin_meta_organization);
@@ -100,9 +106,13 @@ void dtn_ion_bpadmin_init_ctrl()
 	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_OUTDUCT_CHANGE, 4, dtn_ion_bpadmin_ctrl_outduct_change);
 	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_OUTDUCT_DEL, 2, dtn_ion_bpadmin_ctrl_outduct_del);
 	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_OUTDUCT_START, 2, dtn_ion_bpadmin_ctrl_outduct_start);
+	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_OUTDUCT_STOP, 2, dtn_ion_bpadmin_ctrl_outduct_stop);
+	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_ADD, 3, dtn_ion_bpadmin_ctrl_egress_plan_add);
+	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_DEL, 2, dtn_ion_bpadmin_ctrl_egress_plan_del);
+	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_START, 2, dtn_ion_bpadmin_ctrl_egress_plan_start);
+	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_STOP, 2, dtn_ion_bpadmin_ctrl_egress_plan_stop);
 	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_BLOCK, 1, dtn_ion_bpadmin_ctrl_egress_plan_block);
 	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_EGRESS_PLAN_UNBLOCK, 1, dtn_ion_bpadmin_ctrl_egress_plan_unblock);
-	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_OUTDUCT_STOP, 2, dtn_ion_bpadmin_ctrl_outduct_stop);
 	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_PROTOCOL_ADD, 4, dtn_ion_bpadmin_ctrl_protocol_add);
 	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_PROTOCOL_DEL, 1, dtn_ion_bpadmin_ctrl_protocol_del);
 	adm_add_ctrldef(g_dtn_ion_bpadmin_idx[ADM_CTRL_IDX], DTN_ION_BPADMIN_CTRL_PROTOCOL_START, 1, dtn_ion_bpadmin_ctrl_protocol_start);
@@ -185,5 +195,3 @@ void dtn_ion_bpadmin_init_tblt()
 	tblt_add_col(def, AMP_TYPE_UINT, "nominal_rate");
 	adm_add_tblt(def);
 }
-
-#endif // _HAVE_DTN_ION_BPADMIN_ADM_
