@@ -8,10 +8,10 @@
  **
  ** Assumptions: TODO
  **
- ** Modification History: 
+ ** Modification History:
  **  YYYY-MM-DD  AUTHOR           DESCRIPTION
  **  ----------  --------------   --------------------------------------------
- **  2020-04-13  AUTO             Auto-generated header file 
+ **  2023-04-12  AUTO             Auto-generated header file
  **
  ****************************************************************************/
 
@@ -31,9 +31,6 @@
 /*   START typeENUM */
 /*   STOP typeENUM  */
 
-void name_adm_init_agent();
-
-
 
 /*
  * +---------------------------------------------------------------------------------------------+
@@ -49,6 +46,7 @@ void dtn_ion_bpadmin_cleanup();
 
 /* Metadata Functions */
 tnv_t *dtn_ion_bpadmin_meta_name(tnvc_t *parms);
+tnv_t *dtn_ion_bpadmin_meta_enum(tnvc_t *parms);
 tnv_t *dtn_ion_bpadmin_meta_namespace(tnvc_t *parms);
 tnv_t *dtn_ion_bpadmin_meta_version(tnvc_t *parms);
 tnv_t *dtn_ion_bpadmin_meta_organization(tnvc_t *parms);
@@ -73,9 +71,13 @@ tnv_t *dtn_ion_bpadmin_ctrl_outduct_add(eid_t *def_mgr, tnvc_t *parms, int8_t *s
 tnv_t *dtn_ion_bpadmin_ctrl_outduct_change(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
 tnv_t *dtn_ion_bpadmin_ctrl_outduct_del(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
 tnv_t *dtn_ion_bpadmin_ctrl_outduct_start(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
+tnv_t *dtn_ion_bpadmin_ctrl_outduct_stop(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
+tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_add(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
+tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_del(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
+tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_start(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
+tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_stop(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
 tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_block(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
 tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_unblock(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
-tnv_t *dtn_ion_bpadmin_ctrl_outduct_stop(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
 tnv_t *dtn_ion_bpadmin_ctrl_protocol_add(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
 tnv_t *dtn_ion_bpadmin_ctrl_protocol_del(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
 tnv_t *dtn_ion_bpadmin_ctrl_protocol_start(eid_t *def_mgr, tnvc_t *parms, int8_t *status);
@@ -99,4 +101,4 @@ tbl_t *dtn_ion_bpadmin_tblt_protocols(ari_t *id);
 tbl_t *dtn_ion_bpadmin_tblt_schemes(ari_t *id);
 tbl_t *dtn_ion_bpadmin_tblt_egress_plans(ari_t *id);
 
-#endif //ADM_ION_BP_ADMIN_IMPL_H_
+#endif // ADM_ION_BP_ADMIN_IMPL_H_
