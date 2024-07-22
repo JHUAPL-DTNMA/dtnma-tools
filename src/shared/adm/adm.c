@@ -646,6 +646,7 @@ amp_vast adm_get_parm_vast(tnvc_t *parms, uint8_t idx, int *success)
 amp_tv_t adm_get_parm_tv(tnvc_t *parms, uint8_t idx, int *success)
 {
   tnv_t *val = tnvc_get(parms, idx);
+	AMP_DEBUG_ENTRY("adm_get_parm_tv","val parm tv, %d", val->type);	
   return (val == NULL) ? AMP_TV_ZERO : tnv_to_tv(*val, success);
 }
 

@@ -36,6 +36,9 @@ int amp_tv_serialize(QCBOREncodeContext *enc, const amp_tv_t *item)
  */
 OS_time_t amp_tv_to_ctime(amp_tv_t val, const OS_time_t *event_time)
 {
+    AMP_DEBUG_ENTRY("amp_tv_to_ctime","val value ticks, %d", val.secs);	
+    AMP_DEBUG_ENTRY("amp_tv_to_ctime","val value total, %d", OS_TimeGetTotalSeconds(val.secs));
+    
     OS_time_t res;
     if(OS_TimeGetTotalSeconds(val.secs) <= EPOCH_ABSTIME_DTN)
     {
@@ -47,7 +50,7 @@ OS_time_t amp_tv_to_ctime(amp_tv_t val, const OS_time_t *event_time)
         {
             // Log error
             AMP_DEBUG_ERR("amp_tv_to_ctime", "Cannot convert a relative time without a reference event");
-            res = OS_TimeAssembleFromMilliseconds(0, 0);
+            res = OS_TimeAssembleFromMilliseconds(OS_TimeGetTotalSeconds(val.secs), 0);
         }
     }
     else

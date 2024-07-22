@@ -561,6 +561,8 @@ int rda_process_rules(OS_time_t nowtime)
                 }
                 else
                 {
+              AMP_DEBUG_INFO("DEBUG","now %d , period %d, next, %d.", ctx.nowtime, rule->def.as_tbr.period, OS_TimeAdd(ctx.nowtime, rule->def.as_tbr.period));
+                        
                         rule->eval_at = OS_TimeAdd(ctx.nowtime, rule->def.as_tbr.period);
                         if(db_persist_rule(rule) != AMP_OK)
                         {

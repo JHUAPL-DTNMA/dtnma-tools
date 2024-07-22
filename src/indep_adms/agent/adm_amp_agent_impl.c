@@ -1810,7 +1810,9 @@ tnv_t *amp_agent_ctrl_add_tbr(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 	def.period = amp_tv_to_ctime(adm_get_parm_tv(parms, 2, &success), NULL);
 	def.max_fire = adm_get_parm_uvast(parms, 3, &success);
 	ac_t action = ac_copy(adm_get_parm_obj(parms, 4, AMP_TYPE_AC));
-
+		AMP_DEBUG_INFO("ADD_TBR", "period, %d", def.period);
+		AMP_DEBUG_INFO("ADD_TBR", "parm, %d", adm_get_parm_tv(parms, 2, &success));
+		
 	if(id == NULL)
 	{
 		AMP_DEBUG_ERR("ADD_TBR", "Bad parameters for control", NULL);

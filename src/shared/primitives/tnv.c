@@ -1386,9 +1386,10 @@ amp_vast  tnv_to_vast(tnv_t val, int *success)
 		case AMP_TYPE_BYTE:   result = (amp_vast) val.value.as_byte;   break;
 		case AMP_TYPE_INT:    result = (amp_vast) val.value.as_int;    break;
 		case AMP_TYPE_UINT:   result = (amp_vast) val.value.as_uint;   break;
-		case AMP_TYPE_VAST:   result = val.value.as_vast;          break;
-        case AMP_TYPE_TV:
+				case AMP_TYPE_TV:
         case AMP_TYPE_TS:
+		case AMP_TYPE_VAST:   result = val.value.as_vast;          break;
+        
 		case AMP_TYPE_UVAST:  result = (amp_vast) val.value.as_uvast;  break;
 		case AMP_TYPE_REAL32: result = (amp_vast) val.value.as_real32; break;
 		case AMP_TYPE_REAL64: result = (amp_vast) val.value.as_real64; break;
@@ -1401,6 +1402,7 @@ amp_vast  tnv_to_vast(tnv_t val, int *success)
 amp_tv_t tnv_to_tv(tnv_t val, int *success)
 {
   amp_vast secs = tnv_to_vast(val, success);
+	AMP_DEBUG_ENTRY("tnv_to_tv","val secs, %d", secs);	
   return (amp_tv_t){ .secs = OS_TimeFromTotalSeconds(secs) };
 }
 
