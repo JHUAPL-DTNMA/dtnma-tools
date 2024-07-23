@@ -419,7 +419,7 @@ rule_t *ui_create_sbr_from_parms(tnvc_t parms)
 	int success;
 
 	ari_t *id = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
-   OS_time_t start =adm_get_parm_tv(parms, 2, &success).secs;
+   OS_time_t start =adm_get_parm_tv(&parms, 2, &success).secs;
 	expr_t *state = adm_get_parm_obj(&parms, 2, AMP_TYPE_EXPR);
 	def.expr = *state;
 	SRELEASE(state);
