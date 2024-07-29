@@ -561,6 +561,7 @@ int rda_process_rules(OS_time_t nowtime)
                 }
                 else
                 {
+                        
                         rule->eval_at = OS_TimeAdd(ctx.nowtime, rule->def.as_tbr.period);
                         if(db_persist_rule(rule) != AMP_OK)
                         {

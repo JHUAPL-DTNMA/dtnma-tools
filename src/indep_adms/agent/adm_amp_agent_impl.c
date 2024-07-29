@@ -24,6 +24,7 @@
 #include "../shared/msg/msg.h"
 #include "rda.h"
 #include "ldc.h"
+#include "time.h"
 
 /*   STOP CUSTOM INCLUDES HERE  */
 
@@ -1806,11 +1807,12 @@ tnv_t *amp_agent_ctrl_add_tbr(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 	rule_t *tbr = NULL;
 
 	ari_t *id = adm_get_parm_obj(parms, 0, AMP_TYPE_ARI);
-	OS_time_t start = amp_tv_to_ctime(adm_get_parm_tv(parms, 1, &success), NULL);
-	def.period = amp_tv_to_ctime(adm_get_parm_tv(parms, 2, &success), NULL);
+
+	OS_time_t start =  adm_get_parm_tv(parms, 1, &success).secs;
+	def.period = adm_get_parm_tv(parms, 2, &success).secs;
 	def.max_fire = adm_get_parm_uvast(parms, 3, &success);
 	ac_t action = ac_copy(adm_get_parm_obj(parms, 4, AMP_TYPE_AC));
-
+		
 	if(id == NULL)
 	{
 		AMP_DEBUG_ERR("ADD_TBR", "Bad parameters for control", NULL);
@@ -1874,7 +1876,7 @@ tnv_t *amp_agent_ctrl_add_sbr(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 	int rh_code;
 
 	ari_t *id = adm_get_parm_obj(parms, 0, AMP_TYPE_ARI);
-	OS_time_t start = amp_tv_to_ctime(adm_get_parm_tv(parms, 1, &success), NULL);
+	OS_time_t start = adm_get_parm_tv(parms, 1, &success).secs;
 	expr_t *state = adm_get_parm_obj(parms, 2, AMP_TYPE_EXPR);
 	def.expr = expr_copy(*state);
 	def.max_eval = adm_get_parm_uvast(parms, 3, &success);

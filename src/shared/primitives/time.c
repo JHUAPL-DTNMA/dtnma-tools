@@ -46,7 +46,7 @@ OS_time_t amp_tv_to_ctime(amp_tv_t val, const OS_time_t *event_time)
         else
         {
             // Log error
-            AMP_DEBUG_ERR("amp_tv_to_ctime", "Cannot convert a relative time without a reference event");
+            AMP_DEBUG_ERR("amp_tv_to_ctime", "Cannot convert a relative time without a reference event, returning 0");
             res = OS_TimeAssembleFromMilliseconds(0, 0);
         }
     }

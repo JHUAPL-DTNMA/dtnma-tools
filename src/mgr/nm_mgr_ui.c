@@ -398,8 +398,8 @@ rule_t *ui_create_tbr_from_parms(tnvc_t parms)
 	int success;
 
 	ari_t *id = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
-	OS_time_t start = amp_tv_to_ctime(adm_get_parm_tv(&parms, 1, &success), NULL);
-	def.period = amp_tv_to_ctime(adm_get_parm_tv(&parms, 2, &success), NULL);
+	OS_time_t start = adm_get_parm_tv(&parms, 1, &success).secs;
+	def.period = adm_get_parm_tv(&parms, 2, &success).secs;
 	def.max_fire = adm_get_parm_uvast(&parms, 3, &success);
 	ac_t action = ac_copy(adm_get_parm_obj(&parms, 4, AMP_TYPE_AC));
 
@@ -419,7 +419,7 @@ rule_t *ui_create_sbr_from_parms(tnvc_t parms)
 	int success;
 
 	ari_t *id = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
-        OS_time_t start = amp_tv_to_ctime(adm_get_parm_tv(&parms, 1, &success), NULL);
+   OS_time_t start =adm_get_parm_tv(&parms, 2, &success).secs;
 	expr_t *state = adm_get_parm_obj(&parms, 2, AMP_TYPE_EXPR);
 	def.expr = *state;
 	SRELEASE(state);
