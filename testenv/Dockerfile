@@ -46,7 +46,7 @@ RUN apt-get update && apt-get install -y \
     lsof iftop gdb valgrind socat
 
 
-FROM ubuntu:22.04 as deps-local
+FROM ubuntu:22.04 AS deps-local
 
 RUN apt-get update && apt-get install -y \
     build-essential \
