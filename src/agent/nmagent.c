@@ -101,6 +101,7 @@ bool nmagent_start(nmagent_t *agent)
         {&rx_thread, "rx_thread"},
         {&rda_ctrls, "rda_ctrls"},
         {&rda_reports, "rda_reports"},
+        {&rda_tables, "rda_tables"},
         {&rda_rules, "rda_rules"},
     };
     rc = threadset_start(&agent->threads, threadinfo, sizeof(threadinfo)/sizeof(threadinfo_t), agent);

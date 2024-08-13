@@ -74,7 +74,7 @@ int tbl_add_row(tbl_t *tbl, tnvc_t *row)
 		AMP_DEBUG_ERR("tbl_add_row", "row doesn't match template.", NULL);
 		return AMP_FAIL;
 	}
-
+	
 	return vec_push(&(tbl->rows), row);
 }
 
@@ -118,7 +118,7 @@ tbl_t*   tbl_create(ari_t *id)
 {
 	tbl_t *result = NULL;
 	int success;
-
+	AMP_DEBUG_ENTRY("tbl_create","(%"PRIxPTR")", id);
 	CHKNULL(id);
 
 	if((result = (tbl_t*) STAKE(sizeof(tbl_t))) == NULL)
@@ -136,6 +136,7 @@ tbl_t*   tbl_create(ari_t *id)
 
 	if(success != AMP_OK)
 	{
+		AMP_DEBUG_ERR("tbl_create","vec_create error", NULL);
 		tbl_release(result, 1);
 		result = NULL;
 	}

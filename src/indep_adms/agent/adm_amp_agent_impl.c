@@ -69,6 +69,7 @@ int amp_agent_build_ari_table(tbl_t *table, rhht_t *ht)
 		tnvc_insert(cur_row, tnv_from_obj(AMP_TYPE_ARI, ari_copy_ptr(ari)));
 		if(tbl_add_row(table, cur_row) != AMP_OK)
 		{
+			AMP_DEBUG_ERR("amp_agent_build_ari_table", "add row", NULL);
 			success = AMP_FAIL;
 			break;
 		}
@@ -659,11 +660,12 @@ tnv_t *amp_agent_get_amp_epoch(tnvc_t *parms)
 tbl_t *amp_agent_tblt_adms(ari_t *id)
 {
 	tbl_t *table = NULL;
+	AMP_DEBUG_ENTRY("send Table","test", NULL);
 	if((table = tbl_create(id)) == NULL)
 	{
 		return NULL;
 	}
-
+AMP_DEBUG_ENTRY("send Table","test2", NULL);
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |START CUSTOM FUNCTION tblt_adms BODY
@@ -675,6 +677,7 @@ tbl_t *amp_agent_tblt_adms(ari_t *id)
 	tnvc_insert(cur_row, tnv_from_str("AMP AGENT"));
 	if(tbl_add_row(table, cur_row) != AMP_OK)
 	{
+		AMP_DEBUG_ENTRY("send Table","test3", NULL);
 		tbl_release(table, 1);
 		return NULL;
 	}
@@ -684,6 +687,7 @@ tbl_t *amp_agent_tblt_adms(ari_t *id)
 	 * |STOP CUSTOM FUNCTION tblt_adms BODY
 	 * +-------------------------------------------------------------------------+
 	 */
+	AMP_DEBUG_ENTRY("send Table","test4", NULL);
 	return table;
 }
 
@@ -1489,7 +1493,7 @@ tnv_t *amp_agent_ctrl_gen_rpts(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 			return result;
 		}
 
-                pthread_mutex_lock(&gAgentDb.rpt_msgs.lock);
+    pthread_mutex_lock(&gAgentDb.rpt_msgs.lock);
 		strncpy(mgr_eid.name, cur_mgr->value.as_ptr, AMP_MAX_EID_LEN-1);
 		msg_rpt = rda_get_msg_rpt(mgr_eid);
 
@@ -1516,7 +1520,7 @@ tnv_t *amp_agent_ctrl_gen_rpts(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 			msg_rpt_add_rpt(msg_rpt, rpt);
 		}
 
-                AMP_DEBUG_ERR("GEN_RPTT","Finished adding %d reports for: %s", vec_num_entries(msg_rpt->rpts), mgr_eid.name);
+                AMP_DEBUG_INFO("GEN_RPTT","Finished adding %d reports for: %s", vec_num_entries(msg_rpt->rpts), mgr_eid.name);
                 pthread_cond_signal(&gAgentDb.rpt_msgs.cond_ins_mod);
                 pthread_mutex_unlock(&gAgentDb.rpt_msgs.lock);
 	}
@@ -1580,8 +1584,8 @@ tnv_t *amp_agent_ctrl_gen_tbls(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 			return result;
 		}
 
+		pthread_mutex_lock(&gAgentDb.tbl_msgs.lock);
 		strncpy(mgr_eid.name, cur_mgr->value.as_ptr, AMP_MAX_EID_LEN-1);
-
 		msg_tbl = rda_get_msg_tbl(mgr_eid);
 
 		/* For each table being sent. */
@@ -1591,7 +1595,7 @@ tnv_t *amp_agent_ctrl_gen_tbls(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 			tblt_t *def = VDB_FINDKEY_TBLT(cur_id);
 			tbl_t *tbl = NULL;
 			tnv_t *val = NULL;
-
+			AMP_DEBUG_ENTRY("send Table","(%s)", cur_id);
 			if( (def == NULL) ||
 				((tbl = def->build(cur_id)) == NULL) ||
 				((val = tnv_from_obj(AMP_TYPE_TBL, tbl)) == NULL))
@@ -1601,10 +1605,11 @@ tnv_t *amp_agent_ctrl_gen_tbls(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 				AMP_DEBUG_ERR("GEN_TBLT","Cannot build table.", NULL);
 				continue;
 			}
-
 			msg_tbl_add_tbl(msg_tbl, tbl);
 		}
-
+		AMP_DEBUG_INFO("GEN_TBLT","Finished adding %d tables for: %s", vec_num_entries(msg_tbl->tbls), mgr_eid.name);
+    pthread_cond_signal(&gAgentDb.tbl_msgs.cond_ins_mod);
+    pthread_mutex_unlock(&gAgentDb.tbl_msgs.lock);
 	}
 
 	*status = CTRL_SUCCESS;

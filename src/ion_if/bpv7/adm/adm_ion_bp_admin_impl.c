@@ -1149,6 +1149,7 @@ tnv_t *dtn_ion_bpadmin_ctrl_egress_plan_start(eid_t *def_mgr, tnvc_t *parms, int
 	{
 		*status = CTRL_SUCCESS;
 	}
+	AMP_DEBUG_ENTRY("TEST_EGRESS","%d", status);
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION ctrl_egress_plan_start BODY

@@ -90,6 +90,7 @@ void * rda_rules(void *arg);
 int          rda_send_reports(nmagent_t *agent);
 int          rda_send_tables(nmagent_t *agent);
 void * rda_reports(void *arg);
+void * rda_tables(void *arg);
 
 #ifdef __cplusplus
 }

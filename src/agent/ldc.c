@@ -50,7 +50,7 @@ tnv_t* ldc_collect(ari_t *id, tnvc_t *parms)
 	tnv_t *result = NULL;
 
 	CHKNULL(id);
-
+	AMP_DEBUG_INFO("ldc_collect","type is: %d", id->type);
 	switch(id->type)
 	{
 		case AMP_TYPE_LIT:

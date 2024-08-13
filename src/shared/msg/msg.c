@@ -447,8 +447,11 @@ int msg_tbl_add_tbl(msg_tbl_t *msg, tbl_t *tbl)
 
 	if(vec_push(&(msg->tbls), tbl) != VEC_OK)
 	{
+		AMP_DEBUG_ENTRY("msg_tbl_add_tbl","test5", NULL);
+
 		return AMP_FAIL;
 	}
+	AMP_DEBUG_ENTRY("msg_tbl_add_tbl","test6", NULL);
 
 	return AMP_OK;	
 }
@@ -460,6 +463,7 @@ void msg_tbl_cb_del_fn(void *item)
 
 msg_tbl_t* msg_tbl_create(char *rx_name)
 {
+	AMP_DEBUG_ENTRY("msg_tbl_create","name: %s", rx_name);
 	int success;
 	msg_tbl_t *result = STAKE(sizeof(msg_tbl_t));
 	char *name_copy;

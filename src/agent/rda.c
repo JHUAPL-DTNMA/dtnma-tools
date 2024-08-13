@@ -697,6 +697,141 @@ int rda_send_reports(nmagent_t *agent)
 }
 
 
+/******************************************************************************
+ *
+ * \par Function Name: rda_send_tables
+ *
+ * \par Purpose: For each report constructed during this evaluation period,
+ *               create a message and send it.
+ *
+ * \retval int -  0 : Success
+ *               -1 : Failure
+ *
+ * \par Notes:
+ *              - When we construct the tables, we build one compound report
+ *                per recipient. By the time we get to this function, we should have
+ *                one report per recipient, so making one message per report should
+ *                not result in multiple messages to the same recipient.
+ *
+ *
+ * Modification History:
+ *  MM/DD/YY  AUTHOR         DESCRIPTION
+ *  --------  ------------   ---------------------------------------------
+ *  08/12/24  E. Birrane     Initial implementation,
+ 
+ *****************************************************************************/
+
+int rda_send_tables(nmagent_t *agent)
+{
+    vecit_t it1;
+    vecit_t it2;
+    OS_time_t nowtime;
+    OS_GetLocalTime(&nowtime);
+    unsigned long num_tbls = 0;
+
+    AMP_DEBUG_ENTRY("rda_send_tables","()", NULL);
+
+
+    vec_lock(&(gAgentDb.tbl_msgs));
+
+    for(it1 = vecit_first(&(gAgentDb.tbl_msgs)); vecit_valid(it1); it1 = vecit_next(it1))
+    {
+        msg_tbl_t *msg_tbl = (msg_tbl_t*)vecit_data(it1);
+
+        if(msg_tbl == NULL)
+        {
+                continue;
+        }
+        if (vec_num_entries(msg_tbl->tbls) < 1)
+        {
+            AMP_DEBUG_WARN("rda_send_tables", "Vector has no tables");
+            continue;
+        }
+
+        for(it2 = vecit_first(&(msg_tbl->rx)); vecit_valid(it2); it2 = vecit_next(it2))
+        {
+                char *rx = vecit_data(it2);
+
+                if(rx == NULL)
+                {
+                        AMP_DEBUG_ERR("rda_send_tables", "NULL rx", NULL);
+                        continue;
+                }
+                eid_t destination;
+                strncpy(destination.name, rx, AMP_MAX_EID_LEN);
+                if(mif_send_msg(&agent->mif, MSG_TYPE_TBL_SET, msg_tbl, &destination, amp_tv_from_ctime(nowtime, NULL)) == AMP_OK)
+                {
+                        num_tbls += vec_num_entries(msg_tbl->tbls);
+                }
+                else
+                {
+                        AMP_DEBUG_ERR("rda_send_tables", "Error sending tables to %s", rx);
+                }
+        }
+        /* FIXME: cleanup belongs in the vector state
+        msg_tbl_release(msg_tbl, 1);
+        */
+    }
+    AMP_DEBUG_INFO("rda_send_tables","Sent %u tables", num_tbls);
+    gAgentInstr.num_sent_tbls += num_tbls;
+
+    /* Sent successfully or not, clear the tables. */
+    vec_clear(&(gAgentDb.tbl_msgs));
+
+    vec_unlock(&(gAgentDb.tbl_msgs));
+
+    AMP_DEBUG_EXIT("rda_send_tables","()", NULL);
+    return AMP_OK;
+}
+
+
+void* rda_tables(void *arg)
+{
+    nmagent_t *agent = arg;
+    bool running = true;
+#ifndef mingw
+    AMP_DEBUG_ENTRY("rda_tables","(0x%"PRIxPTR")", pthread_self());
+#endif
+
+    AMP_DEBUG_INFO("rda_tables","Running Remote Data Aggregator Thread.", NULL);
+
+    /* While the DTNMP Agent is running...*/
+    while(running)
+    {
+      if (pthread_mutex_lock(&gAgentDb.tbl_msgs.lock))
+      {
+        AMP_DEBUG_ERR("rda_tables", "failed mutex %p lock", &gAgentDb.tbl_msgs.lock);
+        return NULL;
+      }
+      if (!daemon_run_get(&agent->running))
+      {
+        // exit thread after queued items are handled
+        AMP_DEBUG_INFO("rda_tables","Daemon shutdown", NULL);
+        running = false;
+      }
+      if (running && (vec_num_entries_ptr(&gAgentDb.tbl_msgs) == 0))
+      {
+        AMP_DEBUG_INFO("rda_tables","Waiting for table", NULL);
+        pthread_cond_wait(&gAgentDb.tbl_msgs.cond_ins_mod, &(gAgentDb.tbl_msgs.lock));
+      }
+      if (pthread_mutex_unlock(&(gAgentDb.tbl_msgs.lock)))
+      {
+        AMP_DEBUG_ERR("rda_tables", "failed mutex %p unlock", &(gAgentDb.tbl_msgs.lock));
+        return NULL;
+      }
+
+      AMP_DEBUG_INFO("rda_tables", "processing table...", NULL);
+      if(rda_send_tables(agent) != AMP_OK)
+      {
+        AMP_DEBUG_ERR("rda_tables","Problem processing table.", NULL);
+      }
+    } // end while
+
+    AMP_DEBUG_ALWAYS("rda_tables","Shutting Down Remote Data Aggregator Thread.",NULL);
+    return NULL;
+}
+
+
 void* rda_reports(void *arg)
 {
     nmagent_t *agent = arg;
