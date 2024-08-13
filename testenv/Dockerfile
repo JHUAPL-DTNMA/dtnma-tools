@@ -64,10 +64,7 @@ RUN cd /usr/src/nm/deps/ion && \
     make -j$(nproc) clean
 
 COPY deps/QCBOR /usr/src/nm/deps/QCBOR
-COPY deps/qcbor*.patch /usr/src/nm/deps/
 RUN cd /usr/src/nm/deps/QCBOR && \
-    patch -p1 <../qcbor-install.patch && \
-    patch -p2 <../qcbor-expose-private.patch && \
     make -j$(nproc) && \
     make install && \
     make -j$(nproc) clean
@@ -100,7 +97,7 @@ RUN apt-get update && apt-get install -y \
 # Agent to test
 RUN apt-get update && apt-get install -y \
     cmake ninja-build ruby \
-    civetweb libcivetweb-dev libssl-dev libcjson-dev
+    flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev
 COPY deps /usr/src/nm/deps
 COPY cmake /usr/src/nm/cmake
 COPY src /usr/src/nm/src

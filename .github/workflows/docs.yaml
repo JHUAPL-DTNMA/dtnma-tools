@@ -34,7 +34,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y
           cmake ninja-build
           ruby build-essential autoconf libtool
-          flex bison civetweb libcivetweb-dev libssl-dev libcjson-dev
+          flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev
           doxygen graphviz plantuml
       - name: Prep
         run: ./deps.sh && ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS=ON

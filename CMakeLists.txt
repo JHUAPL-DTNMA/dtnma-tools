@@ -23,7 +23,7 @@ option(BUILD_AGENT "Build the Agent library and executable" ON)
 option(BUILD_MANAGER "Build the Manager library and executable" ON)
 option(ARI_TEXT_PARSE "Build ARI text-form parsing capability" ON)
 option(ENABLE_LUT_CACHE "Enable runtime lookup caching" ON)
-option(BUILD_TESTING "Enable test fixtures and libraries" ON)
+option(BUILD_TESTING "Enable test fixtures and libraries" OFF)
 option(TEST_MEMCHECK "Enable test runtime memory checking" OFF)
 option(TEST_COVERAGE "Enable test runtime coverage logging" OFF)
 
