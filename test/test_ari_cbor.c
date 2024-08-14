@@ -147,7 +147,7 @@ void test_ari_cbor_encode_lit_typed_ac_1item(void)
         ari_ac_t acinit;
         ari_ac_init(&acinit);
         {
-            ari_t *item = *ari_list_push_back_new(acinit.items);
+            ari_t *item = ari_list_push_back_new(acinit.items);
             ari_set_null(item);
         }
 

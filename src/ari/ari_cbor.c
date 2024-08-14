@@ -201,8 +201,8 @@ static int ari_cbor_encode_ac(QCBOREncodeContext *enc, const ari_ac_t *obj)
     ari_list_it_t it;
     for (ari_list_it(it, obj->items); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_list_subtype_ct *item = ari_list_cref(it);
-        if (ari_cbor_encode_stream(enc, *item))
+        const ari_t *item = ari_list_cref(it);
+        if (ari_cbor_encode_stream(enc, item))
         {
             retval = 2;
             break;
@@ -254,7 +254,7 @@ static int ari_cbor_decode_ac(QCBORDecodeContext *dec, ari_ac_t *obj)
         }
 
         // push only after fully reading
-        ari_t *item = *ari_list_push_back_new(obj->items);
+        ari_t *item = ari_list_push_back_new(obj->items);
         ari_set_move(item, &ari);
     }
     QCBORDecode_ExitArray(dec);
@@ -270,12 +270,12 @@ static int ari_cbor_encode_am(QCBOREncodeContext *enc, const ari_am_t *obj)
     for (ari_dict_it(it, obj->items); !ari_dict_end_p(it); ari_dict_next(it))
     {
         const ari_dict_subtype_ct *pair = ari_dict_cref(it);
-        if (ari_cbor_encode_stream(enc, pair->key))
+        if (ari_cbor_encode_stream(enc, &(pair->key)))
         {
             retval = 2;
             break;
         }
-        if (ari_cbor_encode_stream(enc, pair->value))
+        if (ari_cbor_encode_stream(enc, &(pair->value)))
         {
             retval = 2;
             break;
@@ -333,7 +333,7 @@ static int ari_cbor_decode_am(QCBORDecodeContext *dec, ari_am_t *obj)
         }
 
         // push only after fully reading
-        ari_t *val = *ari_dict_safe_get(obj->items, &key);
+        ari_t *val = ari_dict_safe_get(obj->items, key);
         ari_set_move(val, &value);
         ari_deinit(&key);
     }
@@ -352,8 +352,8 @@ static int ari_cbor_encode_tbl(QCBOREncodeContext *enc, const ari_tbl_t *obj)
     ari_array_it_t it;
     for (ari_array_it(it, obj->items); !ari_array_end_p(it); ari_array_next(it))
     {
-        const ari_array_subtype_ct *item = ari_array_cref(it);
-        if (ari_cbor_encode_stream(enc, *item))
+        const ari_t *item = ari_array_cref(it);
+        if (ari_cbor_encode_stream(enc, item))
         {
             retval = 2;
             break;
@@ -378,8 +378,8 @@ static int ari_cbor_decode_tbl(QCBORDecodeContext *dec, ari_tbl_t *obj)
 
     while (true)
     {
-        ari_a1_t ari       = { ARI_INIT_UNDEFINED };
-        int      parse_res = ari_cbor_decode_stream(dec, ari);
+        ari_t ari       = ARI_INIT_UNDEFINED;
+        int   parse_res = ari_cbor_decode_stream(dec, &ari);
 
         int  dec_res = QCBORDecode_GetAndResetError(dec);
         bool atend   = dec_res == QCBOR_ERR_NO_MORE_ITEMS;
@@ -399,7 +399,7 @@ static int ari_cbor_decode_tbl(QCBORDecodeContext *dec, ari_tbl_t *obj)
 
         if (retval)
         {
-            ari_deinit(ari);
+            ari_deinit(&ari);
             break;
         }
         if (atend)
@@ -428,8 +428,8 @@ static int ari_cbor_encode_execset(QCBOREncodeContext *enc, const ari_execset_t 
     ari_list_it_t it;
     for (ari_list_it(it, obj->targets); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_list_subtype_ct *item = ari_list_cref(it);
-        if (ari_cbor_encode_stream(enc, *item))
+        const ari_t *item = ari_list_cref(it);
+        if (ari_cbor_encode_stream(enc, item))
         {
             retval = 2;
             break;
@@ -487,7 +487,7 @@ static int ari_cbor_decode_execset(QCBORDecodeContext *dec, ari_execset_t *obj)
         }
 
         // push only after fully reading
-        ari_t *item = *ari_list_push_back_new(obj->targets);
+        ari_t *item = ari_list_push_back_new(obj->targets);
         ari_set_move(item, &ari);
     }
 
@@ -514,8 +514,8 @@ static int ari_cbor_encode_report(QCBOREncodeContext *enc, const ari_report_t ob
     ari_list_it_t it;
     for (ari_list_it(it, obj->items); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_list_subtype_ct *item = ari_list_cref(it);
-        if (ari_cbor_encode_stream(enc, *item))
+        const ari_t *item = ari_list_cref(it);
+        if (ari_cbor_encode_stream(enc, item))
         {
             retval = 2;
             break;
@@ -582,7 +582,7 @@ static int ari_cbor_decode_report(QCBORDecodeContext *dec, ari_report_t obj)
         }
 
         // push only after fully reading
-        ari_t *item = *ari_list_push_back_new(obj->items);
+        ari_t *item = ari_list_push_back_new(obj->items);
         ari_set_move(item, &ari);
     }
 

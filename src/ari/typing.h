@@ -40,11 +40,20 @@ extern "C" {
 #define ARI_ERR_CONVERT_NULLFUNC 2
 #define ARI_ERR_CONVERT_BADVALUE 3
 
+// Forward declaration to allow recursive references
 struct amm_type_s;
+
+/// A typedef representing an AMM semantic type.
 typedef struct amm_type_s amm_type_t;
 
-// A set of pointers to other types
+/** @struct amm_typeptr_list_t
+ * A set of pointers to other type structs.
+ * These are all references and have no ownership logic.
+ * This includes the valid possibility of circular references.
+ */
+/// @cond Doxygen_Suppress
 DEQUE_DEF(amm_typeptr_list, const amm_type_t *, M_PTR_OPLIST)
+/// @endcond
 
 /// Configuration for a built-in type
 struct amm_type_builtin_s

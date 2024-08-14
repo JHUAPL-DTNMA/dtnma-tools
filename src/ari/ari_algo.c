@@ -29,9 +29,9 @@ static int ari_visit_ac(const ari_ac_t *obj, const ari_visitor_t *visitor, const
     ari_list_it_t it;
     for (ari_list_it(it, obj->items); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_list_subtype_ct *item = ari_list_cref(it);
+        const ari_t *item = ari_list_cref(it);
 
-        retval = ari_visit_ari(*item, visitor, ctx);
+        retval = ari_visit_ari(item, visitor, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -47,11 +47,11 @@ static int ari_visit_am(const ari_am_t *obj, const ari_visitor_t *visitor, ari_v
         const ari_dict_subtype_ct *pair = ari_dict_cref(it);
 
         ctx->is_map_key = true;
-        retval          = ari_visit_ari(pair->key, visitor, ctx);
+        retval          = ari_visit_ari(&(pair->key), visitor, ctx);
         CHKERRVAL(retval);
 
         ctx->is_map_key = false;
-        retval          = ari_visit_ari(pair->value, visitor, ctx);
+        retval          = ari_visit_ari(&(pair->value), visitor, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -64,9 +64,9 @@ static int ari_visit_tbl(const ari_tbl_t *obj, const ari_visitor_t *visitor, con
     ari_array_it_t it;
     for (ari_array_it(it, obj->items); !ari_array_end_p(it); ari_array_next(it))
     {
-        const ari_array_subtype_ct *item = ari_array_cref(it);
+        const ari_t *item = ari_array_cref(it);
 
-        retval = ari_visit_ari(*item, visitor, ctx);
+        retval = ari_visit_ari(item, visitor, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -79,9 +79,9 @@ static int ari_visit_execset(const ari_execset_t *obj, const ari_visitor_t *visi
     ari_list_it_t it;
     for (ari_list_it(it, obj->targets); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_list_subtype_ct *item = ari_list_cref(it);
+        const ari_t *item = ari_list_cref(it);
 
-        retval = ari_visit_ari(*item, visitor, ctx);
+        retval = ari_visit_ari(item, visitor, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -100,9 +100,9 @@ static int ari_visit_report(const ari_report_t obj, const ari_visitor_t *visitor
     ari_list_it_t it;
     for (ari_list_it(it, obj->items); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_list_subtype_ct *item = ari_list_cref(it);
+        const ari_t *item = ari_list_cref(it);
 
-        retval = ari_visit_ari(*item, visitor, ctx);
+        retval = ari_visit_ari(item, visitor, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -241,9 +241,9 @@ static int ari_map_ac(ari_ac_t *out, const ari_ac_t *in, const ari_translator_t 
     ari_list_it_t it;
     for (ari_list_it(it, in->items); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_list_subtype_ct *in_item  = ari_list_cref(it);
-        ari_t                     *out_item = *ari_list_push_back_new(out->items);
-        retval                              = ari_translate(out_item, *in_item, translator, user_data);
+        const ari_t *in_item  = ari_list_cref(it);
+        ari_t       *out_item = ari_list_push_back_new(out->items);
+        retval                = ari_translate(out_item, in_item, translator, user_data);
         CHKERRVAL(retval);
     }
     return 0;
@@ -258,12 +258,12 @@ static int ari_map_am(ari_am_t *out, const ari_am_t *in, const ari_translator_t 
         const ari_dict_subtype_ct *pair = ari_dict_cref(it);
 
         ari_t out_key  = ARI_INIT_UNDEFINED;
-        retval         = ari_translate(&out_key, pair->key, translator, user_data);
-        ari_t *out_val = *ari_dict_safe_get(out->items, &out_key);
+        retval         = ari_translate(&out_key, &(pair->key), translator, user_data);
+        ari_t *out_val = ari_dict_safe_get(out->items, out_key);
         ari_deinit(&out_key);
         CHKERRVAL(retval);
 
-        retval = ari_translate(out_val, pair->value, translator, user_data);
+        retval = ari_translate(out_val, &(pair->value), translator, user_data);
         CHKERRVAL(retval);
     }
     return 0;
@@ -278,9 +278,9 @@ static int ari_map_tbl(ari_tbl_t *out, const ari_tbl_t *in, const ari_translator
     ari_array_it_t it;
     for (ari_array_it(it, in->items); !ari_array_end_p(it); ari_array_next(it))
     {
-        const ari_array_subtype_ct *in_item  = ari_array_cref(it);
-        ari_a1_t                    out_item = { ARI_INIT_UNDEFINED };
-        retval                               = ari_translate(out_item, *in_item, translator, user_data);
+        const ari_t *in_item  = ari_array_cref(it);
+        ari_t        out_item = ARI_INIT_UNDEFINED;
+        retval                = ari_translate(&out_item, in_item, translator, user_data);
         ari_array_push_move(out->items, &out_item);
         CHKERRVAL(retval);
     }

@@ -36,17 +36,13 @@
 extern "C" {
 #endif
 
-#define ARI_PTR_OPLIST                                                                                            \
-    M_OPEXTEND(M_A1_OPLIST, INIT(ari_init), INIT_SET(ari_init_copy), INIT_MOVE(ari_init_move), CLEAR(ari_deinit), \
-               RESET(ari_deinit), SET(ari_set_copy), MOVE(ari_set_move), HASH(ari_hash), EQUAL(ari_equal))
-
 /// @cond Doxygen_Suppress
 /// Linked list of ARI as ari_list_t
-DEQUE_DEF(ari_list, ari_a1_t, ARI_PTR_OPLIST)
+DEQUE_DEF(ari_list, ari_t)
 /// Dictionary from (literal) ARI to ARI
-M_DICT_DEF2(ari_dict, ari_a1_t, ARI_PTR_OPLIST, ari_a1_t, ARI_PTR_OPLIST)
+M_DICT_DEF2(ari_dict, ari_t, ari_t)
 /// Flat array of ARI for TBL
-ARRAY_DEF(ari_array, ari_a1_t, ARI_PTR_OPLIST)
+ARRAY_DEF(ari_array, ari_t)
 
 /// @endcond
 

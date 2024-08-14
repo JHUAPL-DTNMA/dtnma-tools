@@ -194,7 +194,7 @@ void test_ari_text_encode_lit_typed_ac_1item(void)
         ari_ac_t ctr;
         ari_ac_init(&ctr);
         {
-            ari_t *item = *ari_list_push_back_new(ctr.items);
+            ari_t *item = ari_list_push_back_new(ctr.items);
             ari_set_null(item);
         }
 
@@ -214,11 +214,11 @@ void test_ari_text_encode_lit_typed_ac_2item(void)
         ari_ac_t ctr;
         ari_ac_init(&ctr);
         {
-            ari_t *item = *ari_list_push_back_new(ctr.items);
+            ari_t *item = ari_list_push_back_new(ctr.items);
             ari_set_null(item);
         }
         {
-            ari_t *item = *ari_list_push_back_new(ctr.items);
+            ari_t *item = ari_list_push_back_new(ctr.items);
             ari_set_bool(item, false);
         }
 
@@ -241,7 +241,7 @@ void test_ari_text_encode_lit_typed_am_2item(void)
             ari_t key;
             ari_init(&key);
             ari_set_int(&key, 1);
-            ari_t *val = *ari_dict_safe_get(ctr.items, &key);
+            ari_t *val = ari_dict_safe_get(ctr.items, key);
             ari_set_null(val);
             ari_deinit(&key);
         }
@@ -249,7 +249,7 @@ void test_ari_text_encode_lit_typed_am_2item(void)
             ari_t key;
             ari_init(&key);
             ari_set_int(&key, 2);
-            ari_t *val = *ari_dict_safe_get(ctr.items, &key);
+            ari_t *val = ari_dict_safe_get(ctr.items, key);
             ari_set_bool(val, false);
             ari_deinit(&key);
         }
@@ -273,11 +273,11 @@ void test_ari_text_encode_lit_typed_execset_2tgt(void)
             ari_set_uvast(&(ctr.nonce), 12345678);
         }
         {
-            ari_t *item = *ari_list_push_back_new(ctr.targets);
+            ari_t *item = ari_list_push_back_new(ctr.targets);
             ari_set_objref_path_textid(item, "adm", ARI_TYPE_CTRL, "one");
         }
         {
-            ari_t *item = *ari_list_push_back_new(ctr.targets);
+            ari_t *item = ari_list_push_back_new(ctr.targets);
             ari_set_objref_path_textid(item, "adm", ARI_TYPE_CTRL, "two");
         }
 
@@ -639,16 +639,16 @@ void test_ari_text_decode_lit_typed_rptset(const char *text, enum ari_prim_type_
     TEST_ASSERT_FALSE(ctr->reftime.is_ref);
     switch (ctr->reftime.as_lit.prim_type)
     {
-    case ARI_PRIM_INT64:
-        TEST_ASSERT_EQUAL_INT(725943845, ctr->reftime.as_lit.value.as_int64);
-        break;
-    case ARI_PRIM_TIMESPEC:
-        TEST_ASSERT_EQUAL_INT(725943845, ctr->reftime.as_lit.value.as_timespec.tv_sec);
-        TEST_ASSERT_EQUAL_INT(0, ctr->reftime.as_lit.value.as_timespec.tv_nsec);
-        break;
-    default:
-        TEST_FAIL_MESSAGE("reftime has invalid type");
-        break;
+        case ARI_PRIM_INT64:
+            TEST_ASSERT_EQUAL_INT(725943845, ctr->reftime.as_lit.value.as_int64);
+            break;
+        case ARI_PRIM_TIMESPEC:
+            TEST_ASSERT_EQUAL_INT(725943845, ctr->reftime.as_lit.value.as_timespec.tv_sec);
+            TEST_ASSERT_EQUAL_INT(0, ctr->reftime.as_lit.value.as_timespec.tv_nsec);
+            break;
+        default:
+            TEST_FAIL_MESSAGE("reftime has invalid type");
+            break;
     }
 
     TEST_ASSERT_EQUAL_INT(expect_count, ari_report_list_size(ctr->reports));

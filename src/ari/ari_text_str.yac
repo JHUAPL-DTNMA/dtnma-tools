@@ -28,7 +28,7 @@ int yydebug = 0;
 #include <m-string.h>
 #include <m-dict.h>
 
-M_DICT_DEF2(lit_param_dict, string_t, M_STRING_OPLIST, ari_a1_t, ARI_PTR_OPLIST)
+M_DICT_DEF2(lit_param_dict, string_t, M_STRING_OPLIST, ari_t, M_OPL_ari_t())
 
 typedef struct {
     /// The input stream
@@ -152,14 +152,14 @@ ssp-literal:
     | T_LITTYPE_TBL litparamlist {
         string_t key;
         string_init_set_str(key, "c");
-        ari_a1_t *found_c = lit_param_dict_get($2, key);
+        ari_t *found_c = lit_param_dict_get($2, key);
         string_clear(key);
 
         bool valid = false;
         size_t ncols = 0;
         if (found_c)
         {
-            valid = (ari_get_uvast(*found_c, &ncols) == 0);
+            valid = (ari_get_uvast(found_c, &ncols) == 0);
         }
         if (!valid)
         {
@@ -174,19 +174,19 @@ ssp-literal:
     | T_LITTYPE_EXECSET litparamlist acbracket {
         string_t key;
         string_init_set_str(key, "n");
-        ari_a1_t *found_n = lit_param_dict_get($2, key);
+        ari_t *found_n = lit_param_dict_get($2, key);
         string_clear(key);
 
         if (found_n)
         {
-            if ((*found_n)->is_ref)
+            if (found_n->is_ref)
             {
-                ari_deinit(*found_n);
+                ari_deinit(found_n);
                 found_n = NULL;
             }
             else
             {
-                switch ((*found_n)->as_lit.prim_type)
+                switch (found_n->as_lit.prim_type)
                 {
                     case ARI_PRIM_NULL:
                     case ARI_PRIM_INT64:
@@ -194,7 +194,7 @@ ssp-literal:
                     case ARI_PRIM_BSTR:
                         break;
                     default:
-                        ari_deinit(*found_n);
+                        ari_deinit(found_n);
                         found_n = NULL;
                 }
             }
@@ -208,7 +208,7 @@ ssp-literal:
         }
 
         ari_lit_init_container(&$$, ARI_TYPE_EXECSET);
-        ari_init_move(&($$.value.as_execset->nonce), *found_n);
+        ari_init_move(&($$.value.as_execset->nonce), found_n);
         lit_param_dict_clear($2);
 
         ari_list_move($$.value.as_execset->targets, $3.value.as_ac->items);
@@ -218,23 +218,23 @@ ssp-literal:
     | T_LITTYPE_RPTSET litparamlist reportlist {
         string_t key;
         string_init_set_str(key, "n");
-        ari_a1_t *found_n = lit_param_dict_get($2, key);
+        ari_t *found_n = lit_param_dict_get($2, key);
         string_clear(key);
 
         string_init_set_str(key, "r");
-        ari_a1_t *found_r = lit_param_dict_get($2, key);
+        ari_t *found_r = lit_param_dict_get($2, key);
         string_clear(key);
 
         if (found_n)
         {
-            if ((*found_n)->is_ref)
+            if (found_n->is_ref)
             {
-                ari_deinit(*found_n);
+                ari_deinit(found_n);
                 found_n = NULL;
             }
             else
             {
-                switch ((*found_n)->as_lit.prim_type)
+                switch (found_n->as_lit.prim_type)
                 {
                     case ARI_PRIM_NULL:
                     case ARI_PRIM_INT64:
@@ -242,7 +242,7 @@ ssp-literal:
                     case ARI_PRIM_BSTR:
                         break;
                     default:
-                        ari_deinit(*found_n);
+                        ari_deinit(found_n);
                         found_n = NULL;
                 }
             }
@@ -257,9 +257,9 @@ ssp-literal:
 
         if (found_r)
         {
-            if ((*found_r)->is_ref)
+            if (found_r->is_ref)
             {
-                ari_deinit(*found_r);
+                ari_deinit(found_r);
                 found_r = NULL;
             }
             else
@@ -276,8 +276,8 @@ ssp-literal:
         }
 
         $$ = $3;
-        ari_init_move(&($$.value.as_rptset->nonce), *found_n);
-        ari_init_move(&($$.value.as_rptset->reftime), *found_r);
+        ari_init_move(&($$.value.as_rptset->nonce), found_n);
+        ari_init_move(&($$.value.as_rptset->reftime), found_r);
         lit_param_dict_clear($2);
     }
 ;
@@ -294,12 +294,12 @@ acbracket:
 aclist:
     ari {
         ari_lit_init_container(&$$, ARI_TYPE_AC);
-        ari_t *item = *ari_list_push_back_new($$.value.as_ac->items);
+        ari_t *item = ari_list_push_back_new($$.value.as_ac->items);
         *item = $1;
     }
     | aclist T_COMMA ari {
         $$ = $1;
-        ari_t *item = *ari_list_push_back_new($$.value.as_ac->items);
+        ari_t *item = ari_list_push_back_new($$.value.as_ac->items);
         *item = $3;
     }
 ;
@@ -316,13 +316,13 @@ ambracket:
 amlist:
     ari T_EQ ari {
         ari_lit_init_container(&$$, ARI_TYPE_AM);
-        ari_t *val = *ari_dict_safe_get($$.value.as_am->items, &$1);
+        ari_t *val = ari_dict_safe_get($$.value.as_am->items, $1);
         ari_set_move(val, &$3);
         ari_deinit(&$1);
     }
     | amlist T_COMMA ari T_EQ ari {
         $$ = $1;
-        ari_t *val = *ari_dict_safe_get($$.value.as_am->items, &$3);
+        ari_t *val = ari_dict_safe_get($$.value.as_am->items, $3);
         ari_set_move(val, &$5);
         ari_deinit(&$3);
     }
@@ -334,8 +334,8 @@ litparamlist:
     }
     | litparamlist T_VALSEG T_EQ ari T_SC {
         lit_param_dict_init_move($$, $1);
-        ari_a1_t *val = lit_param_dict_safe_get($$, $2);
-        ari_set_move(*val, &$4);
+        ari_t *val = lit_param_dict_safe_get($$, $2);
+        ari_set_move(val, &$4);
         string_clear($2);
     }
 ;
@@ -379,18 +379,18 @@ report:
 
         string_t key;
         string_init_set_str(key, "t");
-        ari_a1_t *found_t = lit_param_dict_get($2, key);
+        ari_t *found_t = lit_param_dict_get($2, key);
         string_clear(key);
 
         string_init_set_str(key, "s");
-        ari_a1_t *found_s = lit_param_dict_get($2, key);
+        ari_t *found_s = lit_param_dict_get($2, key);
         string_clear(key);
 
         if (found_t)
         {
-            if ((*found_t)->is_ref)
+            if (found_t->is_ref)
             {
-                ari_deinit(*found_t);
+                ari_deinit(found_t);
                 found_t = NULL;
             }
             else
@@ -408,9 +408,9 @@ report:
 
         if (found_s)
         {
-            if (!((*found_s)->is_ref))
+            if (!(found_s->is_ref))
             {
-                ari_deinit(*found_s);
+                ari_deinit(found_s);
                 found_s = NULL;
             }
             else
@@ -426,8 +426,8 @@ report:
             YYERROR;
         }
 
-        ari_init_move(&($$->reltime), *found_t);
-        ari_init_move(&($$->source), *found_s);
+        ari_init_move(&($$->reltime), found_t);
+        ari_init_move(&($$->source), found_s);
         lit_param_dict_clear($2);
 
         ari_list_move($$->items, $3.value.as_ac->items);

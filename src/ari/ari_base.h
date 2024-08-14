@@ -295,11 +295,6 @@ typedef struct ari_s
     };
 } ari_t;
 
-/** A definition to use length-one-array trick for store-by-value and
- * pass-by-reference semantics.
- */
-typedef struct ari_s ari_a1_t[1];
-
 /** A static value to initialize an ARI to the undefined value.
  * This can be used as an alternative to ari_init() for static initialization.
  */
@@ -362,6 +357,12 @@ int ari_deinit(ari_t *ari);
 int ari_set_copy(ari_t *ari, const ari_t *src);
 
 int ari_set_move(ari_t *ari, ari_t *src);
+
+/// Default OPLIST for ari_t
+#define M_OPL_ari_t()                                                                                                  \
+    (INIT(API_2(ari_init)), INIT_SET(API_6(ari_init_copy)), INIT_MOVE(API_6(ari_init_move)), CLEAR(API_2(ari_deinit)), \
+     RESET(API_2(ari_deinit)), SET(API_6(ari_set_copy)), MOVE(API_6(ari_set_move)), HASH(API_2(ari_hash)),             \
+     EQUAL(API_6(ari_equal)))
 
 #ifdef __cplusplus
 }

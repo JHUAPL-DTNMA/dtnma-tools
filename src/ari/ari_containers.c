@@ -95,11 +95,11 @@ int ari_tbl_move_row(ari_tbl_t *obj, ari_ac_t *row)
 
     while (!ari_list_empty_p(row->items))
     {
-        ari_a1_t item;
-        ari_init(item);
+        ari_t item;
+        ari_init(&item);
         ari_list_pop_front(&item, row->items);
         ari_array_push_move(obj->items, &item);
-        ari_deinit(item);
+        ari_deinit(&item);
     }
     return 0;
 }

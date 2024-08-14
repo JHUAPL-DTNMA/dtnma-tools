@@ -28,7 +28,7 @@
 // Allow this macro
 #define TEST_CASE(...)
 
-M_DICT_DEF2(test_seen_ari, string_t, STRING_OPLIST, ari_a1_t, ARI_PTR_OPLIST)
+M_DICT_DEF2(test_seen_ari, string_t, STRING_OPLIST, ari_t, M_OPL_ari_t())
 
 M_DICT_DEF2(test_seen_hash, string_t, STRING_OPLIST, size_t, M_BASIC_OPLIST)
 
@@ -129,7 +129,7 @@ void test_ari_equal()
 
         TEST_ASSERT_TRUE_MESSAGE(ari_equal(&ari_a, &ari_b), "ari_equal() differs");
         {
-            ari_a1_t *found = test_seen_ari_get(ari_history, intext);
+            ari_t *found = test_seen_ari_get(ari_history, intext);
             TEST_ASSERT_NULL(found); // no duplicates
         }
         {
@@ -137,10 +137,10 @@ void test_ari_equal()
             for (test_seen_ari_it(it, ari_history); !test_seen_ari_end_p(it); test_seen_ari_next(it))
             {
                 test_seen_ari_itref_t *pair = test_seen_ari_ref(it);
-                TEST_ASSERT_FALSE(ari_equal(&ari_a, pair->value));
+                TEST_ASSERT_FALSE(ari_equal(&ari_a, &(pair->value)));
             }
         }
-        ari_t *val = *test_seen_ari_safe_get(ari_history, intext);
+        ari_t *val = test_seen_ari_safe_get(ari_history, intext);
         ari_set_move(val, &ari_a);
 
         string_clear(intext);

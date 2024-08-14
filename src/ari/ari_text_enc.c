@@ -89,7 +89,7 @@ static int ari_text_encode_ac(ari_text_enc_state_t *state, const ari_ac_t *ctr)
         }
         sep = true;
 
-        const ari_t *item = *ari_list_cref(item_it);
+        const ari_t *item = ari_list_cref(item_it);
 
         int ret = ari_text_encode_stream(state, item);
         if (ret)
@@ -123,7 +123,7 @@ static int ari_text_encode_am(ari_text_enc_state_t *state, const ari_am_t *ctr)
 
         const ari_dict_itref_t *pair = ari_dict_cref(item_it);
 
-        int ret = ari_text_encode_stream(state, pair->key);
+        int ret = ari_text_encode_stream(state, &(pair->key));
         if (ret)
         {
             retval = 2;
@@ -132,7 +132,7 @@ static int ari_text_encode_am(ari_text_enc_state_t *state, const ari_am_t *ctr)
 
         string_push_back(state->out, '=');
 
-        ret = ari_text_encode_stream(state, pair->value);
+        ret = ari_text_encode_stream(state, &(pair->value));
         if (ret)
         {
             retval = 2;
@@ -175,7 +175,7 @@ static int ari_text_encode_tbl(ari_text_enc_state_t *state, const ari_tbl_t *ctr
             }
             sep = true;
 
-            const ari_t *item = *ari_array_cref(item_it);
+            const ari_t *item = ari_array_cref(item_it);
 
             int ret = ari_text_encode_stream(state, item);
             if (ret)
@@ -226,7 +226,7 @@ static int ari_text_encode_execset(ari_text_enc_state_t *state, const ari_execse
         }
         sep = true;
 
-        const ari_t *item = *ari_list_cref(item_it);
+        const ari_t *item = ari_list_cref(item_it);
 
         int ret = ari_text_encode_stream(state, item);
         if (ret)
@@ -273,7 +273,7 @@ static int ari_text_encode_report(ari_text_enc_state_t *state, const ari_report_
         }
         sep = true;
 
-        const ari_t *item = *ari_list_cref(item_it);
+        const ari_t *item = ari_list_cref(item_it);
 
         int ret = ari_text_encode_stream(state, item);
         if (ret)

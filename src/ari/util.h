@@ -15,6 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup ari
+ * This file contains preprocessor utility definitions shared among the
+ * ARI library.
+ */
+#ifndef ARI_UTIL_H_
+#define ARI_UTIL_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,3 +77,5 @@ extern "C" {
 #ifdef __cplusplus
 } // extern C
 #endif
+
+#endif /* ARI_UTIL_H_ */
