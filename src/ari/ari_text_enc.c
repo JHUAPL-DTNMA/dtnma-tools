@@ -112,8 +112,8 @@ static int ari_text_encode_am(ari_text_enc_state_t *state, const ari_am_t *ctr)
     int  retval = 0;
     bool sep    = false;
 
-    ari_dict_it_t item_it;
-    for (ari_dict_it(item_it, ctr->items); !ari_dict_end_p(item_it); ari_dict_next(item_it))
+    ari_tree_it_t item_it;
+    for (ari_tree_it(item_it, ctr->items); !ari_tree_end_p(item_it); ari_tree_next(item_it))
     {
         if (sep)
         {
@@ -121,9 +121,9 @@ static int ari_text_encode_am(ari_text_enc_state_t *state, const ari_am_t *ctr)
         }
         sep = true;
 
-        const ari_dict_itref_t *pair = ari_dict_cref(item_it);
+        const ari_tree_itref_t *pair = ari_tree_cref(item_it);
 
-        int ret = ari_text_encode_stream(state, &(pair->key));
+        int ret = ari_text_encode_stream(state, pair->key_ptr);
         if (ret)
         {
             retval = 2;
@@ -132,7 +132,7 @@ static int ari_text_encode_am(ari_text_enc_state_t *state, const ari_am_t *ctr)
 
         string_push_back(state->out, '=');
 
-        ret = ari_text_encode_stream(state, &(pair->value));
+        ret = ari_text_encode_stream(state, pair->value_ptr);
         if (ret)
         {
             retval = 2;

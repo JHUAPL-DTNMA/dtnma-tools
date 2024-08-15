@@ -317,7 +317,7 @@ void ari_set_am(ari_t *ari, struct ari_am_s *src)
     ari_am_init(ctr);
     if (src)
     {
-        ari_dict_move(ctr->items, src->items);
+        ari_tree_move(ctr->items, src->items);
     }
 
     *ari_init_lit(ari) = (ari_lit_t) { .has_ari_type = true,

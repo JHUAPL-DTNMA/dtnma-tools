@@ -496,6 +496,7 @@ TEST_CASE("82041864")
 TEST_CASE("82051864")
 TEST_CASE("82061864")
 TEST_CASE("82071864")
+TEST_CASE("8212A303F50A626869626F6804") // ari:/AM/(3=true,10=hi,oh=4) AM key ordering
 TEST_CASE("84647465737464746869736474686174811822") // ari://test/this/that(34)
 void test_ari_cbor_loopback(const char *inhex)
 {

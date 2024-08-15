@@ -266,16 +266,16 @@ static int ari_cbor_encode_am(QCBOREncodeContext *enc, const ari_am_t *obj)
     int retval = 0;
     QCBOREncode_OpenMap(enc);
 
-    ari_dict_it_t it;
-    for (ari_dict_it(it, obj->items); !ari_dict_end_p(it); ari_dict_next(it))
+    ari_tree_it_t it;
+    for (ari_tree_it(it, obj->items); !ari_tree_end_p(it); ari_tree_next(it))
     {
-        const ari_dict_subtype_ct *pair = ari_dict_cref(it);
-        if (ari_cbor_encode_stream(enc, &(pair->key)))
+        const ari_tree_subtype_ct *pair = ari_tree_cref(it);
+        if (ari_cbor_encode_stream(enc, pair->key_ptr))
         {
             retval = 2;
             break;
         }
-        if (ari_cbor_encode_stream(enc, &(pair->value)))
+        if (ari_cbor_encode_stream(enc, pair->value_ptr))
         {
             retval = 2;
             break;
@@ -333,7 +333,7 @@ static int ari_cbor_decode_am(QCBORDecodeContext *dec, ari_am_t *obj)
         }
 
         // push only after fully reading
-        ari_t *val = ari_dict_safe_get(obj->items, key);
+        ari_t *val = ari_tree_safe_get(obj->items, key);
         ari_set_move(val, &value);
         ari_deinit(&key);
     }

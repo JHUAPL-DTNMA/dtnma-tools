@@ -41,17 +41,17 @@ static int ari_visit_am(const ari_am_t *obj, const ari_visitor_t *visitor, ari_v
 {
     int retval;
 
-    ari_dict_it_t it;
-    for (ari_dict_it(it, obj->items); !ari_dict_end_p(it); ari_dict_next(it))
+    ari_tree_it_t it;
+    for (ari_tree_it(it, obj->items); !ari_tree_end_p(it); ari_tree_next(it))
     {
-        const ari_dict_subtype_ct *pair = ari_dict_cref(it);
+        const ari_tree_subtype_ct *pair = ari_tree_cref(it);
 
         ctx->is_map_key = true;
-        retval          = ari_visit_ari(&(pair->key), visitor, ctx);
+        retval          = ari_visit_ari(pair->key_ptr, visitor, ctx);
         CHKERRVAL(retval);
 
         ctx->is_map_key = false;
-        retval          = ari_visit_ari(&(pair->value), visitor, ctx);
+        retval          = ari_visit_ari(pair->value_ptr, visitor, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -256,20 +256,20 @@ static int ari_map_ac(ari_ac_t *out, const ari_ac_t *in, const ari_translator_t 
 static int ari_map_am(ari_am_t *out, const ari_am_t *in, const ari_translator_t *translator, ari_translate_ctx_t *ctx)
 {
     int           retval;
-    ari_dict_it_t it;
-    for (ari_dict_it(it, in->items); !ari_dict_end_p(it); ari_dict_next(it))
+    ari_tree_it_t it;
+    for (ari_tree_it(it, in->items); !ari_tree_end_p(it); ari_tree_next(it))
     {
-        const ari_dict_subtype_ct *pair = ari_dict_cref(it);
+        const ari_tree_subtype_ct *pair = ari_tree_cref(it);
 
         ari_t out_key   = ARI_INIT_UNDEFINED;
         ctx->is_map_key = true;
-        retval          = ari_translate_ari(&out_key, &(pair->key), translator, ctx);
-        ari_t *out_val  = ari_dict_safe_get(out->items, out_key);
+        retval          = ari_translate_ari(&out_key, pair->key_ptr, translator, ctx);
+        ari_t *out_val  = ari_tree_safe_get(out->items, out_key);
         ari_deinit(&out_key);
         CHKERRVAL(retval);
 
         ctx->is_map_key = false;
-        retval          = ari_translate_ari(out_val, &(pair->value), translator, ctx);
+        retval          = ari_translate_ari(out_val, pair->value_ptr, translator, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -505,6 +505,31 @@ size_t ari_hash(const ari_t *ari)
     return accum;
 }
 
+static bool ari_objpath_cmp(const ari_objpath_t *left, const ari_objpath_t *right)
+{
+    int part_cmp = ari_idseg_cmp(&(left->ns_id), &(right->ns_id));
+    if (part_cmp)
+    {
+        return part_cmp;
+    }
+
+    // prefer derived values
+    if (left->has_ari_type && right->has_ari_type)
+    {
+        part_cmp = left->ari_type < right->ari_type;
+    }
+    else
+    {
+        part_cmp = ari_idseg_cmp(&(left->type_id), &(right->type_id));
+    }
+    if (part_cmp)
+    {
+        return part_cmp;
+    }
+
+    return ari_idseg_cmp(&(left->obj_id), &(right->obj_id));
+}
+
 static bool ari_objpath_equal(const ari_objpath_t *left, const ari_objpath_t *right)
 {
     // prefer derived values
@@ -520,6 +545,27 @@ static bool ari_objpath_equal(const ari_objpath_t *left, const ari_objpath_t *ri
 
     return (ari_idseg_equal(&(left->ns_id), &(right->ns_id)) && type_equal
             && ari_idseg_equal(&(left->obj_id), &(right->obj_id)));
+}
+
+static int ari_params_cmp(const ari_params_t *left, const ari_params_t *right)
+{
+    int part_cmp = M_CMP_DEFAULT(left->state, right->state);
+    if (part_cmp)
+    {
+        return part_cmp;
+    }
+
+    switch (left->state)
+    {
+        case ARI_PARAMS_NONE:
+            return 0;
+        case ARI_PARAMS_AC:
+            return ari_ac_cmp(left->as_ac, right->as_ac);
+        case ARI_PARAMS_AM:
+            return ari_am_cmp(left->as_am, right->as_am);
+        default:
+            return -2;
+    }
 }
 
 static bool ari_params_equal(const ari_params_t *left, const ari_params_t *right)
@@ -538,6 +584,134 @@ static bool ari_params_equal(const ari_params_t *left, const ari_params_t *right
             return ari_am_equal(left->as_am, right->as_am);
         default:
             return false;
+    }
+}
+
+int ari_cmp(const ari_t *left, const ari_t *right)
+{
+    CHKRET(left, -1);
+    CHKRET(right, -1);
+
+    if (left->is_ref != right->is_ref)
+    {
+        // literals order first
+        return left->is_ref ? 1 : -1;
+    }
+    if (left->is_ref)
+    {
+        int part_cmp = ari_objpath_cmp(&(left->as_ref.objpath), &(right->as_ref.objpath));
+        if (part_cmp)
+        {
+            return part_cmp;
+        }
+        return ari_params_cmp(&(left->as_ref.params), &(right->as_ref.params));
+    }
+    else
+    {
+        if (left->as_lit.has_ari_type != right->as_lit.has_ari_type)
+        {
+            // untyped order first
+            return left->as_lit.has_ari_type ? 1 : -1;
+        }
+        if (left->as_lit.has_ari_type)
+        {
+            int part_cmp = M_CMP_DEFAULT(left->as_lit.ari_type, right->as_lit.ari_type);
+            if (part_cmp)
+            {
+                return part_cmp;
+            }
+            switch (left->as_lit.ari_type)
+            {
+                case ARI_TYPE_AC:
+                    part_cmp = ari_ac_cmp(left->as_lit.value.as_ac, right->as_lit.value.as_ac);
+                    if (part_cmp)
+                    {
+                        return part_cmp;
+                    }
+                    break;
+                case ARI_TYPE_AM:
+                    part_cmp = ari_am_cmp(left->as_lit.value.as_am, right->as_lit.value.as_am);
+                    if (part_cmp)
+                    {
+                        return part_cmp;
+                    }
+                    break;
+                case ARI_TYPE_TBL:
+                    part_cmp = ari_tbl_cmp(left->as_lit.value.as_tbl, right->as_lit.value.as_tbl);
+                    if (part_cmp)
+                    {
+                        return part_cmp;
+                    }
+                    break;
+                case ARI_TYPE_EXECSET:
+                    part_cmp = ari_execset_cmp(left->as_lit.value.as_execset, right->as_lit.value.as_execset);
+                    if (part_cmp)
+                    {
+                        return part_cmp;
+                    }
+                    break;
+                case ARI_TYPE_RPTSET:
+                    part_cmp = ari_rptset_cmp(left->as_lit.value.as_rptset, right->as_lit.value.as_rptset);
+                    if (part_cmp)
+                    {
+                        return part_cmp;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        int part_cmp = M_CMP_DEFAULT(left->as_lit.prim_type, right->as_lit.prim_type);
+        if (part_cmp)
+        {
+            // ordered by primitive enum, not CBOR related
+            return part_cmp;
+        }
+        switch (left->as_lit.prim_type)
+        {
+            case ARI_PRIM_UNDEFINED:
+            case ARI_PRIM_NULL:
+                part_cmp = 0;
+                break;
+            case ARI_PRIM_BOOL:
+                part_cmp = M_CMP_BASIC(left->as_lit.value.as_bool, right->as_lit.value.as_bool);
+                break;
+            case ARI_PRIM_UINT64:
+                part_cmp = M_CMP_BASIC(left->as_lit.value.as_uint64, right->as_lit.value.as_uint64);
+                break;
+            case ARI_PRIM_INT64:
+                part_cmp = M_CMP_BASIC(left->as_lit.value.as_int64, right->as_lit.value.as_int64);
+                break;
+            case ARI_PRIM_FLOAT64:
+                part_cmp = M_CMP_BASIC(isnan(left->as_lit.value.as_float64), isnan(right->as_lit.value.as_float64));
+                if (part_cmp)
+                {
+                    return part_cmp;
+                }
+                if (!isnan(left->as_lit.value.as_float64))
+                {
+                    part_cmp = M_CMP_BASIC(left->as_lit.value.as_float64, right->as_lit.value.as_float64);
+                }
+                break;
+            case ARI_PRIM_TSTR:
+            case ARI_PRIM_BSTR:
+                part_cmp = ari_data_cmp(&(left->as_lit.value.as_data), &(right->as_lit.value.as_data));
+                break;
+            case ARI_PRIM_TIMESPEC:
+                part_cmp = M_CMP_BASIC(left->as_lit.value.as_timespec.tv_sec, right->as_lit.value.as_timespec.tv_sec);
+                if (part_cmp)
+                {
+                    return part_cmp;
+                }
+                part_cmp = M_CMP_BASIC(left->as_lit.value.as_timespec.tv_nsec, right->as_lit.value.as_timespec.tv_nsec);
+                break;
+            default:
+                part_cmp = -2;
+                break;
+        }
+
+        return part_cmp;
     }
 }
 

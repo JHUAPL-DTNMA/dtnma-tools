@@ -128,19 +128,36 @@ size_t ari_data_hash(const ari_data_t *data)
     return accum;
 }
 
+int ari_data_cmp(const ari_data_t *lt, const ari_data_t *rt)
+{
+    CHKRET(lt, -2);
+    CHKRET(lt, -2);
+
+    int part_cmp = M_CMP_BASIC(lt->len, rt->len);
+    if (part_cmp)
+    {
+        return part_cmp;
+    }
+
+    if (!lt->ptr || !rt->ptr)
+    {
+        // null ptr ordered before non-null
+        return lt->ptr ? 1 : -1;
+    }
+    return memcmp(lt->ptr, rt->ptr, lt->len);
+}
+
 bool ari_data_equal(const ari_data_t *lt, const ari_data_t *rt)
 {
     CHKFALSE(lt);
     CHKFALSE(rt);
-    if (!lt->ptr && !rt->ptr)
-    {
-        return true;
-    }
-    if (!lt->ptr || !rt->ptr)
+
+    if (lt->len != rt->len)
     {
         return false;
     }
-    if (lt->len != rt->len)
+
+    if (!lt->ptr || !rt->ptr)
     {
         return false;
     }

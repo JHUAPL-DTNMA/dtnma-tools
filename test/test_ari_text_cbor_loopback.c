@@ -70,6 +70,7 @@ TEST_CASE("ari:/AC/()")
 TEST_CASE("ari:/AC/(null,/INT/23)")
 TEST_CASE("ari:/AM/()")
 TEST_CASE("ari:/AM/(1=true)")
+TEST_CASE("ari:/AM/(3=true,10=hi,oh=4)") // AM key ordering
 TEST_CASE("ari:/TBL/c=3;")
 TEST_CASE("ari:/TBL/c=3;(1,2,3)")
 TEST_CASE("ari:/EXECSET/n=null;()")

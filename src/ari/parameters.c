@@ -121,24 +121,24 @@ int ari_actual_param_set_init(ari_actual_param_set_t *obj, const ari_formal_para
         }
         case ARI_PARAMS_AM:
         {
-            ari_dict_t *gparam_map = &(gparams->as_am->items);
+            ari_tree_t *gparam_map = &(gparams->as_am->items);
 
             // keep track of used keys and normalize
-            ari_dict_t norm_map;
-            ari_dict_init(norm_map);
+            ari_tree_t norm_map;
+            ari_tree_init(norm_map);
             {
-                ari_dict_it_t git;
-                for (ari_dict_it(git, *gparam_map); !ari_dict_end_p(git); ari_dict_next(git))
+                ari_tree_it_t git;
+                for (ari_tree_it(git, *gparam_map); !ari_tree_end_p(git); ari_tree_next(git))
                 {
-                    const ari_dict_subtype_ct *pair = ari_dict_cref(git);
+                    const ari_tree_subtype_ct *pair = ari_tree_cref(git);
 
                     ari_t norm_key;
-                    if (normalize_key(&norm_key, &(pair->key)))
+                    if (normalize_key(&norm_key, pair->key_ptr))
                     {
                         retval = 2;
                         break;
                     }
-                    ari_dict_set_at(norm_map, norm_key, pair->value);
+                    ari_tree_set_at(norm_map, norm_key, *(pair->value_ptr));
                     ari_deinit(&norm_key);
                 }
             }
@@ -159,13 +159,13 @@ int ari_actual_param_set_init(ari_actual_param_set_t *obj, const ari_formal_para
                 ari_t key_uvast;
                 ari_init(&key_uvast);
                 ari_set_uvast(&key_uvast, fparam->index);
-                const ari_t *gparam_uvast = ari_dict_cget(norm_map, key_uvast);
+                const ari_t *gparam_uvast = ari_tree_cget(norm_map, key_uvast);
 
                 // try text key
                 ari_t key_tstr;
                 ari_init(&key_tstr);
                 ari_set_tstr(&key_tstr, string_get_cstr(fparam->name), false);
-                const ari_t *gparam_tstr = ari_dict_cget(norm_map, key_tstr);
+                const ari_t *gparam_tstr = ari_tree_cget(norm_map, key_tstr);
 
                 if (gparam_uvast && gparam_tstr)
                 {
@@ -191,23 +191,23 @@ int ari_actual_param_set_init(ari_actual_param_set_t *obj, const ari_formal_para
 
                 if (gparam_uvast)
                 {
-                    ari_dict_erase(norm_map, key_uvast);
+                    ari_tree_erase(norm_map, key_uvast);
                 }
                 ari_deinit(&key_uvast);
 
                 if (gparam_tstr)
                 {
-                    ari_dict_erase(norm_map, key_tstr);
+                    ari_tree_erase(norm_map, key_tstr);
                 }
                 ari_deinit(&key_tstr);
             }
 
             // remaining unused actuals
-            if (!retval && !ari_dict_empty_p(norm_map))
+            if (!retval && !ari_tree_empty_p(norm_map))
             {
                 retval = 3;
             }
-            ari_dict_clear(norm_map);
+            ari_tree_clear(norm_map);
 
             break;
         }

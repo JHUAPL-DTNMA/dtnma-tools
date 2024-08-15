@@ -163,6 +163,9 @@ int ari_data_copy(ari_data_t *data, const ari_data_t *src);
 int ari_data_swap(ari_data_t *data, ari_data_t *other);
 
 size_t ari_data_hash(const ari_data_t *data);
+
+int ari_data_cmp(const ari_data_t *lt, const ari_data_t *rt);
+
 bool   ari_data_equal(const ari_data_t *lt, const ari_data_t *rt);
 
 struct m_string_s;

@@ -314,13 +314,13 @@ ambracket:
 amlist:
     ari T_EQ ari {
         ari_lit_init_container(&$$, ARI_TYPE_AM);
-        ari_t *val = ari_dict_safe_get($$.value.as_am->items, $1);
+        ari_t *val = ari_tree_safe_get($$.value.as_am->items, $1);
         ari_set_move(val, &$3);
         ari_deinit(&$1);
     }
     | amlist T_COMMA ari T_EQ ari {
         $$ = $1;
-        ari_t *val = ari_dict_safe_get($$.value.as_am->items, $3);
+        ari_t *val = ari_tree_safe_get($$.value.as_am->items, $3);
         ari_set_move(val, &$5);
         ari_deinit(&$3);
     }

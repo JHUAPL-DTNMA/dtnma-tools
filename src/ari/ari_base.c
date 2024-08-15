@@ -295,7 +295,7 @@ int ari_params_copy(ari_params_t *obj, const ari_params_t *src)
             ari_am_t *ctr = M_MEMORY_ALLOC(ari_am_t);
             obj->state    = src->state;
             obj->as_am    = ctr;
-            ari_dict_init_set(ctr->items, src->as_am->items);
+            ari_tree_init_set(ctr->items, src->as_am->items);
         }
         break;
     }
@@ -390,7 +390,7 @@ int ari_lit_copy(ari_lit_t *lit, const ari_lit_t *src)
             {
                 ari_am_t *ctr    = M_MEMORY_ALLOC(ari_am_t);
                 lit->value.as_am = ctr;
-                ari_dict_init_set(ctr->items, src->value.as_am->items);
+                ari_tree_init_set(ctr->items, src->value.as_am->items);
                 break;
             }
             case ARI_TYPE_TBL:

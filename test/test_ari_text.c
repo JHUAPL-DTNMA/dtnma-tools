@@ -241,7 +241,7 @@ void test_ari_text_encode_lit_typed_am_2item(void)
             ari_t key;
             ari_init(&key);
             ari_set_prim_uint64(&key, 1);
-            ari_t *val = ari_dict_safe_get(ctr.items, key);
+            ari_t *val = ari_tree_safe_get(ctr.items, key);
             ari_set_null(val);
             ari_deinit(&key);
         }
@@ -249,7 +249,7 @@ void test_ari_text_encode_lit_typed_am_2item(void)
             ari_t key;
             ari_init(&key);
             ari_set_prim_uint64(&key, 2);
-            ari_t *val = ari_dict_safe_get(ctr.items, key);
+            ari_t *val = ari_tree_safe_get(ctr.items, key);
             ari_set_bool(val, false);
             ari_deinit(&key);
         }
@@ -257,7 +257,7 @@ void test_ari_text_encode_lit_typed_am_2item(void)
         ari_t ari = ARI_INIT_UNDEFINED;
         ari_set_am(&ari, &ctr);
         {
-            const char *expect = "ari:/AM/(2=false,1=null)";
+            const char *expect = "ari:/AM/(1=null,2=false)";
             check_encode(&ari, expect, ARI_TEXT_ENC_OPTS_DEFAULT);
         }
         ari_deinit(&ari);
@@ -719,6 +719,7 @@ TEST_CASE("ari:/AC/()")
 TEST_CASE("ari:/AC/(null,/INT/23)")
 TEST_CASE("ari:/AM/()")
 TEST_CASE("ari:/AM/(1=true)")
+TEST_CASE("ari:/AM/(3=true,10=hi,oh=4)") // AM key ordering
 TEST_CASE("ari:/TBL/c=3;(1,2,3)")
 TEST_CASE("ari:/EXECSET/n=null;()")
 TEST_CASE("ari:/EXECSET/n=1234;(//test/CTRL/hi)")
