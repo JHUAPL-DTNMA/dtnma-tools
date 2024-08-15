@@ -1901,6 +1901,7 @@ tnv_t *amp_agent_ctrl_add_sbr(eid_t *def_mgr, tnvc_t *parms, int8_t *status)
 
 		if(rh_code != RH_OK)
 		{
+			AMP_DEBUG_ERR("ADD_SBR", "Unable to add SBR to DB, %d", rh_code);
 			rule_release(sbr, 1);
 		}
 		else

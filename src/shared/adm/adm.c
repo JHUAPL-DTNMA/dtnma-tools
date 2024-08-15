@@ -401,7 +401,8 @@ int adm_add_op_ari(ari_t *id, uint8_t num_parm, op_fn apply_fn)
 int adm_add_op(vec_idx_t nn, amp_uvast name, uint8_t num_parm, op_fn apply_fn)
 {
 	// The OPER ARI itself has no parameters, but the operator consumes stack items
-	return adm_add_op_ari(adm_build_ari(AMP_TYPE_OPER, 1, nn, name),num_parm, apply_fn);
+	// the OPER ARI could have parameters but the num_parm is actually num_operands
+	return adm_add_op_ari(adm_build_ari(AMP_TYPE_OPER,  0, nn, name),num_parm, apply_fn);
 }
 
 
