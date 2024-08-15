@@ -85,10 +85,10 @@ TEST_CASE(1234, ARI_TEXT_INT_BASE16, "ari:0x4D2")
 TEST_CASE(-1234, ARI_TEXT_INT_BASE10, "ari:-1234")
 TEST_CASE(-1234, ARI_TEXT_INT_BASE2, "ari:-0b10011010010")
 TEST_CASE(-1234, ARI_TEXT_INT_BASE16, "ari:-0x4D2")
-void test_ari_text_encode_lit_prim_int(ari_int value, enum ari_int_base_e base, const char *expect)
+void test_ari_text_encode_lit_prim_int(int64_t value, enum ari_int_base_e base, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_int(&ari, value);
+    ari_set_prim_int64(&ari, value);
 
     ari_text_enc_opts_t opts = ARI_TEXT_ENC_OPTS_DEFAULT;
     opts.int_base            = base;
@@ -102,10 +102,10 @@ TEST_CASE(0, ARI_TEXT_INT_BASE16, "ari:0x0")
 TEST_CASE(1234, ARI_TEXT_INT_BASE10, "ari:1234")
 TEST_CASE(1234, ARI_TEXT_INT_BASE2, "ari:0b10011010010")
 TEST_CASE(1234, ARI_TEXT_INT_BASE16, "ari:0x4D2")
-void test_ari_text_encode_lit_prim_uint(ari_uint value, enum ari_int_base_e base, const char *expect)
+void test_ari_text_encode_lit_prim_uint(uint64_t value, enum ari_int_base_e base, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_uint(&ari, value);
+    ari_set_prim_uint64(&ari, value);
 
     ari_text_enc_opts_t opts = ARI_TEXT_ENC_OPTS_DEFAULT;
     opts.int_base            = base;
@@ -126,7 +126,7 @@ TEST_CASE((ari_real64)-INFINITY, ' ', "ari:-Infinity")
 void test_ari_text_encode_lit_prim_float64(ari_real64 value, char form, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_real64(&ari, value);
+    ari_set_prim_float64(&ari, value);
 
     ari_text_enc_opts_t opts = ARI_TEXT_ENC_OPTS_DEFAULT;
     opts.float_form          = form;
@@ -240,7 +240,7 @@ void test_ari_text_encode_lit_typed_am_2item(void)
         {
             ari_t key;
             ari_init(&key);
-            ari_set_int(&key, 1);
+            ari_set_prim_uint64(&key, 1);
             ari_t *val = ari_dict_safe_get(ctr.items, key);
             ari_set_null(val);
             ari_deinit(&key);
@@ -248,7 +248,7 @@ void test_ari_text_encode_lit_typed_am_2item(void)
         {
             ari_t key;
             ari_init(&key);
-            ari_set_int(&key, 2);
+            ari_set_prim_uint64(&key, 2);
             ari_t *val = ari_dict_safe_get(ctr.items, key);
             ari_set_bool(val, false);
             ari_deinit(&key);
@@ -257,7 +257,7 @@ void test_ari_text_encode_lit_typed_am_2item(void)
         ari_t ari = ARI_INIT_UNDEFINED;
         ari_set_am(&ari, &ctr);
         {
-            const char *expect = "ari:/AM/(1=null,2=false)";
+            const char *expect = "ari:/AM/(2=false,1=null)";
             check_encode(&ari, expect, ARI_TEXT_ENC_OPTS_DEFAULT);
         }
         ari_deinit(&ari);
@@ -270,7 +270,7 @@ void test_ari_text_encode_lit_typed_execset_2tgt(void)
         ari_execset_t ctr;
         ari_execset_init(&ctr);
         {
-            ari_set_uvast(&(ctr.nonce), 12345678);
+            ari_set_prim_uint64(&(ctr.nonce), 12345678);
         }
         {
             ari_t *item = ari_list_push_back_new(ctr.targets);

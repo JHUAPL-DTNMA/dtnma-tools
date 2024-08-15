@@ -28,8 +28,6 @@ int yydebug = 0;
 #include <m-string.h>
 #include <m-dict.h>
 
-M_DICT_DEF2(lit_param_dict, string_t, M_STRING_OPLIST, ari_t, M_OPL_ari_t())
-
 typedef struct {
     /// The input stream
     FILE *src;
@@ -61,7 +59,7 @@ void ari_str_error(yyscan_t *scanner, ari_text_str_t *input, char const *msg);
   
   ari_lit_t lit;
   ari_type_t ari_type;
-  lit_param_dict_t litparams;
+  named_ari_dict_t litparams;
   struct ari_report_s *report;
   
   ari_ref_t objref;
@@ -106,7 +104,7 @@ void ari_str_error(yyscan_t *scanner, ari_text_str_t *input, char const *msg);
 %type <ari> ssp
 
 %destructor { string_clear($$); } <text>
-%destructor { lit_param_dict_clear($$); } <litparams>
+%destructor { named_ari_dict_clear($$); } <litparams>
 %destructor { ari_lit_deinit(&$$); } <lit>
 %destructor { if ($$) { ari_report_deinit($$); M_MEMORY_DEL($$); } } <report>
 %destructor { ari_ref_deinit(&$$); } <objref>
@@ -152,7 +150,7 @@ ssp-literal:
     | T_LITTYPE_TBL litparamlist {
         string_t key;
         string_init_set_str(key, "c");
-        ari_t *found_c = lit_param_dict_get($2, key);
+        ari_t *found_c = named_ari_dict_get($2, key);
         string_clear(key);
 
         bool valid = false;
@@ -168,13 +166,13 @@ ssp-literal:
         }
         input->tbl_c = ncols;
     } tblrowlist {
-        lit_param_dict_clear($2); // parameter still kept up to this point
+        named_ari_dict_clear($2); // parameter still kept up to this point
         $$ = $4;
     }
     | T_LITTYPE_EXECSET litparamlist acbracket {
         string_t key;
         string_init_set_str(key, "n");
-        ari_t *found_n = lit_param_dict_get($2, key);
+        ari_t *found_n = named_ari_dict_get($2, key);
         string_clear(key);
 
         if (found_n)
@@ -201,7 +199,7 @@ ssp-literal:
         }
         if (!found_n)
         {
-            lit_param_dict_clear($2);
+            named_ari_dict_clear($2);
             ari_lit_deinit(&$3);
             ari_str_error(scanner, input, "EXECSET has invalid key \"n\"");
             YYERROR;
@@ -209,7 +207,7 @@ ssp-literal:
 
         ari_lit_init_container(&$$, ARI_TYPE_EXECSET);
         ari_init_move(&($$.value.as_execset->nonce), found_n);
-        lit_param_dict_clear($2);
+        named_ari_dict_clear($2);
 
         ari_list_move($$.value.as_execset->targets, $3.value.as_ac->items);
         ari_list_init($3.value.as_ac->items);
@@ -218,11 +216,11 @@ ssp-literal:
     | T_LITTYPE_RPTSET litparamlist reportlist {
         string_t key;
         string_init_set_str(key, "n");
-        ari_t *found_n = lit_param_dict_get($2, key);
+        ari_t *found_n = named_ari_dict_get($2, key);
         string_clear(key);
 
         string_init_set_str(key, "r");
-        ari_t *found_r = lit_param_dict_get($2, key);
+        ari_t *found_r = named_ari_dict_get($2, key);
         string_clear(key);
 
         if (found_n)
@@ -249,7 +247,7 @@ ssp-literal:
         }
         if (!found_n)
         {
-            lit_param_dict_clear($2);
+            named_ari_dict_clear($2);
             ari_lit_deinit(&$3);
             ari_str_error(scanner, input, "RPTSET has invalid key \"n\"");
             YYERROR;
@@ -269,7 +267,7 @@ ssp-literal:
         }
         if (!found_r)
         {
-            lit_param_dict_clear($2);
+            named_ari_dict_clear($2);
             ari_lit_deinit(&$3);
             ari_str_error(scanner, input, "RPTSET has invalid key \"r\"");
             YYERROR;
@@ -278,7 +276,7 @@ ssp-literal:
         $$ = $3;
         ari_init_move(&($$.value.as_rptset->nonce), found_n);
         ari_init_move(&($$.value.as_rptset->reftime), found_r);
-        lit_param_dict_clear($2);
+        named_ari_dict_clear($2);
     }
 ;
 
@@ -330,11 +328,11 @@ amlist:
 
 litparamlist:
     %empty {
-        lit_param_dict_init($$);
+        named_ari_dict_init($$);
     }
     | litparamlist T_VALSEG T_EQ ari T_SC {
-        lit_param_dict_init_move($$, $1);
-        ari_t *val = lit_param_dict_safe_get($$, $2);
+        named_ari_dict_init_move($$, $1);
+        ari_t *val = named_ari_dict_safe_get($$, $2);
         ari_set_move(val, &$4);
         string_clear($2);
     }
@@ -379,11 +377,11 @@ report:
 
         string_t key;
         string_init_set_str(key, "t");
-        ari_t *found_t = lit_param_dict_get($2, key);
+        ari_t *found_t = named_ari_dict_get($2, key);
         string_clear(key);
 
         string_init_set_str(key, "s");
-        ari_t *found_s = lit_param_dict_get($2, key);
+        ari_t *found_s = named_ari_dict_get($2, key);
         string_clear(key);
 
         if (found_t)
@@ -400,7 +398,7 @@ report:
         }
         if (!found_t)
         {
-            lit_param_dict_clear($2);
+            named_ari_dict_clear($2);
             ari_lit_deinit(&$3);
             ari_str_error(scanner, input, "RPT has invalid key \"t\"");
             YYERROR;
@@ -420,7 +418,7 @@ report:
         }
         if (!found_s)
         {
-            lit_param_dict_clear($2);
+            named_ari_dict_clear($2);
             ari_lit_deinit(&$3);
             ari_str_error(scanner, input, "RPT has invalid key \"s\"");
             YYERROR;
@@ -428,7 +426,7 @@ report:
 
         ari_init_move(&($$->reltime), found_t);
         ari_init_move(&($$->source), found_s);
-        lit_param_dict_clear($2);
+        named_ari_dict_clear($2);
 
         ari_list_move($$->items, $3.value.as_ac->items);
         ari_list_init($3.value.as_ac->items);

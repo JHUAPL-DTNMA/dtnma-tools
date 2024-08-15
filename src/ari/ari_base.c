@@ -150,6 +150,28 @@ size_t ari_idseg_hash(const ari_idseg_t *obj)
     return M_HASH_FINAL(accum);
 }
 
+int ari_idseg_cmp(const ari_idseg_t *left, const ari_idseg_t *right)
+{
+    CHKRET(left, -2);
+    CHKRET(right, -2);
+
+    if (left->form != right->form)
+    {
+        return M_CMP_DEFAULT(left->form, right->form);
+    }
+    switch (left->form)
+    {
+        case ARI_IDSEG_NULL:
+            return 0;
+        case ARI_IDSEG_INT:
+            return M_CMP_DEFAULT(left->as_int, right->as_int);
+        case ARI_IDSEG_TEXT:
+            return string_cmp(left->as_text, right->as_text);
+        default:
+            return -2;
+    }
+}
+
 bool ari_idseg_equal(const ari_idseg_t *left, const ari_idseg_t *right)
 {
     CHKFALSE(left);

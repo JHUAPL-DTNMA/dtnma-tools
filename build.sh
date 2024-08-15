@@ -25,19 +25,22 @@ set -e
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 source setenv.sh
 
+BUILDDIR=${SELFDIR}/build/default
+
 if [ "$1" = "docs" ]
 then
-    cmake --build ${SELFDIR}/build/default --target docs
+    cmake --build ${BUILDDIR} --target docs
 else
-    cmake --build ${SELFDIR}/build/default
+    cmake --build ${BUILDDIR}
 fi
 
 if [ "$1" = "install" ]
 then
-    cmake --install ${SELFDIR}/build/default
+    cmake --install ${BUILDDIR}
 elif [ "$1" = "check" ]
 then
-    ctest --test-dir ${SELFDIR}/build/default \
+    ctest --test-dir ${BUILDDIR} \
 	  --output-junit testresults.xml \
 	  --verbose
+    cmake --build ${BUILDDIR} --target coverage || true
 fi

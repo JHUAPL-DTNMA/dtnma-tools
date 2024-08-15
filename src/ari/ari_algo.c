@@ -150,13 +150,13 @@ static int ari_visit_ari(const ari_t *ari, const ari_visitor_t *visitor, const a
     {
         if (visitor->visit_ref)
         {
-            retval = visitor->visit_ref(&(ari->as_ref), &sub_ctx);
+            retval = visitor->visit_ref(&(ari->as_ref), ctx);
             CHKERRVAL(retval);
         }
 
         if (visitor->visit_objpath)
         {
-            retval = visitor->visit_objpath(&(ari->as_ref.objpath), &sub_ctx);
+            retval = visitor->visit_objpath(&(ari->as_ref.objpath), ctx);
             CHKERRVAL(retval);
         }
 
@@ -186,7 +186,7 @@ static int ari_visit_ari(const ari_t *ari, const ari_visitor_t *visitor, const a
     {
         if (visitor->visit_lit)
         {
-            retval = visitor->visit_lit(&(ari->as_lit), &sub_ctx);
+            retval = visitor->visit_lit(&(ari->as_lit), ctx);
             CHKERRVAL(retval);
         }
 
@@ -235,7 +235,11 @@ int ari_visit(const ari_t *ari, const ari_visitor_t *visitor, void *user_data)
     return ari_visit_ari(ari, visitor, &sub_ctx);
 }
 
-static int ari_map_ac(ari_ac_t *out, const ari_ac_t *in, const ari_translator_t *translator, void *user_data)
+static int ari_translate_ari(ari_t *out, const ari_t *in, const ari_translator_t *translator,
+                             const ari_translate_ctx_t *ctx);
+
+static int ari_map_ac(ari_ac_t *out, const ari_ac_t *in, const ari_translator_t *translator,
+                      const ari_translate_ctx_t *ctx)
 {
     int           retval;
     ari_list_it_t it;
@@ -243,13 +247,13 @@ static int ari_map_ac(ari_ac_t *out, const ari_ac_t *in, const ari_translator_t 
     {
         const ari_t *in_item  = ari_list_cref(it);
         ari_t       *out_item = ari_list_push_back_new(out->items);
-        retval                = ari_translate(out_item, in_item, translator, user_data);
+        retval                = ari_translate_ari(out_item, in_item, translator, ctx);
         CHKERRVAL(retval);
     }
     return 0;
 }
 
-static int ari_map_am(ari_am_t *out, const ari_am_t *in, const ari_translator_t *translator, void *user_data)
+static int ari_map_am(ari_am_t *out, const ari_am_t *in, const ari_translator_t *translator, ari_translate_ctx_t *ctx)
 {
     int           retval;
     ari_dict_it_t it;
@@ -257,19 +261,22 @@ static int ari_map_am(ari_am_t *out, const ari_am_t *in, const ari_translator_t 
     {
         const ari_dict_subtype_ct *pair = ari_dict_cref(it);
 
-        ari_t out_key  = ARI_INIT_UNDEFINED;
-        retval         = ari_translate(&out_key, &(pair->key), translator, user_data);
-        ari_t *out_val = ari_dict_safe_get(out->items, out_key);
+        ari_t out_key   = ARI_INIT_UNDEFINED;
+        ctx->is_map_key = true;
+        retval          = ari_translate_ari(&out_key, &(pair->key), translator, ctx);
+        ari_t *out_val  = ari_dict_safe_get(out->items, out_key);
         ari_deinit(&out_key);
         CHKERRVAL(retval);
 
-        retval = ari_translate(out_val, &(pair->value), translator, user_data);
+        ctx->is_map_key = false;
+        retval          = ari_translate_ari(out_val, &(pair->value), translator, ctx);
         CHKERRVAL(retval);
     }
     return 0;
 }
 
-static int ari_map_tbl(ari_tbl_t *out, const ari_tbl_t *in, const ari_translator_t *translator, void *user_data)
+static int ari_map_tbl(ari_tbl_t *out, const ari_tbl_t *in, const ari_translator_t *translator,
+                       const ari_translate_ctx_t *ctx)
 {
     int retval;
 
@@ -280,24 +287,22 @@ static int ari_map_tbl(ari_tbl_t *out, const ari_tbl_t *in, const ari_translator
     {
         const ari_t *in_item  = ari_array_cref(it);
         ari_t        out_item = ARI_INIT_UNDEFINED;
-        retval                = ari_translate(&out_item, in_item, translator, user_data);
+        retval                = ari_translate_ari(&out_item, in_item, translator, ctx);
         ari_array_push_move(out->items, &out_item);
         CHKERRVAL(retval);
     }
     return 0;
 }
 
-int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translator, void *user_data)
+static int ari_translate_ari(ari_t *out, const ari_t *in, const ari_translator_t *translator,
+                             const ari_translate_ctx_t *ctx)
 {
-    CHKERR1(out);
-    CHKERR1(in);
-    CHKERR1(translator);
     int retval;
 
     // handle main ARI first
     if (translator->map_ari)
     {
-        retval = translator->map_ari(out, in, user_data);
+        retval = translator->map_ari(out, in, ctx);
         CHKERRVAL(retval);
     }
     else
@@ -305,11 +310,17 @@ int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translato
         out->is_ref = in->is_ref;
     }
 
+    ari_translate_ctx_t sub_ctx = {
+        .parent     = in,
+        .is_map_key = ctx->is_map_key,
+        .user_data  = ctx->user_data,
+    };
+
     if (in->is_ref)
     {
         if (translator->map_objpath)
         {
-            retval = translator->map_objpath(&(out->as_ref.objpath), &(in->as_ref.objpath), user_data);
+            retval = translator->map_objpath(&(out->as_ref.objpath), &(in->as_ref.objpath), ctx);
             CHKERRVAL(retval);
         }
         else
@@ -326,13 +337,13 @@ int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translato
             {
                 ari_lit_t tmp;
                 ari_lit_init_container(&tmp, ARI_TYPE_AC);
-                retval = ari_map_ac(tmp.value.as_ac, in->as_ref.params.as_ac, translator, user_data);
+                retval = ari_map_ac(tmp.value.as_ac, in->as_ref.params.as_ac, translator, &sub_ctx);
                 if (retval)
                 {
                     ari_lit_deinit(&tmp);
                     return retval;
                 }
-                out->as_ref.params.state = ARI_PARAMS_NONE;
+                out->as_ref.params.state = ARI_PARAMS_AC;
                 out->as_ref.params.as_ac = tmp.value.as_ac;
                 break;
             }
@@ -341,14 +352,14 @@ int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translato
                 {
                     ari_lit_t tmp;
                     ari_lit_init_container(&tmp, ARI_TYPE_AM);
-                    retval = ari_map_am(tmp.value.as_am, in->as_ref.params.as_am, translator, user_data);
+                    retval = ari_map_am(tmp.value.as_am, in->as_ref.params.as_am, translator, &sub_ctx);
                     if (retval)
                     {
                         ari_lit_deinit(&tmp);
                         return retval;
                     }
-                    out->as_ref.params.state = ARI_PARAMS_NONE;
-                    out->as_ref.params.as_ac = tmp.value.as_ac;
+                    out->as_ref.params.state = ARI_PARAMS_AM;
+                    out->as_ref.params.as_am = tmp.value.as_am;
                     break;
                 }
             }
@@ -360,7 +371,7 @@ int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translato
     {
         if (translator->map_lit)
         {
-            retval = translator->map_lit(&(out->as_lit), &(in->as_lit), user_data);
+            retval = translator->map_lit(&(out->as_lit), &(in->as_lit), ctx);
             CHKERRVAL(retval);
         }
         else
@@ -374,20 +385,20 @@ int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translato
             {
                 case ARI_TYPE_AC:
                     ari_lit_init_container(&(out->as_lit), ARI_TYPE_AC);
-                    retval = ari_map_ac(out->as_lit.value.as_ac, in->as_lit.value.as_ac, translator, user_data);
+                    retval = ari_map_ac(out->as_lit.value.as_ac, in->as_lit.value.as_ac, translator, &sub_ctx);
                     CHKERRVAL(retval);
                     break;
                 case ARI_TYPE_AM:
                 {
                     ari_lit_init_container(&(out->as_lit), ARI_TYPE_AM);
-                    retval = ari_map_am(out->as_lit.value.as_am, in->as_lit.value.as_am, translator, user_data);
+                    retval = ari_map_am(out->as_lit.value.as_am, in->as_lit.value.as_am, translator, &sub_ctx);
                     CHKERRVAL(retval);
                     break;
                 }
                 case ARI_TYPE_TBL:
                 {
                     ari_lit_init_container(&(out->as_lit), ARI_TYPE_TBL);
-                    retval = ari_map_tbl(out->as_lit.value.as_tbl, in->as_lit.value.as_tbl, translator, user_data);
+                    retval = ari_map_tbl(out->as_lit.value.as_tbl, in->as_lit.value.as_tbl, translator, &sub_ctx);
                     CHKERRVAL(retval);
                     break;
                 }
@@ -398,6 +409,19 @@ int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translato
     }
 
     return retval;
+}
+
+int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translator, void *user_data)
+{
+    CHKERR1(out);
+    CHKERR1(in);
+    CHKERR1(translator);
+
+    ari_translate_ctx_t sub_ctx = {
+        .parent    = NULL,
+        .user_data = user_data,
+    };
+    return ari_translate_ari(out, in, translator, &sub_ctx);
 }
 
 static int ari_hash_visit_objpath(const ari_objpath_t *path, const ari_visit_ctx_t *ctx)

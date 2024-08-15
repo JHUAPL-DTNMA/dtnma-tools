@@ -60,6 +60,20 @@ int ari_get_bool(const ari_t *ari, ari_bool *out);
 
 void ari_set_bool(ari_t *ari, ari_bool src);
 
+/** Set an ARI as an untyped literal value.
+ *
+ * @param[in,out] ari The ARI to set the value on.
+ * This must have been initialized.
+ * @param src The primitive value to set to.
+ */
+void ari_set_prim_uint64(ari_t *ari, uint64_t src);
+
+/// @overload
+void ari_set_prim_int64(ari_t *ari, int64_t src);
+
+/// @overload
+void ari_set_prim_float64(ari_t *ari, ari_real64 src);
+
 int ari_get_int(ari_t *ari, ari_int *out);
 
 void ari_set_int(ari_t *ari, ari_int src);

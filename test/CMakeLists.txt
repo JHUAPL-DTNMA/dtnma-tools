@@ -42,3 +42,6 @@ target_link_libraries(test_ari_algo PUBLIC ari)
 
 add_unity_test(SOURCE "test_typing.c")
 target_link_libraries(test_typing PUBLIC ari)
+
+add_unity_test(SOURCE "test_parameters.c")
+target_link_libraries(test_parameters PUBLIC ari)

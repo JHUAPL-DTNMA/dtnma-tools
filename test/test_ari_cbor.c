@@ -79,7 +79,7 @@ void test_ari_cbor_encode_lit_prim_null(void)
 void test_ari_cbor_encode_lit_prim_uint(void)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_uint(&ari, 1234);
+    ari_set_prim_uint64(&ari, 1234);
 
     check_encoding(&ari, "1904D2");
 

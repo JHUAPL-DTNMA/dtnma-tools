@@ -28,5 +28,6 @@
 #include "ari_base.h"
 #include "ari_containers.h"
 #include "ari_access.h"
+#include "ari_algo.h"
 
 #endif /* ARI_ARI_H_ */

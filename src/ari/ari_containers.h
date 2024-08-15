@@ -29,6 +29,7 @@
 #include "ari_access.h"
 #include "ari_algo.h"
 #include <m-array.h>
+#include <m-bptree.h>
 #include <m-deque.h>
 #include <m-dict.h>
 
@@ -41,6 +42,10 @@ extern "C" {
 DEQUE_DEF(ari_list, ari_t)
 /// Dictionary from (literal) ARI to ARI
 M_DICT_DEF2(ari_dict, ari_t, ari_t)
+/// Dictionary from text name to ARI
+M_DICT_DEF2(named_ari_dict, string_t, M_STRING_OPLIST, ari_t, M_OPL_ari_t())
+/// Tree map from (literal) ARI to ARI
+BPTREE_DEF2(ari_tree, 4, ari_t, M_OPL_ari_t(), ari_t, M_OPL_ari_t())
 /// Flat array of ARI for TBL
 ARRAY_DEF(ari_array, ari_t)
 

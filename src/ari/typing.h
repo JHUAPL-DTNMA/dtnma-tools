@@ -159,6 +159,7 @@ void amm_type_deinit(amm_type_t *type);
  *
  * @param[in] type The type to check against.
  * @param[in] ari The value to check.
+ * This struct must be initialized.
  * @return True if the type fully matches the value.
  */
 bool amm_type_match(const amm_type_t *type, const ari_t *ari);
@@ -167,7 +168,9 @@ bool amm_type_match(const amm_type_t *type, const ari_t *ari);
  *
  * @param[in] type The type to convert to.
  * @param[out] out The converted value (valid if the return is zero).
+ * This struct must already be initialized.
  * @param[in] in The value to convert.
+ * This struct must be initialized.
  * @return Zero if the conversion is successful.
  */
 int amm_type_convert(const amm_type_t *type, ari_t *out, const ari_t *in);

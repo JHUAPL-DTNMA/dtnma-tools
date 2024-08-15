@@ -93,6 +93,8 @@ void ari_idseg_copy(ari_idseg_t *obj, const ari_idseg_t *src);
 
 size_t ari_idseg_hash(const ari_idseg_t *obj);
 
+int ari_idseg_cmp(const ari_idseg_t *left, const ari_idseg_t *right);
+
 bool ari_idseg_equal(const ari_idseg_t *left, const ari_idseg_t *right);
 
 /** These are enumerations for internal switching of the
@@ -357,12 +359,6 @@ int ari_deinit(ari_t *ari);
 int ari_set_copy(ari_t *ari, const ari_t *src);
 
 int ari_set_move(ari_t *ari, ari_t *src);
-
-/// Default OPLIST for ari_t
-#define M_OPL_ari_t()                                                                                                  \
-    (INIT(API_2(ari_init)), INIT_SET(API_6(ari_init_copy)), INIT_MOVE(API_6(ari_init_move)), CLEAR(API_2(ari_deinit)), \
-     RESET(API_2(ari_deinit)), SET(API_6(ari_set_copy)), MOVE(API_6(ari_set_move)), HASH(API_2(ari_hash)),             \
-     EQUAL(API_6(ari_equal)))
 
 #ifdef __cplusplus
 }

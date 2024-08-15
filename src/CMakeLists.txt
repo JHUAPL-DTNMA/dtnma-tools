@@ -31,6 +31,7 @@ set(HFILES
   "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_util.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/ari/typing.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ari/parameters.h"
 )
 set(CFILES
   "ari/ari_type.c"
@@ -43,6 +44,7 @@ set(CFILES
   "ari/ari_text_util.c"
   "ari/ari_text_enc.c"
   "ari/typing.c"
+  "ari/parameters.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(

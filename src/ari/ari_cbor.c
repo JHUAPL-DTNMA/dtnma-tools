@@ -973,8 +973,9 @@ int ari_cbor_decode_stream(QCBORDecodeContext *dec, ari_t *ari)
         if (decitem.val.uCount == 2)
         {
             ari_lit_t *obj = ari_init_lit(ari);
-            *obj           = (ari_lit_t) {
-                          .has_ari_type = true,
+            // literal value state
+            *obj = (ari_lit_t) {
+                .has_ari_type = true,
             };
 
             int64_t type_id;
