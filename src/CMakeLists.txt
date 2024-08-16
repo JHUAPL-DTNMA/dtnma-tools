@@ -17,58 +17,60 @@ limitations under the License.
 ]]
 
 # ARI handling library
-configure_file("ari/ari_config.h.in" "ari/ari_config.h")
+configure_file("cace/config.h.in" "cace/config.h")
 set(HFILES
-  "${CMAKE_CURRENT_BINARY_DIR}/ari/ari_config.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_type.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_data.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_base.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_algo.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_containers.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_access.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_cbor.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_util.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/typing.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ari/parameters.h"
+  "${CMAKE_CURRENT_BINARY_DIR}/cace/config.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/cace_data.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/type.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/base.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/algo.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/containers.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/access.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/cbor.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_util.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/typing.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/parameters.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_base.h"
 )
 set(CFILES
-  "ari/ari_type.c"
-  "ari/ari_data.c"
-  "ari/ari_base.c"
-  "ari/ari_algo.c"
-  "ari/ari_containers.c"
-  "ari/ari_access.c"
-  "ari/ari_cbor.c"
-  "ari/ari_text_util.c"
-  "ari/ari_text_enc.c"
-  "ari/typing.c"
-  "ari/parameters.c"
+  "cace/cace_data.c"
+  "cace/ari/type.c"
+  "cace/ari/base.c"
+  "cace/ari/algo.c"
+  "cace/ari/containers.c"
+  "cace/ari/access.c"
+  "cace/ari/cbor.c"
+  "cace/ari/text_util.c"
+  "cace/ari/text_enc.c"
+  "cace/amm/typing.c"
+  "cace/amm/parameters.c"
+  "cace/amm/obj_base.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(
-        AriStrParse ${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_str.yac
-        ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_str_parse.c
-        COMPILE_FLAGS "-p ari_str_"
+        AriStrParse ${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_str.yac
+        ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_str_parse.c
+        COMPILE_FLAGS "-p cace_ari_text_str_"
     )
     FLEX_TARGET(
-        AriStrScan ${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_str.lex
-        ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_str_scan.c
-        DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_str_scan.h
+        AriStrScan ${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_str.lex
+        ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_str_scan.c
+        DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_str_scan.h
     )
     ADD_FLEX_BISON_DEPENDENCY(AriStrScan AriStrParse)
     list(APPEND CFILES ${BISON_AriStrParse_OUTPUT_SOURCE} ${FLEX_AriStrScan_OUTPUTS})
 
     BISON_TARGET(
-        AriValParse ${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_val.yac
-        ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_val_parse.c
-        COMPILE_FLAGS "-p ari_val_"
+        AriValParse ${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_val.yac
+        ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_val_parse.c
+        COMPILE_FLAGS "-p cace_ari_text_val_"
     )
     FLEX_TARGET(
-        AriValScan ${CMAKE_CURRENT_SOURCE_DIR}/ari/ari_text_val.lex
-        ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_val_scan.c
-        DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/ari/ari_text_val_scan.h
+        AriValScan ${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_val.lex
+        ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_val_scan.c
+        DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_val_scan.h
     )
     ADD_FLEX_BISON_DEPENDENCY(AriValScan AriValParse)
 
@@ -77,29 +79,27 @@ if(ARI_TEXT_PARSE)
     list(APPEND CFILES ${BISON_AriValParse_OUTPUT_SOURCE} ${FLEX_AriValScan_OUTPUTS})
 endif(ARI_TEXT_PARSE)
 
-add_library(ari)
-target_sources(ari PUBLIC ${HFILES})
-target_sources(ari PRIVATE ${CFILES})
+add_library(cace)
+target_sources(cace PUBLIC ${HFILES})
+target_sources(cace PRIVATE ${CFILES})
 target_include_directories(
-  ari PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/ari>
+  cace PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ari>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/nm>
 )
-target_compile_definitions(ari PRIVATE
+target_compile_definitions(cace PRIVATE
   -D_XOPEN_SOURCE
   -D_POSIX_C_SOURCE=200809L
 )
-target_link_libraries(ari PUBLIC ${FLEX_LIBRARIES})
-target_link_libraries(ari PUBLIC MLIB::mlib)
-target_link_libraries(ari PUBLIC qcbor)
-target_link_libraries(ari PUBLIC m)
+target_link_libraries(cace PUBLIC ${FLEX_LIBRARIES})
+target_link_libraries(cace PUBLIC MLIB::mlib)
+target_link_libraries(cace PUBLIC qcbor)
+target_link_libraries(cace PUBLIC m)
 
-add_executable(case_ari)
-target_sources(case_ari PRIVATE ari/case_ari.c)
-target_link_libraries(case_ari PUBLIC ari)
+add_executable(cace_ari)
+target_sources(cace_ari PRIVATE cace/cace_ari.c)
+target_link_libraries(cace_ari PUBLIC cace)
 
 
 if(FALSE) # Disabled for test

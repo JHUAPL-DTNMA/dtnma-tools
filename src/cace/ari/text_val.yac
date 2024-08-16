@@ -1,0 +1,141 @@
+%define api.pure full
+%lex-param {void *scanner}
+%parse-param {void *scanner}{cace_ari_text_val_t *input}
+
+%define parse.trace
+%define parse.error verbose
+
+%{
+#include "text_val_parse.h"
+#include "text_val_scan.h"
+#include "cace/ari/base.h"
+#include "cace/config.h"
+#include "cace/util.h"
+#include <m-string.h>
+#include <stdio.h>
+
+#define YYMALLOC(size) ARI_MALLOC(size)
+#define YYFREE(ptr) ARI_FREE(ptr)
+
+int yydebug = 0;
+%}
+
+%code requires
+{
+#include "cace/ari/base.h"
+
+typedef struct {
+    /// The input stream
+    FILE *src;
+    /// The final result literal
+    ari_lit_t *lit;
+    /// Optional error text storage
+    const char **errm;
+} cace_ari_text_val_t;
+
+/** Decode a literal value segment.
+ *
+ * @param[in,out] lit The initial ari_lit_t::ari_type if applicable, and
+ * the result storage.
+ * @param text The text to parse.
+ * @param errm An optional pointer to an error string storage if the
+ * return value is non-zero.
+ * @return Zero upon success.
+ */
+int cace_ari_text_valseg_decode(ari_lit_t *lit, const char *text, const char **errm);
+
+// Match the definition in generated C file
+typedef void * yyscan_t;
+
+void cace_ari_text_val_error(yyscan_t *scanner, const cace_ari_text_val_t *input, char const *msg);
+
+}
+
+/* Generate YYSTYPE from these types: */
+%union {
+  ari_lit_t lit;
+}
+
+%token <lit> T_UNDEFINED
+%token <lit> T_NULL
+%token <lit> T_BOOL
+%token <lit> T_FLOAT
+%token <lit> T_INT
+%token <lit> T_UINT
+%token <lit> T_IDENTITY
+%token <lit> T_TSTR
+%token <lit> T_BSTR
+%token <lit> T_CBOR_DIAG
+%token <lit> T_TIMEPOINT
+%token <lit> T_TIMEDIFF
+%token <lit> T_DECFRAC
+%type <lit> litval
+
+%destructor { ari_lit_deinit(&$$); } <lit>
+
+%start setinput
+
+%%
+
+setinput : litval YYEOF {
+    // The ARI type, if present, is set outside this parser
+    input->lit->prim_type = $1.prim_type;
+    input->lit->value = $1.value;
+};
+
+litval:
+    T_UNDEFINED
+    | T_NULL
+    | T_BOOL
+    | T_INT
+    | T_UINT
+    | T_FLOAT
+    | T_IDENTITY
+    | T_TSTR
+    | T_BSTR
+    | T_TIMEPOINT
+    | T_TIMEDIFF
+    | T_DECFRAC
+    | T_CBOR_DIAG
+;
+
+%%
+
+int cace_ari_text_valseg_decode(ari_lit_t *lit, const char *text, const char **errm)
+{
+    if (!lit || !text)
+    {
+        return 1;
+    }
+
+    yyscan_t scanner;
+    int res;
+    cace_ari_text_val_t input = {
+      .src = fmemopen((void *)text, strlen(text) + 1, "r"),
+      .lit = lit,
+      .errm = errm,
+    };
+  
+    cace_ari_text_val_lex_init_extra(&input, &scanner);
+    cace_ari_text_val_set_in(input.src, scanner);
+    res = cace_ari_text_val_parse(scanner, &input);
+    cace_ari_text_val_lex_destroy(scanner);
+    fclose(input.src);
+
+    return res;
+}
+
+void cace_ari_text_val_error(yyscan_t *scanner _U_, const cace_ari_text_val_t *input, char const *msg)
+{
+    if (!input || !(input->errm))
+    {
+        fprintf(stderr, "Parse error: %s\n", msg);
+        return;
+    }
+
+    string_t str;
+    string_init(str);
+    string_cat_printf(str, "Parse error: %s", msg);
+
+    *(input->errm) = m_string_clear_get_cstr(str);
+}
