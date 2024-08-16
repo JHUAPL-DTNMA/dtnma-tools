@@ -164,7 +164,7 @@ void amp_agent_init_var()
 	expr = expr_create(AMP_TYPE_UINT);
 	expr_add_item(expr, adm_build_ari(AMP_TYPE_EDD, 0, g_amp_agent_idx[ADM_EDD_IDX], AMP_AGENT_EDD_NUM_TBR));
 	expr_add_item(expr, adm_build_ari(AMP_TYPE_EDD, 0, g_amp_agent_idx[ADM_EDD_IDX], AMP_AGENT_EDD_NUM_SBR));
-	expr_add_item(expr, adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSUINT));
+	expr_add_item(expr, adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSUINT));
 	adm_add_var_from_expr(id, AMP_TYPE_UINT, expr);
 }
 

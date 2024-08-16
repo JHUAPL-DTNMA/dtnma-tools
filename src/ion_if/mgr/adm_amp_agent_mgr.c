@@ -162,368 +162,368 @@ void amp_agent_init_op()
 	metadata_t *meta = NULL;
 
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_INT, id, ADM_ENUM_AMP_AGENT, "plusINT", "Int32 addition");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_INT);
 	meta_add_parm(meta, "O2", AMP_TYPE_INT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSUINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSUINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UINT, id, ADM_ENUM_AMP_AGENT, "plusUINT", "Unsigned Int32 addition");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UINT);
 	meta_add_parm(meta, "O2", AMP_TYPE_UINT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_VAST, id, ADM_ENUM_AMP_AGENT, "plusVAST", "Int64 addition");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_VAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_VAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSUVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSUVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "plusUVAST", "Unsigned Int64 addition");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSREAL32);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSREAL32);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL32, id, ADM_ENUM_AMP_AGENT, "plusREAL32", "Real32 addition");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL32);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL32);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSREAL64);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSREAL64);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL64, id, ADM_ENUM_AMP_AGENT, "plusREAL64", "Real64 addition");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL64);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL64);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_INT, id, ADM_ENUM_AMP_AGENT, "minusINT", "Int32 subtraction");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_INT);
 	meta_add_parm(meta, "O2", AMP_TYPE_INT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSUINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSUINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UINT, id, ADM_ENUM_AMP_AGENT, "minusUINT", "Unsigned Int32 subtraction");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UINT);
 	meta_add_parm(meta, "O2", AMP_TYPE_UINT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_VAST, id, ADM_ENUM_AMP_AGENT, "minusVAST", "Int64 subtraction");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_VAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_VAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSUVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSUVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "minusUVAST", "Unsigned Int64 subtraction");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSREAL32);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSREAL32);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL32, id, ADM_ENUM_AMP_AGENT, "minusREAL32", "Real32 subtraction");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL32);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL32);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSREAL64);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MINUSREAL64);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL64, id, ADM_ENUM_AMP_AGENT, "minusREAL64", "Real64 subtraction");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL64);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL64);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_INT, id, ADM_ENUM_AMP_AGENT, "multINT", "Int32 multiplication");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_INT);
 	meta_add_parm(meta, "O2", AMP_TYPE_INT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTUINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTUINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UINT, id, ADM_ENUM_AMP_AGENT, "multUINT", "Unsigned Int32 multiplication");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UINT);
 	meta_add_parm(meta, "O2", AMP_TYPE_UINT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_VAST, id, ADM_ENUM_AMP_AGENT, "multVAST", "Int64 multiplication");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_VAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_VAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTUVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTUVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "multUVAST", "Unsigned Int64 multiplication");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTREAL32);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTREAL32);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL32, id, ADM_ENUM_AMP_AGENT, "multREAL32", "Real32 multiplication");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL32);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL32);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTREAL64);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MULTREAL64);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL64, id, ADM_ENUM_AMP_AGENT, "multREAL64", "Real64 multiplication");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL64);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL64);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_INT, id, ADM_ENUM_AMP_AGENT, "divINT", "Int32 division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_INT);
 	meta_add_parm(meta, "O2", AMP_TYPE_INT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVUINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVUINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UINT, id, ADM_ENUM_AMP_AGENT, "divUINT", "Unsigned Int32 division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UINT);
 	meta_add_parm(meta, "O2", AMP_TYPE_UINT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_VAST, id, ADM_ENUM_AMP_AGENT, "divVAST", "Int64 division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_VAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_VAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVUVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVUVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "divUVAST", "Unsigned Int64 division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVREAL32);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVREAL32);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL32, id, ADM_ENUM_AMP_AGENT, "divREAL32", "Real32 division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL32);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL32);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVREAL64);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_DIVREAL64);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL64, id, ADM_ENUM_AMP_AGENT, "divREAL64", "Real64 division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL64);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL64);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_INT, id, ADM_ENUM_AMP_AGENT, "modINT", "Int32 modulus division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_INT);
 	meta_add_parm(meta, "O2", AMP_TYPE_INT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODUINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODUINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UINT, id, ADM_ENUM_AMP_AGENT, "modUINT", "Unsigned Int32 modulus division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UINT);
 	meta_add_parm(meta, "O2", AMP_TYPE_UINT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_VAST, id, ADM_ENUM_AMP_AGENT, "modVAST", "Int64 modulus division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_VAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_VAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODUVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODUVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "modUVAST", "Unsigned Int64 modulus division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODREAL32);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODREAL32);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL32, id, ADM_ENUM_AMP_AGENT, "modREAL32", "Real32 modulus division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL32);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL32);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODREAL64);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_MODREAL64);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL64, id, ADM_ENUM_AMP_AGENT, "modREAL64", "Real64 modulus division");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL64);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL64);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_INT, id, ADM_ENUM_AMP_AGENT, "expINT", "Int32 exponentiation");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_INT);
 	meta_add_parm(meta, "O2", AMP_TYPE_INT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPUINT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPUINT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UINT, id, ADM_ENUM_AMP_AGENT, "expUINT", "Unsigned int32 exponentiation");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UINT);
 	meta_add_parm(meta, "O2", AMP_TYPE_UINT);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_VAST, id, ADM_ENUM_AMP_AGENT, "expVAST", "Int64 exponentiation");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_VAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_VAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPUVAST);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPUVAST);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "expUVAST", "Unsigned Int64 exponentiation");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPREAL32);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPREAL32);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL32, id, ADM_ENUM_AMP_AGENT, "expREAL32", "Real32 exponentiation");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL32);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL32);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPREAL64);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EXPREAL64);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_REAL64, id, ADM_ENUM_AMP_AGENT, "expREAL64", "Real64 exponentiation");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_REAL64);
 	meta_add_parm(meta, "O2", AMP_TYPE_REAL64);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITAND);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITAND);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "bitAND", "Bitwise and");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITOR);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITOR);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "bitOR", "Bitwise or");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITXOR);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITXOR);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "bitXOR", "Bitwise xor");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITNOT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITNOT);
 	adm_add_op_ari(id, 1, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "bitNOT", "Bitwise not");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LOGAND);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LOGAND);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_BOOL, id, ADM_ENUM_AMP_AGENT, "logAND", "Logical and");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_BOOL);
 	meta_add_parm(meta, "O2", AMP_TYPE_BOOL);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LOGOR);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LOGOR);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_BOOL, id, ADM_ENUM_AMP_AGENT, "logOR", "Logical or");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_BOOL);
 	meta_add_parm(meta, "O2", AMP_TYPE_BOOL);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LOGNOT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LOGNOT);
 	adm_add_op_ari(id, 1, NULL);
 	meta = meta_add_op(AMP_TYPE_BOOL, id, ADM_ENUM_AMP_AGENT, "logNOT", "Logical not");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_BOOL);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_ABS);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_ABS);
 	adm_add_op_ari(id, 1, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "abs", "absolute value");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_VAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LESSTHAN);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LESSTHAN);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_BOOL, id, ADM_ENUM_AMP_AGENT, "lessThan", "<");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UNK);
 	meta_add_parm(meta, "O2", AMP_TYPE_UNK);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_GREATERTHAN);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_GREATERTHAN);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_BOOL, id, ADM_ENUM_AMP_AGENT, "greaterThan", ">");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UNK);
 	meta_add_parm(meta, "O2", AMP_TYPE_UNK);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LESSEQUAL);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_LESSEQUAL);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_BOOL, id, ADM_ENUM_AMP_AGENT, "lessEqual", "<=");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UNK);
 	meta_add_parm(meta, "O2", AMP_TYPE_UNK);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_GREATEREQUAL);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_GREATEREQUAL);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_BOOL, id, ADM_ENUM_AMP_AGENT, "greaterEqual", ">=");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UNK);
 	meta_add_parm(meta, "O2", AMP_TYPE_UNK);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_NOTEQUAL);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_NOTEQUAL);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_BOOL, id, ADM_ENUM_AMP_AGENT, "notEqual", "!=");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UNK);
 	meta_add_parm(meta, "O2", AMP_TYPE_UNK);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EQUAL);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_EQUAL);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_BOOL, id, ADM_ENUM_AMP_AGENT, "Equal", "==");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UNK);
 	meta_add_parm(meta, "O2", AMP_TYPE_UNK);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITSHIFTLEFT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITSHIFTLEFT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "bitShiftLeft", "<<");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITSHIFTRIGHT);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_BITSHIFTRIGHT);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UVAST, id, ADM_ENUM_AMP_AGENT, "bitShiftRight", ">>");
 
 	meta_add_parm(meta, "O1", AMP_TYPE_UVAST);
 	meta_add_parm(meta, "O2", AMP_TYPE_UVAST);
 
-	id = adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_STOR);
+	id = adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_STOR);
 	adm_add_op_ari(id, 2, NULL);
 	meta = meta_add_op(AMP_TYPE_UNK, id, ADM_ENUM_AMP_AGENT, "STOR", "Store value of parm 2 in parm 1");
 
