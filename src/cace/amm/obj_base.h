@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -20,7 +20,7 @@
 
 #include "cace/ari.h"
 #include "parameters.h"
-#include "cace/casestr.h"
+#include "cace/nocase.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,6 +69,13 @@ void cace_amm_obj_desc_deinit(cace_amm_obj_desc_t *obj);
     (INIT(API_2(M_C3(cace_amm_, otname, _desc_init))), CLEAR(API_2(M_C3(cace_amm_, otname, _desc_deinit))))
 
 /** Define AMM object instance containers.
+ *
+ * The @c _list container is used to actually store and manage the lifetime of
+ * object descriptors.
+ *
+ * The @c _by_enum and @c _by_name dictionaries are used for lookup from integer
+ * or text (C-string) identifiers respectively to pointer-to-descriptor.
+ *
  * The text name lookup is case-insensitive.
  *
  * @param otname The object type name (e.g. "edd")
@@ -77,7 +84,7 @@ void cace_amm_obj_desc_deinit(cace_amm_obj_desc_t *obj);
     DEQUE_DEF(M_C3(cace_amm_, otname, _desc_list), M_C3(cace_amm_, otname, _desc_t), CACE_AMM_OBJTYPE_OPLIST(otname)) \
     M_DICT_DEF2(M_C3(cace_amm_, otname, _desc_by_enum), int64_t, M_BASIC_OPLIST, M_C3(cace_amm_, otname, _desc_t) *,  \
                 M_PTR_OPLIST)                                                                                         \
-    M_DICT_DEF2(M_C3(cace_amm_, otname, _desc_by_name), const char *, M_CASESTR_OPLIST,                               \
+    M_DICT_DEF2(M_C3(cace_amm_, otname, _desc_by_name), const char *, M_CSTR_NOCASE_OPLIST,                           \
                 M_C3(cace_amm_, otname, _desc_t) *, M_PTR_OPLIST)
 
 /** Declare AMM object container uses within an ADM.
@@ -88,89 +95,6 @@ void cace_amm_obj_desc_deinit(cace_amm_obj_desc_t *obj);
     M_C3(cace_amm_, otname, _desc_list_t) M_C(otname, _list);       \
     M_C3(cace_amm_, otname, _desc_by_enum_t) M_C(otname, _by_enum); \
     M_C3(cace_amm_, otname, _desc_by_name_t) M_C(otname, _by_name);
-
-typedef struct
-{
-    /** Original path dereferenced to the object being produced from.
-     * All path segments are in their original form.
-     */
-    ari_objpath_t objpath;
-    /** Actual parameters normalized for this object from the given parameters.
-     */
-    ari_actual_param_set_t aparams;
-    /** Storage for the produced value.
-     * This is initialized as undefined and must be set to any other value
-     * to indicate successful production.
-     */
-    ari_t value;
-} cace_amm_edd_ctx_t;
-
-/** A CONST descriptor.
- * This defines the properties of a CONST in an Agent and includes common
- * object metadata.
- */
-typedef struct
-{
-    CACE_AMM_OBJTYPE_BASE_MEMBER
-
-    /** Storage for the constant value.
-     * This is initialized as undefined and must be set to any other value
-     * to indicate successful production.
-     */
-    ari_t value;
-
-} cace_amm_const_desc_t;
-
-static inline void cace_amm_const_desc_init(cace_amm_const_desc_t *obj)
-{
-    cace_amm_obj_desc_init(&(obj->base));
-    obj->value = ARI_INIT_UNDEFINED;
-}
-
-static inline void cace_amm_const_desc_deinit(cace_amm_const_desc_t *obj)
-{
-    cace_amm_obj_desc_deinit(&(obj->base));
-    memset(obj, 0, sizeof(*obj));
-}
-
-/// Define functions and structures for ::cace_amm_const_desc_t use
-CACE_AMM_OBJTYPE_DEFINE_STORAGE(const)
-
-/** An EDD descriptor.
- * This defines the properties of an EDD in an Agent and includes common
- * object metadata.
- */
-typedef struct
-{
-    CACE_AMM_OBJTYPE_BASE_MEMBER
-
-    /** Value production callback for this object.
-     *
-     * @param ctx The production context, including result storage.
-     */
-    void (*produce)(cace_amm_edd_ctx_t *ctx);
-} cace_amm_edd_desc_t;
-
-static inline void cace_amm_edd_desc_init(cace_amm_edd_desc_t *obj)
-{
-    cace_amm_obj_desc_init(&(obj->base));
-    obj->produce = NULL;
-}
-
-static inline void cace_amm_edd_desc_deinit(cace_amm_edd_desc_t *obj)
-{
-    cace_amm_obj_desc_deinit(&(obj->base));
-    memset(obj, 0, sizeof(*obj));
-}
-
-/// Define functions and structures for ::cace_amm_edd_desc_t use
-CACE_AMM_OBJTYPE_DEFINE_STORAGE(edd)
-
-typedef struct
-{
-    CACE_AMM_OBJTYPE_USE_STORAGE(const)
-    CACE_AMM_OBJTYPE_USE_STORAGE(edd)
-} cace_amm_adm_desc_t;
 
 #ifdef __cplusplus
 } // extern C

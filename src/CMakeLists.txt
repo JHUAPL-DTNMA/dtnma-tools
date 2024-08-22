@@ -32,7 +32,12 @@ set(HFILES
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/typing.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/parameters.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/runctx.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_base.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/const.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/var.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/edd.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/namespace.h"
 )
 set(CFILES
   "cace/cace_data.c"
@@ -46,7 +51,12 @@ set(CFILES
   "cace/ari/text_enc.c"
   "cace/amm/typing.c"
   "cace/amm/parameters.c"
+  "cace/amm/runctx.c"
   "cace/amm/obj_base.c"
+  "cace/amm/const.c"
+  "cace/amm/var.c"
+  "cace/amm/edd.c"
+  "cace/amm/namespace.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(

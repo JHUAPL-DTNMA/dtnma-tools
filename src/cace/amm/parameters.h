@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -48,8 +48,8 @@ void ari_formal_param_deinit(ari_formal_param_t *obj);
 
 /// @cond Doxygen_Suppress
 DEQUE_DEF(ari_formal_param_list, ari_formal_param_t)
-/// Dictionary from text name to external ARI
-M_DICT_DEF2(named_ari_ptr_dict, string_t, M_STRING_OPLIST, ari_t *, M_PTR_OPLIST)
+/// Dictionary from formal parameter name to external ARI
+M_DICT_DEF2(named_ari_ptr_dict, const char *, M_CSTR_OPLIST, ari_t *, M_PTR_OPLIST)
 /// @endcond
 
 /** An actual parameter set normalized from given parameters
@@ -63,17 +63,19 @@ typedef struct
     named_ari_ptr_dict_t named;
 } ari_actual_param_set_t;
 
-/** Initialize and populate actual parameters.
+void ari_actual_param_set_init(ari_actual_param_set_t *obj);
+
+void ari_actual_param_set_deinit(ari_actual_param_set_t *obj);
+
+/** Populate actual parameters.
  *
  * @param[out] obj The struct to initialize.
  * @param[in] fparams Formal parameters to normalize to.
  * @param[in] gparams Given parameters to normalize from.
  * @return Zero upon success.
  */
-int ari_actual_param_set_init(ari_actual_param_set_t *obj, const ari_formal_param_list_t fparams,
-                              const ari_params_t *gparams);
-
-void ari_actual_param_set_deinit(ari_actual_param_set_t *obj);
+int ari_actual_param_set_populate(ari_actual_param_set_t *obj, const ari_formal_param_list_t fparams,
+                                  const ari_params_t *gparams);
 
 #ifdef __cplusplus
 } // extern C

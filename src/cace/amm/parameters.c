@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Delay-Tolerant Networking Management
+ * Architecture (DTNMA) Tools package.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "parameters.h"
 #include "cace/util.h"
 
@@ -15,6 +32,20 @@ void ari_formal_param_deinit(ari_formal_param_t *obj)
     CHKVOID(obj);
     ari_deinit(&(obj->defval));
     memset(obj, 0, sizeof(ari_formal_param_t));
+}
+
+void ari_actual_param_set_init(ari_actual_param_set_t *obj)
+{
+    CHKVOID(obj);
+    ari_list_init(obj->ordered);
+    named_ari_ptr_dict_init(obj->named);
+}
+
+void ari_actual_param_set_deinit(ari_actual_param_set_t *obj)
+{
+    CHKVOID(obj);
+    named_ari_ptr_dict_clear(obj->named);
+    ari_list_clear(obj->ordered);
 }
 
 static int normalize_key(ari_t *out, const ari_t *in)
@@ -49,15 +80,12 @@ static int normalize_key(ari_t *out, const ari_t *in)
     return 0;
 }
 
-int ari_actual_param_set_init(ari_actual_param_set_t *obj, const ari_formal_param_list_t fparams,
-                              const ari_params_t *gparams)
+int ari_actual_param_set_populate(ari_actual_param_set_t *obj, const ari_formal_param_list_t fparams,
+                                  const ari_params_t *gparams)
 {
     CHKERR1(obj);
     CHKERR1(fparams);
     CHKERR1(gparams);
-
-    ari_list_init(obj->ordered);
-    named_ari_ptr_dict_init(obj->named);
 
     //    ari_list_it_t oit;
     ari_formal_param_list_it_t fit;
@@ -72,7 +100,7 @@ int ari_actual_param_set_init(ari_actual_param_set_t *obj, const ari_formal_para
                 const ari_formal_param_t *fparam = ari_formal_param_list_cref(fit);
 
                 ari_t *aparam = ari_list_push_back_new(obj->ordered);
-                named_ari_ptr_dict_set_at(obj->named, fparam->name, aparam);
+                named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
 
                 // FIXME don't care if it's undefined or not
                 ari_set_copy(aparam, &(fparam->defval));
@@ -91,7 +119,7 @@ int ari_actual_param_set_init(ari_actual_param_set_t *obj, const ari_formal_para
                 const ari_formal_param_t *fparam = ari_formal_param_list_cref(fit);
 
                 ari_t *aparam = ari_list_push_back_new(obj->ordered);
-                named_ari_ptr_dict_set_at(obj->named, fparam->name, aparam);
+                named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
 
                 if (ari_list_end_p(gparam_it))
                 {
@@ -153,7 +181,7 @@ int ari_actual_param_set_init(ari_actual_param_set_t *obj, const ari_formal_para
                 const ari_formal_param_t *fparam = ari_formal_param_list_cref(fit);
 
                 ari_t *aparam = ari_list_push_back_new(obj->ordered);
-                named_ari_ptr_dict_set_at(obj->named, fparam->name, aparam);
+                named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
 
                 // try integer key
                 ari_t key_uvast;
@@ -214,10 +242,4 @@ int ari_actual_param_set_init(ari_actual_param_set_t *obj, const ari_formal_para
     }
 
     return retval;
-}
-
-void ari_actual_param_set_deinit(ari_actual_param_set_t *obj)
-{
-    named_ari_ptr_dict_clear(obj->named);
-    ari_list_clear(obj->ordered);
 }

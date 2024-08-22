@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -17,7 +17,7 @@
  */
 #include "type.h"
 #include "cace/util.h"
-#include "cace/casestr.h"
+#include "cace/nocase.h"
 #include <m-dict.h>
 #include <pthread.h>
 #include <stddef.h>
@@ -66,8 +66,8 @@ static _ari_type_name_pair_t _ari_type_names[] = {
 
 #ifdef ENABLE_LUT_CACHE
 
-DICT_DEF2(_ari_type_by_id, ari_type_t, M_BASIC_OPLIST, const char *, M_CASESTR_OPLIST)
-DICT_DEF2(_ari_type_by_name, const char *, M_CASESTR_OPLIST, ari_type_t, M_BASIC_OPLIST)
+DICT_DEF2(_ari_type_by_id, ari_type_t, M_BASIC_OPLIST, const char *, M_CSTR_NOCASE_OPLIST)
+DICT_DEF2(_ari_type_by_name, const char *, M_CSTR_NOCASE_OPLIST, ari_type_t, M_BASIC_OPLIST)
 
 /// Cached type dictionary
 static _ari_type_by_id_t   _ari_type_id_dict;

@@ -40,19 +40,15 @@ static void check_normalize(ari_actual_param_set_t *aparams, const ari_formal_pa
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
     TEST_ASSERT_TRUE(inval.is_ref);
 
-    res = ari_actual_param_set_init(aparams, fparams, &(inval.as_ref.params));
+    res = ari_actual_param_set_populate(aparams, fparams, &(inval.as_ref.params));
     ari_deinit(&inval);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "ari_actual_param_set_init() disagrees");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "ari_actual_param_set_populate() disagrees");
 
     // all formal parameters accounted for
     const size_t formal_size = ari_formal_param_list_size(fparams);
     TEST_ASSERT_EQUAL_INT(formal_size, ari_list_size(aparams->ordered));
     TEST_ASSERT_EQUAL_INT(formal_size, named_ari_ptr_dict_size(aparams->named));
 }
-
-void setUp(void) {}
-
-void tearDown(void) {}
 
 TEST_CASE("83022004", 0)           // ari://2/-1/4
 TEST_CASE("8402200480", 0)         // ari://2/-1/4() special case empty params
@@ -65,10 +61,8 @@ void test_fparam_empty(const char *inhex, int expect_res)
     ari_formal_param_list_init(fparams);
 
     ari_actual_param_set_t aparams;
+    ari_actual_param_set_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
-
-    TEST_ASSERT_EQUAL_INT(0, ari_list_size(aparams.ordered));
-    TEST_ASSERT_EQUAL_INT(0, named_ari_ptr_dict_size(aparams.named));
 
     ari_actual_param_set_deinit(&aparams);
     ari_formal_param_list_clear(fparams);
@@ -92,6 +86,7 @@ void test_fparam_one_bool(const char *inhex, int expect_res)
     }
 
     ari_actual_param_set_t aparams;
+    ari_actual_param_set_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
 
     ari_actual_param_set_deinit(&aparams);
@@ -121,6 +116,7 @@ void test_fparam_one_int(const char *inhex, int expect_res)
     }
 
     ari_actual_param_set_t aparams;
+    ari_actual_param_set_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
 
     ari_actual_param_set_deinit(&aparams);

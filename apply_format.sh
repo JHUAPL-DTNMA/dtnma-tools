@@ -33,7 +33,7 @@ if [[ "$#" -ne 0 ]]
 then
     ARGS="$@"
 else
-    ARGS="src/case/*.h src/case/*.c src/case/ari/*.h src/case/ari/*.c src/case/amm/*.h src/case/amm/*.c test/*.h test/*.c"
+    ARGS="src/cace/*.h src/cace/*.c src/cace/ari/*.h src/cace/ari/*.c src/cace/amm/*.h src/cace/amm/*.c test/cace/*.c"
 fi
 
 clang-format --style=file -i $ARGS
