@@ -18,10 +18,23 @@
 #include <cace/amm/const.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
+#include <cace/logging.h>
+#include <cace/util.h>
 #include <unity.h>
 
 // Allow this macro
 #define TEST_CASE(...)
+
+void suiteSetUp(void)
+{
+    cace_openlog();
+}
+
+int suiteTearDown(int failures)
+{
+    cace_closelog();
+    return failures;
+}
 
 static void ari_convert(ari_t *ari, const char *inhex)
 {
@@ -91,11 +104,11 @@ void test_const_produce_param_none(const char *valhex, const char *refhex, const
 
 // References are based on ari://2/CONST/4
 TEST_CASE("0A", "83022104", "0A", 0)
-TEST_CASE("0A", "84022104810A", "0A", 0)         // [10] not used, but not an error
-TEST_CASE("0A", "84022104A1000A", "0A", 0)       // {0:10} not used
-TEST_CASE("0A", "84022104A1010A", "0A", 2)       // {1:10} extra given param
-//FIXME: TEST_CASE("820E00", "84022104810A", "0A", 0)     // [10] label substituted by index
-//FIXME: TEST_CASE("820E626869", "84022104810A", "0A", 0) // [10] label substituted by name
+TEST_CASE("0A", "84022104810A", "0A", 0)   // [10] not used, but not an error
+TEST_CASE("0A", "84022104A1000A", "0A", 0) // {0:10} not used
+TEST_CASE("0A", "84022104A1010A", "0A", 2) // {1:10} extra given param
+// FIXME: TEST_CASE("820E00", "84022104810A", "0A", 0)     // [10] label substituted by index
+// FIXME: TEST_CASE("820E626869", "84022104810A", "0A", 0) // [10] label substituted by name
 void test_const_produce_param_one_int(const char *valhex, const char *refhex, const char *outhex, int expect_res)
 {
     cace_amm_const_desc_t obj;

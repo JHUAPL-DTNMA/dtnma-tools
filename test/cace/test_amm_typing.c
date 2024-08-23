@@ -145,9 +145,10 @@ TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
 void test_amm_type_match_semtype_use_1(const char *inhex, bool expect)
 {
     amm_type_t mytype;
+    amm_type_init(&mytype);
     {
         const amm_type_t *base = amm_type_get_builtin(ARI_TYPE_INT);
-        TEST_ASSERT_EQUAL_INT(0, amm_type_init_use(&mytype, base));
+        TEST_ASSERT_EQUAL_INT(0, amm_type_set_use(&mytype, base));
     }
 
     check_match(&mytype, inhex, expect);
@@ -165,13 +166,14 @@ TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
 void test_amm_type_match_semtype_union_1(const char *inhex, bool expect)
 {
     amm_type_t mytype;
+    amm_type_init(&mytype);
     {
         const amm_type_t *choices[] = {
             amm_type_get_builtin(ARI_TYPE_INT),
             amm_type_get_builtin(ARI_TYPE_NULL),
             NULL,
         };
-        TEST_ASSERT_EQUAL_INT(0, amm_type_init_union(&mytype, choices));
+        TEST_ASSERT_EQUAL_INT(0, amm_type_set_union(&mytype, choices));
     }
 
     check_match(&mytype, inhex, expect);

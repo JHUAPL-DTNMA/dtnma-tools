@@ -20,6 +20,7 @@ limitations under the License.
 configure_file("cace/config.h.in" "cace/config.h")
 set(HFILES
   "${CMAKE_CURRENT_BINARY_DIR}/cace/config.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/logging.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/cace_data.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/type.h"
@@ -37,9 +38,11 @@ set(HFILES
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/const.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/var.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/edd.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/ctrl.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/namespace.h"
 )
 set(CFILES
+  "cace/logging_stderr.c"
   "cace/cace_data.c"
   "cace/ari/type.c"
   "cace/ari/base.c"
@@ -56,6 +59,7 @@ set(CFILES
   "cace/amm/const.c"
   "cace/amm/var.c"
   "cace/amm/edd.c"
+  "cace/amm/ctrl.c"
   "cace/amm/namespace.c"
 )
 if(ARI_TEXT_PARSE)

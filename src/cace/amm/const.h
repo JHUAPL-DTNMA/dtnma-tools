@@ -35,7 +35,8 @@ typedef struct
 
     /** Storage for the constant value.
      * This is type-converted at initialization time so the parent
-     * struct has no explicit ::amm_type_t pointer.
+     * struct has no explicit ::amm_type_t because it is assumed that the
+     * value has been converted externally.
      */
     ari_t value;
 

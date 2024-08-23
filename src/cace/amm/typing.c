@@ -728,11 +728,25 @@ const amm_type_t *amm_type_get_builtin(ari_type_t ari_type)
 
 #endif /* ENABLE_LUT_CACHE */
 
+#define AMM_TYPE_INIT_INVALID                                          \
+    (amm_type_t)                                                       \
+    {                                                                  \
+        .match = NULL, .convert = NULL, .type_class = AMM_TYPE_INVALID \
+    }
+
+void amm_type_init(amm_type_t *type)
+{
+    CHKVOID(type)
+    *type = AMM_TYPE_INIT_INVALID;
+}
+
 void amm_type_deinit(amm_type_t *type)
 {
-    CHKVOID(type);
+    CHKVOID(type)
     switch (type->type_class)
     {
+        case AMM_TYPE_INVALID:
+            break;
         case AMM_TYPE_BUILTIN:
             // should not happen
             break;
@@ -742,6 +756,32 @@ void amm_type_deinit(amm_type_t *type)
             amm_typeptr_list_clear(type->as_union.choices);
             break;
     }
+    *type = AMM_TYPE_INIT_INVALID;
+}
+
+void amm_type_reset(amm_type_t *type)
+{
+    CHKVOID(type)
+    switch (type->type_class)
+    {
+        case AMM_TYPE_INVALID:
+            break;
+        case AMM_TYPE_BUILTIN:
+            // should not happen
+            break;
+        case AMM_TYPE_USE:
+            break;
+        case AMM_TYPE_UNION:
+            amm_typeptr_list_reset(type->as_union.choices);
+            break;
+    }
+    *type = AMM_TYPE_INIT_INVALID;
+}
+
+bool amm_type_is_valid(const amm_type_t *type)
+{
+    CHKFALSE(type)
+    return type->type_class != AMM_TYPE_INVALID;
 }
 
 static bool amm_type_use_match(const amm_type_t *self, const ari_t *ari)
@@ -761,12 +801,13 @@ static bool amm_type_use_match(const amm_type_t *self, const ari_t *ari)
     return true;
 }
 
-int amm_type_init_use(amm_type_t *type, const amm_type_t *base)
+int amm_type_set_use(amm_type_t *type, const amm_type_t *base)
 {
     CHKERR1(type);
     CHKERR1(base);
 
     type->match       = amm_type_use_match;
+    type->convert     = NULL; // FIXME replace
     type->type_class  = AMM_TYPE_USE;
     type->as_use.base = base;
 
@@ -787,12 +828,13 @@ static bool amm_type_union_match(const amm_type_t *self, const ari_t *ari)
     return false;
 }
 
-int amm_type_init_union(amm_type_t *type, const amm_type_t **choices)
+int amm_type_set_union(amm_type_t *type, const amm_type_t **choices)
 {
     CHKERR1(type);
     CHKERR1(choices);
 
     type->match      = amm_type_union_match;
+    type->convert    = NULL; // FIXME replace
     type->type_class = AMM_TYPE_UNION;
     amm_typeptr_list_init(type->as_union.choices);
 

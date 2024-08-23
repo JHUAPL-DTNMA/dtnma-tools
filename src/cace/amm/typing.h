@@ -105,6 +105,8 @@ struct amm_type_s
     /// Determine which of the following union member is valid
     enum amm_type_class_e
     {
+        /// An initialized but not valid type
+        AMM_TYPE_INVALID,
         /// A built-in type using the #as_builtin member
         AMM_TYPE_BUILTIN,
         /// An augmented use of another type using the #as_use member
@@ -131,13 +133,37 @@ struct amm_type_s
  */
 const amm_type_t *amm_type_get_builtin(ari_type_t ari_type);
 
+/** Initialize a type object to a default, invalid state.
+ *
+ * @param[out] type The type to initialize.
+ */
+void amm_type_init(amm_type_t *type);
+
+/** Free any resources associated with a semantic type.
+ *
+ * @param[in,out] type The object to de-initialize.
+ */
+void amm_type_deinit(amm_type_t *type);
+
+/** Reset to the default invalid state.
+ *
+ * @param[in,out] type The object to de-initialize.
+ */
+void amm_type_reset(amm_type_t *type);
+
+/** Determine if a type object is valid.
+ *
+ * @return True if the object is valid.
+ */
+bool amm_type_is_valid(const amm_type_t *type);
+
 /** Create a use type based on a base type object.
  * A use type adds annotations and constraints onto a base type.
  *
  * @param[out] type The type to initialize and populate.
  * @param[in] base The base type to create a use of.
  */
-int amm_type_init_use(amm_type_t *type, const amm_type_t *base);
+int amm_type_set_use(amm_type_t *type, const amm_type_t *base);
 
 /** Create a union type based on a choice of other type objects.
  * A union type contains a list of underlying types to choose from.
@@ -146,14 +172,7 @@ int amm_type_init_use(amm_type_t *type, const amm_type_t *base);
  * @param[in] choices A null-terminated array of pointers to the types
  * to create the union for.
  */
-int amm_type_init_union(amm_type_t *type, const amm_type_t **choices);
-
-/** Free any resources associated with a semantic type.
- *
- * @param[in,out] type The object to de-initialize.
- * @return Zero upon success.
- */
-void amm_type_deinit(amm_type_t *type);
+int amm_type_set_union(amm_type_t *type, const amm_type_t **choices);
 
 /** Determine if a type (built-in or semantic) matches a specific value.
  *
