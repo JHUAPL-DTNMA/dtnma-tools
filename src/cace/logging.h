@@ -44,6 +44,7 @@
 #define CACE_LOGGING_H_
 
 #include <syslog.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,12 +66,21 @@ void cace_closelog(void);
 
 /** Set the least severity enabled for logging.
  * Other events will be dropped by the logging facility.
+ * This function is multi-thread safe.
  *
  * @param severity The severity from a subset of the POSIX syslog values.
+ * @sa cace_log_is_enabled_for
  */
 void cace_log_set_least_severity(int severity);
 
-void cace_log_is_enabled_for(int severity);
+/** Determine if a particular severity is being logged.
+ * This function is multi-thread safe.
+ *
+ * @param severity The severity from a subset of the POSIX syslog values.
+ * @return True if the severity level will be logged.
+ * @sa cace_log_set_least_severity
+ */
+bool cace_log_is_enabled_for(int severity);
 
 /** Log an event.
  *

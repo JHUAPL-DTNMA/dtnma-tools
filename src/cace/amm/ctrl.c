@@ -5,15 +5,13 @@
 
 void cace_amm_ctrl_desc_init(cace_amm_ctrl_desc_t *obj)
 {
-    cace_amm_obj_desc_init(&(obj->base));
-    amm_type_init(&(obj->typeobj));
+    amm_type_init(&(obj->res_type));
     obj->execute = NULL;
 }
 
 void cace_amm_ctrl_desc_deinit(cace_amm_ctrl_desc_t *obj)
 {
-    amm_type_deinit(&(obj->typeobj));
-    cace_amm_obj_desc_deinit(&(obj->base));
+    amm_type_deinit(&(obj->res_type));
     // not necessary but helpful
     memset(obj, 0, sizeof(*obj));
 }
@@ -38,12 +36,12 @@ int cace_amm_ctrl_desc_execute(const cace_amm_ctrl_desc_t *obj, cace_amm_exec_ct
         return 2;
     }
 
-    if (amm_type_is_valid(&(obj->typeobj)))
+    if (amm_type_is_valid(&(obj->res_type)))
     {
         // force result type
         ari_t tmp;
         ari_init(&tmp);
-        res = amm_type_convert(&(obj->typeobj), &tmp, &(ctx->result));
+        res = amm_type_convert(&(obj->res_type), &tmp, &(ctx->result));
         ari_set_move(&(ctx->result), &tmp);
         if (res)
         {

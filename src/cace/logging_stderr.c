@@ -80,6 +80,11 @@ void cace_log_event_deinit(cace_log_event_t *obj)
 M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING)
 /// @endcond
 
+/// Shared least severity
+static int least_severity;
+/// Mutex for #least_severity
+static pthread_mutex_t least_severity_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /// Shared safe queue
 static cace_log_queue_t event_queue;
 /// Sink thread ID
@@ -161,6 +166,57 @@ void cace_openlog(void)
     }
 }
 
+void cace_closelog(void)
+{
+    // sentinel empty message
+    cace_log_event_t event;
+    cace_log_event_init(&event);
+    cace_log_queue_push(event_queue, event);
+
+    int res = pthread_join(thr_sink, NULL);
+    if (res)
+    {
+        // unsynchronized write
+        cace_log_event_t manual;
+        cace_log_event_init(&manual);
+        manual.severity = LOG_CRIT;
+        string_set_str(manual.message, "cace_closelog() failed");
+        write_log(&manual);
+        cace_log_event_deinit(&manual);
+    }
+    else
+    {
+        atomic_store(&thr_valid, false);
+    }
+}
+
+void cace_log_set_least_severity(int severity)
+{
+    if ((severity < 0) || (severity > LOG_DEBUG))
+    {
+        return;
+    }
+
+    if (pthread_mutex_lock(&least_severity_mutex))
+    {
+        return;
+    }
+    least_severity = severity;
+    pthread_mutex_unlock(&least_severity_mutex);
+}
+
+bool cace_log_is_enabled_for(int severity)
+{
+    if (pthread_mutex_lock(&least_severity_mutex))
+    {
+        return false;
+    }
+    // lower severity has higher define value
+    const bool enabled = (least_severity <= severity);
+    pthread_mutex_unlock(&least_severity_mutex);
+    return enabled;
+}
+
 void cace_log(int severity, const char *filename, int lineno, const char *funcname, const char *format, ...)
 {
     if ((severity < 0) || (severity > LOG_DEBUG))
@@ -215,29 +271,5 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
 
         write_log(&event);
         cace_log_event_deinit(&event);
-    }
-}
-
-void cace_closelog(void)
-{
-    // sentinel empty message
-    cace_log_event_t event;
-    cace_log_event_init(&event);
-    cace_log_queue_push(event_queue, event);
-
-    int res = pthread_join(thr_sink, NULL);
-    if (res)
-    {
-        // unsynchronized write
-        cace_log_event_t manual;
-        cace_log_event_init(&manual);
-        manual.severity = LOG_CRIT;
-        string_set_str(manual.message, "cace_closelog() failed");
-        write_log(&manual);
-        cace_log_event_deinit(&manual);
-    }
-    else
-    {
-        atomic_store(&thr_valid, false);
     }
 }

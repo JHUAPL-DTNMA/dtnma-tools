@@ -18,7 +18,6 @@
 #ifndef CACE_AMM_VAR_H_
 #define CACE_AMM_VAR_H_
 
-#include "obj_base.h"
 #include "runctx.h"
 
 #ifdef __cplusplus
@@ -31,12 +30,11 @@ extern "C" {
  */
 typedef struct
 {
-    CACE_AMM_OBJTYPE_BASE_MEMBER
-
-    /** The fully recursively resolved type for the stored value.
+    /** The required type for the stored value and result value.
+     * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t *typeobj;
+    amm_type_t val_type;
 
     /** Storage for the value.
      * This is initialized as undefined and must be set to any other value
@@ -57,9 +55,6 @@ void cace_amm_var_desc_deinit(cace_amm_var_desc_t *obj);
  * @return Zero upon success.
  */
 int cace_amm_var_desc_produce(const cace_amm_var_desc_t *obj, cace_amm_valprod_ctx_t *ctx);
-
-/// Define functions and structures for ::cace_amm_var_desc_t use
-CACE_AMM_OBJTYPE_DEFINE_STORAGE(var)
 
 #ifdef __cplusplus
 } // extern C

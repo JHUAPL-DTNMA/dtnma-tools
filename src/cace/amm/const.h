@@ -18,7 +18,6 @@
 #ifndef CACE_AMM_CONST_H_
 #define CACE_AMM_CONST_H_
 
-#include "obj_base.h"
 #include "runctx.h"
 
 #ifdef __cplusplus
@@ -31,8 +30,6 @@ extern "C" {
  */
 typedef struct
 {
-    CACE_AMM_OBJTYPE_BASE_MEMBER
-
     /** Storage for the constant value.
      * This is type-converted at initialization time so the parent
      * struct has no explicit ::amm_type_t because it is assumed that the
@@ -53,9 +50,6 @@ void cace_amm_const_desc_deinit(cace_amm_const_desc_t *obj);
  * @return Zero upon success.
  */
 int cace_amm_const_desc_produce(const cace_amm_const_desc_t *obj, cace_amm_valprod_ctx_t *ctx);
-
-/// Define functions and structures for ::cace_amm_const_desc_t use
-CACE_AMM_OBJTYPE_DEFINE_STORAGE(const)
 
 #ifdef __cplusplus
 } // extern C

@@ -18,7 +18,6 @@
 #ifndef CACE_AMM_EDD_H_
 #define CACE_AMM_EDD_H_
 
-#include "obj_base.h"
 #include "runctx.h"
 
 #ifdef __cplusplus
@@ -31,13 +30,11 @@ extern "C" {
  */
 typedef struct cace_amm_edd_desc_s
 {
-    CACE_AMM_OBJTYPE_BASE_MEMBER
-
-    /** The required type for the result value.
+    /** The required type for the produced value.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t typeobj;
+    amm_type_t prod_type;
 
     /** Value production callback for this object.
      *
@@ -59,9 +56,6 @@ void cace_amm_edd_desc_deinit(cace_amm_edd_desc_t *obj);
  * @return Zero upon success.
  */
 int cace_amm_edd_desc_produce(const cace_amm_edd_desc_t *obj, cace_amm_valprod_ctx_t *ctx);
-
-/// Define functions and structures for ::cace_amm_edd_desc_t use
-CACE_AMM_OBJTYPE_DEFINE_STORAGE(edd)
 
 #ifdef __cplusplus
 } // extern C

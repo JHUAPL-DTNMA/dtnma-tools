@@ -46,6 +46,9 @@ target_link_libraries(test_amm_const PUBLIC cace)
 add_unity_test(SOURCE "cace/test_amm_ctrl.c")
 target_link_libraries(test_amm_ctrl PUBLIC cace)
 
+add_unity_test(SOURCE "cace/test_amm_namespace.c")
+target_link_libraries(test_amm_namespace PUBLIC cace)
+
 
 if(FALSE) # Disabled for test
 

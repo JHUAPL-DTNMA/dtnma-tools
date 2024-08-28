@@ -5,13 +5,14 @@
 
 void cace_amm_var_desc_init(cace_amm_var_desc_t *obj)
 {
-    cace_amm_obj_desc_init(&(obj->base));
+    amm_type_init(&(obj->val_type));
     obj->value = ARI_INIT_UNDEFINED;
 }
 
 void cace_amm_var_desc_deinit(cace_amm_var_desc_t *obj)
 {
-    cace_amm_obj_desc_deinit(&(obj->base));
+    ari_deinit(&(obj->value));
+    amm_type_deinit(&(obj->val_type));
     memset(obj, 0, sizeof(*obj));
 }
 

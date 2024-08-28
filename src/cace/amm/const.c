@@ -5,13 +5,12 @@
 
 void cace_amm_const_desc_init(cace_amm_const_desc_t *obj)
 {
-    cace_amm_obj_desc_init(&(obj->base));
     obj->value = ARI_INIT_UNDEFINED;
 }
 
 void cace_amm_const_desc_deinit(cace_amm_const_desc_t *obj)
 {
-    cace_amm_obj_desc_deinit(&(obj->base));
+    ari_deinit(&(obj->value));
     memset(obj, 0, sizeof(*obj));
 }
 

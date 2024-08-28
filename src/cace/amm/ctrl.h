@@ -18,7 +18,7 @@
 #ifndef CACE_AMM_CTRL_H_
 #define CACE_AMM_CTRL_H_
 
-#include "obj_base.h"
+//#include "obj_base.h"
 #include "runctx.h"
 
 #ifdef __cplusplus
@@ -35,13 +35,11 @@ typedef struct cace_amm_ctrl_desc_s cace_amm_ctrl_desc_t;
  */
 struct cace_amm_ctrl_desc_s
 {
-    CACE_AMM_OBJTYPE_BASE_MEMBER
-
     /** An optional type for the result value.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t typeobj;
+    amm_type_t res_type;
 
     /** Execution callback for this object.
      *
@@ -63,9 +61,6 @@ void cace_amm_ctrl_desc_deinit(cace_amm_ctrl_desc_t *obj);
  * @return Zero upon success.
  */
 int cace_amm_ctrl_desc_execute(const cace_amm_ctrl_desc_t *obj, cace_amm_exec_ctx_t *ctx);
-
-/// Define functions and structures for ::cace_amm_ctrl_desc_t use
-CACE_AMM_OBJTYPE_DEFINE_STORAGE(ctrl)
 
 #ifdef __cplusplus
 } // extern C

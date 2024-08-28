@@ -34,7 +34,7 @@ set(HFILES
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/typing.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/parameters.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/runctx.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_base.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_desc.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/const.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/var.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/edd.h"
@@ -55,7 +55,7 @@ set(CFILES
   "cace/amm/typing.c"
   "cace/amm/parameters.c"
   "cace/amm/runctx.c"
-  "cace/amm/obj_base.c"
+  "cace/amm/obj_desc.c"
   "cace/amm/const.c"
   "cace/amm/var.c"
   "cace/amm/edd.c"
@@ -74,6 +74,7 @@ if(ARI_TEXT_PARSE)
         DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_str_scan.h
     )
     ADD_FLEX_BISON_DEPENDENCY(AriStrScan AriStrParse)
+    list(APPEND HFILES ${BISON_AriStrParse_OUTPUT_HEADER} ${FLEX_AriStrScan_OUTPUT_HEADER})
     list(APPEND CFILES ${BISON_AriStrParse_OUTPUT_SOURCE} ${FLEX_AriStrScan_OUTPUTS})
 
     BISON_TARGET(
@@ -87,9 +88,7 @@ if(ARI_TEXT_PARSE)
         DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_val_scan.h
     )
     ADD_FLEX_BISON_DEPENDENCY(AriValScan AriValParse)
-
-    #FIXME generated headers
-    # list(APPEND HFILES ${BISON_AriValParse_OUTPUT_HEADER} ${FLEX_AriValScan_OUTPUT_HEADER})
+    list(APPEND HFILES ${BISON_AriValParse_OUTPUT_HEADER} ${FLEX_AriValScan_OUTPUT_HEADER})
     list(APPEND CFILES ${BISON_AriValParse_OUTPUT_SOURCE} ${FLEX_AriValScan_OUTPUTS})
 endif(ARI_TEXT_PARSE)
 
@@ -100,7 +99,7 @@ target_include_directories(
   cace PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/nm>
+  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/cace>
 )
 target_compile_definitions(cace PRIVATE
   -D_XOPEN_SOURCE

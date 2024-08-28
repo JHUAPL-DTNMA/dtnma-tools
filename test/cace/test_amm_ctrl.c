@@ -82,8 +82,12 @@ static void ari_convert(ari_t *ari, const char *inhex)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 }
 
-static void check_execute(ari_t *result, cace_amm_ctrl_desc_t *obj, const char *refhex, const char *outhex,
-                          int expect_res)
+// cace_amm_obj_desc_t obj;
+// cace_amm_obj_desc_init(&obj);
+// cace_amm_user_data_set_from(&obj.app_data, &ctrl, (cace_amm_user_data_deinit_f)&cace_amm_ctrl_desc_deinit);
+
+static void check_execute(ari_t *result, const cace_amm_ctrl_desc_t *obj, const ari_formal_param_list_t fparams,
+                          const char *refhex, const char *outhex, int expect_res)
 {
     ari_t inref = ARI_INIT_UNDEFINED;
     ari_convert(&inref, refhex);
@@ -94,7 +98,7 @@ static void check_execute(ari_t *result, cace_amm_ctrl_desc_t *obj, const char *
     TEST_ASSERT_EQUAL_INT(0, ari_set_copy(&mock_result_store, &outval));
 
     cace_amm_exec_ctx_t ctx;
-    int                 res = cace_amm_exec_ctx_init(&ctx, obj->base.fparams, &inref);
+    int                 res = cace_amm_exec_ctx_init(&ctx, fparams, &inref);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_exec_ctx_init() disagrees");
 
     res = cace_amm_ctrl_desc_execute(obj, &ctx);
@@ -131,14 +135,18 @@ void test_ctrl_execute_param_none(ari_type_t restype, const char *refhex, const 
     cace_amm_ctrl_desc_t obj;
     cace_amm_ctrl_desc_init(&obj);
     // leave formal parameter list empty
-    amm_type_set_use(&obj.typeobj, amm_type_get_builtin(restype));
+    amm_type_set_use(&obj.res_type, amm_type_get_builtin(restype));
     obj.execute = mock_ctrl_exec_none;
 
+    ari_formal_param_list_t fparams;
+    ari_formal_param_list_init(fparams);
+
     ari_t result = ARI_INIT_UNDEFINED;
-    check_execute(&result, &obj, refhex, outhex, expect_res);
+    check_execute(&result, &obj, fparams, refhex, outhex, expect_res);
 
     ari_deinit(&result);
-    cace_amm_ctrl_desc_deinit(&obj);
+    ari_formal_param_list_clear(fparams);
+    cace_amm_ctrl_desc_init(&obj);
 }
 
 // References are based on ari://2/CONST/4
@@ -151,20 +159,24 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex, int
 {
     cace_amm_ctrl_desc_t obj;
     cace_amm_ctrl_desc_init(&obj);
+    // result is same type as parameter
+    amm_type_set_use(&obj.res_type, amm_type_get_builtin(ARI_TYPE_INT));
+    obj.execute = mock_ctrl_exec_one_int;
+
+    ari_formal_param_list_t fparams;
+    ari_formal_param_list_init(fparams);
     {
-        ari_formal_param_t *fparam = ari_formal_param_list_push_back_new(obj.base.fparams);
+        ari_formal_param_t *fparam = ari_formal_param_list_push_back_new(fparams);
         fparam->index              = 0;
         string_set_str(fparam->name, "hi");
         fparam->typeobj = amm_type_get_builtin(ARI_TYPE_INT);
         ari_set_int(&(fparam->defval), 3); // arbitrary default
     }
-    // result is same type as parameter
-    amm_type_set_use(&obj.typeobj, amm_type_get_builtin(ARI_TYPE_INT));
-    obj.execute = mock_ctrl_exec_one_int;
 
     ari_t result = ARI_INIT_UNDEFINED;
-    check_execute(&result, &obj, refhex, outhex, expect_res);
+    check_execute(&result, &obj, fparams, refhex, outhex, expect_res);
 
     ari_deinit(&result);
-    cace_amm_ctrl_desc_deinit(&obj);
+    ari_formal_param_list_clear(fparams);
+    cace_amm_ctrl_desc_init(&obj);
 }
