@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include "text_util.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include <string.h>
 #include <strings.h>
 #include <inttypes.h>

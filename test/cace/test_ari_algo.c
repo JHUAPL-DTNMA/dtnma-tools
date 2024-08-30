@@ -21,7 +21,7 @@
 #include <cace/ari/algo.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
-#include <cace/util.h>
+#include <cace/util/defs.h>
 #include <m-dict.h>
 #include <unity.h>
 

@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-#include <errno.h>
 #include "threadset.h"
-#include "debug.h"
-#include "utils.h"
+#include "logging.h"
+#include "defs.h"
+#include <errno.h>
 
-int threadset_start(list_thread_t *tset, const threadinfo_t *info, size_t count, void *arg)
+int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, void *arg)
 {
   for (const threadinfo_t *it = info; it < info + count; ++it)
   {
@@ -33,34 +33,36 @@ int threadset_start(list_thread_t *tset, const threadinfo_t *info, size_t count,
     int res = pthread_create(&thr, NULL, it->func, arg);
     if (res)
     {
-      AMP_DEBUG_ERR("threadset_start","Unable to create pthread %s, errno = %s",
+      CACE_LOG_ERR("Unable to create pthread %s, errno = %s",
                     it->name, strerror(errno));
-      return AMP_SYSERR;
+      return 2;
     }
-    list_thread_push_back(*tset, thr);
-    AMP_DEBUG_INFO("threadset_start", "Started thread %s", it->name);
+    threadset_push_back(tset, thr);
+    CACE_LOG_INFO("Started thread %s", it->name);
 
+#ifdef _GNU_SOURCE
     if (it->name)
     {
       pthread_setname_np(thr, it->name);
     }
+#endif /* _GNU_SOURCE */
   }
 
-  return AMP_OK;
+  return 0;
 }
 
-int threadset_join(list_thread_t *tset)
+int threadset_join(threadset_t tset)
 {
-  while (!list_thread_empty_p(*tset))
+  while (!threadset_empty_p(tset))
   {
     pthread_t thr;
-    list_thread_pop_back(&thr, *tset);
+    threadset_pop_back(&thr, tset);
     if (pthread_join(thr, NULL))
     {
-        AMP_DEBUG_ERR("threadset_join","Unable to join pthread %s, errno = %s",
+        CACE_LOG_ERR("Unable to join pthread %s, errno = %s",
                       "name", strerror(errno));
-        return AMP_SYSERR;
+        return 2;
     }
   }
-  return AMP_OK;
+  return 0;
 }

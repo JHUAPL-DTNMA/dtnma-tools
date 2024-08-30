@@ -16,22 +16,23 @@
  * limitations under the License.
  */
 
-#ifndef SRC_SHARED_UTILS_THREADSET_H_
-#define SRC_SHARED_UTILS_THREADSET_H_
+#ifndef CACE_UTIL_THREADSET_H_
+#define CACE_UTIL_THREADSET_H_
 
+#include "cace/config.h"
 #include <pthread.h>
 #include <m-list.h>
 
-LIST_DEF(list_thread, pthread_t)
+LIST_DEF(threadset, pthread_t)
 
 typedef struct {
   void* (*func)(void*);
   const char *name;
 } threadinfo_t;
 
-int threadset_start(list_thread_t *tset, const threadinfo_t *info, size_t count, void *arg);
+int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, void *arg);
 
-int threadset_join(list_thread_t *tset);
+int threadset_join(threadset_t tset);
 
 
-#endif /* SRC_SHARED_UTILS_THREADSET_H_ */
+#endif /* CACE_UTIL_THREADSET_H_ */

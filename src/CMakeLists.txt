@@ -20,8 +20,10 @@ limitations under the License.
 configure_file("cace/config.h.in" "cace/config.h")
 set(HFILES
   "${CMAKE_CURRENT_BINARY_DIR}/cace/config.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/cace/logging.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/cace_data.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/defs.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/logging.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/threadset.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/type.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/base.h"
@@ -35,15 +37,17 @@ set(HFILES
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/parameters.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/runctx.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_desc.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_ns.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_store.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/const.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/var.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/edd.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/ctrl.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/namespace.h"
 )
 set(CFILES
-  "cace/logging_stderr.c"
   "cace/cace_data.c"
+  "cace/util/logging_stderr.c"
+  "cace/util/threadset.c"
   "cace/ari/type.c"
   "cace/ari/base.c"
   "cace/ari/algo.c"
@@ -56,11 +60,12 @@ set(CFILES
   "cace/amm/parameters.c"
   "cace/amm/runctx.c"
   "cace/amm/obj_desc.c"
+  "cace/amm/obj_ns.c"
+  "cace/amm/obj_store.c"
   "cace/amm/const.c"
   "cace/amm/var.c"
   "cace/amm/edd.c"
   "cace/amm/ctrl.c"
-  "cace/amm/namespace.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(
@@ -74,7 +79,7 @@ if(ARI_TEXT_PARSE)
         DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_str_scan.h
     )
     ADD_FLEX_BISON_DEPENDENCY(AriStrScan AriStrParse)
-    list(APPEND HFILES ${BISON_AriStrParse_OUTPUT_HEADER} ${FLEX_AriStrScan_OUTPUT_HEADER})
+    #list(APPEND HFILES ${BISON_AriStrParse_OUTPUT_HEADER} ${FLEX_AriStrScan_OUTPUT_HEADER})
     list(APPEND CFILES ${BISON_AriStrParse_OUTPUT_SOURCE} ${FLEX_AriStrScan_OUTPUTS})
 
     BISON_TARGET(
@@ -88,7 +93,7 @@ if(ARI_TEXT_PARSE)
         DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_val_scan.h
     )
     ADD_FLEX_BISON_DEPENDENCY(AriValScan AriValParse)
-    list(APPEND HFILES ${BISON_AriValParse_OUTPUT_HEADER} ${FLEX_AriValScan_OUTPUT_HEADER})
+    #list(APPEND HFILES ${BISON_AriValParse_OUTPUT_HEADER} ${FLEX_AriValScan_OUTPUT_HEADER})
     list(APPEND CFILES ${BISON_AriValParse_OUTPUT_SOURCE} ${FLEX_AriValScan_OUTPUTS})
 endif(ARI_TEXT_PARSE)
 
@@ -113,6 +118,24 @@ target_link_libraries(cace PUBLIC m)
 add_executable(cace_ari)
 target_sources(cace_ari PRIVATE cace/cace_ari.c)
 target_link_libraries(cace_ari PUBLIC cace)
+
+
+set(HFILES
+    "refda/agent.h"
+)
+set(CFILES
+    "refda/agent.c"
+)
+add_library(refda)
+target_sources(refda PUBLIC ${HFILES})
+target_sources(refda PRIVATE ${CFILES})
+target_include_directories(
+  refda PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/refda>
+)
+target_link_libraries(refda PUBLIC cace)
 
 
 if(FALSE) # Disabled for test

@@ -9,7 +9,7 @@
 #include "text_val_parse.h"
 #include "cace/ari/text_util.h"
 #include "cace/config.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include <m-string.h>
 
 struct yyguts_t;

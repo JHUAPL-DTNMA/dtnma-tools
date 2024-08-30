@@ -1,6 +1,6 @@
 #include "runctx.h"
 #include "parameters.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 
 void cace_amm_modval_state_init(cace_amm_modval_state_t *obj)
 {

@@ -20,7 +20,7 @@
  */
 #include "base.h"
 #include "containers.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include <inttypes.h>
 
 int ari_lit_deinit(ari_lit_t *obj)

@@ -17,7 +17,7 @@
  */
 #include "algo.h"
 #include "containers.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include <math.h>
 
 static int ari_visit_ari(const ari_t *ari, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx);

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _DAEMON_RUN_H_
-#define _DAEMON_RUN_H_
+#ifndef CACE_UTIL_DAEMON_RUN_H_
+#define CACE_UTIL_DAEMON_RUN_H_
 
 #include <stdbool.h>
 #include <semaphore.h>
@@ -46,4 +46,4 @@ bool daemon_run_wait(daemon_run_t *dr);
 }
 #endif
 
-#endif /* _DAEMON_RUN_H_ */
+#endif /* CACE_UTIL_DAEMON_RUN_H_ */

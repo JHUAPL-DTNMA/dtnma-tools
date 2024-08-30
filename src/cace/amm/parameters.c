@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include "parameters.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 
 // DICT_SET_DEF(ari_seen_keys, ari_t)
 

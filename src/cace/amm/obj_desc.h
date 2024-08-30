@@ -18,9 +18,9 @@
 #ifndef CACE_AMM_OBJ_DESC_H_
 #define CACE_AMM_OBJ_DESC_H_
 
-#include "cace/ari.h"
 #include "parameters.h"
-#include "cace/nocase.h"
+#include "cace/ari.h"
+#include "cace/util/nocase.h"
 
 #ifdef __cplusplus
 extern "C" {

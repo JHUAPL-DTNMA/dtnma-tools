@@ -1,7 +1,7 @@
 #include "const.h"
-#include "cace/logging.h"
+#include "cace/util/logging.h"
 #include "cace/ari/text.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 
 void cace_amm_const_desc_init(cace_amm_const_desc_t *obj)
 {

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include "access.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 
 bool ari_is_undefined(const ari_t *ari)
 {

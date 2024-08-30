@@ -17,7 +17,7 @@
  */
 #include "typing.h"
 #include "cace/ari/algo.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include "cace/config.h"
 #include <m-dict.h>
 #include <pthread.h>

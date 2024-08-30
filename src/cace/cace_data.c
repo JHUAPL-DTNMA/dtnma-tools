@@ -19,7 +19,7 @@
  * @ingroup ari
  */
 #include "cace_data.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include <m-core.h>
 #include <m-string.h>
 #include <string.h>

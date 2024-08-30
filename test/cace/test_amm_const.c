@@ -18,8 +18,8 @@
 #include <cace/amm/const.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
-#include <cace/logging.h>
-#include <cace/util.h>
+#include <cace/util/logging.h>
+#include <cace/util/defs.h>
 #include <unity.h>
 
 // Allow this macro

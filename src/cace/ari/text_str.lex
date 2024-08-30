@@ -9,7 +9,7 @@
 #include "cace/ari/text_str_parse.h"
 #include "cace/ari/text_util.h"
 #include "cace/config.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include <stdio.h>
 
 static int ari_valseg_decode(string_t out, const char *in, size_t inlen);

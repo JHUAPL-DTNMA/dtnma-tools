@@ -21,7 +21,7 @@
  */
 #include "cace/config.h"
 #include "logging.h"
-#include "util.h"
+#include "defs.h"
 #include <m-buffer.h>
 #include <m-string.h>
 #include <pthread.h>

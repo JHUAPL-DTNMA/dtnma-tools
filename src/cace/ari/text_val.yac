@@ -10,7 +10,7 @@
 #include "text_val_scan.h"
 #include "cace/ari/base.h"
 #include "cace/config.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include <m-string.h>
 #include <stdio.h>
 

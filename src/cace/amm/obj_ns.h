@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CACE_AMM_NAMESPACE_H_
-#define CACE_AMM_NAMESPACE_H_
+#ifndef CACE_AMM_OBJ_NS_H_
+#define CACE_AMM_OBJ_NS_H_
 
 #include "obj_desc.h"
+#include "cace/util/nocase.h"
 #include <m-rbtree.h>
 
 #ifdef __cplusplus
@@ -47,23 +48,23 @@ typedef struct
     cace_amm_obj_desc_list_t    obj_list;
     cace_amm_obj_desc_by_enum_t obj_by_enum;
     cace_amm_obj_desc_by_name_t obj_by_name;
-} cace_amm_obj_container_t;
+} cace_amm_obj_ns_ctr_t;
 
-void cace_amm_obj_container_init(cace_amm_obj_container_t *obj);
+void cace_amm_obj_ns_ctr_init(cace_amm_obj_ns_ctr_t *obj);
 
-void cace_amm_obj_container_deinit(cace_amm_obj_container_t *obj);
+void cace_amm_obj_ns_ctr_deinit(cace_amm_obj_ns_ctr_t *obj);
 
-#define M_OPL_cace_amm_obj_container_t() \
-    (INIT(API_2(cace_amm_obj_container_init)), CLEAR(API_2(cace_amm_obj_container_deinit)))
+#define M_OPL_cace_amm_obj_ns_ctr_t() (INIT(API_2(cace_amm_obj_ns_ctr_init)), CLEAR(API_2(cace_amm_obj_ns_ctr_deinit)))
 
 /// @cond Doxygen_Suppress
-M_DICT_DEF2(cace_amm_obj_container_dict, ari_type_t, M_BASIC_OPLIST, cace_amm_obj_container_t,
-            M_OPL_cace_amm_obj_container_t())
+M_DICT_DEF2(cace_amm_obj_ns_ctr_dict, ari_type_t, M_BASIC_OPLIST, cace_amm_obj_ns_ctr_t, M_OPL_cace_amm_obj_ns_ctr_t())
 /// @endcond
 
 typedef struct
 {
-    /// Integer enumeration for this namespace
+    /// Indication of whether this namespace has an enumeration assigned
+    bool has_enum;
+    /// Optional integer enumeration for this namespace if #has_enum is true
     int64_t intenum;
     /// Mandatory name for this namespace
     m_string_t name;
@@ -71,24 +72,26 @@ typedef struct
     /// Features supported within this namespace
     string_tree_set_t feature_supp;
 
-    // AMM object descriptors follow
-    cace_amm_obj_container_dict_t object_types;
-} cace_amm_namespace_t;
+    /// AMM object descriptors organized by object type
+    cace_amm_obj_ns_ctr_dict_t object_types;
+} cace_amm_obj_ns_t;
 
-void cace_amm_namespace_init(cace_amm_namespace_t *ns);
+void cace_amm_obj_ns_init(cace_amm_obj_ns_t *ns);
 
-void cace_amm_namespace_deinit(cace_amm_namespace_t *ns);
+void cace_amm_obj_ns_deinit(cace_amm_obj_ns_t *ns);
 
-cace_amm_obj_desc_t *cace_amm_namespace_add_obj(cace_amm_namespace_t *ns, ari_type_t obj_type, const char *name, int64_t intenum);
+/// Oplist to store namespaces in containers
+#define M_OPL_cace_amm_obj_ns_t() (INIT(API_2(cace_amm_obj_ns_init)), CLEAR(API_2(cace_amm_obj_ns_deinit)))
 
-cace_amm_obj_desc_t *cace_amm_namespace_find_obj_name(const cace_amm_namespace_t *ns, ari_type_t obj_type,
-                                                      const char *name);
+cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type, const char *name,
+                                             bool has_enum, int64_t intenum);
 
-cace_amm_obj_desc_t *cace_amm_namespace_find_obj_enum(const cace_amm_namespace_t *ns, ari_type_t obj_type,
-                                                      int64_t intenum);
+cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_name(const cace_amm_obj_ns_t *ns, ari_type_t obj_type, const char *name);
+
+cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, ari_type_t obj_type, int64_t intenum);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* CACE_AMM_NAMESPACE_H_ */
+#endif /* CACE_AMM_OBJ_NS_H_ */

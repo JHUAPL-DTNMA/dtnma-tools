@@ -19,7 +19,7 @@
  * @ingroup ari
  */
 #include "containers.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include <inttypes.h>
 
 /// CMP operation not defined by M*LIB

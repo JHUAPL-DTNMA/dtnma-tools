@@ -17,7 +17,7 @@
  */
 #include "text.h"
 #include "text_util.h"
-#include "cace/util.h"
+#include "cace/util/defs.h"
 #include <inttypes.h>
 
 typedef struct
