@@ -24,6 +24,7 @@ set(HFILES
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/defs.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/logging.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/threadset.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/daemon_run.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/type.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/base.h"
@@ -43,11 +44,13 @@ set(HFILES
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/var.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/edd.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/ctrl.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/msg_if.h"
 )
 set(CFILES
   "cace/cace_data.c"
   "cace/util/logging_stderr.c"
   "cace/util/threadset.c"
+  "cace/util/daemon_run.c"
   "cace/ari/type.c"
   "cace/ari/base.c"
   "cace/ari/algo.c"
@@ -66,6 +69,7 @@ set(CFILES
   "cace/amm/var.c"
   "cace/amm/edd.c"
   "cace/amm/ctrl.c"
+  "cace/amm/msg_if.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(
@@ -121,7 +125,7 @@ target_link_libraries(cace_ari PUBLIC cace)
 
 
 set(HFILES
-    "refda/agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/refda/agent.h"
 )
 set(CFILES
     "refda/agent.c"
@@ -136,6 +140,17 @@ target_include_directories(
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/refda>
 )
 target_link_libraries(refda PUBLIC cace)
+
+
+set(HFILES
+)
+set(CFILES
+    "refda-stdio/main.c"
+)
+add_executable(refda-stdio)
+target_sources(refda-stdio PUBLIC ${HFILES})
+target_sources(refda-stdio PRIVATE ${CFILES})
+target_link_libraries(refda-stdio PUBLIC refda)
 
 
 if(FALSE) # Disabled for test

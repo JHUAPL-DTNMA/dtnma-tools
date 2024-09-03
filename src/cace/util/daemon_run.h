@@ -27,11 +27,12 @@ extern "C" {
 
 /** State for daemon run/stop signalling.
  */
-typedef struct daemon_run {
-  sem_t stop;
+typedef struct daemon_run
+{
+    sem_t stop;
 } daemon_run_t;
 
-int daemon_run_init(daemon_run_t *dr);
+int  daemon_run_init(daemon_run_t *dr);
 void daemon_run_cleanup(daemon_run_t *dr);
 void daemon_run_stop(daemon_run_t *dr);
 bool daemon_run_get(daemon_run_t *dr);

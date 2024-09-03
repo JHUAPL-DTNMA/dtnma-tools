@@ -23,46 +23,44 @@
 
 int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, void *arg)
 {
-  for (const threadinfo_t *it = info; it < info + count; ++it)
-  {
-    if (!(it->func))
+    for (const threadinfo_t *it = info; it < info + count; ++it)
     {
-      continue;
-    }
-    pthread_t thr;
-    int res = pthread_create(&thr, NULL, it->func, arg);
-    if (res)
-    {
-      CACE_LOG_ERR("Unable to create pthread %s, errno = %s",
-                    it->name, strerror(errno));
-      return 2;
-    }
-    threadset_push_back(tset, thr);
-    CACE_LOG_INFO("Started thread %s", it->name);
+        if (!(it->func))
+        {
+            continue;
+        }
+        pthread_t thr;
+        int       res = pthread_create(&thr, NULL, it->func, arg);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to create pthread %s, errno = %s", it->name, strerror(errno));
+            return 2;
+        }
+        threadset_push_back(tset, thr);
+        CACE_LOG_INFO("Started thread %s", it->name);
 
 #ifdef _GNU_SOURCE
-    if (it->name)
-    {
-      pthread_setname_np(thr, it->name);
-    }
+        if (it->name)
+        {
+            pthread_setname_np(thr, it->name);
+        }
 #endif /* _GNU_SOURCE */
-  }
+    }
 
-  return 0;
+    return 0;
 }
 
 int threadset_join(threadset_t tset)
 {
-  while (!threadset_empty_p(tset))
-  {
-    pthread_t thr;
-    threadset_pop_back(&thr, tset);
-    if (pthread_join(thr, NULL))
+    while (!threadset_empty_p(tset))
     {
-        CACE_LOG_ERR("Unable to join pthread %s, errno = %s",
-                      "name", strerror(errno));
-        return 2;
+        pthread_t thr;
+        threadset_pop_back(&thr, tset);
+        if (pthread_join(thr, NULL))
+        {
+            CACE_LOG_ERR("Unable to join pthread %s, errno = %s", "name", strerror(errno));
+            return 2;
+        }
     }
-  }
-  return 0;
+    return 0;
 }

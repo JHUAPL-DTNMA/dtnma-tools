@@ -22,6 +22,7 @@ int cace_amm_const_desc_produce(const cace_amm_const_desc_t *obj, cace_amm_valpr
     ari_set_copy(&(ctx->value), &(obj->value));
     // FIXME use ctx parameters to substitute
 
+    if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         string_t buf;
         string_init(buf);

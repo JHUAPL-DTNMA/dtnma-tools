@@ -25,14 +25,14 @@
 
 LIST_DEF(threadset, pthread_t)
 
-typedef struct {
-  void* (*func)(void*);
-  const char *name;
+typedef struct
+{
+    void *(*func)(void *);
+    const char *name;
 } threadinfo_t;
 
 int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, void *arg);
 
 int threadset_join(threadset_t tset);
-
 
 #endif /* CACE_UTIL_THREADSET_H_ */

@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 #include "daemon_run.h"
-#include "shared/platform.h"
-#include "shared/utils/debug.h"
+#include "logging.h"
+#include <errno.h>
 
 /**
  * @brief daemon_run_init Initialize the daemon run object.
@@ -26,14 +26,14 @@
  */
 int daemon_run_init(daemon_run_t *dr)
 {
-  int ret = sem_init(&(dr->stop), 0, 0);
-  if (ret)
-  {
-    AMP_DEBUG_ERR("daemon_run_init", "Failed to create mutex");
-    return 1;
-  }
-  daemon_run_get(dr);
-  return 0;
+    int ret = sem_init(&(dr->stop), 0, 0);
+    if (ret)
+    {
+        CACE_LOG_ERR("Failed to create mutex: %d", errno);
+        return 1;
+    }
+    daemon_run_get(dr);
+    return 0;
 }
 
 /**
@@ -42,10 +42,10 @@ int daemon_run_init(daemon_run_t *dr)
  */
 void daemon_run_cleanup(daemon_run_t *dr)
 {
-  if (sem_destroy(&(dr->stop)))
-  {
-    AMP_DEBUG_ERR("daemon_run_cleanup", "Failed delete mutex");
-  }
+    if (sem_destroy(&(dr->stop)))
+    {
+        CACE_LOG_ERR("Failed delete mutex: %d", errno);
+    }
 }
 
 /**
@@ -54,11 +54,11 @@ void daemon_run_cleanup(daemon_run_t *dr)
  */
 void daemon_run_stop(daemon_run_t *dr)
 {
-  AMP_DEBUG_INFO("daemon_run_stop", "Stopping daemon");
-  if (sem_post(&(dr->stop)))
-  {
-    AMP_DEBUG_ERR("daemon_run_stop", "Failed give mutex");
-  }
+    CACE_LOG_INFO("Stopping daemon");
+    if (sem_post(&(dr->stop)))
+    {
+        CACE_LOG_ERR("Failed give mutex: %d", errno);
+    }
 }
 
 /**
@@ -69,22 +69,25 @@ void daemon_run_stop(daemon_run_t *dr)
  */
 bool daemon_run_get(daemon_run_t *dr)
 {
-  int val;
-  if (sem_getvalue(&(dr->stop), &val))
-  {
-    AMP_DEBUG_ERR("daemon_run_get", "Failed check mutex");
-    return false;
-  }
-  AMP_DEBUG_INFO("daemon_run_get", "Value for %p: %d", dr, val);
-  return val == 0;
+    int val;
+    if (sem_getvalue(&(dr->stop), &val))
+    {
+        CACE_LOG_ERR("Failed in get: %d", errno);
+        return false;
+    }
+    CACE_LOG_DEBUG("Value for %p: %d", dr, val);
+    return val == 0;
 }
 
 bool daemon_run_wait(daemon_run_t *dr)
 {
-  if (sem_wait(&(dr->stop)))
-  {
-    AMP_DEBUG_ERR("daemon_run_get", "Failed check mutex");
-    return false;
-  }
-  return true;
+    if (sem_wait(&(dr->stop)))
+    {
+        if (errno != EINTR)
+        {
+            CACE_LOG_ERR("Failed in wait: %d", errno);
+            return false;
+        }
+    }
+    return true;
 }

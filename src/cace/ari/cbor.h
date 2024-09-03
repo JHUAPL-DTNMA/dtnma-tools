@@ -54,6 +54,7 @@ int ari_cbor_encode_stream(QCBOREncodeContext *encoder, const ari_t *ari);
  * value against the buffer size itself.
  *
  * @param[out] ari The ARI to decode into.
+ * The struct must already be initialized.
  * @param[in] buf The buffer to decode from.
  * @param[out] used If non-null, the size of used data for this decoding
  * is placed here.
@@ -62,7 +63,7 @@ int ari_cbor_encode_stream(QCBOREncodeContext *encoder, const ari_t *ari);
  * @param[out] errm If non-null, this will be set to a specific error message
  * associated with any failure.
  * Regardless of the return code, if the pointed-to pointer is non-null it
- * must be freed using M_MEMORY_FREE().
+ * must be freed using ARI_FREE().
  * @return Zero upon success.
  */
 int ari_cbor_decode(ari_t *ari, const cace_data_t *buf, size_t *used, const char **errm);

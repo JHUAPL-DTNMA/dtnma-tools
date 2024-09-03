@@ -27,13 +27,14 @@
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <strings.h>
 #include <sys/time.h>
 #include <time.h>
 
 /// Number of events to buffer to I/O thread
 #define BSL_LOG_QUEUE_SIZE 100
 
-static const char *prionames[] = {
+static const char *sev_names[] = {
     NULL,      // LOG_EMERG
     NULL,      // LOG_ALERT
     "CRIT",    // LOG_CRIT
@@ -96,7 +97,7 @@ static void write_log(const cace_log_event_t *event)
 {
     CHKVOID(event);
     // already domain validated
-    const char *prioname = prionames[event->severity];
+    const char *prioname = sev_names[event->severity];
 
     char tmbuf[32];
     {
@@ -190,6 +191,26 @@ void cace_closelog(void)
     }
 }
 
+int cace_log_get_severity(int *severity, const char *name)
+{
+    CHKERR1(severity)
+    CHKERR1(name)
+
+    for (size_t ix = 0; ix < sizeof(sev_names) / sizeof(const char *); ++ix)
+    {
+        if (!sev_names[ix])
+        {
+            continue;
+        }
+        if (strcasecmp(sev_names[ix], name) == 0)
+        {
+            *severity = (int)ix;
+            return 0;
+        }
+    }
+    return 2;
+}
+
 void cace_log_set_least_severity(int severity)
 {
     if ((severity < 0) || (severity > LOG_DEBUG))
@@ -207,19 +228,24 @@ void cace_log_set_least_severity(int severity)
 
 bool cace_log_is_enabled_for(int severity)
 {
+    if ((severity < 0) || (severity > LOG_DEBUG))
+    {
+        return false;
+    }
+
     if (pthread_mutex_lock(&least_severity_mutex))
     {
         return false;
     }
     // lower severity has higher define value
-    const bool enabled = (least_severity <= severity);
+    const bool enabled = (least_severity >= severity);
     pthread_mutex_unlock(&least_severity_mutex);
     return enabled;
 }
 
 void cace_log(int severity, const char *filename, int lineno, const char *funcname, const char *format, ...)
 {
-    if ((severity < 0) || (severity > LOG_DEBUG))
+    if (!cace_log_is_enabled_for(severity))
     {
         return;
     }

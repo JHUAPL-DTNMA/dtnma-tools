@@ -64,6 +64,14 @@ void cace_openlog(void);
  */
 void cace_closelog(void);
 
+/** Interpret a text name as a severity level.
+ *
+ * @param[out] severity The associated severity level.
+ * @param[in] name The text name, which is case insensitive.
+ * @return Zero if successful.
+ */
+int cace_log_get_severity(int *severity, const char *name);
+
 /** Set the least severity enabled for logging.
  * Other events will be dropped by the logging facility.
  * This function is multi-thread safe.
