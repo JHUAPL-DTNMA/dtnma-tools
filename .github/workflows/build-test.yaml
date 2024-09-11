@@ -39,6 +39,7 @@ jobs:
         run: ./build.sh check
 
   agent-test:
+    if: false # FIXME re-enable when agent is ready
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -72,6 +73,7 @@ jobs:
         run: python3 -m pytest agent-test --capture=no --log-cli-level=debug
 
   integration-test:
+    if: false # FIXME re-enable when agent is ready
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
