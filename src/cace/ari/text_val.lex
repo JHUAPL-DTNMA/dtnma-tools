@@ -96,7 +96,11 @@ DECDIG [0-9]
     else
     {
         string_t text;
-        string_init_set_str(text, yytext);
+        if (yytext[0] == '+') { 
+          string_init_set_str(text, yytext + 1);
+        } else {
+          string_init_set_str(text, yytext);
+        }
         uint64_t val;
         int ret = ari_uint64_decode(&val, text);
         string_clear(text);
