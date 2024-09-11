@@ -67,7 +67,7 @@ jobs:
           ruby build-essential autoconf libtool \
           flex bison civetweb libcivetweb-dev libssl-dev libcjson-dev
         ./deps.sh
-        ./prep.sh
+        ./prep.sh -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS=OFF
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
