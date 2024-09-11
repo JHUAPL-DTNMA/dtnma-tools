@@ -18,8 +18,9 @@
 #ifndef CACE_AMM_PARAMETERS_H_
 #define CACE_AMM_PARAMETERS_H_
 
-#include "cace/ari.h"
 #include "typing.h"
+#include "cace/ari.h"
+#include "cace/config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,16 +39,17 @@ typedef struct
     const amm_type_t *typeobj;
     /// Optional default value, or the undefined value
     ari_t defval;
-} ari_formal_param_t;
+} cace_amm_formal_param_t;
 
-void ari_formal_param_init(ari_formal_param_t *obj);
+void cace_amm_formal_param_init(cace_amm_formal_param_t *obj);
 
-void ari_formal_param_deinit(ari_formal_param_t *obj);
+void cace_amm_formal_param_deinit(cace_amm_formal_param_t *obj);
 
-#define M_OPL_ari_formal_param_t() (INIT(API_2(ari_formal_param_init)), CLEAR(API_2(ari_formal_param_deinit)))
+#define M_OPL_cace_amm_formal_param_t() \
+    (INIT(API_2(cace_amm_formal_param_init)), CLEAR(API_2(cace_amm_formal_param_deinit)))
 
 /// @cond Doxygen_Suppress
-DEQUE_DEF(ari_formal_param_list, ari_formal_param_t)
+DEQUE_DEF(cace_amm_formal_param_list, cace_amm_formal_param_t)
 /// Dictionary from formal parameter name to external ARI
 M_DICT_DEF2(named_ari_ptr_dict, const char *, M_CSTR_OPLIST, ari_t *, M_PTR_OPLIST)
 /// @endcond
@@ -61,21 +63,27 @@ typedef struct
     ari_list_t ordered;
     /// Lookup parameter by name
     named_ari_ptr_dict_t named;
-} ari_actual_param_set_t;
+} cace_amm_actual_param_set_t;
 
-void ari_actual_param_set_init(ari_actual_param_set_t *obj);
+void cace_amm_actual_param_set_init(cace_amm_actual_param_set_t *obj);
 
-void ari_actual_param_set_deinit(ari_actual_param_set_t *obj);
+void cace_amm_actual_param_set_deinit(cace_amm_actual_param_set_t *obj);
+
+/** Clear out any parameters present.
+ *
+ * @param[in,out] obj The struct to clear.
+ */
+void cace_amm_actual_param_set_reset(cace_amm_actual_param_set_t *obj);
 
 /** Populate actual parameters.
  *
- * @param[out] obj The struct to initialize.
+ * @param[in,out] obj The struct to initialize.
  * @param[in] fparams Formal parameters to normalize to.
  * @param[in] gparams Given parameters to normalize from.
  * @return Zero upon success.
  */
-int ari_actual_param_set_populate(ari_actual_param_set_t *obj, const ari_formal_param_list_t fparams,
-                                  const ari_params_t *gparams);
+int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const cace_amm_formal_param_list_t fparams,
+                                       const ari_params_t *gparams);
 
 #ifdef __cplusplus
 } // extern C

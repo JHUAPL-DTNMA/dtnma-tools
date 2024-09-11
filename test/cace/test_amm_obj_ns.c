@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -42,10 +42,10 @@ void test_obj_ns_find_obj(void)
     cace_amm_obj_ns_t ns;
     cace_amm_obj_ns_init(&ns);
 
-    cace_amm_obj_desc_t *ident1 = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, "name", true, 1);
+    cace_amm_obj_desc_t *ident1 = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, cace_amm_obj_id_withenum("name", 1));
     TEST_ASSERT_NOT_NULL(ident1);
 
-    cace_amm_obj_desc_t *ident2 = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, "other", true, 2);
+    cace_amm_obj_desc_t *ident2 = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, cace_amm_obj_id_withenum("other", 2));
     TEST_ASSERT_NOT_NULL(ident2);
 
     cace_amm_obj_desc_t *found;
@@ -76,15 +76,15 @@ void test_obj_ns_add_obj_duplicate(void)
     cace_amm_obj_ns_t ns;
     cace_amm_obj_ns_init(&ns);
 
-    cace_amm_obj_desc_t *ident1 = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, "name", true, 1);
+    cace_amm_obj_desc_t *ident1 = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, cace_amm_obj_id_withenum("name", 1));
     TEST_ASSERT_NOT_NULL(ident1);
 
     cace_amm_obj_desc_t *dupe;
-    dupe = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, "name", true, 2);
+    dupe = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, cace_amm_obj_id_withenum("name", 2));
     TEST_ASSERT_NULL(dupe);
-    dupe = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, "name", false, 0);
+    dupe = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, cace_amm_obj_id_noenum("name"));
     TEST_ASSERT_NULL(dupe);
-    dupe = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, "other", true, 1);
+    dupe = cace_amm_obj_ns_add_obj(&ns, ARI_TYPE_IDENT, cace_amm_obj_id_withenum("other", 1));
     TEST_ASSERT_NULL(dupe);
 
     cace_amm_obj_ns_deinit(&ns);

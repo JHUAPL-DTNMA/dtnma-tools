@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CACE_AMM_VAR_H_
-#define CACE_AMM_VAR_H_
+#ifndef REFDA_AMM_CONST_H_
+#define REFDA_AMM_CONST_H_
 
 #include "runctx.h"
 
@@ -24,40 +24,35 @@
 extern "C" {
 #endif
 
-/** A VAR descriptor.
- * This defines the properties of a VAR in an Agent and includes common
+/** A CONST descriptor.
+ * This defines the properties of a CONST in an Agent and includes common
  * object metadata.
  */
 typedef struct
 {
-    /** The required type for the stored value and result value.
-     * All type references are fully recursively resolved.
-     * The type object is owned by this descriptor.
-     */
-    amm_type_t val_type;
-
-    /** Storage for the value.
-     * This is initialized as undefined and must be set to any other value
-     * to indicate successful production.
+    /** Storage for the constant value.
+     * This is type-converted at initialization time so the parent
+     * struct has no explicit ::amm_type_t because it is assumed that the
+     * value has been converted externally.
      */
     ari_t value;
 
-} cace_amm_var_desc_t;
+} refda_amm_const_desc_t;
 
-void cace_amm_var_desc_init(cace_amm_var_desc_t *obj);
+void refda_amm_const_desc_init(refda_amm_const_desc_t *obj);
 
-void cace_amm_var_desc_deinit(cace_amm_var_desc_t *obj);
+void refda_amm_const_desc_deinit(refda_amm_const_desc_t *obj);
 
-/** Perform value production procedure on a VAR.
+/** Perform value production procedure on a CONST.
  *
  * @param obj The object to produce from.
  * @param ctx The production context.
  * @return Zero upon success.
  */
-int cace_amm_var_desc_produce(const cace_amm_var_desc_t *obj, cace_amm_valprod_ctx_t *ctx);
+int refda_amm_const_desc_produce(const refda_amm_const_desc_t *obj, refda_amm_valprod_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* CACE_AMM_VAR_H_ */
+#endif /* REFDA_AMM_CONST_H_ */

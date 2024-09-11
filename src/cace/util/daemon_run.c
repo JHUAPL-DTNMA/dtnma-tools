@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -75,7 +75,9 @@ bool daemon_run_get(daemon_run_t *dr)
         CACE_LOG_ERR("Failed in get: %d", errno);
         return false;
     }
+#if 0
     CACE_LOG_DEBUG("Value for %p: %d", dr, val);
+#endif
     return val == 0;
 }
 

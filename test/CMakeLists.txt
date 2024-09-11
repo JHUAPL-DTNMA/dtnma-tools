@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -40,14 +40,17 @@ target_link_libraries(test_amm_typing PUBLIC cace)
 add_unity_test(SOURCE "cace/test_amm_parameters.c")
 target_link_libraries(test_amm_parameters PUBLIC cace)
 
-add_unity_test(SOURCE "cace/test_amm_const.c")
-target_link_libraries(test_amm_const PUBLIC cace)
-
-add_unity_test(SOURCE "cace/test_amm_ctrl.c")
-target_link_libraries(test_amm_ctrl PUBLIC cace)
-
 add_unity_test(SOURCE "cace/test_amm_obj_ns.c")
 target_link_libraries(test_amm_obj_ns PUBLIC cace)
+
+add_unity_test(SOURCE "cace/test_amm_lookup.c")
+target_link_libraries(test_amm_lookup PUBLIC cace)
+
+add_unity_test(SOURCE "refda/test_amm_const.c")
+target_link_libraries(test_amm_const PUBLIC refda)
+
+add_unity_test(SOURCE "refda/test_amm_ctrl.c")
+target_link_libraries(test_amm_ctrl PUBLIC refda)
 
 
 if(FALSE) # Disabled for test

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CACE_AMM_CTRL_H_
-#define CACE_AMM_CTRL_H_
+#ifndef REFDA_AMM_CTRL_H_
+#define REFDA_AMM_CTRL_H_
 
 //#include "obj_base.h"
 #include "runctx.h"
@@ -26,14 +26,14 @@ extern "C" {
 #endif
 
 // forward declaration for callback reference
-struct cace_amm_ctrl_desc_s;
-typedef struct cace_amm_ctrl_desc_s cace_amm_ctrl_desc_t;
+struct refda_amm_ctrl_desc_s;
+typedef struct refda_amm_ctrl_desc_s refda_amm_ctrl_desc_t;
 
 /** A control (CTRL) descriptor.
  * This defines the properties of a CTRL in an Agent and includes common
  * object metadata.
  */
-struct cace_amm_ctrl_desc_s
+struct refda_amm_ctrl_desc_s
 {
     /** An optional type for the result value.
      * All type references are fully recursively resolved.
@@ -47,12 +47,12 @@ struct cace_amm_ctrl_desc_s
      * @param[in,out] ctx The production context, including result storage.
      * @return Zero upon success, or any other value for failure.
      */
-    int (*execute)(const cace_amm_ctrl_desc_t *obj, cace_amm_exec_ctx_t *ctx);
+    int (*execute)(const refda_amm_ctrl_desc_t *obj, refda_amm_exec_ctx_t *ctx);
 };
 
-void cace_amm_ctrl_desc_init(cace_amm_ctrl_desc_t *obj);
+void refda_amm_ctrl_desc_init(refda_amm_ctrl_desc_t *obj);
 
-void cace_amm_ctrl_desc_deinit(cace_amm_ctrl_desc_t *obj);
+void refda_amm_ctrl_desc_deinit(refda_amm_ctrl_desc_t *obj);
 
 /** Perform the execution procedure on a CTRL.
  *
@@ -60,10 +60,10 @@ void cace_amm_ctrl_desc_deinit(cace_amm_ctrl_desc_t *obj);
  * @param ctx The execution context.
  * @return Zero upon success.
  */
-int cace_amm_ctrl_desc_execute(const cace_amm_ctrl_desc_t *obj, cace_amm_exec_ctx_t *ctx);
+int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_amm_exec_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* CACE_AMM_CTRL_H_ */
+#endif /* REFDA_AMM_CTRL_H_ */

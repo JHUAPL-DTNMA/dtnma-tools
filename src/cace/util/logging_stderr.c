@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
- * This file is part of the BPSec Library (BSL).
+ * This file is part of the Delay-Tolerant Networking Management
+ * Architecture (DTNMA) Tools package.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +14,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * This work was performed for the Jet Propulsion Laboratory, California
- * Institute of Technology, sponsored by the United States Government under
- * the prime contract 80NM0018D0004 between the Caltech and NASA under
- * subcontract 1700763.
  */
 #include "cace/config.h"
 #include "logging.h"
@@ -75,6 +71,7 @@ void cace_log_event_deinit(cace_log_event_t *obj)
     string_clear(obj->context);
 }
 
+/// OPLIST for cace_log_event_t
 #define M_OPL_cace_log_event_t() (INIT(API_2(cace_log_event_init)), CLEAR(API_2(cace_log_event_deinit)))
 
 /// @cond Doxygen_Suppress
@@ -90,7 +87,7 @@ static pthread_mutex_t least_severity_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cace_log_queue_t event_queue;
 /// Sink thread ID
 static pthread_t thr_sink;
-/// True if #thr_sink is valid
+/// True if ::thr_sink is valid
 static atomic_bool thr_valid = ATOMIC_VAR_INIT(false);
 
 static void write_log(const cace_log_event_t *event)
@@ -124,7 +121,7 @@ static void write_log(const cace_log_event_t *event)
         }
         *out = '\0';
     }
-    fprintf(stderr, "%s T:%s %s <%s> %s\n", tmbuf, thrbuf, string_get_cstr(event->context), prioname,
+    fprintf(stderr, "%s T:%s <%s> [%s] %s\n", tmbuf, thrbuf, prioname, string_get_cstr(event->context),
             string_get_cstr(event->message));
     fflush(stderr);
 }
@@ -257,6 +254,7 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
     if (filename)
     {
         static const char dirsep = '/';
+
         const char       *pos    = strrchr(filename, dirsep);
         if (pos)
         {

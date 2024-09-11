@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Delay-Tolerant Networking Management
+ * Architecture (DTNMA) Tools package.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "obj_ns.h"
 #include "cace/util/logging.h"
 
@@ -29,36 +46,35 @@ void cace_amm_obj_ns_deinit(cace_amm_obj_ns_t *ns)
     m_string_clear(ns->name);
 }
 
-cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type, const char *name,
-                                             bool has_enum, int64_t intenum)
+cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type, const cace_amm_obj_id_t obj_id)
 {
     cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_dict_safe_get(ns->object_types, obj_type);
 
-    cace_amm_obj_desc_t **found = cace_amm_obj_desc_by_name_get(ctr->obj_by_name, name);
+    cace_amm_obj_desc_t **found = cace_amm_obj_desc_by_name_get(ctr->obj_by_name, obj_id.name);
     if (found)
     {
-        CACE_LOG_WARNING("ignoring duplicate object name: %s", name);
+        CACE_LOG_WARNING("ignoring duplicate object name: %s", obj_id.name);
         return NULL;
     }
-    if (has_enum)
+    if (obj_id.has_enum)
     {
-        found = cace_amm_obj_desc_by_enum_get(ctr->obj_by_enum, intenum);
+        found = cace_amm_obj_desc_by_enum_get(ctr->obj_by_enum, obj_id.intenum);
         if (found)
         {
-            CACE_LOG_WARNING("ignoring duplicate object enum: %" PRId64, intenum);
+            CACE_LOG_WARNING("ignoring duplicate object enum: %" PRId64, obj_id.intenum);
             return NULL;
         }
     }
 
     cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_push_back_new(ctr->obj_list);
-    string_set_str(obj->name, name);
-    obj->has_enum = has_enum;
-    obj->intenum  = intenum;
+    string_set_str(obj->name, obj_id.name);
+    obj->has_enum = obj_id.has_enum;
+    obj->intenum  = obj_id.intenum;
 
-    cace_amm_obj_desc_by_name_set_at(ctr->obj_by_name, name, obj);
-    if (has_enum)
+    cace_amm_obj_desc_by_name_set_at(ctr->obj_by_name, string_get_cstr(obj->name), obj);
+    if (obj->has_enum)
     {
-        cace_amm_obj_desc_by_enum_set_at(ctr->obj_by_enum, intenum, obj);
+        cace_amm_obj_desc_by_enum_set_at(ctr->obj_by_enum, obj->intenum, obj);
     }
 
     return obj;

@@ -15,44 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CACE_AMM_CONST_H_
-#define CACE_AMM_CONST_H_
+#ifndef REFDA_AMM_TYPEDEF_H_
+#define REFDA_AMM_TYPEDEF_H_
 
-#include "runctx.h"
+#include "cace/amm/typing.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** A CONST descriptor.
- * This defines the properties of a CONST in an Agent and includes common
+/** An Externally Defined Data (EDD) descriptor.
+ * This defines the properties of an EDD in an Agent and includes common
  * object metadata.
  */
 typedef struct
 {
-    /** Storage for the constant value.
-     * This is type-converted at initialization time so the parent
-     * struct has no explicit ::amm_type_t because it is assumed that the
-     * value has been converted externally.
+    /** The required type for the produced value.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this descriptor.
      */
-    ari_t value;
+    amm_type_t semtype;
 
-} cace_amm_const_desc_t;
+} refda_amm_typedef_desc_t;
 
-void cace_amm_const_desc_init(cace_amm_const_desc_t *obj);
+void refda_amm_typedef_desc_init(refda_amm_typedef_desc_t *obj);
 
-void cace_amm_const_desc_deinit(cace_amm_const_desc_t *obj);
-
-/** Perform value production procedure on a CONST.
- *
- * @param obj The object to produce from.
- * @param ctx The production context.
- * @return Zero upon success.
- */
-int cace_amm_const_desc_produce(const cace_amm_const_desc_t *obj, cace_amm_valprod_ctx_t *ctx);
+void refda_amm_typedef_desc_deinit(refda_amm_typedef_desc_t *obj);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* CACE_AMM_CONST_H_ */
+#endif /* REFDA_AMM_TYPEDEF_H_ */

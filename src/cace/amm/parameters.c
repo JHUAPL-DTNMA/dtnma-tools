@@ -18,34 +18,39 @@
 #include "parameters.h"
 #include "cace/util/defs.h"
 
-// DICT_SET_DEF(ari_seen_keys, ari_t)
-
-void ari_formal_param_init(ari_formal_param_t *obj)
+void cace_amm_formal_param_init(cace_amm_formal_param_t *obj)
 {
     CHKVOID(obj);
-    memset(obj, 0, sizeof(ari_formal_param_t));
+    memset(obj, 0, sizeof(cace_amm_formal_param_t));
     obj->defval = ARI_INIT_UNDEFINED;
 }
 
-void ari_formal_param_deinit(ari_formal_param_t *obj)
+void cace_amm_formal_param_deinit(cace_amm_formal_param_t *obj)
 {
     CHKVOID(obj);
     ari_deinit(&(obj->defval));
-    memset(obj, 0, sizeof(ari_formal_param_t));
+    memset(obj, 0, sizeof(cace_amm_formal_param_t));
 }
 
-void ari_actual_param_set_init(ari_actual_param_set_t *obj)
+void cace_amm_actual_param_set_init(cace_amm_actual_param_set_t *obj)
 {
     CHKVOID(obj);
     ari_list_init(obj->ordered);
     named_ari_ptr_dict_init(obj->named);
 }
 
-void ari_actual_param_set_deinit(ari_actual_param_set_t *obj)
+void cace_amm_actual_param_set_deinit(cace_amm_actual_param_set_t *obj)
 {
     CHKVOID(obj);
     named_ari_ptr_dict_clear(obj->named);
     ari_list_clear(obj->ordered);
+}
+
+void cace_amm_actual_param_set_reset(cace_amm_actual_param_set_t *obj)
+{
+    CHKVOID(obj);
+    ari_list_reset(obj->ordered);
+    named_ari_ptr_dict_reset(obj->named);
 }
 
 static int normalize_key(ari_t *out, const ari_t *in)
@@ -80,24 +85,23 @@ static int normalize_key(ari_t *out, const ari_t *in)
     return 0;
 }
 
-int ari_actual_param_set_populate(ari_actual_param_set_t *obj, const ari_formal_param_list_t fparams,
-                                  const ari_params_t *gparams)
+int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const cace_amm_formal_param_list_t fparams,
+                                       const ari_params_t *gparams)
 {
     CHKERR1(obj);
     CHKERR1(fparams);
     CHKERR1(gparams);
+    int retval = 0;
 
-    //    ari_list_it_t oit;
-    ari_formal_param_list_it_t fit;
-    int                        retval = 0;
+    cace_amm_formal_param_list_it_t fit;
     switch (gparams->state)
     {
         case ARI_PARAMS_NONE:
         {
-            for (ari_formal_param_list_it(fit, fparams); !ari_formal_param_list_end_p(fit);
-                 ari_formal_param_list_next(fit))
+            for (cace_amm_formal_param_list_it(fit, fparams); !cace_amm_formal_param_list_end_p(fit);
+                 cace_amm_formal_param_list_next(fit))
             {
-                const ari_formal_param_t *fparam = ari_formal_param_list_cref(fit);
+                const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
 
                 ari_t *aparam = ari_list_push_back_new(obj->ordered);
                 named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
@@ -113,10 +117,10 @@ int ari_actual_param_set_populate(ari_actual_param_set_t *obj, const ari_formal_
             ari_list_it_t gparam_it;
             ari_list_it(gparam_it, *gparam_list);
 
-            for (ari_formal_param_list_it(fit, fparams); !ari_formal_param_list_end_p(fit);
-                 ari_formal_param_list_next(fit))
+            for (cace_amm_formal_param_list_it(fit, fparams); !cace_amm_formal_param_list_end_p(fit);
+                 cace_amm_formal_param_list_next(fit))
             {
-                const ari_formal_param_t *fparam = ari_formal_param_list_cref(fit);
+                const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
 
                 ari_t *aparam = ari_list_push_back_new(obj->ordered);
                 named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
@@ -175,10 +179,10 @@ int ari_actual_param_set_populate(ari_actual_param_set_t *obj, const ari_formal_
                 break;
             }
 
-            for (ari_formal_param_list_it(fit, fparams); !ari_formal_param_list_end_p(fit) && !retval;
-                 ari_formal_param_list_next(fit))
+            for (cace_amm_formal_param_list_it(fit, fparams); !cace_amm_formal_param_list_end_p(fit) && !retval;
+                 cace_amm_formal_param_list_next(fit))
             {
-                const ari_formal_param_t *fparam = ari_formal_param_list_cref(fit);
+                const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
 
                 ari_t *aparam = ari_list_push_back_new(obj->ordered);
                 named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);

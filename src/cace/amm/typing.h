@@ -65,7 +65,9 @@ struct amm_type_builtin_s
 /// Configuration for an augmented use of another type
 struct amm_type_use_s
 {
-    /// The type being used
+    /// Name of the type used
+    ari_t name;
+    /// The type object being used
     const amm_type_t *base;
     // FIXME Other attributes TBD
 };
@@ -133,6 +135,12 @@ struct amm_type_s
  */
 const amm_type_t *amm_type_get_builtin(ari_type_t ari_type);
 
+#define AMM_TYPE_INIT_INVALID                                          \
+    (amm_type_t)                                                       \
+    {                                                                  \
+        .match = NULL, .convert = NULL, .type_class = AMM_TYPE_INVALID \
+    }
+
 /** Initialize a type object to a default, invalid state.
  *
  * @param[out] type The type to initialize.
@@ -147,7 +155,7 @@ void amm_type_deinit(amm_type_t *type);
 
 /** Reset to the default invalid state.
  *
- * @param[in,out] type The object to de-initialize.
+ * @param[in,out] type The object to reset.
  */
 void amm_type_reset(amm_type_t *type);
 

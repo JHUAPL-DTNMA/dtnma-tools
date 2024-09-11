@@ -20,24 +20,35 @@
 void cace_amm_user_data_init(cace_amm_user_data_t *obj)
 {
     obj->ptr    = NULL;
+    obj->owned  = false;
     obj->deinit = NULL;
 }
 
 void cace_amm_user_data_deinit(cace_amm_user_data_t *obj)
 {
-    if (obj->deinit && obj->ptr)
+    if (obj->ptr)
     {
-        (obj->deinit)(obj->ptr);
+        if (obj->deinit)
+        {
+            (obj->deinit)(obj->ptr);
+        }
+        if (obj->owned)
+        {
+            ARI_FREE(obj->ptr);
+        }
     }
+
     obj->deinit = NULL;
+    obj->owned  = false;
     obj->ptr    = NULL;
 }
 
-void cace_amm_user_data_set_from(cace_amm_user_data_t *obj, void *ptr, cace_amm_user_data_deinit_f deinit)
+void cace_amm_user_data_set_from(cace_amm_user_data_t *obj, void *ptr, bool owned, cace_amm_user_data_deinit_f deinit)
 {
     cace_amm_user_data_deinit(obj);
 
     obj->ptr    = ptr;
+    obj->owned  = owned;
     obj->deinit = deinit;
 }
 
@@ -45,13 +56,13 @@ void cace_amm_obj_desc_init(cace_amm_obj_desc_t *obj)
 {
     obj->has_enum = false;
     string_init(obj->name);
-    ari_formal_param_list_init(obj->fparams);
+    cace_amm_formal_param_list_init(obj->fparams);
     cace_amm_user_data_init(&(obj->app_data));
 }
 
 void cace_amm_obj_desc_deinit(cace_amm_obj_desc_t *obj)
 {
     cace_amm_user_data_deinit(&(obj->app_data));
-    ari_formal_param_list_clear(obj->fparams);
+    cace_amm_formal_param_list_clear(obj->fparams);
     string_clear(obj->name);
 }

@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CACE_AMM_EDD_H_
-#define CACE_AMM_EDD_H_
+#ifndef REFDA_AMM_EDD_H_
+#define REFDA_AMM_EDD_H_
 
 #include "runctx.h"
+#include "cace/amm/typing.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +29,7 @@ extern "C" {
  * This defines the properties of an EDD in an Agent and includes common
  * object metadata.
  */
-typedef struct cace_amm_edd_desc_s
+typedef struct refda_amm_edd_desc_s
 {
     /** The required type for the produced value.
      * All type references are fully recursively resolved.
@@ -41,13 +42,13 @@ typedef struct cace_amm_edd_desc_s
      * @param[in] obj Pointer to this descriptor.
      * @param[in,out] ctx The production context, including result storage.
      */
-    void (*produce)(const struct cace_amm_edd_desc_s *obj, cace_amm_valprod_ctx_t *ctx);
+    void (*produce)(const struct refda_amm_edd_desc_s *obj, refda_amm_valprod_ctx_t *ctx);
 
-} cace_amm_edd_desc_t;
+} refda_amm_edd_desc_t;
 
-void cace_amm_edd_desc_init(cace_amm_edd_desc_t *obj);
+void refda_amm_edd_desc_init(refda_amm_edd_desc_t *obj);
 
-void cace_amm_edd_desc_deinit(cace_amm_edd_desc_t *obj);
+void refda_amm_edd_desc_deinit(refda_amm_edd_desc_t *obj);
 
 /** Perform value production procedure on an EDD.
  *
@@ -55,10 +56,10 @@ void cace_amm_edd_desc_deinit(cace_amm_edd_desc_t *obj);
  * @param ctx The production context.
  * @return Zero upon success.
  */
-int cace_amm_edd_desc_produce(const cace_amm_edd_desc_t *obj, cace_amm_valprod_ctx_t *ctx);
+int refda_amm_edd_desc_produce(const refda_amm_edd_desc_t *obj, refda_amm_valprod_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* CACE_AMM_EDD_H_ */
+#endif /* REFDA_AMM_EDD_H_ */

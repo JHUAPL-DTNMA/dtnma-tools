@@ -83,8 +83,38 @@ void cace_amm_obj_ns_deinit(cace_amm_obj_ns_t *ns);
 /// Oplist to store namespaces in containers
 #define M_OPL_cace_amm_obj_ns_t() (INIT(API_2(cace_amm_obj_ns_init)), CLEAR(API_2(cace_amm_obj_ns_deinit)))
 
-cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type, const char *name,
-                                             bool has_enum, int64_t intenum);
+typedef struct
+{
+    const char *name;
+    bool        has_enum;
+    int64_t     intenum;
+} cace_amm_obj_id_t;
+
+/** Construct an object ID with an integer enum.
+ *
+ * @param[in] name The object name, which must be non-null.
+ * @param The object enumeration.
+ * @return The full object ID.
+ */
+static inline cace_amm_obj_id_t cace_amm_obj_id_withenum(const char *name, int64_t intenum)
+{
+    return (cace_amm_obj_id_t) {
+        .name     = name,
+        .has_enum = true,
+        .intenum  = intenum,
+    };
+}
+/// @overload
+static inline cace_amm_obj_id_t cace_amm_obj_id_noenum(const char *name)
+{
+    return (cace_amm_obj_id_t) {
+        .name     = name,
+        .has_enum = false,
+    };
+}
+
+cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type,
+                                             const cace_amm_obj_id_t obj_id);
 
 cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_name(const cace_amm_obj_ns_t *ns, ari_type_t obj_type, const char *name);
 

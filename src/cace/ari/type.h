@@ -68,9 +68,10 @@ typedef enum
     // Catch-all object reference type ID
     ARI_TYPE_OBJECT = -256,
 
-    ARI_TYPE_IDENT = -1,
-    ARI_TYPE_CONST = -2,
-    ARI_TYPE_CTRL  = -3,
+    ARI_TYPE_IDENT   = -1,
+    ARI_TYPE_CONST   = -2,
+    ARI_TYPE_CTRL    = -3,
+    ARI_TYPE_TYPEDEF = -12,
 } ari_type_t;
 
 /** Lookup a type ID from its integer enumeration.

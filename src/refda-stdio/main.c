@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "refda/agent.h"
+#include "refda/adm/ietf.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include "cace/ari/text_util.h"
@@ -99,8 +100,9 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
 
     // Watch stdin (fd 0) for input, assuming whole-lines are given
     struct pollfd pfds[] = {
-        { .fd = fileno(stdin), .events = POLLIN },
+        { .fd = fileno(stdin), .events = POLLIN | POLLERR | POLLHUP },
     };
+    struct pollfd *poll_stdin = pfds + 0;
 
     while (true)
     {
@@ -116,17 +118,18 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
             // nothing ready, but maybe daemon is shutting down
             if (!daemon_run_get(running))
             {
+                CACE_LOG_DEBUG("returning due to running state change");
                 return 0;
             }
             continue;
         }
 
-        if (pfds[0].revents & POLLIN)
+        if (poll_stdin->revents & POLLIN)
         {
             // assume that if something is ready to read that a whole line will come
             char  *lineptr = NULL;
-            size_t got;
-            res = getline(&lineptr, &got, stdin);
+            size_t got     = 0;
+            res            = getline(&lineptr, &got, stdin);
             if (res < 0)
             {
                 CACE_LOG_DEBUG("returning due to end of input %d", res);
@@ -148,6 +151,11 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
                         // no more
                         break;
                     }
+                    // skip over optional prefix
+                    if (strncmp("0x", curs, 2) == 0)
+                    {
+                        curs += 2;
+                    }
 
                     curs[plen] = '\0'; // clobber separator
                     CACE_LOG_DEBUG("decoding ARI item from base-16: %s", curs);
@@ -158,7 +166,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
                     cace_data_init(&inbin);
                     if (base16_decode(&inbin, inhex))
                     {
-                        CACE_LOG_ERR("Failed to base-16 decode ARI %s", curs);
+                        CACE_LOG_ERR("Failed to base-16 decode input %s", curs);
                         lineret = 1;
                     }
 
@@ -206,14 +214,20 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
                 }
 
                 free(lineptr);
+
+                CACE_LOG_DEBUG("decoded %d ARI items in the line", ari_list_size(data));
+                if (!ari_list_empty_p(data))
+                {
+                    // stop when something received
+                    break;
+                }
             }
         }
-
-        CACE_LOG_DEBUG("decoded %d ARI items in the line", ari_list_size(data));
-        if (!ari_list_empty_p(data))
+        if (poll_stdin->revents & (POLLERR | POLLHUP))
         {
-            // stop when something received
-            break;
+            // input has closed
+            CACE_LOG_DEBUG("returning due to hangup");
+            return 2;
         }
     }
 
@@ -272,7 +286,7 @@ int main(int argc, char *argv[])
     }
 
     // ADM initialization
-//    amp_agent_init();
+    refda_adm_ietf_amm_init(&agent);
 #if 0
   dtn_bp_agent_init();
   dtn_ion_ionadmin_init();
@@ -325,25 +339,12 @@ int main(int argc, char *argv[])
         }
     }
 
-#if 1
-    {
-        ari_list_t data;
-        ari_list_init(data);
-        cace_amm_msg_if_metadata_t metadata;
-        cace_amm_msg_if_metadata_init(&metadata);
-        stdin_recv(data, &metadata, &agent.running, NULL);
-        stdout_send(data, &metadata, NULL);
-        cace_amm_msg_if_metadata_deinit(&metadata);
-        ari_list_clear(data);
-    }
-#else
     if (!retval)
     {
         // Block until stopped
         daemon_run_wait(&agent.running);
         CACE_LOG_INFO("Agent is shutting down");
     }
-#endif
 
     /* Join threads and wait for them to complete. */
     if (!retval)

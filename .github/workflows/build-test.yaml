@@ -37,6 +37,11 @@ jobs:
         run: ./build.sh
       - name: Test
         run: ./build.sh check
+      - name: Archive coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: build/default/coverage
 
   agent-test:
     if: false # FIXME re-enable when agent is ready
@@ -71,6 +76,13 @@ jobs:
           pip3 install -r agent-test/requirements.txt
       - name: Test
         run: python3 -m pytest agent-test --capture=no --log-cli-level=debug
+      - name: Collect coverage
+        run: cmake --build build/default --target coverage
+      - name: Archive coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-test-coverage
+          path: build/default/coverage
 
   integration-test:
     if: false # FIXME re-enable when agent is ready

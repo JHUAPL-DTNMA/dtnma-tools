@@ -56,6 +56,10 @@ void cace_amm_obj_store_deinit(cace_amm_obj_store_t *store);
 cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const char *name, bool has_enum,
                                              int64_t intenum);
 
+cace_amm_obj_ns_t *cace_amm_obj_store_find_ns_name(const cace_amm_obj_store_t *store, const char *name);
+
+cace_amm_obj_ns_t *cace_amm_obj_store_find_ns_enum(const cace_amm_obj_store_t *store, int64_t intenum);
+
 #ifdef __cplusplus
 } // extern C
 #endif

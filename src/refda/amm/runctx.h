@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CACE_AMM_RUNCTX_H_
-#define CACE_AMM_RUNCTX_H_
+#ifndef REFDA_AMM_RUNCTX_H_
+#define REFDA_AMM_RUNCTX_H_
 
 #include "cace/ari/base.h"
-#include "parameters.h"
+#include "cace/amm/parameters.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +28,7 @@ extern "C" {
 /** Modifiable value state counter.
  * This is used by EDD and VAR objects.
  */
-typedef struct cace_amm_modval_state_s
+typedef struct refda_amm_modval_state_s
 {
     /// The internal counter
     uint64_t _ctr;
@@ -38,20 +38,20 @@ typedef struct cace_amm_modval_state_s
      * @param obj The specific counter which changed.
      * @param user_data A copy of the #notify_user_data pointer.
      */
-    void (*notify)(struct cace_amm_modval_state_s *obj, void *user_data);
+    void (*notify)(struct refda_amm_modval_state_s *obj, void *user_data);
     /// Optional context data for the #notify callback
     void *notify_user_data;
 
-} cace_amm_modval_state_t;
+} refda_amm_modval_state_t;
 
-void cace_amm_modval_state_init(cace_amm_modval_state_t *obj);
+void refda_amm_modval_state_init(refda_amm_modval_state_t *obj);
 
-void cace_amm_modval_state_deinit(cace_amm_modval_state_t *obj);
+void refda_amm_modval_state_deinit(refda_amm_modval_state_t *obj);
 
 /** Increment the counter to the next value and signal to a registerd callback.
  *
  */
-void cace_amm_modval_state_inc(cace_amm_modval_state_t *obj);
+void refda_amm_modval_state_inc(refda_amm_modval_state_t *obj);
 
 /** Context for execution activities.
  */
@@ -63,14 +63,14 @@ typedef struct
     const ari_objpath_t *objpath;
     /** Actual parameters normalized for this object from the given parameters.
      */
-    ari_actual_param_set_t aparams;
+    cace_amm_actual_param_set_t aparams;
 
     /** Storage for an optional result value.
      * This is initialized as undefined and may be set to any other value
      * to indicate that a result is produced.
      */
     ari_t result;
-} cace_amm_exec_ctx_t;
+} refda_amm_exec_ctx_t;
 
 /** Initialize a context based on an object reference ARI and
  * a target object's formal parameters.
@@ -80,9 +80,9 @@ typedef struct
  * @param[in] ref The object reference ARI.
  * The ARI must outlive this context.
  */
-int cace_amm_exec_ctx_init(cace_amm_exec_ctx_t *obj, const ari_formal_param_list_t fparams, const ari_t *ref);
+int refda_amm_exec_ctx_init(refda_amm_exec_ctx_t *obj, const cace_amm_formal_param_list_t fparams, const ari_t *ref);
 
-void cace_amm_exec_ctx_deinit(cace_amm_exec_ctx_t *obj);
+void refda_amm_exec_ctx_deinit(refda_amm_exec_ctx_t *obj);
 
 /** Context for value production activities.
  */
@@ -94,14 +94,14 @@ typedef struct
     const ari_objpath_t *objpath;
     /** Actual parameters normalized for this object from the given parameters.
      */
-    ari_actual_param_set_t aparams;
+    cace_amm_actual_param_set_t aparams;
 
     /** Storage for the produced value.
      * This is initialized as undefined and must be set to any other value
      * to indicate successful production.
      */
     ari_t value;
-} cace_amm_valprod_ctx_t;
+} refda_amm_valprod_ctx_t;
 
 /** Initialize a context based on an object reference ARI and
  * a target object's formal parameters.
@@ -111,12 +111,13 @@ typedef struct
  * @param[in] ref The object reference ARI.
  * The ARI must outlive this context.
  */
-int cace_amm_valprod_ctx_init(cace_amm_valprod_ctx_t *obj, const ari_formal_param_list_t fparams, const ari_t *ref);
+int refda_amm_valprod_ctx_init(refda_amm_valprod_ctx_t *obj, const cace_amm_formal_param_list_t fparams,
+                               const ari_t *ref);
 
-void cace_amm_valprod_ctx_deinit(cace_amm_valprod_ctx_t *obj);
+void refda_amm_valprod_ctx_deinit(refda_amm_valprod_ctx_t *obj);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* CACE_AMM_RUNCTX_H_ */
+#endif /* REFDA_AMM_RUNCTX_H_ */

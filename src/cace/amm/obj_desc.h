@@ -18,6 +18,7 @@
 #ifndef CACE_AMM_OBJ_DESC_H_
 #define CACE_AMM_OBJ_DESC_H_
 
+#include "user_data.h"
 #include "parameters.h"
 #include "cace/ari.h"
 #include "cace/util/nocase.h"
@@ -25,27 +26,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/** Signature for cace_amm_user_data_t::deinit function.
- *
- * @param ptr The user data being de-initialized.
- */
-typedef void (*cace_amm_user_data_deinit_f)(void *ptr);
-
-typedef struct
-{
-    /// Pointer to the opaque user data being managed
-    void *ptr;
-
-    /// An optional cleanup function for the #ptr.
-    cace_amm_user_data_deinit_f deinit;
-} cace_amm_user_data_t;
-
-void cace_amm_user_data_init(cace_amm_user_data_t *obj);
-
-void cace_amm_user_data_deinit(cace_amm_user_data_t *obj);
-
-void cace_amm_user_data_set_from(cace_amm_user_data_t *obj, void *ptr, cace_amm_user_data_deinit_f deinit);
 
 /** A generic object descriptor common to all AMM object types in an Agent.
  */
@@ -59,7 +39,7 @@ typedef struct
     string_t name;
 
     /// Formal parameters of this object instance, which may be empty
-    ari_formal_param_list_t fparams;
+    cace_amm_formal_param_list_t fparams;
 
     /** Object-type-specific application data.
      */

@@ -37,18 +37,30 @@
 extern "C" {
 #endif
 
+/** @struct ari_list_t
+ * Linked list of ari_t items.
+ * This is used for AC literal type.
+ */
+/** @struct ari_dict_t
+ * Dictionary from (literal only) ari_t to ari_t items.
+ */
+/** @struct named_ari_dict_t
+ * Dictionary from ::string_t text name to ari_t items.
+ */
+/** @struct ari_tree_t
+ * Tree map from (literal only) ari_t to ari_t items.
+ * This is used for AM literal type.
+ */
+/** @struct ari_array_t
+ * Flat array of ari_t.
+ * This is used for TBL literal type.
+ */
 /// @cond Doxygen_Suppress
-/// Linked list of ARI as ari_list_t
 DEQUE_DEF(ari_list, ari_t)
-/// Dictionary from (literal) ARI to ARI
 M_DICT_DEF2(ari_dict, ari_t, M_OPL_ari_t(), ari_t, M_OPL_ari_t())
-/// Dictionary from text name to ARI
 M_DICT_DEF2(named_ari_dict, string_t, M_STRING_OPLIST, ari_t, M_OPL_ari_t())
-/// Tree map from (literal) ARI to ARI
 BPTREE_DEF2(ari_tree, 4, ari_t, M_OPL_ari_t(), ari_t, M_OPL_ari_t())
-/// Flat array of ARI for TBL
 ARRAY_DEF(ari_array, ari_t)
-
 /// @endcond
 
 /*

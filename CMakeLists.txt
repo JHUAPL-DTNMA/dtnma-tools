@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -117,7 +117,6 @@ if(BUILD_TESTING)
 endif(BUILD_TESTING)
 
 include(FindPkgConfig)
-add_subdirectory(deps)
 
 # Libaries in deps but built separately
 find_package(ION)

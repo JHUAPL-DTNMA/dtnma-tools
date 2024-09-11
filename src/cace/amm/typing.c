@@ -728,12 +728,6 @@ const amm_type_t *amm_type_get_builtin(ari_type_t ari_type)
 
 #endif /* ENABLE_LUT_CACHE */
 
-#define AMM_TYPE_INIT_INVALID                                          \
-    (amm_type_t)                                                       \
-    {                                                                  \
-        .match = NULL, .convert = NULL, .type_class = AMM_TYPE_INVALID \
-    }
-
 void amm_type_init(amm_type_t *type)
 {
     CHKVOID(type)
@@ -805,10 +799,12 @@ int amm_type_set_use(amm_type_t *type, const amm_type_t *base)
 {
     CHKERR1(type);
     CHKERR1(base);
+    amm_type_reset(type);
 
     type->match       = amm_type_use_match;
     type->convert     = NULL; // FIXME replace
     type->type_class  = AMM_TYPE_USE;
+    type->as_use.name = ARI_INIT_UNDEFINED;
     type->as_use.base = base;
 
     return 0;
@@ -832,6 +828,7 @@ int amm_type_set_union(amm_type_t *type, const amm_type_t **choices)
 {
     CHKERR1(type);
     CHKERR1(choices);
+    amm_type_reset(type);
 
     type->match      = amm_type_union_match;
     type->convert    = NULL; // FIXME replace
