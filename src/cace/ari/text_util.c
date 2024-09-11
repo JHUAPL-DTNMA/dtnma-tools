@@ -249,7 +249,7 @@ int ari_uint64_decode(uint64_t *out, const string_t in)
     const char  *end    = begin + in_len;
 
     uint64_t tmp;
-    if ((in_len >= 2) && (string_get_char(in, 0) == '0') && (string_get_char(in, 1) == 'b'))
+    if ((in_len >= 2) && (string_get_char(in, 0) == '0') && (tolower(string_get_char(in, 1)) == 'b'))
     {
         tmp = 0;
         for (size_t ix = 2; ix < in_len; ++ix)
