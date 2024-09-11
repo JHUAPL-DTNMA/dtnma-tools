@@ -1,5 +1,7 @@
 name: Build and run tests
 on:
+  schedule:
+    - cron: '0 0 * * 0'
   push:
     paths:
       - .github/workflows/build-test.yaml
@@ -8,9 +10,7 @@ on:
       - src/**
       - test/**
       - testenv/**
-  pull_request:
-    branches:
-    - main
+  pull_request: {} # any target
 
 jobs:
   unit-test:
