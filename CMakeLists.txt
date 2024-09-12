@@ -22,7 +22,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 # Ingest the git tag as project version name
 find_package(Git)
 execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe
+    COMMAND ${GIT_EXECUTABLE} describe --always --tags --dirty
     RESULT_VARIABLE GIT_TAG_EXIT
     OUTPUT_VARIABLE GIT_TAG_REV
 )
@@ -31,7 +31,8 @@ if(NOT GIT_TAG_EXIT EQUAL 0)
     message(WARNING "No git tag found, marking as ${GIT_TAG_REV}")
 endif()
 # Make version compatible with CMake needs
-STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+)]] [[\1]] GIT_TAG_VERS ${GIT_TAG_REV})
+STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS "${GIT_TAG_REV}")
+message(STATUS "Using git label ${GIT_TAG_REV} to version ${GIT_TAG_VERS}")
 
 project(nm
     LANGUAGES C
