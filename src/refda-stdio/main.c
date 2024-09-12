@@ -119,7 +119,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
             if (!daemon_run_get(running))
             {
                 CACE_LOG_DEBUG("returning due to running state change");
-                return 0;
+                return 2;
             }
             continue;
         }
@@ -325,6 +325,7 @@ int main(int argc, char *argv[])
             CACE_LOG_INFO("Agent startup completed");
         }
     }
+    CACE_LOG_INFO("READY");
 
     if (!retval)
     {

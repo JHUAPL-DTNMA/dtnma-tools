@@ -148,7 +148,7 @@ void test_amm_type_match_semtype_use_1(const char *inhex, bool expect)
     amm_type_init(&mytype);
     {
         const amm_type_t *base = amm_type_get_builtin(ARI_TYPE_INT);
-        TEST_ASSERT_EQUAL_INT(0, amm_type_set_use(&mytype, base));
+        TEST_ASSERT_EQUAL_INT(0, amm_type_set_use_direct(&mytype, base));
     }
 
     check_match(&mytype, inhex, expect);
@@ -168,12 +168,17 @@ void test_amm_type_match_semtype_union_1(const char *inhex, bool expect)
     amm_type_t mytype;
     amm_type_init(&mytype);
     {
-        const amm_type_t *choices[] = {
-            amm_type_get_builtin(ARI_TYPE_INT),
-            amm_type_get_builtin(ARI_TYPE_NULL),
-            NULL,
-        };
-        TEST_ASSERT_EQUAL_INT(0, amm_type_set_union(&mytype, choices));
+        TEST_ASSERT_EQUAL_INT(0, amm_type_set_union_size(&mytype, 2));
+        {
+            amm_type_t *choice = amm_type_set_union_get(&mytype, 0);
+            TEST_ASSERT_NOT_NULL(choice);
+            amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_INT));
+        }
+        {
+            amm_type_t *choice = amm_type_set_union_get(&mytype, 1);
+            TEST_ASSERT_NOT_NULL(choice);
+            amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_NULL));
+        }
     }
 
     check_match(&mytype, inhex, expect);

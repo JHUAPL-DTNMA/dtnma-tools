@@ -1,5 +1,7 @@
 # Editor files
 *~
+.project
+.pydevproject
 
 # Build files
 __pycache__

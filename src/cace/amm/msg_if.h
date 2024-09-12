@@ -41,7 +41,7 @@ void cace_amm_msg_if_metadata_deinit(cace_amm_msg_if_metadata_t *meta);
  * @param[in] ctx The user context, which may be NULL.
  * @return Zero if successful, 2 if the output has closed.
  */
-typedef int (*cace_amm_msg_if_send_t)(const ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx);
+typedef int (*cace_amm_msg_if_send_f)(const ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx);
 
 /// Status to indicate end-of-input
 #define CACE_AMM_MSG_IF_RECV_END 2
@@ -55,7 +55,7 @@ typedef int (*cace_amm_msg_if_send_t)(const ari_list_t data, const cace_amm_msg_
  * @return Zero if successful, CACE_AMM_MSG_IF_RECV_END if the input has closed (but there still may be items in @c
  * data).
  */
-typedef int (*cace_amm_msg_if_recv_t)(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_run_t *running,
+typedef int (*cace_amm_msg_if_recv_f)(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_run_t *running,
                                       void *ctx);
 
 /**
@@ -65,9 +65,9 @@ typedef int (*cace_amm_msg_if_recv_t)(ari_list_t data, cace_amm_msg_if_metadata_
 typedef struct
 {
     /// Sending callback
-    cace_amm_msg_if_send_t send;
+    cace_amm_msg_if_send_f send;
     /// Receiving callback
-    cace_amm_msg_if_recv_t recv;
+    cace_amm_msg_if_recv_f recv;
     /// Context to provide to #send and #receive functions
     void *ctx;
 } cace_amm_msg_if_t;

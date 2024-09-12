@@ -31,7 +31,7 @@
 
 #include "cace/ari.h"
 #include "cace/cace_data.h"
-#include <m-deque.h>
+#include <m-array.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,13 +46,74 @@ struct amm_type_s;
 /// A typedef representing an AMM semantic type.
 typedef struct amm_type_s amm_type_t;
 
+#define AMM_TYPE_INIT_INVALID                                          \
+    (amm_type_t)                                                       \
+    {                                                                  \
+        .match = NULL, .convert = NULL, .type_class = AMM_TYPE_INVALID \
+    }
+
+/** Initialize a type object to a default, invalid state.
+ *
+ * @param[out] type The type to initialize.
+ */
+void amm_type_init(amm_type_t *type);
+
+/** Free any resources associated with a semantic type.
+ *
+ * @param[in,out] type The object to de-initialize.
+ */
+void amm_type_deinit(amm_type_t *type);
+
+/** Reset to the default invalid state.
+ *
+ * @param[in,out] type The object to reset.
+ */
+void amm_type_reset(amm_type_t *type);
+
+/// OPLIST for the amm_type_t
+#define M_OPL_amm_type_t() (INIT(API_2(amm_type_init)), CLEAR(API_2(amm_type_deinit)), RESET(API_2(amm_type_reset)))
+
+/** A pointer to amm_type_t with ownership semantics.
+ *
+ * The M_SHARED_PTR_RELAXED_DEF cannot be used here because it requires a
+ * concrete type defintion and cannot be used with forward-declared types.
+ */
+typedef struct
+{
+    /// Pointer to the managed object
+    amm_type_t *obj;
+} amm_typeptr_t;
+
+/** Initialize a type pointer to NULL state.
+ *
+ * @param[out] ptr The type to initialize.
+ */
+void amm_typeptr_init(amm_typeptr_t *ptr);
+
+/** Free any allocated type object.
+ *
+ * @param[in,out] ptr The object to de-initialize.
+ */
+void amm_typeptr_deinit(amm_typeptr_t *ptr);
+
+/** Take ownership of a pointed-to object.
+ *
+ * @param[in,out] ptr The object to set.
+ * @param[in] obj The object to own.
+ */
+void amm_typeptr_take(amm_typeptr_t *ptr, amm_type_t *obj);
+
+/// OPLIST for the amm_typeptr_t
+#define M_OPL_amm_typeptr_t() (INIT(API_2(amm_typeptr_init)), CLEAR(API_2(amm_typeptr_deinit)))
+
 /** @struct amm_typeptr_list_t
  * A set of pointers to other type structs.
  * These are all references and have no ownership logic.
  * This includes the valid possibility of circular references.
  */
 /// @cond Doxygen_Suppress
-DEQUE_DEF(amm_typeptr_list, const amm_type_t *, M_PTR_OPLIST)
+//DEQUE_DEF(amm_typeptr_list, amm_typeptr_t)
+ARRAY_DEF(amm_typeptr_array, amm_typeptr_t)
 /// @endcond
 
 /// Configuration for a built-in type
@@ -67,16 +128,21 @@ struct amm_type_use_s
 {
     /// Name of the type used
     ari_t name;
-    /// The type object being used
+    /** The type object being used, which is bound based on #name.
+     * This is always a reference to an externally-owned object.
+     */
     const amm_type_t *base;
-    // FIXME Other attributes TBD
+
+    // FIXME Other constraints and attributes TBD
 };
 
 /// Configuration for a union of other types
 struct amm_type_union_s
 {
-    /// The ordered list of types in this union
-    amm_typeptr_list_t choices;
+    /** The ordered list of types in this union.
+     * Ownership of these objects is managed by the container.
+     */
+    amm_typeptr_array_t choices;
 };
 
 /** Descriptor for each built-in (ARI type) and semantic type within the AMM.
@@ -135,35 +201,19 @@ struct amm_type_s
  */
 const amm_type_t *amm_type_get_builtin(ari_type_t ari_type);
 
-#define AMM_TYPE_INIT_INVALID                                          \
-    (amm_type_t)                                                       \
-    {                                                                  \
-        .match = NULL, .convert = NULL, .type_class = AMM_TYPE_INVALID \
-    }
-
-/** Initialize a type object to a default, invalid state.
- *
- * @param[out] type The type to initialize.
- */
-void amm_type_init(amm_type_t *type);
-
-/** Free any resources associated with a semantic type.
- *
- * @param[in,out] type The object to de-initialize.
- */
-void amm_type_deinit(amm_type_t *type);
-
-/** Reset to the default invalid state.
- *
- * @param[in,out] type The object to reset.
- */
-void amm_type_reset(amm_type_t *type);
-
 /** Determine if a type object is valid.
  *
  * @return True if the object is valid.
  */
 bool amm_type_is_valid(const amm_type_t *type);
+
+/** Create a use type based on a type reference.
+ * A use type adds annotations and constraints onto a base type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @param[in] name The ARITYPE literal or TYPEDEF reference value.
+ */
+int amm_type_set_use_ref(amm_type_t *type, const ari_t *name);
 
 /** Create a use type based on a base type object.
  * A use type adds annotations and constraints onto a base type.
@@ -171,16 +221,18 @@ bool amm_type_is_valid(const amm_type_t *type);
  * @param[out] type The type to initialize and populate.
  * @param[in] base The base type to create a use of.
  */
-int amm_type_set_use(amm_type_t *type, const amm_type_t *base);
+int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base);
 
 /** Create a union type based on a choice of other type objects.
  * A union type contains a list of underlying types to choose from.
  *
  * @param[out] type The type to initialize and populate.
- * @param[in] choices A null-terminated array of pointers to the types
- * to create the union for.
+ * @param num_choices The number of choices to initialize.
+ * @return Zero upon success.
  */
-int amm_type_set_union(amm_type_t *type, const amm_type_t **choices);
+int amm_type_set_union_size(amm_type_t *type, size_t num_choices);
+
+amm_type_t *amm_type_set_union_get(amm_type_t *type, size_t ix);
 
 /** Determine if a type (built-in or semantic) matches a specific value.
  *

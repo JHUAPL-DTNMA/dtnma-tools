@@ -19,8 +19,8 @@
  * @ingroup ari
  * Configuration items driven by CMake options and user tailoring.
  */
-#ifndef ARI_ARI_CONFIG_H_
-#define ARI_ARI_CONFIG_H_
+#ifndef CACE_CONFIG_H_
+#define CACE_CONFIG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,4 +75,4 @@ extern "C" {
 } // extern C
 #endif
 
-#endif  /* ARI_ARI_CONFIG_H_ */
+#endif  /* CACE_CONFIG_H_ */

@@ -18,6 +18,7 @@
 #include "typing.h"
 #include "cace/ari/algo.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 #include "cace/config.h"
 #include <m-dict.h>
 #include <pthread.h>
@@ -728,6 +729,30 @@ const amm_type_t *amm_type_get_builtin(ari_type_t ari_type)
 
 #endif /* ENABLE_LUT_CACHE */
 
+void amm_typeptr_init(amm_typeptr_t *ptr)
+{
+    CHKVOID(ptr);
+    ptr->obj = NULL;
+}
+
+void amm_typeptr_deinit(amm_typeptr_t *ptr)
+{
+    CHKVOID(ptr);
+    if (ptr->obj)
+    {
+        ARI_FREE(ptr->obj);
+        ptr->obj = NULL;
+    }
+}
+
+void amm_typeptr_take(amm_typeptr_t *ptr, amm_type_t *obj)
+{
+    CHKVOID(ptr);
+    amm_typeptr_deinit(ptr);
+
+    ptr->obj = obj;
+}
+
 void amm_type_init(amm_type_t *type)
 {
     CHKVOID(type)
@@ -747,7 +772,7 @@ void amm_type_deinit(amm_type_t *type)
         case AMM_TYPE_USE:
             break;
         case AMM_TYPE_UNION:
-            amm_typeptr_list_clear(type->as_union.choices);
+            amm_typeptr_array_clear(type->as_union.choices);
             break;
     }
     *type = AMM_TYPE_INIT_INVALID;
@@ -766,7 +791,7 @@ void amm_type_reset(amm_type_t *type)
         case AMM_TYPE_USE:
             break;
         case AMM_TYPE_UNION:
-            amm_typeptr_list_reset(type->as_union.choices);
+            amm_typeptr_array_clear(type->as_union.choices);
             break;
     }
     *type = AMM_TYPE_INIT_INVALID;
@@ -795,7 +820,22 @@ static bool amm_type_use_match(const amm_type_t *self, const ari_t *ari)
     return true;
 }
 
-int amm_type_set_use(amm_type_t *type, const amm_type_t *base)
+int amm_type_set_use_ref(amm_type_t *type, const ari_t *name)
+{
+    CHKERR1(type);
+    CHKERR1(name);
+    amm_type_reset(type);
+
+    type->match      = amm_type_use_match;
+    type->convert    = NULL; // FIXME replace
+    type->type_class = AMM_TYPE_USE;
+    ari_set_copy(&(type->as_use.name), name);
+    type->as_use.base = NULL;
+
+    return 0;
+}
+
+int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base)
 {
     CHKERR1(type);
     CHKERR1(base);
@@ -812,11 +852,17 @@ int amm_type_set_use(amm_type_t *type, const amm_type_t *base)
 
 static bool amm_type_union_match(const amm_type_t *self, const ari_t *ari)
 {
-    amm_typeptr_list_it_t it;
-    for (amm_typeptr_list_it(it, self->as_union.choices); !amm_typeptr_list_end_p(it); amm_typeptr_list_next(it))
+    amm_typeptr_array_it_t it;
+    for (amm_typeptr_array_it(it, self->as_union.choices); !amm_typeptr_array_end_p(it); amm_typeptr_array_next(it))
     {
-        const amm_type_t *choice = *amm_typeptr_list_ref(it);
-        if (choice->match(choice, ari))
+        const amm_typeptr_t *choice = amm_typeptr_array_ref(it);
+        if (!(choice->obj))
+        {
+            CACE_LOG_WARNING("type union choice with null pointer");
+            continue;
+        }
+
+        if (choice->obj->match(choice->obj, ari))
         {
             return true;
         }
@@ -824,23 +870,34 @@ static bool amm_type_union_match(const amm_type_t *self, const ari_t *ari)
     return false;
 }
 
-int amm_type_set_union(amm_type_t *type, const amm_type_t **choices)
+int amm_type_set_union_size(amm_type_t *type, size_t num_choices)
 {
     CHKERR1(type);
-    CHKERR1(choices);
     amm_type_reset(type);
 
     type->match      = amm_type_union_match;
     type->convert    = NULL; // FIXME replace
     type->type_class = AMM_TYPE_UNION;
-    amm_typeptr_list_init(type->as_union.choices);
+    amm_typeptr_array_init(type->as_union.choices);
+    amm_typeptr_array_resize(type->as_union.choices, num_choices);
 
-    for (const amm_type_t **curs = choices; *curs; ++curs)
+    for (size_t ix = 0; ix < num_choices; ++ix)
     {
-        amm_typeptr_list_push_back(type->as_union.choices, *curs);
+        amm_typeptr_t *ptr = amm_typeptr_array_get(type->as_union.choices, ix);
+        amm_type_t *choice = ARI_MALLOC(sizeof(amm_type_t));
+        amm_type_init(choice);
+        amm_typeptr_take(ptr, choice);
     }
 
     return 0;
+}
+
+amm_type_t *amm_type_set_union_get(amm_type_t *type, size_t ix)
+{
+    CHKNULL(type);
+    CHKNULL(type->type_class == AMM_TYPE_UNION);
+
+    return amm_typeptr_array_get(type->as_union.choices, ix)->obj;
 }
 
 bool amm_type_match(const amm_type_t *type, const ari_t *ari)

@@ -16,15 +16,9 @@
  * limitations under the License.
  */
 #include "refda/agent.h"
-#include "refda/amm/ident.h"
-#include "refda/amm/typedef.h"
-#include "cace/amm/obj_ns.h"
+#include "refda/register.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
-
-static refda_amm_typedef_desc_t typedefs[] = { {
-    .semtype = AMM_TYPE_INIT_INVALID,
-} };
 
 int refda_adm_ietf_amm_init(refda_agent_t *agent)
 {
@@ -39,13 +33,32 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
     cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-amm", true, 1);
     cace_amm_obj_desc_t *obj;
 
-    cace_amm_obj_ns_add_obj(adm, ARI_TYPE_IDENT, cace_amm_obj_id_withenum("display-hint", 0));
+    /**
+     * Register IDENT objects
+     */
 
-    obj = cace_amm_obj_ns_add_obj(adm, ARI_TYPE_TYPEDEF, cace_amm_obj_id_withenum("type-ref", 0));
+    refda_register_ident(adm, cace_amm_obj_id_withenum("display-hint", 0), NULL);
+
+    /**
+     * Register TYPEDEF objects
+     */
+
     {
-        refda_amm_typedef_desc_t *objdata = typedefs + 0;
-        cace_amm_user_data_set_from(&(obj->app_data), objdata, false,
-                                    (cace_amm_user_data_deinit_f)refda_amm_typedef_desc_deinit);
+        refda_amm_typedef_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_typedef_desc_t));
+        refda_amm_typedef_desc_init(objdata);
+
+        amm_type_set_union_size(&(objdata->semtype), 2);
+        {
+            amm_type_t *choice = amm_type_set_union_get(&(objdata->semtype), 0);
+            amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_ARITYPE));
+        }
+        {
+            amm_type_t *choice = amm_type_set_union_get(&(objdata->semtype), 1);
+            amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_TYPEDEF));
+        }
+
+        obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("type-ref", 0), objdata);
+        // no parameters
     }
 
     if (pthread_mutex_unlock(&(agent->objs_mutex)))

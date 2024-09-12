@@ -23,10 +23,13 @@ class CmdRunner:
     :param args: The command arguments to execute including the command
     itself.
     '''
-    def __init__(self, args: List[str]):
+
+    def __init__(self, args: List[str], **kwargs):
         self.proc = None
         self._reader = None
         self._args = args
+        self._kwargs = kwargs
+
         self._stdin_lines = queue.Queue()
         self._stdout_lines = queue.Queue()
 
@@ -44,18 +47,19 @@ class CmdRunner:
 
         LOGGER.debug('Starting process: %s', self._fmt_args())
         self.proc = subprocess.Popen(
-            self._args, 
+            self._args,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            text=True
+            text=True,
+            **self._kwargs
         )
         self._reader = threading.Thread(
-            target=self._read_stdout, 
+            target=self._read_stdout,
             args=[self.proc.stdout]
         )
         self._reader.start()
         self._writer = threading.Thread(
-            target=self._write_stdin, 
+            target=self._write_stdin,
             args=[self.proc.stdin]
         )
         self._writer.start()
@@ -76,13 +80,13 @@ class CmdRunner:
         ret = self.proc.returncode
         self.proc = None
         LOGGER.debug('Stopped with exit code: %s', ret)
-        
+
         self._reader.join()
         self._reader = None
         self._stdin_lines.put(None)
         self._writer.join()
         self._writer = None
-        
+
         return ret
 
     def _read_stdout(self, stream):
@@ -114,9 +118,9 @@ class CmdRunner:
         expr = re.compile(pattern)
         LOGGER.debug('Waiting for pattern "%s" ...', pattern)
 
-        deadline_time = time.time_ns()/1e9 + timeout
+        deadline_time = time.time_ns() / 1e9 + timeout
         while True:
-            remain_time = deadline_time - time.time_ns()/1e9
+            remain_time = deadline_time - time.time_ns() / 1e9
             if remain_time <= 0:
                 break
             LOGGER.debug('Waiting for new line up to %s s', remain_time)

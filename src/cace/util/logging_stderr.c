@@ -255,7 +255,7 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
     {
         static const char dirsep = '/';
 
-        const char       *pos    = strrchr(filename, dirsep);
+        const char *pos = strrchr(filename, dirsep);
         if (pos)
         {
             pos += 1;

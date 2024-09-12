@@ -25,11 +25,24 @@
 extern "C" {
 #endif
 
+// Forward declaration
+struct refda_amm_edd_desc_s;
+typedef struct refda_amm_edd_desc_s refda_amm_edd_desc_t;
+
+/** Value production callback for an EDD object.
+ * @note The success or failure of production is indicated by the result value
+ * being set or not within the @c ctx parameter.
+ *
+ * @param[in] obj Pointer to the EDD descriptor.
+ * @param[in,out] ctx The production context, including result storage.
+ */
+typedef void (*refda_amm_edd_produce_f)(const refda_amm_edd_desc_t *obj, refda_amm_valprod_ctx_t *ctx);
+
 /** An Externally Defined Data (EDD) descriptor.
  * This defines the properties of an EDD in an Agent and includes common
  * object metadata.
  */
-typedef struct refda_amm_edd_desc_s
+struct refda_amm_edd_desc_s
 {
     /** The required type for the produced value.
      * All type references are fully recursively resolved.
@@ -38,13 +51,9 @@ typedef struct refda_amm_edd_desc_s
     amm_type_t prod_type;
 
     /** Value production callback for this object.
-     *
-     * @param[in] obj Pointer to this descriptor.
-     * @param[in,out] ctx The production context, including result storage.
      */
-    void (*produce)(const struct refda_amm_edd_desc_s *obj, refda_amm_valprod_ctx_t *ctx);
-
-} refda_amm_edd_desc_t;
+    refda_amm_edd_produce_f produce;
+};
 
 void refda_amm_edd_desc_init(refda_amm_edd_desc_t *obj);
 

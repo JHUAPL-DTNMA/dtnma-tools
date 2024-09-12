@@ -50,5 +50,6 @@ void *refda_exec_worker(void *arg)
     }
 
     CACE_LOG_INFO("Worker stopped");
+    daemon_run_stop(&agent->running); //FIXME move farther down chain
     return NULL;
 }

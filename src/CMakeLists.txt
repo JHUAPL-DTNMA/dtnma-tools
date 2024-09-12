@@ -16,6 +16,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
+include(GNUInstallDirs)
+
 # ARI handling library
 configure_file("cace/config.h.in" "cace/config.h")
 set(HFILES
@@ -115,12 +117,32 @@ add_executable(cace_ari)
 target_sources(cace_ari PRIVATE cace/cace_ari.c)
 target_link_libraries(cace_ari PUBLIC cace)
 
+install(
+    TARGETS cace cace_ari
+)
+install(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cace"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    PATTERN "*.c" EXCLUDE
+)
+install(
+    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cace"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    PATTERN "*.o" EXCLUDE
+    PATTERN "*.c" EXCLUDE
+)
+
+
+if(BUILD_AGENT)
 
 set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/agent.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/ingress.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/egress.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/exec.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/refda/register.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/runctx.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/ident.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/typedef.h"
@@ -135,6 +157,7 @@ set(CFILES
     "refda/ingress.c"
     "refda/egress.c"
     "refda/exec.c"
+    "refda/register.c"
     "refda/amm/runctx.c"
     "refda/amm/ident.c"
     "refda/amm/typedef.c"
@@ -155,6 +178,14 @@ target_include_directories(
 )
 target_link_libraries(refda PUBLIC cace)
 
+install(TARGETS refda)
+install(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/refda"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    PATTERN "*.c" EXCLUDE
+)
+
 
 set(HFILES
 )
@@ -166,6 +197,9 @@ target_sources(refda-stdio PUBLIC ${HFILES})
 target_sources(refda-stdio PRIVATE ${CFILES})
 target_link_libraries(refda-stdio PUBLIC refda)
 
+install(TARGETS refda-stdio)
+
+endif(BUILD_AGENT)
 
 if(FALSE) # Disabled for test
 

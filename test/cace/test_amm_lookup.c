@@ -101,13 +101,13 @@ static void check_lookup(const char *inhex, int expect_res)
     ari_deinit(&inval);
 }
 
-TEST_CASE("8318192000", 0)         // ari://25/-1/0 found
-TEST_CASE("830A2004", 3)           // ari://10/-1/4 missing NS
-TEST_CASE("83181939FF0004", 2)     // ari://25/-65281/4 unknown obj-type
-TEST_CASE("8318192004", 4)         // ari://25/-1/4 missing obj-id
-TEST_CASE("8318192001", 0)         // ari://25/-1/1 found, default parameter
-TEST_CASE("8418192001810A", 0)     // ari://25/-1/1(10)
-TEST_CASE("841819200181F6", 7)     // ari://25/-1/1(null) bad parameter
+TEST_CASE("8318192000", 0)     // ari://25/-1/0 found
+TEST_CASE("830A2004", 3)       // ari://10/-1/4 missing NS
+TEST_CASE("83181939FF0004", 2) // ari://25/-65281/4 unknown obj-type
+TEST_CASE("8318192004", 4)     // ari://25/-1/4 missing obj-id
+TEST_CASE("8318192001", 0)     // ari://25/-1/1 found, default parameter
+TEST_CASE("8418192001810A", 0) // ari://25/-1/1(10)
+TEST_CASE("841819200181F6", 7) // ari://25/-1/1(null) bad parameter
 void test_lookup_deref(const char *inhex, int expect_res)
 {
     check_lookup(inhex, expect_res);
