@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - .github/workflows/build-test.yaml
+      - CMakeLists.txt
       - deps/**
       - cmake/**
       - src/**
