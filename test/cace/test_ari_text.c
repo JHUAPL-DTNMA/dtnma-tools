@@ -472,7 +472,7 @@ TEST_CASE("ari:/REAL32/0xfF.ffp0", 255.255)
 TEST_CASE("ari:/REAL32/0xfF.ffp+0", 255.255)
 TEST_CASE("ari:/REAL32/0x1.b8p+6", 1.1e2)
 TEST_CASE("ari:/REAL32/0x1p+6", 64)
-void test_ari_text_decode_lit_typed_float32(const char *text, uint64_t expect)
+void test_ari_text_decode_lit_typed_float32(const char *text, ari_real32 expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
     check_decode(&ari, text);
@@ -495,7 +495,9 @@ TEST_CASE("ari:/REAL64/0xfF.ffp0", 255.255)
 TEST_CASE("ari:/REAL64/0xfF.ffp+0", 255.255)
 TEST_CASE("ari:/REAL64/0x1.b8p+6", 1.1e2)
 TEST_CASE("ari:/REAL64/0x1p+6", 64)
-void test_ari_text_decode_lit_typed_float64(const char *text, uint64_t expect)
+TEST_CASE("ari:/REAL64/-3.40282347E+38", -3.40282347E+38)
+TEST_CASE("ari:/REAL64/3.40282347E+38", 3.40282347e38)
+void test_ari_text_decode_lit_typed_float64(const char *text, ari_real64 expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
     check_decode(&ari, text);
