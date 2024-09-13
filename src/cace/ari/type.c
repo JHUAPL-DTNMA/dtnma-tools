@@ -59,8 +59,14 @@ static _ari_type_name_pair_t _ari_type_names[] = {
 
     {ARI_TYPE_OBJECT, "OBJECT"},
     {ARI_TYPE_IDENT, "IDENT"},
+    {ARI_TYPE_TYPEDEF, "TYPEDEF"},
     {ARI_TYPE_CONST, "CONST"},
+    {ARI_TYPE_VAR, "VAR"},
+    {ARI_TYPE_EDD, "EDD"},
     {ARI_TYPE_CTRL, "CTRL"},
+    {ARI_TYPE_OPER, "OPER"},
+    {ARI_TYPE_SBR, "SBR"},
+    {ARI_TYPE_TBR, "TBR"},
 };
 // clang-format on
 

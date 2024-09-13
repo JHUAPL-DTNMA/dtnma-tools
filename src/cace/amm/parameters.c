@@ -35,7 +35,7 @@ void cace_amm_formal_param_deinit(cace_amm_formal_param_t *obj)
 void cace_amm_actual_param_set_init(cace_amm_actual_param_set_t *obj)
 {
     CHKVOID(obj);
-    ari_list_init(obj->ordered);
+    ari_array_init(obj->ordered);
     named_ari_ptr_dict_init(obj->named);
 }
 
@@ -43,13 +43,13 @@ void cace_amm_actual_param_set_deinit(cace_amm_actual_param_set_t *obj)
 {
     CHKVOID(obj);
     named_ari_ptr_dict_clear(obj->named);
-    ari_list_clear(obj->ordered);
+    ari_array_clear(obj->ordered);
 }
 
 void cace_amm_actual_param_set_reset(cace_amm_actual_param_set_t *obj)
 {
     CHKVOID(obj);
-    ari_list_reset(obj->ordered);
+    ari_array_reset(obj->ordered);
     named_ari_ptr_dict_reset(obj->named);
 }
 
@@ -98,12 +98,15 @@ int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const c
     {
         case ARI_PARAMS_NONE:
         {
+            ari_array_resize(obj->ordered, cace_amm_formal_param_list_size(fparams));
+            size_t pix = 0;
+
             for (cace_amm_formal_param_list_it(fit, fparams); !cace_amm_formal_param_list_end_p(fit);
-                 cace_amm_formal_param_list_next(fit))
+                 cace_amm_formal_param_list_next(fit), ++pix)
             {
                 const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
 
-                ari_t *aparam = ari_list_push_back_new(obj->ordered);
+                ari_t *aparam = ari_array_get(obj->ordered, pix);
                 named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
 
                 // FIXME don't care if it's undefined or not
@@ -117,12 +120,15 @@ int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const c
             ari_list_it_t gparam_it;
             ari_list_it(gparam_it, *gparam_list);
 
+            ari_array_resize(obj->ordered, cace_amm_formal_param_list_size(fparams));
+            size_t pix = 0;
+
             for (cace_amm_formal_param_list_it(fit, fparams); !cace_amm_formal_param_list_end_p(fit);
-                 cace_amm_formal_param_list_next(fit))
+                 cace_amm_formal_param_list_next(fit), ++pix)
             {
                 const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
 
-                ari_t *aparam = ari_list_push_back_new(obj->ordered);
+                ari_t *aparam = ari_array_get(obj->ordered, pix);
                 named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
 
                 if (ari_list_end_p(gparam_it))
@@ -179,12 +185,15 @@ int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const c
                 break;
             }
 
+            ari_array_resize(obj->ordered, cace_amm_formal_param_list_size(fparams));
+            size_t pix = 0;
+
             for (cace_amm_formal_param_list_it(fit, fparams); !cace_amm_formal_param_list_end_p(fit) && !retval;
-                 cace_amm_formal_param_list_next(fit))
+                 cace_amm_formal_param_list_next(fit), ++pix)
             {
                 const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
 
-                ari_t *aparam = ari_list_push_back_new(obj->ordered);
+                ari_t *aparam = ari_array_get(obj->ordered, pix);
                 named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
 
                 // try integer key

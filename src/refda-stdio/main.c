@@ -287,6 +287,7 @@ int main(int argc, char *argv[])
 
     // ADM initialization
     refda_adm_ietf_amm_init(&agent);
+    refda_adm_ietf_dtnma_agent_init(&agent);
 #if 0
   dtn_bp_agent_init();
   dtn_ion_ionadmin_init();

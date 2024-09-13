@@ -30,35 +30,38 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
         return 2;
     }
 
-    cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-amm", true, 1);
-    cace_amm_obj_desc_t *obj;
-
-    /**
-     * Register IDENT objects
-     */
-
-    refda_register_ident(adm, cace_amm_obj_id_withenum("display-hint", 0), NULL);
-
-    /**
-     * Register TYPEDEF objects
-     */
-
+    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-amm", true, 0);
+    if (adm)
     {
-        refda_amm_typedef_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_typedef_desc_t));
-        refda_amm_typedef_desc_init(objdata);
+        cace_amm_obj_desc_t *obj;
 
-        amm_type_set_union_size(&(objdata->semtype), 2);
-        {
-            amm_type_t *choice = amm_type_set_union_get(&(objdata->semtype), 0);
-            amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_ARITYPE));
-        }
-        {
-            amm_type_t *choice = amm_type_set_union_get(&(objdata->semtype), 1);
-            amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_TYPEDEF));
-        }
+        /**
+         * Register IDENT objects
+         */
 
-        obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("type-ref", 0), objdata);
-        // no parameters
+        refda_register_ident(adm, cace_amm_obj_id_withenum("display-hint", 0), NULL);
+
+        /**
+         * Register TYPEDEF objects
+         */
+
+        {
+            refda_amm_typedef_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+
+            amm_type_set_union_size(&(objdata->semtype), 2);
+            {
+                amm_type_t *choice = amm_type_set_union_get(&(objdata->semtype), 0);
+                amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_ARITYPE));
+            }
+            {
+                amm_type_t *choice = amm_type_set_union_get(&(objdata->semtype), 1);
+                amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_TYPEDEF));
+            }
+
+            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("type-ref", 0), objdata);
+            // no parameters
+        }
     }
 
     if (pthread_mutex_unlock(&(agent->objs_mutex)))

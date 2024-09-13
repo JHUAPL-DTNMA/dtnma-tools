@@ -46,11 +46,10 @@ void suiteSetUp(void)
     TEST_ASSERT_NOT_NULL(obj);
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj->fparams);
-        fparam->index                   = 0;
+
+        fparam->index = 0;
         string_set_str(fparam->name, "hi");
         fparam->typeobj = amm_type_get_builtin(ARI_TYPE_INT);
-
-        ari_init(&fparam->defval);
     }
 
     obj = cace_amm_obj_ns_add_obj(adm, ARI_TYPE_TYPEDEF, cace_amm_obj_id_withenum("semtype", 0));
@@ -83,7 +82,7 @@ static void check_lookup(const char *inhex, int expect_res)
     cace_amm_lookup_t result;
     cace_amm_lookup_init(&result);
     res = cace_amm_lookup_deref(&result, &store, &inval);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "cace_amm_actual_param_set_populate() disagrees");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "cace_amm_lookup_deref() disagrees");
 
     TEST_ASSERT_EQUAL(&inval, result.ref);
     if (res == 0)
@@ -93,7 +92,7 @@ static void check_lookup(const char *inhex, int expect_res)
 
         // all formal parameters accounted for
         const size_t formal_size = cace_amm_formal_param_list_size(result.obj->fparams);
-        TEST_ASSERT_EQUAL_INT(formal_size, ari_list_size(result.aparams.ordered));
+        TEST_ASSERT_EQUAL_INT(formal_size, ari_array_size(result.aparams.ordered));
         TEST_ASSERT_EQUAL_INT(formal_size, named_ari_ptr_dict_size(result.aparams.named));
     }
 

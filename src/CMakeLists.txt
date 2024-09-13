@@ -124,14 +124,13 @@ install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cace"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    PATTERN "*.c" EXCLUDE
+    FILES_MATCHING PATTERN "*.h"
 )
 install(
     DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cace"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    PATTERN "*.o" EXCLUDE
-    PATTERN "*.c" EXCLUDE
+    FILES_MATCHING PATTERN "*.h"
 )
 
 
@@ -166,6 +165,7 @@ set(CFILES
     "refda/amm/edd.c"
     "refda/amm/ctrl.c"
     "refda/adm/ietf_amm.c"
+    "refda/adm/ietf_dtnma_agent.c"
 )
 add_library(refda)
 target_sources(refda PUBLIC ${HFILES})
@@ -183,7 +183,7 @@ install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/refda"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    PATTERN "*.c" EXCLUDE
+    FILES_MATCHING PATTERN "*.h"
 )
 
 

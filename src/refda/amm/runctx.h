@@ -18,8 +18,9 @@
 #ifndef REFDA_AMM_RUNCTX_H_
 #define REFDA_AMM_RUNCTX_H_
 
+#include "../agent.h"
 #include "cace/ari/base.h"
-#include "cace/amm/parameters.h"
+#include "cace/amm/lookup.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,13 +58,15 @@ void refda_amm_modval_state_inc(refda_amm_modval_state_t *obj);
  */
 typedef struct
 {
-    /** Original path dereferenced to the object being produced from.
-     * All path segments are in their original form.
+    /** Reference to the agent being executed upon.
+     * This will never be null.
      */
-    const ari_objpath_t *objpath;
-    /** Actual parameters normalized for this object from the given parameters.
+    refda_agent_t *agent;
+
+    /** Dereference result which led to this execution.
+     * This will never be null.
      */
-    cace_amm_actual_param_set_t aparams;
+    const cace_amm_lookup_t *deref;
 
     /** Storage for an optional result value.
      * This is initialized as undefined and may be set to any other value
@@ -76,11 +79,10 @@ typedef struct
  * a target object's formal parameters.
  *
  * @param[out] obj The context to initialize.
- * @param[in] fparams Formal parameters from the dereferenced object.
- * @param[in] ref The object reference ARI.
- * The ARI must outlive this context.
+ * @param[in] deref The dereference result.
+ * The result must outlive this context.
  */
-int refda_amm_exec_ctx_init(refda_amm_exec_ctx_t *obj, const cace_amm_formal_param_list_t fparams, const ari_t *ref);
+void refda_amm_exec_ctx_init(refda_amm_exec_ctx_t *obj, refda_agent_t *agent, const cace_amm_lookup_t *deref);
 
 void refda_amm_exec_ctx_deinit(refda_amm_exec_ctx_t *obj);
 

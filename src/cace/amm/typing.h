@@ -112,7 +112,7 @@ void amm_typeptr_take(amm_typeptr_t *ptr, amm_type_t *obj);
  * This includes the valid possibility of circular references.
  */
 /// @cond Doxygen_Suppress
-//DEQUE_DEF(amm_typeptr_list, amm_typeptr_t)
+// DEQUE_DEF(amm_typeptr_list, amm_typeptr_t)
 ARRAY_DEF(amm_typeptr_array, amm_typeptr_t)
 /// @endcond
 

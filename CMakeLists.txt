@@ -36,6 +36,7 @@ execute_process(
     COMMAND ${GIT_EXECUTABLE} describe --always --tags --dirty
     RESULT_VARIABLE GIT_TAG_EXIT
     OUTPUT_VARIABLE GIT_TAG_REV
+    OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 if(NOT GIT_TAG_EXIT EQUAL 0)
     set(GIT_TAG_REV "v0.0.0")

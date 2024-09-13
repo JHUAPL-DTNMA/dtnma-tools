@@ -56,6 +56,9 @@ cace_amm_obj_desc_t *refda_register_var(cace_amm_obj_ns_t *ns, const cace_amm_ob
 cace_amm_obj_desc_t *refda_register_edd(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                         refda_amm_edd_desc_t *desc);
 
+cace_amm_obj_desc_t *refda_register_ctrl(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+                                         refda_amm_ctrl_desc_t *desc);
+
 #ifdef __cplusplus
 } // extern C
 #endif

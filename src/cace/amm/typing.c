@@ -883,8 +883,8 @@ int amm_type_set_union_size(amm_type_t *type, size_t num_choices)
 
     for (size_t ix = 0; ix < num_choices; ++ix)
     {
-        amm_typeptr_t *ptr = amm_typeptr_array_get(type->as_union.choices, ix);
-        amm_type_t *choice = ARI_MALLOC(sizeof(amm_type_t));
+        amm_typeptr_t *ptr    = amm_typeptr_array_get(type->as_union.choices, ix);
+        amm_type_t    *choice = ARI_MALLOC(sizeof(amm_type_t));
         amm_type_init(choice);
         amm_typeptr_take(ptr, choice);
     }

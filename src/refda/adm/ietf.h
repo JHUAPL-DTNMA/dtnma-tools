@@ -26,6 +26,8 @@ extern "C" {
 
 int refda_adm_ietf_amm_init(refda_agent_t *agent);
 
+int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent);
+
 #ifdef __cplusplus
 } // extern C
 #endif

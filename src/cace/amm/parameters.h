@@ -60,7 +60,7 @@ M_DICT_DEF2(named_ari_ptr_dict, const char *, M_CSTR_OPLIST, ari_t *, M_PTR_OPLI
 typedef struct
 {
     /// Lookup parameter by index
-    ari_list_t ordered;
+    ari_array_t ordered;
     /// Lookup parameter by name
     named_ari_ptr_dict_t named;
 } cace_amm_actual_param_set_t;

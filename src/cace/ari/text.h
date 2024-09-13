@@ -33,6 +33,21 @@
 extern "C" {
 #endif
 
+enum ari_text_aritype_e
+{
+    /// Show whatever the original decoding was
+    ARI_TEXT_ARITYPE_ORIG,
+    /// Always show the text name
+    ARI_TEXT_ARITYPE_TEXT,
+    /// Always show the integer enumeration
+    ARI_TEXT_ARITYPE_INT,
+};
+
+/** Encode just an object path, which can be useful for debugging output.
+ *
+ */
+int ari_text_encode_objpath(string_t text, const ari_objpath_t *path, enum ari_text_aritype_e show);
+
 /** Parameters for ARI text encoding.
  * Use ::ARI_TEXT_ENC_OPTS_DEFAULT to initialize these contents.
  */
@@ -53,15 +68,7 @@ typedef struct
     /** Determine how to show ari_type_t values.
      * This defaults to ARI_TEXT_ARITYPE_TEXT.
      */
-    enum
-    {
-        /// Show whatever the original decoding was
-        ARI_TEXT_ARITYPE_ORIG,
-        /// Always show the text name
-        ARI_TEXT_ARITYPE_TEXT,
-        /// Always show the integer enumeration
-        ARI_TEXT_ARITYPE_INT,
-    } show_ari_type;
+    enum ari_text_aritype_e show_ari_type;
     /** Desired base of integer values.
      * This defaults to 10 (decimal).
      */
