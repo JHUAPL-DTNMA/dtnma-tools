@@ -461,6 +461,29 @@ void test_ari_text_decode_lit_prim_float64(const char *text, ari_real64 expect)
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari:/REAL32/0", 0.0)
+TEST_CASE("ari:/REAL32/0.", 0.0)
+TEST_CASE("ari:/REAL32/0.255", 0.255)
+TEST_CASE("ari:/REAL32/0xF", 15.0)
+TEST_CASE("ari:/REAL32/0xF.", 15.0)
+TEST_CASE("ari:/REAL32/0xfF", 255.0)
+TEST_CASE("ari:/REAL32/0xfF.ff", 255.255)
+TEST_CASE("ari:/REAL32/0xfF.ffp0", 255.255)
+TEST_CASE("ari:/REAL32/0xfF.ffp+0", 255.255)
+TEST_CASE("ari:/REAL32/0x1.b8p+6", 1.1e2)
+TEST_CASE("ari:/REAL32/0x1p+6", 64)
+void test_ari_text_decode_lit_typed_float32(const char *text, uint64_t expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_REAL32, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_float64);
+    ari_deinit(&ari);
+}
+
 TEST_CASE("label", "label")
 TEST_CASE("\"\"", NULL)
 TEST_CASE("\"hi\"", "hi")
