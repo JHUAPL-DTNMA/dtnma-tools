@@ -33,7 +33,7 @@ void refda_amm_edd_desc_deinit(refda_amm_edd_desc_t *obj)
     memset(obj, 0, sizeof(*obj));
 }
 
-int refda_amm_edd_desc_produce(const refda_amm_edd_desc_t *obj, refda_amm_valprod_ctx_t *ctx)
+int refda_amm_edd_desc_produce(const refda_amm_edd_desc_t *obj, refda_valprod_ctx_t *ctx)
 {
     CHKERR1(obj)
     CHKERR1(ctx)

@@ -39,7 +39,7 @@ int suiteTearDown(int failures)
 
 static ari_t mock_result_store;
 
-static int mock_ctrl_exec_none(const refda_amm_ctrl_desc_t *obj _U_, refda_amm_exec_ctx_t *ctx)
+static int mock_ctrl_exec_none(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
 {
     {
         string_t buf;
@@ -52,7 +52,7 @@ static int mock_ctrl_exec_none(const refda_amm_ctrl_desc_t *obj _U_, refda_amm_e
     return 0;
 }
 
-static int mock_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_amm_exec_ctx_t *ctx)
+static int mock_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
 {
     const ari_t *val = ari_array_cget(ctx->deref->aparams.ordered, 0);
     CHKERR1(val)
@@ -103,8 +103,8 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     int res = cace_amm_actual_param_set_populate(&(deref.aparams), fparams, &(inref.as_ref.params));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
-    refda_amm_exec_ctx_t ctx;
-    refda_amm_exec_ctx_init(&ctx, NULL, &deref);
+    refda_exec_ctx_t ctx;
+    refda_exec_ctx_init(&ctx, NULL, &deref);
 
     res = refda_amm_ctrl_desc_execute(obj, &ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_ctrl_desc_execute() disagrees");
@@ -113,11 +113,11 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
 
     if (result)
     {
-        // move out produced value
+        // move out result value
         TEST_ASSERT_EQUAL_INT(0, ari_set_move(result, &(ctx.result)));
     }
 
-    refda_amm_exec_ctx_deinit(&ctx);
+    refda_exec_ctx_deinit(&ctx);
     cace_amm_lookup_deinit(&deref);
 
     ari_deinit(&outval);

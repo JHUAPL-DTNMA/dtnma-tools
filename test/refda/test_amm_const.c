@@ -58,10 +58,14 @@ static void check_produce(ari_t *value, const refda_amm_const_desc_t *cnst, cons
     ari_convert(&inref, refhex);
     TEST_ASSERT_TRUE_MESSAGE(inref.is_ref, "invalid reference");
 
-    refda_amm_valprod_ctx_t ctx;
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
 
-    int res = refda_amm_valprod_ctx_init(&ctx, fparams, &inref);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_valprod_ctx_init() disagrees");
+    int res = cace_amm_actual_param_set_populate(&(deref.aparams), fparams, &(inref.as_ref.params));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
+
+    refda_valprod_ctx_t ctx;
+    refda_valprod_ctx_init(&ctx, NULL, &deref);
 
     res = refda_amm_const_desc_produce(cnst, &ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_amm_const_desc_produce() failed");
@@ -74,7 +78,9 @@ static void check_produce(ari_t *value, const refda_amm_const_desc_t *cnst, cons
     // move out produced value
     TEST_ASSERT_EQUAL_INT(0, ari_set_move(value, &(ctx.value)));
 
-    refda_amm_valprod_ctx_deinit(&ctx);
+    refda_valprod_ctx_deinit(&ctx);
+    cace_amm_lookup_deinit(&deref);
+
     ari_deinit(&outval);
     ari_deinit(&inref);
 }

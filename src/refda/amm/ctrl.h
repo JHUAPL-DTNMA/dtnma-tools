@@ -18,8 +18,7 @@
 #ifndef REFDA_AMM_CTRL_H_
 #define REFDA_AMM_CTRL_H_
 
-//#include "obj_base.h"
-#include "runctx.h"
+#include "refda/exec.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,7 +46,7 @@ struct refda_amm_ctrl_desc_s
      * @param[in,out] ctx The production context, including result storage.
      * @return Zero upon success, or any other value for failure.
      */
-    int (*execute)(const refda_amm_ctrl_desc_t *obj, refda_amm_exec_ctx_t *ctx);
+    int (*execute)(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx_t *ctx);
 };
 
 void refda_amm_ctrl_desc_init(refda_amm_ctrl_desc_t *obj);
@@ -60,7 +59,7 @@ void refda_amm_ctrl_desc_deinit(refda_amm_ctrl_desc_t *obj);
  * @param ctx The execution context.
  * @return Zero upon success.
  */
-int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_amm_exec_ctx_t *ctx);
+int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

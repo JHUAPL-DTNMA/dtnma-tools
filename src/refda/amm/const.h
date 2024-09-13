@@ -18,7 +18,7 @@
 #ifndef REFDA_AMM_CONST_H_
 #define REFDA_AMM_CONST_H_
 
-#include "runctx.h"
+#include "refda/valprod.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,7 +49,7 @@ void refda_amm_const_desc_deinit(refda_amm_const_desc_t *obj);
  * @param ctx The production context.
  * @return Zero upon success.
  */
-int refda_amm_const_desc_produce(const refda_amm_const_desc_t *obj, refda_amm_valprod_ctx_t *ctx);
+int refda_amm_const_desc_produce(const refda_amm_const_desc_t *obj, refda_valprod_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

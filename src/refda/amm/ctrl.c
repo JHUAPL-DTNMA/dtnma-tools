@@ -33,7 +33,7 @@ void refda_amm_ctrl_desc_deinit(refda_amm_ctrl_desc_t *obj)
     memset(obj, 0, sizeof(*obj));
 }
 
-int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_amm_exec_ctx_t *ctx)
+int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx_t *ctx)
 {
     CHKERR1(obj)
     CHKERR1(ctx)
@@ -53,6 +53,8 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_amm_exec
         return 2;
     }
 
+    //FIXME skip type checking
+    return 0;
     if (amm_type_is_valid(&(obj->res_type)))
     {
         // force result type

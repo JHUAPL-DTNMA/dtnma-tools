@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "ietf.h"
 #include "refda/agent.h"
 #include "refda/register.h"
 #include "cace/util/logging.h"
@@ -30,7 +31,7 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
         return 2;
     }
 
-    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-amm", true, 0);
+    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-amm", true, REFDA_ADM_IETF_AMM_ENUM);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -59,7 +60,7 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                 amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_TYPEDEF));
             }
 
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("type-ref", 0), objdata);
+            refda_register_typedef(adm, cace_amm_obj_id_withenum("type-ref", 0), objdata);
             // no parameters
         }
     }

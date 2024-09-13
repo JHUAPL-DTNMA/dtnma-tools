@@ -94,6 +94,11 @@ A simple validation that the Agent is build and installed properly is the sequen
 echo -ne "ari:/EXECSET/n=1234;(//1/CTRL/5(//1/EDD/sw-version))" | ./run.sh cace_ari | ./run.sh refda-stdio -l debug
 ```
 
+A loopback text output can be converted with:
+```
+echo -ne "ari:/EXECSET/n=1234;(//1/CTRL/5(//1/EDD/sw-version))" | ./run.sh cace_ari | ./run.sh refda-stdio -l debug | ./run.sh cace_ari --inform cborhex --outform text
+```
+
 ## Support
 The wiki for this project contains additional details outside of the source and API documentation, and the issue tracker for this project is used for defect reports and enhancement requests.
 Additional details are in the [Contributing](CONTRIBUTING.md) document.
