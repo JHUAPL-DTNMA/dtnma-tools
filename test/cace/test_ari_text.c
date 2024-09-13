@@ -848,6 +848,8 @@ TEST_CASE("ari:/UINT/-1")
 TEST_CASE("ari:/UINT/4294967296")
 TEST_CASE("ari:/VAST/0x8000000000000000")
 TEST_CASE("ari:/UVAST/-1")
+TEST_CASE("ari:/REAL32/-3.40282347E+38")
+TEST_CASE("ari:/REAL32/3.40282347E+38")
 TEST_CASE("ari:/AM/(/INT/10=true)") // no typed keys
 void test_ari_text_decode_invalid(const char *intext)
 {
