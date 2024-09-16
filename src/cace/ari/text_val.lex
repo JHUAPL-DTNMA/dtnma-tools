@@ -130,7 +130,7 @@ DECDIG [0-9]
     }
 }
 
-<PRIMITIVE,LT_ANYFLOAT>[+-]?(({DECDIG}+|{DECDIG}*\.{DECDIG}*)([eE][+-]?{DECDIG}+)|0[xX]({HEXDIG}+|{HEXDIG}*\.{HEXDIG}*)([pP][+-]?{DECDIG})|0[xX]{HEXDIG}*(\.{HEXDIG}*)?|{DECDIG}*(\.{DECDIG}*)?|Infinity)|NaN {
+<PRIMITIVE,LT_ANYFLOAT>[+-]?(({DECDIG}+|{DECDIG}*\.{DECDIG}*)([eE][+-]?{DECDIG}+)|0[xX]{HEXDIG}\.{HEXDIG}*([pP][+-]?{DECDIG})|{DECDIG}*(\.{DECDIG}*)?|Infinity)|NaN {
     yylval->lit = (ari_lit_t){
         .prim_type = ARI_PRIM_FLOAT64,
         .value.as_float64 = strtod(yytext, NULL),
