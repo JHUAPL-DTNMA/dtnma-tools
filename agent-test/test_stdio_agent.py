@@ -6,6 +6,7 @@ import os
 import signal
 import subprocess
 import time
+from typing import List
 import unittest
 import cbor2
 from ace import (AdmSet, ari_text, ari_cbor, nickname)
