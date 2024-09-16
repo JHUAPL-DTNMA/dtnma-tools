@@ -17,11 +17,15 @@
  */
 #include "parameters.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 void cace_amm_formal_param_init(cace_amm_formal_param_t *obj)
 {
     CHKVOID(obj);
     memset(obj, 0, sizeof(cace_amm_formal_param_t));
+
+    string_init(obj->name);
+    amm_type_init(&(obj->typeobj));
     obj->defval = ARI_INIT_UNDEFINED;
 }
 
@@ -29,6 +33,9 @@ void cace_amm_formal_param_deinit(cace_amm_formal_param_t *obj)
 {
     CHKVOID(obj);
     ari_deinit(&(obj->defval));
+    amm_type_deinit(&(obj->typeobj));
+    string_clear(obj->name);
+
     memset(obj, 0, sizeof(cace_amm_formal_param_t));
 }
 
@@ -79,6 +86,7 @@ static int normalize_key(ari_t *out, const ari_t *in)
         ari_init(out);
         if (amm_type_convert(typeobj, out, in))
         {
+            CACE_LOG_WARNING("Failed to convert key to UVAST type");
             return 3;
         }
     }
@@ -139,7 +147,7 @@ int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const c
                 else
                 {
                     const ari_t *gparam = ari_list_cref(gparam_it);
-                    if (amm_type_convert(fparam->typeobj, aparam, gparam))
+                    if (amm_type_convert(&(fparam->typeobj), aparam, gparam))
                     {
                         retval = 2;
                         break;
@@ -173,7 +181,7 @@ int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const c
                     ari_t norm_key;
                     if (normalize_key(&norm_key, pair->key_ptr))
                     {
-                        retval = 2;
+                        retval = 4;
                         break;
                     }
                     ari_tree_set_at(norm_map, norm_key, *(pair->value_ptr));
@@ -223,7 +231,7 @@ int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const c
                     }
                     else
                     {
-                        if (amm_type_convert(fparam->typeobj, aparam, gparam))
+                        if (amm_type_convert(&(fparam->typeobj), aparam, gparam))
                         {
                             retval = 2;
                         }

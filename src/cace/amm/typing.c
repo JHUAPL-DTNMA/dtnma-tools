@@ -578,6 +578,7 @@ static amm_type_t amm_builtins[] = {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_LITERAL,
         .match               = builtin_literal_match,
+        .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
@@ -625,6 +626,7 @@ static amm_type_t amm_builtins[] = {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_REAL32,
         .match               = builtin_real32_match,
+        .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
@@ -636,49 +638,89 @@ static amm_type_t amm_builtins[] = {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TEXTSTR,
         .match               = builtin_textstr_match,
+        .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_BYTESTR,
         .match               = builtin_bytestr_match,
+        .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TP,
         .match               = builtin_common_lit_match,
+        .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TD,
         .match               = builtin_common_lit_match,
+        .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_LABEL,
         .match               = builtin_idseg_match,
+        .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_CBOR,
         .match               = builtin_common_lit_match,
+        .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_ARITYPE,
         .match               = builtin_idseg_match,
+        .convert             = builtin_default_convert,
     },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_AC,
+        .match               = builtin_common_lit_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_AM,
+        .match               = builtin_common_lit_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_TBL,
+        .match               = builtin_common_lit_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_EXECSET,
+        .match               = builtin_common_lit_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_RPTSET,
+        .match               = builtin_common_lit_match,
+        .convert             = builtin_default_convert,
+    },
+    // FIXME add containers
 
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_OBJECT,
         .match               = builtin_object_match,
+        .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_IDENT,
         .match               = builtin_anyobj_match,
+        .convert             = builtin_default_convert,
     },
-    // FIXME add containers
+    // FIXME add objects
 };
 
 #ifdef ENABLE_LUT_CACHE
@@ -806,10 +848,9 @@ bool amm_type_is_valid(const amm_type_t *type)
 static bool amm_type_use_match(const amm_type_t *self, const ari_t *ari)
 {
     const amm_type_t *base = self->as_use.base;
-    if (!base)
-    {
-        return false;
-    }
+    CHKFALSE(base);
+    CHKFALSE(base->match);
+
     if (!base->match(base, ari))
     {
         return false;
@@ -820,6 +861,21 @@ static bool amm_type_use_match(const amm_type_t *self, const ari_t *ari)
     return true;
 }
 
+static int amm_type_use_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
+{
+    const amm_type_t *base = self->as_use.base;
+    CHKERR1(base);
+
+    CHKRET(base->convert, CACE_AMM_ERR_CONVERT_NULLFUNC);
+
+    int res = base->convert(base, out, in);
+    CHKERRVAL(res);
+
+    // FIXME add constraint checking
+
+    return 0;
+}
+
 int amm_type_set_use_ref(amm_type_t *type, const ari_t *name)
 {
     CHKERR1(type);
@@ -827,7 +883,7 @@ int amm_type_set_use_ref(amm_type_t *type, const ari_t *name)
     amm_type_reset(type);
 
     type->match      = amm_type_use_match;
-    type->convert    = NULL; // FIXME replace
+    type->convert    = amm_type_use_convert;
     type->type_class = AMM_TYPE_USE;
     ari_set_copy(&(type->as_use.name), name);
     type->as_use.base = NULL;
@@ -842,7 +898,7 @@ int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base)
     amm_type_reset(type);
 
     type->match       = amm_type_use_match;
-    type->convert     = NULL; // FIXME replace
+    type->convert     = amm_type_use_convert;
     type->type_class  = AMM_TYPE_USE;
     type->as_use.name = ARI_INIT_UNDEFINED;
     type->as_use.base = base;
@@ -917,10 +973,8 @@ int amm_type_convert(const amm_type_t *type, ari_t *out, const ari_t *in)
     CHKERR1(type);
     CHKERR1(out);
     CHKERR1(in);
-    if (!(type->convert))
-    {
-        return builtin_default_convert(type, out, in);
-    }
+
+    CHKRET(type->convert, CACE_AMM_ERR_CONVERT_NULLFUNC);
 
     return type->convert(type, out, in);
 }

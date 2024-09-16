@@ -53,7 +53,7 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
         return 2;
     }
 
-    //FIXME skip type checking
+    // FIXME skip type checking
     return 0;
     if (amm_type_is_valid(&(obj->res_type)))
     {

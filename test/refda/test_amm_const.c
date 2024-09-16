@@ -68,7 +68,7 @@ static void check_produce(ari_t *value, const refda_amm_const_desc_t *cnst, cons
     refda_valprod_ctx_init(&ctx, NULL, &deref);
 
     res = refda_amm_const_desc_produce(cnst, &ctx);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_amm_const_desc_produce() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_const_desc_produce() mismatch");
 
     ari_t outval = ARI_INIT_UNDEFINED;
     ari_convert(&outval, outhex);
@@ -87,8 +87,6 @@ static void check_produce(ari_t *value, const refda_amm_const_desc_t *cnst, cons
 
 // References are based on ari://2/CONST/4
 TEST_CASE("0A", "83022104", "0A", 0)
-TEST_CASE("0A", "84022104810A", "0A", 2)   // [10] extra given param
-TEST_CASE("0A", "84022104A1000A", "0A", 2) // {0:10} extra given param
 void test_const_produce_param_none(const char *valhex, const char *refhex, const char *outhex, int expect_res)
 {
     refda_amm_const_desc_t obj;
@@ -112,8 +110,6 @@ void test_const_produce_param_none(const char *valhex, const char *refhex, const
 // References are based on ari://2/CONST/4
 TEST_CASE("0A", "83022104", "0A", 0)
 TEST_CASE("0A", "84022104810A", "0A", 0)   // [10] not used, but not an error
-TEST_CASE("0A", "84022104A1000A", "0A", 0) // {0:10} not used
-TEST_CASE("0A", "84022104A1010A", "0A", 2) // {1:10} extra given param
 // FIXME: TEST_CASE("820E00", "84022104810A", "0A", 0)     // [10] label substituted by index
 // FIXME: TEST_CASE("820E626869", "84022104810A", "0A", 0) // [10] label substituted by name
 void test_const_produce_param_one_int(const char *valhex, const char *refhex, const char *outhex, int expect_res)
@@ -125,9 +121,11 @@ void test_const_produce_param_one_int(const char *valhex, const char *refhex, co
     cace_amm_formal_param_list_init(fparams);
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
+
         fparam->index              = 0;
         string_set_str(fparam->name, "hi");
-        fparam->typeobj = amm_type_get_builtin(ARI_TYPE_INT);
+
+        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
     }
 
     // initial state

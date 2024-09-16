@@ -28,7 +28,7 @@
 /// Error result when dereferencing fails
 #define REFDA_EXEC_ERR_DEREF_FAILED 4
 /// Error result when value production fails
-#define REFDA_EXEC_ERR_PROD_FAILED 4
+#define REFDA_EXEC_ERR_PROD_FAILED 5
 
 /** Context for execution activities.
  */

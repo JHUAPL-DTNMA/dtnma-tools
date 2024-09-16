@@ -79,7 +79,7 @@ M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_THRE
 /// @endcond
 
 /// Shared least severity
-static int least_severity;
+static int least_severity = LOG_DEBUG;
 /// Mutex for #least_severity
 static pthread_mutex_t least_severity_mutex = PTHREAD_MUTEX_INITIALIZER;
 

@@ -49,7 +49,8 @@ void suiteSetUp(void)
 
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
-        fparam->typeobj = amm_type_get_builtin(ARI_TYPE_INT);
+
+        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
     }
 
     obj = cace_amm_obj_ns_add_obj(adm, ARI_TYPE_TYPEDEF, cace_amm_obj_id_withenum("semtype", 0));

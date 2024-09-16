@@ -19,6 +19,7 @@
 #include "ingress.h"
 #include "egress.h"
 #include "exec.h"
+#include "reporting.h"
 #include "amm/typedef.h"
 #include "adm/ietf.h"
 #include "cace/amm/lookup.h"
@@ -165,5 +166,15 @@ int refda_agent_stop(refda_agent_t *agent)
 
 int refda_agent_send_hello(refda_agent_t *agent)
 {
-    return 0;
+    ari_t ref = ARI_INIT_UNDEFINED;
+    // ari:/ietf-dtnma-agent/CONST/hello
+    ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_DTNMA_AGENT_ENUM, ARI_TYPE_CONST, 0);
+
+    refda_runctx_t runctx;
+    if (refda_runctx_init(&runctx, agent, NULL))
+    {
+        return 2;
+    }
+
+    return refda_reporting_target(&runctx, &ref);
 }

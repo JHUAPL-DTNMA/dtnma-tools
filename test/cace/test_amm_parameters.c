@@ -81,7 +81,8 @@ void test_fparam_one_bool(const char *inhex, int expect_res)
 
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
-        fparam->typeobj = amm_type_get_builtin(ARI_TYPE_BOOL);
+
+        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_BOOL));
     }
 
     cace_amm_actual_param_set_t aparams;
@@ -110,7 +111,8 @@ void test_fparam_one_int(const char *inhex, int expect_res)
 
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
-        fparam->typeobj = amm_type_get_builtin(ARI_TYPE_INT);
+
+        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
     }
 
     cace_amm_actual_param_set_t aparams;
@@ -132,7 +134,8 @@ void test_fparam_one_object(const char *inhex, int expect_res)
 
         fparam->index = 0;
         string_set_str(fparam->name, "ref");
-        fparam->typeobj = amm_type_get_builtin(ARI_TYPE_OBJECT);
+
+        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_OBJECT));
     }
 
     cace_amm_actual_param_set_t aparams;

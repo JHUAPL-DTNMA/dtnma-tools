@@ -44,13 +44,17 @@ void refda_amm_modval_state_inc(refda_amm_modval_state_t *obj)
 int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const ari_t *exec)
 {
     CHKERR1(ctx);
-    CHKERR1(exec);
-
-    CHKERR1(!(exec->is_ref));
-    CHKERR1(exec->as_lit.has_ari_type && exec->as_lit.ari_type == ARI_TYPE_EXECSET);
 
     ctx->agent = agent;
-    ctx->nonce = &(exec->as_lit.value.as_execset->nonce);
+
+    ctx->nonce = NULL;
+    if (exec && exec->is_ref)
+    {
+        if (exec->as_lit.has_ari_type && (exec->as_lit.ari_type == ARI_TYPE_EXECSET))
+        {
+            ctx->nonce = &(exec->as_lit.value.as_execset->nonce);
+        }
+    }
 
     return 0;
 }

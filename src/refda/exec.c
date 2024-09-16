@@ -49,8 +49,7 @@ static int refda_exec_execset(refda_agent_t *agent, const ari_t *ari)
     CHKERR1(ari);
 
     refda_runctx_t runctx;
-    int            res = refda_runctx_init(&runctx, agent, ari);
-    if (res)
+    if (refda_runctx_init(&runctx, agent, ari))
     {
         return 2;
     }
@@ -101,14 +100,14 @@ static int refda_exec_ctrl(refda_runctx_t *runctx, cace_amm_lookup_t *deref)
 
 /** Execute an arbitrary object reference.
  */
-static int refda_exec_ref(refda_runctx_t *runctx, const ari_t *ari)
+static int refda_exec_ref(refda_runctx_t *runctx, const ari_t *target)
 {
     int retval = 0;
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
 
-    int res = cace_amm_lookup_deref(&deref, &(runctx->agent->objs), ari);
+    int res = cace_amm_lookup_deref(&deref, &(runctx->agent->objs), target);
     CACE_LOG_DEBUG("Lookup result %d", res);
     if (res)
     {
@@ -117,7 +116,7 @@ static int refda_exec_ref(refda_runctx_t *runctx, const ari_t *ari)
 
     if (!retval)
     {
-        switch (ari->as_ref.objpath.ari_type)
+        switch (target->as_ref.objpath.ari_type)
         {
             case ARI_TYPE_CTRL:
                 retval = refda_exec_ctrl(runctx, &deref);
@@ -166,28 +165,28 @@ static int refda_exec_mac(refda_runctx_t *runctx, const ari_t *ari)
     return 0;
 }
 
-int refda_exec_target(refda_runctx_t *runctx, const ari_t *ari)
+int refda_exec_target(refda_runctx_t *runctx, const ari_t *target)
 {
-    CHKERR1(ari);
+    CHKERR1(target);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, ari, ARI_TEXT_ENC_OPTS_DEFAULT);
+        ari_text_encode(buf, target, ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("Executing target %s", string_get_cstr(buf));
         string_clear(buf);
     }
 
     int retval = 0;
-    if (ari->is_ref)
+    if (target->is_ref)
     {
         CACE_LOG_DEBUG("Executing as reference");
-        retval = refda_exec_ref(runctx, ari);
+        retval = refda_exec_ref(runctx, target);
     }
     else
     {
-        if (!amm_type_match(runctx->agent->mac_type, ari) && false) // FIXME need to implement typedefs
+        if (!amm_type_match(runctx->agent->mac_type, target) && false) // FIXME need to implement typedefs
         {
             CACE_LOG_WARNING("Attempt to execute a non-MAC literal");
             retval = REFDA_EXEC_ERR_BAD_TYPE;
@@ -195,7 +194,7 @@ int refda_exec_target(refda_runctx_t *runctx, const ari_t *ari)
         else
         {
             CACE_LOG_DEBUG("Executing as MAC");
-            retval = refda_exec_mac(runctx, ari);
+            retval = refda_exec_mac(runctx, target);
         }
     }
 

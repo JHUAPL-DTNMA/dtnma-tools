@@ -52,6 +52,9 @@ target_link_libraries(test_amm_const PUBLIC refda)
 add_unity_test(SOURCE "refda/test_amm_ctrl.c")
 target_link_libraries(test_amm_ctrl PUBLIC refda)
 
+add_unity_test(SOURCE "refda/test_exec.c")
+target_link_libraries(test_exec PUBLIC refda)
+
 
 if(FALSE) # Disabled for test
 

@@ -58,6 +58,8 @@ typedef struct
 
     /// Cached type from //ietf-amm/TYPEDEF/MAC
     const amm_type_t *mac_type;
+    /// Cached type from //ietf-amm/TYPEDEF/RPTT
+    const amm_type_t *rptt_type;
 
     /// Ingress EXECSET queue
     agent_ari_queue_t execs;

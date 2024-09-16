@@ -139,11 +139,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("inspect", 5), objdata);
             {
-                cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj->fparams);
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "ref");
 
-                fparam->index = 0;
-                string_set_str(fparam->name, "ref");
-                fparam->typeobj = amm_type_get_builtin(ARI_TYPE_OBJECT);
+                amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_OBJECT));
                 // FIXME: above should really be a type use of //ietf-amm/TYPEDEF/VALUE-OBJ
             }
         }

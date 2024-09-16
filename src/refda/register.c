@@ -16,10 +16,13 @@
  * limitations under the License.
  */
 #include "register.h"
+#include "cace/util/defs.h"
 
 cace_amm_obj_desc_t *refda_register_ident(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                           refda_amm_ident_desc_t *desc)
 {
+    CHKNULL(ns);
+
     cace_amm_obj_desc_t *obj = cace_amm_obj_ns_add_obj(ns, ARI_TYPE_IDENT, obj_id);
     if (!obj)
     {
@@ -44,6 +47,8 @@ cace_amm_obj_desc_t *refda_register_ident(cace_amm_obj_ns_t *ns, const cace_amm_
 cace_amm_obj_desc_t *refda_register_typedef(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                             refda_amm_typedef_desc_t *desc)
 {
+    CHKNULL(ns);
+
     cace_amm_obj_desc_t *obj = cace_amm_obj_ns_add_obj(ns, ARI_TYPE_TYPEDEF, obj_id);
     if (!obj)
     {
@@ -69,6 +74,8 @@ cace_amm_obj_desc_t *refda_register_typedef(cace_amm_obj_ns_t *ns, const cace_am
 cace_amm_obj_desc_t *refda_register_const(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                           refda_amm_const_desc_t *desc)
 {
+    CHKNULL(ns);
+
     cace_amm_obj_desc_t *obj = cace_amm_obj_ns_add_obj(ns, ARI_TYPE_CONST, obj_id);
     if (!obj)
     {
@@ -93,6 +100,8 @@ cace_amm_obj_desc_t *refda_register_const(cace_amm_obj_ns_t *ns, const cace_amm_
 cace_amm_obj_desc_t *refda_register_edd(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                         refda_amm_edd_desc_t *desc)
 {
+    CHKNULL(ns);
+
     cace_amm_obj_desc_t *obj = cace_amm_obj_ns_add_obj(ns, ARI_TYPE_EDD, obj_id);
     if (!obj)
     {
@@ -117,6 +126,8 @@ cace_amm_obj_desc_t *refda_register_edd(cace_amm_obj_ns_t *ns, const cace_amm_ob
 cace_amm_obj_desc_t *refda_register_ctrl(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                          refda_amm_ctrl_desc_t *desc)
 {
+    CHKNULL(ns);
+
     cace_amm_obj_desc_t *obj = cace_amm_obj_ns_add_obj(ns, ARI_TYPE_CTRL, obj_id);
     if (!obj)
     {
@@ -136,4 +147,19 @@ cace_amm_obj_desc_t *refda_register_ctrl(cace_amm_obj_ns_t *ns, const cace_amm_o
     cace_amm_user_data_set_from(&(obj->app_data), desc, true, (cace_amm_user_data_deinit_f)refda_amm_ctrl_desc_deinit);
 
     return obj;
+}
+
+cace_amm_formal_param_t *refda_register_add_param(cace_amm_obj_desc_t *obj, const char *name)
+{
+    CHKNULL(obj);
+    CHKNULL(name);
+
+    size_t new_idx = cace_amm_formal_param_list_size(obj->fparams);
+
+    cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj->fparams);
+
+    fparam->index = new_idx;
+    string_set_str(fparam->name, name);
+
+    return fparam;
 }

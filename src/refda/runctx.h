@@ -71,6 +71,13 @@ typedef struct
 
 } refda_runctx_t;
 
+/** Initialize a runtime context.
+ *
+ * @param[out] ctx The contect to initialize.
+ * @param[in] agent The agent being run within.
+ * @param[in] exec The optional EXECSET message being run within.
+ * @return Zero if successful.
+ */
 int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const ari_t *exec);
 
 #ifdef __cplusplus

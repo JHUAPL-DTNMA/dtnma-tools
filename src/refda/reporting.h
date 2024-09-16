@@ -21,9 +21,16 @@
 
 #include "runctx.h"
 
+/// Error result when an invalid type is present
+#define REFDA_REPORTING_ERR_BAD_TYPE 3
+/// Error result when dereferencing fails
+#define REFDA_REPORTING_ERR_DEREF_FAILED 4
+/// Error result when value production fails
+#define REFDA_REPORTING_ERR_PROD_FAILED 5
+
 /** Generate a RPTSET for the conclusion of a CTRL exectuion.
  *
- * @param[in] agent The agent state for RPTSET aggregation.
+ * @param[in] runctx The context for RPTSET aggregation.
  * @param[in] target The original execution target being reported on.
  * @param[in,out] result The result value to move into the report.
  * @return Zero if successful.
@@ -32,10 +39,10 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
 
 /** Implement the reporting procedure from Section TBD of @cite ietf-dtn-amm-01.
  *
- * @param[in] agent The agent state for ARI lookup.
- * @param[in] ari The ARI to generate a report for.
+ * @param[in] runctx The context for reporting.
+ * @param[in] target The ARI to generate a report for.
  * @return Zero if successful.
  */
-int refda_reporting_target(refda_agent_t *agent, const ari_t *ari);
+int refda_reporting_target(refda_runctx_t *runctx, const ari_t *target);
 
 #endif /* REFDA_REPORTING_H_ */

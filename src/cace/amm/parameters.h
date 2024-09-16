@@ -35,8 +35,12 @@ typedef struct
     string_t name;
     /// The list index (ordinal) of the parameter.
     size_t index;
-    /// The fully recursively resolved type of the parameter.
-    const amm_type_t *typeobj;
+
+    /** The type of the parameter.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this formal parameter.
+     */
+    amm_type_t typeobj;
     /// Optional default value, or the undefined value
     ari_t defval;
 } cace_amm_formal_param_t;
