@@ -102,6 +102,7 @@ TEST_CASE(0, ARI_TEXT_INT_BASE16, "ari:0x0")
 TEST_CASE(1234, ARI_TEXT_INT_BASE10, "ari:1234")
 TEST_CASE(1234, ARI_TEXT_INT_BASE2, "ari:0b10011010010")
 TEST_CASE(1234, ARI_TEXT_INT_BASE16, "ari:0x4D2")
+TEST_CASE(0xFFFFFFFFFFFFFFFF, ARI_TEXT_INT_BASE16, "ari:0xFFFFFFFFFFFFFFFF")
 void test_ari_text_encode_lit_prim_uint(uint64_t value, enum ari_int_base_e base, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -408,15 +409,19 @@ TEST_CASE("-1", -1)
 TEST_CASE("+0", 0)
 TEST_CASE("+10", 10)
 TEST_CASE("+0b1010", 10)
-TEST_CASE("+0x10", 0x10)
+TEST_CASE("+0X10", 0x10)
 TEST_CASE("+4294967296", 4294967296)
 TEST_CASE("+0x7FFFFFFFFFFFFFFF", 0x7FFFFFFFFFFFFFFF)
 TEST_CASE("0", 0)
+TEST_CASE("-0", 0)
+TEST_CASE("+0", 0)
 TEST_CASE("10", 10)
 TEST_CASE("0b1010", 10)
+TEST_CASE("0B1010", 10)
+TEST_CASE("0B0111111111111111111111111111111111111111111111111111111111111111", 0x7FFFFFFFFFFFFFFF)
 TEST_CASE("0x10", 0x10)
 TEST_CASE("4294967296", 4294967296)
-TEST_CASE("0x7FFFFFFFFFFFFFFF", 0x7FFFFFFFFFFFFFFF)
+TEST_CASE("0x7FFFFFFFffFFFFFF", 0x7FFFFFFFFFFFFFFF)
 void test_ari_text_decode_lit_prim_int64(const char *text, int64_t expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -438,6 +443,81 @@ void test_ari_text_decode_lit_prim_uint64(const char *text, uint64_t expect)
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
     TEST_ASSERT_EQUAL_INT(ARI_PRIM_UINT64, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_INT(expect, ari.as_lit.value.as_uint64);
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/BYTE/0", 0)
+TEST_CASE("ari:/BYTE/0xff", 255)
+TEST_CASE("ari:/BYTE/0b10000000", 128)
+void test_ari_text_decode_lit_typed_byte(const char *text, uint64_t expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_BYTE, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_INT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_int64);
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/INT/0", 0)
+TEST_CASE("ari:/INT/1234", 1234)
+TEST_CASE("ari:/INT/-0xff", -255)
+TEST_CASE("ari:/INT/0b10000000", 128)
+void test_ari_text_decode_lit_typed_int(const char *text, uint64_t expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_INT, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_INT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_int64);
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/UINT/-0", 0)
+TEST_CASE("ari:/UINT/0xff", 255)
+TEST_CASE("ari:/UINT/0b10000000", 128)
+void test_ari_text_decode_lit_typed_uint(const char *text, uint64_t expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_UINT, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_INT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_uint64);
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/VAST/-0", 0)
+TEST_CASE("ari:/VAST/0xff", 255)
+TEST_CASE("ari:/VAST/0b10000000", 128)
+void test_ari_text_decode_lit_typed_vast(const char *text, uint64_t expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_VAST, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_INT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_int64);
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/UVAST/0x8000000000000000", 0x8000000000000000)
+TEST_CASE("ari:/UVAST/0xFFFFFFFFFFFFFFFF", 0xFFFFFFFFFFFFFFFF)
+void test_ari_text_decode_lit_typed_uvast(const char *text, uint64_t expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_UVAST, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_UINT64, ari.as_lit.prim_type); 
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_uint64);
     ari_deinit(&ari);
 }
 
