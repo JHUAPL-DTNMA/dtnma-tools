@@ -56,6 +56,17 @@ cace_amm_obj_desc_t *refda_register_var(cace_amm_obj_ns_t *ns, const cace_amm_ob
 cace_amm_obj_desc_t *refda_register_edd(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                         refda_amm_edd_desc_t *desc);
 
+cace_amm_obj_desc_t *refda_register_ctrl(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+                                         refda_amm_ctrl_desc_t *desc);
+
+/** Helper function to append a named parameter to an object descriptor.
+ *
+ * @param[in,out] obj The object to add a parameter onto.
+ * @param[in] name The name of the new parameter.
+ * @return The new parameter definition.
+ */
+cace_amm_formal_param_t *refda_register_add_param(cace_amm_obj_desc_t *obj, const char *name);
+
 #ifdef __cplusplus
 } // extern C
 #endif

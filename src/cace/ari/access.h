@@ -109,7 +109,19 @@ void ari_set_am(ari_t *ari, struct ari_am_s *src);
 
 void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
 
-void ari_set_execset(ari_t *ari, struct ari_execset_s *src);
+/** Initialize an ARI as an EXECSET literal value.
+ *
+ * @param[out] ari The value to initialize.
+ * @return The new execset struct.
+ */
+struct ari_execset_s *ari_init_execset(ari_t *ari);
+
+/** Initialize an ARI as an RPTSET literal value.
+ *
+ * @param[out] ari The value to initialize.
+ * @return The new rptset struct.
+ */
+struct ari_rptset_s *ari_init_rptset(ari_t *ari);
 
 /** Set the ARI as an object reference with a specific text-named path.
  *

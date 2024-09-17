@@ -6,6 +6,7 @@ import os
 import signal
 import subprocess
 import time
+from typing import List
 import unittest
 import cbor2
 from ace import (AdmSet, ari_text, ari_cbor, nickname)
@@ -59,12 +60,12 @@ class TestStdioAgent(unittest.TestCase):
         ari_text.Encoder().encode(ari, textbuf)
         return textbuf.getvalue()
 
-    def _send_exec(self, targets):
+    def _send_exec(self, targets: List[bytes]):
         ''' Send an execution message with a number of target ARIs. '''
-        msg = [0]
+        parts = list(map(binascii.b2a_hex, targets))
         for tgt in targets:
             msg.append(b'\x02\x00\x81' + tgt)
-        hexdata = binascii.b2a_hex(cbor2.dumps(msg))
+        hexdata = (cbor2.dumps(msg))
         line = '0x' + hexdata.decode('ascii')
         LOGGER.debug('Sending line %s', line)
         self._agent.send_stdin(line + '\n')

@@ -18,7 +18,7 @@
 #ifndef REFDA_AMM_EDD_H_
 #define REFDA_AMM_EDD_H_
 
-#include "runctx.h"
+#include "refda/valprod.h"
 #include "cace/amm/typing.h"
 
 #ifdef __cplusplus
@@ -36,7 +36,7 @@ typedef struct refda_amm_edd_desc_s refda_amm_edd_desc_t;
  * @param[in] obj Pointer to the EDD descriptor.
  * @param[in,out] ctx The production context, including result storage.
  */
-typedef void (*refda_amm_edd_produce_f)(const refda_amm_edd_desc_t *obj, refda_amm_valprod_ctx_t *ctx);
+typedef void (*refda_amm_edd_produce_f)(const refda_amm_edd_desc_t *obj, refda_valprod_ctx_t *ctx);
 
 /** An Externally Defined Data (EDD) descriptor.
  * This defines the properties of an EDD in an Agent and includes common
@@ -65,7 +65,7 @@ void refda_amm_edd_desc_deinit(refda_amm_edd_desc_t *obj);
  * @param ctx The production context.
  * @return Zero upon success.
  */
-int refda_amm_edd_desc_produce(const refda_amm_edd_desc_t *obj, refda_amm_valprod_ctx_t *ctx);
+int refda_amm_edd_desc_produce(const refda_amm_edd_desc_t *obj, refda_valprod_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

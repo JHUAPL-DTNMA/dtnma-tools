@@ -41,55 +41,20 @@ void refda_amm_modval_state_inc(refda_amm_modval_state_t *obj)
     }
 }
 
-int refda_amm_exec_ctx_init(refda_amm_exec_ctx_t *obj, const cace_amm_formal_param_list_t fparams, const ari_t *ref)
+int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const ari_t *exec)
 {
-    CHKERR1(obj)
-    CHKERR1(fparams)
-    CHKERR1(ref)
-    CHKERR1(ref->is_ref)
+    CHKERR1(ctx);
 
-    obj->objpath = &(ref->as_ref.objpath);
-    cace_amm_actual_param_set_init(&(obj->aparams));
-    ari_init(&(obj->result));
+    ctx->agent = agent;
 
-    int res = cace_amm_actual_param_set_populate(&(obj->aparams), fparams, &(ref->as_ref.params));
-    if (res)
+    ctx->nonce = NULL;
+    if (exec && exec->is_ref)
     {
-        return 2;
+        if (exec->as_lit.has_ari_type && (exec->as_lit.ari_type == ARI_TYPE_EXECSET))
+        {
+            ctx->nonce = &(exec->as_lit.value.as_execset->nonce);
+        }
     }
 
     return 0;
-}
-
-void refda_amm_exec_ctx_deinit(refda_amm_exec_ctx_t *obj)
-{
-    ari_deinit(&(obj->result));
-    cace_amm_actual_param_set_deinit(&(obj->aparams));
-}
-
-int refda_amm_valprod_ctx_init(refda_amm_valprod_ctx_t *obj, const cace_amm_formal_param_list_t fparams,
-                               const ari_t *ref)
-{
-    CHKERR1(obj)
-    CHKERR1(fparams)
-    CHKERR1(ref)
-    CHKERR1(ref->is_ref)
-
-    obj->objpath = &(ref->as_ref.objpath);
-    cace_amm_actual_param_set_init(&(obj->aparams));
-    ari_init(&(obj->value));
-
-    int res = cace_amm_actual_param_set_populate(&(obj->aparams), fparams, &(ref->as_ref.params));
-    if (res)
-    {
-        return 2;
-    }
-
-    return 0;
-}
-
-void refda_amm_valprod_ctx_deinit(refda_amm_valprod_ctx_t *obj)
-{
-    ari_deinit(&(obj->value));
-    cace_amm_actual_param_set_deinit(&(obj->aparams));
 }

@@ -349,18 +349,12 @@ void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src)
                                        } };
 }
 
-void ari_set_execset(ari_t *ari, struct ari_execset_s *src)
+struct ari_execset_s *ari_init_execset(ari_t *ari)
 {
-    CHKVOID(ari);
-    ari_deinit(ari);
+    CHKNULL(ari);
 
-    ari_execset_t *ctr = M_MEMORY_ALLOC(ari_execset_t);
+    ari_execset_t *ctr = ARI_MALLOC(sizeof(ari_execset_t));
     ari_execset_init(ctr);
-    if (src)
-    {
-        ari_set_move(&(ctr->nonce), &(src->nonce));
-        ari_list_move(ctr->targets, src->targets);
-    }
 
     *ari_init_lit(ari) = (ari_lit_t) { .has_ari_type = true,
                                        .ari_type     = ARI_TYPE_EXECSET,
@@ -368,7 +362,27 @@ void ari_set_execset(ari_t *ari, struct ari_execset_s *src)
                                        .value        = {
                                                   .as_execset = ctr,
                                        } };
+
+    return ctr;
 }
+
+struct ari_rptset_s *ari_init_rptset(ari_t *ari)
+{
+    CHKNULL(ari);
+
+    ari_rptset_t *ctr = ARI_MALLOC(sizeof(ari_rptset_t));
+    ari_rptset_init(ctr);
+
+    *ari_init_lit(ari) = (ari_lit_t) { .has_ari_type = true,
+                                       .ari_type     = ARI_TYPE_RPTSET,
+                                       .prim_type    = ARI_PRIM_OTHER,
+                                       .value        = {
+                                                  .as_rptset = ctr,
+                                       } };
+
+    return ctr;
+}
+
 void ari_set_objref_path_textid(ari_t *ari, const char *ns_id, ari_type_t type_id, const char *obj_id)
 {
     CHKVOID(ari);
