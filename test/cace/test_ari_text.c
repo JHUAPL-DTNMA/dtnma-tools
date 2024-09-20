@@ -542,13 +542,46 @@ void test_ari_text_decode_lit_prim_float64(const char *text, ari_real64 expect)
 TEST_CASE("label", "label")
 TEST_CASE("\"\"", NULL)
 TEST_CASE("\"hi\"", "hi")
-// FIXME not working: TEST_CASE("\"h\\\"i\"", "h\"i")
+TEST_CASE("\"h%20i\"", "h i")
+TEST_CASE("\"h%5c%22i\"", "h\"i")
 void test_ari_text_decode_lit_prim_tstr(const char *text, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
     check_decode(&ari, text);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_TSTR, ari.as_lit.prim_type);
+
+    if (expect)
+    {
+        cace_data_t expect_data;
+        cace_data_init_view(&expect_data, strlen(expect) + 1, (cace_data_ptr_t)expect);
+        TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(expect_data.len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_STRING(expect_data.ptr, ari.as_lit.value.as_data.ptr);
+        cace_data_deinit(&expect_data);
+    }
+    else
+    {
+        TEST_ASSERT_FALSE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(0, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_NULL(ari.as_lit.value.as_data.ptr);
+    }
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/TEXTSTR/label", "label")
+TEST_CASE("ari:/TEXTSTR/\"\"", NULL)
+TEST_CASE("ari:/TEXTSTR/\"hi\"", "hi")
+TEST_CASE("ari:/TEXTSTR/\"h%20i\"", "h i")
+TEST_CASE("ari:/TEXTSTR/\"h%5c%22i\"", "h\"i")
+TEST_CASE("ari:/TEXTSTR/%22h%5c%22i%22", "h\"i")
+void test_ari_text_decode_lit_typed_tstr(const char *text, const char *expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
     TEST_ASSERT_EQUAL_INT(ARI_PRIM_TSTR, ari.as_lit.prim_type);
 
     if (expect)
