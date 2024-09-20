@@ -138,6 +138,8 @@ void test_ari_text_encode_lit_prim_float64(ari_real64 value, char form, const ch
 TEST_CASE("test", false, true, "ari:test")
 TEST_CASE("test", false, false, "ari:%22test%22")
 TEST_CASE("test", true, true, "ari:test")
+TEST_CASE("!@#$%^&*()-+[]{},./?", true, true, "ari:%22!@%23%24%25%5E%26%2A%28%29-+%5B%5D%7B%7D%2C.%2F%3F%22")
+TEST_CASE("_-~The quick brown fox", true, true, "ari:%22_-~The%20quick%20brown%20fox%22")
 TEST_CASE("hi\u1234", false, false, "ari:%22hi%5Cu1234%22")
 TEST_CASE("hi\U0001D11E", false, false, "ari:%22hi%5CuD834%5CuDD1E%22")
 void test_ari_text_encode_lit_prim_tstr(const char *value, bool copy, bool text_identity, const char *expect)
@@ -576,6 +578,7 @@ TEST_CASE("ari:/TEXTSTR/\"hi\"", "hi")
 TEST_CASE("ari:/TEXTSTR/\"h%20i\"", "h i")
 TEST_CASE("ari:/TEXTSTR/\"h%5c%22i\"", "h\"i")
 TEST_CASE("ari:/TEXTSTR/%22h%5c%22i%22", "h\"i")
+TEST_CASE("ari:/TEXTSTR/%22!@-+.%22", "!@-+.")
 void test_ari_text_decode_lit_typed_tstr(const char *text, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
