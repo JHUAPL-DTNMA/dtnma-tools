@@ -138,6 +138,7 @@ void test_ari_text_encode_lit_prim_float64(ari_real64 value, char form, const ch
 TEST_CASE("test", false, true, "ari:test")
 TEST_CASE("test", false, false, "ari:%22test%22")
 TEST_CASE("test", true, true, "ari:test")
+TEST_CASE("\\'\'", true, true, "ari:%22%5C''%22")
 TEST_CASE("':!@$%^&*()-+[]{},./?", true, true, "ari:%22':!@%24%25%5E%26%2A%28%29-+%5B%5D%7B%7D%2C.%2F%3F%22")
 TEST_CASE("_-~The quick brown fox", true, true, "ari:%22_-~The%20quick%20brown%20fox%22")
 TEST_CASE("hi\u1234", false, false, "ari:%22hi%5Cu1234%22")
@@ -572,14 +573,17 @@ void test_ari_text_decode_lit_prim_tstr(const char *text, const char *expect)
     ari_deinit(&ari);
 }
 
-TEST_CASE("ari:/TEXTSTR/label", "label")
-TEST_CASE("ari:/TEXTSTR/\"\"", NULL)
-TEST_CASE("ari:/TEXTSTR/\"hi\"", "hi")
-TEST_CASE("ari:/TEXTSTR/\"h%20i\"", "h i")
-TEST_CASE("ari:/TEXTSTR/\"h%5c%22i\"", "h\"i")
-TEST_CASE("ari:/TEXTSTR/%22h%5c%22i%22", "h\"i")
-TEST_CASE("ari:/TEXTSTR/%22!@-+.:'%22", "!@-+.:'")
-void test_ari_text_decode_lit_typed_tstr(const char *text, const char *expect)
+TEST_CASE("ari:/TEXTSTR/label", "label", 6)
+TEST_CASE("ari:/TEXTSTR/\"\"", NULL, 0)
+TEST_CASE("ari:/TEXTSTR/\"hi\"", "hi", 3)
+TEST_CASE("ari:/TEXTSTR/\"h%20i\"", "h i", 4)
+TEST_CASE("ari:/TEXTSTR/\"h%5c%22i\"", "h\"i", 4)
+TEST_CASE("ari:/TEXTSTR/%22h%5c%22i%22", "h\"i", 4)
+TEST_CASE("ari:/TEXTSTR/%22!@-+.:'%22", "!@-+.:'", 8)
+TEST_CASE("ari:/TEXTSTR/%22%5C%22'%22", "\"'", 3)
+TEST_CASE("ari:/TEXTSTR/%22%5C''%22", "''", 3)
+TEST_CASE("ari:/TEXTSTR/%22''%22", "''", 3)
+void test_ari_text_decode_lit_typed_tstr(const char *text, const char *expect, int expect_len)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
     check_decode(&ari, text);
@@ -593,6 +597,7 @@ void test_ari_text_decode_lit_typed_tstr(const char *text, const char *expect)
         cace_data_init_view(&expect_data, strlen(expect) + 1, (cace_data_ptr_t)expect);
         TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
         TEST_ASSERT_EQUAL_INT(expect_data.len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_INT(expect_len, ari.as_lit.value.as_data.len);
         TEST_ASSERT_EQUAL_STRING(expect_data.ptr, ari.as_lit.value.as_data.ptr);
         cace_data_deinit(&expect_data);
     }
