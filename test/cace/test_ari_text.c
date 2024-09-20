@@ -581,8 +581,8 @@ TEST_CASE("ari:/TEXTSTR/\"h%5c%22i\"", "h\"i", 4)
 TEST_CASE("ari:/TEXTSTR/%22h%5c%22i%22", "h\"i", 4)
 TEST_CASE("ari:/TEXTSTR/%22!@-+.:'%22", "!@-+.:'", 8)
 TEST_CASE("ari:/TEXTSTR/%22%5C%22'%22", "\"'", 3)
-TEST_CASE("ari:/TEXTSTR/%22%5C''%22", "''", 3)
 TEST_CASE("ari:/TEXTSTR/%22''%22", "''", 3)
+TEST_CASE("ari:/TEXTSTR/%22%5C''%22", "''", 3) // Silently drops \ for unknown 2-char escape seq
 void test_ari_text_decode_lit_typed_tstr(const char *text, const char *expect, int expect_len)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
