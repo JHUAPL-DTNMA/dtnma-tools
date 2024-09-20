@@ -162,6 +162,7 @@ TEST_CASE("hi\U0001D11E", 6, ARI_TEXT_BSTR_RAW, "ari:'hi%5CuD834%5CuDD1E'")
 TEST_CASE("\x68\x00\x69", 3, ARI_TEXT_BSTR_RAW, "ari:h'680069'")
 TEST_CASE("", 0, ARI_TEXT_BSTR_BASE16, "ari:h''")
 TEST_CASE("", 0, ARI_TEXT_BSTR_BASE64URL, "ari:b64''")
+TEST_CASE("f", 1, ARI_TEXT_BSTR_BASE64URL, "ari:b64'Zg=='")
 // examples from Section 10 of RFC 4648
 TEST_CASE("foobar", 6, ARI_TEXT_BSTR_BASE16, "ari:h'666F6F626172'")
 TEST_CASE("foobar", 6, ARI_TEXT_BSTR_BASE64URL, "ari:b64'Zm9vYmFy'")
@@ -620,6 +621,7 @@ TEST_CASE("ari:h'5C0069'", "\\\0i", 3)
 // examples from Section 10 of RFC 4648
 TEST_CASE("ari:h'666F6F626172'", "foobar", 6)
 TEST_CASE("ari:b64'Zm9vYmFy'", "foobar", 6)
+TEST_CASE("ari:b64'Zg%3d%3d'", "f", 1)
 // ignoring spaces
 TEST_CASE("ari:h'%20666%20F6F626172'", "foobar", 6)
 TEST_CASE("ari:b64'Zm9v%20YmFy'", "foobar", 6)
