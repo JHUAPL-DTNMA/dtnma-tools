@@ -706,7 +706,7 @@ void test_ari_text_decode_lit_typed_ac(const char *text, size_t expect_count, in
 
 TEST_CASE("ari:/AM/()", 0)
 TEST_CASE("ari:/AM/(undefined=1,undefined=/INT/2,1=a)", 2)
-TEST_CASE("ari:/am/(a=/AM/(),b=/AM/(),c=/AM/())", 3)
+TEST_CASE("ari:/AM/(a=/AM/(),b=/AM/(),c=/AM/())", 3)
 void test_ari_text_decode_lit_typed_am(const char *text, size_t expect_count)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -717,6 +717,24 @@ void test_ari_text_decode_lit_typed_am(const char *text, size_t expect_count)
     TEST_ASSERT_EQUAL_INT(ARI_PRIM_OTHER, ari.as_lit.prim_type);
 
     TEST_ASSERT_EQUAL(ari_tree_size(ari.as_lit.value.as_am->items), expect_count);
+
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/TBL/c=0;()()()", 0, 0)
+TEST_CASE("ari:/TBL/c=003;(1,2,3)(4,5,6)", 3, 6)
+TEST_CASE("ari:/TBL/c=1;(/INT/4)(/TBL/c=0;)(\"%20\")", 1, 3)
+void test_ari_text_decode_lit_typed_tbl(const char *text, size_t expect_cols, size_t expect_items)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_TBL, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_OTHER, ari.as_lit.prim_type);
+
+    TEST_ASSERT_EQUAL(ari.as_lit.value.as_tbl->ncols, expect_cols);
+    TEST_ASSERT_EQUAL(ari_array_size(ari.as_lit.value.as_tbl->items), expect_items);
 
     ari_deinit(&ari);
 }
@@ -849,6 +867,9 @@ TEST_CASE("ari:/AM/()")
 TEST_CASE("ari:/AM/(1=true)")
 TEST_CASE("ari:/AM/(3=true,10=hi,oh=4)") // AM key ordering
 TEST_CASE("ari:/TBL/c=3;(1,2,3)")
+TEST_CASE("ari:/TBL/c=3;(1,2,3)(4,5,6)")
+TEST_CASE("ari:/TBL/c=0;")
+TEST_CASE("ari:/TBL/c=1;")
 TEST_CASE("ari:/EXECSET/n=null;()")
 TEST_CASE("ari:/EXECSET/n=1234;(//test/CTRL/hi)")
 TEST_CASE("ari:/EXECSET/n=h'6869';(//test/CTRL/hi,//test/CTRL/eh)")
@@ -927,6 +948,7 @@ TEST_CASE("ari:/UINT/4294967296")
 TEST_CASE("ari:/VAST/0x8000000000000000")
 TEST_CASE("ari:/UVAST/-1")
 TEST_CASE("ari:/AM/(/INT/10=true)") // no typed keys
+TEST_CASE("ari:/TBL/c=02;(1,2)")
 void test_ari_text_decode_invalid(const char *intext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;
