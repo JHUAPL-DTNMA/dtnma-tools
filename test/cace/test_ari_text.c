@@ -683,7 +683,7 @@ void test_ari_text_decode_lit_typed_td(const char *text, time_t expect_sec, long
 TEST_CASE("ari:/AC/()", 0, ARI_TYPE_NULL, ARI_PRIM_NULL)
 TEST_CASE("ari:/AC/(23)", 1, ARI_TYPE_NULL, ARI_PRIM_INT64)
 TEST_CASE("ari:/AC/(/INT/23)", 1, ARI_TYPE_INT, ARI_PRIM_INT64)
-TEST_CASE("ari:/AC/(\"hi\")", 1, ARI_TYPE_NULL, ARI_PRIM_TSTR)
+TEST_CASE("ari:/AC/(\"hi%2C%20there%21\")", 1, ARI_TYPE_NULL, ARI_PRIM_TSTR)
 void test_ari_text_decode_lit_typed_ac(const char *text, size_t expect_count, int expect_ari_type1, int expect_prim_type1)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -693,13 +693,30 @@ void test_ari_text_decode_lit_typed_ac(const char *text, size_t expect_count, in
     TEST_ASSERT_EQUAL_INT(ARI_TYPE_AC, ari.as_lit.ari_type);
     TEST_ASSERT_EQUAL_INT(ARI_PRIM_OTHER, ari.as_lit.prim_type);
 
-    TEST_ASSERT_EQUAL(ari.as_lit.value.as_ac->items->count, expect_count);
+    TEST_ASSERT_EQUAL(ari_list_size(ari.as_lit.value.as_ac->items), expect_count);
 
     if (expect_count > 0) {
       ari_t *a = ari_list_get(ari.as_lit.value.as_ac->items, 0);
       TEST_ASSERT_EQUAL(expect_ari_type1, a->as_lit.ari_type);
       TEST_ASSERT_EQUAL(expect_prim_type1, a->as_lit.prim_type);
     }
+
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/AM/()", 0)
+TEST_CASE("ari:/AM/(undefined=1,undefined=/INT/2,1=a)", 2)
+TEST_CASE("ari:/am/(a=/AM/(),b=/AM/(),c=/AM/())", 3)
+void test_ari_text_decode_lit_typed_am(const char *text, size_t expect_count)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_AM, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_OTHER, ari.as_lit.prim_type);
+
+    TEST_ASSERT_EQUAL(ari_tree_size(ari.as_lit.value.as_am->items), expect_count);
 
     ari_deinit(&ari);
 }
@@ -824,6 +841,8 @@ TEST_CASE("ari:/TEXTSTR/%22hi%20there%22")
 TEST_CASE("ari:/LABEL/hi")
 TEST_CASE("ari:/TP/20230102T030405Z")
 TEST_CASE("ari:/AC/()")
+TEST_CASE("ari:/AC/(a)")
+TEST_CASE("ari:/AC/(a,b,c)")
 TEST_CASE("ari:/AC/(null,/INT/23)")
 TEST_CASE("ari:/AC/(null,/AC/(undefined,/INT/23,/AC/()))")
 TEST_CASE("ari:/AM/()")
@@ -875,6 +894,7 @@ TEST_CASE("ari:/BOOL/3")
 TEST_CASE("ari:/TEXTSTR/1")
 TEST_CASE("ari:/BYTESTR/1")
 TEST_CASE("ari:/AC/")
+TEST_CASE("ari:/AC/(a,")
 TEST_CASE("ari:/AC/(,,,)")
 TEST_CASE("ari:/AM/")
 TEST_CASE("ari:/TBL/")
