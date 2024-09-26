@@ -722,8 +722,9 @@ void test_ari_text_decode_lit_typed_am(const char *text, size_t expect_count)
 }
 
 TEST_CASE("ari:/TBL/c=0;()()()", 0, 0)
+TEST_CASE("ari:/TBL/c=2;c=2;(1,2)", 2, 2)
 TEST_CASE("ari:/TBL/c=003;(1,2,3)(4,5,6)", 3, 6)
-TEST_CASE("ari:/TBL/c=1;(/INT/4)(/TBL/c=0;)(\"%20\")", 1, 3)
+TEST_CASE("ari:/TBL/C=1;(/INT/4)(/TBL/c=0;)(\"%20\")", 1, 3)
 void test_ari_text_decode_lit_typed_tbl(const char *text, size_t expect_cols, size_t expect_items)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -948,7 +949,6 @@ TEST_CASE("ari:/UINT/4294967296")
 TEST_CASE("ari:/VAST/0x8000000000000000")
 TEST_CASE("ari:/UVAST/-1")
 TEST_CASE("ari:/AM/(/INT/10=true)") // no typed keys
-TEST_CASE("ari:/TBL/c=02;(1,2)")
 void test_ari_text_decode_invalid(const char *intext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;
