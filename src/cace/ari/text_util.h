@@ -140,6 +140,22 @@ int slash_unescape(string_t out, const cace_data_t *in);
  */
 void strip_space(string_t out, const char *in, size_t in_len);
 
+/** Convert a text string to lowercase.
+ * This is written to work on byte strings, not unicode.
+ *
+ * @param[out] out The output buffer, which will be replaced.
+ * @return Zero upon success.
+ */
+int cace_string_tolower(string_t out);
+
+/** Convert a text string to uppercase.
+ * This is written to work on byte strings, not unicode.
+ *
+ * @param[out] out The output buffer, which will be replaced.
+ * @return Zero upon success.
+ */
+int cace_string_toupper(string_t out);
+
 /** Encode to base16 text form.
  * This is defined in Section 8 of RFC 4648 @cite rfc4648.
  *
