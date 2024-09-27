@@ -333,16 +333,17 @@ litparamlist:
     | litparamlist T_VALSEG T_EQ ari T_SC {
         named_ari_dict_init_move($$, $1);
         string_t *s = &$2;
-        for (size_t i = 0; i < string_size(*s); i++){
+        for (size_t i = 0; i < string_size(*s); i++){ // Case insensitive keys
           string_set_char(*s, i, tolower(string_get_char(*s, i)));
         }
-        ari_t *val = named_ari_dict_safe_get($$, $2);
-        if (val->is_ref || val->as_lit.prim_type != ARI_PRIM_UNDEFINED) {
+        ari_t *val = named_ari_dict_get($$, $2);
+        if (val) { // Detect duplicate keys
             named_ari_dict_clear($$);
             string_clear($2);
             cace_ari_text_str_error(scanner, input, "Parameter list has duplicate key");
             YYERROR;
         }
+        val = named_ari_dict_safe_get($$, $2);
         ari_set_move(val, &$4);
         string_clear($2);
     }
