@@ -904,6 +904,46 @@ void test_ari_text_loopback(const char *intext)
     string_clear(outtext);
 }
 
+TEST_CASE("ari:/null/null", "ari:/NULL/null")
+TEST_CASE("ari:/bool/false", "ari:/BOOL/false")
+TEST_CASE("ari:/int/10", "ari:/INT/10")
+TEST_CASE("ari:/uint/10", "ari:/UINT/10")
+TEST_CASE("ari:/vast/10", "ari:/VAST/10")
+TEST_CASE("ari:/uvast/10", "ari:/UVAST/10")
+TEST_CASE("ari:/real32/10", "ari:/REAL32/10")
+TEST_CASE("ari:/real64/+Infinity", "ari:/REAL64/+Infinity")
+TEST_CASE("ari:/bytestr/h'6869'", "ari:/BYTESTR/h'6869'")
+TEST_CASE("ari:/textstr/hi", "ari:/TEXTSTR/hi")
+TEST_CASE("ari:/label/hi", "ari:/LABEL/hi")
+TEST_CASE("ari:/tp/20230102T030405Z", "ari:/TP/20230102T030405Z")
+TEST_CASE("ari:/ac/()", "ari:/AC/()")
+TEST_CASE("ari:/am/()", "ari:/AM/()")
+TEST_CASE("ari:/tbl/c=3;(1,2,3)", "ari:/TBL/c=3;(1,2,3)")
+TEST_CASE("ari:/execset/n=null;()", "ari:/EXECSET/n=null;()")
+TEST_CASE("ari:/rptset/n=1234;r=1000;(t=0;s=//test/ctrl/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=1000;(t=0;s=//test/ctrl/hi;(null,3,h'6869'))")
+void test_ari_text_encode_decode(const char *intext, const char *expect_outtext)
+{
+    ari_t    ari = ARI_INIT_UNDEFINED;
+    string_t inbuf;
+    string_init_set_str(inbuf, intext);
+    int ret = ari_text_decode(&ari, inbuf, &errm);
+    string_clear(inbuf);
+    if (ret && errm)
+    {
+        TEST_FAIL_MESSAGE(errm);
+    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "ari_text_decode() failed");
+
+    string_t outtext;
+    string_init(outtext);
+    ret = ari_text_encode(outtext, &ari, ARI_TEXT_ENC_OPTS_DEFAULT);
+    ari_deinit(&ari);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "ari_text_encode() failed");
+
+    TEST_ASSERT_EQUAL_STRING(expect_outtext, string_get_cstr(outtext));
+    string_clear(outtext);
+}
+
 TEST_CASE("-0x8FFFFFFFFFFFFFFF")
 TEST_CASE("-0x1FFFFFFFFFFFFFFFF")
 TEST_CASE("ari:/OTHERNAME/0")
