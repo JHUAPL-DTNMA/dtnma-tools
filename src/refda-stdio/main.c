@@ -60,6 +60,7 @@ static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *
             CACE_LOG_ERR("Failed to base-16 encode ARI");
             retval = 4;
         }
+        CACE_LOG_DEBUG("encoded ARI item to base-16: %s", string_get_cstr(outhex));
 
         if (!retval)
         {
@@ -287,6 +288,7 @@ int main(int argc, char *argv[])
 
     // ADM initialization
     refda_adm_ietf_amm_init(&agent);
+    refda_adm_ietf_dtnma_agent_init(&agent);
 #if 0
   dtn_bp_agent_init();
   dtn_ion_ionadmin_init();
@@ -315,6 +317,17 @@ int main(int argc, char *argv[])
     /* Start agent threads. */
     if (!retval)
     {
+        int failures = refda_agent_bindrefs(&agent);
+        if (failures)
+        {
+            // Warn but continue on
+            CACE_LOG_WARNING("ADM reference binding failed for %d objects", failures);
+        }
+        else
+        {
+            CACE_LOG_INFO("ADM reference binding succeeded");
+        }
+
         if (refda_agent_start(&agent))
         {
             CACE_LOG_ERR("Agent startup failed");

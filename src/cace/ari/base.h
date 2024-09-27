@@ -190,8 +190,11 @@ int ari_lit_copy(ari_lit_t *lit, const ari_lit_t *src);
  */
 typedef struct
 {
+    /// The namespace-id segment of the path
     ari_idseg_t ns_id;
+    /// The object-type segment of the path
     ari_idseg_t type_id;
+    /// The object-id segment of the path
     ari_idseg_t obj_id;
 
     /// True if #ari_type is valid
@@ -314,23 +317,23 @@ typedef struct ari_s
 
 /** Initialize an ARI to the undefined value.
  *
- * @param[in,out] ari The value to modify.
+ * @param[out] ari The value to modify.
  */
 void ari_init(ari_t *ari);
 
-/** @overload
- * The source data is moved into the value.
+/** Initialize an ARI to be a literal value which requires further state
+ * initialization.
  *
- * @param[in,out] ari The value to modify.
- * @return A pointer to the literal struct.
+ * @param[out] ari The value to modify.
+ * @return A pointer to the literal struct to set state in.
  */
 ari_lit_t *ari_init_lit(ari_t *ari);
 
-/** @overload
- * The source data is moved into the value.
+/** Initialize an ARI to be an object reference value which requires further state
+ * initialization.
  *
- * @param[in,out] ari The value to modify.
- * @return A pointer to the object reference struct.
+ * @param[out] ari The value to modify.
+ * @return A pointer to the object reference struct to set state in.
  */
 ari_ref_t *ari_init_objref(ari_t *ari);
 

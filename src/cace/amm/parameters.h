@@ -35,8 +35,12 @@ typedef struct
     string_t name;
     /// The list index (ordinal) of the parameter.
     size_t index;
-    /// The fully recursively resolved type of the parameter.
-    const amm_type_t *typeobj;
+
+    /** The type of the parameter.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this formal parameter.
+     */
+    amm_type_t typeobj;
     /// Optional default value, or the undefined value
     ari_t defval;
 } cace_amm_formal_param_t;
@@ -60,7 +64,7 @@ M_DICT_DEF2(named_ari_ptr_dict, const char *, M_CSTR_OPLIST, ari_t *, M_PTR_OPLI
 typedef struct
 {
     /// Lookup parameter by index
-    ari_list_t ordered;
+    ari_array_t ordered;
     /// Lookup parameter by name
     named_ari_ptr_dict_t named;
 } cace_amm_actual_param_set_t;

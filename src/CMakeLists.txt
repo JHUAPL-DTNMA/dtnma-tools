@@ -124,14 +124,13 @@ install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cace"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    PATTERN "*.c" EXCLUDE
+    FILES_MATCHING PATTERN "*.h"
 )
 install(
     DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cace"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    PATTERN "*.o" EXCLUDE
-    PATTERN "*.c" EXCLUDE
+    FILES_MATCHING PATTERN "*.h"
 )
 
 
@@ -141,9 +140,11 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/agent.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/ingress.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/egress.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/exec.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/register.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/runctx.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/refda/runctx.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/refda/valprod.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/refda/exec.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/refda/reporting.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/ident.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/typedef.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/const.h"
@@ -156,9 +157,11 @@ set(CFILES
     "refda/agent.c"
     "refda/ingress.c"
     "refda/egress.c"
-    "refda/exec.c"
     "refda/register.c"
-    "refda/amm/runctx.c"
+    "refda/runctx.c"
+    "refda/valprod.c"
+    "refda/exec.c"
+    "refda/reporting.c"
     "refda/amm/ident.c"
     "refda/amm/typedef.c"
     "refda/amm/const.c"
@@ -166,6 +169,7 @@ set(CFILES
     "refda/amm/edd.c"
     "refda/amm/ctrl.c"
     "refda/adm/ietf_amm.c"
+    "refda/adm/ietf_dtnma_agent.c"
 )
 add_library(refda)
 target_sources(refda PUBLIC ${HFILES})
@@ -183,7 +187,7 @@ install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/refda"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    PATTERN "*.c" EXCLUDE
+    FILES_MATCHING PATTERN "*.h"
 )
 
 

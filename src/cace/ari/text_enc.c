@@ -345,12 +345,13 @@ static void ari_text_encode_prefix(ari_text_enc_state_t *state)
     string_cat_str(state->out, "ari:");
 }
 
-static int ari_text_encode_idseg(ari_text_enc_state_t *state, const ari_idseg_t *obj);
+static void ari_text_encode_idseg(string_t text, const ari_idseg_t *obj);
 
-static void ari_text_encode_aritype(ari_text_enc_state_t *state, const ari_type_t val, const ari_idseg_t *idseg)
+static void ari_text_encode_aritype(string_t text, enum ari_text_aritype_e show, const ari_type_t val,
+                                    const ari_idseg_t *idseg)
 {
     const char *name;
-    switch (state->opts->show_ari_type)
+    switch (show)
     {
         case ARI_TEXT_ARITYPE_TEXT:
             name = ari_type_to_name(val);
@@ -361,7 +362,7 @@ static void ari_text_encode_aritype(ari_text_enc_state_t *state, const ari_type_
         default:
             if (idseg)
             {
-                ari_text_encode_idseg(state, idseg);
+                ari_text_encode_idseg(text, idseg);
                 return;
             }
             else
@@ -373,11 +374,11 @@ static void ari_text_encode_aritype(ari_text_enc_state_t *state, const ari_type_
 
     if (name)
     {
-        string_cat_str(state->out, name);
+        string_cat_str(text, name);
     }
     else
     {
-        string_cat_printf(state->out, "%" PRId64, val);
+        string_cat_printf(text, "%" PRId64, val);
     }
 }
 
@@ -388,7 +389,7 @@ static int ari_text_encode_lit(ari_text_enc_state_t *state, const ari_lit_t *obj
     if (obj->has_ari_type)
     {
         string_push_back(state->out, '/');
-        ari_text_encode_aritype(state, obj->ari_type, NULL);
+        ari_text_encode_aritype(state->out, state->opts->show_ari_type, obj->ari_type, NULL);
         string_push_back(state->out, '/');
 
         switch (obj->ari_type)
@@ -563,19 +564,48 @@ static int ari_text_encode_lit(ari_text_enc_state_t *state, const ari_lit_t *obj
     return 0;
 }
 
-static int ari_text_encode_idseg(ari_text_enc_state_t *state, const ari_idseg_t *obj)
+static void ari_text_encode_idseg(string_t text, const ari_idseg_t *obj)
 {
     switch (obj->form)
     {
         case ARI_IDSEG_NULL:
             break;
         case ARI_IDSEG_TEXT:
-            string_cat(state->out, obj->as_text);
+            string_cat(text, obj->as_text);
             break;
         case ARI_IDSEG_INT:
-            string_cat_printf(state->out, "%" PRId64, obj->as_int);
+            string_cat_printf(text, "%" PRId64, obj->as_int);
             break;
     }
+}
+
+int ari_text_encode_objpath(string_t text, const ari_objpath_t *path, enum ari_text_aritype_e show)
+{
+    CHKERR1(text);
+    CHKERR1(path);
+
+    string_cat_str(text, "//");
+    ari_text_encode_idseg(text, &(path->ns_id));
+
+    string_push_back(text, '/');
+    if (path->type_id.form == ARI_IDSEG_NULL)
+    {
+        // case for a namespace reference only
+        return 0;
+    }
+
+    if (path->has_ari_type)
+    {
+        ari_text_encode_aritype(text, show, path->ari_type, &(path->type_id));
+    }
+    else
+    {
+        ari_text_encode_idseg(text, &(path->type_id));
+    }
+
+    string_push_back(text, '/');
+    ari_text_encode_idseg(text, &(path->obj_id));
+
     return 0;
 }
 
@@ -583,27 +613,10 @@ static int ari_text_encode_objref(ari_text_enc_state_t *state, const ari_ref_t *
 {
     ari_text_encode_prefix(state);
 
-    string_cat_str(state->out, "//");
-    ari_text_encode_idseg(state, &(obj->objpath.ns_id));
-
-    string_push_back(state->out, '/');
-    if (obj->objpath.type_id.form == ARI_IDSEG_NULL)
+    if (ari_text_encode_objpath(state->out, &(obj->objpath), state->opts->show_ari_type))
     {
-        // case for a namespace reference only
-        return 0;
+        return 2;
     }
-
-    if (obj->objpath.has_ari_type)
-    {
-        ari_text_encode_aritype(state, obj->objpath.ari_type, &(obj->objpath.type_id));
-    }
-    else
-    {
-        ari_text_encode_idseg(state, &(obj->objpath.type_id));
-    }
-
-    string_push_back(state->out, '/');
-    ari_text_encode_idseg(state, &(obj->objpath.obj_id));
 
     switch (obj->params.state)
     {

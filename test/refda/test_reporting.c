@@ -15,6 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <refda/exec.h>
+#include <refda/register.h>
+#include <refda/amm/const.h>
 #include <refda/amm/ctrl.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -37,22 +40,8 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-static ari_t mock_result_store;
 
-static int mock_ctrl_exec_none(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
-{
-    {
-        string_t buf;
-        string_init(buf);
-        ari_text_encode(buf, &mock_result_store, ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("execution with mock result %s", string_get_cstr(buf));
-        string_clear(buf);
-    }
-    ari_set_copy(&(ctx->result), &mock_result_store);
-    return 0;
-}
-
-static int mock_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
+static int test_reporting_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
 {
     const ari_t *val = ari_array_cget(ctx->deref->aparams.ordered, 0);
     CHKERR1(val)
@@ -65,6 +54,66 @@ static int mock_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_ex
     }
     ari_set_copy(&(ctx->result), val);
     return 0;
+}
+
+
+static refda_agent_t agent;
+
+#define EXAMPLE_ADM_ENUM 65536
+
+void setUp(void)
+{
+    refda_agent_init(&agent);
+
+    {
+        // ADM for this test fixture
+        cace_amm_obj_ns_t *adm =
+            cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
+        cace_amm_obj_desc_t *obj;
+
+        /**
+         * Register CONST objects
+         */
+        {
+            refda_amm_const_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_const_desc_t));
+            refda_amm_const_desc_init(objdata);
+            {
+                ari_ac_t acinit;
+                ari_ac_init(&acinit);
+                {
+                    ari_t *item = ari_list_push_back_new(acinit.items);
+                    ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, ARI_TYPE_EDD, 1); // ari://example-adm/EDD/edd1
+                }
+                // FIXME: should be total
+                // amm:init-value "/AC/(./EDD/sw-vendor,./EDD/sw-version,./EDD/capability)";
+
+                ari_set_ac(&(objdata->value), &acinit);
+            }
+
+            obj = refda_register_const(adm, cace_amm_obj_id_withenum("rptt1", 1), objdata);
+            // no parameters
+        }
+
+        /**
+         * Register EDD objects
+         */
+        {
+            refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_init(objdata);
+            amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            objdata->produce = refda_adm_ietf_dtnma_agent_edd_sw_version;
+
+            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd1", 1), objdata);
+            // no parameters
+        }
+    }
+
+    TEST_ASSERT_EQUAL_INT(0, refda_agent_bindrefs(&agent));
+}
+
+void tearDown(void)
+{
+    refda_agent_deinit(&agent);
 }
 
 static void ari_convert(ari_t *ari, const char *inhex)
@@ -81,10 +130,6 @@ static void ari_convert(ari_t *ari, const char *inhex)
     cace_data_deinit(&indata);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 }
-
-// refda_amm_obj_desc_t obj;
-// refda_amm_obj_desc_init(&obj);
-// refda_amm_user_data_set_from(&obj.app_data, &ctrl, (refda_amm_user_data_deinit_f)&refda_amm_ctrl_desc_deinit);
 
 static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const cace_amm_formal_param_list_t fparams,
                           const char *refhex, const char *outhex, int expect_res)
@@ -122,16 +167,6 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
 
     ari_deinit(&outval);
     ari_deinit(&inref);
-}
-
-void setUp(void)
-{
-    ari_init(&mock_result_store);
-}
-
-void tearDown(void)
-{
-    ari_deinit(&mock_result_store);
 }
 
 // References are based on ari://2/CONST/4
@@ -174,11 +209,9 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex, int
     cace_amm_formal_param_list_init(fparams);
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
-
         fparam->index              = 0;
         string_set_str(fparam->name, "hi");
-
-        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
+        fparam->typeobj = amm_type_get_builtin(ARI_TYPE_INT);
         ari_set_int(&(fparam->defval), 3); // arbitrary default
     }
 

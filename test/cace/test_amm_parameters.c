@@ -46,7 +46,7 @@ static void check_normalize(cace_amm_actual_param_set_t *aparams, const cace_amm
 
     // all formal parameters accounted for
     const size_t formal_size = cace_amm_formal_param_list_size(fparams);
-    TEST_ASSERT_EQUAL_INT(formal_size, ari_list_size(aparams->ordered));
+    TEST_ASSERT_EQUAL_INT(formal_size, ari_array_size(aparams->ordered));
     TEST_ASSERT_EQUAL_INT(formal_size, named_ari_ptr_dict_size(aparams->named));
 }
 
@@ -78,11 +78,11 @@ void test_fparam_one_bool(const char *inhex, int expect_res)
     cace_amm_formal_param_list_init(fparams);
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
-        fparam->index                   = 0;
-        string_set_str(fparam->name, "hi");
-        fparam->typeobj = amm_type_get_builtin(ARI_TYPE_BOOL);
 
-        ari_init(&fparam->defval);
+        fparam->index = 0;
+        string_set_str(fparam->name, "hi");
+
+        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_BOOL));
     }
 
     cace_amm_actual_param_set_t aparams;
@@ -108,11 +108,34 @@ void test_fparam_one_int(const char *inhex, int expect_res)
     cace_amm_formal_param_list_init(fparams);
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
-        fparam->index                   = 0;
-        string_set_str(fparam->name, "hi");
-        fparam->typeobj = amm_type_get_builtin(ARI_TYPE_INT);
 
-        ari_init(&fparam->defval);
+        fparam->index = 0;
+        string_set_str(fparam->name, "hi");
+
+        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
+    }
+
+    cace_amm_actual_param_set_t aparams;
+    cace_amm_actual_param_set_init(&aparams);
+    check_normalize(&aparams, fparams, inhex, expect_res);
+
+    cace_amm_actual_param_set_deinit(&aparams);
+    cace_amm_formal_param_list_clear(fparams);
+}
+
+TEST_CASE("840122058183012301", 0)                     // ari://2/-1/4(//1/EDD/1)
+TEST_CASE("84012205818301236A73775F76657273696F6E", 0) // ari://2/-1/4(//1/EDD/sw_version)
+void test_fparam_one_object(const char *inhex, int expect_res)
+{
+    cace_amm_formal_param_list_t fparams;
+    cace_amm_formal_param_list_init(fparams);
+    {
+        cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
+
+        fparam->index = 0;
+        string_set_str(fparam->name, "ref");
+
+        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_OBJECT));
     }
 
     cace_amm_actual_param_set_t aparams;

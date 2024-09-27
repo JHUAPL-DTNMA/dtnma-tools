@@ -33,7 +33,9 @@ extern "C" {
  */
 typedef struct
 {
-    /// Original ARI with any given parameters
+    /** Original ARI with any given parameters.
+     * All path segments are in their original form.
+     */
     const ari_t *ref;
 
     /// The found namespace, or a null pointer
@@ -41,7 +43,9 @@ typedef struct
     /// The found object, or a null pointer
     cace_amm_obj_desc_t *obj;
 
-    /// Set if the #obj is non-null and parameter processing succeeded
+    /** Actual parameters normalized for this object from the given parameters.
+     * This is set if the #obj is non-null and parameter processing succeeded
+     */
     cace_amm_actual_param_set_t aparams;
 
 } cace_amm_lookup_t;

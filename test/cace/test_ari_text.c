@@ -267,22 +267,20 @@ void test_ari_text_encode_lit_typed_am_2item(void)
 void test_ari_text_encode_lit_typed_execset_2tgt(void)
 {
     {
-        ari_execset_t ctr;
-        ari_execset_init(&ctr);
+        ari_t          ari;
+        ari_execset_t *ctr = ari_init_execset(&ari);
         {
-            ari_set_prim_uint64(&(ctr.nonce), 12345678);
+            ari_set_prim_uint64(&(ctr->nonce), 12345678);
         }
         {
-            ari_t *item = ari_list_push_back_new(ctr.targets);
+            ari_t *item = ari_list_push_back_new(ctr->targets);
             ari_set_objref_path_textid(item, "adm", ARI_TYPE_CTRL, "one");
         }
         {
-            ari_t *item = ari_list_push_back_new(ctr.targets);
+            ari_t *item = ari_list_push_back_new(ctr->targets);
             ari_set_objref_path_textid(item, "adm", ARI_TYPE_CTRL, "two");
         }
 
-        ari_t ari = ARI_INIT_UNDEFINED;
-        ari_set_execset(&ari, &ctr);
         {
             const char *expect = "ari:/EXECSET/n=12345678;(//adm/CTRL/one,//adm/CTRL/two)";
             check_encode(&ari, expect, ARI_TEXT_ENC_OPTS_DEFAULT);

@@ -71,6 +71,11 @@ typedef enum
     ARI_TYPE_IDENT   = -1,
     ARI_TYPE_CONST   = -2,
     ARI_TYPE_CTRL    = -3,
+    ARI_TYPE_EDD     = -4,
+    ARI_TYPE_OPER    = -6,
+    ARI_TYPE_SBR     = -8,
+    ARI_TYPE_TBR     = -10,
+    ARI_TYPE_VAR     = -11,
     ARI_TYPE_TYPEDEF = -12,
 } ari_type_t;
 

@@ -24,12 +24,47 @@ void *refda_egress_worker(void *arg)
     refda_agent_t *agent = arg;
     CACE_LOG_INFO("Worker started");
 
-    /*
-     * agent->running controls the overall execution of threads in the
-     * Agent.
-     */
     while (daemon_run_get(&agent->running))
-    {}
+    {
+        ari_t ari;
+
+        sem_wait(&(agent->rptgs_sem));
+        if (!agent_ari_queue_pop(&ari, agent->rptgs))
+        {
+            // shouldn't happen
+            CACE_LOG_WARNING("failed to pop from rptgs queue");
+            continue;
+        }
+        // sentinel for end-of-input
+        const bool at_end = ari_is_undefined(&ari);
+        if (!at_end)
+        {
+            ari_list_t data;
+            ari_list_init(data);
+            cace_amm_msg_if_metadata_t meta;
+            cace_amm_msg_if_metadata_init(&meta);
+
+            ari_list_push_back_move(data, &ari);
+
+            int send_res = (agent->mif.send)(data, &meta, agent->mif.ctx);
+            if (send_res)
+            {
+                CACE_LOG_WARNING("Got mif.send result=%d", send_res);
+            }
+
+            ari_list_clear(data);
+            cace_amm_msg_if_metadata_deinit(&meta);
+        }
+
+        ari_deinit(&ari);
+        if (at_end)
+        {
+            // No more reports possible
+            daemon_run_stop(&agent->running); // FIXME move farther down chain
+
+            break;
+        }
+    }
 
     CACE_LOG_INFO("Worker stopped");
     return NULL;
