@@ -337,6 +337,12 @@ litparamlist:
           string_set_char(*s, i, tolower(string_get_char(*s, i)));
         }
         ari_t *val = named_ari_dict_safe_get($$, $2);
+        if (val->is_ref || val->as_lit.prim_type != ARI_PRIM_UNDEFINED) {
+            named_ari_dict_clear($$);
+            string_clear($2);
+            cace_ari_text_str_error(scanner, input, "Parameter list has duplicate key");
+            YYERROR;
+        }
         ari_set_move(val, &$4);
         string_clear($2);
     }
