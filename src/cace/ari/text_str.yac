@@ -332,10 +332,7 @@ litparamlist:
     }
     | litparamlist T_VALSEG T_EQ ari T_SC {
         named_ari_dict_init_move($$, $1);
-        string_t *s = &$2;
-        for (size_t i = 0; i < string_size(*s); i++){ // Case insensitive keys
-          string_set_char(*s, i, tolower(string_get_char(*s, i)));
-        }
+        cace_string_tolower($2);
         ari_t *val = named_ari_dict_get($$, $2);
         if (val) { // Detect duplicate keys
             named_ari_dict_clear($$);

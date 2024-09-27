@@ -94,6 +94,7 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
             cace_ari_text_str_error(yyscanner, yyextra, "TYPE-ID segment failed to percent-decode");
             return YYerror;
         }
+        cace_string_toupper(decoded);
         ari_idseg_init_from_text(&typeid, decoded);
     }
 
