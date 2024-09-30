@@ -815,6 +815,9 @@ TEST_CASE("ari://test@1234/this/that") // ADM revision
 TEST_CASE("ari://!test/this/that")     // ODM path
 TEST_CASE("ari://test/this/that(34)")
 TEST_CASE("ari://2/CTRL/4(hi)")
+TEST_CASE("ari:/CBOR/h'0A'")
+//TEST_CASE("ari:/CBOR/%3C%3C10%3E%3E") // memory corruption????
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
 void test_ari_text_loopback(const char *intext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;
