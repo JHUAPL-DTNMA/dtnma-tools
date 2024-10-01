@@ -495,6 +495,7 @@ int slash_escape(string_t out, const cace_data_t *in, const char quote)
             string_cat_printf(out, "\\u%04" PRIX16 "\\u%04" PRIX16, high, low);
         }
     }
+    string_clear(in_text);
     return 0;
 }
 
