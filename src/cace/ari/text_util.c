@@ -667,22 +667,20 @@ void strip_space(string_t out, const char *in, size_t in_len)
     strip_chars(out, in, in_len, " \b\f\n\r\t");
 }
 
-int cace_string_tolower(string_t out) {
-    CHKERR1(out);
+void cace_string_tolower(string_t out) {
+    CHKVOID(out);
     size_t len = string_size(out);
     for (size_t i = 0; i < len; i++) {
       string_set_char(out, i, tolower(string_get_char(out, i)));
     }
-    return 0;
 }
 
-int cace_string_toupper(string_t out) {
-    CHKERR1(out);
+void cace_string_toupper(string_t out) {
+    CHKVOID(out);
     size_t len = string_size(out);
     for (size_t i = 0; i < len; i++) {
       string_set_char(out, i, toupper(string_get_char(out, i)));
     }
-    return 0;
 }
 
 int base16_encode(string_t out, const cace_data_t *in, bool uppercase)
