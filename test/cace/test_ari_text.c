@@ -138,6 +138,9 @@ void test_ari_text_encode_lit_prim_float64(ari_real64 value, char form, const ch
 TEST_CASE("test", false, true, "ari:test")
 TEST_CASE("test", false, false, "ari:%22test%22")
 TEST_CASE("test", true, true, "ari:test")
+TEST_CASE("\\'\'", true, true, "ari:%22%5C''%22")
+TEST_CASE("':!@$%^&*()-+[]{},./?", true, true, "ari:%22':!@%24%25%5E%26%2A%28%29-+%5B%5D%7B%7D%2C.%2F%3F%22")
+TEST_CASE("_-~The quick brown fox", true, true, "ari:%22_-~The%20quick%20brown%20fox%22")
 TEST_CASE("hi\u1234", false, false, "ari:%22hi%5Cu1234%22")
 TEST_CASE("hi\U0001D11E", false, false, "ari:%22hi%5CuD834%5CuDD1E%22")
 void test_ari_text_encode_lit_prim_tstr(const char *value, bool copy, bool text_identity, const char *expect)
@@ -159,6 +162,7 @@ TEST_CASE("hi\U0001D11E", 6, ARI_TEXT_BSTR_RAW, "ari:'hi%5CuD834%5CuDD1E'")
 TEST_CASE("\x68\x00\x69", 3, ARI_TEXT_BSTR_RAW, "ari:h'680069'")
 TEST_CASE("", 0, ARI_TEXT_BSTR_BASE16, "ari:h''")
 TEST_CASE("", 0, ARI_TEXT_BSTR_BASE64URL, "ari:b64''")
+TEST_CASE("f", 1, ARI_TEXT_BSTR_BASE64URL, "ari:b64'Zg=='")
 // examples from Section 10 of RFC 4648
 TEST_CASE("foobar", 6, ARI_TEXT_BSTR_BASE16, "ari:h'666F6F626172'")
 TEST_CASE("foobar", 6, ARI_TEXT_BSTR_BASE64URL, "ari:b64'Zm9vYmFy'")
@@ -542,7 +546,8 @@ void test_ari_text_decode_lit_prim_float64(const char *text, ari_real64 expect)
 TEST_CASE("label", "label")
 TEST_CASE("\"\"", NULL)
 TEST_CASE("\"hi\"", "hi")
-// FIXME not working: TEST_CASE("\"h\\\"i\"", "h\"i")
+TEST_CASE("\"h%20i\"", "h i")
+TEST_CASE("\"h%5c%22i\"", "h\"i")
 void test_ari_text_decode_lit_prim_tstr(const char *text, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -569,14 +574,54 @@ void test_ari_text_decode_lit_prim_tstr(const char *text, const char *expect)
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari:/TEXTSTR/label", "label", 6)
+TEST_CASE("ari:/TEXTSTR/\"\"", NULL, 0)
+TEST_CASE("ari:/TEXTSTR/\"hi\"", "hi", 3)
+TEST_CASE("ari:/TEXTSTR/\"h%20i\"", "h i", 4)
+TEST_CASE("ari:/TEXTSTR/\"h%5c%22i\"", "h\"i", 4)
+TEST_CASE("ari:/TEXTSTR/%22h%5c%22i%22", "h\"i", 4)
+TEST_CASE("ari:/TEXTSTR/%22!@-+.:'%22", "!@-+.:'", 8)
+TEST_CASE("ari:/TEXTSTR/%22%5C%22'%22", "\"'", 3)
+TEST_CASE("ari:/TEXTSTR/%22''%22", "''", 3)
+TEST_CASE("ari:/TEXTSTR/%22%5C''%22", "''", 3) // Silently drops \ for unknown 2-char escape seq
+TEST_CASE("ari:/TEXTSTR/%22a%5Cu0000test%22", "atest", 6)
+void test_ari_text_decode_lit_typed_tstr(const char *text, const char *expect, int expect_len)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_TSTR, ari.as_lit.prim_type);
+
+    if (expect)
+    {
+        cace_data_t expect_data;
+        cace_data_init_view(&expect_data, strlen(expect) + 1, (cace_data_ptr_t)expect);
+        TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(expect_data.len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_INT(expect_len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_STRING(expect_data.ptr, ari.as_lit.value.as_data.ptr);
+        cace_data_deinit(&expect_data);
+    }
+    else
+    {
+        TEST_ASSERT_FALSE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(0, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_NULL(ari.as_lit.value.as_data.ptr);
+    }
+    ari_deinit(&ari);
+}
+
 TEST_CASE("''", NULL, 0)
 TEST_CASE("'hi'", "hi", 2)
 TEST_CASE("'hi%20there'", "hi there", 8)
-// FIXME not working: TEST_CASE("'h\\'i'", "h'i", 3)
+TEST_CASE("'h%5C'i'", "h'i", 3)
 TEST_CASE("h'6869'", "hi", 2)
+TEST_CASE("ari:h'5C0069'", "\\\0i", 3)
 // examples from Section 10 of RFC 4648
 TEST_CASE("ari:h'666F6F626172'", "foobar", 6)
 TEST_CASE("ari:b64'Zm9vYmFy'", "foobar", 6)
+TEST_CASE("ari:b64'Zg%3d%3d'", "f", 1)
 // ignoring spaces
 TEST_CASE("ari:h'%20666%20F6F626172'", "foobar", 6)
 TEST_CASE("ari:b64'Zm9v%20YmFy'", "foobar", 6)
