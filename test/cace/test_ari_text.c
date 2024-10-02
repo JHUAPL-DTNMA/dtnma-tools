@@ -530,6 +530,8 @@ TEST_CASE("1.1e2", 1.1e2)
 TEST_CASE("1.1e+10", 1.1e+10)
 TEST_CASE("0x1.4p+3", 10)
 TEST_CASE("NaN", (ari_real64)NAN)
+TEST_CASE("nan", (ari_real64)NAN)
+TEST_CASE("infinity", (ari_real64)INFINITY)
 TEST_CASE("+Infinity", (ari_real64)INFINITY)
 TEST_CASE("-Infinity", (ari_real64)-INFINITY)
 void test_ari_text_decode_lit_prim_float64(const char *text, ari_real64 expect)
@@ -540,6 +542,54 @@ void test_ari_text_decode_lit_prim_float64(const char *text, ari_real64 expect)
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
     TEST_ASSERT_EQUAL_INT(ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_DOUBLE(expect, ari.as_lit.value.as_float64);
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/REAL32/0", 0.0)
+TEST_CASE("ari:/REAL32/-0.", 0.0)
+TEST_CASE("ari:/REAL32/0.255", 0.255)
+TEST_CASE("ari:/REAL32/0xF", 15.0)
+TEST_CASE("ari:/REAL32/0xF.", 15.0)
+TEST_CASE("ari:/REAL32/0xfF", 255.0)
+TEST_CASE("ari:/REAL32/0xfF.ff", 255.255)
+TEST_CASE("ari:/REAL32/0xfF.ffp0", 255.255)
+TEST_CASE("ari:/REAL32/0xfF.ffp+0", 255.255)
+TEST_CASE("ari:/REAL32/0x1.b8p+6", 1.1e2)
+TEST_CASE("ari:/REAL32/0x1p+6", 64)
+void test_ari_text_decode_lit_typed_float32(const char *text, ari_real32 expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_REAL32, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_float64);
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/REAL64/0", 0.0)
+TEST_CASE("ari:/REAL64/-0.", 0.0)
+TEST_CASE("ari:/REAL64/0.255", 0.255)
+TEST_CASE("ari:/REAL64/0xF", 15.0)
+TEST_CASE("ari:/REAL64/0xF.", 15.0)
+TEST_CASE("ari:/REAL64/0xfF", 255.0)
+TEST_CASE("ari:/REAL64/0xfF.ff", 255.255)
+TEST_CASE("ari:/REAL64/0xfF.ffp0", 255.255)
+TEST_CASE("ari:/REAL64/0xfF.ffp+0", 255.255)
+TEST_CASE("ari:/REAL64/0x1.b8p+6", 1.1e2)
+TEST_CASE("ari:/REAL64/0x1p+6", 64)
+TEST_CASE("ari:/REAL64/-3.40282347E+38", -3.40282347E+38)
+TEST_CASE("ari:/REAL64/3.40282347E+38", 3.40282347e38)
+void test_ari_text_decode_lit_typed_float64(const char *text, ari_real64 expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_REAL64, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_float64);
     ari_deinit(&ari);
 }
 
@@ -1035,6 +1085,8 @@ TEST_CASE("ari:/UINT/-1")
 TEST_CASE("ari:/UINT/4294967296")
 TEST_CASE("ari:/VAST/0x8000000000000000")
 TEST_CASE("ari:/UVAST/-1")
+TEST_CASE("ari:/REAL32/-3.40282347E+38")
+TEST_CASE("ari:/REAL32/3.40282347E+38")
 TEST_CASE("ari:/AM/(/INT/10=true)") // no typed keys
 void test_ari_text_decode_invalid(const char *intext)
 {
