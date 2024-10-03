@@ -701,25 +701,27 @@ void test_ari_text_decode_lit_prim_bstr(const char *text, const char *expect, si
     ari_deinit(&ari);
 }
 
-TEST_CASE("ari:/CBOR/h''", NULL, 0)
-TEST_CASE("ari:/CBOR/h'A164746573748203F94480'", "\xA1\x64\x74\x65\x73\x74\x82\x03\xF9\x44\x80", 11)
-TEST_CASE("ari:/CBOR/h'A1%2064%2074%2065%2073%2074%2082%2003%20F9%2044%20%2080'", "\xA1\x64\x74\x65\x73\x74\x82\x03\xF9\x44\x80", 11)
-void test_ari_text_decode_lit_typed_cbor(const char *text, const char *expect, size_t expect_len)
+TEST_CASE("ari:/CBOR/h''", "ari:/BYTESTR/h''", 0)
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'", "ari:/BYTESTR/h'A164746573748203F94480'", 11)
+TEST_CASE("ari:/CBOR/h'0064746573748203F94480'", "ari:/BYTESTR/h'0064746573748203F94480'", 11)
+TEST_CASE("ari:/CBOR/h'A1%2064%2074%2065%2073%2074%2082%2003%20F9%2044%20%2080'", "ari:/CBOR/h'A1%2064%2074%2065%2073%2074%2082%2003%20F9%2044%20%2080'", 11)
+void test_ari_text_decode_lit_typed_cbor(const char *text, const char *expect, int expect_len)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
+    ari_t ari_expect = ARI_INIT_UNDEFINED;
     check_decode(&ari, text);
+    check_decode(&ari_expect, expect);
+
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_EQUAL_INT(ARI_TYPE_CBOR, ari.as_lit.ari_type);
     TEST_ASSERT_EQUAL_INT(ARI_PRIM_BSTR, ari.as_lit.prim_type);
 
-    if (expect)
+    if (expect_len > 0)
     {
-        cace_data_t expect_data;
-        cace_data_init_view(&expect_data, expect_len, (cace_data_ptr_t)expect);
         TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
-        TEST_ASSERT_EQUAL_INT(expect_data.len, ari.as_lit.value.as_data.len);
-        TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, ari.as_lit.value.as_data.ptr, ari.as_lit.value.as_data.len);
-        cace_data_deinit(&expect_data);
+        TEST_ASSERT_EQUAL_INT(ari_expect.as_lit.value.as_data.len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_INT(expect_len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_MEMORY(ari_expect.as_lit.value.as_data.ptr, ari.as_lit.value.as_data.ptr, ari.as_lit.value.as_data.len);
     }
     else
     {
@@ -728,6 +730,7 @@ void test_ari_text_decode_lit_typed_cbor(const char *text, const char *expect, s
         TEST_ASSERT_NULL(ari.as_lit.value.as_data.ptr);
     }
     ari_deinit(&ari);
+    ari_deinit(&ari_expect);
 }
 
 TEST_CASE("ari:/NULL/null")
