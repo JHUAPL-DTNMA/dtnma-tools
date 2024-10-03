@@ -495,6 +495,7 @@ int slash_escape(string_t out, const cace_data_t *in, const char quote)
             string_cat_printf(out, "\\u%04" PRIX16 "\\u%04" PRIX16, high, low);
         }
     }
+    string_clear(in_text);
     return 0;
 }
 
@@ -665,6 +666,22 @@ static void strip_chars(string_t out, const char *in, size_t in_len, const char 
 void strip_space(string_t out, const char *in, size_t in_len)
 {
     strip_chars(out, in, in_len, " \b\f\n\r\t");
+}
+
+void cace_string_tolower(string_t out) {
+    CHKVOID(out);
+    size_t len = string_size(out);
+    for (size_t i = 0; i < len; i++) {
+      string_set_char(out, i, tolower(string_get_char(out, i)));
+    }
+}
+
+void cace_string_toupper(string_t out) {
+    CHKVOID(out);
+    size_t len = string_size(out);
+    for (size_t i = 0; i < len; i++) {
+      string_set_char(out, i, toupper(string_get_char(out, i)));
+    }
 }
 
 int base16_encode(string_t out, const cace_data_t *in, bool uppercase)

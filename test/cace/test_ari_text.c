@@ -138,6 +138,9 @@ void test_ari_text_encode_lit_prim_float64(ari_real64 value, char form, const ch
 TEST_CASE("test", false, true, "ari:test")
 TEST_CASE("test", false, false, "ari:%22test%22")
 TEST_CASE("test", true, true, "ari:test")
+TEST_CASE("\\'\'", true, true, "ari:%22%5C''%22")
+TEST_CASE("':!@$%^&*()-+[]{},./?", true, true, "ari:%22':!@%24%25%5E%26%2A%28%29-+%5B%5D%7B%7D%2C.%2F%3F%22")
+TEST_CASE("_-~The quick brown fox", true, true, "ari:%22_-~The%20quick%20brown%20fox%22")
 TEST_CASE("hi\u1234", false, false, "ari:%22hi%5Cu1234%22")
 TEST_CASE("hi\U0001D11E", false, false, "ari:%22hi%5CuD834%5CuDD1E%22")
 void test_ari_text_encode_lit_prim_tstr(const char *value, bool copy, bool text_identity, const char *expect)
@@ -159,6 +162,7 @@ TEST_CASE("hi\U0001D11E", 6, ARI_TEXT_BSTR_RAW, "ari:'hi%5CuD834%5CuDD1E'")
 TEST_CASE("\x68\x00\x69", 3, ARI_TEXT_BSTR_RAW, "ari:h'680069'")
 TEST_CASE("", 0, ARI_TEXT_BSTR_BASE16, "ari:h''")
 TEST_CASE("", 0, ARI_TEXT_BSTR_BASE64URL, "ari:b64''")
+TEST_CASE("f", 1, ARI_TEXT_BSTR_BASE64URL, "ari:b64'Zg=='")
 // examples from Section 10 of RFC 4648
 TEST_CASE("foobar", 6, ARI_TEXT_BSTR_BASE16, "ari:h'666F6F626172'")
 TEST_CASE("foobar", 6, ARI_TEXT_BSTR_BASE64URL, "ari:b64'Zm9vYmFy'")
@@ -526,6 +530,8 @@ TEST_CASE("1.1e2", 1.1e2)
 TEST_CASE("1.1e+10", 1.1e+10)
 TEST_CASE("0x1.4p+3", 10)
 TEST_CASE("NaN", (ari_real64)NAN)
+TEST_CASE("nan", (ari_real64)NAN)
+TEST_CASE("infinity", (ari_real64)INFINITY)
 TEST_CASE("+Infinity", (ari_real64)INFINITY)
 TEST_CASE("-Infinity", (ari_real64)-INFINITY)
 void test_ari_text_decode_lit_prim_float64(const char *text, ari_real64 expect)
@@ -539,10 +545,59 @@ void test_ari_text_decode_lit_prim_float64(const char *text, ari_real64 expect)
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari:/REAL32/0", 0.0)
+TEST_CASE("ari:/REAL32/-0.", 0.0)
+TEST_CASE("ari:/REAL32/0.255", 0.255)
+TEST_CASE("ari:/REAL32/0xF", 15.0)
+TEST_CASE("ari:/REAL32/0xF.", 15.0)
+TEST_CASE("ari:/REAL32/0xfF", 255.0)
+TEST_CASE("ari:/REAL32/0xfF.ff", 255.255)
+TEST_CASE("ari:/REAL32/0xfF.ffp0", 255.255)
+TEST_CASE("ari:/REAL32/0xfF.ffp+0", 255.255)
+TEST_CASE("ari:/REAL32/0x1.b8p+6", 1.1e2)
+TEST_CASE("ari:/REAL32/0x1p+6", 64)
+void test_ari_text_decode_lit_typed_float32(const char *text, ari_real32 expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_REAL32, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_float64);
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/REAL64/0", 0.0)
+TEST_CASE("ari:/REAL64/-0.", 0.0)
+TEST_CASE("ari:/REAL64/0.255", 0.255)
+TEST_CASE("ari:/REAL64/0xF", 15.0)
+TEST_CASE("ari:/REAL64/0xF.", 15.0)
+TEST_CASE("ari:/REAL64/0xfF", 255.0)
+TEST_CASE("ari:/REAL64/0xfF.ff", 255.255)
+TEST_CASE("ari:/REAL64/0xfF.ffp0", 255.255)
+TEST_CASE("ari:/REAL64/0xfF.ffp+0", 255.255)
+TEST_CASE("ari:/REAL64/0x1.b8p+6", 1.1e2)
+TEST_CASE("ari:/REAL64/0x1p+6", 64)
+TEST_CASE("ari:/REAL64/-3.40282347E+38", -3.40282347E+38)
+TEST_CASE("ari:/REAL64/3.40282347E+38", 3.40282347e38)
+void test_ari_text_decode_lit_typed_float64(const char *text, ari_real64 expect)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_REAL64, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL(expect, ari.as_lit.value.as_float64);
+    ari_deinit(&ari);
+}
+
 TEST_CASE("label", "label")
 TEST_CASE("\"\"", NULL)
 TEST_CASE("\"hi\"", "hi")
-// FIXME not working: TEST_CASE("\"h\\\"i\"", "h\"i")
+TEST_CASE("\"h%20i\"", "h i")
+TEST_CASE("\"h%5c%22i\"", "h\"i")
 void test_ari_text_decode_lit_prim_tstr(const char *text, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -569,14 +624,54 @@ void test_ari_text_decode_lit_prim_tstr(const char *text, const char *expect)
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari:/TEXTSTR/label", "label", 6)
+TEST_CASE("ari:/TEXTSTR/\"\"", NULL, 0)
+TEST_CASE("ari:/TEXTSTR/\"hi\"", "hi", 3)
+TEST_CASE("ari:/TEXTSTR/\"h%20i\"", "h i", 4)
+TEST_CASE("ari:/TEXTSTR/\"h%5c%22i\"", "h\"i", 4)
+TEST_CASE("ari:/TEXTSTR/%22h%5c%22i%22", "h\"i", 4)
+TEST_CASE("ari:/TEXTSTR/%22!@-+.:'%22", "!@-+.:'", 8)
+TEST_CASE("ari:/TEXTSTR/%22%5C%22'%22", "\"'", 3)
+TEST_CASE("ari:/TEXTSTR/%22''%22", "''", 3)
+TEST_CASE("ari:/TEXTSTR/%22%5C''%22", "''", 3) // Silently drops \ for unknown 2-char escape seq
+TEST_CASE("ari:/TEXTSTR/%22a%5Cu0000test%22", "atest", 6)
+void test_ari_text_decode_lit_typed_tstr(const char *text, const char *expect, int expect_len)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_TSTR, ari.as_lit.prim_type);
+
+    if (expect)
+    {
+        cace_data_t expect_data;
+        cace_data_init_view(&expect_data, strlen(expect) + 1, (cace_data_ptr_t)expect);
+        TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(expect_data.len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_INT(expect_len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_STRING(expect_data.ptr, ari.as_lit.value.as_data.ptr);
+        cace_data_deinit(&expect_data);
+    }
+    else
+    {
+        TEST_ASSERT_FALSE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(0, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_NULL(ari.as_lit.value.as_data.ptr);
+    }
+    ari_deinit(&ari);
+}
+
 TEST_CASE("''", NULL, 0)
 TEST_CASE("'hi'", "hi", 2)
 TEST_CASE("'hi%20there'", "hi there", 8)
-// FIXME not working: TEST_CASE("'h\\'i'", "h'i", 3)
+TEST_CASE("'h%5C'i'", "h'i", 3)
 TEST_CASE("h'6869'", "hi", 2)
+TEST_CASE("ari:h'5C0069'", "\\\0i", 3)
 // examples from Section 10 of RFC 4648
 TEST_CASE("ari:h'666F6F626172'", "foobar", 6)
 TEST_CASE("ari:b64'Zm9vYmFy'", "foobar", 6)
+TEST_CASE("ari:b64'Zg%3d%3d'", "f", 1)
 // ignoring spaces
 TEST_CASE("ari:h'%20666%20F6F626172'", "foobar", 6)
 TEST_CASE("ari:b64'Zm9v%20YmFy'", "foobar", 6)
@@ -709,6 +804,66 @@ void test_ari_text_decode_lit_typed_td(const char *text, time_t expect_sec, long
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari:/AC/()", 0, ARI_TYPE_NULL, ARI_PRIM_NULL)
+TEST_CASE("ari:/AC/(23)", 1, ARI_TYPE_NULL, ARI_PRIM_INT64)
+TEST_CASE("ari:/AC/(/INT/23)", 1, ARI_TYPE_INT, ARI_PRIM_INT64)
+TEST_CASE("ari:/AC/(\"hi%2C%20there%21\")", 1, ARI_TYPE_NULL, ARI_PRIM_TSTR)
+void test_ari_text_decode_lit_typed_ac(const char *text, size_t expect_count, int expect_ari_type1, int expect_prim_type1)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_AC, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_OTHER, ari.as_lit.prim_type);
+
+    TEST_ASSERT_EQUAL(ari_list_size(ari.as_lit.value.as_ac->items), expect_count);
+
+    if (expect_count > 0) {
+      ari_t *a = ari_list_get(ari.as_lit.value.as_ac->items, 0);
+      TEST_ASSERT_EQUAL(expect_ari_type1, a->as_lit.ari_type);
+      TEST_ASSERT_EQUAL(expect_prim_type1, a->as_lit.prim_type);
+    }
+
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/AM/()", 0)
+TEST_CASE("ari:/AM/(undefined=1,undefined=/INT/2,1=a)", 2)
+TEST_CASE("ari:/AM/(a=/AM/(),b=/AM/(),c=/AM/())", 3)
+void test_ari_text_decode_lit_typed_am(const char *text, size_t expect_count)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_AM, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_OTHER, ari.as_lit.prim_type);
+
+    TEST_ASSERT_EQUAL(ari_tree_size(ari.as_lit.value.as_am->items), expect_count);
+
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:/TBL/c=0;()()()", 0, 0)
+TEST_CASE("ari:/TBL/c=2;(1,2)", 2, 2)
+TEST_CASE("ari:/TBL/c=003;(1,2,3)(4,5,6)", 3, 6)
+TEST_CASE("ari:/TBL/C=1;(/INT/4)(/TBL/c=0;)(\"%20\")", 1, 3)
+void test_ari_text_decode_lit_typed_tbl(const char *text, size_t expect_cols, size_t expect_items)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_TBL, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_OTHER, ari.as_lit.prim_type);
+
+    TEST_ASSERT_EQUAL(ari.as_lit.value.as_tbl->ncols, expect_cols);
+    TEST_ASSERT_EQUAL(ari_array_size(ari.as_lit.value.as_tbl->items), expect_items);
+
+    ari_deinit(&ari);
+}
+
 TEST_CASE("ari:/EXECSET/n=null;()", ARI_PRIM_NULL, 0)
 TEST_CASE("ari:/EXECSET/n=1234;(//test/CTRL/hi)", ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/EXECSET/n=h'6869';(//test/CTRL/hi,//test/CTRL/eh)", ARI_PRIM_BSTR, 2)
@@ -829,11 +984,17 @@ TEST_CASE("ari:/TEXTSTR/%22hi%20there%22")
 TEST_CASE("ari:/LABEL/hi")
 TEST_CASE("ari:/TP/20230102T030405Z")
 TEST_CASE("ari:/AC/()")
+TEST_CASE("ari:/AC/(a)")
+TEST_CASE("ari:/AC/(a,b,c)")
 TEST_CASE("ari:/AC/(null,/INT/23)")
+TEST_CASE("ari:/AC/(null,/AC/(undefined,/INT/23,/AC/()))")
 TEST_CASE("ari:/AM/()")
 TEST_CASE("ari:/AM/(1=true)")
 TEST_CASE("ari:/AM/(3=true,10=hi,oh=4)") // AM key ordering
 TEST_CASE("ari:/TBL/c=3;(1,2,3)")
+TEST_CASE("ari:/TBL/c=3;(1,2,3)(4,5,6)")
+TEST_CASE("ari:/TBL/c=0;")
+TEST_CASE("ari:/TBL/c=1;")
 TEST_CASE("ari:/EXECSET/n=null;()")
 TEST_CASE("ari:/EXECSET/n=1234;(//test/CTRL/hi)")
 TEST_CASE("ari:/EXECSET/n=h'6869';(//test/CTRL/hi,//test/CTRL/eh)")
@@ -869,6 +1030,46 @@ void test_ari_text_loopback(const char *intext)
     string_clear(outtext);
 }
 
+TEST_CASE("ari:/null/null", "ari:/NULL/null")
+TEST_CASE("ari:/bool/false", "ari:/BOOL/false")
+TEST_CASE("ari:/int/10", "ari:/INT/10")
+TEST_CASE("ari:/uint/10", "ari:/UINT/10")
+TEST_CASE("ari:/vast/10", "ari:/VAST/10")
+TEST_CASE("ari:/uvast/10", "ari:/UVAST/10")
+TEST_CASE("ari:/real32/10", "ari:/REAL32/10")
+TEST_CASE("ari:/real64/+Infinity", "ari:/REAL64/+Infinity")
+TEST_CASE("ari:/bytestr/h'6869'", "ari:/BYTESTR/h'6869'")
+TEST_CASE("ari:/textstr/hi", "ari:/TEXTSTR/hi")
+TEST_CASE("ari:/label/hi", "ari:/LABEL/hi")
+TEST_CASE("ari:/tp/20230102T030405Z", "ari:/TP/20230102T030405Z")
+TEST_CASE("ari:/ac/()", "ari:/AC/()")
+TEST_CASE("ari:/am/()", "ari:/AM/()")
+TEST_CASE("ari:/tbl/c=3;(1,2,3)", "ari:/TBL/c=3;(1,2,3)")
+TEST_CASE("ari:/execset/n=null;()", "ari:/EXECSET/n=null;()")
+TEST_CASE("ari:/rptset/n=1234;r=1000;(t=0;s=//test/ctrl/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=1000;(t=0;s=//test/ctrl/hi;(null,3,h'6869'))")
+void test_ari_text_encode_decode(const char *intext, const char *expect_outtext)
+{
+    ari_t    ari = ARI_INIT_UNDEFINED;
+    string_t inbuf;
+    string_init_set_str(inbuf, intext);
+    int ret = ari_text_decode(&ari, inbuf, &errm);
+    string_clear(inbuf);
+    if (ret && errm)
+    {
+        TEST_FAIL_MESSAGE(errm);
+    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "ari_text_decode() failed");
+
+    string_t outtext;
+    string_init(outtext);
+    ret = ari_text_encode(outtext, &ari, ARI_TEXT_ENC_OPTS_DEFAULT);
+    ari_deinit(&ari);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "ari_text_encode() failed");
+
+    TEST_ASSERT_EQUAL_STRING(expect_outtext, string_get_cstr(outtext));
+    string_clear(outtext);
+}
+
 TEST_CASE("-0x8FFFFFFFFFFFFFFF")
 TEST_CASE("-0x1FFFFFFFFFFFFFFFF")
 TEST_CASE("ari:/OTHERNAME/0")
@@ -881,11 +1082,15 @@ TEST_CASE("ari:/BOOL/3")
 TEST_CASE("ari:/TEXTSTR/1")
 TEST_CASE("ari:/BYTESTR/1")
 TEST_CASE("ari:/AC/")
+TEST_CASE("ari:/AC/(a,")
+TEST_CASE("ari:/AC/(,,,)")
 TEST_CASE("ari:/AM/")
 TEST_CASE("ari:/TBL/")
 TEST_CASE("ari:/TBL/c=hi;")
 TEST_CASE("ari:/TBL/c=5;(1,2)")
 TEST_CASE("ari:/TBL/(1,2,3)")
+TEST_CASE("ari:/TBL/c=aaa;c=2;(1,2)")
+TEST_CASE("ari:/TBL/c=2;c=2;(1,2)")
 TEST_CASE("ari:/EXECSET/()")
 TEST_CASE("ari:/EXECSET/g=null;()")
 TEST_CASE("ari:/EXECSET/n=undefined;()")
@@ -911,6 +1116,8 @@ TEST_CASE("ari:/UINT/-1")
 TEST_CASE("ari:/UINT/4294967296")
 TEST_CASE("ari:/VAST/0x8000000000000000")
 TEST_CASE("ari:/UVAST/-1")
+TEST_CASE("ari:/REAL32/-3.40282347E+38")
+TEST_CASE("ari:/REAL32/3.40282347E+38")
 TEST_CASE("ari:/AM/(/INT/10=true)") // no typed keys
 void test_ari_text_decode_invalid(const char *intext)
 {

@@ -332,7 +332,15 @@ litparamlist:
     }
     | litparamlist T_VALSEG T_EQ ari T_SC {
         named_ari_dict_init_move($$, $1);
-        ari_t *val = named_ari_dict_safe_get($$, $2);
+        cace_string_tolower($2);
+        ari_t *val = named_ari_dict_get($$, $2);
+        if (val) { // Detect duplicate keys
+            named_ari_dict_clear($$);
+            string_clear($2);
+            cace_ari_text_str_error(scanner, input, "Parameter list has duplicate key");
+            YYERROR;
+        }
+        val = named_ari_dict_safe_get($$, $2);
         ari_set_move(val, &$4);
         string_clear($2);
     }
