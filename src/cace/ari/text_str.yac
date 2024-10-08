@@ -262,7 +262,12 @@ ssp-literal:
             }
             else
             {
-                //FIXME where to convert (and check) type?
+                if (!found_r->as_lit.has_ari_type ||
+                    found_r->as_lit.ari_type != ARI_TYPE_TP ||
+                    found_r->as_lit.prim_type != ARI_PRIM_TIMESPEC) {
+                  ari_deinit(found_r);
+                  found_r = NULL;
+                }
             }
         }
         if (!found_r)
@@ -401,7 +406,12 @@ report:
             }
             else
             {
-                //FIXME where to convert (and check) type?
+                if (!found_t->as_lit.has_ari_type ||
+                    found_t->as_lit.ari_type != ARI_TYPE_TD ||
+                    found_t->as_lit.prim_type != ARI_PRIM_TIMESPEC) {
+                  ari_deinit(found_t);
+                  found_t = NULL;
+                }
             }
         }
         if (!found_t)
@@ -421,7 +431,10 @@ report:
             }
             else
             {
-                //FIXME where to convert (and check) type?
+                if (!found_s->as_ref.objpath.has_ari_type) {
+                  ari_deinit(found_s);
+                  found_s = NULL;
+                }
             }
         }
         if (!found_s)
