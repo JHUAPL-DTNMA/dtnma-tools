@@ -523,7 +523,7 @@ static int builtin_real64_convert(const amm_type_t *self, ari_t *out, const ari_
     }
 }
 
-static bool builtin_tp_constraints(struct timespec *out, const ari_t *ari)
+static bool builtin_time_constraints(struct timespec *out, const ari_t *ari)
 {
     const ari_lit_t *obj = &(ari->as_lit);
     struct timespec value;
@@ -567,7 +567,7 @@ static bool builtin_tp_constraints(struct timespec *out, const ari_t *ari)
     return (value.tv_sec >= 0);
 }
 
-static int builtin_tp_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
+static int builtin_time_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
 {
     if (builtin_common_convert(self, out, in))
     {
@@ -581,7 +581,7 @@ static int builtin_tp_convert(const amm_type_t *self, ari_t *out, const ari_t *i
     else
     {
         struct timespec result;
-        if (!builtin_tp_constraints(&result, in))
+        if (!builtin_time_constraints(&result, in))
         {
             return CACE_AMM_ERR_CONVERT_BADVALUE;
         }
@@ -718,13 +718,13 @@ static amm_type_t amm_builtins[] = {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TP,
         .match               = builtin_common_lit_match,
-        .convert             = builtin_tp_convert,
+        .convert             = builtin_time_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TD,
         .match               = builtin_common_lit_match,
-        .convert             = builtin_default_convert,
+        .convert             = builtin_time_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,

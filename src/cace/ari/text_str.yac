@@ -410,11 +410,14 @@ report:
             }
             else
             {
-                if (!found_t->as_lit.has_ari_type ||
-                    found_t->as_lit.ari_type != ARI_TYPE_TD ||
-                    found_t->as_lit.prim_type != ARI_PRIM_TIMESPEC) {
+                ari_t tmp;
+                ari_init(&tmp);
+                int err = amm_type_convert(amm_type_get_builtin(ARI_TYPE_TD), &tmp, found_t);
+                if (err) {
                   ari_deinit(found_t);
                   found_t = NULL;
+                } else {
+                  ari_set_copy(found_t, &tmp);
                 }
             }
         }

@@ -856,7 +856,8 @@ void test_ari_text_decode_lit_typed_execset(const char *text, enum ari_prim_type
 }
 
 TEST_CASE("ari:/RPTSET/n=null;r=725943845;", ARI_PRIM_NULL, 0)
-TEST_CASE("ari:/RPTSET/n=1234;r=725943845;(t=/TD/0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
+TEST_CASE("ari:/RPTSET/n=1234;r=725943845;(t=0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
+TEST_CASE("ari:/RPTSET/n=1234;r=725943845;(t=0.0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845;(t=/TD/0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845.000;(t=/TD/0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
@@ -1016,6 +1017,8 @@ TEST_CASE("ari:/am/()", "ari:/AM/()")
 TEST_CASE("ari:/tbl/c=3;(1,2,3)", "ari:/TBL/c=3;(1,2,3)")
 TEST_CASE("ari:/execset/n=null;()", "ari:/EXECSET/n=null;()")
 TEST_CASE("ari:/rptset/n=1234;r=/TP/1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=/TP/1000;(t=0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=/TP/1000;(t=100.5;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT1M40.5S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=1000.0;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=/UVAST/1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
