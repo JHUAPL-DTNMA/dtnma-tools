@@ -100,9 +100,6 @@ typedef struct
      * False to use decimal fraction form.
      */
     bool time_text;
-
-    // cbor_diag:bool = False
-
 } ari_text_enc_opts_t;
 
 #define ARI_TEXT_ENC_OPTS_DEFAULT                                                                                     \

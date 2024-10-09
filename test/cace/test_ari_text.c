@@ -701,6 +701,38 @@ void test_ari_text_decode_lit_prim_bstr(const char *text, const char *expect, si
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari:/CBOR/h''", "ari:/BYTESTR/h''", 0)
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'", "ari:/BYTESTR/h'A164746573748203F94480'", 11)
+TEST_CASE("ari:/CBOR/h'0064746573748203F94480'", "ari:/BYTESTR/h'0064746573748203F94480'", 11)
+TEST_CASE("ari:/CBOR/h'A1%2064%2074%2065%2073%2074%2082%2003%20F9%2044%20%2080'", "ari:/CBOR/h'A1%2064%2074%2065%2073%2074%2082%2003%20F9%2044%20%2080'", 11)
+void test_ari_text_decode_lit_typed_cbor(const char *text, const char *expect, int expect_len)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    ari_t ari_expect = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    check_decode(&ari_expect, expect);
+
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_CBOR, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_BSTR, ari.as_lit.prim_type);
+
+    if (expect_len > 0)
+    {
+        TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(ari_expect.as_lit.value.as_data.len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_INT(expect_len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_MEMORY(ari_expect.as_lit.value.as_data.ptr, ari.as_lit.value.as_data.ptr, ari.as_lit.value.as_data.len);
+    }
+    else
+    {
+        TEST_ASSERT_FALSE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(0, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_NULL(ari.as_lit.value.as_data.ptr);
+    }
+    ari_deinit(&ari);
+    ari_deinit(&ari_expect);
+}
+
 TEST_CASE("ari:/NULL/null")
 TEST_CASE("ari:/0/null")
 void test_ari_text_decode_lit_typed_null(const char *text)
@@ -979,6 +1011,8 @@ TEST_CASE("ari://test@1234/this/that") // ADM revision
 TEST_CASE("ari://!test/this/that")     // ODM path
 TEST_CASE("ari://test/this/that(34)")
 TEST_CASE("ari://2/CTRL/4(hi)")
+TEST_CASE("ari:/CBOR/h'0A'")
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
 void test_ari_text_loopback(const char *intext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;

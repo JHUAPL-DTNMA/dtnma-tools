@@ -65,7 +65,6 @@ void cace_ari_text_val_error(yyscan_t *scanner, const cace_ari_text_val_t *input
 %token <lit> T_IDENTITY
 %token <lit> T_TSTR
 %token <lit> T_BSTR
-%token <lit> T_CBOR_DIAG
 %token <lit> T_TIMEPOINT
 %token <lit> T_TIMEDIFF
 %token <lit> T_DECFRAC
@@ -96,7 +95,6 @@ litval:
     | T_TIMEPOINT
     | T_TIMEDIFF
     | T_DECFRAC
-    | T_CBOR_DIAG
 ;
 
 %%

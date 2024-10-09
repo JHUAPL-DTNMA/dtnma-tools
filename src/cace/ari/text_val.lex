@@ -302,10 +302,6 @@ DECDIG [0-9]
     return T_IDENTITY;
 }
 
-<LT_CBOR>\<\<(.*)\>\> {
-    return T_CBOR_DIAG;
-}
-
 <*>\0|\n {
     // ignore trailing null
 }
