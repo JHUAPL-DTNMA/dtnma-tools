@@ -6,6 +6,7 @@
 %define parse.error verbose
 
 %{
+#include "cace/amm/typing.h"
 #include "cace/ari/text_str_parse.h"
 #include "cace/ari/text_str_scan.h"
 #include "cace/ari/text_val_parse.h"
@@ -262,12 +263,15 @@ ssp-literal:
             }
             else
             {
-                if (!found_r->as_lit.has_ari_type ||
-                    found_r->as_lit.ari_type != ARI_TYPE_TP ||
-                    found_r->as_lit.prim_type != ARI_PRIM_TIMESPEC) {
-                  ari_deinit(found_r);
-                  found_r = NULL;
-                }
+              ari_t tmp;
+              ari_init(&tmp);
+              int err = amm_type_convert(amm_type_get_builtin(ARI_TYPE_TP), &tmp, found_r);
+              if (err) {
+                ari_deinit(found_r);
+                found_r = NULL;
+              } else {
+                ari_set_copy(found_r, &tmp);
+              }
             }
         }
         if (!found_r)
