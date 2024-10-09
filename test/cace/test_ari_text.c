@@ -836,6 +836,9 @@ void test_ari_text_decode_lit_typed_tbl(const char *text, size_t expect_cols, si
 }
 
 TEST_CASE("ari:/EXECSET/n=null;()", ARI_PRIM_NULL, 0)
+TEST_CASE("ari:/EXECSET/N=null;()", ARI_PRIM_NULL, 0)
+TEST_CASE("ari:/EXECSET/N=0xabcd;()", ARI_PRIM_INT64, 0)
+TEST_CASE("ari:/EXECSET/N=/UINT/0B0101;()", ARI_PRIM_INT64, 0)
 TEST_CASE("ari:/EXECSET/n=1234;(//test/CTRL/hi)", ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/EXECSET/n=h'6869';(//test/CTRL/hi,//test/CTRL/eh)", ARI_PRIM_BSTR, 2)
 void test_ari_text_decode_lit_typed_execset(const char *text, enum ari_prim_type_e expect_n, size_t expect_count)
@@ -1063,6 +1066,8 @@ TEST_CASE("ari:/TBL/c=2;c=2;(1,2)")
 TEST_CASE("ari:/EXECSET/()")
 TEST_CASE("ari:/EXECSET/g=null;()")
 TEST_CASE("ari:/EXECSET/n=undefined;()")
+TEST_CASE("ari:/EXECSET/n=1;")
+TEST_CASE("ari:/EXECSET/n=1;n=2;()")
 void test_ari_text_decode_failure(const char *intext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;
