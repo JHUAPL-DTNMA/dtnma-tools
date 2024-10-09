@@ -266,10 +266,13 @@ ssp-literal:
               ari_t tmp;
               ari_init(&tmp);
               int err = amm_type_convert(amm_type_get_builtin(ARI_TYPE_TP), &tmp, found_r);
-              if (err) {
+              if (err) 
+              {
                 ari_deinit(found_r);
                 found_r = NULL;
-              } else {
+              }
+              else
+              {
                 ari_set_copy(found_r, &tmp);
               }
             }
@@ -413,10 +416,13 @@ report:
                 ari_t tmp;
                 ari_init(&tmp);
                 int err = amm_type_convert(amm_type_get_builtin(ARI_TYPE_TD), &tmp, found_t);
-                if (err) {
+                if (err) 
+                {
                   ari_deinit(found_t);
                   found_t = NULL;
-                } else {
+                }
+                else 
+                {
                   ari_set_copy(found_t, &tmp);
                 }
             }
@@ -438,7 +444,8 @@ report:
             }
             else
             {
-                if (!found_s->as_ref.objpath.has_ari_type) {
+                if (!found_s->as_ref.objpath.has_ari_type) 
+                {
                   ari_deinit(found_s);
                   found_s = NULL;
                 }
