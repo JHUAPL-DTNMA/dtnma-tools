@@ -355,8 +355,8 @@ void test_ari_text_encode_nsref_int(int64_t ns_id, const char *expect)
     ari_deinit(&ari);
 }
 
-TEST_CASE(ARI_TYPE_CONST, "hi", "ari:./CONST/hi")
-TEST_CASE(ARI_TYPE_IDENT, "34", "ari:./IDENT/34")
+TEST_CASE(ARI_TYPE_CONST, "hi", "ari:///CONST/hi") //"ari:./CONST/hi")
+TEST_CASE(ARI_TYPE_IDENT, "34", "ari:///IDENT/34") //"ari:./IDENT/34")
 void test_ari_text_encode_ariref(ari_type_t type_id, const char *obj_id, const char *expect)
 {
     ari_t      ari = ARI_INIT_UNDEFINED;
@@ -376,8 +376,8 @@ void test_ari_text_encode_ariref(ari_type_t type_id, const char *obj_id, const c
         string_init_set_str(*value, obj_id);
     }
 
-    //ref->objpath.has_ari_type = true;
-    //ref->objpath.ari_type     = type_id;
+    ref->objpath.has_ari_type = true;
+    ref->objpath.ari_type     = type_id;
 
     ari_text_enc_opts_t opts = ARI_TEXT_ENC_OPTS_DEFAULT;
     check_encode(&ari, expect, opts);
