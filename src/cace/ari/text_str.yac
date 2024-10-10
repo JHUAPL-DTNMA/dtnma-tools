@@ -269,11 +269,12 @@ ssp-literal:
               if (err) 
               {
                 ari_deinit(found_r);
+                ari_deinit(&tmp);
                 found_r = NULL;
               }
               else
               {
-                ari_set_copy(found_r, &tmp);
+                ari_set_move(found_r, &tmp);
               }
             }
         }
@@ -419,11 +420,12 @@ report:
                 if (err) 
                 {
                   ari_deinit(found_t);
+                  ari_deinit(&tmp);
                   found_t = NULL;
                 }
                 else 
                 {
-                  ari_set_copy(found_t, &tmp);
+                  ari_set_move(found_t, &tmp);
                 }
             }
         }
