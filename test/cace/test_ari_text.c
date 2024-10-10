@@ -318,6 +318,11 @@ void test_ari_text_encode_objref_int(int64_t ns_id, ari_type_t type_id, int64_t 
 }
 
 TEST_CASE("adm", "ari://adm/")
+TEST_CASE("example-adm-a@2024-06-25", "ari://example-adm-a@2024-06-25/")
+TEST_CASE("example-adm-a", "ari://example-adm-a/")
+TEST_CASE("!example-odm-b", "ari://!example-odm-b/")
+TEST_CASE("65536", "ari://65536/")
+TEST_CASE("-20", "ari://-20/")
 void test_ari_text_encode_nsref_text(const char *ns_id, const char *expect)
 {
     ari_t      ari = ARI_INIT_UNDEFINED;
@@ -334,6 +339,8 @@ void test_ari_text_encode_nsref_text(const char *ns_id, const char *expect)
 }
 
 TEST_CASE(18, "ari://18/")
+TEST_CASE(65536, "ari://65536/")
+TEST_CASE(-20, "ari://-20/")
 void test_ari_text_encode_nsref_int(int64_t ns_id, const char *expect)
 {
     ari_t      ari = ARI_INIT_UNDEFINED;
@@ -342,6 +349,35 @@ void test_ari_text_encode_nsref_int(int64_t ns_id, const char *expect)
         ref->objpath.ns_id.form   = ARI_IDSEG_INT;
         ref->objpath.ns_id.as_int = ns_id;
     }
+
+    ari_text_enc_opts_t opts = ARI_TEXT_ENC_OPTS_DEFAULT;
+    check_encode(&ari, expect, opts);
+    ari_deinit(&ari);
+}
+
+TEST_CASE(ARI_TYPE_CONST, "hi", "ari:./CONST/hi")
+TEST_CASE(ARI_TYPE_IDENT, "34", "ari:./IDENT/34")
+void test_ari_text_encode_ariref(ari_type_t type_id, const char *obj_id, const char *expect)
+{
+    ari_t      ari = ARI_INIT_UNDEFINED;
+    ari_ref_t *ref = ari_init_objref(&ari);
+    {
+        ref->objpath.ns_id.form   = ARI_IDSEG_NULL;
+    }
+    {
+        const char *type_name     = ari_type_to_name(type_id);
+        ref->objpath.type_id.form = ARI_IDSEG_TEXT;
+        string_t *value           = &(ref->objpath.type_id.as_text);
+        string_init_set_str(*value, type_name);
+    }
+    {
+        ref->objpath.obj_id.form = ARI_IDSEG_TEXT;
+        string_t *value          = &(ref->objpath.obj_id.as_text);
+        string_init_set_str(*value, obj_id);
+    }
+
+    //ref->objpath.has_ari_type = true;
+    //ref->objpath.ari_type     = type_id;
 
     ari_text_enc_opts_t opts = ARI_TEXT_ENC_OPTS_DEFAULT;
     check_encode(&ari, expect, opts);
@@ -920,6 +956,11 @@ TEST_CASE("ari://adm")
 TEST_CASE("ari://adm/")
 TEST_CASE("ari://18")
 TEST_CASE("ari://18/")
+TEST_CASE("ari://65536/")
+TEST_CASE("ari://-20/")
+TEST_CASE("ari://example-adm-a@2024-06-25/")
+TEST_CASE("ari://example-adm-a/")
+TEST_CASE("ari://!example-odm-b/")
 void test_ari_text_decode_nsref(const char *text)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -929,6 +970,22 @@ void test_ari_text_decode_nsref(const char *text)
     TEST_ASSERT_NOT_EQUAL_INT(ARI_IDSEG_NULL, ari.as_ref.objpath.ns_id.form);
     TEST_ASSERT_EQUAL_INT(ARI_IDSEG_NULL, ari.as_ref.objpath.type_id.form);
     TEST_ASSERT_EQUAL_INT(ARI_IDSEG_NULL, ari.as_ref.objpath.obj_id.form);
+
+    ari_deinit(&ari);
+}
+
+TEST_CASE("ari:./CTRL/do_thing", ARI_TYPE_CTRL)
+TEST_CASE("ari:./CTRL/otherobj(%22a%20param%22,/UINT/10)", ARI_TYPE_CTRL)
+TEST_CASE("ari:./-2/30", ARI_TYPE_CONST)
+void test_ari_text_decode_ariref(const char *text, ari_type_t expect_type)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_TRUE(ari.is_ref);
+    TEST_ASSERT_EQUAL_INT(expect_type, ari.as_ref.objpath.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_IDSEG_NULL, ari.as_ref.objpath.ns_id.form);
+    TEST_ASSERT_NOT_EQUAL_INT(ARI_IDSEG_NULL, ari.as_ref.objpath.type_id.form);
+    TEST_ASSERT_NOT_EQUAL_INT(ARI_IDSEG_NULL, ari.as_ref.objpath.obj_id.form);
 
     ari_deinit(&ari);
 }
