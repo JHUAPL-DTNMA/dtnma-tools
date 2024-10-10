@@ -542,7 +542,7 @@ static bool builtin_time_constraints(struct timespec *out, const ari_t *ari)
             double v = obj->value.as_float64;
             if (isnan(v) || isinf(v) || v > INT64_MAX || v < 0.0)
             {
-              return 1;
+              return false;
             }
 
             double integral;
