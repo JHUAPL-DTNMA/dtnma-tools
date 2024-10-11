@@ -275,6 +275,7 @@ ssp-literal:
               else
               {
                 ari_set_move(found_r, &tmp);
+                ari_deinit(&tmp);
               }
             }
         }
@@ -426,6 +427,7 @@ report:
                 else 
                 {
                   ari_set_move(found_t, &tmp);
+                  ari_deinit(&tmp);
                 }
             }
         }
