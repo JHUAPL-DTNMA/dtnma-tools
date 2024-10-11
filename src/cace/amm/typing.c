@@ -578,6 +578,11 @@ static int builtin_time_convert(const amm_type_t *self, ari_t *out, const ari_t 
     {
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
+    else if ((self->as_builtin.ari_type == ARI_TYPE_TP && in->as_lit.ari_type == ARI_TYPE_TD) ||
+             (self->as_builtin.ari_type == ARI_TYPE_TD && in->as_lit.ari_type == ARI_TYPE_TP))
+    {
+        return CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
     else
     {
         struct timespec result;
