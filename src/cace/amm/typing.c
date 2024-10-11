@@ -540,7 +540,7 @@ static bool builtin_time_constraints(struct timespec *out, const ari_t *ari)
         case ARI_PRIM_FLOAT64:
         {
             double v = obj->value.as_float64;
-            if (isnan(v) || isinf(v) || v > INT64_MAX || v < 0.0)
+            if (isnan(v) || isinf(v) || v > INT64_MAX || v < INT64_MIN)
             {
               return false;
             }
@@ -564,7 +564,7 @@ static bool builtin_time_constraints(struct timespec *out, const ari_t *ari)
         *out = value;
     }
 
-    return (value.tv_sec >= 0);
+    return true;
 }
 
 static int builtin_time_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
