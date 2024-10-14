@@ -485,6 +485,18 @@ objpath:
         $$.type_id = $2;
         $$.obj_id = $3;
         ari_objpath_derive_type(&$$);
+
+        if ($$.has_ari_type == false ||
+            !(ari_objpath_has_valid_type(&$$)))
+        {
+          //string_t str;
+          //string_init(str);
+          //string_cat_printf(str, "Invalid object type %s", $2);
+          //cace_ari_text_str_error(scanner, input, string_get_cstr(str));
+          cace_ari_text_str_error(scanner, input, "Invalid object type");
+          //string_clear(str);
+          YYERROR;
+        }
     }
     | T_IDSEG {
         ari_objpath_init(&$$);

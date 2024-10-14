@@ -217,6 +217,12 @@ void ari_objpath_copy(ari_objpath_t *obj, const ari_objpath_t *src);
  */
 int ari_objpath_derive_type(ari_objpath_t *path);
 
+/** Validate object type of the given path.
+ * @param path The object to check.
+ * @return true upon success
+ */
+bool ari_objpath_has_valid_type(ari_objpath_t *path);
+
 /// Indicate the presence of parameters in ari_params_t
 enum ari_param_state_e
 {

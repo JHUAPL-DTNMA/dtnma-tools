@@ -68,6 +68,7 @@ typedef enum
     // Catch-all object reference type ID
     ARI_TYPE_OBJECT = -256,
 
+    // AMM object types
     ARI_TYPE_IDENT   = -1,
     ARI_TYPE_CONST   = -2,
     ARI_TYPE_CTRL    = -3,

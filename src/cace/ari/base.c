@@ -250,6 +250,19 @@ int ari_objpath_derive_type(ari_objpath_t *path)
     return path->has_ari_type ? 0 : 2;
 }
 
+bool ari_objpath_has_valid_type(ari_objpath_t *path)
+{
+  if (path->has_ari_type) 
+  {
+    if (path->ari_type >= ARI_TYPE_NULL || path->ari_type == ARI_TYPE_OBJECT)
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 int ari_params_deinit(ari_params_t *obj)
 {
     CHKERR1(obj);
