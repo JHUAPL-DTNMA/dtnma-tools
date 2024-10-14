@@ -19,6 +19,7 @@
  * Test the ari_text.h interfaces.
  */
 #include <cace/ari/text.h>
+#include <cace/ari/text_util.h>
 #include <cace/amm/typing.h>
 #include <unity.h>
 
@@ -701,6 +702,42 @@ void test_ari_text_decode_lit_prim_bstr(const char *text, const char *expect, si
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari:/CBOR/h''", "")
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'", "A164746573748203F94480")
+TEST_CASE("ari:/CBOR/h'0064746573748203F94480'", "0064746573748203F94480")
+TEST_CASE("ari:/CBOR/h'A1%2064%2074%2065%2073%2074%2082%2003%20F9%2044%20%2080'", "A164746573748203F94480")
+void test_ari_text_decode_lit_typed_cbor(const char *text, const char *expect_hex)
+{
+    string_t expect_text;
+    string_init_set_str(expect_text, expect_hex);
+    cace_data_t expect_data;
+    cace_data_init(&expect_data);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, base16_decode(&expect_data, expect_text), "base16_decode() failed");
+
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_CBOR, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_BSTR, ari.as_lit.prim_type);
+
+    if (expect_data.len > 0)
+    {
+        TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(expect_data.len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, ari.as_lit.value.as_data.ptr, ari.as_lit.value.as_data.len);
+    }
+    else
+    {
+        TEST_ASSERT_FALSE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(0, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_NULL(ari.as_lit.value.as_data.ptr);
+    }
+    ari_deinit(&ari);
+    cace_data_deinit(&expect_data);
+    string_clear(expect_text);
+}
+
 TEST_CASE("ari:/NULL/null")
 TEST_CASE("ari:/0/null")
 void test_ari_text_decode_lit_typed_null(const char *text)
@@ -979,6 +1016,8 @@ TEST_CASE("ari://test@1234/this/that") // ADM revision
 TEST_CASE("ari://!test/this/that")     // ODM path
 TEST_CASE("ari://test/this/that(34)")
 TEST_CASE("ari://2/CTRL/4(hi)")
+TEST_CASE("ari:/CBOR/h'0A'")
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
 void test_ari_text_loopback(const char *intext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;
