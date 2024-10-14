@@ -523,6 +523,79 @@ static int builtin_real64_convert(const amm_type_t *self, ari_t *out, const ari_
     }
 }
 
+static bool builtin_time_constraints(struct timespec *out, const ari_t *ari)
+{
+    const ari_lit_t *obj = &(ari->as_lit);
+    struct timespec value;
+    switch (obj->prim_type)
+    {
+        case ARI_PRIM_UINT64:
+            value.tv_sec = obj->value.as_uint64;
+            value.tv_nsec = 0;
+            break;
+        case ARI_PRIM_INT64:
+            value.tv_sec = obj->value.as_int64;
+            value.tv_nsec = 0;
+            break;
+        case ARI_PRIM_FLOAT64:
+        {
+            double v = obj->value.as_float64;
+            if (isnan(v) || isinf(v) || v > INT64_MAX || v < INT64_MIN)
+            {
+              return false;
+            }
+
+            double integral;
+            double frac = modf(v, &integral);
+
+            value.tv_sec = (time_t) integral;
+            value.tv_nsec = (time_t) (frac * 1000000000);
+            break;
+        }
+        case ARI_PRIM_TIMESPEC:
+            value = obj->value.as_timespec;
+            break;
+        default:
+            return false;
+    }
+
+    if (out)
+    {
+        *out = value;
+    }
+
+    return true;
+}
+
+static int builtin_time_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
+{
+    if (builtin_common_convert(self, out, in))
+    {
+        return 0;
+    }
+
+    if (in->is_ref)
+    {
+        return CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
+    else if ((self->as_builtin.ari_type == ARI_TYPE_TP && in->as_lit.ari_type == ARI_TYPE_TD) ||
+             (self->as_builtin.ari_type == ARI_TYPE_TD && in->as_lit.ari_type == ARI_TYPE_TP))
+    {
+        return CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
+    else
+    {
+        struct timespec result;
+        if (!builtin_time_constraints(&result, in))
+        {
+            return CACE_AMM_ERR_CONVERT_BADVALUE;
+        }
+        ari_set_tp(out, result);
+        ari_force_lit_type(out, self->as_builtin.ari_type);
+        return 0;
+    }
+}
+
 static bool builtin_textstr_match(const amm_type_t *self, const ari_t *ari)
 {
     if (!builtin_common_lit_match(self, ari))
@@ -650,13 +723,13 @@ static amm_type_t amm_builtins[] = {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TP,
         .match               = builtin_common_lit_match,
-        .convert             = builtin_default_convert,
+        .convert             = builtin_time_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TD,
         .match               = builtin_common_lit_match,
-        .convert             = builtin_default_convert,
+        .convert             = builtin_time_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,

@@ -6,6 +6,7 @@
 %define parse.error verbose
 
 %{
+#include "cace/amm/typing.h"
 #include "cace/ari/text_str_parse.h"
 #include "cace/ari/text_str_scan.h"
 #include "cace/ari/text_val_parse.h"
@@ -262,7 +263,20 @@ ssp-literal:
             }
             else
             {
-                //FIXME where to convert (and check) type?
+              ari_t tmp;
+              ari_init(&tmp);
+              int err = amm_type_convert(amm_type_get_builtin(ARI_TYPE_TP), &tmp, found_r);
+              if (err) 
+              {
+                ari_deinit(found_r);
+                ari_deinit(&tmp);
+                found_r = NULL;
+              }
+              else
+              {
+                ari_set_move(found_r, &tmp);
+                ari_deinit(&tmp);
+              }
             }
         }
         if (!found_r)
@@ -401,7 +415,20 @@ report:
             }
             else
             {
-                //FIXME where to convert (and check) type?
+                ari_t tmp;
+                ari_init(&tmp);
+                int err = amm_type_convert(amm_type_get_builtin(ARI_TYPE_TD), &tmp, found_t);
+                if (err) 
+                {
+                  ari_deinit(found_t);
+                  ari_deinit(&tmp);
+                  found_t = NULL;
+                }
+                else 
+                {
+                  ari_set_move(found_t, &tmp);
+                  ari_deinit(&tmp);
+                }
             }
         }
         if (!found_t)
@@ -421,7 +448,11 @@ report:
             }
             else
             {
-                //FIXME where to convert (and check) type?
+                if (!found_s->as_ref.objpath.has_ari_type) 
+                {
+                  ari_deinit(found_s);
+                  found_s = NULL;
+                }
             }
         }
         if (!found_s)

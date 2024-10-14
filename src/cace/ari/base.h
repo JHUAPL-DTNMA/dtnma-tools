@@ -359,8 +359,19 @@ int ari_init_move(ari_t *ari, ari_t *src);
  */
 int ari_deinit(ari_t *ari);
 
+/** Copy an ARI value into another ARI.
+ *
+ * @param[in,out] ari The ARI to modify. The previous value is de-initialized prior to copy.
+ * @param src The source to deep copy from.
+ */
 int ari_set_copy(ari_t *ari, const ari_t *src);
 
+/** Move an ARI value into another ARI.
+ *
+ * @param[in,out] ari The ARI to modify. The previous value is de-initialized prior to move.
+ * @param[in,out] src The source to move from and reset.
+ * @post Source ARI is left as the undefined value.
+ */
 int ari_set_move(ari_t *ari, ari_t *src);
 
 #ifdef __cplusplus

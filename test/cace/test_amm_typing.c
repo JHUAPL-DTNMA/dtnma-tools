@@ -288,3 +288,35 @@ void test_amm_type_convert_ident(const char *inhex, const char *expecthex)
     const amm_type_t *type = amm_type_get_builtin(ARI_TYPE_IDENT);
     check_convert(type, inhex, expecthex);
 }
+
+TEST_CASE("820C1A2B450625", "820C1A2B450625") // ari:/TP/20230102T030405Z
+TEST_CASE("82041864", "820C1864") // ari:/INT/100 -> ari:/TP/100
+TEST_CASE("8208FB40593F34D6A161E5", "820C82231A000F68D4") // ari:/REAL64/100.9876
+TEST_CASE("8209FA7F000000", NULL) // REAL64 exceeds INT64 MAX
+TEST_CASE("8209FAEF000000", NULL) // REAL64 less than UINT64 MAX
+TEST_CASE("820D1864", NULL) // ari:/TD/100
+TEST_CASE("82043863", "820C3863") // ari:/INT/-100 
+TEST_CASE("8209FBC0593F34D6A161E5", "820C82233A000F68D3") // ari:/REAL64/-100.9876
+TEST_CASE("8209F97C00", NULL) // ari:/real64/Infinity
+TEST_CASE("8209F97E00", NULL) // ari:/real64/NaN
+void test_amm_type_convert_tp(const char *inhex, const char *expecthex)
+{
+    const amm_type_t *type = amm_type_get_builtin(ARI_TYPE_TP);
+    check_convert(type, inhex, expecthex);
+}
+
+TEST_CASE("820D822018CD", "820D822018CD") // ari:/TD/PT20.5S
+TEST_CASE("82041864", "820D1864") // ari:/INT/100 -> ari:/TD/100
+TEST_CASE("8208FB40593F34D6A161E5", "820D82231A000F68D4") // ari:/REAL64/100.9876
+TEST_CASE("8209FA7F000000", NULL) // REAL64 exceeds INT64 MAX
+TEST_CASE("8209FAEF000000", NULL) // REAL64 less than UINT64 MAX
+TEST_CASE("820C1864", NULL) // ari:/TP/100
+TEST_CASE("82043863", "820D3863") // ari:/INT/-100 
+TEST_CASE("8208FBC0593F34D6A161E5", "820D82233A000F68D3") // ari:/REAL32/-100.9876
+TEST_CASE("8209F97C00", NULL) // ari:/real64/Infinity
+TEST_CASE("8209F97E00", NULL) // ari:/real64/NaN
+void test_amm_type_convert_td(const char *inhex, const char *expecthex)
+{
+    const amm_type_t *type = amm_type_get_builtin(ARI_TYPE_TD);
+    check_convert(type, inhex, expecthex);
+}
