@@ -484,10 +484,9 @@ objpath:
         $$.ns_id = $1;
         $$.type_id = $2;
         $$.obj_id = $3;
-        ari_objpath_derive_type(&$$);
+        int err = ari_objpath_derive_type(&$$);
 
-        if ($$.has_ari_type == false ||
-            !(ari_objpath_has_valid_type(&$$)))
+        if (err)
         {
           cace_ari_text_str_error(scanner, input, "Invalid object type");
           YYERROR;

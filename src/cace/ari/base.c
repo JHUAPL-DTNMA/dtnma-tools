@@ -215,6 +215,11 @@ void ari_objpath_copy(ari_objpath_t *obj, const ari_objpath_t *src)
     obj->ari_type     = src->ari_type;
 }
 
+bool ari_valid_type_for_objpath(ari_type_t type)
+{
+  return (type < ARI_TYPE_NULL && type != ARI_TYPE_OBJECT);
+}
+
 int ari_objpath_derive_type(ari_objpath_t *path)
 {
     CHKERR1(path);
@@ -232,11 +237,20 @@ int ari_objpath_derive_type(ari_objpath_t *path)
             {
                 path->has_ari_type = true;
                 path->ari_type     = found;
+                if (!ari_valid_type_for_objpath(found))
+                {
+                  return 3; // Invalid ARI
+                }
             }
             break;
         }
         case ARI_IDSEG_INT:
         {
+            if (!ari_valid_type_for_objpath(path->type_id.as_int))
+            {
+              return 3; // Invalid ARI
+            }
+
             // validate the ID by getting a static name
             if ((path->type_id.as_int < 0) && ari_type_to_name(path->type_id.as_int))
             {
@@ -248,19 +262,6 @@ int ari_objpath_derive_type(ari_objpath_t *path)
     }
 
     return path->has_ari_type ? 0 : 2;
-}
-
-bool ari_objpath_has_valid_type(ari_objpath_t *path)
-{
-  if (path->has_ari_type) 
-  {
-    if (path->ari_type >= ARI_TYPE_NULL || path->ari_type == ARI_TYPE_OBJECT)
-    {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 int ari_params_deinit(ari_params_t *obj)
