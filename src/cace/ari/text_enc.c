@@ -584,8 +584,15 @@ int ari_text_encode_objpath(string_t text, const ari_objpath_t *path, enum ari_t
     CHKERR1(text);
     CHKERR1(path);
 
-    string_cat_str(text, "//");
-    ari_text_encode_idseg(text, &(path->ns_id));
+    if (path->ns_id.form != ARI_IDSEG_NULL) 
+    {
+      string_cat_str(text, "//");
+      ari_text_encode_idseg(text, &(path->ns_id));
+    }
+    else
+    {
+      string_cat_str(text, ".");
+    }
 
     string_push_back(text, '/');
     if (path->type_id.form == ARI_IDSEG_NULL)

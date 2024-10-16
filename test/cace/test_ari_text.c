@@ -355,9 +355,8 @@ void test_ari_text_encode_nsref_int(int64_t ns_id, const char *expect)
     ari_deinit(&ari);
 }
 
-// FIXME: is below correct or are the commented-out ARI's correct?
-TEST_CASE(ARI_TYPE_CONST, "hi", "ari:///CONST/hi") //"ari:./CONST/hi")
-TEST_CASE(ARI_TYPE_IDENT, "34", "ari:///IDENT/34") //"ari:./IDENT/34")
+TEST_CASE(ARI_TYPE_CONST, "hi", "ari:./CONST/hi")
+TEST_CASE(ARI_TYPE_IDENT, "34", "ari:./IDENT/34")
 void test_ari_text_encode_ariref(ari_type_t type_id, const char *obj_id, const char *expect)
 {
     ari_t      ari = ARI_INIT_UNDEFINED;
@@ -978,6 +977,9 @@ void test_ari_text_decode_nsref(const char *text)
 TEST_CASE("ari:./CTRL/do_thing", ARI_TYPE_CTRL)
 TEST_CASE("ari:./CTRL/otherobj(%22a%20param%22,/UINT/10)", ARI_TYPE_CTRL)
 TEST_CASE("ari:./-2/30", ARI_TYPE_CONST)
+TEST_CASE("./CTRL/do_thing", ARI_TYPE_CTRL)
+TEST_CASE("./CTRL/otherobj(%22a%20param%22,/UINT/10)", ARI_TYPE_CTRL)
+TEST_CASE("./-2/30", ARI_TYPE_CONST)
 void test_ari_text_decode_ariref(const char *text, ari_type_t expect_type)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
