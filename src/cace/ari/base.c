@@ -215,7 +215,7 @@ void ari_objpath_copy(ari_objpath_t *obj, const ari_objpath_t *src)
     obj->ari_type     = src->ari_type;
 }
 
-bool ari_valid_type_for_objpath(ari_type_t type)
+static bool ari_valid_type_for_objpath(ari_type_t type)
 {
   return (type < ARI_TYPE_NULL && type != ARI_TYPE_OBJECT);
 }
