@@ -22,6 +22,22 @@
 #include <m-string.h>
 #include <strings.h>
 
+/* HASH function for a C-string (to be used within oplist)
+ * We cannot use m_core_hash due to the alignment constraint,
+ * and it avoids computing the size before computing the hash.
+ */
+static inline size_t m_core_cstr_nocase_hash(const char str[])
+{
+  M_HASH_DECL(hash);
+  while (*str) {
+    unsigned long u = tolower((unsigned char) *str++);
+    M_HASH_UP(hash, u);
+  }
+  return M_HASH_FINAL(hash);
+}
+
+#define M_CSTR_NOCASE_HASH(s) (m_core_cstr_nocase_hash(s))
+
 /// Case-insensitive equality comparison
 #define M_CSTR_NOCASE_EQUAL(a, b) (strcasecmp((a), (b)) == 0)
 
@@ -29,7 +45,7 @@
  * This is intended to be used as dict/tree keys of type "const char *" with
  * external memory management.
  */
-#define M_CSTR_NOCASE_OPLIST M_OPEXTEND(M_CSTR_OPLIST, EQUAL(M_CSTR_NOCASE_EQUAL), CMP(strcasecmp))
+#define M_CSTR_NOCASE_OPLIST M_OPEXTEND(M_CSTR_OPLIST, HASH(M_CSTR_NOCASE_HASH), EQUAL(M_CSTR_NOCASE_EQUAL), CMP(strcasecmp))
 
 /// Case-insensitive comparison
 static inline int m_string_nocase_cmp(const m_string_t v1, const m_string_t v2)

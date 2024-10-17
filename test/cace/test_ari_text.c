@@ -936,6 +936,27 @@ void test_ari_text_decode_lit_typed_rptset(const char *text, enum ari_prim_type_
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari://test/const/hi", ARI_TYPE_CONST)
+TEST_CASE("ari://test/ctrl/hi", ARI_TYPE_CTRL)
+TEST_CASE("ari://test/IDENT/hi", ARI_TYPE_IDENT)
+TEST_CASE("ari://test/TYPEDEF/hi", ARI_TYPE_TYPEDEF)
+TEST_CASE("ari://test/CONST/hi", ARI_TYPE_CONST)
+TEST_CASE("ari://test/VAR/hi", ARI_TYPE_VAR)
+TEST_CASE("ari://test/EDD/hi", ARI_TYPE_EDD)
+TEST_CASE("ari://test/CTRL/hi", ARI_TYPE_CTRL)
+TEST_CASE("ari://test/OPER/hi", ARI_TYPE_OPER)
+TEST_CASE("ari://test/SBR/hi", ARI_TYPE_SBR)
+TEST_CASE("ari://test/TBR/hi", ARI_TYPE_TBR)
+TEST_CASE("ari://test/ident/hi", ARI_TYPE_IDENT)
+TEST_CASE("ari://test/typedef/hi", ARI_TYPE_TYPEDEF)
+TEST_CASE("ari://test/const/hi", ARI_TYPE_CONST)
+TEST_CASE("ari://test/var/hi", ARI_TYPE_VAR)
+TEST_CASE("ari://test/edd/hi", ARI_TYPE_EDD)
+TEST_CASE("ari://test/ctrl/hi", ARI_TYPE_CTRL)
+TEST_CASE("ari://test/CtRl/hi", ARI_TYPE_CTRL)
+TEST_CASE("ari://test/oper/hi", ARI_TYPE_OPER)
+TEST_CASE("ari://test/sbr/hi", ARI_TYPE_SBR)
+TEST_CASE("ari://test/tbr/hi", ARI_TYPE_TBR)
 TEST_CASE("ari://adm/const/hi", ARI_TYPE_CONST)
 TEST_CASE("ari://adm/CONST/hi", ARI_TYPE_CONST)
 TEST_CASE("ari://adm/-2/hi", ARI_TYPE_CONST)
@@ -952,6 +973,66 @@ void test_ari_text_decode_objref(const char *text, ari_type_t expect_type)
     TEST_ASSERT_NOT_EQUAL_INT(ARI_IDSEG_NULL, ari.as_ref.objpath.obj_id.form);
 
     ari_deinit(&ari);
+}
+
+TEST_CASE("ari://test/LITERAL/hi")
+TEST_CASE("ari://test/NULL/hi")
+TEST_CASE("ari://test/BOOL/hi")
+TEST_CASE("ari://test/BYTE/hi")
+TEST_CASE("ari://test/INT/hi")
+TEST_CASE("ari://test/UINT/hi")
+TEST_CASE("ari://test/VAST/hi")
+TEST_CASE("ari://test/UVAST/hi")
+TEST_CASE("ari://test/REAL32/hi")
+TEST_CASE("ari://test/REAL64/hi")
+TEST_CASE("ari://test/TEXTSTR/hi")
+TEST_CASE("ari://test/BYTESTR/hi")
+TEST_CASE("ari://test/TP/hi")
+TEST_CASE("ari://test/TD/hi")
+TEST_CASE("ari://test/LABEL/hi")
+TEST_CASE("ari://test/CBOR/hi")
+TEST_CASE("ari://test/ARITYPE/hi")
+TEST_CASE("ari://test/AC/hi")
+TEST_CASE("ari://test/AM/hi")
+TEST_CASE("ari://test/TBL/hi")
+TEST_CASE("ari://test/EXECSET/hi")
+TEST_CASE("ari://test/RPTSET/hi")
+TEST_CASE("ari://test/OBJECT/hi")
+TEST_CASE("ari://test/literal/hi")
+TEST_CASE("ari://test/null/hi")
+TEST_CASE("ari://test/bool/hi")
+TEST_CASE("ari://test/byte/hi")
+TEST_CASE("ari://test/int/hi")
+TEST_CASE("ari://test/uint/hi")
+TEST_CASE("ari://test/vast/hi")
+TEST_CASE("ari://test/uvast/hi")
+TEST_CASE("ari://test/real32/hi")
+TEST_CASE("ari://test/real64/hi")
+TEST_CASE("ari://test/textstr/hi")
+TEST_CASE("ari://test/bytestr/hi")
+TEST_CASE("ari://test/tp/hi")
+TEST_CASE("ari://test/td/hi")
+TEST_CASE("ari://test/label/hi")
+TEST_CASE("ari://test/cbor/hi")
+TEST_CASE("ari://test/aritype/hi")
+TEST_CASE("ari://test/ac/hi")
+TEST_CASE("ari://test/am/hi")
+TEST_CASE("ari://test/tbl/hi")
+TEST_CASE("ari://test/execset/hi")
+TEST_CASE("ari://test/rptset/hi")
+TEST_CASE("ari://test/object/hi")
+void test_ari_text_decode_objref_invalid(const char *intext)
+{
+    ari_t    ari = ARI_INIT_UNDEFINED;
+    string_t inbuf;
+    string_init_set_str(inbuf, intext);
+    int ret = ari_text_decode(&ari, inbuf, &errm);
+    string_clear(inbuf);
+    ari_deinit(&ari);
+
+    TEST_ASSERT_NOT_EQUAL_INT(0, ret);
+    TEST_ASSERT_NOT_NULL_MESSAGE(errm, "decode failure must provide a message");
+    TEST_MESSAGE(errm);
 }
 
 TEST_CASE("ari://adm")
@@ -1012,10 +1093,10 @@ TEST_CASE("ari:/EXECSET/n=1234;(//test/CTRL/hi)")
 TEST_CASE("ari:/EXECSET/n=h'6869';(//test/CTRL/hi,//test/CTRL/eh)")
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
-TEST_CASE("ari://test/this/that")      // ADM path
-TEST_CASE("ari://test@1234/this/that") // ADM revision
-TEST_CASE("ari://!test/this/that")     // ODM path
-TEST_CASE("ari://test/this/that(34)")
+TEST_CASE("ari://test/CONST/that")      // ADM path
+TEST_CASE("ari://test@1234/CONST/that") // ADM revision
+TEST_CASE("ari://!test/CONST/that")     // ODM path
+TEST_CASE("ari://test/CTRL/that(34)")
 TEST_CASE("ari://2/CTRL/4(hi)")
 TEST_CASE("ari:/CBOR/h'0A'")
 TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
@@ -1058,6 +1139,7 @@ TEST_CASE("ari:/ac/()", "ari:/AC/()")
 TEST_CASE("ari:/am/()", "ari:/AM/()")
 TEST_CASE("ari:/tbl/c=3;(1,2,3)", "ari:/TBL/c=3;(1,2,3)")
 TEST_CASE("ari:/execset/n=null;()", "ari:/EXECSET/n=null;()")
+TEST_CASE("ari:/rptset/n=1234;r=1000;(t=0;s=//test/ctrl/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=/TP/1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=/TP/1000;(t=0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=/TP/1000;(t=100.5;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT1M40.5S;s=//test/CTRL/hi;(null,3,h'6869'))")

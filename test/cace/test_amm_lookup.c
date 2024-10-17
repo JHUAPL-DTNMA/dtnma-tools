@@ -64,7 +64,7 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-static void check_lookup(const char *inhex, int expect_res)
+static void check_lookup(const char *inhex, int expect_cbor_decode, int expect_res)
 {
     string_t intext;
     string_init_set_str(intext, inhex);
@@ -77,7 +77,14 @@ static void check_lookup(const char *inhex, int expect_res)
     ari_t inval = ARI_INIT_UNDEFINED;
     res         = ari_cbor_decode(&inval, &indata, NULL, NULL);
     cace_data_deinit(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_cbor_decode, res, "ari_cbor_decode() failed");
+
+    if (expect_cbor_decode)
+    {
+      ari_deinit(&inval);
+      return;
+    }
+
     TEST_ASSERT_TRUE(inval.is_ref);
 
     cace_amm_lookup_t result;
@@ -101,14 +108,14 @@ static void check_lookup(const char *inhex, int expect_res)
     ari_deinit(&inval);
 }
 
-TEST_CASE("8318192000", 0)     // ari://25/-1/0 found
-TEST_CASE("830A2004", 3)       // ari://10/-1/4 missing NS
-TEST_CASE("83181939FF0004", 2) // ari://25/-65281/4 unknown obj-type
-TEST_CASE("8318192004", 4)     // ari://25/-1/4 missing obj-id
-TEST_CASE("8318192001", 0)     // ari://25/-1/1 found, default parameter
-TEST_CASE("8418192001810A", 0) // ari://25/-1/1(10)
-TEST_CASE("841819200181F6", 7) // ari://25/-1/1(null) bad parameter
-void test_lookup_deref(const char *inhex, int expect_res)
+TEST_CASE("8318192000", 0, 0)     // ari://25/-1/0 found
+TEST_CASE("830A2004", 0, 3)       // ari://10/-1/4 missing NS
+TEST_CASE("83181939FF0004", 3, 2) // ari://25/-65281/4 unknown obj-type
+TEST_CASE("8318192004", 0, 4)     // ari://25/-1/4 missing obj-id
+TEST_CASE("8318192001", 0, 0)     // ari://25/-1/1 found, default parameter
+TEST_CASE("8418192001810A", 0, 0) // ari://25/-1/1(10)
+TEST_CASE("841819200181F6", 0, 7) // ari://25/-1/1(null) bad parameter
+void test_lookup_deref(const char *inhex, int expect_cbor_decode, int expect_res)
 {
-    check_lookup(inhex, expect_res);
+    check_lookup(inhex, expect_cbor_decode, expect_res);
 }
