@@ -584,14 +584,14 @@ int ari_text_encode_objpath(string_t text, const ari_objpath_t *path, enum ari_t
     CHKERR1(text);
     CHKERR1(path);
 
-    if (path->ns_id.form != ARI_IDSEG_NULL) 
+    if (path->ns_id.form != ARI_IDSEG_NULL)
     {
-      string_cat_str(text, "//");
-      ari_text_encode_idseg(text, &(path->ns_id));
+        string_cat_str(text, "//");
+        ari_text_encode_idseg(text, &(path->ns_id));
     }
     else
     {
-      string_cat_str(text, ".");
+        string_cat_str(text, ".");
     }
 
     string_push_back(text, '/');
@@ -618,7 +618,11 @@ int ari_text_encode_objpath(string_t text, const ari_objpath_t *path, enum ari_t
 
 static int ari_text_encode_objref(ari_text_enc_state_t *state, const ari_ref_t *obj)
 {
-    ari_text_encode_prefix(state);
+    // no scheme for path-only URI Reference form
+    if (obj->objpath.ns_id.form != ARI_IDSEG_NULL)
+    {
+        ari_text_encode_prefix(state);
+    }
 
     if (ari_text_encode_objpath(state->out, &(obj->objpath), state->opts->show_ari_type))
     {
