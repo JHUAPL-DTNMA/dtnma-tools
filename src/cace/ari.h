@@ -28,6 +28,6 @@
 #include "ari/base.h"
 #include "ari/containers.h"
 #include "ari/access.h"
-#include  "ari/algo.h"
+#include "ari/algo.h"
 
 #endif /* CACE_ARI_H_ */
