@@ -1224,8 +1224,9 @@ TEST_CASE("ari:/rptset/n=1234;r=/TP/1000.987654321;(t=/TD/0;s=//test/CTRL/hi;(nu
           "ari:/RPTSET/n=1234;r=/TP/20000101T001640.987654321Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=1000.9876543210987654321;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))",
           "ari:/RPTSET/n=1234;r=/TP/20000101T001640.987654321Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari://test", "ari://test/") // always trailing slash
 TEST_CASE("ari:./ctrl/hi", "./CTRL/hi") // scheme elided
-void test_ari_text_encode_decode(const char *intext, const char *expect_outtext)
+void test_ari_text_reencode(const char *intext, const char *expect_outtext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;
     string_t inbuf;
