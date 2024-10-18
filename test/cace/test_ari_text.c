@@ -1210,6 +1210,7 @@ TEST_CASE("ari:/rptset/n=1234;r=/UVAST/1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'
 TEST_CASE("ari:/rptset/n=1234;r=/UVAST/0b1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T000008Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=/TP/1000.987654321;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640.987654321Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=1000.9876543210987654321;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640.987654321Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("./ctrl/hi", "ari:./CTRL/hi") // "ari:" scheme only encoded due to opts
 void test_ari_text_encode_decode(const char *intext, const char *expect_outtext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;
@@ -1259,6 +1260,8 @@ TEST_CASE("ari:/EXECSET/g=null;()")
 TEST_CASE("ari:/EXECSET/n=undefined;()")
 TEST_CASE("ari:/EXECSET/n=1;")
 TEST_CASE("ari:/EXECSET/n=1;n=2;()")
+TEST_CASE("ari://./object/hi")
+TEST_CASE("./object/hi")
 void test_ari_text_decode_failure(const char *intext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;
