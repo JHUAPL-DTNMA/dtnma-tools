@@ -28,12 +28,13 @@
  */
 static inline size_t m_core_cstr_nocase_hash(const char str[])
 {
-  M_HASH_DECL(hash);
-  while (*str) {
-    unsigned long u = tolower((unsigned char) *str++);
-    M_HASH_UP(hash, u);
-  }
-  return M_HASH_FINAL(hash);
+    M_HASH_DECL(hash);
+    while (*str)
+    {
+        unsigned long u = tolower((unsigned char)*str++);
+        M_HASH_UP(hash, u);
+    }
+    return M_HASH_FINAL(hash);
 }
 
 #define M_CSTR_NOCASE_HASH(s) (m_core_cstr_nocase_hash(s))
@@ -45,7 +46,8 @@ static inline size_t m_core_cstr_nocase_hash(const char str[])
  * This is intended to be used as dict/tree keys of type "const char *" with
  * external memory management.
  */
-#define M_CSTR_NOCASE_OPLIST M_OPEXTEND(M_CSTR_OPLIST, HASH(M_CSTR_NOCASE_HASH), EQUAL(M_CSTR_NOCASE_EQUAL), CMP(strcasecmp))
+#define M_CSTR_NOCASE_OPLIST \
+    M_OPEXTEND(M_CSTR_OPLIST, HASH(M_CSTR_NOCASE_HASH), EQUAL(M_CSTR_NOCASE_EQUAL), CMP(strcasecmp))
 
 /// Case-insensitive comparison
 static inline int m_string_nocase_cmp(const m_string_t v1, const m_string_t v2)

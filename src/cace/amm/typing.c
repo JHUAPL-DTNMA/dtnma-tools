@@ -526,15 +526,15 @@ static int builtin_real64_convert(const amm_type_t *self, ari_t *out, const ari_
 static bool builtin_time_constraints(struct timespec *out, const ari_t *ari)
 {
     const ari_lit_t *obj = &(ari->as_lit);
-    struct timespec value;
+    struct timespec  value;
     switch (obj->prim_type)
     {
         case ARI_PRIM_UINT64:
-            value.tv_sec = obj->value.as_uint64;
+            value.tv_sec  = obj->value.as_uint64;
             value.tv_nsec = 0;
             break;
         case ARI_PRIM_INT64:
-            value.tv_sec = obj->value.as_int64;
+            value.tv_sec  = obj->value.as_int64;
             value.tv_nsec = 0;
             break;
         case ARI_PRIM_FLOAT64:
@@ -542,14 +542,14 @@ static bool builtin_time_constraints(struct timespec *out, const ari_t *ari)
             double v = obj->value.as_float64;
             if (isnan(v) || isinf(v) || v > INT64_MAX || v < INT64_MIN)
             {
-              return false;
+                return false;
             }
 
             double integral;
             double frac = modf(v, &integral);
 
-            value.tv_sec = (time_t) integral;
-            value.tv_nsec = (time_t) (frac * 1000000000);
+            value.tv_sec  = (time_t)integral;
+            value.tv_nsec = (time_t)(frac * 1000000000);
             break;
         }
         case ARI_PRIM_TIMESPEC:
@@ -578,8 +578,8 @@ static int builtin_time_convert(const amm_type_t *self, ari_t *out, const ari_t 
     {
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
-    else if ((self->as_builtin.ari_type == ARI_TYPE_TP && in->as_lit.ari_type == ARI_TYPE_TD) ||
-             (self->as_builtin.ari_type == ARI_TYPE_TD && in->as_lit.ari_type == ARI_TYPE_TP))
+    else if ((self->as_builtin.ari_type == ARI_TYPE_TP && in->as_lit.ari_type == ARI_TYPE_TD)
+             || (self->as_builtin.ari_type == ARI_TYPE_TD && in->as_lit.ari_type == ARI_TYPE_TP))
     {
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }

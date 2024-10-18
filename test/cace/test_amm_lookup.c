@@ -81,8 +81,8 @@ static void check_lookup(const char *inhex, int expect_cbor_decode, int expect_r
 
     if (expect_cbor_decode)
     {
-      ari_deinit(&inval);
-      return;
+        ari_deinit(&inval);
+        return;
     }
 
     TEST_ASSERT_TRUE(inval.is_ref);

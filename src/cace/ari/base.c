@@ -217,7 +217,7 @@ void ari_objpath_copy(ari_objpath_t *obj, const ari_objpath_t *src)
 
 static bool ari_valid_type_for_objpath(ari_type_t type)
 {
-  return (type < ARI_TYPE_NULL && type != ARI_TYPE_OBJECT);
+    return (type < ARI_TYPE_NULL && type != ARI_TYPE_OBJECT);
 }
 
 int ari_objpath_derive_type(ari_objpath_t *path)
@@ -239,7 +239,7 @@ int ari_objpath_derive_type(ari_objpath_t *path)
                 path->ari_type     = found;
                 if (!ari_valid_type_for_objpath(found))
                 {
-                  return 3; // Invalid ARI
+                    return 3; // Invalid ARI
                 }
             }
             break;
@@ -248,7 +248,7 @@ int ari_objpath_derive_type(ari_objpath_t *path)
         {
             if (!ari_valid_type_for_objpath(path->type_id.as_int))
             {
-              return 3; // Invalid ARI
+                return 3; // Invalid ARI
             }
 
             // validate the ID by getting a static name
