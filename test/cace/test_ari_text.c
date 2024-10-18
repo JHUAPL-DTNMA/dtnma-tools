@@ -19,6 +19,7 @@
  * Test the ari_text.h interfaces.
  */
 #include <cace/ari/text.h>
+#include <cace/ari/text_util.h>
 #include <cace/amm/typing.h>
 #include <unity.h>
 
@@ -738,6 +739,42 @@ void test_ari_text_decode_lit_prim_bstr(const char *text, const char *expect, si
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari:/CBOR/h''", "")
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'", "A164746573748203F94480")
+TEST_CASE("ari:/CBOR/h'0064746573748203F94480'", "0064746573748203F94480")
+TEST_CASE("ari:/CBOR/h'A1%2064%2074%2065%2073%2074%2082%2003%20F9%2044%20%2080'", "A164746573748203F94480")
+void test_ari_text_decode_lit_typed_cbor(const char *text, const char *expect_hex)
+{
+    string_t expect_text;
+    string_init_set_str(expect_text, expect_hex);
+    cace_data_t expect_data;
+    cace_data_init(&expect_data);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, base16_decode(&expect_data, expect_text), "base16_decode() failed");
+
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_CBOR, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_BSTR, ari.as_lit.prim_type);
+
+    if (expect_data.len > 0)
+    {
+        TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(expect_data.len, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, ari.as_lit.value.as_data.ptr, ari.as_lit.value.as_data.len);
+    }
+    else
+    {
+        TEST_ASSERT_FALSE(ari.as_lit.value.as_data.owned);
+        TEST_ASSERT_EQUAL_INT(0, ari.as_lit.value.as_data.len);
+        TEST_ASSERT_NULL(ari.as_lit.value.as_data.ptr);
+    }
+    ari_deinit(&ari);
+    cace_data_deinit(&expect_data);
+    string_clear(expect_text);
+}
+
 TEST_CASE("ari:/NULL/null")
 TEST_CASE("ari:/0/null")
 void test_ari_text_decode_lit_typed_null(const char *text)
@@ -897,10 +934,11 @@ void test_ari_text_decode_lit_typed_execset(const char *text, enum ari_prim_type
 
 TEST_CASE("ari:/RPTSET/n=null;r=725943845;", ARI_PRIM_NULL, 0)
 TEST_CASE("ari:/RPTSET/n=1234;r=725943845;(t=0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
-TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845;(t=0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
-TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845.000;(t=0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
-TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
-TEST_CASE("ari:/RPTSET/n=h'6869';r=725943845;(t=0;s=//test/CTRL/hi;())(t=1;s=//test/CTRL/eh;())", ARI_PRIM_BSTR, 2)
+TEST_CASE("ari:/RPTSET/n=1234;r=725943845;(t=0.0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
+TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845;(t=/TD/0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
+TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845.000;(t=/TD/0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
+TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/0;s=//test/CTRL/hi;())", ARI_PRIM_INT64, 1)
+TEST_CASE("ari:/RPTSET/n=h'6869';r=/TP/725943845;(t=/TD/0;s=//test/CTRL/hi;())(t=/TD/1;s=//test/CTRL/eh;())", ARI_PRIM_BSTR, 2)
 void test_ari_text_decode_lit_typed_rptset(const char *text, enum ari_prim_type_e expect_n, size_t expect_count)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -935,6 +973,27 @@ void test_ari_text_decode_lit_typed_rptset(const char *text, enum ari_prim_type_
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari://test/const/hi", ARI_TYPE_CONST)
+TEST_CASE("ari://test/ctrl/hi", ARI_TYPE_CTRL)
+TEST_CASE("ari://test/IDENT/hi", ARI_TYPE_IDENT)
+TEST_CASE("ari://test/TYPEDEF/hi", ARI_TYPE_TYPEDEF)
+TEST_CASE("ari://test/CONST/hi", ARI_TYPE_CONST)
+TEST_CASE("ari://test/VAR/hi", ARI_TYPE_VAR)
+TEST_CASE("ari://test/EDD/hi", ARI_TYPE_EDD)
+TEST_CASE("ari://test/CTRL/hi", ARI_TYPE_CTRL)
+TEST_CASE("ari://test/OPER/hi", ARI_TYPE_OPER)
+TEST_CASE("ari://test/SBR/hi", ARI_TYPE_SBR)
+TEST_CASE("ari://test/TBR/hi", ARI_TYPE_TBR)
+TEST_CASE("ari://test/ident/hi", ARI_TYPE_IDENT)
+TEST_CASE("ari://test/typedef/hi", ARI_TYPE_TYPEDEF)
+TEST_CASE("ari://test/const/hi", ARI_TYPE_CONST)
+TEST_CASE("ari://test/var/hi", ARI_TYPE_VAR)
+TEST_CASE("ari://test/edd/hi", ARI_TYPE_EDD)
+TEST_CASE("ari://test/ctrl/hi", ARI_TYPE_CTRL)
+TEST_CASE("ari://test/CtRl/hi", ARI_TYPE_CTRL)
+TEST_CASE("ari://test/oper/hi", ARI_TYPE_OPER)
+TEST_CASE("ari://test/sbr/hi", ARI_TYPE_SBR)
+TEST_CASE("ari://test/tbr/hi", ARI_TYPE_TBR)
 TEST_CASE("ari://adm/const/hi", ARI_TYPE_CONST)
 TEST_CASE("ari://adm/CONST/hi", ARI_TYPE_CONST)
 TEST_CASE("ari://adm/-2/hi", ARI_TYPE_CONST)
@@ -951,6 +1010,66 @@ void test_ari_text_decode_objref(const char *text, ari_type_t expect_type)
     TEST_ASSERT_NOT_EQUAL_INT(ARI_IDSEG_NULL, ari.as_ref.objpath.obj_id.form);
 
     ari_deinit(&ari);
+}
+
+TEST_CASE("ari://test/LITERAL/hi")
+TEST_CASE("ari://test/NULL/hi")
+TEST_CASE("ari://test/BOOL/hi")
+TEST_CASE("ari://test/BYTE/hi")
+TEST_CASE("ari://test/INT/hi")
+TEST_CASE("ari://test/UINT/hi")
+TEST_CASE("ari://test/VAST/hi")
+TEST_CASE("ari://test/UVAST/hi")
+TEST_CASE("ari://test/REAL32/hi")
+TEST_CASE("ari://test/REAL64/hi")
+TEST_CASE("ari://test/TEXTSTR/hi")
+TEST_CASE("ari://test/BYTESTR/hi")
+TEST_CASE("ari://test/TP/hi")
+TEST_CASE("ari://test/TD/hi")
+TEST_CASE("ari://test/LABEL/hi")
+TEST_CASE("ari://test/CBOR/hi")
+TEST_CASE("ari://test/ARITYPE/hi")
+TEST_CASE("ari://test/AC/hi")
+TEST_CASE("ari://test/AM/hi")
+TEST_CASE("ari://test/TBL/hi")
+TEST_CASE("ari://test/EXECSET/hi")
+TEST_CASE("ari://test/RPTSET/hi")
+TEST_CASE("ari://test/OBJECT/hi")
+TEST_CASE("ari://test/literal/hi")
+TEST_CASE("ari://test/null/hi")
+TEST_CASE("ari://test/bool/hi")
+TEST_CASE("ari://test/byte/hi")
+TEST_CASE("ari://test/int/hi")
+TEST_CASE("ari://test/uint/hi")
+TEST_CASE("ari://test/vast/hi")
+TEST_CASE("ari://test/uvast/hi")
+TEST_CASE("ari://test/real32/hi")
+TEST_CASE("ari://test/real64/hi")
+TEST_CASE("ari://test/textstr/hi")
+TEST_CASE("ari://test/bytestr/hi")
+TEST_CASE("ari://test/tp/hi")
+TEST_CASE("ari://test/td/hi")
+TEST_CASE("ari://test/label/hi")
+TEST_CASE("ari://test/cbor/hi")
+TEST_CASE("ari://test/aritype/hi")
+TEST_CASE("ari://test/ac/hi")
+TEST_CASE("ari://test/am/hi")
+TEST_CASE("ari://test/tbl/hi")
+TEST_CASE("ari://test/execset/hi")
+TEST_CASE("ari://test/rptset/hi")
+TEST_CASE("ari://test/object/hi")
+void test_ari_text_decode_objref_invalid(const char *intext)
+{
+    ari_t    ari = ARI_INIT_UNDEFINED;
+    string_t inbuf;
+    string_init_set_str(inbuf, intext);
+    int ret = ari_text_decode(&ari, inbuf, &errm);
+    string_clear(inbuf);
+    ari_deinit(&ari);
+
+    TEST_ASSERT_NOT_EQUAL_INT(0, ret);
+    TEST_ASSERT_NOT_NULL_MESSAGE(errm, "decode failure must provide a message");
+    TEST_MESSAGE(errm);
 }
 
 TEST_CASE("ari://adm")
@@ -1033,13 +1152,15 @@ TEST_CASE("ari:/TBL/c=1;")
 TEST_CASE("ari:/EXECSET/n=null;()")
 TEST_CASE("ari:/EXECSET/n=1234;(//test/CTRL/hi)")
 TEST_CASE("ari:/EXECSET/n=h'6869';(//test/CTRL/hi,//test/CTRL/eh)")
-TEST_CASE("ari:/RPTSET/n=1234;r=1000;(t=0;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
-TEST_CASE("ari://test/this/that")      // ADM path
-TEST_CASE("ari://test@1234/this/that") // ADM revision
-TEST_CASE("ari://!test/this/that")     // ODM path
-TEST_CASE("ari://test/this/that(34)")
+TEST_CASE("ari://test/CONST/that")      // ADM path
+TEST_CASE("ari://test@1234/CONST/that") // ADM revision
+TEST_CASE("ari://!test/CONST/that")     // ODM path
+TEST_CASE("ari://test/CTRL/that(34)")
 TEST_CASE("ari://2/CTRL/4(hi)")
+TEST_CASE("ari:/CBOR/h'0A'")
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
 void test_ari_text_loopback(const char *intext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;
@@ -1079,7 +1200,16 @@ TEST_CASE("ari:/ac/()", "ari:/AC/()")
 TEST_CASE("ari:/am/()", "ari:/AM/()")
 TEST_CASE("ari:/tbl/c=3;(1,2,3)", "ari:/TBL/c=3;(1,2,3)")
 TEST_CASE("ari:/execset/n=null;()", "ari:/EXECSET/n=null;()")
-TEST_CASE("ari:/rptset/n=1234;r=1000;(t=0;s=//test/ctrl/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=1000;(t=0;s=//test/ctrl/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=1000;(t=0;s=//test/ctrl/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=/TP/1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=/TP/1000;(t=0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=/TP/1000;(t=100.5;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT1M40.5S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=1000.0;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=/UVAST/1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=/UVAST/0b1000;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T000008Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=/TP/1000.987654321;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640.987654321Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
+TEST_CASE("ari:/rptset/n=1234;r=1000.9876543210987654321;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))", "ari:/RPTSET/n=1234;r=/TP/20000101T001640.987654321Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 void test_ari_text_encode_decode(const char *intext, const char *expect_outtext)
 {
     ari_t    ari = ARI_INIT_UNDEFINED;

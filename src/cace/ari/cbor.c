@@ -1047,7 +1047,13 @@ int ari_cbor_decode_stream(QCBORDecodeContext *dec, ari_t *ari)
             ari_cbor_decode_idseg(dec, &(obj->objpath.ns_id));
             ari_cbor_decode_idseg(dec, &(obj->objpath.type_id));
             ari_cbor_decode_idseg(dec, &(obj->objpath.obj_id));
-            ari_objpath_derive_type(&(obj->objpath));
+            int err = ari_objpath_derive_type(&(obj->objpath));
+
+            // Validate AMM object type
+            if (err)
+            {
+                return 3;
+            }
 
             obj->params.state = ARI_PARAMS_NONE;
             if (decitem.val.uCount > 3)
