@@ -407,6 +407,9 @@ void ari_set_objref_path_textid_opt(ari_t *ari, bool has_ns, const char *ns_id, 
         ref->objpath.type_id.form = ARI_IDSEG_TEXT;
         string_t *value           = &(ref->objpath.type_id.as_text);
         string_init_set_str(*value, type_name);
+
+        ref->objpath.has_ari_type = true;
+        ref->objpath.ari_type     = type_id;
     }
     if (has_obj)
     {
@@ -414,9 +417,6 @@ void ari_set_objref_path_textid_opt(ari_t *ari, bool has_ns, const char *ns_id, 
         string_t *value          = &(ref->objpath.obj_id.as_text);
         string_init_set_str(*value, obj_id);
     }
-
-    ref->objpath.has_ari_type = true;
-    ref->objpath.ari_type     = type_id;
 }
 
 void ari_set_objref_path_intid(ari_t *ari, int64_t ns_id, ari_type_t type_id, int64_t obj_id)
@@ -439,15 +439,15 @@ void ari_set_objref_path_intid_opt(ari_t *ari, bool has_ns, int64_t ns_id, bool 
     {
         ref->objpath.type_id.form   = ARI_IDSEG_INT;
         ref->objpath.type_id.as_int = type_id;
+
+        ref->objpath.has_ari_type = true;
+        ref->objpath.ari_type     = type_id;
     }
     if (has_obj)
     {
         ref->objpath.obj_id.form   = ARI_IDSEG_INT;
         ref->objpath.obj_id.as_int = obj_id;
     }
-
-    ref->objpath.has_ari_type = true;
-    ref->objpath.ari_type     = type_id;
 }
 
 void ari_set_objref_params_ac(ari_t *ari, struct ari_ac_s *src)
