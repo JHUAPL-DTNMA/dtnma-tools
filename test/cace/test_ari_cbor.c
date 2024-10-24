@@ -160,6 +160,28 @@ void test_ari_cbor_encode_lit_typed_ac_1item(void)
     }
 }
 
+void test_ari_cbor_encode_objref_path_text_with_param(void)
+{
+//TEST_CASE("test", true, ARI_TYPE_CTRL, "that(34)", "846474657374226474686174811822") // ari://test/CTRL/that(34)
+    ari_t ari = ARI_INIT_UNDEFINED;
+    ari_ac_t acinit;
+    ari_set_objref_path_textid_opt(&ari, true, "test", true, ARI_TYPE_CTRL, true, "that");
+    ari_ac_init(&acinit);
+    {
+        ari_t *item = ari_list_push_back_new(acinit.items);
+        ari_set_int(item, 34);
+    }
+
+    ari_set_objref_params_ac(&ari, &acinit);
+
+    check_encoding(&ari, "846474657374226474686174811822");
+
+//846474657374226474686174811822
+//83647465737422687468617428333429
+
+    ari_deinit(&ari);
+}
+
 TEST_CASE("example-adm-a@2024-06-25", false, 0, NULL, "8378186578616D706C652D61646D2D6140323032342D30362D3235F6F6") // ari://example-adm-a@2024-06-25/
 TEST_CASE("example-adm-a", false, 0, NULL, "836D6578616D706C652D61646D2D61F6F6") // ari://example-adm-a/
 TEST_CASE("!example-odm-b", false, 0, NULL, "836E216578616D706C652D6F646D2D62F6F6") // ari://!example-odm-b/
@@ -169,7 +191,7 @@ TEST_CASE("adm", true, ARI_TYPE_CONST, "hi", "836361646D21626869") // ari://adm/
 TEST_CASE("test", true, ARI_TYPE_CONST, "that", "836474657374216474686174") // ari://test/CONST/that
 TEST_CASE("test@1234", true, ARI_TYPE_CONST, "that", "8369746573744031323334216474686174") // ari://test@1234/CONST/that
 TEST_CASE("!test", true, ARI_TYPE_CONST, "that", "83652174657374216474686174") // ari://!test/CONST/that
-// TODO: TEST_CASE("test", true, ARI_TYPE_CTRL, "that(34)", "846474657374226474686174811822") // ari://test/CTRL/that(34)
+TEST_CASE("test", true, ARI_TYPE_CTRL, "that(34)", "846474657374226474686174811822") // ari://test/CTRL/that(34)
 void test_ari_cbor_encode_objref_path_text(const char *ns_id, bool has_type, ari_type_t type_id, const char *obj_id, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
