@@ -385,7 +385,7 @@ struct ari_rptset_s *ari_init_rptset(ari_t *ari)
 
 void ari_set_objref_path_textid(ari_t *ari, const char *ns_id, ari_type_t type_id, const char *obj_id)
 {
-    ari_set_objref_path_textid_opt(ari, false, ns_id, false, type_id, false, obj_id);
+    ari_set_objref_path_textid_opt(ari, true, ns_id, true, type_id, true, obj_id);
 }
 
 void ari_set_objref_path_textid_opt(ari_t *ari, bool has_ns, const char *ns_id, bool has_type, ari_type_t type_id, bool has_obj, const char *obj_id)
