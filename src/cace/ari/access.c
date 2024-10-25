@@ -421,7 +421,7 @@ void ari_set_objref_path_textid_opt(ari_t *ari, bool has_ns, const char *ns_id, 
 
 void ari_set_objref_path_intid(ari_t *ari, int64_t ns_id, ari_type_t type_id, int64_t obj_id)
 {
-    ari_set_objref_path_intid_opt(ari, false, ns_id, false, type_id, false, obj_id);
+    ari_set_objref_path_intid_opt(ari, true, ns_id, true, type_id, true, obj_id);
 }
 
 void ari_set_objref_path_intid_opt(ari_t *ari, bool has_ns, int64_t ns_id, bool has_type, ari_type_t type_id, bool has_obj, int64_t obj_id)
