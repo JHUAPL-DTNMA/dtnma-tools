@@ -185,9 +185,6 @@ TEST_CASE(true, 65536, false, 0, false, 0, "831A00010000F6F6") // ari://65536/
 TEST_CASE(true, -20, false, 0, false, 0, "8333F6F6") // ari://-20/
 TEST_CASE(false, 0, true, ARI_TYPE_IDENT, true, 34, "83F6201822") // ./IDENT/34
 TEST_CASE(true, 18, true, ARI_TYPE_IDENT, true, 34, "8312201822") // ari://18/IDENT/34
-// TODO:
-///home/ethieja1/dtn/dtnma-tools/test/cace/test_ari_text_cbor_loopback.c:138:test_ari_text_loopback("ari://2/CTRL/4(hi)"):INFO: Encoded hex: 8402220481626869
-///home/ethieja1/dtn/dtnma-tools/test/cace/test_ari_text_cbor_loopback.c:108:test_ari_text_loopback("ari://2/CTRL/4(hi)"):PASS
 void test_ari_cbor_encode_objref_path_int(bool has_ns, int64_t ns_id, bool has_type, ari_type_t type_id, bool has_obj, int64_t obj_id, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
