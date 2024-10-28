@@ -833,6 +833,10 @@ TEST_CASE("ari:/TD/20.5", 20, 500e6)
 TEST_CASE("ari:/TD/20.500", 20, 500e6)
 TEST_CASE("ari:/TD/20.000001", 20, 1e3)
 TEST_CASE("ari:/TD/20.000000001", 20, 1)
+TEST_CASE("ari:/TD/+PT1M", 60, 0)
+TEST_CASE("ari:/TD/-PT1M", -60, 0)
+TEST_CASE("ari:/TD/-P1DT", -(24 * 60 * 60), 0)
+TEST_CASE("ari:/TD/PT", 0, 0)
 void test_ari_text_decode_lit_typed_td(const char *text, time_t expect_sec, long expect_nsec)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
@@ -1224,7 +1228,7 @@ TEST_CASE("ari:/rptset/n=1234;r=/TP/1000.987654321;(t=/TD/0;s=//test/CTRL/hi;(nu
           "ari:/RPTSET/n=1234;r=/TP/20000101T001640.987654321Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/rptset/n=1234;r=1000.9876543210987654321;(t=/TD/0;s=//test/CTRL/hi;(null,3,h'6869'))",
           "ari:/RPTSET/n=1234;r=/TP/20000101T001640.987654321Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))")
-TEST_CASE("ari://test", "ari://test/") // always trailing slash
+TEST_CASE("ari://test", "ari://test/")  // always trailing slash
 TEST_CASE("ari:./ctrl/hi", "./CTRL/hi") // scheme elided
 void test_ari_text_reencode(const char *intext, const char *expect_outtext)
 {

@@ -479,7 +479,7 @@ void test_ari_cbor_decode_lit_typed_real64(const char *inhex, bool expect)
 
 TEST_CASE("A0")             // bad major type
 TEST_CASE("821182A0820417") // AC with item having bad major type
-//TEST_CASE("836474657374226474686174") // ari://test/CTRL/that
+// TEST_CASE("836474657374226474686174") // ari://test/CTRL/that
 TEST_CASE("8364746573740A6474686174") // ari://test/TEXTSTR/that
 void test_ari_cbor_decode_failure(const char *inhex)
 {
@@ -566,7 +566,7 @@ TEST_CASE("82041864")
 TEST_CASE("82051864")
 TEST_CASE("82061864")
 TEST_CASE("82071864")
-TEST_CASE("8212A303F50A626869626F6804")             // ari:/AM/(3=true,10=hi,oh=4) AM key ordering
+TEST_CASE("8212A303F50A626869626F6804")     // ari:/AM/(3=true,10=hi,oh=4) AM key ordering
 TEST_CASE("8464746573742A6474686174811822") // ari://test/-11/that(34)
 void test_ari_cbor_loopback(const char *inhex)
 {
