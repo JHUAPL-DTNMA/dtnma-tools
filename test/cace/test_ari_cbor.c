@@ -160,19 +160,21 @@ void test_ari_cbor_encode_lit_typed_ac_1item(void)
     }
 }
 
-TEST_CASE("example-adm-a@2024-06-25", false, 0, NULL, "8378186578616D706C652D61646D2D6140323032342D30362D3235F6F6") // ari://example-adm-a@2024-06-25/
-TEST_CASE("example-adm-a", false, 0, NULL, "836D6578616D706C652D61646D2D61F6F6") // ari://example-adm-a/
+TEST_CASE("example-adm-a@2024-06-25", false, 0, NULL,
+          "8378186578616D706C652D61646D2D6140323032342D30362D3235F6F6")             // ari://example-adm-a@2024-06-25/
+TEST_CASE("example-adm-a", false, 0, NULL, "836D6578616D706C652D61646D2D61F6F6")    // ari://example-adm-a/
 TEST_CASE("!example-odm-b", false, 0, NULL, "836E216578616D706C652D6F646D2D62F6F6") // ari://!example-odm-b/
-TEST_CASE("adm", false, 0, NULL, "836361646DF6F6") // ari://adm/
-TEST_CASE(NULL, true, ARI_TYPE_CONST, "hi", "83F621626869") // "./CONST/hi
-TEST_CASE("adm", true, ARI_TYPE_CONST, "hi", "836361646D21626869") // ari://adm/CONST/hi
-TEST_CASE("test", true, ARI_TYPE_CONST, "that", "836474657374216474686174") // ari://test/CONST/that
+TEST_CASE("adm", false, 0, NULL, "836361646DF6F6")                                  // ari://adm/
+TEST_CASE(NULL, true, ARI_TYPE_CONST, "hi", "83F621626869")                         // "./CONST/hi
+TEST_CASE("adm", true, ARI_TYPE_CONST, "hi", "836361646D21626869")                  // ari://adm/CONST/hi
+TEST_CASE("test", true, ARI_TYPE_CONST, "that", "836474657374216474686174")         // ari://test/CONST/that
 TEST_CASE("test@1234", true, ARI_TYPE_CONST, "that", "8369746573744031323334216474686174") // ari://test@1234/CONST/that
-TEST_CASE("!test", true, ARI_TYPE_CONST, "that", "83652174657374216474686174") // ari://!test/CONST/that
-void test_ari_cbor_encode_objref_path_text(const char *ns_id, bool has_type, ari_type_t type_id, const char *obj_id, const char *expect)
+TEST_CASE("!test", true, ARI_TYPE_CONST, "that", "83652174657374216474686174")             // ari://!test/CONST/that
+void test_ari_cbor_encode_objref_path_text(const char *ns_id, bool has_type, ari_type_t type_id, const char *obj_id,
+                                           const char *expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
-    bool has_ns = ns_id != NULL, has_obj = obj_id != NULL;
+    ari_t ari    = ARI_INIT_UNDEFINED;
+    bool  has_ns = ns_id != NULL, has_obj = obj_id != NULL;
     ari_set_objref_path_textid_opt(&ari, has_ns ? ns_id : NULL, has_type ? &type_id : NULL, has_obj ? obj_id : NULL);
 
     check_encoding(&ari, expect);
@@ -180,12 +182,13 @@ void test_ari_cbor_encode_objref_path_text(const char *ns_id, bool has_type, ari
     ari_deinit(&ari);
 }
 
-TEST_CASE(true, 18, false, 0, false, 0, "8312F6F6") // ari://18/
-TEST_CASE(true, 65536, false, 0, false, 0, "831A00010000F6F6") // ari://65536/
-TEST_CASE(true, -20, false, 0, false, 0, "8333F6F6") // ari://-20/
+TEST_CASE(true, 18, false, 0, false, 0, "8312F6F6")               // ari://18/
+TEST_CASE(true, 65536, false, 0, false, 0, "831A00010000F6F6")    // ari://65536/
+TEST_CASE(true, -20, false, 0, false, 0, "8333F6F6")              // ari://-20/
 TEST_CASE(false, 0, true, ARI_TYPE_IDENT, true, 34, "83F6201822") // ./IDENT/34
 TEST_CASE(true, 18, true, ARI_TYPE_IDENT, true, 34, "8312201822") // ari://18/IDENT/34
-void test_ari_cbor_encode_objref_path_int(bool has_ns, int64_t ns_id, bool has_type, ari_type_t type_id, bool has_obj, int64_t obj_id, const char *expect)
+void test_ari_cbor_encode_objref_path_int(bool has_ns, int64_t ns_id, bool has_type, ari_type_t type_id, bool has_obj,
+                                          int64_t obj_id, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
     ari_set_objref_path_intid_opt(&ari, has_ns ? &ns_id : NULL, has_type ? &type_id : NULL, has_obj ? &obj_id : NULL);
@@ -218,12 +221,13 @@ static void check_decoding(ari_t *ari, const char *inhex)
     TEST_ASSERT_TRUE_MESSAGE(amm_builtin_validate(ari), "amm_builtin_validate() failed");
 }
 
-TEST_CASE("836361646D21626869", "adm", ARI_TYPE_CONST, "hi") // ari://adm/CONST/hi
-TEST_CASE("836474657374216474686174", "test", ARI_TYPE_CONST, "that") // "ari://test/CONST/that
+TEST_CASE("836361646D21626869", "adm", ARI_TYPE_CONST, "hi")                         // ari://adm/CONST/hi
+TEST_CASE("836474657374216474686174", "test", ARI_TYPE_CONST, "that")                // "ari://test/CONST/that
 TEST_CASE("8369746573744031323334216474686174", "test@1234", ARI_TYPE_CONST, "that") // ari://test@1234/CONST/that
-TEST_CASE("83652174657374216474686174", "!test", ARI_TYPE_CONST, "that") // ari://!test/CONST/that
-TEST_CASE("846474657374226474686174811822", "test", ARI_TYPE_CTRL, "that") // ari://test/CTRL/that(34)
-void test_ari_cbor_decode_objref_path_text(const char *hexval, const char *ns_id, ari_type_t type_id, const char *obj_id)
+TEST_CASE("83652174657374216474686174", "!test", ARI_TYPE_CONST, "that")             // ari://!test/CONST/that
+TEST_CASE("846474657374226474686174811822", "test", ARI_TYPE_CTRL, "that")           // ari://test/CTRL/that(34)
+void test_ari_cbor_decode_objref_path_text(const char *hexval, const char *ns_id, ari_type_t type_id,
+                                           const char *obj_id)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
 

@@ -136,7 +136,8 @@ void ari_set_objref_path_textid(ari_t *ari, const char *ns_id, ari_type_t type_i
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in] ns_id The namespace path segment, or NULL for none.
- * @param type_id The object type path segment, or NULL for none. The pointed-to lifetime does not need to outlast this function call.
+ * @param type_id The object type path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
+ * function call.
  * @param[in] obj_id The object ID path segment, or NULL for none.
  */
 void ari_set_objref_path_textid_opt(ari_t *ari, const char *ns_id, const ari_type_t *type_id, const char *obj_id);
@@ -153,9 +154,12 @@ void ari_set_objref_path_intid(ari_t *ari, int64_t ns_id, ari_type_t type_id, in
 /** Set the ARI as an object reference with a specific integer-enumerated path.
  *
  * @param[in,out] ari The ARI value to modify.
- * @param ns_id The namespace path segment, or NULL for none. The pointed-to lifetime does not need to outlast this function call.
- * @param type_id The object type path segment, or NULL for none. The pointed-to lifetime does not need to outlast this function call.
- * @param obj_id The object ID path segment, or NULL for none. The pointed-to lifetime does not need to outlast this function call.
+ * @param ns_id The namespace path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
+ * function call.
+ * @param type_id The object type path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
+ * function call.
+ * @param obj_id The object ID path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
+ * function call.
  */
 void ari_set_objref_path_intid_opt(ari_t *ari, const int64_t *ns_id, const ari_type_t *type_id, const int64_t *obj_id);
 
