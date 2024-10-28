@@ -833,6 +833,10 @@ TEST_CASE("ari:/TD/20.5", 20, 500e6)
 TEST_CASE("ari:/TD/20.500", 20, 500e6)
 TEST_CASE("ari:/TD/20.000001", 20, 1e3)
 TEST_CASE("ari:/TD/20.000000001", 20, 1)
+TEST_CASE("ari:/TD/+PT1M", 60, 0)
+TEST_CASE("ari:/TD/-PT1M", -60, 0)
+TEST_CASE("ari:/TD/-P1DT", -(24 * 60 * 60), 0)
+TEST_CASE("ari:/TD/PT", 0, 0)
 void test_ari_text_decode_lit_typed_td(const char *text, time_t expect_sec, long expect_nsec)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
