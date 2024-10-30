@@ -486,6 +486,7 @@ TEST_CASE("A0")             // bad major type
 TEST_CASE("821182A0820417") // AC with item having bad major type
 // TEST_CASE("836474657374226474686174") // ari://test/CTRL/that
 TEST_CASE("8364746573740A6474686174") // ari://test/TEXTSTR/that
+TEST_CASE("821386030102030405") // ari:/TBL/c=3;(1,2,3)(4,5) - FIXME: should be an error here, right?
 void test_ari_cbor_decode_failure(const char *inhex)
 {
     string_t intext;
@@ -613,7 +614,6 @@ TEST_CASE("8212A0") // ari:/AM/()
 TEST_CASE("8212A303F50A626869626F6804") // ari:/AM/(3=true,10=hi,oh=4)
 TEST_CASE("82138403010203") // ari:/TBL/c=3;(1,2,3)
 TEST_CASE("82138703010203040506") // ari:/TBL/c=3;(1,2,3)(4,5,6)
-TEST_CASE("821386030102030405") // ari:/TBL/c=3;(1,2,3)(4,5) - FIXME: should be an error here, right?
 TEST_CASE("82138100") // ari:/TBL/c=0;
 TEST_CASE("82138101") // ari:/TBL/c=1;
 TEST_CASE("821481F6") // ari:/EXECSET/n=null;()

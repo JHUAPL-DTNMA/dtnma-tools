@@ -411,6 +411,11 @@ static int ari_cbor_decode_tbl(QCBORDecodeContext *dec, ari_tbl_t *obj)
         ari_array_push_move(obj->items, &ari);
     }
 
+    if (obj->ncols > 0 && ari_array_size(obj->items) % obj->ncols) 
+    { 
+      retval = 3; // Invalid ARI due to incomplete row data
+    }
+
     QCBORDecode_ExitArray(dec);
     return retval;
 }
