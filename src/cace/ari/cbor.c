@@ -375,6 +375,10 @@ static int ari_cbor_decode_tbl(QCBORDecodeContext *dec, ari_tbl_t *obj)
     }
 
     QCBORDecode_GetUInt64(dec, &(obj->ncols));
+    if (QCBORDecode_GetError(dec))
+    {
+        return 2;
+    }
 
     while (true)
     {
