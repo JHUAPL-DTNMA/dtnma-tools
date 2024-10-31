@@ -188,9 +188,15 @@ ssp-literal:
                 switch (found_n->as_lit.prim_type)
                 {
                     case ARI_PRIM_NULL:
-                    case ARI_PRIM_INT64:
                     case ARI_PRIM_UINT64:
                     case ARI_PRIM_BSTR:
+                        break;
+                    case ARI_PRIM_INT64:
+                        if (found_n->as_lit.value.as_int64 < 0)
+                        {
+                          ari_deinit(found_n);
+                          found_n = NULL;
+                        }
                         break;
                     default:
                         ari_deinit(found_n);
@@ -236,9 +242,15 @@ ssp-literal:
                 switch (found_n->as_lit.prim_type)
                 {
                     case ARI_PRIM_NULL:
-                    case ARI_PRIM_INT64:
                     case ARI_PRIM_UINT64:
                     case ARI_PRIM_BSTR:
+                        break;
+                    case ARI_PRIM_INT64:
+                        if (found_n->as_lit.value.as_int64 < 0)
+                        {
+                          ari_deinit(found_n);
+                          found_n = NULL;
+                        }
                         break;
                     default:
                         ari_deinit(found_n);
