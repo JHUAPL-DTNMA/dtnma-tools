@@ -9,3 +9,4 @@ deps/build
 build
 testroot
 /deps/
+/.pytest_cache/

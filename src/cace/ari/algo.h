@@ -173,7 +173,7 @@ bool ari_equal(const ari_t *left, const ari_t *right);
 /// Default OPLIST for ari_t
 #define M_OPL_ari_t()                                                                                                  \
     (INIT(API_2(ari_init)), INIT_SET(API_6(ari_init_copy)), INIT_MOVE(API_6(ari_init_move)), CLEAR(API_2(ari_deinit)), \
-     RESET(API_2(ari_deinit)), SET(API_6(ari_set_copy)), MOVE(API_6(ari_set_move)), HASH(API_2(ari_hash)),             \
+     RESET(API_2(ari_reset)), SET(API_6(ari_set_copy)), MOVE(API_6(ari_set_move)), HASH(API_2(ari_hash)),             \
      CMP(API_6(ari_cmp)), EQUAL(API_6(ari_equal)))
 
 #ifdef __cplusplus
