@@ -138,26 +138,26 @@ typedef struct ari_report_s
     ari_t source;
     /// Items of the report itself
     ari_list_t items;
-} ari_report_t[1];
+} ari_report_t;
 
-void   ari_report_init(ari_report_t obj);
-void   ari_report_init_copy(ari_report_t obj, const ari_report_t src);
-void   ari_report_init_move(ari_report_t obj, ari_report_t src);
-void   ari_report_deinit(ari_report_t obj);
-void   ari_report_set_copy(ari_report_t obj, const ari_report_t src);
-void   ari_report_set_move(ari_report_t obj, ari_report_t src);
-size_t ari_report_hash(const ari_report_t obj);
-int    ari_report_cmp(const ari_report_t left, const ari_report_t right);
-bool   ari_report_equal(const ari_report_t left, const ari_report_t right);
+void   ari_report_init(ari_report_t *obj);
+void   ari_report_init_copy(ari_report_t *obj, const ari_report_t *src);
+void   ari_report_init_move(ari_report_t *obj, ari_report_t *src);
+void   ari_report_deinit(ari_report_t *obj);
+void   ari_report_set_copy(ari_report_t *obj, const ari_report_t *src);
+void   ari_report_set_move(ari_report_t *obj, ari_report_t *src);
+size_t ari_report_hash(const ari_report_t *obj);
+int    ari_report_cmp(const ari_report_t *left, const ari_report_t *right);
+bool   ari_report_equal(const ari_report_t *left, const ari_report_t *right);
 
-#define ARI_REPORT_OPLIST                                                                                            \
-    M_OPEXTEND(M_A1_OPLIST, INIT(ari_report_init), INIT_SET(ari_report_init_copy), INIT_MOVE(ari_report_init_move),  \
-               CLEAR(ari_report_deinit), SET(ari_report_set_copy), MOVE(ari_report_set_move), HASH(ari_report_hash), \
-               CMP(ari_report_cmp), EQUAL(ari_report_equal))
+#define M_OPL_ari_report_t()                                                                                      \
+    (INIT(API_2(ari_report_init)), INIT_SET(API_6(ari_report_init_copy)), INIT_MOVE(API_6(ari_report_init_move)), \
+     CLEAR(API_2(ari_report_deinit)), SET(API_6(ari_report_set_copy)), MOVE(API_6(ari_report_set_move)),          \
+     HASH(API_2(ari_report_hash)), CMP(API_6(ari_report_cmp)), EQUAL(API_6(ari_report_equal)))
 
 /// @cond Doxygen_Suppress
 /// Linked list of reports
-DEQUE_DEF(ari_report_list, ari_report_t, ARI_REPORT_OPLIST)
+DEQUE_DEF(ari_report_list, ari_report_t)
 /// @endcond
 
 /*

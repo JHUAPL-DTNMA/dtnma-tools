@@ -44,11 +44,10 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
     refda_agent_nowtime(runctx->agent, &(rpts->reftime));
     {
         ari_report_t *rpt = ari_report_list_push_back_new(rpts->reports);
-        ari_set_td(&(**rpt).reltime, (struct timespec) { .tv_sec = 0 });
-        ari_set_copy(&(**rpt).source, target);
+        ari_set_td(&(rpt->reltime), (struct timespec) { .tv_sec = 0 });
+        ari_set_copy(&(rpt->source), target);
 
-        ari_t *item = ari_list_push_back_new((**rpt).items);
-        ari_set_copy(item, result);
+        ari_list_push_back_move(rpt->items, result);
     }
     CACE_LOG_DEBUG("generated an execution report");
 
@@ -132,7 +131,7 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const ari_t *
     for (ari_list_it(rptt_it, value->as_lit.value.as_ac->items); !ari_list_end_p(rptt_it); ari_list_next(rptt_it))
     {
         const ari_t *rptt_item = ari_list_cref(rptt_it);
-        ari_t rpt_item = ARI_INIT_UNDEFINED;
+        ari_t        rpt_item  = ARI_INIT_UNDEFINED;
 
         int res = 0;
         if (rptt_item->is_ref)
@@ -277,10 +276,10 @@ int refda_reporting_gen(refda_agent_t *agent, const ari_t *src, ari_list_t items
     refda_agent_nowtime(agent, &(rpts->reftime));
     {
         ari_report_t *rpt = ari_report_list_push_back_new(rpts->reports);
-        ari_set_td(&(**rpt).reltime, (struct timespec) { .tv_sec = 0 });
-        ari_set_copy(&(**rpt).source, src);
+        ari_set_td(&(rpt->reltime), (struct timespec) { .tv_sec = 0 });
+        ari_set_copy(&(rpt->source), src);
 
-        ari_list_move((**rpt).items, items);
+        ari_list_move(rpt->items, items);
         ari_list_init(items);
 
         if (cace_log_is_enabled_for(LOG_DEBUG))
@@ -288,7 +287,8 @@ int refda_reporting_gen(refda_agent_t *agent, const ari_t *src, ari_list_t items
             string_t buf;
             string_init(buf);
             ari_text_encode(buf, src, ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("Generated a report for source %s with %d items", string_get_cstr(buf), ari_list_size((**rpt).items));
+            CACE_LOG_DEBUG("Generated a report for source %s with %d items", string_get_cstr(buf),
+                           ari_list_size(rpt->items));
             string_clear(buf);
         }
     }

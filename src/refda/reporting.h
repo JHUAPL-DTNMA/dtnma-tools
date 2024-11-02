@@ -40,7 +40,7 @@ typedef struct
     /** Dereference result which led to this reporting.
      * This will never be null.
      */
-    //const cace_amm_lookup_t *deref;
+    // const cace_amm_lookup_t *deref;
 
     /** Storage for the items of a report layer.
      * This is initialized as empty and is pushed back as items are added.

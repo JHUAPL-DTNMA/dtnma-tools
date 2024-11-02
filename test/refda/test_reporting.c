@@ -214,8 +214,8 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     ari_list_it_t expect_it;
     ari_list_it(expect_it, *expect_seq);
     ari_list_it_t got_it;
-    ari_list_it(got_it, (**rpt).items);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(ari_list_size(*expect_seq), ari_list_size((**rpt).items), "RPT size mismatch");
+    ari_list_it(got_it, rpt->items);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(ari_list_size(*expect_seq), ari_list_size(rpt->items), "RPT size mismatch");
     size_t item_ix = 0;
     for (; !ari_list_end_p(expect_it) && !ari_list_end_p(got_it); ari_list_next(expect_it), ari_list_next(got_it))
     {
