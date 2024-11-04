@@ -415,9 +415,9 @@ static int ari_cbor_decode_tbl(QCBORDecodeContext *dec, ari_tbl_t *obj)
         ari_array_push_move(obj->items, &ari);
     }
 
-    if (obj->ncols > 0 && ari_array_size(obj->items) % obj->ncols) 
-    { 
-      retval = 3; // Invalid ARI due to incomplete row data
+    if (obj->ncols > 0 && ari_array_size(obj->items) % obj->ncols)
+    {
+        retval = 3; // Invalid ARI due to incomplete row data
     }
 
     QCBORDecode_ExitArray(dec);
@@ -466,25 +466,25 @@ static int ari_cbor_decode_execset(QCBORDecodeContext *dec, ari_execset_t *obj)
 
     if (obj->nonce.is_ref)
     {
-      return 3;
-    } 
-    else 
+        return 3;
+    }
+    else
     {
-      switch (obj->nonce.as_lit.prim_type)
-      {
-          case ARI_PRIM_NULL:
-          case ARI_PRIM_UINT64:
-          case ARI_PRIM_BSTR:
-              break;
-          case ARI_PRIM_INT64:
-              if (obj->nonce.as_lit.value.as_int64 < 0)
-              {
+        switch (obj->nonce.as_lit.prim_type)
+        {
+            case ARI_PRIM_NULL:
+            case ARI_PRIM_UINT64:
+            case ARI_PRIM_BSTR:
+                break;
+            case ARI_PRIM_INT64:
+                if (obj->nonce.as_lit.value.as_int64 < 0)
+                {
+                    return 3;
+                }
+                break;
+            default:
                 return 3;
-              }
-              break;
-          default:
-              return 3;
-      }
+        }
     }
 
     while (true)
@@ -670,25 +670,25 @@ static int ari_cbor_decode_rptset(QCBORDecodeContext *dec, ari_rptset_t *obj)
 
     if (obj->nonce.is_ref)
     {
-      return 3;
+        return 3;
     }
-    else 
+    else
     {
-      switch (obj->nonce.as_lit.prim_type)
-      {
-          case ARI_PRIM_NULL:
-          case ARI_PRIM_UINT64:
-          case ARI_PRIM_BSTR:
-              break;
-          case ARI_PRIM_INT64:
-              if (obj->nonce.as_lit.value.as_int64 < 0)
-              {
+        switch (obj->nonce.as_lit.prim_type)
+        {
+            case ARI_PRIM_NULL:
+            case ARI_PRIM_UINT64:
+            case ARI_PRIM_BSTR:
+                break;
+            case ARI_PRIM_INT64:
+                if (obj->nonce.as_lit.value.as_int64 < 0)
+                {
+                    return 3;
+                }
+                break;
+            default:
                 return 3;
-              }
-              break;
-          default:
-              return 3;
-      }
+        }
     }
 
     {
