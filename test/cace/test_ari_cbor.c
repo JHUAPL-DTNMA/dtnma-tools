@@ -255,6 +255,43 @@ void test_ari_cbor_decode_objref_path_int(const char *hexval, int64_t ns_id, ari
     ari_deinit(&ari);
 }
 
+TEST_CASE("8215831904D21903E8850083647465737422626869F603426869", 1234, 1000, 0, 1) // ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
+TEST_CASE("8215831904D282211904D2850083647465737422626869F603426869", 1234, 12, 340000000, 1)
+void test_ari_cbor_decode_rptset(const char *hexval, int expect_nonce, time_t expect_tv_sec, long expect_tv_nsec, int expect_reports)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+
+    check_decoding(&ari, hexval);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_RPTSET, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ari.as_lit.value.as_rptset->nonce.as_lit.value.as_int64, expect_nonce);
+
+    struct timespec *tm = &(ari.as_lit.value.as_rptset->reftime.as_lit.value.as_timespec);
+    TEST_ASSERT_EQUAL_INT(tm->tv_sec, expect_tv_sec);
+    TEST_ASSERT_EQUAL_INT(tm->tv_nsec, expect_tv_nsec);
+
+    ari_report_list_t *reports = &(ari.as_lit.value.as_rptset->reports);
+    TEST_ASSERT_EQUAL_INT(ari_report_list_size(*reports), expect_reports);
+
+    ari_deinit(&ari);
+}
+
+TEST_CASE("82158282041904D21903E8", 1234, 1000, 0)
+void test_ari_cbor_encode_rptset(const char *expect_hexval, int nonce, time_t tv_sec, long tv_nsec)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+
+    struct timespec tm = {.tv_sec = tv_sec, .tv_nsec = tv_nsec};
+
+    ari_init_rptset(&ari);
+    ari_set_int(&ari.as_lit.value.as_rptset->nonce, nonce);
+    ari_set_tp(&ari.as_lit.value.as_rptset->reftime, tm);
+
+    check_encoding(&ari, expect_hexval);
+}
+
+
 void test_ari_cbor_decode_lit_prim_undef(void)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
