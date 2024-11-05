@@ -803,6 +803,37 @@ void test_ari_text_decode_lit_typed_bool(const char *text, ari_bool expect)
     ari_deinit(&ari);
 }
 
+TEST_CASE("ari:/LABEL/hi", "hi", 0)
+TEST_CASE("ari:/LABEL/testing", "testing", 0)
+TEST_CASE("ari:/LABEL/10", NULL, 10)
+TEST_CASE("ari:/LABEL/0", NULL, 0)
+TEST_CASE("ari:/LABEL/9999999", NULL, 9999999)
+TEST_CASE("ari:/LABEL/9001234", NULL, 9001234)
+void test_ari_text_decode_lit_typed_label(const char *text, const char *expect_text, int64_t expect_int)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+    check_decode(&ari, text);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_LABEL, ari.as_lit.ari_type);
+
+    if (expect_text)
+    {
+        cace_data_t expect_data;
+        cace_data_init_view(&expect_data, strlen(expect_text) + 1, (cace_data_ptr_t)expect_text);
+        TEST_ASSERT_EQUAL_INT(ARI_PRIM_TSTR, ari.as_lit.prim_type);
+        TEST_ASSERT_EQUAL_STRING(expect_data.ptr, ari.as_lit.value.as_data.ptr);
+        cace_data_deinit(&expect_data);
+    }
+    else 
+    {
+        TEST_ASSERT_EQUAL_INT(ARI_PRIM_INT64, ari.as_lit.prim_type);
+        TEST_ASSERT_EQUAL(expect_int, ari.as_lit.value.as_int64);
+    }
+
+    ari_deinit(&ari);
+}
+
 TEST_CASE("ari:/TP/2000-01-01T00:00:20Z", 20, 0)
 TEST_CASE("ari:/TP/20000101T000020Z", 20, 0)
 TEST_CASE("ari:/TP/20000101T000020.5Z", 20, 500e6)
@@ -1143,6 +1174,7 @@ TEST_CASE("ari:/BYTESTR/h'6869'")
 TEST_CASE("ari:/TEXTSTR/hi")
 TEST_CASE("ari:/TEXTSTR/%22hi%20there%22")
 TEST_CASE("ari:/LABEL/hi")
+TEST_CASE("ari:/LABEL/1")
 TEST_CASE("ari:/TP/20230102T030405Z")
 TEST_CASE("ari:/AC/()")
 TEST_CASE("ari:/AC/(a)")
@@ -1264,6 +1296,9 @@ TEST_CASE("ari:/BOOL/fae")
 TEST_CASE("ari:/BOOL/3")
 TEST_CASE("ari:/TEXTSTR/1")
 TEST_CASE("ari:/BYTESTR/1")
+TEST_CASE("ari:/LABEL/001234")
+TEST_CASE("ari:/LABEL/01234")
+TEST_CASE("ari:/LABEL/-1")
 TEST_CASE("ari:/AC/")
 TEST_CASE("ari:/AC/(a,")
 TEST_CASE("ari:/AC/(,,,)")
