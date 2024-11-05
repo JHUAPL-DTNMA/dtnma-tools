@@ -825,7 +825,7 @@ void test_ari_text_decode_lit_typed_label(const char *text, const char *expect_t
         TEST_ASSERT_EQUAL_STRING(expect_data.ptr, ari.as_lit.value.as_data.ptr);
         cace_data_deinit(&expect_data);
     }
-    else 
+    else
     {
         TEST_ASSERT_EQUAL_INT(ARI_PRIM_INT64, ari.as_lit.prim_type);
         TEST_ASSERT_EQUAL(expect_int, ari.as_lit.value.as_int64);
