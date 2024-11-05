@@ -65,6 +65,37 @@ DECDIG [0-9]
     return T_BOOL;
 }
 
+<LT_LABEL>(0|[1-9]{DECDIG}*) {
+        string_t text;
+          string_init_set_str(text, yytext);
+
+        uint64_t val;
+        int ret = ari_uint64_decode(&val, text);
+        string_clear(text);
+        if (ret)
+        {
+            cace_ari_text_val_error(yyscanner, yyextra, "number too large to parse");
+            return YYerror;
+        }
+
+        // prefer signed integer use
+        if (val <= INT64_MAX)
+        {
+            yylval->lit = (ari_lit_t){
+                .prim_type = ARI_PRIM_INT64,
+                .value.as_int64 = (int64_t)val,
+            };
+            return T_INT;
+        }
+        else
+        {
+            yylval->lit = (ari_lit_t){
+                .prim_type = ARI_PRIM_UINT64,
+                .value.as_uint64 = val,
+            };
+            return T_UINT;
+        }
+}
 <PRIMITIVE,LT_ANYINT,LT_ARITYPE>[+-]?(0[bB][01]+|0[xX]{HEXDIG}+|{DECDIG}+) {
     // infer the base from the text
     if (yytext[0] == '-')
