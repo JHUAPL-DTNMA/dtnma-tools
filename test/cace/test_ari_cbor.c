@@ -291,6 +291,7 @@ void test_ari_cbor_encode_rptset(const char *expect_hexval, int nonce, time_t tv
     ari_set_tp(&ari.as_lit.value.as_rptset->reftime, tm);
 
     check_encoding(&ari, expect_hexval);
+    ari_deinit(&ari);
 }
 
 void test_ari_cbor_decode_lit_prim_undef(void)
