@@ -521,8 +521,8 @@ void test_ari_cbor_decode_lit_typed_real64(const char *inhex, bool expect)
 }
 
 TEST_CASE("8402202020")
-TEST_CASE("A0")             // bad major type
-TEST_CASE("821182A0820417") // AC with item having bad major type
+TEST_CASE("A0")                                 // bad major type
+TEST_CASE("821182A0820417")                     // AC with item having bad major type
 TEST_CASE("8364746573740A6474686174")           // ari://test/TEXTSTR/that
 TEST_CASE("821386030102030405")                 // ari:/TBL/c=3;(1,2,3)(4,5)
 TEST_CASE("821380")                             // ari:/TBL/
