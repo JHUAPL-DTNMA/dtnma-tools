@@ -23,6 +23,7 @@
 #include "obj_store.h"
 #include "parameters.h"
 #include "cace/ari.h"
+#include <m-shared.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,6 +43,8 @@ typedef struct
     cace_amm_obj_ns_t *ns;
     /// The found object, or a null pointer
     cace_amm_obj_desc_t *obj;
+    /// The found object type, if #obj is non-null
+    ari_type_t obj_type;
 
     /** Actual parameters normalized for this object from the given parameters.
      * This is set if the #obj is non-null and parameter processing succeeded
@@ -54,12 +57,20 @@ void cace_amm_lookup_init(cace_amm_lookup_t *res);
 
 void cace_amm_lookup_deinit(cace_amm_lookup_t *res);
 
+/** Initializer with move semantics.
+ */
+void cace_amm_lookup_init_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src);
+
 /** Perform a lookup into an object store.
  *
  * @return Zero if successful,
  * 1 if parameters are invalid (including an ARI that is not an object reference).
  */
 int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *store, const ari_t *ref);
+
+#define M_OPL_cace_amm_lookup_t()                                                    \
+    (INIT(API_2(cace_amm_lookup_init)), INIT_MOVE(API_6(cace_amm_lookup_init_move)), \
+     CLEAR(API_2(cace_amm_lookup_deinit)))
 
 #ifdef __cplusplus
 } // extern C

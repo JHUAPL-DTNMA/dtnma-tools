@@ -48,7 +48,7 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
     CACE_LOG_DEBUG("Producing value for reference type %s", ari_type_to_name(ctx->deref->ref->as_ref.objpath.ari_type));
 
     int retval = 0;
-    switch (ctx->deref->ref->as_ref.objpath.ari_type)
+    switch (ctx->deref->obj_type)
     {
         case ARI_TYPE_CONST:
         {

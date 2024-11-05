@@ -176,12 +176,7 @@ int refda_agent_send_hello(refda_agent_t *agent)
         return 2;
     }
 
-    refda_reporting_ctx_t ctx;
-    refda_reporting_ctx_init(&ctx, &runctx);
-
     int res = refda_reporting_target(&runctx, &ref);
-
-    refda_reporting_ctx_deinit(&ctx);
 
     return res;
 }

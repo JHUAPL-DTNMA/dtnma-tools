@@ -20,6 +20,7 @@
 
 void cace_amm_lookup_init(cace_amm_lookup_t *res)
 {
+    CHKVOID(res);
     res->ref = NULL;
     res->ns  = NULL;
     res->obj = NULL;
@@ -28,10 +29,27 @@ void cace_amm_lookup_init(cace_amm_lookup_t *res)
 
 void cace_amm_lookup_deinit(cace_amm_lookup_t *res)
 {
+    CHKVOID(res);
     cace_amm_actual_param_set_deinit(&(res->aparams));
-    res->ns  = NULL;
-    res->obj = NULL;
-    res->ref = NULL;
+    res->ns       = NULL;
+    res->obj      = NULL;
+    res->obj_type = ARI_TYPE_NULL;
+    res->ref      = NULL;
+}
+
+void cace_amm_lookup_init_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src)
+{
+    CHKVOID(res);
+    CHKVOID(src);
+    res->ref      = src->ref;
+    src->ref      = NULL;
+    res->ns       = src->ns;
+    src->ns       = NULL;
+    res->obj      = src->obj;
+    src->obj      = NULL;
+    res->obj_type = src->obj_type;
+    src->obj_type = ARI_TYPE_NULL;
+    cace_amm_actual_param_set_init_move(&(res->aparams), &(src->aparams));
 }
 
 int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *store, const ari_t *ref)
@@ -42,9 +60,10 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
     CHKERR1(ref->is_ref);
 
     // reset state
-    res->ref = ref;
-    res->ns  = NULL;
-    res->obj = NULL;
+    res->ref      = ref;
+    res->ns       = NULL;
+    res->obj      = NULL;
+    res->obj_type = ARI_TYPE_NULL;
     cace_amm_actual_param_set_reset(&(res->aparams));
 
     const ari_objpath_t *path = &(ref->as_ref.objpath);
@@ -85,6 +104,8 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
     {
         return 4;
     }
+
+    res->obj_type = path->ari_type;
 
     int pop_res = cace_amm_actual_param_set_populate(&(res->aparams), res->obj->fparams, &(ref->as_ref.params));
     if (pop_res)

@@ -25,5 +25,8 @@ target_link_libraries(test_amm_ctrl PUBLIC refda)
 add_unity_test(SOURCE "test_exec.c")
 target_link_libraries(test_exec PUBLIC refda)
 
+add_unity_test(SOURCE "test_eval.c")
+target_link_libraries(test_eval PUBLIC refda)
+
 add_unity_test(SOURCE "test_reporting.c")
 target_link_libraries(test_reporting PUBLIC refda)

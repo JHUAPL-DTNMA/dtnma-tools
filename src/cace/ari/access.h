@@ -98,6 +98,13 @@ void ari_set_tp(ari_t *ari, struct timespec dtntime);
 
 void ari_set_td(ari_t *ari, struct timespec delta);
 
+/** Require an AC value and extract a pointer to its item list.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained AC struct, if present, otherwise NULL.
+ */
+struct ari_ac_s *ari_get_ac(const ari_t *ari);
+
 /** Set the ARI as an AC, optionally moving values from an external source.
  *
  * @param[in,out] ari The ARI value to modify.
@@ -108,6 +115,13 @@ void ari_set_ac(ari_t *ari, struct ari_ac_s *src);
 void ari_set_am(ari_t *ari, struct ari_am_s *src);
 
 void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
+
+/** Require an AC value and extract a pointer to its item list.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained AC struct, if present, otherwise NULL.
+ */
+struct ari_execset_s *ari_get_execset(const ari_t *ari);
 
 /** Initialize an ARI as an EXECSET literal value.
  *

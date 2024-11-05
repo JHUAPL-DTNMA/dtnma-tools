@@ -185,24 +185,15 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
 
     ari_t expect_rpt_items = ARI_INIT_UNDEFINED;
     ari_convert(&expect_rpt_items, expectloghex);
-    {
-        const amm_type_t *ac_type = amm_type_get_builtin(ARI_TYPE_AC);
-        TEST_ASSERT_NOT_NULL(ac_type);
-        TEST_ASSERT_TRUE_MESSAGE(amm_type_match(ac_type, &expect_rpt_items), "invalid log ARI");
-    }
-    ari_list_t *expect_seq = &(expect_rpt_items.as_lit.value.as_ac->items);
+    ari_ac_t *expect_seq = ari_get_ac(&expect_rpt_items);
+    TEST_ASSERT_NOT_NULL(expect_seq);
 
     refda_runctx_t runctx;
     // no nonce for test
     refda_runctx_init(&runctx, &agent, NULL);
 
-    refda_reporting_ctx_t ctx;
-    refda_reporting_ctx_init(&ctx, &runctx);
-
     int res = refda_reporting_target(&runctx, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");
-
-    refda_reporting_ctx_deinit(&ctx);
 
     // extract agent state
     TEST_ASSERT_EQUAL_INT(1, agent_ari_queue_size(agent.rptgs));
@@ -212,10 +203,10 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
 
     // verify RPTSET result
     ari_list_it_t expect_it;
-    ari_list_it(expect_it, *expect_seq);
+    ari_list_it(expect_it, expect_seq->items);
     ari_list_it_t got_it;
     ari_list_it(got_it, rpt->items);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(ari_list_size(*expect_seq), ari_list_size(rpt->items), "RPT size mismatch");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(ari_list_size(expect_seq->items), ari_list_size(rpt->items), "RPT size mismatch");
     size_t item_ix = 0;
     for (; !ari_list_end_p(expect_it) && !ari_list_end_p(got_it); ari_list_next(expect_it), ari_list_next(got_it))
     {

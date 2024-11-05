@@ -21,44 +21,16 @@
 
 #include "runctx.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// Error result when an invalid type is present
 #define REFDA_REPORTING_ERR_BAD_TYPE 3
 /// Error result when dereferencing fails
 #define REFDA_REPORTING_ERR_DEREF_FAILED 4
 /// Error result when value production fails
 #define REFDA_REPORTING_ERR_PROD_FAILED 5
-
-/** Context for execution activities.
- */
-typedef struct
-{
-    /** Parent running context.
-     * This will never be null.
-     */
-    refda_runctx_t *parent;
-
-    /** Dereference result which led to this reporting.
-     * This will never be null.
-     */
-    // const cace_amm_lookup_t *deref;
-
-    /** Storage for the items of a report layer.
-     * This is initialized as empty and is pushed back as items are added.
-     */
-    ari_list_t items;
-} refda_reporting_ctx_t;
-
-/** Initialize a context based on an object reference ARI and
- * a target object's formal parameters.
- *
- * @param[out] obj The context to initialize.
- * @param[in] parent The parent runtime context.
- * @param[in] deref The dereference result.
- * The result must outlive this context.
- */
-void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *parent);
-
-void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj);
 
 /** Generate a RPTSET for the conclusion of a CTRL exectuion.
  *
@@ -81,5 +53,9 @@ int refda_reporting_target(refda_runctx_t *runctx, const ari_t *target);
  *
  */
 int refda_reporting_gen(refda_agent_t *agent, const ari_t *src, ari_list_t items);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* REFDA_REPORTING_H_ */

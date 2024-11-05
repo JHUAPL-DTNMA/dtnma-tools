@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef REFDA_EXEC_H_
-#define REFDA_EXEC_H_
+#ifndef REFDA_EVAL_H_
+#define REFDA_EVAL_H_
 
 #include "agent.h"
 #include "runctx.h"
@@ -28,29 +28,27 @@ extern "C" {
 #endif
 
 /// Error result when an invalid type is present
-#define REFDA_EXEC_ERR_BAD_TYPE 3
+#define REFDA_EVAL_ERR_BAD_TYPE 3
 /// Error result when dereferencing fails
-#define REFDA_EXEC_ERR_DEREF_FAILED 4
+#define REFDA_EVAL_ERR_DEREF_FAILED 4
 /// Error result when value production fails
-#define REFDA_EXEC_ERR_PROD_FAILED 5
+#define REFDA_EVAL_ERR_PROD_FAILED 5
+/// Error result when the evaluation does not resolve to a single value
+#define REFDA_EVAL_ERR_NON_SINGLE 6
 
-/** Implement the execution procedure from Section TBD of @cite ietf-dtn-amm-01.
+/** Implement the evaluation procedure from Section TBD of @cite ietf-dtn-amm-01.
  *
  * @param[in] agent The agent state for ARI lookup.
- * @param[in] ari The ARI to dereference, if necessary, and execute.
+ * @param[out] result The single result value from the evaluation.
+ * This ARI must be initialized before the call and will be valid if the
+ * return code is zero but must be deinitialized regardless.
+ * @param[in] ari The ARI to dereference, if necessary, and evaluate.
  * @return Zero if successful.
  */
-int refda_exec_target(refda_runctx_t *runctx, const ari_t *ari);
-
-/** Work thread function for the Agent execution manager.
- *
- * @param[in] arg The context ::refda_agent_t pointer.
- * @return Always NULL pointer.
- */
-void *refda_exec_worker(void *arg);
+int refda_eval_target(refda_runctx_t *runctx, ari_t *result, const ari_t *ari);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* REFDA_EXEC_H_ */
+#endif /* REFDA_EVAL_H_ */

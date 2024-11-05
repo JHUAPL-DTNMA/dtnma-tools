@@ -15,55 +15,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef REFDA_AMM_CTRL_H_
-#define REFDA_AMM_CTRL_H_
+#ifndef REFDA_AMM_OPER_H_
+#define REFDA_AMM_OPER_H_
 
-#include "refda/exec.h"
-#include "refda/exec_ctx.h"
+#include "refda/eval.h"
+#include "refda/eval_ctx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // forward declaration for callback reference
-struct refda_amm_ctrl_desc_s;
-typedef struct refda_amm_ctrl_desc_s refda_amm_ctrl_desc_t;
+struct refda_amm_oper_desc_s;
+typedef struct refda_amm_oper_desc_s refda_amm_oper_desc_t;
 
 /** A control (CTRL) descriptor.
  * This defines the properties of a CTRL in an Agent and includes common
  * object metadata.
  */
-struct refda_amm_ctrl_desc_s
+struct refda_amm_oper_desc_s
 {
+    // FIXME add operand types
+
     /** An optional type for the result value.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
     amm_type_t res_type;
 
-    /** Execution callback for this object.
+    /** Evaluation callback for this object.
      *
      * @param[in] obj Pointer to this descriptor.
-     * @param[in,out] ctx The execution context, including result storage.
+     * @param[in,out] ctx The evaluation context, including value stack.
      * @return Zero upon success, or any other value for failure.
      */
-    int (*execute)(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx_t *ctx);
+    int (*evaluate)(const refda_amm_oper_desc_t *obj, refda_eval_ctx_t *ctx);
 };
 
-void refda_amm_ctrl_desc_init(refda_amm_ctrl_desc_t *obj);
+void refda_amm_oper_desc_init(refda_amm_oper_desc_t *obj);
 
-void refda_amm_ctrl_desc_deinit(refda_amm_ctrl_desc_t *obj);
+void refda_amm_oper_desc_deinit(refda_amm_oper_desc_t *obj);
 
-/** Perform the execution procedure on a CTRL.
+/** Perform the evaluation procedure on an OPER.
  *
  * @param obj The object to execute.
  * @param ctx The execution context.
  * @return Zero upon success.
  */
-int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx_t *ctx);
+int refda_amm_oper_desc_evaluate(const refda_amm_oper_desc_t *obj, refda_eval_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* REFDA_AMM_CTRL_H_ */
+#endif /* REFDA_AMM_OPER_H_ */

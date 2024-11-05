@@ -71,6 +71,8 @@ typedef struct
 
 void cace_amm_actual_param_set_init(cace_amm_actual_param_set_t *obj);
 
+void cace_amm_actual_param_set_init_move(cace_amm_actual_param_set_t *obj, cace_amm_actual_param_set_t *src);
+
 void cace_amm_actual_param_set_deinit(cace_amm_actual_param_set_t *obj);
 
 /** Clear out any parameters present.

@@ -16,24 +16,11 @@
  * limitations under the License.
  */
 #include "reporting.h"
+#include "reporting_ctx.h"
 #include "valprod.h"
 #include "cace/ari/text.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
-
-void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *parent)
-{
-    CHKVOID(obj);
-    obj->parent = parent;
-    ari_list_init(obj->items);
-}
-
-void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj)
-{
-    CHKVOID(obj);
-    ari_list_clear(obj->items);
-    obj->parent = NULL;
-}
 
 int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *result)
 {
@@ -57,8 +44,9 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
     return 0;
 }
 
-static int refda_reporting_item_val(refda_runctx_t *parent, ari_t *rpt_item, const ari_t *rptt_item)
+static int refda_reporting_item_val(refda_runctx_t *parent _U_, ari_t *rpt_item, const ari_t *rptt_item)
 {
+    //FIXME: evaluate if necessary
     ari_set_copy(rpt_item, rptt_item);
     return 0;
 }
@@ -96,7 +84,7 @@ static int refda_reporting_item_ref(refda_runctx_t *parent, ari_t *rpt_item, con
 
     if (!retval)
     {
-        switch (rptt_item->as_ref.objpath.ari_type)
+        switch (deref.obj_type)
         {
             case ARI_TYPE_CONST:
             case ARI_TYPE_VAR:
@@ -204,7 +192,7 @@ static int refda_reporting_rptt_ref(refda_reporting_ctx_t *rptctx, const ari_t *
 
     if (!retval)
     {
-        switch (target->as_ref.objpath.ari_type)
+        switch (deref.obj_type)
         {
             case ARI_TYPE_CONST:
             case ARI_TYPE_VAR:
