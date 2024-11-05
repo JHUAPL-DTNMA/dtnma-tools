@@ -176,8 +176,13 @@ static ari_report_t * assert_rptset_items(ari_t *val)
     return ari_report_list_front(*rpts);
 }
 
-TEST_CASE("821182831A000100002301831A000100002A01", 0, "821182""820601""82061A0001E240") // direct RPTT ari:/AC/(//65536/EDD/1,//65536/VAR/1)
-TEST_CASE("831A000100002101", 0, "821182""820601""82061A0001E240") // indirect RPTT ari://65536/CONST/1
+// direct RPTT ari:/AC/(//65536/EDD/1,//65536/VAR/1) -> (/VAST/1,/VAST/123456)
+TEST_CASE("821182831A000100002301831A000100002A01", 0, "821182""820601""82061A0001E240")
+// indirect RPTT ari://65536/CONST/1 -> (/VAST/1,/VAST/123456)
+TEST_CASE("831A000100002101", 0, "821182""820601""82061A0001E240")
+// direct with simple (one-item) expressions
+// ari:/AC/(/AC/(//65536/EDD/1),/AC/(//65536/VAR/1)) -> (/VAST/1,/VAST/123456)
+TEST_CASE("821182821181831A000100002301821181831A000100002A01", 0, "821182""820601""82061A0001E240")
 void test_refda_reporting_target(const char *targethex, int expect_res, const char *expectloghex)
 {
     ari_t target = ARI_INIT_UNDEFINED;

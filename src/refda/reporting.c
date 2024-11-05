@@ -18,6 +18,7 @@
 #include "reporting.h"
 #include "reporting_ctx.h"
 #include "valprod.h"
+#include "eval.h"
 #include "cace/ari/text.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
@@ -44,13 +45,8 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
     return 0;
 }
 
-static int refda_reporting_item_val(refda_runctx_t *parent _U_, ari_t *rpt_item, const ari_t *rptt_item)
-{
-    //FIXME: evaluate if necessary
-    ari_set_copy(rpt_item, rptt_item);
-    return 0;
-}
-
+/** Require any literal to be an EXPR and evaluate the expression.
+ */
 static int refda_reporting_item_lit(refda_runctx_t *parent, ari_t *rpt_item, const ari_t *rptt_item)
 {
     int retval = 0;
@@ -62,11 +58,18 @@ static int refda_reporting_item_lit(refda_runctx_t *parent, ari_t *rpt_item, con
     else
     {
         CACE_LOG_DEBUG("Reporting on item literal");
-        retval = refda_reporting_item_val(parent, rpt_item, rptt_item);
+        if (refda_eval_target(parent, rpt_item, rptt_item))
+        {
+            ari_reset(rpt_item);
+            retval = REFDA_REPORTING_ERR_EVAL_FAILED;
+        }
     }
     return retval;
 }
 
+/** Treat any object reference as a value-producing activity, with the
+ * produced value reported on directly.
+ */
 static int refda_reporting_item_ref(refda_runctx_t *parent, ari_t *rpt_item, const ari_t *rptt_item)
 {
     CACE_LOG_DEBUG("Reporting on item reference");
@@ -95,8 +98,8 @@ static int refda_reporting_item_ref(refda_runctx_t *parent, ari_t *rpt_item, con
                 retval = refda_valprod_run(&prodctx);
                 if (!retval)
                 {
-                    // execute the produced value as a target
-                    retval = refda_reporting_item_lit(parent, rpt_item, &(prodctx.value));
+                    // include the produced value directly
+                    ari_set_copy(rpt_item, &(prodctx.value));
                 }
                 refda_valprod_ctx_deinit(&prodctx);
                 break;

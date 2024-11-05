@@ -31,6 +31,8 @@ extern "C" {
 #define REFDA_REPORTING_ERR_DEREF_FAILED 4
 /// Error result when value production fails
 #define REFDA_REPORTING_ERR_PROD_FAILED 5
+/// Error result when value EXPR evaluation fails
+#define REFDA_REPORTING_ERR_EVAL_FAILED 6
 
 /** Generate a RPTSET for the conclusion of a CTRL exectuion.
  *
