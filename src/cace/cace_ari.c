@@ -27,15 +27,27 @@
 
 typedef enum
 {
+    /// Default invalid value
     ARI_FORM_INVALID,
+    /** Detect the input by its initial characters as either text or hex
+     * and use the opposite on output.
+     */
+    ARI_FORM_AUTO,
+    /// Use text form ARIs
     ARI_FORM_TEXT,
+    /// Use binary form ARIs
     ARI_FORM_CBOR,
+    /// Use hex-encoded binary form ARIs
     ARI_FORM_CBORHEX,
 } ari_form_t;
 
 static ari_form_t get_form(const char *text)
 {
-    if (strcasecmp(text, "text") == 0)
+    if (strcasecmp(text, "auto") == 0)
+    {
+        return ARI_FORM_AUTO;
+    }
+    else if (strcasecmp(text, "text") == 0)
     {
         return ARI_FORM_TEXT;
     }
@@ -215,6 +227,47 @@ static int read_cborhex(ari_t *inval, FILE *source)
     return 0;
 }
 
+static int read_auto(ari_form_t *inform, ari_form_t *outform, ari_t *inval, FILE *source)
+{
+    // check only the first line
+    char  *buf = NULL;
+    size_t len = 0;
+    int    res = getline(&buf, &len, source);
+    if (res < 0)
+    {
+        // end of file
+        return -1;
+    }
+
+    if ((len >= 4) && (strncasecmp(buf, "ari:", 4) == 0))
+    {
+        *inform = ARI_FORM_TEXT;
+        *outform = ARI_FORM_CBORHEX;
+
+        FILE *tmp = fmemopen(buf, len, "rb");
+        if (!tmp)
+        {
+            return 2;
+        }
+        res = read_text(inval, tmp);
+        fclose(tmp);
+    }
+    else
+    {
+        *inform = ARI_FORM_CBORHEX;
+        *outform = ARI_FORM_TEXT;
+
+        FILE *tmp = fmemopen(buf, len, "rb");
+        if (!tmp)
+        {
+            return 2;
+        }
+        res = read_cborhex(inval, tmp);
+        fclose(tmp);
+    }
+    return res;
+}
+
 static int write_text(const ari_t *val, FILE *dest, ari_text_enc_opts_t opts)
 {
     string_t outtext;
@@ -298,9 +351,9 @@ static int write_cborhex(const ari_t *val, FILE *dest)
 int main(int argc, char *argv[])
 {
     FILE               *source    = stdin;
-    ari_form_t          inform    = ARI_FORM_TEXT;
+    ari_form_t          inform    = ARI_FORM_AUTO;
     FILE               *dest      = stdout;
-    ari_form_t          outform   = ARI_FORM_CBORHEX;
+    ari_form_t          outform   = ARI_FORM_AUTO;
     ari_text_enc_opts_t text_opts = ARI_TEXT_ENC_OPTS_DEFAULT;
 
 #ifdef HAVE_GETOPT_LONG
@@ -364,8 +417,8 @@ int main(int argc, char *argv[])
                 break;
             default:
                 fprintf(stderr,
-                        "Usage: %s [--source {filename or -}] [--inform {text,cbor,cborhex}] [--dest {filename or -}] "
-                        "[--outform {text,cbor,cborhex}]\n",
+                        "Usage: %s [--source {filename or -}] [--inform {auto,text,cbor,cborhex}] [--dest {filename or -}] "
+                        "[--outform {auto,text,cbor,cborhex}]\n",
                         argv[0]);
                 retval = 1;
                 cont   = false;
@@ -391,6 +444,9 @@ int main(int argc, char *argv[])
         int   res   = 0;
         switch (inform)
         {
+            case ARI_FORM_AUTO:
+                res = read_auto(&inform, &outform, &inval, source);
+                break;
             case ARI_FORM_TEXT:
                 res = read_text(&inval, source);
                 break;
