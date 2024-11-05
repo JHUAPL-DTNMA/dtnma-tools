@@ -119,9 +119,9 @@ int refda_eval_target(refda_runctx_t *runctx, ari_t *result, const ari_t *ari)
         for (refda_eval_list_it(in_it, eval_ctx.input); !refda_eval_list_end_p(in_it) && !retval;
              refda_eval_list_next(in_it))
         {
-            refda_eval_item_t *item     = refda_eval_list_ref(in_it);
+            refda_eval_item_t *item = refda_eval_list_ref(in_it);
 
-            ari_t             *as_value = refda_eval_item_get_value(*item);
+            ari_t *as_value = refda_eval_item_get_value(*item);
             if (as_value)
             {
                 ari_list_push_back_move(eval_ctx.stack, as_value);

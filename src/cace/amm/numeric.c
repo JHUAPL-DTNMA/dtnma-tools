@@ -45,22 +45,22 @@ static int numeric_rank(ari_type_t typ)
 {
     switch (typ)
     {
-    case ARI_TYPE_BYTE:
-        return 0;
-    case ARI_TYPE_UINT:
-        return 1;
-    case ARI_TYPE_INT:
-        return 2;
-    case ARI_TYPE_UVAST:
-        return 3;
-    case ARI_TYPE_VAST:
-        return 4;
-    case ARI_TYPE_REAL32:
-        return 5;
-    case ARI_TYPE_REAL64:
-        return 6;
-    default:
-        return -1;
+        case ARI_TYPE_BYTE:
+            return 0;
+        case ARI_TYPE_UINT:
+            return 1;
+        case ARI_TYPE_INT:
+            return 2;
+        case ARI_TYPE_UVAST:
+            return 3;
+        case ARI_TYPE_VAST:
+            return 4;
+        case ARI_TYPE_REAL32:
+            return 5;
+        case ARI_TYPE_REAL64:
+            return 6;
+        default:
+            return -1;
     }
 }
 
