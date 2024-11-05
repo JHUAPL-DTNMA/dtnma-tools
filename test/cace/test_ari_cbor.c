@@ -222,7 +222,7 @@ static void check_decoding(ari_t *ari, const char *inhex)
 }
 
 TEST_CASE("836361646D21626869", "adm", ARI_TYPE_CONST, "hi")                         // ari://adm/CONST/hi
-TEST_CASE("836474657374216474686174", "test", ARI_TYPE_CONST, "that")                // "ari://test/CONST/that
+TEST_CASE("836474657374216474686174", "test", ARI_TYPE_CONST, "that")                // ari://test/CONST/that
 TEST_CASE("8369746573744031323334216474686174", "test@1234", ARI_TYPE_CONST, "that") // ari://test@1234/CONST/that
 TEST_CASE("83652174657374216474686174", "!test", ARI_TYPE_CONST, "that")             // ari://!test/CONST/that
 TEST_CASE("846474657374226474686174811822", "test", ARI_TYPE_CTRL, "that")           // ari://test/CTRL/that(34)
@@ -523,7 +523,6 @@ void test_ari_cbor_decode_lit_typed_real64(const char *inhex, bool expect)
 TEST_CASE("8402202020")
 TEST_CASE("A0")             // bad major type
 TEST_CASE("821182A0820417") // AC with item having bad major type
-// TEST_CASE("836474657374226474686174") // ari://test/CTRL/that
 TEST_CASE("8364746573740A6474686174")           // ari://test/TEXTSTR/that
 TEST_CASE("821386030102030405")                 // ari:/TBL/c=3;(1,2,3)(4,5)
 TEST_CASE("821380")                             // ari:/TBL/
