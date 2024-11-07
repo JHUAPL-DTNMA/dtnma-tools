@@ -9,7 +9,7 @@ import time
 from typing import List
 import unittest
 import cbor2
-from ace import (AdmSet, ari_text, ari_cbor, nickname)
+from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
 from helpers.runner import CmdRunner, Timeout
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
@@ -27,88 +27,62 @@ class TestStdioAgent(unittest.TestCase):
         LOGGER.info('Working in %s', path)
 
         args = ['bash', 'run.sh', 'refda-stdio', '-l', 'debug']
-        self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
+        self._agent = CmdRunner(args)
 
         # ADM handling
         adms = AdmSet()
-        adms.load_from_dir(os.path.join(OWNPATH, '..', 'adms'))
+        adms.load_from_dirs([os.path.join(OWNPATH, 'adms')])
         self._adms = adms
 
     def tearDown(self):
         self._agent.stop()
 
     def _start(self):
-        ''' Spawn the process and wait for the startup READY message. '''
+        ''' Spawn the process and wait for the startup HELLO report. '''
         self._agent.start()
-        self._agent.wait_for_text(r'.* <INFO> .+ READY$')
+        self._wait_rptset()
 
-    def _ari_to_cbor(self, text):
-        nn_func = nickname.Converter(nickname.Mode.TO_NN, self._adms, must_nickname=True)
+    def _ari_text_to_obj(self, text:str) -> ARI:
+        nn_func = nickname.Converter(nickname.Mode.TO_NN, self._adms.db_session(), must_nickname=True)
 
         ari = ari_text.Decoder().decode(io.StringIO(text))
         nn_func(ari)
+        return ari
+
+    def _ari_obj_to_cbor(self, ari:ARI) -> bytes:
         buf = io.BytesIO()
         ari_cbor.Encoder().encode(ari, buf)
         return buf.getvalue()
 
-    def _ari_from_cbor(self, databuf):
-        nn_func = nickname.Converter(nickname.Mode.FROM_NN, self._adms, must_nickname=True)
+    def _ari_obj_from_cbor(self, databuf:bytes) -> ARI:
+        nn_func = nickname.Converter(nickname.Mode.FROM_NN, self._adms.db_session(), must_nickname=True)
 
-        ari = ari_cbor.Decoder().decode(databuf)
+        with io.BytesIO(databuf) as buf:
+            ari = ari_cbor.Decoder().decode(buf)
         nn_func(ari)
-        textbuf = io.StringIO()
-        ari_text.Encoder().encode(ari, textbuf)
-        return textbuf.getvalue()
+        return ari
 
-    def _send_exec(self, targets: List[bytes]):
-        ''' Send an execution message with a number of target ARIs. '''
-        parts = list(map(binascii.b2a_hex, targets))
-        for tgt in targets:
-            msg.append(b'\x02\x00\x81' + tgt)
-        hexdata = (cbor2.dumps(msg))
-        line = '0x' + hexdata.decode('ascii')
+    def _send_execset(self, text:str):
+        ''' Send an EXECSET with a number of target ARIs. '''
+        data = self._ari_obj_to_cbor(self._ari_text_to_obj(text))
+        line = binascii.b2a_hex(data).decode('ascii')
         LOGGER.debug('Sending line %s', line)
         self._agent.send_stdin(line + '\n')
 
-    def _wait_report(self):
-        line = self._agent.wait_for_text(r'^0x')
+    def _wait_rptset(self) -> ARI:
+        ''' Wait for a RPTSET and decode it. '''
+        line = self._agent.wait_for_text(HEXSTR).strip()
         LOGGER.debug('Received line %s', line)
-        msg = cbor2.loads(binascii.a2b_hex(line[2:-1]))
-        LOGGER.debug('Got msg %s', msg)
+        data = binascii.a2b_hex(line)
+        ari = self._ari_obj_from_cbor(data)
+        LOGGER.debug('Decoded as %s', ari)
 
-        buf = io.BytesIO(msg[1])
-        dec = cbor2.CBORDecoder(buf)
-        head = dec.decode()
-        self.assertEqual(0x01, head)
-        mgrs = dec.decode()
-        self.assertEqual(list, type(mgrs))
+        if LOGGER.isEnabledFor(logging.INFO):
+            textbuf = io.StringIO()
+            ari_text.Encoder().encode(ari, textbuf)
+            LOGGER.info('Received value: %s', textbuf.getvalue())
 
-        # the report set is an array
-        rptset_head = buf.read(1)[0]
-        self.assertEqual(4, rptset_head >> 5)
-        rptset_count = rptset_head & 0x1F
-        self.assertLess(0, rptset_count)
-        self.assertGreater(24, rptset_count)
-
-        for ix in range(rptset_count):
-            # each report is an array
-            rpt_head = buf.read(1)[0]
-            self.assertEqual(4, rpt_head >> 5)
-            rpt_count = rpt_head & 0x1F
-            self.assertIn(rpt_count, {2, 3})
-            LOGGER.debug('Report set %s %s', rptset_count, rpt_count)
-
-            rptt = self._ari_from_cbor(buf)
-            LOGGER.debug('Report template %s', rptt)
-
-            if rpt_count == 3:
-                ts = dec.decode()
-                LOGGER.debug('Report timestamp %s', ts)
-
-            # FIXME: this is messy to decode
-            tnvc = ari_cbor.Decoder()._decode_tnvc(dec)
-            for item in tnvc:
-                LOGGER.info('Item %s', item)
+        return ari
 
     def test_start_terminate(self):
         self._start()
@@ -121,7 +95,6 @@ class TestStdioAgent(unittest.TestCase):
 
     def test_start_close(self):
         self._start()
-#        self._agent.wait_for_text(HEXSTR)
 
         LOGGER.debug('Closing stdin')
         self._agent.proc.stdin.close()
@@ -129,17 +102,16 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(0, self._agent.proc.returncode)
 
     def test_cmd(self):
-        self.skipTest('not yet')
-        self._agent.start()
-        self._agent.wait_for_text(r'^0x')
+        self._start()
 
-        tgt = self._ari_to_cbor(
-          'ari:/IANA:amp_agent/CTRL.gen_rpts([ari:/IANA:amp_agent/RPTT.full_report],[])'
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf-dtnma-agent/CTRL/inspect(//ietf-dtnma-agent/EDD/sw-version))'
         )
-        self.assertEqual(bytes, type(tgt))
-        self.assertEqual(
-            b'c11541050502252381871819410000',
-            binascii.b2a_hex(tgt)
-        )
-        self._send_exec([tgt])
-        rpt = self._wait_report()
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf-dtnma-agent/ctrl/inspect(//ietf-dtnma-agent/EDD/sw-version)'), rpt.source)
+        # items of the report
+        self.assertEqual([ari.LiteralARI('0.0.0')], rpt.items)

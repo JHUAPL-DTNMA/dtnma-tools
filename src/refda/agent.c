@@ -170,13 +170,32 @@ int refda_agent_send_hello(refda_agent_t *agent)
     // ari:/ietf-dtnma-agent/CONST/hello
     ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_DTNMA_AGENT_ENUM, ARI_TYPE_CONST, 0);
 
+    // dummy message source
+    refda_msgdata_t msg;
+    refda_msgdata_init(&msg);
+    //FIXME how to indicate this destination..?
+    static const char *src = "any";
+    cace_data_copy_from(&(msg.ident), strlen(src) - 1, (cace_data_ptr_t)src);
+
     refda_runctx_t runctx;
-    if (refda_runctx_init(&runctx, agent, NULL))
+    int retval = 0;
+    int res = refda_runctx_init(&runctx, agent, &msg);
+    if (res)
     {
-        return 2;
+        retval = 2;
     }
 
-    int res = refda_reporting_target(&runctx, &ref);
+    if (!retval)
+    {
+        res = refda_reporting_target(&runctx, &ref);
+        if (res)
+        {
+            retval = 3;
+        }
+    }
 
-    return res;
+    // no deinit for runctx
+    refda_msgdata_deinit(&msg);
+
+    return retval;
 }

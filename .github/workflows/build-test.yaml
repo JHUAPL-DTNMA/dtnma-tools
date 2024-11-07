@@ -71,11 +71,13 @@ jobs:
       - name: Install
         run: ./build.sh install
       - name: Test Prep
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          python3 python3-pip &&
-          pip3 install --upgrade pip &&
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          python3 python3-pip
+          pip3 install git+https://github.com/JHUAPL-DTNMA/dtnma-ace.git@apl-fy24
+          pip3 install --upgrade pip
           pip3 install -r agent-test/requirements.txt
+          git clone --branch apl-fy24 https://github.com/JHUAPL-DTNMA/dtnma-adms.git agent-test/adms
       - name: Test
         run: python3 -m pytest agent-test --capture=no --log-cli-level=debug
       - name: Collect coverage

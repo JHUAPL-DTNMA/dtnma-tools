@@ -86,6 +86,7 @@ static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *
             retval = 2;
         }
         fflush(stdout);
+        CACE_LOG_DEBUG("flushed stdout");
     }
 
     return retval;
@@ -98,6 +99,9 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
     CHKERR1(running);
 
     static const char *arisep = " \f\n\r\t\v"; // Identical to isspace()
+
+    static const char *src = "stdin";
+    cace_data_copy_from(&(meta->src), strlen(src) - 1, (cace_data_ptr_t)src);
 
     // Watch stdin (fd 0) for input, assuming whole-lines are given
     struct pollfd pfds[] = {
