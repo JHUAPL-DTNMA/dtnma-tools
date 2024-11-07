@@ -21,11 +21,19 @@
 
 #include <cace/util/daemon_run.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Work thread function for the Agent ingress.
  *
  * @param[in] arg The context ::refda_agent_t pointer.
  * @return Always NULL pointer.
  */
 void *refda_ingress_worker(void *arg);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* REFDA_INGRESS_H_ */

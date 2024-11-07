@@ -16,24 +16,24 @@
  * limitations under the License.
  */
 
-#ifndef REFDA_EGRESS_H_
-#define REFDA_EGRESS_H_
+#ifndef REFDA_RPT_AGG_H_
+#define REFDA_RPT_AGG_H_
 
-#include <cace/util/daemon_run.h>
+#include <cace/ari.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** Work thread function for the Agent aggregation and egress.
- *
- * @param[in] arg The context ::refda_agent_t pointer.
- * @return Always NULL pointer.
+/** Parameters used to correlate RPTSET for aggregation.
  */
-void *refda_egress_worker(void *arg);
+typedef struct
+{
+    int hi;
+} refda_rpt_agg_key_t;
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* REFDA_EGRESS_H_ */
+#endif /* REFDA_RPT_AGG_H_ */

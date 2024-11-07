@@ -24,19 +24,21 @@ void *refda_egress_worker(void *arg)
     refda_agent_t *agent = arg;
     CACE_LOG_INFO("Worker started");
 
-    while (daemon_run_get(&agent->running))
+    // run until explicitly told to stop via refda_agent_t::rptgs
+    while (true)
     {
-        ari_t ari;
+        refda_msgdata_t item;
 
         sem_wait(&(agent->rptgs_sem));
-        if (!agent_ari_queue_pop(&ari, agent->rptgs))
+        if (!refda_msgdata_queue_pop(&item, agent->rptgs))
         {
             // shouldn't happen
             CACE_LOG_WARNING("failed to pop from rptgs queue");
             continue;
         }
         // sentinel for end-of-input
-        const bool at_end = ari_is_undefined(&ari);
+        const bool at_end = ari_is_undefined(&(item.value));
+        CACE_LOG_DEBUG("Processing rptgs item (end %d)", at_end);
         if (!at_end)
         {
             ari_list_t data;
@@ -44,7 +46,7 @@ void *refda_egress_worker(void *arg)
             cace_amm_msg_if_metadata_t meta;
             cace_amm_msg_if_metadata_init(&meta);
 
-            ari_list_push_back_move(data, &ari);
+            ari_list_push_back_move(data, &item.value);
 
             int send_res = (agent->mif.send)(data, &meta, agent->mif.ctx);
             if (send_res)
@@ -55,8 +57,7 @@ void *refda_egress_worker(void *arg)
             ari_list_clear(data);
             cace_amm_msg_if_metadata_deinit(&meta);
         }
-
-        ari_deinit(&ari);
+        refda_msgdata_deinit(&item);
         if (at_end)
         {
             // No more reports possible

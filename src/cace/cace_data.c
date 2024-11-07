@@ -107,14 +107,23 @@ int cace_data_copy(cace_data_t *data, const cace_data_t *src)
     return cace_data_copy_from(data, src->len, src->ptr);
 }
 
-int cace_data_swap(cace_data_t *data, cace_data_t *other)
+void cace_data_move(cace_data_t *data, cace_data_t *src)
+{
+    CHKERR1(data);
+    CHKERR1(src);
+
+    cace_data_int_free(data);
+    *data = *src; // shallow copy
+    cace_data_int_reset(src);
+}
+
+void cace_data_swap(cace_data_t *data, cace_data_t *other)
 {
     CHKERR1(data);
     CHKERR1(other);
     cace_data_t tmp = *data;
     *data           = *other;
     *other          = tmp;
-    return 0;
 }
 
 size_t cace_data_hash(const cace_data_t *data)

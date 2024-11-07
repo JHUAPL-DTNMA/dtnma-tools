@@ -241,7 +241,7 @@ static int read_auto(ari_form_t *inform, ari_form_t *outform, ari_t *inval, FILE
 
     if ((len >= 4) && (strncasecmp(buf, "ari:", 4) == 0))
     {
-        *inform = ARI_FORM_TEXT;
+        *inform  = ARI_FORM_TEXT;
         *outform = ARI_FORM_CBORHEX;
 
         FILE *tmp = fmemopen(buf, len, "rb");
@@ -254,7 +254,7 @@ static int read_auto(ari_form_t *inform, ari_form_t *outform, ari_t *inval, FILE
     }
     else
     {
-        *inform = ARI_FORM_CBORHEX;
+        *inform  = ARI_FORM_CBORHEX;
         *outform = ARI_FORM_TEXT;
 
         FILE *tmp = fmemopen(buf, len, "rb");
@@ -416,10 +416,11 @@ int main(int argc, char *argv[])
                 }
                 break;
             default:
-                fprintf(stderr,
-                        "Usage: %s [--source {filename or -}] [--inform {auto,text,cbor,cborhex}] [--dest {filename or -}] "
-                        "[--outform {auto,text,cbor,cborhex}]\n",
-                        argv[0]);
+                fprintf(
+                    stderr,
+                    "Usage: %s [--source {filename or -}] [--inform {auto,text,cbor,cborhex}] [--dest {filename or -}] "
+                    "[--outform {auto,text,cbor,cborhex}]\n",
+                    argv[0]);
                 retval = 1;
                 cont   = false;
                 break;
@@ -490,6 +491,7 @@ int main(int argc, char *argv[])
             case ARI_FORM_CBORHEX:
                 write_cborhex(outval, dest);
                 break;
+            case ARI_FORM_AUTO:
             case ARI_FORM_INVALID:
                 // not supposed to happen
                 cont = false;

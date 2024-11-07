@@ -394,9 +394,10 @@ struct ari_execset_s *ari_init_execset(ari_t *ari)
     return ctr;
 }
 
-struct ari_rptset_s *ari_init_rptset(ari_t *ari)
+struct ari_rptset_s *ari_set_rptset(ari_t *ari)
 {
     CHKNULL(ari);
+    ari_deinit(ari);
 
     ari_rptset_t *ctr = ARI_MALLOC(sizeof(ari_rptset_t));
     ari_rptset_init(ctr);

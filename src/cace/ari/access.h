@@ -130,12 +130,12 @@ struct ari_execset_s *ari_get_execset(const ari_t *ari);
  */
 struct ari_execset_s *ari_init_execset(ari_t *ari);
 
-/** Initialize an ARI as an RPTSET literal value.
+/** Set an ARI as an RPTSET literal value.
  *
- * @param[out] ari The value to initialize.
+ * @param[out] ari The value to set.
  * @return The new rptset struct.
  */
-struct ari_rptset_s *ari_init_rptset(ari_t *ari);
+struct ari_rptset_s *ari_set_rptset(ari_t *ari);
 
 /** Set the ARI as an object reference with a specific text-named path.
  *

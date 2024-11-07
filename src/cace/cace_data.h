@@ -154,13 +154,20 @@ int cace_data_append_byte(cace_data_t *data, uint8_t val);
  */
 int cace_data_copy(cace_data_t *data, const cace_data_t *src);
 
+/** Move between two data structs, both already initialized.
+ *
+ * @param[in,out] data The data to move to, which must not be NULL.
+ * @param src The data to move from, which must not be NULL.
+ */
+void cace_data_move(cace_data_t *data, cace_data_t *src);
+
 /** Swap between two data structs, both already initialized.
  *
  * @param[in,out] data The data to swap to, which must not be NULL.
  * @param[in,out] other The data to swap with, which must not be NULL.
  * @return Zero upon success.
  */
-int cace_data_swap(cace_data_t *data, cace_data_t *other);
+void cace_data_swap(cace_data_t *data, cace_data_t *other);
 
 size_t cace_data_hash(const cace_data_t *data);
 
@@ -183,9 +190,11 @@ int cace_data_from_m_string(cace_data_t *data, const struct m_string_s *src);
  */
 typedef struct cace_data_s cace_data_a1_t[1];
 
-#define CACE_DATA_OPLIST                                                                                    \
-    M_OPEXTEND(M_EMPTY_OPLIST, INIT(cace_data_init), INIT_SET(cace_data_init_set), CLEAR(cace_data_deinit), \
-               SET(cace_data_copy), HASH(cace_data_hash), EQUAL(cace_data_equal), )
+/// Default OPLIST for cace_data_t
+#define M_OPL_cace_data_t()                                                                            \
+    (INIT(API_2(cace_data_init)), INIT_SET(API_6(cace_data_init_set)), CLEAR(API_2(cace_data_deinit)), \
+     SET(API_2(cace_data_copy)), MOVE(API_6(cace_data_move)), SWAP(API_6(cace_data_swap)),             \
+     HASH(API_2(cace_data_hash)), EQUAL(API_6(cace_data_equal)))
 
 #ifdef __cplusplus
 }
