@@ -65,7 +65,7 @@ static int ari_report_list_cmp(const ari_report_list_t left, const ari_report_li
          !ari_report_list_end_p(lt_it) && !ari_report_list_end_p(rt_it);
          ari_report_list_next(lt_it), ari_report_list_next(rt_it))
     {
-        part_cmp = ari_report_cmp(*ari_report_list_cref(lt_it), *ari_report_list_cref(rt_it));
+        part_cmp = ari_report_cmp(ari_report_list_cref(lt_it), ari_report_list_cref(rt_it));
         if (part_cmp)
         {
             return part_cmp;
@@ -251,48 +251,48 @@ bool ari_execset_equal(const ari_execset_t *left, const ari_execset_t *right)
     return (ari_equal(&(left->nonce), &(right->nonce)) && ari_list_equal_p(left->targets, right->targets));
 }
 
-void ari_report_init(ari_report_t obj)
+void ari_report_init(ari_report_t *obj)
 {
     ari_init(&(obj->reltime));
     ari_init(&(obj->source));
     ari_list_init(obj->items);
 }
 
-void ari_report_init_copy(ari_report_t obj, const ari_report_t src)
+void ari_report_init_copy(ari_report_t *obj, const ari_report_t *src)
 {
     ari_init_copy(&(obj->reltime), &(src->reltime));
     ari_init_copy(&(obj->source), &(src->source));
     ari_list_init_set(obj->items, src->items);
 }
 
-void ari_report_init_move(ari_report_t obj, ari_report_t src)
+void ari_report_init_move(ari_report_t *obj, ari_report_t *src)
 {
     ari_init_move(&(obj->reltime), &(src->reltime));
     ari_init_move(&(obj->source), &(src->source));
     ari_list_init_move(obj->items, src->items);
 }
 
-void ari_report_deinit(ari_report_t obj)
+void ari_report_deinit(ari_report_t *obj)
 {
     ari_deinit(&(obj->reltime));
     ari_deinit(&(obj->source));
     ari_list_clear(obj->items);
 }
 
-void ari_report_set_copy(ari_report_t obj, const ari_report_t src)
+void ari_report_set_copy(ari_report_t *obj, const ari_report_t *src)
 {
     ari_set_copy(&(obj->source), &(src->source));
     ari_list_set(obj->items, src->items);
 }
 
-void ari_report_set_move(ari_report_t obj, ari_report_t src)
+void ari_report_set_move(ari_report_t *obj, ari_report_t *src)
 {
     ari_set_move(&(obj->reltime), &(src->reltime));
     ari_set_move(&(obj->source), &(src->source));
     ari_list_move(obj->items, src->items);
 }
 
-int ari_report_cmp(const ari_report_t left, const ari_report_t right)
+int ari_report_cmp(const ari_report_t *left, const ari_report_t *right)
 {
     int part_cmp = ari_cmp(&(left->reltime), &(right->reltime));
     if (part_cmp)
@@ -309,7 +309,7 @@ int ari_report_cmp(const ari_report_t left, const ari_report_t right)
     return ari_list_cmp(left->items, right->items);
 }
 
-bool ari_report_equal(const ari_report_t left, const ari_report_t right)
+bool ari_report_equal(const ari_report_t *left, const ari_report_t *right)
 {
     return (ari_equal(&(left->reltime), &(right->reltime)) && ari_equal(&(left->source), &(right->source))
             && ari_list_equal_p(left->items, right->items));

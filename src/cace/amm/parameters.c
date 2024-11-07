@@ -46,6 +46,14 @@ void cace_amm_actual_param_set_init(cace_amm_actual_param_set_t *obj)
     named_ari_ptr_dict_init(obj->named);
 }
 
+void cace_amm_actual_param_set_init_move(cace_amm_actual_param_set_t *obj, cace_amm_actual_param_set_t *src)
+{
+    CHKVOID(obj);
+    CHKVOID(src);
+    ari_array_init_move(obj->ordered, src->ordered);
+    named_ari_ptr_dict_init_move(obj->named, src->named);
+}
+
 void cace_amm_actual_param_set_deinit(cace_amm_actual_param_set_t *obj)
 {
     CHKVOID(obj);

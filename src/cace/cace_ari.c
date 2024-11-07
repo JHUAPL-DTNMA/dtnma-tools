@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
         int option_index = 0;
         int res          = getopt_long(argc, argv, ":s:i:d:o:", longopts, &option_index);
 #else
-        int    res = getopt(argc, argv, ":s:i:d:o:");
+        int res = getopt(argc, argv, ":s:i:d:o:");
 #endif /* HAVE_GETOPT_LONG */
 
         if (res == -1)

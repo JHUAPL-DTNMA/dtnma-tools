@@ -527,7 +527,7 @@ static int ari_cbor_decode_execset(QCBORDecodeContext *dec, ari_execset_t *obj)
     return retval;
 }
 
-static int ari_cbor_encode_report(QCBOREncodeContext *enc, const ari_report_t obj)
+static int ari_cbor_encode_report(QCBOREncodeContext *enc, const ari_report_t *obj)
 {
     int retval = 0;
     QCBOREncode_OpenArray(enc);
@@ -558,7 +558,7 @@ static int ari_cbor_encode_report(QCBOREncodeContext *enc, const ari_report_t ob
     return retval;
 }
 
-static int ari_cbor_decode_report(QCBORDecodeContext *dec, ari_report_t obj)
+static int ari_cbor_decode_report(QCBORDecodeContext *dec, ari_report_t *obj)
 {
     int retval = 0;
 
@@ -641,8 +641,8 @@ static int ari_cbor_encode_rptset(QCBOREncodeContext *enc, const ari_rptset_t *o
     ari_report_list_it_t it;
     for (ari_report_list_it(it, obj->reports); !ari_report_list_end_p(it); ari_report_list_next(it))
     {
-        const ari_report_list_subtype_ct *rpt = ari_report_list_cref(it);
-        if (ari_cbor_encode_report(enc, *rpt))
+        const ari_report_t *rpt = ari_report_list_cref(it);
+        if (ari_cbor_encode_report(enc, rpt))
         {
             retval = 2;
             break;
@@ -703,8 +703,8 @@ static int ari_cbor_decode_rptset(QCBORDecodeContext *dec, ari_rptset_t *obj)
     while (true)
     {
         ari_report_t rpt;
-        ari_report_init(rpt);
-        int parse_res = ari_cbor_decode_report(dec, rpt);
+        ari_report_init(&rpt);
+        int parse_res = ari_cbor_decode_report(dec, &rpt);
 
         int  dec_res = QCBORDecode_GetAndResetError(dec);
         bool atend   = dec_res == QCBOR_ERR_NO_MORE_ITEMS;
@@ -724,13 +724,12 @@ static int ari_cbor_decode_rptset(QCBORDecodeContext *dec, ari_rptset_t *obj)
 
         if (retval || atend)
         {
-            ari_report_deinit(rpt);
+            ari_report_deinit(&rpt);
             break;
         }
 
         // push only after fully reading
-        ari_report_t *item = ari_report_list_push_back_new(obj->reports);
-        ari_report_set_move(*item, rpt);
+        ari_report_list_push_back_move(obj->reports, &rpt);
     }
 
     QCBORDecode_ExitArray(dec);

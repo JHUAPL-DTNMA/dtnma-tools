@@ -288,6 +288,20 @@ void ari_set_td(ari_t *ari, struct timespec delta)
     };
 }
 
+struct ari_ac_s *ari_get_ac(const ari_t *ari)
+{
+    CHKNULL(ari);
+    if (ari->is_ref)
+    {
+        return NULL;
+    }
+    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_AC))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_ac;
+}
+
 void ari_set_ac(ari_t *ari, struct ari_ac_s *src)
 {
     CHKVOID(ari);
@@ -347,6 +361,20 @@ void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src)
                                        .value        = {
                                                   .as_tbl = ctr,
                                        } };
+}
+
+struct ari_execset_s *ari_get_execset(const ari_t *ari)
+{
+    CHKNULL(ari);
+    if (ari->is_ref)
+    {
+        return NULL;
+    }
+    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_EXECSET))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_execset;
 }
 
 struct ari_execset_s *ari_init_execset(ari_t *ari)

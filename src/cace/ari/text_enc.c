@@ -241,7 +241,7 @@ static int ari_text_encode_execset(ari_text_enc_state_t *state, const ari_execse
     return retval;
 }
 
-static int ari_text_encode_report(ari_text_enc_state_t *state, const ari_report_t rpt)
+static int ari_text_encode_report(ari_text_enc_state_t *state, const ari_report_t *rpt)
 {
     string_push_back(state->out, '(');
     {
@@ -314,7 +314,7 @@ static int ari_text_encode_rptset(ari_text_enc_state_t *state, const ari_rptset_
     {
         const ari_report_t *rpt = ari_report_list_cref(rpt_it);
 
-        int ret = ari_text_encode_report(state, *rpt);
+        int ret = ari_text_encode_report(state, rpt);
         if (ret)
         {
             retval = 2;

@@ -398,15 +398,14 @@ reportlist:
     }
     | reportlist report {
         $$ = $1;
-        ari_report_t *rpt = ari_report_list_push_back_new($$.value.as_rptset->reports);
-        ari_report_set_move(*rpt, $2);
-        M_MEMORY_DEL($2);
+        ari_report_list_push_back_move($$.value.as_rptset->reports, $2);
+        ARI_FREE($2);
     }
 ;
 
 report:
     T_LPAREN litparamlist acbracket T_RPAREN {
-        $$ = M_MEMORY_ALLOC(struct ari_report_s);
+        $$ = ARI_MALLOC(sizeof(struct ari_report_s));
         ari_report_init($$);
 
         string_t key;

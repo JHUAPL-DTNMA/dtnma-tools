@@ -24,7 +24,7 @@
 #include "amm/var.h"
 #include "amm/edd.h"
 #include "amm/ctrl.h"
-//#include "amm/oper.h"
+#include "amm/oper.h"
 #include "cace/amm/obj_ns.h"
 
 #ifdef __cplusplus
@@ -58,6 +58,9 @@ cace_amm_obj_desc_t *refda_register_edd(cace_amm_obj_ns_t *ns, const cace_amm_ob
 
 cace_amm_obj_desc_t *refda_register_ctrl(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                          refda_amm_ctrl_desc_t *desc);
+
+cace_amm_obj_desc_t *refda_register_oper(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+                                         refda_amm_oper_desc_t *desc);
 
 /** Helper function to append a named parameter to an object descriptor.
  *

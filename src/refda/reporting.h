@@ -21,12 +21,18 @@
 
 #include "runctx.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// Error result when an invalid type is present
 #define REFDA_REPORTING_ERR_BAD_TYPE 3
 /// Error result when dereferencing fails
 #define REFDA_REPORTING_ERR_DEREF_FAILED 4
 /// Error result when value production fails
 #define REFDA_REPORTING_ERR_PROD_FAILED 5
+/// Error result when value EXPR evaluation fails
+#define REFDA_REPORTING_ERR_EVAL_FAILED 6
 
 /** Generate a RPTSET for the conclusion of a CTRL exectuion.
  *
@@ -44,5 +50,14 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
  * @return Zero if successful.
  */
 int refda_reporting_target(refda_runctx_t *runctx, const ari_t *target);
+
+/** Generate and queue a one-report RPTSET value.
+ *
+ */
+int refda_reporting_gen(refda_agent_t *agent, const ari_t *src, ari_list_t items);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* REFDA_REPORTING_H_ */

@@ -15,8 +15,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ]]
-set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
-find_package(unitytools)
 
-add_subdirectory(cace)
-add_subdirectory(refda)
+add_unity_test(SOURCE "test_amm_const.c")
+target_link_libraries(test_amm_const PUBLIC refda)
+
+add_unity_test(SOURCE "test_amm_ctrl.c")
+target_link_libraries(test_amm_ctrl PUBLIC refda)
+
+add_unity_test(SOURCE "test_exec.c")
+target_link_libraries(test_exec PUBLIC refda)
+
+add_unity_test(SOURCE "test_eval.c")
+target_link_libraries(test_eval PUBLIC refda)
+
+add_unity_test(SOURCE "test_reporting.c")
+target_link_libraries(test_reporting PUBLIC refda)

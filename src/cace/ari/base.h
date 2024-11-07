@@ -359,6 +359,14 @@ int ari_init_move(ari_t *ari, ari_t *src);
  */
 int ari_deinit(ari_t *ari);
 
+/** Reset an initialized ARI to the undefined value.
+ * This is equivalent to calling ari_deinit() and ari_init() in sequence.
+ *
+ * @param[in,out] ari The value to reset.
+ * @post The ARI is left as the undefined value.
+ */
+void ari_reset(ari_t *ari);
+
 /** Copy an ARI value into another ARI.
  *
  * @param[in,out] ari The ARI to modify. The previous value is de-initialized prior to copy.

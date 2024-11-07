@@ -58,6 +58,8 @@ typedef struct
 
     /// Cached type from //ietf-amm/TYPEDEF/MAC
     const amm_type_t *mac_type;
+    /// Cached type from //ietf-amm/TYPEDEF/EXPR
+    const amm_type_t *expr_type;
     /// Cached type from //ietf-amm/TYPEDEF/RPTT
     const amm_type_t *rptt_type;
 

@@ -16,41 +16,44 @@
  * limitations under the License.
  */
 
-#ifndef REFDA_EXEC_H_
-#define REFDA_EXEC_H_
+#ifndef REFDA_REPORTING_CTX_H_
+#define REFDA_REPORTING_CTX_H_
 
-#include "agent.h"
 #include "runctx.h"
-#include <cace/ari.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// Error result when an invalid type is present
-#define REFDA_EXEC_ERR_BAD_TYPE 3
-/// Error result when dereferencing fails
-#define REFDA_EXEC_ERR_DEREF_FAILED 4
-/// Error result when value production fails
-#define REFDA_EXEC_ERR_PROD_FAILED 5
-
-/** Implement the execution procedure from Section TBD of @cite ietf-dtn-amm-01.
- *
- * @param[in] agent The agent state for ARI lookup.
- * @param[in] ari The ARI to dereference, if necessary, and execute.
- * @return Zero if successful.
+/** Context for reporting activities.
  */
-int refda_exec_target(refda_runctx_t *runctx, const ari_t *ari);
+typedef struct
+{
+    /** Parent running context.
+     * This will never be null.
+     */
+    refda_runctx_t *parent;
 
-/** Work thread function for the Agent execution manager.
+    /** Storage for the items of a report layer.
+     * This is initialized as empty and is pushed back as items are added.
+     */
+    ari_list_t items;
+} refda_reporting_ctx_t;
+
+/** Initialize a context based on an object reference ARI and
+ * a target object's formal parameters.
  *
- * @param[in] arg The context ::refda_agent_t pointer.
- * @return Always NULL pointer.
+ * @param[out] obj The context to initialize.
+ * @param[in] parent The parent runtime context.
+ * @param[in] deref The dereference result.
+ * The result must outlive this context.
  */
-void *refda_exec_worker(void *arg);
+void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *parent);
+
+void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* REFDA_EXEC_H_ */
+#endif /* REFDA_REPORTING_CTX_H_ */

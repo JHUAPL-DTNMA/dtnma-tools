@@ -335,7 +335,7 @@ static int ari_ref_copy(ari_ref_t *obj, const ari_ref_t *src)
  *
  * @param ari The struct to reset.
  */
-static void ari_reset(ari_t *ari)
+static void ari_state_reset(ari_t *ari)
 {
     memset(ari, 0, sizeof(ari_t));
 }
@@ -455,13 +455,13 @@ static void ari_deinit_parts(ari_t *ari)
 void ari_init(ari_t *ari)
 {
     CHKVOID(ari);
-    ari_reset(ari);
+    ari_state_reset(ari);
 }
 
 ari_lit_t *ari_init_lit(ari_t *ari)
 {
     CHKNULL(ari);
-    ari_reset(ari);
+    ari_state_reset(ari);
     ari->is_ref = false;
     return &(ari->as_lit);
 }
@@ -469,7 +469,7 @@ ari_lit_t *ari_init_lit(ari_t *ari)
 ari_ref_t *ari_init_objref(ari_t *ari)
 {
     CHKNULL(ari);
-    ari_reset(ari);
+    ari_state_reset(ari);
     ari->is_ref = true;
     return &(ari->as_ref);
 }
@@ -499,17 +499,23 @@ int ari_init_move(ari_t *ari, ari_t *src)
 
     ari_copy_shallow(ari, src);
     // reset the state of the src (not deinit)
-    ari_reset(src);
+    ari_state_reset(src);
     return 0;
 }
 
 int ari_deinit(ari_t *ari)
 {
     CHKERR1(ari);
-
     ari_deinit_parts(ari);
-    ari_reset(ari);
+    ari_state_reset(ari);
     return 0;
+}
+
+void ari_reset(ari_t *ari)
+{
+    CHKVOID(ari);
+    ari_deinit_parts(ari);
+    ari_state_reset(ari);
 }
 
 int ari_set_copy(ari_t *ari, const ari_t *src)
@@ -538,6 +544,6 @@ int ari_set_move(ari_t *ari, ari_t *src)
     ari_deinit_parts(ari);
     ari_copy_shallow(ari, src);
     // reset the state of the src (not deinit)
-    ari_reset(src);
+    ari_state_reset(src);
     return 0;
 }

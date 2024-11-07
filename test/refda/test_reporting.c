@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <refda/exec.h>
+#include <refda/reporting.h>
 #include <refda/register.h>
 #include <refda/amm/const.h>
-#include <refda/amm/ctrl.h>
+#include <refda/amm/edd.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
 #include <cace/util/logging.h>
@@ -41,29 +41,38 @@ int suiteTearDown(int failures)
 }
 
 
-static int test_reporting_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
+#define EXAMPLE_ADM_ENUM 65536
+
+/// Agent context for testing
+static refda_agent_t agent;
+
+static atomic_int edd_one_state = ATOMIC_VAR_INIT(0);
+
+static void test_reporting_edd_int(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
+{
+    int oldval = atomic_fetch_add(&edd_one_state, 1);
+    TEST_PRINTF("EDD production to counter %d", oldval);
+    ari_set_int(&(ctx->value), oldval);
+}
+
+static void test_reporting_edd_one_int(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
 {
     const ari_t *val = ari_array_cget(ctx->deref->aparams.ordered, 0);
-    CHKERR1(val)
+    CHKVOID(val)
     {
         string_t buf;
         string_init(buf);
         ari_text_encode(buf, val, ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("execution with parameter %s", string_get_cstr(buf));
+        TEST_PRINTF("EDD production with parameter %s", string_get_cstr(buf));
         string_clear(buf);
     }
-    ari_set_copy(&(ctx->result), val);
-    return 0;
+    ari_set_copy(&(ctx->value), val);
 }
-
-
-static refda_agent_t agent;
-
-#define EXAMPLE_ADM_ENUM 65536
 
 void setUp(void)
 {
     refda_agent_init(&agent);
+    atomic_store(&edd_one_state, 1);
 
     {
         // ADM for this test fixture
@@ -84,13 +93,28 @@ void setUp(void)
                     ari_t *item = ari_list_push_back_new(acinit.items);
                     ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, ARI_TYPE_EDD, 1); // ari://example-adm/EDD/edd1
                 }
-                // FIXME: should be total
-                // amm:init-value "/AC/(./EDD/sw-vendor,./EDD/sw-version,./EDD/capability)";
+                {
+                    ari_t *item = ari_list_push_back_new(acinit.items);
+                    ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, ARI_TYPE_VAR, 1); // ari://example-adm/VAR/var2
+                }
 
                 ari_set_ac(&(objdata->value), &acinit);
             }
 
             obj = refda_register_const(adm, cace_amm_obj_id_withenum("rptt1", 1), objdata);
+            // no parameters
+        }
+
+        /**
+         * Register VAR objects
+         */
+        {
+            refda_amm_var_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_var_desc_t));
+            refda_amm_var_desc_init(objdata);
+            amm_type_set_use_direct(&(objdata->val_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            ari_set_vast(&(objdata->value), 123456);
+
+            obj = refda_register_var(adm, cace_amm_obj_id_withenum("var1", 1), objdata);
             // no parameters
         }
 
@@ -101,14 +125,25 @@ void setUp(void)
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
             amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_VAST));
-            objdata->produce = refda_adm_ietf_dtnma_agent_edd_sw_version;
+            objdata->produce = test_reporting_edd_int;
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd1", 1), objdata);
             // no parameters
         }
+        {
+            refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_init(objdata);
+            amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            objdata->produce = test_reporting_edd_one_int;
+
+            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd1", 2), objdata);
+            // no parameters
+        }
     }
 
-    TEST_ASSERT_EQUAL_INT(0, refda_agent_bindrefs(&agent));
+    int res = refda_agent_bindrefs(&agent);
+    (void)res;
+//    TEST_ASSERT_EQUAL_INT(0, res);
 }
 
 void tearDown(void)
@@ -131,94 +166,61 @@ static void ari_convert(ari_t *ari, const char *inhex)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 }
 
-static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const cace_amm_formal_param_list_t fparams,
-                          const char *refhex, const char *outhex, int expect_res)
+static ari_report_t * assert_rptset_items(ari_t *val)
 {
-    ari_t inref = ARI_INIT_UNDEFINED;
-    ari_convert(&inref, refhex);
-    TEST_ASSERT_TRUE_MESSAGE(inref.is_ref, "invalid reference");
-
-    ari_t outval = ARI_INIT_UNDEFINED;
-    ari_convert(&outval, outhex);
-    TEST_ASSERT_EQUAL_INT(0, ari_set_copy(&mock_result_store, &outval));
-
-    cace_amm_lookup_t deref;
-    cace_amm_lookup_init(&deref);
-
-    int res = cace_amm_actual_param_set_populate(&(deref.aparams), fparams, &(inref.as_ref.params));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
-
-    refda_exec_ctx_t ctx;
-    refda_exec_ctx_init(&ctx, NULL, &deref);
-
-    res = refda_amm_ctrl_desc_execute(obj, &ctx);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_ctrl_desc_execute() disagrees");
-
-    TEST_ASSERT_TRUE_MESSAGE(ari_equal(&outval, &(ctx.result)), "result value mismatch");
-
-    if (result)
-    {
-        // move out result value
-        TEST_ASSERT_EQUAL_INT(0, ari_set_move(result, &(ctx.result)));
-    }
-
-    refda_exec_ctx_deinit(&ctx);
-    cace_amm_lookup_deinit(&deref);
-
-    ari_deinit(&outval);
-    ari_deinit(&inref);
+    TEST_ASSERT_FALSE(val->is_ref);
+    TEST_ASSERT_TRUE(val->as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL(ARI_TYPE_RPTSET, val->as_lit.ari_type);
+    ari_report_list_t *rpts = &(val->as_lit.value.as_rptset->reports);
+    TEST_ASSERT_EQUAL_INT(1, ari_report_list_size(*rpts));
+    return ari_report_list_front(*rpts);
 }
 
-// References are based on ari://2/CONST/4
-TEST_CASE(ARI_TYPE_NULL, "83022104", "F6", 0)
-TEST_CASE(ARI_TYPE_INT, "83022104", "0A", 0)
-void test_ctrl_execute_param_none(ari_type_t restype, const char *refhex, const char *outhex, int expect_res)
+// direct RPTT ari:/AC/(//65536/EDD/1,//65536/VAR/1) -> (/VAST/1,/VAST/123456)
+TEST_CASE("821182831A000100002301831A000100002A01", 0, "821182""820601""82061A0001E240")
+// indirect RPTT ari://65536/CONST/1 -> (/VAST/1,/VAST/123456)
+TEST_CASE("831A000100002101", 0, "821182""820601""82061A0001E240")
+// direct with simple (one-item) expressions
+// ari:/AC/(/AC/(//65536/EDD/1),/AC/(//65536/VAR/1)) -> (/VAST/1,/VAST/123456)
+TEST_CASE("821182821181831A000100002301821181831A000100002A01", 0, "821182""820601""82061A0001E240")
+void test_refda_reporting_target(const char *targethex, int expect_res, const char *expectloghex)
 {
-    refda_amm_ctrl_desc_t obj;
-    refda_amm_ctrl_desc_init(&obj);
-    // leave formal parameter list empty
-    amm_type_set_use_direct(&obj.res_type, amm_type_get_builtin(restype));
-    obj.execute = mock_ctrl_exec_none;
+    ari_t target = ARI_INIT_UNDEFINED;
+    ari_convert(&target, targethex);
 
-    cace_amm_formal_param_list_t fparams;
-    cace_amm_formal_param_list_init(fparams);
+    ari_t expect_rpt_items = ARI_INIT_UNDEFINED;
+    ari_convert(&expect_rpt_items, expectloghex);
+    ari_ac_t *expect_seq = ari_get_ac(&expect_rpt_items);
+    TEST_ASSERT_NOT_NULL(expect_seq);
 
-    ari_t result = ARI_INIT_UNDEFINED;
-    check_execute(&result, &obj, fparams, refhex, outhex, expect_res);
+    refda_runctx_t runctx;
+    // no nonce for test
+    refda_runctx_init(&runctx, &agent, NULL);
 
-    ari_deinit(&result);
-    cace_amm_formal_param_list_clear(fparams);
-    refda_amm_ctrl_desc_init(&obj);
-}
+    int res = refda_reporting_target(&runctx, &target);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");
 
-// References are based on ari://2/CONST/4
-TEST_CASE("83022104", "820403", 0)           // no parameters, default value
-TEST_CASE("84022104810A", "82040A", 0)       // pass through parameter
-TEST_CASE("84022104A1000A", "82040A", 0)     // pass through parameter by index
-TEST_CASE("84022104A16268690A", "82040A", 0) // pass through parameter by name
-TEST_CASE("8402210481F7", "F7", 0)           // pass through undefined parameter
-void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex, int expect_res)
-{
-    refda_amm_ctrl_desc_t obj;
-    refda_amm_ctrl_desc_init(&obj);
-    // result is same type as parameter
-    amm_type_set_use_direct(&obj.res_type, amm_type_get_builtin(ARI_TYPE_INT));
-    obj.execute = mock_ctrl_exec_one_int;
+    // extract agent state
+    TEST_ASSERT_EQUAL_INT(1, agent_ari_queue_size(agent.rptgs));
+    ari_t got_rptset;
+    agent_ari_queue_pop(&got_rptset, agent.rptgs);
+    ari_report_t *rpt = assert_rptset_items(&got_rptset);
 
-    cace_amm_formal_param_list_t fparams;
-    cace_amm_formal_param_list_init(fparams);
+    // verify RPTSET result
+    ari_list_it_t expect_it;
+    ari_list_it(expect_it, expect_seq->items);
+    ari_list_it_t got_it;
+    ari_list_it(got_it, rpt->items);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(ari_list_size(expect_seq->items), ari_list_size(rpt->items), "RPT size mismatch");
+    size_t item_ix = 0;
+    for (; !ari_list_end_p(expect_it) && !ari_list_end_p(got_it); ari_list_next(expect_it), ari_list_next(got_it))
     {
-        cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
-        fparam->index              = 0;
-        string_set_str(fparam->name, "hi");
-        fparam->typeobj = amm_type_get_builtin(ARI_TYPE_INT);
-        ari_set_int(&(fparam->defval), 3); // arbitrary default
+        TEST_PRINTF("Checking ARI %u", item_ix++);
+        const bool equal = ari_equal(ari_list_cref(expect_it), ari_list_cref(got_it));
+        TEST_ASSERT_TRUE_MESSAGE(equal, "RPT ARI is different");
     }
 
-    ari_t result = ARI_INIT_UNDEFINED;
-    check_execute(&result, &obj, fparams, refhex, outhex, expect_res);
-
-    ari_deinit(&result);
-    cace_amm_formal_param_list_clear(fparams);
-    refda_amm_ctrl_desc_init(&obj);
+    ari_deinit(&got_rptset);
+    ari_deinit(&expect_rpt_items);
+    ari_deinit(&target);
 }

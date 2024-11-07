@@ -1,4 +1,47 @@
 {
+   _gcov_do_dump_param
+   Memcheck:Param
+   read(buf)
+   fun:read
+   fun:_IO_file_xsgetn
+   fun:fread
+   fun:gcov_read_words
+   fun:gcov_do_dump
+}
+{
+   _gcov_do_dump_leak1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:gcov_do_dump
+}
+{
+   _gcov_do_dump_leak2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:fdopen@@GLIBC_2.2.5
+   fun:__gcov_open
+   fun:gcov_do_dump
+}
+{
+   _gcov_exit
+   Memcheck:Addr8
+   fun:gcov_do_dump
+   fun:__gcov_exit
+}
+{
+   _unity_putchar_leak
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_IO_file_doallocate
+   fun:_IO_doallocbuf
+   fun:_IO_file_overflow@@GLIBC_2.2.5
+   fun:putchar
+   fun:UnityPrintChar
+}
+{
    _ari_type_dict_init1
    Memcheck:Leak
    match-leak-kinds: reachable

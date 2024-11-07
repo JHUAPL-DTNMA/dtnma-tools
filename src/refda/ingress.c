@@ -48,12 +48,7 @@ void *refda_ingress_worker(void *arg)
             for (ari_list_it(iit, items); !ari_list_end_p(iit); ari_list_next(iit))
             {
                 ari_t *item = ari_list_ref(iit);
-                if (item->is_ref)
-                {
-                    CACE_LOG_ERR("Ignoring input ARI that is not an EXECSET");
-                    continue;
-                }
-                if (!item->as_lit.has_ari_type || (item->as_lit.ari_type != ARI_TYPE_EXECSET))
+                if (!ari_get_execset(item))
                 {
                     CACE_LOG_ERR("Ignoring input ARI that is not an EXECSET");
                     continue;

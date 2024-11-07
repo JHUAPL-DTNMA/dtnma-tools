@@ -136,6 +136,7 @@ void setUp(void)
     }
 
     int res = refda_agent_bindrefs(&agent);
+    (void)res;
 //    TEST_ASSERT_EQUAL_INT(0, res);
 }
 
@@ -177,7 +178,7 @@ void test_refda_exec_target(const char *targethex, int expect_res, const char *e
         TEST_ASSERT_NOT_NULL(ac_type);
         TEST_ASSERT_TRUE_MESSAGE(amm_type_match(ac_type, &expect_log), "invalid log ARI");
     }
-    const ari_list_t *expect_seq = &(expect_log.as_lit.value.as_ac->items);
+    ari_list_t *expect_seq = &(expect_log.as_lit.value.as_ac->items);
 
     refda_runctx_t ctx;
     // no nonce for test

@@ -87,7 +87,7 @@ static int ari_visit_execset(const ari_execset_t *obj, const ari_visitor_t *visi
     return 0;
 }
 
-static int ari_visit_report(const ari_report_t obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
+static int ari_visit_report(const ari_report_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
 {
     int retval;
 
@@ -121,9 +121,9 @@ static int ari_visit_rptset(const ari_rptset_t *obj, const ari_visitor_t *visito
     ari_report_list_it_t it;
     for (ari_report_list_it(it, obj->reports); !ari_report_list_end_p(it); ari_report_list_next(it))
     {
-        const ari_report_list_subtype_ct *item = ari_report_list_cref(it);
+        const ari_report_t *item = ari_report_list_cref(it);
 
-        retval = ari_visit_report(*item, visitor, ctx);
+        retval = ari_visit_report(item, visitor, ctx);
         CHKERRVAL(retval);
     }
     return 0;
