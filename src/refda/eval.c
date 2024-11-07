@@ -74,7 +74,8 @@ int refda_eval_target(refda_runctx_t *runctx, ari_t *result, const ari_t *ari)
     CHKERR1(runctx);
     CHKERR1(ari);
 
-    /*
+    /* FIXME: handle target of object reference for rule/ctrl conditions.
+     * This is not reachable for reporting alone.
     ari_t tgt_exp;
     ari_init(&tgt_exp);
     if (refda_eval_expand(runctx, &tgt_exp, ari))
