@@ -29,8 +29,8 @@ extern "C" {
 struct refda_amm_oper_desc_s;
 typedef struct refda_amm_oper_desc_s refda_amm_oper_desc_t;
 
-/** A control (CTRL) descriptor.
- * This defines the properties of a CTRL in an Agent and includes common
+/** An operator (OPER) descriptor.
+ * This defines the properties of a OPER in an Agent and includes common
  * object metadata.
  */
 struct refda_amm_oper_desc_s
