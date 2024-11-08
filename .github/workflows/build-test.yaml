@@ -3,14 +3,9 @@ on:
   schedule:
     - cron: '0 0 * * 0'
   push:
-    paths:
-      - .github/workflows/build-test.yaml
-      - CMakeLists.txt
-      - deps/**
-      - cmake/**
-      - src/**
-      - test/**
-      - testenv/**
+    branches:
+      - main
+      - 'apl-*'
   pull_request: {} # any target
 
 jobs:
