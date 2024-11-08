@@ -15,14 +15,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ]]
-set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
-find_package(unitytools)
 
-include_directories(
-  BEFORE
-  ${CMAKE_BINARY_DIR}/src
-  ${CMAKE_SOURCE_DIR}/src
+include(GNUInstallDirs)
+
+
+set(HFILES
 )
+set(CFILES
+    "main.c"
+)
+add_executable(refda-stdio)
+target_sources(refda-stdio PUBLIC ${HFILES})
+target_sources(refda-stdio PRIVATE ${CFILES})
+target_link_libraries(refda-stdio PUBLIC refda)
 
-add_subdirectory(cace)
-add_subdirectory(refda)
+install(TARGETS refda-stdio)
