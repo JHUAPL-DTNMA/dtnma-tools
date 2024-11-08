@@ -40,7 +40,7 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
          * Register IDENT objects
          */
 
-        refda_register_ident(adm, cace_amm_obj_id_withenum("display-hint", 0), NULL);
+        obj = refda_register_ident(adm, cace_amm_obj_id_withenum("display-hint", 0), NULL);
 
         /**
          * Register TYPEDEF objects
@@ -60,7 +60,7 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                 amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_TYPEDEF));
             }
 
-            refda_register_typedef(adm, cace_amm_obj_id_withenum("type-ref", 0), objdata);
+            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("type-ref", 0), objdata);
             // no parameters
         }
     }

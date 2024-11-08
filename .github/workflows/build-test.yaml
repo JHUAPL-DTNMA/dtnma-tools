@@ -65,7 +65,7 @@ jobs:
         with:
           create-symlink: true
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF
+        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
       - name: Build
         run: ./build.sh
       - name: Install

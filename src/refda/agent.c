@@ -173,13 +173,13 @@ int refda_agent_send_hello(refda_agent_t *agent)
     // dummy message source
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
-    //FIXME how to indicate this destination..?
+    // FIXME how to indicate this destination..?
     static const char *src = "any";
     cace_data_copy_from(&(msg.ident), strlen(src) - 1, (cace_data_ptr_t)src);
 
     refda_runctx_t runctx;
-    int retval = 0;
-    int res = refda_runctx_init(&runctx, agent, &msg);
+    int            retval = 0;
+    int            res    = refda_runctx_init(&runctx, agent, &msg);
     if (res)
     {
         retval = 2;

@@ -109,8 +109,8 @@ int cace_data_copy(cace_data_t *data, const cace_data_t *src)
 
 void cace_data_move(cace_data_t *data, cace_data_t *src)
 {
-    CHKERR1(data);
-    CHKERR1(src);
+    CHKVOID(data);
+    CHKVOID(src);
 
     cace_data_int_free(data);
     *data = *src; // shallow copy
@@ -119,8 +119,8 @@ void cace_data_move(cace_data_t *data, cace_data_t *src)
 
 void cace_data_swap(cace_data_t *data, cace_data_t *other)
 {
-    CHKERR1(data);
-    CHKERR1(other);
+    CHKVOID(data);
+    CHKVOID(other);
     cace_data_t tmp = *data;
     *data           = *other;
     *other          = tmp;

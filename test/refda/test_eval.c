@@ -261,16 +261,6 @@ static void ari_convert(ari_t *ari, const char *inhex)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 }
 
-static ari_report_t * assert_rptset_items(ari_t *val)
-{
-    TEST_ASSERT_FALSE(val->is_ref);
-    TEST_ASSERT_TRUE(val->as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL(ARI_TYPE_RPTSET, val->as_lit.ari_type);
-    ari_report_list_t *rpts = &(val->as_lit.value.as_rptset->reports);
-    TEST_ASSERT_EQUAL_INT(1, ari_report_list_size(*rpts));
-    return ari_report_list_front(*rpts);
-}
-
 // direct EXPR ari:/AC/(/VAST/1) -> /VAST/1
 TEST_CASE("821181820601", "820601")
 // ref EXPR ari:/AC/(//65536/EDD/2(10)) -> /VAST/10

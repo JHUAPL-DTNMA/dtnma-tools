@@ -116,21 +116,30 @@ void ari_set_am(ari_t *ari, struct ari_am_s *src);
 
 void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
 
-/** Require an AC value and extract a pointer to its item list.
+/** Require an EXECSET value and extract a pointer to its struct.
  *
  * @param[in] ari The ARI to read.
- * @return Pointer to the contained AC struct, if present, otherwise NULL.
+ * @return Pointer to the contained struct, if present, otherwise NULL.
  */
 struct ari_execset_s *ari_get_execset(const ari_t *ari);
 
-/** Initialize an ARI as an EXECSET literal value.
+/** Set an ARI as an EXECSET literal value.
+ * Any previous value is de-initialized.
  *
- * @param[out] ari The value to initialize.
+ * @param[out] ari The value to set.
  * @return The new execset struct.
  */
-struct ari_execset_s *ari_init_execset(ari_t *ari);
+struct ari_execset_s *ari_set_execset(ari_t *ari);
+
+/** Require an RPTSET value and extract a pointer to its struct.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained struct, if present, otherwise NULL.
+ */
+struct ari_rptset_s *ari_get_rptset(const ari_t *ari);
 
 /** Set an ARI as an RPTSET literal value.
+ * Any previous value is de-initialized.
  *
  * @param[out] ari The value to set.
  * @return The new rptset struct.

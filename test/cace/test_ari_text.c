@@ -273,8 +273,9 @@ void test_ari_text_encode_lit_typed_am_2item(void)
 void test_ari_text_encode_lit_typed_execset_2tgt(void)
 {
     {
-        ari_t          ari;
-        ari_execset_t *ctr = ari_init_execset(&ari);
+        ari_t ari = ARI_INIT_UNDEFINED;
+
+        ari_execset_t *ctr = ari_set_execset(&ari);
         {
             ari_set_prim_uint64(&(ctr->nonce), 12345678);
         }
