@@ -45,8 +45,9 @@ class TestStdioAgent(unittest.TestCase):
     def _ari_text_to_obj(self, text:str) -> ARI:
         nn_func = nickname.Converter(nickname.Mode.TO_NN, self._adms.db_session(), must_nickname=True)
 
-        ari = ari_text.Decoder().decode(io.StringIO(text))
-        nn_func(ari)
+        with io.StringIO(text) as buf:
+            ari = ari_text.Decoder().decode(buf)
+        ari = nn_func(ari)
         return ari
 
     def _ari_obj_to_cbor(self, ari:ARI) -> bytes:
@@ -55,27 +56,24 @@ class TestStdioAgent(unittest.TestCase):
         return buf.getvalue()
 
     def _ari_obj_from_cbor(self, databuf:bytes) -> ARI:
-        nn_func = nickname.Converter(nickname.Mode.FROM_NN, self._adms.db_session(), must_nickname=True)
-
         with io.BytesIO(databuf) as buf:
             ari = ari_cbor.Decoder().decode(buf)
-        nn_func(ari)
         return ari
 
     def _send_execset(self, text:str):
         ''' Send an EXECSET with a number of target ARIs. '''
+        LOGGER.info('Sending value %s', text)
         data = self._ari_obj_to_cbor(self._ari_text_to_obj(text))
         line = binascii.b2a_hex(data).decode('ascii')
-        LOGGER.debug('Sending line %s', line)
+        LOGGER.info('Sending line %s', line)
         self._agent.send_stdin(line + '\n')
 
     def _wait_rptset(self) -> ARI:
         ''' Wait for a RPTSET and decode it. '''
         line = self._agent.wait_for_text(HEXSTR).strip()
-        LOGGER.debug('Received line %s', line)
+        LOGGER.info('Received line %s', line)
         data = binascii.a2b_hex(line)
         ari = self._ari_obj_from_cbor(data)
-        LOGGER.debug('Decoded as %s', ari)
 
         if LOGGER.isEnabledFor(logging.INFO):
             textbuf = io.StringIO()
