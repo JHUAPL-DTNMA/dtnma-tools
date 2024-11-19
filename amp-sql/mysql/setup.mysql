@@ -1,0 +1,51 @@
+# -- Setup Database.  This script can be executed with the mysql command line client
+# -- ie (using docker-compose example): mysql --user=root --password=mysql < setup.mysql
+
+DROP DATABASE IF EXISTS amp_core;
+
+source Database_Scripts/Tables/amp_core_create_database.sql
+source Database_Scripts/Views/obj_view.sql
+source Database_Scripts/Views/ari_view.sql
+source Database_Scripts/Views/ctrl_view.sql
+source Database_Scripts/Views/edd_view.sql
+source Database_Scripts/Views/mac_view.sql
+source Database_Scripts/Views/message_view.sql
+source Database_Scripts/Views/oper_view.sql
+source Database_Scripts/Views/rpt_view.sql
+source Database_Scripts/Views/sbr_view.sql
+source Database_Scripts/Views/tblt_view.sql
+source Database_Scripts/Views/tbr_view.sql
+source Database_Scripts/Views/tnvc_view.sql
+source Database_Scripts/Routines/amp_core_routines_obj.sql
+source Database_Scripts/Routines/amp_core_routines_var.sql
+source Database_Scripts/Routines/amp_core_routines_ac.sql
+source Database_Scripts/Routines/amp_core_routines_actual_parmspec.sql
+source Database_Scripts/Routines/amp_core_routines_agents.sql
+source Database_Scripts/Routines/amp_core_routines_const.sql
+source Database_Scripts/Routines/amp_core_routines_ctrl.sql
+source Database_Scripts/Routines/amp_core_routines_data_values.sql
+source Database_Scripts/Routines/amp_core_routines_edd.sql
+source Database_Scripts/Routines/amp_core_routines_expr.sql
+source Database_Scripts/Routines/amp_core_routines_formal_parmspec.sql
+source Database_Scripts/Routines/amp_core_routines_lit.sql
+source Database_Scripts/Routines/amp_core_routines_macro.sql
+source Database_Scripts/Routines/amp_core_routines_messages.sql
+source Database_Scripts/Routines/amp_core_routines_namespace.sql
+source Database_Scripts/Routines/amp_core_routines_operator.sql
+source Database_Scripts/Routines/amp_core_routines_report.sql
+source Database_Scripts/Routines/amp_core_routines_sbr.sql
+source Database_Scripts/Routines/amp_core_routines_table.sql
+source Database_Scripts/Routines/amp_core_routines_tbr.sql
+source Database_Scripts/Routines/amp_core_routines_tnvc.sql
+source Database_Scripts/amp_core_functions.sql
+# -- Begin Insert Agent Scripts
+source Agent_Scripts/adm_amp_agent.sql
+source Agent_Scripts/adm_bp_agent.sql
+source Agent_Scripts/adm_ltp_agent.sql
+source Agent_Scripts/adm_ionsec_admin.sql
+source Agent_Scripts/adm_ion_ltp_admin.sql
+source Agent_Scripts/adm_ion_ipn_admin.sql
+source Agent_Scripts/adm_ion_bp_admin.sql
+source Agent_Scripts/adm_ion_admin.sql
+source Agent_Scripts/adm_sbsp.sql
+# -- End Insert Agent Scripts

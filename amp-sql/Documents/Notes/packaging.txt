@@ -1,0 +1,41 @@
+A file listing that can serve to initialize the database via a docker-compose.yml
+
+- ${PWD}/amp-sql/mysql/Database_Scripts/Tables/amp_core_create_database.sql:/docker-entrypoint-initdb.d/00-amp_core_create_database.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Views/ctrl_view.sql:/docker-entrypoint-initdb.d/01-ctrl_view.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Views/edd_view.sql:/docker-entrypoint-initdb.d/02-edd_view.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Views/mac_view.sql:/docker-entrypoint-initdb.d/03-mac_view.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Views/oper_view.sql:/docker-entrypoint-initdb.d/04-oper_view.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Views/rpt_view.sql:/docker-entrypoint-initdb.d/05-rpt_view.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Views/tblt_view.sql:/docker-entrypoint-initdb.d/06-tblt_view.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Views/sbr_view.sql:/docker-entrypoint-initdb.d/07-sbr_view.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Views/tbr_view.sql:/docker-entrypoint-initdb.d/08-tbr_view.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Views/tnvc_view.sql:/docker-entrypoint-initdb.d/09-tnvc_view.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_obj.sql:/docker-entrypoint-initdb.d/10-amp_core_routines_obj.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_var.sql:/docker-entrypoint-initdb.d/11-amp_core_routines_var.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_ac.sql:/docker-entrypoint-initdb.d/11-amp_core_routines_ac.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_actual_parmspec.sql:/docker-entrypoint-initdb.d/12-amp_core_routines_actual_parmspec.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_agents.sql:/docker-entrypoint-initdb.d/13-amp_core_routines_agents.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_const.sql:/docker-entrypoint-initdb.d/14-amp_core_routines_const.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_ctrl.sql:/docker-entrypoint-initdb.d/15-amp_core_routines_ctrl.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_data_values.sql:/docker-entrypoint-initdb.d/16-amp_core_routines_data_values.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_edd.sql:/docker-entrypoint-initdb.d/17-amp_core_routines_edd.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_expr.sql:/docker-entrypoint-initdb.d/18-amp_core_routines_expr.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_formal_parmspec.sql:/docker-entrypoint-initdb.d/19-amp_core_routines_formal_parmspec.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_lit.sql:/docker-entrypoint-initdb.d/20-amp_core_routines_lit.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_macro.sql:/docker-entrypoint-initdb.d/21-amp_core_routines_macro.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_messages.sql:/docker-entrypoint-initdb.d/22-amp_core_routines_messages.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_namespace.sql:/docker-entrypoint-initdb.d/23-amp_core_routines_namespace.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_operator.sql:/docker-entrypoint-initdb.d/24-amp_core_routines_operator.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_report.sql:/docker-entrypoint-initdb.d/25-amp_core_routines_report.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_sbr.sql:/docker-entrypoint-initdb.d/26-amp_core_routines_sbr.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_table.sql:/docker-entrypoint-initdb.d/27-amp_core_routines_table.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_tbr.sql:/docker-entrypoint-initdb.d/28-amp_core_routines_tbr.sql
+- ${PWD}/amp-sql/mysql/Database_Scripts/Routines/amp_core_routines_tnvc.sql:/docker-entrypoint-initdb.d/28-amp_core_routines_tnvc.sql
+- ${PWD}/amp-sql/mysql/Agent_Scripts/adm_bp_agent.sql:/docker-entrypoint-initdb.d/29-adm_bp_agent.sql
+- ${PWD}/amp-sql/mysql/Agent_Scripts/adm_amp_agent.sql:/docker-entrypoint-initdb.d/30-adm_amp_agent.sql
+- ${PWD}/amp-sql/mysql/Agent_Scripts/nm_example.sql:/docker-entrypoint-initdb.d/31-nm_example.sql
+
+an example bash script for generating the database 
+    create_amp_db.sh
+
+amp_core.sql is a dump of the sql database that can be used to regenerate the database and stored procedures
