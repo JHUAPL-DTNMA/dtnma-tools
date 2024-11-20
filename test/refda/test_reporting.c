@@ -75,7 +75,10 @@ void setUp(void)
 {
     refda_agent_init(&agent);
     cace_data_init(&mgr);
-    cace_data_copy_from(&mgr, 4, (cace_data_ptr_t)"test");
+
+    static const char *data = "test";
+    // CACE data does not include terminating null
+    cace_data_copy_from(&mgr, strlen(data), (cace_data_ptr_t)data);
 
     atomic_store(&edd_one_state, 1);
 
