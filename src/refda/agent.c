@@ -37,20 +37,20 @@ void refda_agent_init(refda_agent_t *agent)
     cace_amm_obj_store_init(&(agent->objs));
     pthread_mutex_init(&(agent->objs_mutex), NULL);
 
-    agent_ari_queue_init(agent->execs, AGENT_QUEUE_SIZE);
+    refda_msgdata_queue_init(agent->execs, AGENT_QUEUE_SIZE);
     sem_init(&(agent->execs_sem), 0, 0);
 
-    agent_ari_queue_init(agent->rptgs, AGENT_QUEUE_SIZE);
+    refda_msgdata_queue_init(agent->rptgs, AGENT_QUEUE_SIZE);
     sem_init(&(agent->rptgs_sem), 0, 0);
 }
 
 void refda_agent_deinit(refda_agent_t *agent)
 {
     sem_destroy(&(agent->rptgs_sem));
-    agent_ari_queue_clear(agent->rptgs);
+    refda_msgdata_queue_clear(agent->rptgs);
 
     sem_destroy(&(agent->execs_sem));
-    agent_ari_queue_clear(agent->execs);
+    refda_msgdata_queue_clear(agent->execs);
 
     pthread_mutex_destroy(&(agent->objs_mutex));
     cace_amm_obj_store_deinit(&(agent->objs));
@@ -170,13 +170,32 @@ int refda_agent_send_hello(refda_agent_t *agent)
     // ari:/ietf-dtnma-agent/CONST/hello
     ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_DTNMA_AGENT_ENUM, ARI_TYPE_CONST, 0);
 
+    // dummy message source
+    refda_msgdata_t msg;
+    refda_msgdata_init(&msg);
+    // FIXME how to indicate this destination..?
+    static const char *src = "any";
+    cace_data_copy_from(&(msg.ident), strlen(src) - 1, (cace_data_ptr_t)src);
+
     refda_runctx_t runctx;
-    if (refda_runctx_init(&runctx, agent, NULL))
+    int            retval = 0;
+    int            res    = refda_runctx_init(&runctx, agent, &msg);
+    if (res)
     {
-        return 2;
+        retval = 2;
     }
 
-    int res = refda_reporting_target(&runctx, &ref);
+    if (!retval)
+    {
+        res = refda_reporting_target(&runctx, &ref);
+        if (res)
+        {
+            retval = 3;
+        }
+    }
 
-    return res;
+    // no deinit for runctx
+    refda_msgdata_deinit(&msg);
+
+    return retval;
 }

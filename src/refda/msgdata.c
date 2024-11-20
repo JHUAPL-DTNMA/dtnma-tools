@@ -15,25 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "msgdata.h"
+#include <cace/util/defs.h>
 
-#ifndef REFDA_EGRESS_H_
-#define REFDA_EGRESS_H_
+void refda_msgdata_init(refda_msgdata_t *obj)
+{
+    CHKVOID(obj);
+    cace_data_init(&(obj->ident));
+    ari_init(&(obj->value));
+}
 
-#include <cace/util/daemon_run.h>
+void refda_msgdata_init_move(refda_msgdata_t *obj, refda_msgdata_t *src)
+{
+    CHKVOID(obj);
+    CHKVOID(src);
+    cace_data_init(&(obj->ident));
+    cace_data_move(&(obj->ident), &(src->ident));
+    ari_init_move(&(obj->value), &(src->value));
+}
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** Work thread function for the Agent aggregation and egress.
- *
- * @param[in] arg The context ::refda_agent_t pointer.
- * @return Always NULL pointer.
- */
-void *refda_egress_worker(void *arg);
-
-#ifdef __cplusplus
-} // extern C
-#endif
-
-#endif /* REFDA_EGRESS_H_ */
+void refda_msgdata_deinit(refda_msgdata_t *obj)
+{
+    CHKVOID(obj);
+    ari_deinit(&(obj->value));
+    cace_data_deinit(&(obj->ident));
+}

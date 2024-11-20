@@ -64,6 +64,12 @@ typedef struct
      */
     refda_agent_t *agent;
 
+    /** During execution, a reference to the manager identity which caused
+     * the execution.
+     * When triggered by the agent itself this will be null.
+     */
+    const cace_data_t *mgr_ident;
+
     /** During execution, a reference to a context nonce value.
      * This can be null if there is no context nonce.
      */
@@ -75,10 +81,10 @@ typedef struct
  *
  * @param[out] ctx The contect to initialize.
  * @param[in] agent The agent being run within.
- * @param[in] exec The optional EXECSET message being run within.
+ * @param[in] msg The optional EXECSET message being run within.
  * @return Zero if successful.
  */
-int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const ari_t *exec);
+int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
 
 #ifdef __cplusplus
 } // extern C

@@ -19,6 +19,8 @@
 #ifndef REFDA_AGENT_H_
 #define REFDA_AGENT_H_
 
+#include "msgdata.h"
+#include "rpt_agg.h"
 #include <cace/util/daemon_run.h>
 #include <cace/util/threadset.h>
 #include <cace/amm/obj_ns.h>
@@ -27,15 +29,15 @@
 #include <m-buffer.h>
 #include <pthread.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// Error result when agent locking fails
 #define REFDA_AGENT_ERR_LOCK_FAILED 2
 
 /// Size of agent handoff queues
 #define AGENT_QUEUE_SIZE 1024
-
-/// @cond Doxygen_Suppress
-QUEUE_SPSC_DEF(agent_ari_queue, ari_t, BUFFER_QUEUE | BUFFER_PUSH_INIT_POP_MOVE)
-/// @endcond
 
 /** State of a DTNMA Agent.
  */
@@ -64,14 +66,16 @@ typedef struct
     const amm_type_t *rptt_type;
 
     /// Ingress EXECSET queue
-    agent_ari_queue_t execs;
-    sem_t             execs_sem;
+    refda_msgdata_queue_t execs;
+    /// Semaphore for items in #execs
+    sem_t execs_sem;
 
     // TBD execution state table
 
     /// Egress RPTSET queue
-    agent_ari_queue_t rptgs;
-    sem_t             rptgs_sem;
+    refda_msgdata_queue_t rptgs;
+    /// Semaphore for items in #rptgs
+    sem_t rptgs_sem;
 
     /// Pending aggregated RPTSETs
     // TBD
@@ -127,5 +131,9 @@ int refda_agent_start(refda_agent_t *agent);
 int refda_agent_stop(refda_agent_t *agent);
 
 int refda_agent_send_hello(refda_agent_t *agent);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* REFDA_AGENT_H_ */

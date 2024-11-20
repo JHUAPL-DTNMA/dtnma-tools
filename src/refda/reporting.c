@@ -25,9 +25,16 @@
 
 int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *result)
 {
-    ari_t rptset;
+    if (!(runctx->mgr_ident))
+    {
+        // nothing to do
+        return 0;
+    }
 
-    ari_rptset_t *rpts = ari_init_rptset(&rptset);
+    refda_msgdata_t msg;
+    refda_msgdata_init(&msg);
+
+    ari_rptset_t *rpts = ari_set_rptset(&msg.value);
     ari_set_copy(&(rpts->nonce), runctx->nonce);
     refda_agent_nowtime(runctx->agent, &(rpts->reftime));
     {
@@ -39,7 +46,7 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
     }
     CACE_LOG_DEBUG("generated an execution report");
 
-    agent_ari_queue_push_move(runctx->agent->rptgs, &rptset);
+    refda_msgdata_queue_push_move(runctx->agent->rptgs, &msg);
     sem_post(&(runctx->agent->rptgs_sem));
 
     return 0;
@@ -251,18 +258,26 @@ int refda_reporting_target(refda_runctx_t *runctx, const ari_t *target)
 
     if (!retval)
     {
-        refda_reporting_gen(runctx->agent, target, rptctx.items);
+        refda_reporting_gen(runctx->agent, runctx->mgr_ident, target, rptctx.items);
     }
 
     refda_reporting_ctx_deinit(&rptctx);
     return retval;
 }
 
-int refda_reporting_gen(refda_agent_t *agent, const ari_t *src, ari_list_t items)
+int refda_reporting_gen(refda_agent_t *agent, const cace_data_t *mgr_ident, const ari_t *src, ari_list_t items)
 {
-    ari_t rptset;
+    if (!mgr_ident)
+    {
+        // nothing to do
+        CACE_LOG_WARNING("attempted to report to unknown manager");
+        return 0;
+    }
 
-    ari_rptset_t *rpts = ari_init_rptset(&rptset);
+    refda_msgdata_t msg;
+    refda_msgdata_init(&msg);
+
+    ari_rptset_t *rpts = ari_set_rptset(&msg.value);
     ari_set_null(&(rpts->nonce));
     refda_agent_nowtime(agent, &(rpts->reftime));
     {
@@ -284,7 +299,7 @@ int refda_reporting_gen(refda_agent_t *agent, const ari_t *src, ari_list_t items
         }
     }
 
-    agent_ari_queue_push_move(agent->rptgs, &rptset);
+    refda_msgdata_queue_push_move(agent->rptgs, &msg);
     sem_post(&(agent->rptgs_sem));
     return 0;
 }

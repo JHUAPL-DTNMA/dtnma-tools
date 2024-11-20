@@ -41,19 +41,24 @@ void refda_amm_modval_state_inc(refda_amm_modval_state_t *obj)
     }
 }
 
-int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const ari_t *exec)
+int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg)
 {
     CHKERR1(ctx);
 
     ctx->agent = agent;
 
-    ctx->nonce = NULL;
-    if (exec && exec->is_ref)
+    if (msg)
     {
-        if (exec->as_lit.has_ari_type && (exec->as_lit.ari_type == ARI_TYPE_EXECSET))
-        {
-            ctx->nonce = &(exec->as_lit.value.as_execset->nonce);
-        }
+        ctx->mgr_ident = msg->ident.ptr ? &(msg->ident) : NULL;
+
+        const ari_execset_t *eset = ari_get_execset(&(msg->value));
+        // should not be null, but guard anyway
+        ctx->nonce = eset ? &(eset->nonce) : NULL;
+    }
+    else
+    {
+        ctx->mgr_ident = NULL;
+        ctx->nonce     = NULL;
     }
 
     return 0;

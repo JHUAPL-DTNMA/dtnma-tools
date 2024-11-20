@@ -140,6 +140,7 @@ if(BUILD_AGENT)
 
 set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/refda/msgdata.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/ingress.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/egress.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/refda/register.h"
@@ -162,6 +163,7 @@ set(HFILES
 )
 set(CFILES
     "refda/agent.c"
+    "refda/msgdata.c"
     "refda/ingress.c"
     "refda/egress.c"
     "refda/register.c"
