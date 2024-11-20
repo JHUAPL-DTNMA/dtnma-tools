@@ -157,7 +157,7 @@ int cace_data_copy(cace_data_t *data, const cace_data_t *src);
 /** Move between two data structs, both already initialized.
  *
  * @param[in,out] data The data to move to, which must not be NULL.
- * @param src The data to move from, which must not be NULL.
+ * @param[in,out] src The data to move from, which must not be NULL.
  */
 void cace_data_move(cace_data_t *data, cace_data_t *src);
 
@@ -165,14 +165,19 @@ void cace_data_move(cace_data_t *data, cace_data_t *src);
  *
  * @param[in,out] data The data to swap to, which must not be NULL.
  * @param[in,out] other The data to swap with, which must not be NULL.
- * @return Zero upon success.
  */
 void cace_data_swap(cace_data_t *data, cace_data_t *other);
 
+/** Interface for M*LIB items.
+ */
 size_t cace_data_hash(const cace_data_t *data);
 
+/** Interface for M*LIB items.
+ */
 int cace_data_cmp(const cace_data_t *lt, const cace_data_t *rt);
 
+/** Interface for M*LIB items.
+ */
 bool cace_data_equal(const cace_data_t *lt, const cace_data_t *rt);
 
 struct m_string_s;
