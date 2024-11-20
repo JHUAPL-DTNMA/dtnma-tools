@@ -84,7 +84,6 @@ jobs:
           path: build/default/coverage
 
   integration-test:
-    if: false # FIXME re-enable when agent is ready
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
