@@ -27,13 +27,13 @@
 /** Process a top-level incoming ARI which has already been verified
  * to be an EXECSET literal.
  */
-static int refda_exec_execset(refda_agent_t *agent, const ari_t *ari)
+static int refda_exec_execset(refda_agent_t *agent, const refda_msgdata_t *msg)
 {
     CHKERR1(agent);
-    CHKERR1(ari);
+    CHKERR1(msg);
 
     refda_runctx_t runctx;
-    if (refda_runctx_init(&runctx, agent, ari))
+    if (refda_runctx_init(&runctx, agent, msg))
     {
         return 2;
     }
@@ -41,7 +41,7 @@ static int refda_exec_execset(refda_agent_t *agent, const ari_t *ari)
     // FIXME: lock more fine-grained level
     REFDA_AGENT_LOCK(agent)
 
-    ari_list_t   *targets = &(ari->as_lit.value.as_execset->targets);
+    ari_list_t   *targets = &(msg->value.as_lit.value.as_execset->targets);
     ari_list_it_t tgtit;
     for (ari_list_it(tgtit, *targets); !ari_list_end_p(tgtit); ari_list_next(tgtit))
     {
@@ -70,10 +70,12 @@ static int refda_exec_ctrl(refda_runctx_t *runctx, cace_amm_lookup_t *deref)
     refda_exec_ctx_init(&ctx, runctx, deref);
 
     int res = refda_amm_ctrl_desc_execute(ctrl, &ctx);
+    CACE_LOG_DEBUG("Finished execution with status %d", res);
 
     if (ctx.parent->nonce && !ari_is_null(ctx.parent->nonce))
     {
         // generate report regardless of production
+        CACE_LOG_DEBUG("Pushing execution result");
         refda_reporting_ctrl(runctx, deref->ref, &ctx.result);
     }
 
@@ -191,32 +193,33 @@ void *refda_exec_worker(void *arg)
     refda_agent_t *agent = arg;
     CACE_LOG_INFO("Worker started");
 
-    while (daemon_run_get(&agent->running))
+    // run until explicitly told to stop via refda_agent_t::execs
+    while (true)
     {
-        ari_t ari;
+        refda_msgdata_t item;
 
         sem_wait(&(agent->execs_sem));
-        if (!agent_ari_queue_pop(&ari, agent->execs))
+        if (!refda_msgdata_queue_pop(&item, agent->execs))
         {
             // shouldn't happen
             CACE_LOG_WARNING("failed to pop from execs queue");
             continue;
         }
         // sentinel for end-of-input
-        const bool at_end = ari_is_undefined(&ari);
+        const bool at_end = ari_is_undefined(&(item.value));
         if (!at_end)
         {
-            refda_exec_execset(agent, &ari);
+            refda_exec_execset(agent, &item);
         }
-
-        ari_deinit(&ari);
+        refda_msgdata_deinit(&item);
         if (at_end)
         {
             CACE_LOG_INFO("Got undefined exec, stopping");
 
             // flush the input queue but keep the daemon running
-            ari_t undef = ARI_INIT_UNDEFINED;
-            agent_ari_queue_push_move(agent->rptgs, &undef);
+            refda_msgdata_t undef;
+            refda_msgdata_init(&undef);
+            refda_msgdata_queue_push_move(agent->rptgs, &undef);
             sem_post(&(agent->rptgs_sem));
 
             break;

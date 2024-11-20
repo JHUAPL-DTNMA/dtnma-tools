@@ -45,6 +45,8 @@ int suiteTearDown(int failures)
 
 /// Agent context for testing
 static refda_agent_t agent;
+/// Manager identity
+static cace_data_t mgr;
 
 static atomic_int edd_one_state = ATOMIC_VAR_INIT(0);
 
@@ -72,6 +74,12 @@ static void test_reporting_edd_one_int(const refda_amm_edd_desc_t *obj _U_, refd
 void setUp(void)
 {
     refda_agent_init(&agent);
+    cace_data_init(&mgr);
+
+    static const char *data = "test";
+    // CACE data does not include terminating null
+    cace_data_copy_from(&mgr, strlen(data), (cace_data_ptr_t)data);
+
     atomic_store(&edd_one_state, 1);
 
     {
@@ -148,6 +156,7 @@ void setUp(void)
 
 void tearDown(void)
 {
+    cace_data_deinit(&mgr);
     refda_agent_deinit(&agent);
 }
 
@@ -196,15 +205,17 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     refda_runctx_t runctx;
     // no nonce for test
     refda_runctx_init(&runctx, &agent, NULL);
+    runctx.mgr_ident = &mgr;
 
     int res = refda_reporting_target(&runctx, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");
 
     // extract agent state
-    TEST_ASSERT_EQUAL_INT(1, agent_ari_queue_size(agent.rptgs));
-    ari_t got_rptset;
-    agent_ari_queue_pop(&got_rptset, agent.rptgs);
-    ari_report_t *rpt = assert_rptset_items(&got_rptset);
+    TEST_ASSERT_EQUAL_INT(1, refda_msgdata_queue_size(agent.rptgs));
+    refda_msgdata_t got_rptset;
+    TEST_ASSERT_TRUE(refda_msgdata_queue_pop(&got_rptset, agent.rptgs));
+    ari_report_t *rpt = assert_rptset_items(&got_rptset.value);
+    TEST_ASSERT_NOT_NULL(rpt);
 
     // verify RPTSET result
     ari_list_it_t expect_it;
@@ -220,7 +231,7 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
         TEST_ASSERT_TRUE_MESSAGE(equal, "RPT ARI is different");
     }
 
-    ari_deinit(&got_rptset);
+    refda_msgdata_deinit(&got_rptset);
     ari_deinit(&expect_rpt_items);
     ari_deinit(&target);
 }

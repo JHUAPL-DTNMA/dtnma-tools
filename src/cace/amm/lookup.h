@@ -63,8 +63,11 @@ void cace_amm_lookup_init_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src);
 
 /** Perform a lookup into an object store.
  *
- * @return Zero if successful,
+ * @return Zero if successful.
  * 1 if parameters are invalid (including an ARI that is not an object reference).
+ * 2 if the ARI type is invalid.
+ * 3 if the namespace ID does not resolve to a namespace.
+ * 4 if the object ID does not resolve to an object.
  */
 int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *store, const ari_t *ref);
 

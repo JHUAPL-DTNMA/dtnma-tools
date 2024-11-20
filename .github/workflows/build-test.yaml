@@ -3,14 +3,9 @@ on:
   schedule:
     - cron: '0 0 * * 0'
   push:
-    paths:
-      - .github/workflows/build-test.yaml
-      - CMakeLists.txt
-      - deps/**
-      - cmake/**
-      - src/**
-      - test/**
-      - testenv/**
+    branches:
+      - main
+      - 'apl-*'
   pull_request: {} # any target
 
 jobs:
@@ -65,17 +60,19 @@ jobs:
         with:
           create-symlink: true
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF
+        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
       - name: Build
         run: ./build.sh
       - name: Install
         run: ./build.sh install
       - name: Test Prep
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          python3 python3-pip &&
-          pip3 install --upgrade pip &&
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          python3 python3-pip
+          pip3 install --upgrade pip
+          pip3 install git+https://github.com/JHUAPL-DTNMA/dtnma-ace.git@apl-fy24-fix-decimal-fraction
           pip3 install -r agent-test/requirements.txt
+          git clone --branch apl-fy24 https://github.com/JHUAPL-DTNMA/dtnma-adms.git agent-test/adms
       - name: Test
         run: python3 -m pytest agent-test --capture=no --log-cli-level=debug
       - name: Collect coverage

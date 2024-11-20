@@ -377,9 +377,10 @@ struct ari_execset_s *ari_get_execset(const ari_t *ari)
     return ari->as_lit.value.as_execset;
 }
 
-struct ari_execset_s *ari_init_execset(ari_t *ari)
+struct ari_execset_s *ari_set_execset(ari_t *ari)
 {
     CHKNULL(ari);
+    ari_deinit(ari);
 
     ari_execset_t *ctr = ARI_MALLOC(sizeof(ari_execset_t));
     ari_execset_init(ctr);
@@ -394,9 +395,24 @@ struct ari_execset_s *ari_init_execset(ari_t *ari)
     return ctr;
 }
 
-struct ari_rptset_s *ari_init_rptset(ari_t *ari)
+struct ari_rptset_s *ari_get_rptset(const ari_t *ari)
 {
     CHKNULL(ari);
+    if (ari->is_ref)
+    {
+        return NULL;
+    }
+    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_RPTSET))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_rptset;
+}
+
+struct ari_rptset_s *ari_set_rptset(ari_t *ari)
+{
+    CHKNULL(ari);
+    ari_deinit(ari);
 
     ari_rptset_t *ctr = ARI_MALLOC(sizeof(ari_rptset_t));
     ari_rptset_init(ctr);
