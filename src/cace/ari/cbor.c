@@ -165,6 +165,12 @@ static int ari_cbor_decode_timespec(QCBORDecodeContext *dec, struct timespec *ts
             return 2;
         }
 
+        // Restrict exponent per ARI spec
+        if (exp > 9 || exp < -9)
+        {
+            return 3;
+        }
+
         // normalize to 1e-9 seconds
         while (exp > -9)
         {
