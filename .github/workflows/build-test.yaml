@@ -34,11 +34,15 @@ jobs:
         run: ./build.sh
       - name: Test
         run: ./build.sh check
+      - name: Collect coverage
+        run: ./build.sh coverage
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-coverage
-          path: build/default/coverage
+          path:
+            -  build/default/coverage-cace-html
+            -  build/default/coverage-refda-html
 
   agent-test:
     runs-on: ubuntu-22.04
@@ -76,12 +80,14 @@ jobs:
       - name: Test
         run: python3 -m pytest agent-test --capture=no --log-cli-level=debug
       - name: Collect coverage
-        run: cmake --build build/default --target coverage
+        run: ./build.sh coverage
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
           name: agent-test-coverage
-          path: build/default/coverage
+          path:
+            -  build/default/coverage-cace-html
+            -  build/default/coverage-refda-html
 
   integration-test:
     if: false # FIXME re-enable when agent is ready

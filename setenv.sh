@@ -16,6 +16,7 @@
 ## limitations under the License.
 ##
 
+SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 DESTDIR=${DESTDIR:-${SELFDIR}/testroot}
 PREFIX=${PREFIX:-/usr}
 

@@ -110,8 +110,14 @@ if(TEST_COVERAGE)
   set(GCOVR_ADDITIONAL_ARGS
   )
   setup_target_for_coverage_gcovr_html(
-    NAME coverage
-    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    NAME coverage-cace-html
+    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/cace"
+    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/cace"
+  )
+  setup_target_for_coverage_gcovr_html(
+    NAME coverage-refda-html
+    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refda"
+    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refda"
   )
 endif(TEST_COVERAGE)
 if(BUILD_TESTING)
