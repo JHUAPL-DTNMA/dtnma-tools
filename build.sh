@@ -22,7 +22,6 @@
 #
 set -e
 
-SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 source setenv.sh
 
 BUILDDIR=${SELFDIR}/build/default
@@ -30,17 +29,20 @@ BUILDDIR=${SELFDIR}/build/default
 if [ "$1" = "docs" ]
 then
     cmake --build ${BUILDDIR} --target docs
-else
-    cmake --build ${BUILDDIR}
-fi
-
-if [ "$1" = "install" ]
+elif [ "$1" = "install" ]
 then
-    cmake --install ${BUILDDIR}
+    shift
+    cmake --install ${BUILDDIR} "$@"
 elif [ "$1" = "check" ]
 then
     ctest --test-dir ${BUILDDIR} \
-	  --output-junit testresults.xml \
-	  --verbose
-    cmake --build ${BUILDDIR} --target coverage || true
+        --output-junit testresults.xml \
+        --verbose
+elif [ "$1" = "coverage" ]
+then
+    cmake --build ${BUILDDIR} -j1 --target \
+        coverage-cace-html coverage-cace-xml \
+        coverage-refda-html coverage-refda-xml
+else
+    cmake --build ${BUILDDIR}
 fi

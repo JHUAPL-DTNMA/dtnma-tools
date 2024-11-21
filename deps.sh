@@ -30,7 +30,7 @@ BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"
 echo "Installing to ${DESTDIR}"
 
-if [ ! -e ${DESTDIR}/usr/include/ion.h ]
+if [ false && ! -e ${DESTDIR}/usr/include/ion.h ]
 then
   mkdir -p ${BUILDDIR}
   rsync --recursive ${DEPSDIR}/ion/ ${BUILDDIR}/ion/

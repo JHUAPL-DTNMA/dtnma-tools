@@ -16,208 +16,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-include(GNUInstallDirs)
-
-# ARI handling library
-configure_file("cace/config.h.in" "cace/config.h")
-set(HFILES
-    "${CMAKE_CURRENT_BINARY_DIR}/cace/config.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/cace_data.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/defs.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/logging.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/threadset.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/util/daemon_run.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/type.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/base.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/algo.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/containers.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/access.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/cbor.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_util.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/typing.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/numeric.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/parameters.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_desc.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_ns.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/obj_store.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/lookup.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cace/amm/msg_if.h"
-)
-set(CFILES
-    "cace/cace_data.c"
-    "cace/util/logging_stderr.c"
-    "cace/util/threadset.c"
-    "cace/util/daemon_run.c"
-    "cace/ari/type.c"
-    "cace/ari/base.c"
-    "cace/ari/algo.c"
-    "cace/ari/containers.c"
-    "cace/ari/access.c"
-    "cace/ari/cbor.c"
-    "cace/ari/text_util.c"
-    "cace/ari/text_enc.c"
-    "cace/amm/typing.c"
-    "cace/amm/numeric.c"
-    "cace/amm/parameters.c"
-    "cace/amm/obj_desc.c"
-    "cace/amm/obj_ns.c"
-    "cace/amm/obj_store.c"
-    "cace/amm/lookup.c"
-    "cace/amm/msg_if.c"
-)
-if(ARI_TEXT_PARSE)
-    BISON_TARGET(
-        AriStrParse ${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_str.yac
-        ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_str_parse.c
-        COMPILE_FLAGS "-p cace_ari_text_str_"
-    )
-    FLEX_TARGET(
-        AriStrScan ${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_str.lex
-        ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_str_scan.c
-        DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_str_scan.h
-    )
-    ADD_FLEX_BISON_DEPENDENCY(AriStrScan AriStrParse)
-    #list(APPEND HFILES ${BISON_AriStrParse_OUTPUT_HEADER} ${FLEX_AriStrScan_OUTPUT_HEADER})
-    list(APPEND CFILES ${BISON_AriStrParse_OUTPUT_SOURCE} ${FLEX_AriStrScan_OUTPUTS})
-
-    BISON_TARGET(
-        AriValParse ${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_val.yac
-        ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_val_parse.c
-        COMPILE_FLAGS "-p cace_ari_text_val_"
-    )
-    FLEX_TARGET(
-        AriValScan ${CMAKE_CURRENT_SOURCE_DIR}/cace/ari/text_val.lex
-        ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_val_scan.c
-        DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/cace/ari/text_val_scan.h
-    )
-    ADD_FLEX_BISON_DEPENDENCY(AriValScan AriValParse)
-    #list(APPEND HFILES ${BISON_AriValParse_OUTPUT_HEADER} ${FLEX_AriValScan_OUTPUT_HEADER})
-    list(APPEND CFILES ${BISON_AriValParse_OUTPUT_SOURCE} ${FLEX_AriValScan_OUTPUTS})
-endif(ARI_TEXT_PARSE)
-
-add_library(cace)
-target_sources(cace PUBLIC ${HFILES})
-target_sources(cace PRIVATE ${CFILES})
-target_include_directories(
-  cace PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/cace>
-)
-target_compile_definitions(cace PRIVATE
-  -D_XOPEN_SOURCE
-  -D_POSIX_C_SOURCE=200809L
-)
-target_link_libraries(cace PUBLIC ${FLEX_LIBRARIES})
-target_link_libraries(cace PUBLIC MLIB::mlib)
-target_link_libraries(cace PUBLIC qcbor)
-target_link_libraries(cace PUBLIC m)
-
-add_executable(cace_ari)
-target_sources(cace_ari PRIVATE cace/cace_ari.c)
-target_link_libraries(cace_ari PUBLIC cace)
-
-install(
-    TARGETS cace cace_ari
-)
-install(
-    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cace"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    FILES_MATCHING PATTERN "*.h"
-)
-install(
-    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cace"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    FILES_MATCHING PATTERN "*.h"
+# All directories will be reflected in installed include path
+include_directories(
+  BEFORE
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+add_subdirectory(cace)
 
 if(BUILD_AGENT)
-
-set(HFILES
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/agent.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/msgdata.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/ingress.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/egress.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/register.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/runctx.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/valprod.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/exec.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/exec_ctx.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/eval.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/eval_ctx.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/reporting.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/reporting_ctx.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/ident.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/typedef.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/const.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/var.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/edd.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/ctrl.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/amm/oper.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/refda/adm/ietf.h"
-)
-set(CFILES
-    "refda/agent.c"
-    "refda/msgdata.c"
-    "refda/ingress.c"
-    "refda/egress.c"
-    "refda/register.c"
-    "refda/runctx.c"
-    "refda/valprod.c"
-    "refda/exec.c"
-    "refda/exec_ctx.c"
-    "refda/eval.c"
-    "refda/eval_ctx.c"
-    "refda/reporting.c"
-    "refda/reporting_ctx.c"
-    "refda/amm/ident.c"
-    "refda/amm/typedef.c"
-    "refda/amm/const.c"
-    "refda/amm/var.c"
-    "refda/amm/edd.c"
-    "refda/amm/ctrl.c"
-    "refda/amm/oper.c"
-    "refda/adm/ietf_amm.c"
-    "refda/adm/ietf_dtnma_agent.c"
-)
-add_library(refda)
-target_sources(refda PUBLIC ${HFILES})
-target_sources(refda PRIVATE ${CFILES})
-target_include_directories(
-  refda PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/refda>
-)
-target_link_libraries(refda PUBLIC cace)
-
-install(TARGETS refda)
-install(
-    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/refda"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    FILES_MATCHING PATTERN "*.h"
-)
-
-
-set(HFILES
-)
-set(CFILES
-    "refda-stdio/main.c"
-)
-add_executable(refda-stdio)
-target_sources(refda-stdio PUBLIC ${HFILES})
-target_sources(refda-stdio PRIVATE ${CFILES})
-target_link_libraries(refda-stdio PUBLIC refda)
-
-install(TARGETS refda-stdio)
-
+    add_subdirectory(refda)
+    add_subdirectory(refda-stdio)
+    if(ION_FOUND)
+        add_subdirectory(refda-ion)
+    endif(ION_FOUND)
 endif(BUILD_AGENT)
+if(BUILD_MANAGER)
+    add_subdirectory(refdm)
+    if(ION_FOUND)
+        add_subdirectory(refdm-ion)
+    endif(ION_FOUND)
+endif(BUILD_MANAGER)
+
 
 if(FALSE) # Disabled for test
 
