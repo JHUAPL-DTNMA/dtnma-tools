@@ -416,7 +416,7 @@ endfunction() # setup_target_for_coverage_lcov
 function(setup_target_for_coverage_gcovr_xml)
 
     set(options NONE)
-    set(oneValueArgs BASE_DIRECTORY NAME)
+    set(oneValueArgs BASE_DIRECTORY BINARY_DIRECTORY NAME)
     set(multiValueArgs EXCLUDE EXECUTABLE EXECUTABLE_ARGS DEPENDENCIES)
     cmake_parse_arguments(Coverage "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -429,6 +429,11 @@ function(setup_target_for_coverage_gcovr_xml)
         get_filename_component(BASEDIR ${Coverage_BASE_DIRECTORY} ABSOLUTE)
     else()
         set(BASEDIR ${PROJECT_SOURCE_DIR})
+    endif()
+    if(DEFINED Coverage_BINARY_DIRECTORY)
+        get_filename_component(BINARYDIR ${Coverage_BINARY_DIRECTORY} ABSOLUTE)
+    else()
+        set(BINARYDIR ${PROJECT_BINARY_DIR})
     endif()
 
     # Collect excludes (CMake 3.4+: Also compute absolute paths)
@@ -456,7 +461,7 @@ function(setup_target_for_coverage_gcovr_xml)
     # Running gcovr
     set(GCOVR_XML_CMD
         ${GCOVR_PATH} --xml ${Coverage_NAME}.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
-        ${GCOVR_EXCLUDE_ARGS} --object-directory=${PROJECT_BINARY_DIR}
+        ${GCOVR_EXCLUDE_ARGS} --object-directory=${BINARYDIR}
     )
 
     if(CODE_COVERAGE_VERBOSE)

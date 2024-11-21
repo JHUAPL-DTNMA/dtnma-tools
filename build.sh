@@ -40,8 +40,9 @@ then
         --verbose
 elif [ "$1" = "coverage" ]
 then
-    cmake --build ${BUILDDIR} --target \
-        coverage-cace-html coverage-refda-html
+    cmake --build ${BUILDDIR} -j1 --target \
+        coverage-cace-html coverage-cace-xml \
+        coverage-refda-html coverage-refda-xml
 else
     cmake --build ${BUILDDIR}
 fi

@@ -86,42 +86,58 @@ check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
 check_symbol_exists(getopt_long "getopt.h" HAVE_GETOPT_LONG)
 
 
-if(TEST_MEMCHECK)
-  find_program(MEMCHECK_CMD valgrind)
-  set(MEMCHECK_OPTIONS
-    "--tool=memcheck"
-    "--trace-children=yes"
-    "--leak-check=full" "--show-leak-kinds=all"
-    "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/memcheck.supp"
-    "--error-exitcode=2"
-  )
-  # Arguments as list into global scope for Findunitytools.cmake
-  set(TEST_EXEC_PREFIX "${MEMCHECK_CMD}" ${MEMCHECK_OPTIONS})
-endif(TEST_MEMCHECK)
-if(TEST_COVERAGE)
-  include(CodeCoverage)
-  append_coverage_compiler_flags()
-
-  set(COVERAGE_EXCLUDES
-    "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
-    "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
-    "${CMAKE_CURRENT_BINARY_DIR}/test/*"
-  )
-  set(GCOVR_ADDITIONAL_ARGS
-  )
-  setup_target_for_coverage_gcovr_html(
-    NAME coverage-cace-html
-    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/cace"
-    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/cace"
-  )
-  setup_target_for_coverage_gcovr_html(
-    NAME coverage-refda-html
-    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refda"
-    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refda"
-  )
-endif(TEST_COVERAGE)
 if(BUILD_TESTING)
+  if(TEST_MEMCHECK)
+    find_program(MEMCHECK_CMD valgrind)
+    message(STATUS "Using valgrind memcheck for tests: ${MEMCHECK_CMD}")
+    set(MEMCHECK_OPTIONS
+      "--tool=memcheck"
+      "--trace-children=yes"
+      "--leak-check=full" "--show-leak-kinds=all"
+      "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/memcheck.supp"
+      "--error-exitcode=2"
+    )
+    # Arguments as list into global scope for Findunitytools.cmake
+    set(TEST_EXEC_PREFIX "${MEMCHECK_CMD}" ${MEMCHECK_OPTIONS})
+  endif(TEST_MEMCHECK)
+  if(TEST_COVERAGE)
+    include(CodeCoverage)
+    append_coverage_compiler_flags()
+
+    set(COVERAGE_EXCLUDES
+      "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
+      "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
+      "${CMAKE_CURRENT_BINARY_DIR}/test/*"
+    )
+    set(GCOVR_ADDITIONAL_ARGS
+    )
+    setup_target_for_coverage_gcovr_xml(
+      NAME coverage-cace-xml
+      BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/cace"
+      BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/cace"
+    )
+    setup_target_for_coverage_gcovr_html(
+      NAME coverage-cace-html
+      BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/cace"
+      BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/cace"
+    )
+    setup_target_for_coverage_gcovr_xml(
+      NAME coverage-refda-xml
+      BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refda"
+      BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refda"
+    )
+    setup_target_for_coverage_gcovr_html(
+      NAME coverage-refda-html
+      BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refda"
+      BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refda"
+    )
+  endif(TEST_COVERAGE)
+
   include(CTest)
+  set(CMAKE_CTEST_ARGUMENTS
+    --output-junit testresults.xml
+    --verbose
+  )
 endif(BUILD_TESTING)
 
 include(FindPkgConfig)
