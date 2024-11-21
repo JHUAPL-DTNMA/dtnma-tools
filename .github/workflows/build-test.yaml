@@ -83,15 +83,6 @@ jobs:
           git clone --branch apl-fy24 https://github.com/JHUAPL-DTNMA/dtnma-adms.git agent-test/adms
       - name: Test
         run: python3 -m pytest agent-test --capture=no --log-cli-level=debug
-      - name: Collect coverage
-        run: ./build.sh coverage
-      - name: Archive coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: agent-test-coverage
-          path: |
-            build/default/coverage-cace-html
-            build/default/coverage-refda-html
 
   integration-test:
     if: false # FIXME re-enable when agent is ready
