@@ -520,10 +520,29 @@ void test_ari_cbor_decode_lit_typed_real64(const char *inhex, bool expect)
     ari_deinit(&ari);
 }
 
+TEST_CASE("820C82200C", 1, 200000000)
+TEST_CASE("820C82080C", 1200000000, 0)
+TEST_CASE("820C82070C", 120000000, 0)
+TEST_CASE("820C82280C", 0, 12)
+void test_ari_cbor_decode_tp(const char *inhex, time_t expect_sec, long expect_nsec)
+{
+    ari_t ari = ARI_INIT_UNDEFINED;
+
+    check_decoding(&ari, inhex);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_TYPE_TP, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(ARI_PRIM_TIMESPEC, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(expect_sec, ari.as_lit.value.as_timespec.tv_sec);
+    TEST_ASSERT_EQUAL_INT(expect_nsec, ari.as_lit.value.as_timespec.tv_nsec);
+}
+
 TEST_CASE("8402202020")
 TEST_CASE("A0")                                 // bad major type
 TEST_CASE("821182A0820417")                     // AC with item having bad major type
 TEST_CASE("8364746573740A6474686174")           // ari://test/TEXTSTR/that
+TEST_CASE("820C82290C")                         // TP with decimal fraction exponent of -10
+TEST_CASE("820C820A0C")                         // TP with decimal fraction exponent of 10
 TEST_CASE("821386030102030405")                 // ari:/TBL/c=3;(1,2,3)(4,5)
 TEST_CASE("821380")                             // ari:/TBL/
 TEST_CASE("8213816474657374")                   // ari:/TBL/test
