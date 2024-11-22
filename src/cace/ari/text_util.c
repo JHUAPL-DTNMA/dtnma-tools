@@ -126,7 +126,7 @@ int uri_percent_encode(string_t out, const cace_data_t *in, const char *safe)
 
         if (partlen)
         {
-            string_cat_printf(out, "%.*s", partlen, curs);
+            string_cat_printf(out, "%.*s", (int)partlen, curs);
         }
         curs += partlen;
 
@@ -167,7 +167,7 @@ int uri_percent_decode(string_t out, const cace_data_t *in)
 
         if (partlen)
         {
-            string_cat_printf(out, "%.*s", partlen, curs);
+            string_cat_printf(out, "%.*s", (int)partlen, curs);
         }
         curs += partlen + 1;
 
@@ -370,7 +370,7 @@ int subsec_encode(string_t out, subsec_t subsec)
         subsec /= 10;
         --digits;
     }
-    string_cat_printf(out, ".%.*u", digits, subsec);
+    string_cat_printf(out, ".%.*lu", digits, subsec);
     return 0;
 }
 
@@ -540,7 +540,7 @@ int slash_unescape(string_t out, const cace_data_t *in)
 
         if (partlen)
         {
-            string_cat_printf(out, "%.*s", partlen, curs);
+            string_cat_printf(out, "%.*s", (int)partlen, curs);
         }
         curs += partlen + 1;
 
@@ -655,7 +655,7 @@ static void strip_chars(string_t out, const char *in, size_t in_len, const char 
     while (curs < end)
     {
         plen = strcspn(curs, chars);
-        string_cat_printf(out, "%.*s", plen, curs);
+        string_cat_printf(out, "%.*s", (int)plen, curs);
         curs += plen;
 
         plen = strspn(curs, chars);
