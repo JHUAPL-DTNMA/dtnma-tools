@@ -13,9 +13,10 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+      - 'apl-*'
+  pull_request: {} # any target
   schedule:
     - cron: '20 8 * * 4'
 
@@ -57,6 +58,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
+        fetch-depth: 0
         submodules: recursive
 
     - name: Prep
