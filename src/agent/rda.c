@@ -462,7 +462,7 @@ void rda_scan_sbrs_cb(rh_elt_t *elt, void *tag)
         if((RULE_IS_ACTIVE(rule->flags))
            && (TimeCompare(rule->eval_at, ctx->nowtime) <= 0))
         {
-                if(rule->def.as_sbr.max_eval > rule->num_eval)
+                if(rule->def.as_sbr.max_eval > rule->num_eval || rule->def.as_sbr.max_eval == 0)
                 {
                         vec_push(ctx->vec, rule);
                 }

@@ -362,7 +362,7 @@ void dtn_bpsec_init_var()
 	expr = expr_create(AMP_TYPE_UINT);
 	expr_add_item(expr, adm_build_ari(AMP_TYPE_EDD, 0, g_dtn_bpsec_idx[ADM_EDD_IDX], DTN_BPSEC_EDD_NUM_BAD_TX_BIB_BLKS));
 	expr_add_item(expr, adm_build_ari(AMP_TYPE_EDD, 0, g_dtn_bpsec_idx[ADM_EDD_IDX], DTN_BPSEC_EDD_NUM_BAD_TX_BCB_BLKS));
-	expr_add_item(expr, adm_build_ari(AMP_TYPE_OPER, 1, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSUINT));
+	expr_add_item(expr, adm_build_ari(AMP_TYPE_OPER, 0, g_amp_agent_idx[ADM_OPER_IDX], AMP_AGENT_OP_PLUSUINT));
 	adm_add_var_from_expr(id, AMP_TYPE_UINT, expr);
 	meta_add_var(AMP_TYPE_UINT, id, ADM_ENUM_DTN_BPSEC, "total_bad_tx_blks", "This is the number of failed TX blocks (# failed BIB + # failed bcb).");
 

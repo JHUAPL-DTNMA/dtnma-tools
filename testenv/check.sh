@@ -21,9 +21,9 @@ set -e
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 cd "${SELFDIR}"
 
-docker-compose ps
+docker compose ps
 
-DEXEC="docker-compose exec -T nm-mgr"
+DEXEC="docker compose exec -T nm-mgr"
 
 # Wait a few seconds for ION to start
 for IX in $(seq 10)
