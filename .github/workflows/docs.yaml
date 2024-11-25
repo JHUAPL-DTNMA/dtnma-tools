@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - 'apl-*'
+      - 'apl-fy??'
   pull_request: {} # any target
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages

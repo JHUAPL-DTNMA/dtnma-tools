@@ -182,13 +182,13 @@ void test_amm_type_match_semtype_ulist_1(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F6", false)          // ari:null
-TEST_CASE("82040A", false)      // ari:/INT/10
-TEST_CASE("8211820102", false)   // ari:/AC/(1,2)
-TEST_CASE("82118201F5", false)  // ari:/AC/(1,true)
-TEST_CASE("8212A10102", false)  // ari:/AM/(1=2)
-TEST_CASE("8212A101F5", true) // ari:/AM/(1=true)
-TEST_CASE("82138102", false)    // ari:/TBL/c=3;
+TEST_CASE("F6", false)         // ari:null
+TEST_CASE("82040A", false)     // ari:/INT/10
+TEST_CASE("8211820102", false) // ari:/AC/(1,2)
+TEST_CASE("82118201F5", false) // ari:/AC/(1,true)
+TEST_CASE("8212A10102", false) // ari:/AM/(1=2)
+TEST_CASE("8212A101F5", true)  // ari:/AM/(1=true)
+TEST_CASE("82138102", false)   // ari:/TBL/c=3;
 void test_amm_type_match_semtype_umap_1(const char *inhex, bool expect)
 {
     amm_type_t mytype;
@@ -199,7 +199,6 @@ void test_amm_type_match_semtype_umap_1(const char *inhex, bool expect)
 
         amm_type_set_use_direct(&(semtype->key_type), amm_type_get_builtin(ARI_TYPE_INT));
         amm_type_set_use_direct(&(semtype->val_type), amm_type_get_builtin(ARI_TYPE_BOOL));
-
     }
 
     check_match(&mytype, inhex, expect);
