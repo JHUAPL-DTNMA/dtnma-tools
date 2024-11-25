@@ -2,7 +2,9 @@ name: Source formatting
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+      - 'apl-fy[0-9][0-9]'
   pull_request: {} # any target
   schedule:
     - cron: '20 8 * * 4'
