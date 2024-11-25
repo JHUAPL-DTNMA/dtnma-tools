@@ -136,7 +136,7 @@ static bool amm_semtype_tblt_match(const amm_type_t *self, const ari_t *ari)
         }
         const amm_type_t *typeobj = &(amm_semtype_tblt_col_array_ref(col_it)->typeobj);
 
-        if (!(typeobj->match(typeobj, item)))
+        if (!(amm_type_match(typeobj, item)))
         {
             return false;
         }
@@ -159,16 +159,21 @@ static int amm_semtype_tblt_convert(const amm_type_t *self, ari_t *out, const ar
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
 
-    struct ari_tbl_s outval;
+    ari_tbl_t    outval;
+    const size_t nrows = ari_array_size(inval->items) / inval->ncols;
+    ari_tbl_init(&outval, inval->ncols, nrows);
 
     amm_semtype_tblt_col_array_it_t col_it;
     amm_semtype_tblt_col_array_it(col_it, semtype->columns);
 
-    ari_array_it_t val_it;
-    for (ari_array_it(val_it, inval->items); !ari_array_end_p(val_it);
-         ari_array_next(val_it), amm_semtype_tblt_col_array_next(col_it))
+    int retval = 0;
+    // input and output have exact same size
+    ari_array_it_t inval_it, outval_it;
+    for (ari_array_it(inval_it, inval->items), ari_array_it(outval_it, outval.items); !ari_array_end_p(inval_it);
+         ari_array_next(inval_it), ari_array_next(outval_it), amm_semtype_tblt_col_array_next(col_it))
     {
-        const ari_t *item = ari_array_cref(val_it);
+        const ari_t *in_item  = ari_array_cref(inval_it);
+        ari_t       *out_item = ari_array_ref(outval_it);
 
         if (amm_semtype_tblt_col_array_end_p(col_it))
         {
@@ -176,14 +181,17 @@ static int amm_semtype_tblt_convert(const amm_type_t *self, ari_t *out, const ar
         }
         const amm_type_t *typeobj = &(amm_semtype_tblt_col_array_ref(col_it)->typeobj);
 
-        if (!(typeobj->match(typeobj, item)))
+        int res = amm_type_convert(typeobj, out_item, in_item);
+        if (res)
         {
-            return false;
+            retval = res;
+            break;
         }
     }
 
+    // always pass ownership to the output value
     ari_set_tbl(out, &outval);
-    return 0;
+    return retval;
 }
 
 amm_semtype_tblt_t *amm_type_set_tblt_size(amm_type_t *type, size_t num_cols)
@@ -237,7 +245,7 @@ static int amm_semtype_union_convert(const amm_type_t *self, ari_t *out, const a
     return CACE_AMM_ERR_CONVERT_NOCHOICE;
 }
 
-amm_semtype_union_t * amm_type_set_union_size(amm_type_t *type, size_t num_choices)
+amm_semtype_union_t *amm_type_set_union_size(amm_type_t *type, size_t num_choices)
 {
     CHKNULL(type);
     amm_type_reset(type);

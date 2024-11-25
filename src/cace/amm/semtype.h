@@ -148,7 +148,7 @@ amm_semtype_tblt_t *amm_type_set_tblt_size(amm_type_t *type, size_t num_cols);
  * @param num_choices The number of choices to initialize.
  * @return Non-NULL upon success.
  */
-amm_semtype_union_t * amm_type_set_union_size(amm_type_t *type, size_t num_choices);
+amm_semtype_union_t *amm_type_set_union_size(amm_type_t *type, size_t num_choices);
 
 #ifdef __cplusplus
 }
