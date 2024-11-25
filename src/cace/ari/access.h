@@ -114,6 +114,8 @@ void ari_set_ac(ari_t *ari, struct ari_ac_s *src);
 
 void ari_set_am(ari_t *ari, struct ari_am_s *src);
 
+struct ari_tbl_s *ari_get_tbl(const ari_t *ari);
+
 void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
 
 /** Require an EXECSET value and extract a pointer to its struct.

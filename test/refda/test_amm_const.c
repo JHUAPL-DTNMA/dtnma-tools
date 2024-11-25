@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include <refda/amm/const.h>
+#include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
 #include <cace/util/logging.h>

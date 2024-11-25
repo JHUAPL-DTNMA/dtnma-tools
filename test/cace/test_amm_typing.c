@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cace/amm/semtype.h>
 #include <cace/amm/typing.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -149,6 +150,33 @@ void test_amm_type_match_semtype_use_1(const char *inhex, bool expect)
     {
         const amm_type_t *base = amm_type_get_builtin(ARI_TYPE_INT);
         TEST_ASSERT_EQUAL_INT(0, amm_type_set_use_direct(&mytype, base));
+    }
+
+    check_match(&mytype, inhex, expect);
+    amm_type_deinit(&mytype);
+}
+TEST_CASE("F6", false)          // ari:null
+TEST_CASE("8211820102", false)  // ari:/AC/(1,2)
+TEST_CASE("82118201F5", false)  // ari:/AC/(1,true)
+TEST_CASE("82138102", true)     // ari:/TBL/c=3;
+TEST_CASE("8213830201F5", true) // ari:/TBL/c=3;(1,2,3)
+void test_amm_type_match_semtype_tblt_1(const char *inhex, bool expect)
+{
+    amm_type_t mytype;
+    amm_type_init(&mytype);
+    {
+        amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&mytype, 2);
+        TEST_ASSERT_NOT_NULL(semtype);
+        {
+            amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 0);
+            TEST_ASSERT_NOT_NULL(col);
+            amm_type_set_use_direct(&(col->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
+        }
+        {
+            amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 1);
+            TEST_ASSERT_NOT_NULL(col);
+            amm_type_set_use_direct(&(col->typeobj), amm_type_get_builtin(ARI_TYPE_BOOL));
+        }
     }
 
     check_match(&mytype, inhex, expect);

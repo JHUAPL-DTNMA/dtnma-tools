@@ -342,6 +342,20 @@ void ari_set_am(ari_t *ari, struct ari_am_s *src)
                                        } };
 }
 
+struct ari_tbl_s *ari_get_tbl(const ari_t *ari)
+{
+    CHKNULL(ari);
+    if (ari->is_ref)
+    {
+        return NULL;
+    }
+    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_TBL))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_tbl;
+}
+
 void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src)
 {
     CHKVOID(ari);

@@ -18,6 +18,7 @@
 #include "ietf.h"
 #include "refda/agent.h"
 #include "refda/register.h"
+#include "cace/amm/semtype.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 

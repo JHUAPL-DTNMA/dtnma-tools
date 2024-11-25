@@ -17,7 +17,7 @@
  */
 /** @file
  * @ingroup ari
- * This file contains definitions for AMM semantic typing of ARI values.
+ * This file contains definitions for AMM typing of ARI values.
  */
 /** @page amm_typing AMM Typing
  * Types within the AMM extend beyond the built-in types of ARI values into
@@ -39,6 +39,7 @@ extern "C" {
 
 #define CACE_AMM_ERR_CONVERT_NULLFUNC 2
 #define CACE_AMM_ERR_CONVERT_BADVALUE 3
+#define CACE_AMM_ERR_CONVERT_NOCHOICE 4
 
 // Forward declaration to allow recursive references
 struct amm_type_s;
@@ -70,7 +71,7 @@ void amm_type_deinit(amm_type_t *type);
  */
 void amm_type_reset(amm_type_t *type);
 
-/// OPLIST for the amm_type_t
+/// M*LIB OPLIST for the amm_type_t
 #define M_OPL_amm_type_t() (INIT(API_2(amm_type_init)), CLEAR(API_2(amm_type_deinit)), RESET(API_2(amm_type_reset)))
 
 /** A pointer to amm_type_t with ownership semantics.
@@ -84,7 +85,7 @@ typedef struct
     amm_type_t *obj;
 } amm_typeptr_t;
 
-/** Initialize a type pointer to NULL state.
+/** Initialize a type pointer to an allocated and initialized type object.
  *
  * @param[out] ptr The type to initialize.
  */
@@ -106,16 +107,6 @@ void amm_typeptr_take(amm_typeptr_t *ptr, amm_type_t *obj);
 /// OPLIST for the amm_typeptr_t
 #define M_OPL_amm_typeptr_t() (INIT(API_2(amm_typeptr_init)), CLEAR(API_2(amm_typeptr_deinit)))
 
-/** @struct amm_typeptr_list_t
- * A set of pointers to other type structs.
- * These are all references and have no ownership logic.
- * This includes the valid possibility of circular references.
- */
-/// @cond Doxygen_Suppress
-// DEQUE_DEF(amm_typeptr_list, amm_typeptr_t)
-ARRAY_DEF(amm_typeptr_array, amm_typeptr_t)
-/// @endcond
-
 /// Configuration for a built-in type
 struct amm_type_builtin_s
 {
@@ -123,31 +114,14 @@ struct amm_type_builtin_s
     ari_type_t ari_type;
 };
 
-/// Configuration for an augmented use of another type
-struct amm_type_use_s
-{
-    /// Name of the type used
-    ari_t name;
-    /** The type object being used, which is bound based on #name.
-     * This is always a reference to an externally-owned object.
-     */
-    const amm_type_t *base;
-
-    // FIXME Other constraints and attributes TBD
-};
-
-/// Configuration for a union of other types
-struct amm_type_union_s
-{
-    /** The ordered list of types in this union.
-     * Ownership of these objects is managed by the container.
-     */
-    amm_typeptr_array_t choices;
-};
-
 /** Descriptor for each built-in (ARI type) and semantic type within the AMM.
+ * Users of this struct must treat it as opaque and not access any individual
+ * members directly, instead use amm_type_set_* functions to set its state
+ * and other functions to access its state.
+ *
  * Both #match and #convert should be non-null for any type.
  * Details about AMM typing are discussed in the page @ref amm_typing.
+ * This includes the valid possibility of circular references.
  */
 struct amm_type_s
 {
@@ -179,6 +153,8 @@ struct amm_type_s
         AMM_TYPE_BUILTIN,
         /// An augmented use of another type using the #as_use member
         AMM_TYPE_USE,
+        /// A table template using the #as_tblt member
+        AMM_TYPE_TBLT,
         /// A union type using the #as_union member
         AMM_TYPE_UNION,
     } type_class;
@@ -186,10 +162,11 @@ struct amm_type_s
     {
         /// Valid when #type_class is amm_type_s::AMM_TYPE_BUILTIN
         struct amm_type_builtin_s as_builtin;
-        /// Valid when #type_class is amm_type_s::AMM_TYPE_USE
-        struct amm_type_use_s as_use;
-        /// Valid when #type_class is amm_type_s::AMM_TYPE_UNION
-        struct amm_type_union_s as_union;
+        /** Non-null for all other amm_type_s values.
+         * Cast to specific internal configuration struct for each class of
+         * semantic type.
+         */
+        void *as_semtype;
     };
 };
 
@@ -207,32 +184,12 @@ const amm_type_t *amm_type_get_builtin(ari_type_t ari_type);
  */
 bool amm_type_is_valid(const amm_type_t *type);
 
-/** Create a use type based on a type reference.
- * A use type adds annotations and constraints onto a base type.
- *
- * @param[out] type The type to initialize and populate.
- * @param[in] name The ARITYPE literal or TYPEDEF reference value.
+/** @struct amm_type_array_t
+ * An array of type structs.
  */
-int amm_type_set_use_ref(amm_type_t *type, const ari_t *name);
-
-/** Create a use type based on a base type object.
- * A use type adds annotations and constraints onto a base type.
- *
- * @param[out] type The type to initialize and populate.
- * @param[in] base The base type to create a use of.
- */
-int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base);
-
-/** Create a union type based on a choice of other type objects.
- * A union type contains a list of underlying types to choose from.
- *
- * @param[out] type The type to initialize and populate.
- * @param num_choices The number of choices to initialize.
- * @return Zero upon success.
- */
-int amm_type_set_union_size(amm_type_t *type, size_t num_choices);
-
-amm_type_t *amm_type_set_union_get(amm_type_t *type, size_t ix);
+/// @cond Doxygen_Suppress
+ARRAY_DEF(amm_type_array, amm_type_t)
+/// @endcond
 
 /** Determine if a type (built-in or semantic) matches a specific value.
  *
