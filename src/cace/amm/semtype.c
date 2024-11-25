@@ -144,13 +144,55 @@ static bool amm_semtype_tblt_match(const amm_type_t *self, const ari_t *ari)
     return true;
 }
 
+static int amm_semtype_tblt_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
+{
+    const amm_semtype_tblt_t *semtype = self->as_semtype;
+
+    struct ari_tbl_s *inval = ari_get_tbl(in);
+    if (!inval)
+    {
+        return CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
+
+    if (inval->ncols != amm_semtype_tblt_col_array_size(semtype->columns))
+    {
+        return CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
+
+    struct ari_tbl_s outval;
+
+    amm_semtype_tblt_col_array_it_t col_it;
+    amm_semtype_tblt_col_array_it(col_it, semtype->columns);
+
+    ari_array_it_t val_it;
+    for (ari_array_it(val_it, inval->items); !ari_array_end_p(val_it);
+         ari_array_next(val_it), amm_semtype_tblt_col_array_next(col_it))
+    {
+        const ari_t *item = ari_array_cref(val_it);
+
+        if (amm_semtype_tblt_col_array_end_p(col_it))
+        {
+            amm_semtype_tblt_col_array_it(col_it, semtype->columns);
+        }
+        const amm_type_t *typeobj = &(amm_semtype_tblt_col_array_ref(col_it)->typeobj);
+
+        if (!(typeobj->match(typeobj, item)))
+        {
+            return false;
+        }
+    }
+
+    ari_set_tbl(out, &outval);
+    return 0;
+}
+
 amm_semtype_tblt_t *amm_type_set_tblt_size(amm_type_t *type, size_t num_cols)
 {
     CHKNULL(type);
     amm_type_reset(type);
 
     type->match      = amm_semtype_tblt_match;
-    type->convert    = NULL; // FIXME replace
+    type->convert    = amm_semtype_tblt_convert;
     type->type_class = AMM_TYPE_TBLT;
 
     amm_semtype_tblt_t *semtype = ARI_MALLOC(sizeof(amm_semtype_tblt_t));
@@ -195,28 +237,19 @@ static int amm_semtype_union_convert(const amm_type_t *self, ari_t *out, const a
     return CACE_AMM_ERR_CONVERT_NOCHOICE;
 }
 
-int amm_type_set_union_size(amm_type_t *type, size_t num_choices)
+amm_semtype_union_t * amm_type_set_union_size(amm_type_t *type, size_t num_choices)
 {
-    CHKERR1(type);
+    CHKNULL(type);
     amm_type_reset(type);
 
     type->match      = amm_semtype_union_match;
     type->convert    = amm_semtype_union_convert;
     type->type_class = AMM_TYPE_UNION;
-    {
-        amm_semtype_union_t *semtype = ARI_MALLOC(sizeof(amm_semtype_union_t));
-        amm_semtype_union_init(semtype);
-        type->as_semtype = semtype;
-        amm_type_array_resize(semtype->choices, num_choices);
-    }
 
-    return 0;
-}
+    amm_semtype_union_t *semtype = ARI_MALLOC(sizeof(amm_semtype_union_t));
+    amm_semtype_union_init(semtype);
+    type->as_semtype = semtype;
+    amm_type_array_resize(semtype->choices, num_choices);
 
-amm_type_t *amm_type_set_union_get(amm_type_t *type, size_t ix)
-{
-    CHKNULL(type);
-    CHKNULL(type->type_class == AMM_TYPE_UNION);
-    amm_semtype_union_t *semtype = type->as_semtype;
-    return amm_type_array_get(semtype->choices, ix);
+    return semtype;
 }

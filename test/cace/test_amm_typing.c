@@ -196,14 +196,15 @@ void test_amm_type_match_semtype_union_1(const char *inhex, bool expect)
     amm_type_t mytype;
     amm_type_init(&mytype);
     {
-        TEST_ASSERT_EQUAL_INT(0, amm_type_set_union_size(&mytype, 2));
+        amm_semtype_union_t *semtype = amm_type_set_union_size(&mytype, 2);
+        TEST_ASSERT_NOT_NULL(semtype);
         {
-            amm_type_t *choice = amm_type_set_union_get(&mytype, 0);
+            amm_type_t *choice = amm_type_array_get(semtype->choices, 0);
             TEST_ASSERT_NOT_NULL(choice);
             amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_INT));
         }
         {
-            amm_type_t *choice = amm_type_set_union_get(&mytype, 1);
+            amm_type_t *choice = amm_type_array_get(semtype->choices, 1);
             TEST_ASSERT_NOT_NULL(choice);
             amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_NULL));
         }

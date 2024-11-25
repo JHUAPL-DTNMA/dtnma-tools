@@ -51,13 +51,13 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
             refda_amm_typedef_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
 
-            amm_type_set_union_size(&(objdata->semtype), 2);
+            amm_semtype_union_t *semtype = amm_type_set_union_size(&(objdata->typeobj), 2);
             {
-                amm_type_t *choice = amm_type_set_union_get(&(objdata->semtype), 0);
+                amm_type_t *choice = amm_type_array_get(semtype->choices, 0);
                 amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_ARITYPE));
             }
             {
-                amm_type_t *choice = amm_type_set_union_get(&(objdata->semtype), 1);
+                amm_type_t *choice = amm_type_array_get(semtype->choices, 1);
                 amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_TYPEDEF));
             }
 
