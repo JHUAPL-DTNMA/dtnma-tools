@@ -906,6 +906,12 @@ void amm_type_deinit(amm_type_t *type)
         case AMM_TYPE_USE:
             amm_semtype_use_deinit(type->as_semtype);
             break;
+        case AMM_TYPE_ULIST:
+            amm_semtype_ulist_deinit(type->as_semtype);
+            break;
+        case AMM_TYPE_UMAP:
+            amm_semtype_umap_deinit(type->as_semtype);
+            break;
         case AMM_TYPE_TBLT:
             amm_semtype_tblt_deinit(type->as_semtype);
             break;

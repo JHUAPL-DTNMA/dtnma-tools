@@ -54,6 +54,82 @@ static inline void amm_semtype_use_deinit(amm_semtype_use_t *obj)
     obj->base = NULL;
 }
 
+/** A closed interval of size_t values with optional minimum and maximum.
+ */
+typedef struct
+{
+    /// True if this interval has a finite minimum
+    bool has_min;
+    /// The minimum value of the interval, valid if #has_max is true
+    size_t i_min;
+    /// True if this interval has a finite maximum
+    bool has_max;
+    /// The maximum value of the interval, valid if #has_max is true
+    size_t i_max;
+} amm_semtype_size_intvl_t;
+
+static inline void amm_semtype_size_intvl_init(amm_semtype_size_intvl_t *obj)
+{
+    *obj = (amm_semtype_size_intvl_t) {
+        .has_min = false,
+        .has_max = false,
+    };
+}
+
+/// Configuration for a uniform list within an AC
+typedef struct
+{
+    /** The type for each item of the list.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this column.
+     */
+    amm_type_t item_type;
+
+    /** Constraint on the number of items.
+     */
+    amm_semtype_size_intvl_t size;
+
+} amm_semtype_ulist_t;
+
+static inline void amm_semtype_ulist_init(amm_semtype_ulist_t *obj)
+{
+    amm_type_init(&(obj->item_type));
+    amm_semtype_size_intvl_init(&(obj->size));
+}
+
+static inline void amm_semtype_ulist_deinit(amm_semtype_ulist_t *obj)
+{
+    amm_type_deinit(&(obj->item_type));
+}
+
+/// Configuration for a uniform list within an AM
+typedef struct
+{
+    /** The type for each key of the map.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this column.
+     */
+    amm_type_t key_type;
+    /** The type for each value of the map.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this column.
+     */
+    amm_type_t val_type;
+
+} amm_semtype_umap_t;
+
+static inline void amm_semtype_umap_init(amm_semtype_umap_t *obj)
+{
+    amm_type_init(&(obj->key_type));
+    amm_type_init(&(obj->val_type));
+}
+
+static inline void amm_semtype_umap_deinit(amm_semtype_umap_t *obj)
+{
+    amm_type_deinit(&(obj->val_type));
+    amm_type_deinit(&(obj->key_type));
+}
+
 /// Configuration of a table template column
 typedef struct
 {
@@ -132,6 +208,20 @@ int amm_type_set_use_ref(amm_type_t *type, const ari_t *name);
  * @param[in] base The base type to create a use of.
  */
 int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base);
+
+/** Create a uniform list semantic type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @return Non-NULL upon success.
+ */
+amm_semtype_ulist_t *amm_type_set_ulist(amm_type_t *type);
+
+/** Create a uniform map semantic type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @return Non-NULL upon success.
+ */
+amm_semtype_umap_t *amm_type_set_umap(amm_type_t *type);
 
 /** Create a table template based on a set of typed columns.
  *

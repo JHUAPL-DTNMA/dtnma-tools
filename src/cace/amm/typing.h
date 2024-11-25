@@ -151,11 +151,15 @@ struct amm_type_s
         AMM_TYPE_INVALID,
         /// A built-in type using the #as_builtin member
         AMM_TYPE_BUILTIN,
-        /// An augmented use of another type using the #as_use member
+        /// An augmented use of another type using the #as_semtype member
         AMM_TYPE_USE,
-        /// A table template using the #as_tblt member
+        /// A uniform list using the #as_semtype member
+        AMM_TYPE_ULIST,
+        /// A uniform map using the #as_semtype member
+        AMM_TYPE_UMAP,
+        /// A table template using the #as_semtype member
         AMM_TYPE_TBLT,
-        /// A union type using the #as_union member
+        /// A union type using the #as_semtype member
         AMM_TYPE_UNION,
     } type_class;
     union

@@ -106,6 +106,207 @@ int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base)
     return 0;
 }
 
+static bool amm_semtype_ulist_match(const amm_type_t *self, const ari_t *ari)
+{
+    const amm_semtype_ulist_t *semtype = self->as_semtype;
+
+    struct ari_ac_s *val = ari_get_ac(ari);
+    if (!val)
+    {
+        return false;
+    }
+
+    // overall size constraints
+    const size_t valsize = ari_list_size(val->items);
+    if (semtype->size.has_min)
+    {
+        if (valsize < semtype->size.i_min)
+        {
+            return false;
+        }
+    }
+    if (semtype->size.has_max)
+    {
+        if (valsize > semtype->size.i_max)
+        {
+            return false;
+        }
+    }
+
+    // per-item check
+    ari_list_it_t val_it;
+    for (ari_list_it(val_it, val->items); !ari_list_end_p(val_it); ari_list_next(val_it))
+    {
+        const ari_t *val_item = ari_list_cref(val_it);
+
+        if (!amm_type_match(&(semtype->item_type), val_item))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+static int amm_semtype_ulist_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
+{
+    const amm_semtype_ulist_t *semtype = self->as_semtype;
+
+    struct ari_ac_s *inval = ari_get_ac(in);
+    if (!inval)
+    {
+        return CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
+
+    // overall size constraints
+    const size_t valsize = ari_list_size(inval->items);
+    if (semtype->size.has_min)
+    {
+        if (valsize < semtype->size.i_min)
+        {
+            return CACE_AMM_ERR_CONVERT_BADVALUE;
+        }
+    }
+    if (semtype->size.has_max)
+    {
+        if (valsize > semtype->size.i_max)
+        {
+            return CACE_AMM_ERR_CONVERT_BADVALUE;
+        }
+    }
+
+    ari_ac_t outval;
+    ari_ac_init(&outval);
+
+    int retval = 0;
+    // input and output have exact same size
+    ari_list_it_t inval_it;
+    for (ari_list_it(inval_it, inval->items); !ari_list_end_p(inval_it); ari_list_next(inval_it))
+    {
+        const ari_t *in_item  = ari_list_cref(inval_it);
+        ari_t        out_item = ARI_INIT_UNDEFINED;
+
+        int res = amm_type_convert(&(semtype->item_type), &out_item, in_item);
+        if (res)
+        {
+            retval = res;
+            break;
+        }
+
+        ari_list_push_back_move(outval.items, &out_item);
+    }
+
+    // always pass ownership to the output value
+    ari_set_ac(out, &outval);
+    return retval;
+}
+
+amm_semtype_ulist_t *amm_type_set_ulist(amm_type_t *type)
+{
+    CHKNULL(type);
+    amm_type_reset(type);
+
+    type->match      = amm_semtype_ulist_match;
+    type->convert    = amm_semtype_ulist_convert;
+    type->type_class = AMM_TYPE_ULIST;
+
+    amm_semtype_ulist_t *semtype = ARI_MALLOC(sizeof(amm_semtype_ulist_t));
+    amm_semtype_ulist_init(semtype);
+    type->as_semtype = semtype;
+
+    return semtype;
+}
+
+static bool amm_semtype_umap_match(const amm_type_t *self, const ari_t *ari)
+{
+    const amm_semtype_umap_t *semtype = self->as_semtype;
+
+    struct ari_am_s *val = ari_get_am(ari);
+    if (!val)
+    {
+        return false;
+    }
+
+    // per-item check
+    ari_tree_it_t val_it;
+    for (ari_tree_it(val_it, val->items); !ari_tree_end_p(val_it); ari_tree_next(val_it))
+    {
+        const ari_tree_itref_t *val_item = ari_tree_cref(val_it);
+
+        if (!amm_type_match(&(semtype->key_type), val_item->key_ptr))
+        {
+            return false;
+        }
+        if (!amm_type_match(&(semtype->val_type), val_item->value_ptr))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+static int amm_semtype_umap_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
+{
+    const amm_semtype_umap_t *semtype = self->as_semtype;
+
+    struct ari_am_s *inval = ari_get_am(in);
+    if (!inval)
+    {
+        return CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
+
+    ari_am_t outval;
+    ari_am_init(&outval);
+
+    int retval = 0;
+    // input and output have exact same size
+    ari_tree_it_t inval_it;
+    for (ari_tree_it(inval_it, inval->items); !ari_tree_end_p(inval_it); ari_tree_next(inval_it))
+    {
+        const ari_tree_itref_t *in_item = ari_tree_cref(inval_it);
+        ari_t                   out_key = ARI_INIT_UNDEFINED;
+        ari_t                   out_val = ARI_INIT_UNDEFINED;
+
+        int res = amm_type_convert(&(semtype->key_type), &out_key, in_item->key_ptr);
+        if (res)
+        {
+            retval = res;
+            break;
+        }
+
+        res = amm_type_convert(&(semtype->val_type), &out_val, in_item->value_ptr);
+        if (res)
+        {
+            retval = res;
+            break;
+        }
+
+        // FIXME is there a more efficient way?
+        ari_tree_set_at(outval.items, out_key, out_val);
+        ari_deinit(&out_key);
+        ari_deinit(&out_val);
+    }
+
+    // always pass ownership to the output value
+    ari_set_am(out, &outval);
+    return retval;
+}
+
+amm_semtype_umap_t *amm_type_set_umap(amm_type_t *type)
+{
+    CHKNULL(type);
+    amm_type_reset(type);
+
+    type->match      = amm_semtype_umap_match;
+    type->convert    = amm_semtype_umap_convert;
+    type->type_class = AMM_TYPE_UMAP;
+
+    amm_semtype_umap_t *semtype = ARI_MALLOC(sizeof(amm_semtype_umap_t));
+    amm_semtype_umap_init(semtype);
+    type->as_semtype = semtype;
+
+    return semtype;
+}
+
 static bool amm_semtype_tblt_match(const amm_type_t *self, const ari_t *ari)
 {
     const amm_semtype_tblt_t *semtype = self->as_semtype;
@@ -128,7 +329,7 @@ static bool amm_semtype_tblt_match(const amm_type_t *self, const ari_t *ari)
     for (ari_array_it(val_it, val->items); !ari_array_end_p(val_it);
          ari_array_next(val_it), amm_semtype_tblt_col_array_next(col_it))
     {
-        const ari_t *item = ari_array_cref(val_it);
+        const ari_t *val_item = ari_array_cref(val_it);
 
         if (amm_semtype_tblt_col_array_end_p(col_it))
         {
@@ -136,7 +337,7 @@ static bool amm_semtype_tblt_match(const amm_type_t *self, const ari_t *ari)
         }
         const amm_type_t *typeobj = &(amm_semtype_tblt_col_array_ref(col_it)->typeobj);
 
-        if (!(amm_type_match(typeobj, item)))
+        if (!amm_type_match(typeobj, val_item))
         {
             return false;
         }
