@@ -176,19 +176,21 @@ static int amm_semtype_ulist_convert(const amm_type_t *self, ari_t *out, const a
 
     ari_ac_t outval;
     ari_ac_init(&outval);
-
     int retval = 0;
+
     // input and output have exact same size
     ari_list_it_t inval_it;
     for (ari_list_it(inval_it, inval->items); !ari_list_end_p(inval_it); ari_list_next(inval_it))
     {
-        const ari_t *in_item  = ari_list_cref(inval_it);
-        ari_t        out_item = ARI_INIT_UNDEFINED;
+        const ari_t *in_item = ari_list_cref(inval_it);
 
+        ari_t out_item = ARI_INIT_UNDEFINED;
+        // actual conversion
         int res = amm_type_convert(&(semtype->item_type), &out_item, in_item);
         if (res)
         {
             retval = res;
+            ari_deinit(&out_item);
             break;
         }
 
@@ -212,6 +214,135 @@ amm_semtype_ulist_t *amm_type_set_ulist(amm_type_t *type)
     amm_semtype_ulist_t *semtype = ARI_MALLOC(sizeof(amm_semtype_ulist_t));
     amm_semtype_ulist_init(semtype);
     type->as_semtype = semtype;
+
+    return semtype;
+}
+
+static bool amm_semtype_dlist_match(const amm_type_t *self, const ari_t *ari)
+{
+    const amm_semtype_dlist_t *semtype = self->as_semtype;
+
+    struct ari_ac_s *val = ari_get_ac(ari);
+    if (!val)
+    {
+        return false;
+    }
+
+    // try to consume all value items
+    ari_list_it_t val_it;
+    ari_list_it(val_it, val->items);
+
+    amm_type_array_it_t typ_it;
+    for (amm_type_array_it(typ_it, semtype->types); !amm_type_array_end_p(typ_it); amm_type_array_next(typ_it))
+    {
+        // each type in the list takes off one or more items
+        const amm_type_t *typ_item = amm_type_array_cref(typ_it);
+
+        // FIXME handle sequence specially
+        // if (typ_item->type_class == AMM_TYPE_SEQ)
+        // else
+        {
+            // not enough values
+            if (ari_list_end_p(val_it))
+            {
+                return false;
+            }
+            const ari_t *val_item = ari_list_cref(val_it);
+
+            // actual match
+            if (!amm_type_match(typ_item, val_item))
+            {
+                return false;
+            }
+
+            ari_list_next(val_it);
+        }
+    }
+
+    // too many input values
+    if (!ari_list_end_p(val_it))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+static int amm_semtype_dlist_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
+{
+    const amm_semtype_dlist_t *semtype = self->as_semtype;
+    M_ASSERT(semtype);
+
+    struct ari_ac_s *inval = ari_get_ac(in);
+    if (!inval)
+    {
+        return CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
+
+    ari_ac_t outval;
+    ari_ac_init(&outval);
+    int retval = 0;
+
+    ari_list_it_t inval_it;
+    ari_list_it(inval_it, inval->items);
+
+    amm_type_array_it_t typ_it;
+    for (amm_type_array_it(typ_it, semtype->types); !amm_type_array_end_p(typ_it); amm_type_array_next(typ_it))
+    {
+        // each type in the list takes off one or more items
+        const amm_type_t *typ_item = amm_type_array_cref(typ_it);
+
+        // FIXME handle sequence specially
+        // if (typ_item->type_class == AMM_TYPE_SEQ)
+        // else
+        {
+            // not enough values
+            if (ari_list_end_p(inval_it))
+            {
+                retval = CACE_AMM_ERR_CONVERT_BADVALUE;
+                break;
+            }
+            const ari_t *in_item = ari_list_cref(inval_it);
+
+            ari_t out_item = ARI_INIT_UNDEFINED;
+            // actual conversion
+            int res = amm_type_convert(typ_item, &out_item, in_item);
+            if (res)
+            {
+                retval = res;
+                ari_deinit(&out_item);
+                break;
+            }
+
+            ari_list_push_back_move(outval.items, &out_item);
+            ari_list_next(inval_it);
+        }
+    }
+
+    // too many input values (and no earlier error)
+    if (!retval && !ari_list_end_p(inval_it))
+    {
+        retval = CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
+
+    // always pass ownership to the output value
+    ari_set_ac(out, &outval);
+    return retval;
+}
+
+amm_semtype_dlist_t *amm_type_set_dlist(amm_type_t *type, size_t num_types)
+{
+    CHKNULL(type);
+    amm_type_reset(type);
+
+    type->match      = amm_semtype_dlist_match;
+    type->convert    = amm_semtype_dlist_convert;
+    type->type_class = AMM_TYPE_DLIST;
+
+    amm_semtype_dlist_t *semtype = ARI_MALLOC(sizeof(amm_semtype_dlist_t));
+    amm_semtype_dlist_init(semtype);
+    type->as_semtype = semtype;
+    amm_type_array_resize(semtype->types, num_types);
 
     return semtype;
 }
@@ -256,8 +387,8 @@ static int amm_semtype_umap_convert(const amm_type_t *self, ari_t *out, const ar
 
     ari_am_t outval;
     ari_am_init(&outval);
-
     int retval = 0;
+
     // input and output have exact same size
     ari_tree_it_t inval_it;
     for (ari_tree_it(inval_it, inval->items); !ari_tree_end_p(inval_it); ari_tree_next(inval_it))
@@ -363,11 +494,11 @@ static int amm_semtype_tblt_convert(const amm_type_t *self, ari_t *out, const ar
     ari_tbl_t    outval;
     const size_t nrows = ari_array_size(inval->items) / inval->ncols;
     ari_tbl_init(&outval, inval->ncols, nrows);
+    int retval = 0;
 
     amm_semtype_tblt_col_array_it_t col_it;
     amm_semtype_tblt_col_array_it(col_it, semtype->columns);
 
-    int retval = 0;
     // input and output have exact same size
     ari_array_it_t inval_it, outval_it;
     for (ari_array_it(inval_it, inval->items), ari_array_it(outval_it, outval.items); !ari_array_end_p(inval_it);

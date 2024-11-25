@@ -102,6 +102,28 @@ static inline void amm_semtype_ulist_deinit(amm_semtype_ulist_t *obj)
     amm_type_deinit(&(obj->item_type));
 }
 
+/// Configuration for a diverse list within an AC
+typedef struct
+{
+    /** The ordered list of semantic types for each sub-sequence of
+     * the list.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this column.
+     */
+    amm_type_array_t types;
+
+} amm_semtype_dlist_t;
+
+static inline void amm_semtype_dlist_init(amm_semtype_dlist_t *obj)
+{
+    amm_type_array_init(obj->types);
+}
+
+static inline void amm_semtype_dlist_deinit(amm_semtype_dlist_t *obj)
+{
+    amm_type_array_clear(obj->types);
+}
+
 /// Configuration for a uniform list within an AM
 typedef struct
 {
@@ -215,6 +237,14 @@ int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base);
  * @return Non-NULL upon success.
  */
 amm_semtype_ulist_t *amm_type_set_ulist(amm_type_t *type);
+
+/** Create a diverse list semantic type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @param num_cols The number of types to initialize.
+ * @return Non-NULL upon success.
+ */
+amm_semtype_dlist_t *amm_type_set_dlist(amm_type_t *type, size_t num_types);
 
 /** Create a uniform map semantic type.
  *

@@ -155,6 +155,8 @@ struct amm_type_s
         AMM_TYPE_USE,
         /// A uniform list using the #as_semtype member
         AMM_TYPE_ULIST,
+        /// A diverse list using the #as_semtype member
+        AMM_TYPE_DLIST,
         /// A uniform map using the #as_semtype member
         AMM_TYPE_UMAP,
         /// A table template using the #as_semtype member
