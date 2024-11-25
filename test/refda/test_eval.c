@@ -1,0 +1,316 @@
+/*
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Delay-Tolerant Networking Management
+ * Architecture (DTNMA) Tools package.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <refda/eval.h>
+#include <refda/register.h>
+#include <refda/amm/const.h>
+#include <refda/amm/edd.h>
+#include <cace/amm/numeric.h>
+#include <cace/ari/text_util.h>
+#include <cace/ari/cbor.h>
+#include <cace/ari/text.h>
+#include <cace/util/logging.h>
+#include <cace/util/defs.h>
+#include <unity.h>
+
+// Allow this macro
+#define TEST_CASE(...)
+
+void suiteSetUp(void)
+{
+    cace_openlog();
+}
+
+int suiteTearDown(int failures)
+{
+    cace_closelog();
+    return failures;
+}
+
+
+#define EXAMPLE_ADM_ENUM 65536
+
+/// Agent context for testing
+static refda_agent_t agent;
+
+static void test_reporting_edd_one_int(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
+{
+    const ari_t *val = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    CHKVOID(val)
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, val, ARI_TEXT_ENC_OPTS_DEFAULT);
+        TEST_PRINTF("EDD production with parameter %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+    ari_set_copy(&(ctx->value), val);
+}
+
+static int ari_numeric_add(ari_t *result, const ari_t *lt_val, const ari_t *rt_val)
+{
+    ari_type_t promote;
+    if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
+    {
+        return 2;
+    }
+
+    const amm_type_t *amm_promote = amm_type_get_builtin(promote);
+    ari_t lt_prom = ARI_INIT_UNDEFINED;
+    ari_t rt_prom = ARI_INIT_UNDEFINED;
+    amm_type_convert(amm_promote, &lt_prom, lt_val);
+    amm_type_convert(amm_promote, &rt_prom, rt_val);
+
+    ari_deinit(result);
+    ari_lit_t *res_lit = ari_init_lit(result);
+
+    int retval = 0;
+    switch (lt_prom.as_lit.prim_type)
+    {
+    case ARI_PRIM_UINT64:
+        res_lit->value.as_uint64 = lt_prom.as_lit.value.as_uint64 + rt_prom.as_lit.value.as_uint64;
+        break;
+    case ARI_PRIM_INT64:
+        res_lit->value.as_int64 = lt_prom.as_lit.value.as_int64 + rt_prom.as_lit.value.as_int64;
+        break;
+    case ARI_PRIM_FLOAT64:
+        res_lit->value.as_float64 = lt_prom.as_lit.value.as_float64 + rt_prom.as_lit.value.as_float64;
+        break;
+    default:
+        // leave lit as default undefined
+        retval = 3;
+        break;
+    }
+
+    if (!retval)
+    {
+        res_lit->prim_type = lt_prom.as_lit.prim_type;
+        res_lit->has_ari_type = true;
+        res_lit->ari_type = promote;
+    }
+
+    ari_deinit(&lt_prom);
+    ari_deinit(&rt_prom);
+    return retval;
+}
+
+static int test_reporting_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx)
+{
+    // FIXME process stack outside this callback
+    ari_t left = ARI_INIT_UNDEFINED;
+    ari_t right = ARI_INIT_UNDEFINED;
+    ari_list_pop_back_move(&left, ctx->stack);
+    ari_list_pop_back_move(&right, ctx->stack);
+
+    const ari_t *more = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, more, ARI_TEXT_ENC_OPTS_DEFAULT);
+        TEST_PRINTF("OPER evaluation with parameter %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
+    int retval = 0;
+    ari_t tmp1 = ARI_INIT_UNDEFINED;
+    ari_t tmp2 = ARI_INIT_UNDEFINED;
+    if (ari_numeric_add(&tmp1, &left, &right))
+    {
+        retval = 2;
+    }
+    if (!retval)
+    {
+        if (ari_numeric_add(&tmp2, &tmp1, more))
+        {
+            retval = 2;
+        }
+    }
+    ari_deinit(&tmp1);
+    ari_deinit(&left);
+    ari_deinit(&right);
+
+    if (!retval)
+    {
+        ari_list_push_back_move(ctx->stack, &tmp2);
+    }
+    else
+    {
+        ari_deinit(&tmp2);
+    }
+
+    return retval;
+}
+
+void setUp(void)
+{
+    refda_agent_init(&agent);
+
+    {
+        // ADM for this test fixture
+        cace_amm_obj_ns_t *adm =
+            cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
+        cace_amm_obj_desc_t *obj;
+
+        /**
+         * Register CONST objects
+         */
+        {
+            refda_amm_const_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_const_desc_t));
+            refda_amm_const_desc_init(objdata);
+            {
+                ari_ac_t acinit;
+                ari_ac_init(&acinit);
+                {
+                    ari_t *item = ari_list_push_back_new(acinit.items);
+                    ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, ARI_TYPE_EDD, 2); // ari://example-adm/EDD/edd1
+                }
+                {
+                    ari_t *item = ari_list_push_back_new(acinit.items);
+                    ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, ARI_TYPE_VAR, 1); // ari://example-adm/VAR/var1
+                }
+
+                ari_set_ac(&(objdata->value), &acinit);
+            }
+
+            obj = refda_register_const(adm, cace_amm_obj_id_withenum("rptt1", 1), objdata);
+            // no parameters
+        }
+
+        /**
+         * Register VAR objects
+         */
+        {
+            refda_amm_var_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_var_desc_t));
+            refda_amm_var_desc_init(objdata);
+            amm_type_set_use_direct(&(objdata->val_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            ari_set_vast(&(objdata->value), 123456);
+
+            obj = refda_register_var(adm, cace_amm_obj_id_withenum("var1", 1), objdata);
+            // no parameters
+        }
+
+        /**
+         * Register EDD objects
+         */
+        {
+            refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_init(objdata);
+            amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            objdata->produce = test_reporting_edd_one_int;
+
+            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd2", 2), objdata);
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "val");
+                amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_VAST));
+            }
+        }
+
+        /**
+         * Register OPER objects
+         */
+        {
+            refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+// FIXME           amm_type_set_use_direct(&(objdata->val_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            objdata->evaluate = test_reporting_oper_add;
+
+            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("oper1", 1), objdata);
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "more");
+                amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_VAST));
+            }
+        }
+    }
+
+    int res = refda_agent_bindrefs(&agent);
+    (void)res;
+//    TEST_ASSERT_EQUAL_INT(0, res);
+}
+
+void tearDown(void)
+{
+    refda_agent_deinit(&agent);
+}
+
+static void ari_convert(ari_t *ari, const char *inhex)
+{
+    string_t intext;
+    string_init_set_str(intext, inhex);
+    cace_data_t indata;
+    cace_data_init(&indata);
+    int res = base16_decode(&indata, intext);
+    string_clear(intext);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "base16_decode() failed");
+
+    res = ari_cbor_decode(ari, &indata, NULL, NULL);
+    cace_data_deinit(&indata);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+}
+
+// direct EXPR ari:/AC/(/VAST/1) -> /VAST/1
+TEST_CASE("821181820601", "820601")
+// ref EXPR ari:/AC/(//65536/EDD/2(10)) -> /VAST/10
+TEST_CASE("821181841A000100002302810A", "82060A")
+// ari:/AC/(/VAST/3,/VAST/5,//65536/OPER/1(10)) -> /VAST/18
+TEST_CASE("821183820603820605841A000100002501810A", "820612")
+// ari:/AC/(//65536/EDD/2(10),//65536/VAR/1,//65536/OPER/1(10)) -> /VAST/123476
+TEST_CASE("821183841A000100002302810A831A000100002A01841A000100002501810A", "82061A0001E254")
+void test_refda_eval_target_valid(const char *targethex, const char *expectloghex)
+{
+    ari_t target = ARI_INIT_UNDEFINED;
+    ari_convert(&target, targethex);
+
+    ari_t expect_result = ARI_INIT_UNDEFINED;
+    ari_convert(&expect_result, expectloghex);
+    TEST_ASSERT_FALSE(ari_is_undefined(&expect_result));
+
+    refda_runctx_t runctx;
+    // no nonce for test
+    refda_runctx_init(&runctx, &agent, NULL);
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    int res = refda_eval_target(&runctx, &result, &target);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_eval_target() disagrees");
+
+    // verify result value
+    const bool equal = ari_equal(&expect_result, &result);
+    TEST_ASSERT_TRUE_MESSAGE(equal, "result ARI is different");
+
+    ari_deinit(&result);
+    ari_deinit(&expect_result);
+    ari_deinit(&target);
+}
+
+TEST_CASE("821180", 6) // Empty stack ari:/AC/()
+TEST_CASE("821182820601820602", 6) // Extra stack ari:/AC/(/VAST/1,/VAST/2)
+void test_refda_eval_target_failure(const char *targethex, int expect_res)
+{
+
+    ari_t target = ARI_INIT_UNDEFINED;
+    ari_convert(&target, targethex);
+
+    refda_runctx_t runctx;
+    // no nonce for test
+    refda_runctx_init(&runctx, &agent, NULL);
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    int res = refda_eval_target(&runctx, &result, &target);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_eval_target() disagrees");
+
+    ari_deinit(&result);
+    ari_deinit(&target);
+}

@@ -1,0 +1,103 @@
+{
+   _gcov_do_dump_param
+   Memcheck:Param
+   read(buf)
+   fun:read
+   fun:_IO_file_xsgetn
+   fun:fread
+   fun:gcov_read_words
+   fun:gcov_do_dump
+}
+{
+   _gcov_do_dump_leak1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:gcov_do_dump
+}
+{
+   _gcov_do_dump_leak2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:fdopen@@GLIBC_2.2.5
+   fun:__gcov_open
+   fun:gcov_do_dump
+}
+{
+   _gcov_exit
+   Memcheck:Addr8
+   fun:gcov_do_dump
+   fun:__gcov_exit
+}
+{
+   _unity_putchar_leak
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_IO_file_doallocate
+   fun:_IO_doallocbuf
+   fun:_IO_file_overflow@@GLIBC_2.2.5
+   fun:putchar
+   fun:UnityPrintChar
+}
+{
+   _ari_type_dict_init1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   fun:_ari_type_by_id_array_list_pair_resize
+   fun:m_d1ct__ari_type_by_id_resize_up
+   fun:_ari_type_by_id_set_at
+   fun:_ari_type_dict_init
+}
+{
+   _ari_type_dict_init2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   fun:_ari_type_by_name_array_list_pair_resize
+   fun:m_d1ct__ari_type_by_name_resize_up
+   fun:_ari_type_by_name_set_at
+   fun:_ari_type_dict_init
+}
+{
+   _ari_type_dict_init3
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:m_l1st__ari_type_by_id_list_pair_new
+   fun:_ari_type_by_id_list_pair_push_raw
+   fun:_ari_type_by_id_set_at
+   fun:_ari_type_dict_init
+}
+{
+   _ari_type_dict_init2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:m_l1st__ari_type_by_name_list_pair_new
+   fun:_ari_type_by_name_list_pair_push_raw
+   fun:_ari_type_by_name_set_at
+   fun:_ari_type_dict_init
+}
+{
+   amm_builtin_dict_init1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   fun:amm_type_lookup_array_list_pair_resize
+   fun:m_d1ct_amm_type_lookup_resize_up
+   fun:amm_type_lookup_set_at
+   fun:amm_builtin_dict_init
+}
+{
+   amm_builtin_dict_init2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:m_l1st_amm_type_lookup_list_pair_new
+   fun:amm_type_lookup_list_pair_push_raw
+   fun:amm_type_lookup_set_at
+   fun:amm_builtin_dict_init
+}

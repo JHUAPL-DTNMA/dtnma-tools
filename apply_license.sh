@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2023 The Johns Hopkins University Applied Physics
+## Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Delay-Tolerant Networking Management
@@ -16,18 +16,26 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ##
+
+# Apply copyright and license markings to source files.
+#
+# Requires installation of:
+#  pip3 install licenseheaders
+# Run as:
+#  ./apply_license.sh {specific dir}
+#
 set -e
 
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 
-LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/license.tmpl"
-LICENSEOPTS="${LICENSEOPTS} --current-year"
+LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/apply_license.tmpl"
+LICENSEOPTS="${LICENSEOPTS} --years 2011-$(date +%Y)"
 # Excludes only apply to directory (--dir) mode and not file mode
 LICENSEOPTS="${LICENSEOPTS} --exclude *.yml *.yaml *.min.* "
 
 
 # Specific paths
-if [ $# -gt 0 ]
+if [[ $# -gt 0 ]]
 then
     echo "Applying markings to selected $@ ..."
     licenseheaders ${LICENSEOPTS} --dir $@
@@ -36,9 +44,15 @@ fi
 
 
 echo "Applying markings to source..."
-for SUBDIR in cmake src test testenv doc
+# Directory trees
+for DIRNAME in cmake src test testenv doc .github
 do
-    licenseheaders ${LICENSEOPTS} --dir ${SELFDIR}/${SUBDIR}
+    licenseheaders ${LICENSEOPTS} --dir ${SELFDIR}/${DIRNAME}
+done
+# Specific top-level files
+for FILEPATH in $(find "${SELFDIR}" -maxdepth 1 -type f)
+do
+    licenseheaders ${LICENSEOPTS} --file ${FILEPATH}
 done
 # Restore non-managed files
 git restore ${SELFDIR}/src/ion_if/agent/adm_*

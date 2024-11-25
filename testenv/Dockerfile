@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2023 The Johns Hopkins University Applied Physics
+## Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Delay-Tolerant Networking Management
@@ -46,7 +46,7 @@ RUN apt-get update && apt-get install -y \
     lsof iftop gdb valgrind socat
 
 
-FROM ubuntu:22.04 as deps-local
+FROM ubuntu:22.04 AS deps-local
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -64,10 +64,7 @@ RUN cd /usr/src/nm/deps/ion && \
     make -j$(nproc) clean
 
 COPY deps/QCBOR /usr/src/nm/deps/QCBOR
-COPY deps/qcbor*.patch /usr/src/nm/deps/
 RUN cd /usr/src/nm/deps/QCBOR && \
-    patch -p1 <../qcbor-install.patch && \
-    patch -p2 <../qcbor-expose-private.patch && \
     make -j$(nproc) && \
     make install && \
     make -j$(nproc) clean
@@ -100,7 +97,7 @@ RUN apt-get update && apt-get install -y \
 # Agent to test
 RUN apt-get update && apt-get install -y \
     cmake ninja-build ruby \
-    civetweb libcivetweb-dev libssl-dev libcjson-dev
+    flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev
 COPY deps /usr/src/nm/deps
 COPY cmake /usr/src/nm/cmake
 COPY src /usr/src/nm/src

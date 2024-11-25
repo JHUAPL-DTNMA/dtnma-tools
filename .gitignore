@@ -1,8 +1,14 @@
 # Editor files
 *~
+.project
+.pydevproject
 
 # Build files
 __pycache__
 deps/build
 build
 testroot
+/deps/
+/.pytest_cache/
+
+agent-test/adms/
