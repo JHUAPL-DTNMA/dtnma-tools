@@ -214,16 +214,16 @@ void test_amm_type_match_semtype_dlist_2item(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F6", false)           // ari:null
-TEST_CASE("82040A", false)       // ari:/INT/10
-TEST_CASE("82118101", false)     // ari:/AC/(1) too few items
-TEST_CASE("8211820102", false)   // ari:/AC/(1,2) bad item type
-TEST_CASE("82118201F5", true)    // ari:/AC/(1,true)
-TEST_CASE("82118301F5F4", true)  // ari:/AC/(1,true,false)
-TEST_CASE("82118401F5F4F5", false)  // ari:/AC/(1,true,false,true)
-TEST_CASE("82118301F503", false) // ari:/AC/(1,true,3) unmatched items
-TEST_CASE("8212A10102", false)   // ari:/AM/(1=2)
-TEST_CASE("82138102", false)     // ari:/TBL/c=3;
+TEST_CASE("F6", false)             // ari:null
+TEST_CASE("82040A", false)         // ari:/INT/10
+TEST_CASE("82118101", false)       // ari:/AC/(1) too few items
+TEST_CASE("8211820102", false)     // ari:/AC/(1,2) bad item type
+TEST_CASE("82118201F5", true)      // ari:/AC/(1,true)
+TEST_CASE("82118301F5F4", true)    // ari:/AC/(1,true,false)
+TEST_CASE("82118401F5F4F5", false) // ari:/AC/(1,true,false,true)
+TEST_CASE("82118301F503", false)   // ari:/AC/(1,true,3) unmatched items
+TEST_CASE("8212A10102", false)     // ari:/AM/(1=2)
+TEST_CASE("82138102", false)       // ari:/TBL/c=3;
 void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, bool expect)
 {
     // diverse list of int and seq-of-bool
@@ -244,9 +244,9 @@ void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, bool expect
 
             amm_type_set_use_direct(&(seq->item_type), amm_type_get_builtin(ARI_TYPE_BOOL));
             seq->size.has_min = true;
-            seq->size.i_min = 1;
+            seq->size.i_min   = 1;
             seq->size.has_max = true;
-            seq->size.i_max = 2;
+            seq->size.i_max   = 2;
         }
     }
 
