@@ -114,6 +114,8 @@ struct amm_type_builtin_s
     ari_type_t ari_type;
 };
 
+typedef void (*amm_semtype_deinit_f)(void *semtype);
+
 /** Descriptor for each built-in (ARI type) and semantic type within the AMM.
  * Users of this struct must treat it as opaque and not access any individual
  * members directly, instead use amm_type_set_* functions to set its state
@@ -163,6 +165,8 @@ struct amm_type_s
         AMM_TYPE_TBLT,
         /// A union type using the #as_semtype member
         AMM_TYPE_UNION,
+        /// A sub-sequence using the #as_semtype member
+        AMM_TYPE_SEQ,
     } type_class;
     union
     {
@@ -174,6 +178,9 @@ struct amm_type_s
          */
         void *as_semtype;
     };
+
+    // De-initializing function for #as_semtype when it is valid
+    amm_semtype_deinit_f as_semtype_deinit;
 };
 
 /** Get a built-in type object.

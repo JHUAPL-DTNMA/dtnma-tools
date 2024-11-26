@@ -82,8 +82,10 @@ int amm_type_set_use_ref(amm_type_t *type, const ari_t *name)
 
     amm_semtype_use_t *semtype = ARI_MALLOC(sizeof(amm_semtype_use_t));
     amm_semtype_use_init(semtype);
-    type->as_semtype = semtype;
     ari_set_copy(&(semtype->name), name);
+
+    type->as_semtype        = semtype;
+    type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_use_deinit;
 
     return 0;
 }
@@ -100,8 +102,10 @@ int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base)
 
     amm_semtype_use_t *semtype = ARI_MALLOC(sizeof(amm_semtype_use_t));
     amm_semtype_use_init(semtype);
-    type->as_semtype = semtype;
-    semtype->base    = base;
+    semtype->base = base;
+
+    type->as_semtype        = semtype;
+    type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_use_deinit;
 
     return 0;
 }
@@ -213,9 +217,74 @@ amm_semtype_ulist_t *amm_type_set_ulist(amm_type_t *type)
 
     amm_semtype_ulist_t *semtype = ARI_MALLOC(sizeof(amm_semtype_ulist_t));
     amm_semtype_ulist_init(semtype);
-    type->as_semtype = semtype;
+
+    type->as_semtype        = semtype;
+    type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_ulist_deinit;
 
     return semtype;
+}
+
+/** Match a sub-sequence of an AC using an input iterator.
+ */
+static bool amm_semtype_seq_match_it(const amm_semtype_seq_t *seq, ari_list_it_t val_it)
+{
+    // iterate until the sequence limit is hit or there are no more
+    size_t used = 0;
+    while (!ari_list_end_p(val_it) && (!seq->size.has_max || (used < seq->size.i_max)))
+    {
+        const ari_t *val_item = ari_list_cref(val_it);
+
+        // actual match
+        if (!amm_type_match(&(seq->item_type), val_item))
+        {
+            // don't fail here, just stop matching this sequence
+            break;
+        }
+
+        ++used;
+        ari_list_next(val_it);
+    }
+
+    // not enough matched
+    if (seq->size.has_min && (used < seq->size.i_min))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+/** Convert a sub-sequence of an AC using an input iterator.
+ */
+static bool amm_semtype_seq_convert_it(const amm_semtype_seq_t *seq, ari_list_t out, ari_list_it_t inval_it)
+{
+    // iterate until the sequence limit is hit or there are no more
+    size_t used = 0;
+    while (!ari_list_end_p(inval_it) && (!seq->size.has_max || (used < seq->size.i_max)))
+    {
+        const ari_t *in_item = ari_list_cref(inval_it);
+
+        ari_t out_item = ARI_INIT_UNDEFINED;
+        // actual conversion
+        int res = amm_type_convert(&(seq->item_type), &out_item, in_item);
+        if (res)
+        {
+            // don't fail here, just stop matching this sequence
+            break;
+        }
+
+        ++used;
+        ari_list_push_back_move(out, &out_item);
+        ari_list_next(inval_it);
+    }
+
+    // not enough matched
+    if (seq->size.has_min && (used < seq->size.i_min))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 static bool amm_semtype_dlist_match(const amm_type_t *self, const ari_t *ari)
@@ -238,9 +307,15 @@ static bool amm_semtype_dlist_match(const amm_type_t *self, const ari_t *ari)
         // each type in the list takes off one or more items
         const amm_type_t *typ_item = amm_type_array_cref(typ_it);
 
-        // FIXME handle sequence specially
-        // if (typ_item->type_class == AMM_TYPE_SEQ)
-        // else
+        if (typ_item->type_class == AMM_TYPE_SEQ)
+        {
+            amm_semtype_seq_t *seq = typ_item->as_semtype;
+            if (!amm_semtype_seq_match_it(seq, val_it))
+            {
+                return false;
+            }
+        }
+        else
         {
             // not enough values
             if (ari_list_end_p(val_it))
@@ -292,9 +367,16 @@ static int amm_semtype_dlist_convert(const amm_type_t *self, ari_t *out, const a
         // each type in the list takes off one or more items
         const amm_type_t *typ_item = amm_type_array_cref(typ_it);
 
-        // FIXME handle sequence specially
-        // if (typ_item->type_class == AMM_TYPE_SEQ)
-        // else
+        if (typ_item->type_class == AMM_TYPE_SEQ)
+        {
+            amm_semtype_seq_t *seq = typ_item->as_semtype;
+            if (!amm_semtype_seq_convert_it(seq, outval.items, inval_it))
+            {
+                retval = CACE_AMM_ERR_CONVERT_BADVALUE;
+                break;
+            }
+        }
+        else
         {
             // not enough values
             if (ari_list_end_p(inval_it))
@@ -341,8 +423,10 @@ amm_semtype_dlist_t *amm_type_set_dlist(amm_type_t *type, size_t num_types)
 
     amm_semtype_dlist_t *semtype = ARI_MALLOC(sizeof(amm_semtype_dlist_t));
     amm_semtype_dlist_init(semtype);
-    type->as_semtype = semtype;
     amm_type_array_resize(semtype->types, num_types);
+
+    type->as_semtype        = semtype;
+    type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_dlist_deinit;
 
     return semtype;
 }
@@ -433,7 +517,9 @@ amm_semtype_umap_t *amm_type_set_umap(amm_type_t *type)
 
     amm_semtype_umap_t *semtype = ARI_MALLOC(sizeof(amm_semtype_umap_t));
     amm_semtype_umap_init(semtype);
-    type->as_semtype = semtype;
+
+    type->as_semtype        = semtype;
+    type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_umap_deinit;
 
     return semtype;
 }
@@ -537,8 +623,10 @@ amm_semtype_tblt_t *amm_type_set_tblt_size(amm_type_t *type, size_t num_cols)
 
     amm_semtype_tblt_t *semtype = ARI_MALLOC(sizeof(amm_semtype_tblt_t));
     amm_semtype_tblt_init(semtype);
-    type->as_semtype = semtype;
     amm_semtype_tblt_col_array_resize(semtype->columns, num_cols);
+
+    type->as_semtype        = semtype;
+    type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_tblt_deinit;
 
     return semtype;
 }
@@ -588,8 +676,29 @@ amm_semtype_union_t *amm_type_set_union_size(amm_type_t *type, size_t num_choice
 
     amm_semtype_union_t *semtype = ARI_MALLOC(sizeof(amm_semtype_union_t));
     amm_semtype_union_init(semtype);
-    type->as_semtype = semtype;
     amm_type_array_resize(semtype->choices, num_choices);
+
+    type->as_semtype        = semtype;
+    type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_union_deinit;
+
+    return semtype;
+}
+
+amm_semtype_seq_t *amm_type_set_seq(amm_type_t *type)
+{
+    CHKNULL(type);
+    amm_type_reset(type);
+
+    // not usable as a direct semantic type, see amm_semtype_dlist_match() and amm_semtype_dlist_convert()
+    type->match      = NULL;
+    type->convert    = NULL;
+    type->type_class = AMM_TYPE_SEQ;
+
+    amm_semtype_seq_t *semtype = ARI_MALLOC(sizeof(amm_semtype_seq_t));
+    amm_semtype_seq_init(semtype);
+
+    type->as_semtype        = semtype;
+    type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_seq_deinit;
 
     return semtype;
 }

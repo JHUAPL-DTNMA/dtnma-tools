@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 #include "typing.h"
-#include "semtype.h"
 #include "cace/ari/algo.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
@@ -874,20 +873,6 @@ void amm_typeptr_take(amm_typeptr_t *ptr, amm_type_t *obj)
     ptr->obj = obj;
 }
 
-void amm_type_tblt_col_init(amm_semtype_tblt_col_t *obj)
-{
-    CHKVOID(obj);
-    string_init(obj->name);
-    amm_type_init(&(obj->typeobj));
-}
-
-void amm_type_tblt_col_deinit(amm_semtype_tblt_col_t *obj)
-{
-    CHKVOID(obj);
-    amm_type_deinit(&(obj->typeobj));
-    string_clear(obj->name);
-}
-
 void amm_type_init(amm_type_t *type)
 {
     CHKVOID(type)
@@ -897,39 +882,19 @@ void amm_type_init(amm_type_t *type)
 void amm_type_deinit(amm_type_t *type)
 {
     CHKVOID(type);
-    // clean up state
-    switch (type->type_class)
-    {
-        case AMM_TYPE_INVALID:
-        case AMM_TYPE_BUILTIN:
-            break;
-        case AMM_TYPE_USE:
-            amm_semtype_use_deinit(type->as_semtype);
-            break;
-        case AMM_TYPE_ULIST:
-            amm_semtype_ulist_deinit(type->as_semtype);
-            break;
-        case AMM_TYPE_DLIST:
-            amm_semtype_dlist_deinit(type->as_semtype);
-            break;
-        case AMM_TYPE_UMAP:
-            amm_semtype_umap_deinit(type->as_semtype);
-            break;
-        case AMM_TYPE_TBLT:
-            amm_semtype_tblt_deinit(type->as_semtype);
-            break;
-        case AMM_TYPE_UNION:
-            amm_semtype_union_deinit(type->as_semtype);
-            break;
-    }
 
-    // release memory
+    // clean up semtype state
     switch (type->type_class)
     {
         case AMM_TYPE_INVALID:
         case AMM_TYPE_BUILTIN:
             break;
         default:
+            if (type->as_semtype_deinit)
+            {
+                type->as_semtype_deinit(type->as_semtype);
+            }
+
             ARI_FREE(type->as_semtype);
             type->as_semtype = NULL;
     }

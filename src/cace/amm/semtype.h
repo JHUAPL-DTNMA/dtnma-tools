@@ -54,6 +54,22 @@ static inline void amm_semtype_use_deinit(amm_semtype_use_t *obj)
     obj->base = NULL;
 }
 
+/** Create a use type based on a type reference.
+ * A use type adds annotations and constraints onto a base type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @param[in] name The ARITYPE literal or TYPEDEF reference value.
+ */
+int amm_type_set_use_ref(amm_type_t *type, const ari_t *name);
+
+/** Create a use type based on a base type object.
+ * A use type adds annotations and constraints onto a base type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @param[in] base The base type to create a use of.
+ */
+int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base);
+
 /** A closed interval of size_t values with optional minimum and maximum.
  */
 typedef struct
@@ -102,6 +118,13 @@ static inline void amm_semtype_ulist_deinit(amm_semtype_ulist_t *obj)
     amm_type_deinit(&(obj->item_type));
 }
 
+/** Create a uniform list semantic type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @return Non-NULL upon success.
+ */
+amm_semtype_ulist_t *amm_type_set_ulist(amm_type_t *type);
+
 /// Configuration for a diverse list within an AC
 typedef struct
 {
@@ -123,6 +146,14 @@ static inline void amm_semtype_dlist_deinit(amm_semtype_dlist_t *obj)
 {
     amm_type_array_clear(obj->types);
 }
+
+/** Create a diverse list semantic type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @param num_cols The number of types to initialize.
+ * @return Non-NULL upon success.
+ */
+amm_semtype_dlist_t *amm_type_set_dlist(amm_type_t *type, size_t num_types);
 
 /// Configuration for a uniform list within an AM
 typedef struct
@@ -151,6 +182,13 @@ static inline void amm_semtype_umap_deinit(amm_semtype_umap_t *obj)
     amm_type_deinit(&(obj->val_type));
     amm_type_deinit(&(obj->key_type));
 }
+
+/** Create a uniform map semantic type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @return Non-NULL upon success.
+ */
+amm_semtype_umap_t *amm_type_set_umap(amm_type_t *type);
 
 /// Configuration of a table template column
 typedef struct
@@ -196,6 +234,14 @@ static inline void amm_semtype_tblt_deinit(amm_semtype_tblt_t *obj)
     amm_semtype_tblt_col_array_clear(obj->columns);
 }
 
+/** Create a table template based on a set of typed columns.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @param num_cols The number of columns to initialize.
+ * @return Non-NULL upon success.
+ */
+amm_semtype_tblt_t *amm_type_set_tblt_size(amm_type_t *type, size_t num_cols);
+
 /// Configuration for a union of other types
 typedef struct
 {
@@ -215,52 +261,6 @@ static inline void amm_semtype_union_deinit(amm_semtype_union_t *obj)
     amm_type_array_clear(obj->choices);
 }
 
-/** Create a use type based on a type reference.
- * A use type adds annotations and constraints onto a base type.
- *
- * @param[out] type The type to initialize and populate.
- * @param[in] name The ARITYPE literal or TYPEDEF reference value.
- */
-int amm_type_set_use_ref(amm_type_t *type, const ari_t *name);
-
-/** Create a use type based on a base type object.
- * A use type adds annotations and constraints onto a base type.
- *
- * @param[out] type The type to initialize and populate.
- * @param[in] base The base type to create a use of.
- */
-int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base);
-
-/** Create a uniform list semantic type.
- *
- * @param[out] type The type to initialize and populate.
- * @return Non-NULL upon success.
- */
-amm_semtype_ulist_t *amm_type_set_ulist(amm_type_t *type);
-
-/** Create a diverse list semantic type.
- *
- * @param[out] type The type to initialize and populate.
- * @param num_cols The number of types to initialize.
- * @return Non-NULL upon success.
- */
-amm_semtype_dlist_t *amm_type_set_dlist(amm_type_t *type, size_t num_types);
-
-/** Create a uniform map semantic type.
- *
- * @param[out] type The type to initialize and populate.
- * @return Non-NULL upon success.
- */
-amm_semtype_umap_t *amm_type_set_umap(amm_type_t *type);
-
-/** Create a table template based on a set of typed columns.
- *
- * @param[out] type The type to initialize and populate.
- * @param num_cols The number of columns to initialize.
- * @return Non-NULL upon success.
- */
-amm_semtype_tblt_t *amm_type_set_tblt_size(amm_type_t *type, size_t num_cols);
-
 /** Create a union type based on a choice of other type objects.
  * A union type contains a list of underlying types to choose from.
  *
@@ -269,6 +269,42 @@ amm_semtype_tblt_t *amm_type_set_tblt_size(amm_type_t *type, size_t num_cols);
  * @return Non-NULL upon success.
  */
 amm_semtype_union_t *amm_type_set_union_size(amm_type_t *type, size_t num_choices);
+
+/** Configuration for a sub-sequence list within an AC.
+ * This is similar to an amm_semtype_ulist_t but does not capture the
+ * containing AC so sequences can be concatenated.
+ */
+typedef struct
+{
+    /** The type for each item of the list.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this column.
+     */
+    amm_type_t item_type;
+
+    /** Constraint on the number of items.
+     */
+    amm_semtype_size_intvl_t size;
+
+} amm_semtype_seq_t;
+
+static inline void amm_semtype_seq_init(amm_semtype_seq_t *obj)
+{
+    amm_type_init(&(obj->item_type));
+    amm_semtype_size_intvl_init(&(obj->size));
+}
+
+static inline void amm_semtype_seq_deinit(amm_semtype_seq_t *obj)
+{
+    amm_type_deinit(&(obj->item_type));
+}
+
+/** Create a sub-sequence list semantic type.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @return Non-NULL upon success.
+ */
+amm_semtype_seq_t *amm_type_set_seq(amm_type_t *type);
 
 #ifdef __cplusplus
 }
