@@ -34,11 +34,6 @@ extern "C" {
  */
 typedef struct
 {
-    /** Original ARI with any given parameters.
-     * All path segments are in their original form.
-     */
-    const ari_t *ref;
-
     /// The found namespace, or a null pointer
     cace_amm_obj_ns_t *ns;
     /// The found object, or a null pointer
@@ -61,8 +56,15 @@ void cace_amm_lookup_deinit(cace_amm_lookup_t *res);
  */
 void cace_amm_lookup_init_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src);
 
+/** Setter with move semantics.
+ */
+void cace_amm_lookup_set_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src);
+
 /** Perform a lookup into an object store.
  *
+ * @param[in,out] res The lookup result to reset and populate.
+ * @param[in] store The object store to lookup within.
+ * @param[in] ref The reference to lookup from.
  * @return Zero if successful.
  * 1 if parameters are invalid (including an ARI that is not an object reference).
  * 2 if the ARI type is invalid.
@@ -73,7 +75,7 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
 
 #define M_OPL_cace_amm_lookup_t()                                                    \
     (INIT(API_2(cace_amm_lookup_init)), INIT_MOVE(API_6(cace_amm_lookup_init_move)), \
-     CLEAR(API_2(cace_amm_lookup_deinit)))
+     CLEAR(API_2(cace_amm_lookup_deinit)), MOVE(API_6(cace_amm_lookup_move)))
 
 #ifdef __cplusplus
 } // extern C

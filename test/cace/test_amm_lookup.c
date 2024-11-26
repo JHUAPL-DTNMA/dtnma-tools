@@ -93,7 +93,6 @@ static void check_lookup(const char *inhex, int expect_cbor_decode, int expect_r
     res = cace_amm_lookup_deref(&result, &store, &inval);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "cace_amm_lookup_deref() disagrees");
 
-    TEST_ASSERT_EQUAL(&inval, result.ref);
     if (res == 0)
     {
         TEST_ASSERT_NOT_NULL(result.ns);

@@ -40,6 +40,8 @@ void refda_agent_init(refda_agent_t *agent)
     refda_msgdata_queue_init(agent->execs, AGENT_QUEUE_SIZE);
     sem_init(&(agent->execs_sem), 0, 0);
 
+    refda_exec_seq_list_init(agent->exec_state);
+
     refda_msgdata_queue_init(agent->rptgs, AGENT_QUEUE_SIZE);
     sem_init(&(agent->rptgs_sem), 0, 0);
 }
@@ -48,6 +50,8 @@ void refda_agent_deinit(refda_agent_t *agent)
 {
     sem_destroy(&(agent->rptgs_sem));
     refda_msgdata_queue_clear(agent->rptgs);
+
+    refda_exec_seq_list_clear(agent->exec_state);
 
     sem_destroy(&(agent->execs_sem));
     refda_msgdata_queue_clear(agent->execs);

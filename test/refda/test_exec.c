@@ -63,7 +63,7 @@ static int test_exec_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, ref
     }
 
     // record this execution
-    ari_list_push_back(exec_log, *ctx->deref->ref);
+    ari_list_push_back(exec_log, *ctx->ref);
 
     ari_set_copy(&(ctx->result), val);
     return 0;

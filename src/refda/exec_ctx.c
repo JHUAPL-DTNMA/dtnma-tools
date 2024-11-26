@@ -18,12 +18,13 @@
 #include "exec_ctx.h"
 #include "cace/util/defs.h"
 
-void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_runctx_t *parent, const cace_amm_lookup_t *deref)
+void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_runctx_t *parent, const ari_t *ref, const cace_amm_lookup_t *deref)
 {
     CHKVOID(obj);
     CHKVOID(deref);
 
     obj->parent = parent;
+    obj->ref = ref;
     obj->deref  = deref;
     ari_init(&(obj->result));
 }

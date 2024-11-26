@@ -43,9 +43,8 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
 {
     CHKERR1(ctx);
     CHKERR1(ctx->deref);
-    CHKERR1(ctx->deref->ref);
     CHKERR1(ctx->deref->obj);
-    CACE_LOG_DEBUG("Producing value for reference type %s", ari_type_to_name(ctx->deref->ref->as_ref.objpath.ari_type));
+    CACE_LOG_DEBUG("Producing value for reference type %s", ari_type_to_name(ctx->deref->obj_type));
 
     int retval = 0;
     switch (ctx->deref->obj_type)

@@ -37,6 +37,10 @@ typedef struct
      */
     refda_runctx_t *parent;
 
+    /** Original reference to the CTRL.
+     */
+    const ari_t *ref;
+
     /** Dereference result for CTRL which led to this execution.
      * This will never be null.
      */
@@ -54,10 +58,11 @@ typedef struct
  *
  * @param[out] obj The context to initialize.
  * @param[in] parent The parent runtime context.
+ * @param[in] ref The original reference.
  * @param[in] deref The dereference result.
  * The result must outlive this context.
  */
-void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_runctx_t *parent, const cace_amm_lookup_t *deref);
+void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_runctx_t *parent, const ari_t *ref, const cace_amm_lookup_t *deref);
 
 void refda_exec_ctx_deinit(refda_exec_ctx_t *obj);
 

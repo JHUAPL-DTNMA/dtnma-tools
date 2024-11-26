@@ -20,6 +20,7 @@
 #define REFDA_AGENT_H_
 
 #include "msgdata.h"
+#include "exec_item.h"
 #include "rpt_agg.h"
 #include <cace/util/daemon_run.h>
 #include <cace/util/threadset.h>
@@ -70,7 +71,10 @@ typedef struct
     /// Semaphore for items in #execs
     sem_t execs_sem;
 
-    // TBD execution state table
+    /** Execution sequence state table.
+     * This is owned by the refda_exec_worker() thread.
+     */
+    refda_exec_seq_list_t exec_state;
 
     /// Egress RPTSET queue
     refda_msgdata_queue_t rptgs;

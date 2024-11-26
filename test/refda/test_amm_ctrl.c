@@ -105,7 +105,7 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_exec_ctx_t ctx;
-    refda_exec_ctx_init(&ctx, NULL, &deref);
+    refda_exec_ctx_init(&ctx, NULL, NULL, &deref);
 
     res = refda_amm_ctrl_desc_execute(obj, &ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_ctrl_desc_execute() disagrees");
