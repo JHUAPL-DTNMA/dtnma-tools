@@ -55,7 +55,7 @@ static int mock_ctrl_exec_none(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_
 
 static int mock_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
 {
-    const ari_t *val = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    const ari_t *val = refda_exec_ctx_get_aparam_index(ctx, 0);
     CHKERR1(val)
     {
         string_t buf;
@@ -90,6 +90,8 @@ static void ari_convert(ari_t *ari, const char *inhex)
 static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const cace_amm_formal_param_list_t fparams,
                           const char *refhex, const char *outhex, int expect_res)
 {
+    refda_exec_item_t eitem;
+    refda_exec_item_init(&eitem);
     ari_t inref = ARI_INIT_UNDEFINED;
     ari_convert(&inref, refhex);
     TEST_ASSERT_TRUE_MESSAGE(inref.is_ref, "invalid reference");
@@ -98,14 +100,11 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     ari_convert(&outval, outhex);
     TEST_ASSERT_EQUAL_INT(0, ari_set_copy(&mock_result_store, &outval));
 
-    cace_amm_lookup_t deref;
-    cace_amm_lookup_init(&deref);
-
-    int res = cace_amm_actual_param_set_populate(&(deref.aparams), fparams, &(inref.as_ref.params));
+    int res = cace_amm_actual_param_set_populate(&(eitem.deref.aparams), fparams, &(inref.as_ref.params));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_exec_ctx_t ctx;
-    refda_exec_ctx_init(&ctx, NULL, NULL, &deref);
+    refda_exec_ctx_init(&ctx, NULL, &eitem);
 
     res = refda_amm_ctrl_desc_execute(obj, &ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_ctrl_desc_execute() disagrees");
@@ -119,7 +118,7 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     }
 
     refda_exec_ctx_deinit(&ctx);
-    cace_amm_lookup_deinit(&deref);
+    refda_exec_item_deinit(&eitem);
 
     ari_deinit(&outval);
     ari_deinit(&inref);

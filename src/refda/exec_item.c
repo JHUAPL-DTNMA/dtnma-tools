@@ -6,6 +6,7 @@ void refda_exec_item_init(refda_exec_item_t *obj)
     CHKVOID(obj);
     ari_init(&(obj->ref));
     cace_amm_lookup_init(&(obj->deref));
+    atomic_init(&(obj->waiting), false);
 }
 
 void refda_exec_item_deinit(refda_exec_item_t *obj)

@@ -40,6 +40,8 @@ typedef struct
      */
     cace_amm_lookup_t deref;
 
+    atomic_bool waiting;
+
 } refda_exec_item_t;
 
 void refda_exec_item_init(refda_exec_item_t *obj);

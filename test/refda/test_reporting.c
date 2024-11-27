@@ -60,7 +60,7 @@ static void test_reporting_edd_int(const refda_amm_edd_desc_t *obj _U_, refda_va
 
 static void test_reporting_edd_one_int(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
 {
-    const ari_t *val = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    const ari_t *val = refda_valprod_ctx_get_aparam_index(ctx, 0);
     CHKVOID(val)
     {
         string_t buf;

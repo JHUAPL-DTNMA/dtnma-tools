@@ -34,7 +34,7 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
 {
     CACE_LOG_WARNING("executed!");
 
-    const ari_t *ref = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    const ari_t *ref = refda_exec_ctx_get_aparam_index(ctx, 0);
 
     // FIXME mutex-serialize object store access
     cace_amm_lookup_t deref;
@@ -75,6 +75,19 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
     cace_amm_lookup_deinit(&deref);
 
     return res;
+}
+
+/** CTRL execution callback for ari://ietf-dtnma-agent/CTRL/wait-for
+ * Description:
+ *   This control causes the execution to pause for a given amount of time.
+ *   This is intended to be used within a macro to separate controls
+ *   in time.";
+ */
+int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
+{
+    refda_exec_ctx_set_waiting(ctx);
+
+    return 0;
 }
 
 int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
@@ -135,8 +148,13 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         {
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            // FIXME set result type
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_inspect;
+            {
+                // Result type ari://ietf-amm/TYPEDEF/any
+                ari_t ref = ARI_INIT_UNDEFINED;
+                ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_AMM_ENUM, ARI_TYPE_TYPEDEF, 8);
+                amm_type_set_use_ref_move(&(objdata->res_type), &ref);
+            }
 
             obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("inspect", 5), objdata);
             {
@@ -144,6 +162,20 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
                 amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_OBJECT));
                 // FIXME: above should really be a type use of //ietf-amm/TYPEDEF/VALUE-OBJ
+            }
+        }
+        {
+            refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
+            refda_amm_ctrl_desc_init(objdata);
+            objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_wait_for;
+            // No result type
+
+            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("wait-for", 2), objdata);
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "duration");
+
+                amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_TD));
+                // FIXME: above should really be a type use of /ARITYPE/TD
             }
         }
     }

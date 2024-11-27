@@ -28,6 +28,11 @@
 extern "C" {
 #endif
 
+typedef enum
+{
+    REFDA_EXEC_STATE_
+} refda_exec_state_t;
+
 /** Context for execution activities.
  */
 typedef struct
@@ -37,14 +42,10 @@ typedef struct
      */
     refda_runctx_t *parent;
 
-    /** Original reference to the CTRL.
-     */
-    const ari_t *ref;
-
-    /** Dereference result for CTRL which led to this execution.
+    /** Internal execution item.
      * This will never be null.
      */
-    const cace_amm_lookup_t *deref;
+    const refda_exec_item_t *item;
 
     /** Storage for an optional result value.
      * This is initialized as undefined and may be set to any other value
@@ -58,13 +59,18 @@ typedef struct
  *
  * @param[out] obj The context to initialize.
  * @param[in] parent The parent runtime context.
- * @param[in] ref The original reference.
- * @param[in] deref The dereference result.
+ * @param[in] item The internal execution item.
  * The result must outlive this context.
  */
-void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_runctx_t *parent, const ari_t *ref, const cace_amm_lookup_t *deref);
+void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_runctx_t *parent, const refda_exec_item_t *item);
 
 void refda_exec_ctx_deinit(refda_exec_ctx_t *obj);
+
+const ari_t *refda_exec_ctx_get_aparam_index(refda_exec_ctx_t *ctx, size_t index);
+
+const ari_t *refda_exec_ctx_get_aparam_name(refda_exec_ctx_t *ctx, const char *name);
+
+void refda_exec_ctx_set_waiting(refda_exec_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

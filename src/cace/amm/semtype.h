@@ -61,6 +61,10 @@ static inline void amm_semtype_use_deinit(amm_semtype_use_t *obj)
  * @param[in] name The ARITYPE literal or TYPEDEF reference value.
  */
 int amm_type_set_use_ref(amm_type_t *type, const ari_t *name);
+/** @overload
+ * Set the name with move semantics.
+ */
+int amm_type_set_use_ref_move(amm_type_t *type, ari_t *name);
 
 /** Create a use type based on a base type object.
  * A use type adds annotations and constraints onto a base type.

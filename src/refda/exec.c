@@ -24,26 +24,44 @@
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
-static int refda_exec_ctrl(refda_runctx_t *runctx, const refda_exec_item_t *item)
+/** Execute a single CTRL and report on a result if requested.
+ */
+static int refda_exec_ctrl(refda_runctx_t *runctx, refda_exec_seq_t *seq)
 {
-    CHKERR1(item);
+    const refda_exec_item_t *item = refda_exec_item_list_front(seq->items);
     CHKERR1(item->deref.obj);
     refda_amm_ctrl_desc_t *ctrl = item->deref.obj->app_data.ptr;
     CHKERR1(ctrl);
 
-    CACE_LOG_DEBUG("Executing CTRL named \"%s\"", string_get_cstr(item->deref.obj->name));
+    if (cace_log_is_enabled_for(LOG_INFO))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(item->ref), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("Execution item %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
 
     refda_exec_ctx_t ctx;
-    refda_exec_ctx_init(&ctx, runctx, &(item->ref), &(item->deref));
+    refda_exec_ctx_init(&ctx, runctx, item);
 
     int res = refda_amm_ctrl_desc_execute(ctrl, &ctx);
-    CACE_LOG_DEBUG("Finished execution with status %d", res);
-
-    if (ctx.parent->nonce && !ari_is_null(ctx.parent->nonce))
+    CACE_LOG_INFO("Execution callback returned with status %d", res);
+    if (atomic_load(&(item->waiting)))
     {
-        // generate report regardless of production
-        CACE_LOG_DEBUG("Pushing execution result");
-        refda_reporting_ctrl(runctx, &(item->ref), &ctx.result);
+        CACE_LOG_INFO("Control is still waiting to finish");
+    }
+    else
+    {
+        // done with this item
+        refda_exec_item_list_pop_front(NULL, seq->items);
+
+        if (ctx.parent->nonce && !ari_is_null(ctx.parent->nonce))
+        {
+            // generate report regardless of production
+            CACE_LOG_DEBUG("Pushing execution result");
+            refda_reporting_ctrl(runctx, &(item->ref), &ctx.result);
+        }
     }
 
     refda_exec_ctx_deinit(&ctx);
@@ -51,6 +69,35 @@ static int refda_exec_ctrl(refda_runctx_t *runctx, const refda_exec_item_t *item
     return res;
 }
 
+/** Execute a sequence until the first deferred completion.
+ *
+ * @param[in,out] seq The sequence which will be popped as items are executed.
+ */
+static int refda_exec_seq(refda_runctx_t *runctx, refda_exec_seq_t *seq)
+{
+    int retval = 0;
+    while (!refda_exec_item_list_empty_p(seq->items))
+    {
+        if (atomic_load(&(refda_exec_item_list_front(seq->items)->waiting)))
+        {
+            // cannot complete at this time
+            return 0;
+        }
+
+        retval = refda_exec_ctrl(runctx, seq);
+        if (retval)
+        {
+            break;
+        }
+    }
+
+    refda_exec_seq_list_pop_back(NULL, runctx->agent->exec_state);
+
+    return retval;
+}
+
+/** Execute any ARI target (reference or literal).
+ */
 static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const ari_t *target);
 
 /** Execute an arbitrary object reference.
@@ -73,7 +120,8 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     {
         switch (deref.obj_type)
         {
-            case ARI_TYPE_CTRL: {
+            case ARI_TYPE_CTRL:
+            {
                 // expansion finished, execution comes later
                 refda_exec_item_t *item = refda_exec_item_list_push_back_new(seq->items);
                 ari_set_copy(&(item->ref), target);
@@ -124,9 +172,6 @@ static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     return 0;
 }
 
-/** Expand step for a single item, either ref-to-CTRL or MAC.
- *
- */
 static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const ari_t *target)
 {
     int retval = 0;
@@ -174,23 +219,24 @@ int refda_exec_target(refda_runctx_t *runctx, const ari_t *target)
         return res;
     }
 
-    // FIXME implement better way
     int retval = 0;
-
-    refda_exec_item_list_it_t it;
-    for (refda_exec_item_list_it(it, seq->items); !refda_exec_item_list_end_p(it); refda_exec_item_list_next(it))
+    res        = refda_exec_seq(runctx, seq);
+    if (res)
     {
-        const refda_exec_item_t *item = refda_exec_item_list_cref(it);
-        retval = refda_exec_ctrl(runctx, item);
-        if (retval)
-        {
-            break;
-        }
+        retval = res;
     }
 
-    refda_exec_seq_list_pop_back(NULL, runctx->agent->exec_state);
-
     return retval;
+}
+
+int refda_exec_waiting(refda_agent_t *agent)
+{
+    refda_exec_seq_list_it_t seq_it;
+    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it); refda_exec_seq_list_next(seq_it))
+    {
+        refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
+    }
+    return 0;
 }
 
 /** Process a top-level incoming ARI which has already been verified
@@ -210,7 +256,7 @@ static int refda_exec_execset(refda_agent_t *agent, const refda_msgdata_t *msg)
     // FIXME: lock more fine-grained level
     REFDA_AGENT_LOCK(agent)
 
-    ari_list_t   *targets = &(msg->value.as_lit.value.as_execset->targets);
+    ari_list_t *targets = &(msg->value.as_lit.value.as_execset->targets);
 
     ari_list_it_t tgtit;
     for (ari_list_it(tgtit, *targets); !ari_list_end_p(tgtit); ari_list_next(tgtit))

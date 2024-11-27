@@ -39,6 +39,16 @@ void refda_valprod_ctx_deinit(refda_valprod_ctx_t *obj)
     ari_deinit(&(obj->value));
 }
 
+const ari_t *refda_valprod_ctx_get_aparam_index(refda_valprod_ctx_t *ctx, size_t index)
+{
+    return ari_array_cget(ctx->deref->aparams.ordered, index);
+}
+
+const ari_t *refda_valprod_ctx_get_aparam_name(refda_valprod_ctx_t *ctx, const char *name)
+{
+    return *named_ari_ptr_dict_cget(ctx->deref->aparams.named, name);
+}
+
 int refda_valprod_run(refda_valprod_ctx_t *ctx)
 {
     CHKERR1(ctx);

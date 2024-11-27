@@ -72,6 +72,13 @@ static int amm_semtype_use_convert(const amm_type_t *self, ari_t *out, const ari
 
 int amm_type_set_use_ref(amm_type_t *type, const ari_t *name)
 {
+    ari_t tmp;
+    ari_init_copy(&tmp, name);
+    return amm_type_set_use_ref_move(type, &tmp);
+}
+
+int amm_type_set_use_ref_move(amm_type_t *type, ari_t *name)
+{
     CHKERR1(type);
     CHKERR1(name);
     amm_type_reset(type);
@@ -82,7 +89,7 @@ int amm_type_set_use_ref(amm_type_t *type, const ari_t *name)
 
     amm_semtype_use_t *semtype = ARI_MALLOC(sizeof(amm_semtype_use_t));
     amm_semtype_use_init(semtype);
-    ari_set_copy(&(semtype->name), name);
+    ari_set_move(&(semtype->name), name);
 
     type->as_semtype        = semtype;
     type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_use_deinit;

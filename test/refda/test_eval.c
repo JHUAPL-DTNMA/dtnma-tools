@@ -50,7 +50,7 @@ static refda_agent_t agent;
 
 static void test_reporting_edd_one_int(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
 {
-    const ari_t *val = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    const ari_t *val = refda_valprod_ctx_get_aparam_index(ctx, 0);
     CHKVOID(val)
     {
         string_t buf;
@@ -117,7 +117,7 @@ static int test_reporting_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_e
     ari_list_pop_back_move(&left, ctx->stack);
     ari_list_pop_back_move(&right, ctx->stack);
 
-    const ari_t *more = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    const ari_t *more = refda_eval_ctx_get_aparam_index(ctx, 0);
     {
         string_t buf;
         string_init(buf);

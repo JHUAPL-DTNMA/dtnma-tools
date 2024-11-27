@@ -19,6 +19,7 @@
 #include <refda/register.h>
 #include <refda/amm/const.h>
 #include <refda/amm/ctrl.h>
+#include <refda/adm/ietf.h>
 #include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -52,7 +53,7 @@ static ari_list_t exec_log;
 
 static int test_exec_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
 {
-    const ari_t *val = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    const ari_t *val = refda_exec_ctx_get_aparam_index(ctx, 0);
     CHKERR1(val)
     {
         string_t buf;
@@ -63,7 +64,7 @@ static int test_exec_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, ref
     }
 
     // record this execution
-    ari_list_push_back(exec_log, *ctx->ref);
+    ari_list_push_back(exec_log, ctx->item->ref);
 
     ari_set_copy(&(ctx->result), val);
     return 0;
@@ -72,6 +73,10 @@ static int test_exec_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, ref
 void setUp(void)
 {
     refda_agent_init(&agent);
+    // ADM initialization
+    refda_adm_ietf_amm_init(&agent);
+    refda_adm_ietf_dtnma_agent_init(&agent);
+
     ari_list_init(exec_log);
 
     {
@@ -188,6 +193,8 @@ void test_refda_exec_target(const char *targethex, int expect_res, const char *e
     int res = refda_exec_target(&ctx, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");
 
+    TEST_ASSERT_TRUE(refda_exec_seq_list_empty_p(agent.exec_state));
+
     // verify execution sequence
     ari_list_it_t expect_it;
     ari_list_it(expect_it, *expect_seq);
@@ -202,5 +209,24 @@ void test_refda_exec_target(const char *targethex, int expect_res, const char *e
     }
 
     ari_deinit(&expect_log);
+    ari_deinit(&target);
+}
+
+TEST_CASE("8401220281820D01", 1000) // direct ref ari://1/CTRL/2(/TD/1)
+TEST_CASE("8401220281820D82200F", 1500) // direct ref ari://1/CTRL/2(/TD/1.5)
+void test_refda_exec_wait_for(const char *targethex, int delay_ms)
+{
+    ari_t target = ARI_INIT_UNDEFINED;
+    ari_convert(&target, targethex);
+
+    refda_runctx_t ctx;
+    // no nonce for test
+    refda_runctx_init(&ctx, &agent, NULL);
+
+    int res = refda_exec_target(&ctx, &target);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_exec_target() disagrees");
+
+    TEST_ASSERT_FALSE(refda_exec_seq_list_empty_p(agent.exec_state));
+
     ari_deinit(&target);
 }

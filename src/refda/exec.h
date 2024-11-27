@@ -42,6 +42,8 @@ extern "C" {
  */
 int refda_exec_target(refda_runctx_t *runctx, const ari_t *ari);
 
+int refda_exec_waiting(refda_agent_t *agent);
+
 /** Work thread function for the Agent execution manager.
  *
  * @param[in] arg The context ::refda_agent_t pointer.
