@@ -16,43 +16,38 @@
  * limitations under the License.
  */
 
-#ifndef REFDA_MSGDATA_H_
-#define REFDA_MSGDATA_H_
+#ifndef REFDA_TIMELINE_H_
+#define REFDA_TIMELINE_H_
 
-#include <cace/ari.h>
-#include <m-buffer.h>
+#include <m-rbtree.h>
+#include <sys/time.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** A combination of ARI and authenticated peer identity.
- * This applies to incoming EXECSET and outgoing RPTSET values.
- */
-typedef struct refda_msgdata_s
+typedef struct
 {
-    /// The peer identity as opaque encoded data
-    cace_data_t ident;
-    /// The associated value
-    ari_t value;
-} refda_msgdata_t;
+    /** Specific time at which the event should occur.
+     */
+    struct timespec ts;
+    /// Reference to user data for this event
+    void *ref;
+} refda_timeline_event_t;
 
-void refda_msgdata_init(refda_msgdata_t *obj);
+/** Compare timestamps of two events.
+ */
+int refda_timeline_event_cmp(const refda_timeline_event_t *lt, const refda_timeline_event_t *rt);
 
-void refda_msgdata_init_move(refda_msgdata_t *obj, refda_msgdata_t *src);
-
-void refda_msgdata_deinit(refda_msgdata_t *obj);
-
-/// OPLIST for refda_msgdata_t
-#define M_OPL_refda_msgdata_t() \
-    (INIT(API_2(refda_msgdata_init)), INIT_MOVE(API_6(refda_msgdata_init_move)), CLEAR(API_2(refda_msgdata_deinit)))
+/// M*LIB OPLIST for refda_timeline_event_t
+#define M_OPL_refda_timeline_event_t() M_OPEXTEND(M_POD_OPLIST, CMP(API_6(refda_timeline_event_cmp)))
 
 /// @cond Doxygen_Suppress
-QUEUE_SPSC_DEF(refda_msgdata_queue, refda_msgdata_t, BUFFER_QUEUE | BUFFER_PUSH_INIT_POP_MOVE)
+RBTREE_DEF(refda_timeline, refda_timeline_event_t)
 /// @endcond
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* REFDA_MSGDATA_H_ */
+#endif /* REFDA_TIMELINE_H_ */

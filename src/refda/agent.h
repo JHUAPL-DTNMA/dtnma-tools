@@ -22,6 +22,7 @@
 #include "msgdata.h"
 #include "exec_item.h"
 #include "rpt_agg.h"
+#include "timeline.h"
 #include <cace/util/daemon_run.h>
 #include <cace/util/threadset.h>
 #include <cace/amm/obj_ns.h>
@@ -42,7 +43,7 @@ extern "C" {
 
 /** State of a DTNMA Agent.
  */
-typedef struct
+typedef struct refda_agent_s
 {
     /// Agent endpoint ID
     string_t agent_eid;
@@ -75,6 +76,7 @@ typedef struct
      * This is owned by the refda_exec_worker() thread.
      */
     refda_exec_seq_list_t exec_state;
+    refda_timeline_t      exec_timeline;
 
     /// Egress RPTSET queue
     refda_msgdata_queue_t rptgs;

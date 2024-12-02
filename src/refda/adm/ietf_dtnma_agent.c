@@ -20,10 +20,11 @@
 #include "refda/register.h"
 #include "refda/valprod.h"
 #include "refda/reporting.h"
-#include "cace/amm/semtype.h"
-#include "cace/ari/text.h"
-#include "cace/util/logging.h"
-#include "cace/util/defs.h"
+#include <cace/amm/semtype.h>
+#include <cace/ari/text.h>
+#include <cace/util/logging.h>
+#include <cace/util/defs.h>
+#include <timespec.h>
 
 void refda_adm_ietf_dtnma_agent_edd_sw_version(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
 {
@@ -85,8 +86,23 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
  */
 int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
 {
-    refda_exec_ctx_set_waiting(ctx);
+    const ari_t *duration = refda_exec_ctx_get_aparam_index(ctx, 0);
 
+    struct timespec nowtime;
+
+    int res = clock_gettime(CLOCK_REALTIME, &nowtime);
+    if (res)
+    {
+        return 2;
+    }
+
+    refda_timeline_event_t event = {
+        .ts  = timespec_add(nowtime, duration->as_lit.value.as_timespec),
+        .ref = ctx,
+    };
+    refda_timeline_push(ctx->parent->agent->exec_timeline, event);
+
+    refda_exec_ctx_set_waiting(ctx);
     return 0;
 }
 

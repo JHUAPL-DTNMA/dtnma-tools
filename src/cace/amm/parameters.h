@@ -91,7 +91,6 @@ void cace_amm_actual_param_set_reset(cace_amm_actual_param_set_t *obj);
 int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const cace_amm_formal_param_list_t fparams,
                                        const ari_params_t *gparams);
 
-
 #ifdef __cplusplus
 } // extern C
 #endif

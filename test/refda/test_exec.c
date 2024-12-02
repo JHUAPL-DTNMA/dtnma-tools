@@ -26,6 +26,7 @@
 #include <cace/util/logging.h>
 #include <cace/ari/text.h>
 #include <cace/util/defs.h>
+#include <timespec.h>
 #include <unity.h>
 
 // Allow this macro
@@ -208,6 +209,10 @@ void test_refda_exec_target(const char *targethex, int expect_res, const char *e
         TEST_ASSERT_TRUE_MESSAGE(equal, "exec_log ARI is different");
     }
 
+    // no remaining state
+    TEST_ASSERT_TRUE(refda_exec_seq_list_empty_p(agent.exec_state));
+    TEST_ASSERT_TRUE(refda_timeline_empty_p(agent.exec_timeline));
+
     ari_deinit(&expect_log);
     ari_deinit(&target);
 }
@@ -227,6 +232,30 @@ void test_refda_exec_wait_for(const char *targethex, int delay_ms)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_exec_target() disagrees");
 
     TEST_ASSERT_FALSE(refda_exec_seq_list_empty_p(agent.exec_state));
+    {
+        TEST_ASSERT_FALSE(refda_exec_seq_list_empty_p(agent.exec_state));
+        const refda_exec_seq_t *seq = refda_exec_seq_list_front(agent.exec_state);
+
+        TEST_ASSERT_FALSE(refda_exec_item_list_empty_p(seq->items));
+        const refda_exec_item_t *item = refda_exec_item_list_front(seq->items);
+        TEST_ASSERT_TRUE(atomic_load(&(item->waiting)));
+    }
+    TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
+    {
+        refda_timeline_it_t it;
+        refda_timeline_it(it, agent.exec_timeline);
+        TEST_ASSERT_FALSE(refda_timeline_end_p(it));
+        const refda_timeline_event_t *evt = refda_timeline_cref(it);
+
+        struct timespec nowtime;
+        int res = clock_gettime(CLOCK_REALTIME, &nowtime);
+        TEST_ASSERT_EQUAL_INT(0, res);
+        struct timespec remain = timespec_sub(evt->ts, nowtime);
+
+        // absolute difference within 50ms of expected
+        TEST_ASSERT_TRUE(timespec_ge(remain, timespec_from_ms(delay_ms - 50)));
+        TEST_ASSERT_TRUE(timespec_le(remain, timespec_from_ms(delay_ms + 50)));
+    }
 
     ari_deinit(&target);
 }

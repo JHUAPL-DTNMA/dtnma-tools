@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 #include "runctx.h"
+#include "agent.h"
+#include "msgdata.h"
 #include "cace/util/defs.h"
 
 void refda_amm_modval_state_init(refda_amm_modval_state_t *obj)

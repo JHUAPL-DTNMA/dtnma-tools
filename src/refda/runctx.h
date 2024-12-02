@@ -18,13 +18,16 @@
 #ifndef REFDA_RUNCTX_H_
 #define REFDA_RUNCTX_H_
 
-#include "agent.h"
 #include "cace/ari/base.h"
 #include "cace/amm/lookup.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Forward declaration
+typedef struct refda_agent_s   refda_agent_t;
+typedef struct refda_msgdata_s refda_msgdata_t;
 
 /** Modifiable value state counter.
  * This is used by EDD and VAR objects.

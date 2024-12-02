@@ -40,6 +40,7 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
     CHKERR1(obj->execute)
 
     int res = (obj->execute)(obj, ctx);
+    if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         string_t buf;
         string_init(buf);
@@ -59,6 +60,7 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
         return 0;
     }
 
+    int retval = 0;
     if (amm_type_is_valid(&(obj->res_type)))
     {
         // force result type
@@ -69,7 +71,7 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
         if (res)
         {
             ari_set_undefined(&(ctx->result));
-            return 3;
+            retval = 3;
         }
     }
     else
@@ -79,14 +81,21 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
         {
             ari_set_null(&(ctx->result));
         }
-
-        if (!ari_is_null(&(ctx->result)))
+        else if (!ari_is_null(&(ctx->result)))
         {
             // should not have a result
             ari_set_undefined(&(ctx->result));
-            return 4;
+            retval = 4;
         }
     }
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(ctx->result), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("result converted to %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
 
-    return 0;
+    return retval;
 }

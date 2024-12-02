@@ -8,7 +8,6 @@ __pycache__
 deps/build
 build
 testroot
-/deps/
 /.pytest_cache/
 
 agent-test/adms/

@@ -135,8 +135,8 @@ void tearDown(void)
 }
 
 // References are based on ari://2/CONST/4
-TEST_CASE(ARI_TYPE_NULL, "83022104", "F6", 0)
-TEST_CASE(ARI_TYPE_INT, "83022104", "0A", 0)
+TEST_CASE(ARI_TYPE_NULL, "83022104", "8200F6", 0)
+TEST_CASE(ARI_TYPE_INT, "83022104", "82040A", 0)
 void test_ctrl_execute_param_none(ari_type_t restype, const char *refhex, const char *outhex, int expect_res)
 {
     refda_amm_ctrl_desc_t obj;

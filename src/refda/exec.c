@@ -229,15 +229,27 @@ int refda_exec_target(refda_runctx_t *runctx, const ari_t *target)
     return retval;
 }
 
+#if 0
 int refda_exec_waiting(refda_agent_t *agent)
 {
     refda_exec_seq_list_it_t seq_it;
     for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it); refda_exec_seq_list_next(seq_it))
     {
         refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
+
+        if (atomic_load(&(refda_exec_item_list_front(seq->items)->waiting)))
+        {
+            // still waiting
+            continue;
+        }
+
+        int res = refda_exfec_ctrl(runctx, seq);
+
+        if (seq->items)
     }
     return 0;
 }
+#endif
 
 /** Process a top-level incoming ARI which has already been verified
  * to be an EXECSET literal.
