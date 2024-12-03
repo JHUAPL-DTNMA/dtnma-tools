@@ -8,6 +8,3 @@ __pycache__
 deps/build
 build
 testroot
-/.pytest_cache/
-
-agent-test/deps/

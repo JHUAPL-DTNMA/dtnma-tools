@@ -20,15 +20,40 @@
 #include "reporting.h"
 #include "amm/ctrl.h"
 #include <cace/ari/text.h>
+#include <cace/ari/text_util.h>
 #include <cace/amm/lookup.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
+#include <timespec.h>
 
-/** Execute a single CTRL and report on a result if requested.
+/** Finish the execution of an item.
+ * Also report on a result if requested.
  */
-static int refda_exec_ctrl(refda_runctx_t *runctx, refda_exec_seq_t *seq)
+static int refda_exec_ctrl_finish(refda_exec_item_t *item)
 {
-    const refda_exec_item_t *item = refda_exec_item_list_front(seq->items);
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(item->seq->runctx);
+
+    if (!ari_is_null(&(runctx->nonce)))
+    {
+        // generate report regardless of production
+        CACE_LOG_DEBUG("Pushing execution result");
+        refda_reporting_ctrl(runctx, &(item->ref), &(item->result));
+    }
+
+    // done with this item
+    if (item->seq)
+    {
+        refda_exec_item_list_pop_front(NULL, item->seq->items);
+    }
+
+    return 0;
+}
+
+/** Execute a single CTRL, possibly deferring its finish.
+ */
+static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
+{
+    refda_exec_item_t *item = refda_exec_item_list_front(seq->items);
     CHKERR1(item->deref.obj);
     refda_amm_ctrl_desc_t *ctrl = item->deref.obj->app_data.ptr;
     CHKERR1(ctrl);
@@ -43,7 +68,7 @@ static int refda_exec_ctrl(refda_runctx_t *runctx, refda_exec_seq_t *seq)
     }
 
     refda_exec_ctx_t ctx;
-    refda_exec_ctx_init(&ctx, runctx, item);
+    refda_exec_ctx_init(&ctx, item);
 
     int res = refda_amm_ctrl_desc_execute(ctrl, &ctx);
     CACE_LOG_INFO("Execution callback returned with status %d", res);
@@ -53,15 +78,7 @@ static int refda_exec_ctrl(refda_runctx_t *runctx, refda_exec_seq_t *seq)
     }
     else
     {
-        if (ctx.parent->nonce && !ari_is_null(ctx.parent->nonce))
-        {
-            // generate report regardless of production
-            CACE_LOG_DEBUG("Pushing execution result");
-            refda_reporting_ctrl(runctx, &(item->ref), &ctx.result);
-        }
-
-        // done with this item
-        refda_exec_item_list_pop_front(NULL, seq->items);
+        refda_exec_ctrl_finish(item);
     }
 
     refda_exec_ctx_deinit(&ctx);
@@ -69,11 +86,7 @@ static int refda_exec_ctrl(refda_runctx_t *runctx, refda_exec_seq_t *seq)
     return res;
 }
 
-/** Execute a sequence until the first deferred completion.
- *
- * @param[in,out] seq The sequence which will be popped as items are executed.
- */
-static int refda_exec_seq(refda_runctx_t *runctx, refda_exec_seq_t *seq)
+int refda_exec_run_seq(refda_exec_seq_t *seq)
 {
     int retval = 0;
     while (!refda_exec_item_list_empty_p(seq->items))
@@ -84,14 +97,12 @@ static int refda_exec_seq(refda_runctx_t *runctx, refda_exec_seq_t *seq)
             return 0;
         }
 
-        retval = refda_exec_ctrl(runctx, seq);
+        retval = refda_exec_ctrl_start(seq);
         if (retval)
         {
             break;
         }
     }
-
-    refda_exec_seq_list_pop_back(NULL, runctx->agent->exec_state);
 
     return retval;
 }
@@ -124,6 +135,7 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
             {
                 // expansion finished, execution comes later
                 refda_exec_item_t *item = refda_exec_item_list_push_back_new(seq->items);
+                item->seq               = seq;
                 ari_set_copy(&(item->ref), target);
                 cace_amm_lookup_set_move(&(item->deref), &deref);
                 cace_amm_lookup_init(&deref);
@@ -197,43 +209,37 @@ static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, co
     return retval;
 }
 
-int refda_exec_target(refda_runctx_t *runctx, const ari_t *target)
+int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const ari_t *target)
 {
     CHKERR1(target);
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(runctxp);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         string_t buf;
         string_init(buf);
         ari_text_encode(buf, target, ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Executing target %s", string_get_cstr(buf));
+        CACE_LOG_DEBUG("Expanding target %s", string_get_cstr(buf));
         string_clear(buf);
     }
 
-    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(runctx->agent->exec_state);
+    refda_runctx_ptr_set(seq->runctx, runctxp);
 
-    int res = refda_exec_exp_item(runctx, seq, target);
-    if (res)
-    {
-        refda_exec_seq_list_pop_back(NULL, runctx->agent->exec_state);
-        return res;
-    }
+    // FIXME: lock more fine-grained level
+    REFDA_AGENT_LOCK(runctx->agent)
 
-    int retval = 0;
-    res        = refda_exec_seq(runctx, seq);
-    if (res)
-    {
-        retval = res;
-    }
+    int retval = refda_exec_exp_item(runctx, seq, target);
+
+    // FIXME: lock more fine-grained level
+    REFDA_AGENT_UNLOCK(runctx->agent)
 
     return retval;
 }
 
-#if 0
-int refda_exec_waiting(refda_agent_t *agent)
+static int refda_exec_waiting(refda_agent_t *agent)
 {
     refda_exec_seq_list_it_t seq_it;
-    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it); refda_exec_seq_list_next(seq_it))
+    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);)
     {
         refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
 
@@ -243,30 +249,40 @@ int refda_exec_waiting(refda_agent_t *agent)
             continue;
         }
 
-        int res = refda_exfec_ctrl(runctx, seq);
+        int res = refda_exec_run_seq(seq);
+        if (res)
+        {
+            CACE_LOG_WARNING("execution of sequence failed, continuing");
+        }
 
-        if (seq->items)
+        if (refda_exec_item_list_empty_p(seq->items))
+        {
+            // no need to keep around
+            refda_exec_seq_list_remove(agent->exec_state, seq_it);
+        }
+        else
+        {
+            refda_exec_seq_list_next(seq_it);
+        }
     }
     return 0;
 }
-#endif
 
 /** Process a top-level incoming ARI which has already been verified
  * to be an EXECSET literal.
  */
-static int refda_exec_execset(refda_agent_t *agent, const refda_msgdata_t *msg)
+static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *msg)
 {
     CHKERR1(agent);
     CHKERR1(msg);
 
-    refda_runctx_t runctx;
-    if (refda_runctx_init(&runctx, agent, msg))
+    refda_runctx_ptr_t ctxptr;
+    refda_runctx_ptr_init_new(ctxptr);
+
+    if (refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, msg))
     {
         return 2;
     }
-
-    // FIXME: lock more fine-grained level
-    REFDA_AGENT_LOCK(agent)
 
     ari_list_t *targets = &(msg->value.as_lit.value.as_execset->targets);
 
@@ -275,12 +291,15 @@ static int refda_exec_execset(refda_agent_t *agent, const refda_msgdata_t *msg)
     {
         const ari_t *tgt = ari_list_cref(tgtit);
 
+        refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
         // Even if an individual execution fails, continue on with others
-        refda_exec_target(&runctx, tgt);
+        int res = refda_exec_exp_target(seq, ctxptr, tgt);
+        if (res)
+        {
+            // clean up useless sequence
+            refda_exec_seq_list_pop_back(NULL, agent->exec_state);
+        }
     }
-
-    // FIXME: lock more fine-grained level
-    REFDA_AGENT_UNLOCK(agent)
 
     return 0;
 }
@@ -295,32 +314,77 @@ void *refda_exec_worker(void *arg)
     {
         refda_msgdata_t item;
 
-        sem_wait(&(agent->execs_sem));
-        if (!refda_msgdata_queue_pop(&item, agent->execs))
+        refda_timeline_it_t tl_it;
+        refda_timeline_it(tl_it, agent->exec_timeline);
+        if (!refda_timeline_end_p(tl_it))
         {
-            // shouldn't happen
-            CACE_LOG_WARNING("failed to pop from execs queue");
-            continue;
-        }
-        // sentinel for end-of-input
-        const bool at_end = ari_is_undefined(&(item.value));
-        if (!at_end)
-        {
-            refda_exec_execset(agent, &item);
-        }
-        refda_msgdata_deinit(&item);
-        if (at_end)
-        {
-            CACE_LOG_INFO("Got undefined exec, stopping");
+            const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+            if (cace_log_is_enabled_for(LOG_DEBUG))
+            {
+                struct timespec nowtime;
+                clock_gettime(CLOCK_REALTIME, &nowtime);
 
-            // flush the input queue but keep the daemon running
-            refda_msgdata_t undef;
-            refda_msgdata_init(&undef);
-            refda_msgdata_queue_push_move(agent->rptgs, &undef);
-            sem_post(&(agent->rptgs_sem));
+                struct timespec diff = timespec_sub(next->ts, nowtime);
 
-            break;
+                string_t buf;
+                string_init(buf);
+                timeperiod_encode(buf, &diff);
+                CACE_LOG_DEBUG("waiting for exec event or %s", string_get_cstr(buf));
+                string_clear(buf);
+            }
+
+            sem_timedwait(&(agent->execs_sem), &(next->ts));
+
+            struct timespec nowtime;
+            clock_gettime(CLOCK_REALTIME, &nowtime);
+
+            // execute appropriate callbacks now
+            while (next && timespec_le(next->ts, nowtime))
+            {
+                CACE_LOG_DEBUG("running deferred callback");
+                bool finished = (next->callback)(next->item);
+                if (finished)
+                {
+                    refda_exec_ctrl_finish(next->item);
+                }
+
+                refda_timeline_remove(agent->exec_timeline, tl_it);
+                // try to advance
+                next = refda_timeline_end_p(tl_it) ? NULL : refda_timeline_cref(tl_it);
+            }
         }
+        else
+        {
+            CACE_LOG_DEBUG("waiting for exec event");
+            sem_wait(&(agent->execs_sem));
+        }
+
+        // execs queue may still be empty if deferred callbacks were run
+        if (refda_msgdata_queue_pop(&item, agent->execs))
+        {
+            // sentinel for end-of-input
+            const bool at_end = ari_is_undefined(&(item.value));
+            if (!at_end)
+            {
+                refda_exec_exp_execset(agent, &item);
+            }
+            refda_msgdata_deinit(&item);
+            if (at_end && refda_timeline_empty_p(agent->exec_timeline))
+            {
+                CACE_LOG_INFO("Got undefined exec, stopping");
+
+                // flush the input queue but keep the daemon running
+                refda_msgdata_t undef;
+                refda_msgdata_init(&undef);
+                refda_msgdata_queue_push_move(agent->rptgs, &undef);
+                sem_post(&(agent->rptgs_sem));
+
+                break;
+            }
+        }
+
+        // execute any waiting sequences
+        refda_exec_waiting(agent);
     }
 
     CACE_LOG_INFO("Worker stopped");

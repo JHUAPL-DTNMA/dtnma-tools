@@ -18,21 +18,18 @@
 #include "exec_ctx.h"
 #include "cace/util/defs.h"
 
-void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_runctx_t *parent, const refda_exec_item_t *item)
+void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_exec_item_t *item)
 {
     CHKVOID(obj);
     CHKVOID(item);
 
-    obj->parent = parent;
+    obj->runctx = refda_runctx_ptr_ref(item->seq->runctx);
     obj->item   = item;
-
-    ari_init(&(obj->result));
 }
 
 void refda_exec_ctx_deinit(refda_exec_ctx_t *obj)
 {
     CHKVOID(obj);
-    ari_deinit(&(obj->result));
 }
 
 const ari_t *refda_exec_ctx_get_aparam_index(refda_exec_ctx_t *ctx, size_t index)
@@ -49,4 +46,14 @@ void refda_exec_ctx_set_waiting(refda_exec_ctx_t *ctx)
 {
     CHKVOID(ctx);
     atomic_store(&(ctx->item->waiting), true);
+}
+
+void refda_exec_ctx_set_result_move(refda_exec_ctx_t *ctx, ari_t *value)
+{
+    ari_set_move(&(ctx->item->result), value);
+}
+
+void refda_exec_ctx_set_result_copy(refda_exec_ctx_t *ctx, const ari_t *value)
+{
+    ari_set_copy(&(ctx->item->result), value);
 }

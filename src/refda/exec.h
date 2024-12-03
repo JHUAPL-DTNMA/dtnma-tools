@@ -34,15 +34,22 @@ extern "C" {
 /// Error result when value production fails
 #define REFDA_EXEC_ERR_PROD_FAILED 5
 
-/** Implement the execution procedure from Section TBD of @cite ietf-dtn-amm-01.
+/** Implement the expansion procedure from Section TBD of @cite ietf-dtn-amm-01.
  *
- * @param[in] agent The agent state for ARI lookup.
+ * @param[in,out] seq A freshly initialized sequence to expand into.
+ * @param[in] runctxp The agent state for ARI lookup.
  * @param[in] ari The ARI to dereference, if necessary, and execute.
  * @return Zero if successful.
  */
-int refda_exec_target(refda_runctx_t *runctx, const ari_t *ari);
+int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const ari_t *ari);
 
-int refda_exec_waiting(refda_agent_t *agent);
+/** Implement the running procedure from Section TBD of @cite ietf-dtn-amm-01.
+ * This executes items in a sequence until the first deferred completion.
+ *
+ * @param[in,out] seq The sequence which will be popped as items are executed.
+ * @return Zero if this sequence executed without error (so far).
+ */
+int refda_exec_run_seq(refda_exec_seq_t *seq);
 
 /** Work thread function for the Agent execution manager.
  *

@@ -40,7 +40,7 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
     // FIXME mutex-serialize object store access
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
-    int res = cace_amm_lookup_deref(&deref, &(ctx->parent->agent->objs), ref);
+    int res = cace_amm_lookup_deref(&deref, &(ctx->runctx->agent->objs), ref);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
@@ -57,7 +57,7 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
     else
     {
         refda_valprod_ctx_t prodctx;
-        refda_valprod_ctx_init(&prodctx, ctx->parent, &deref);
+        refda_valprod_ctx_init(&prodctx, ctx->runctx, &deref);
 
         res = refda_valprod_run(&prodctx);
         if (res)
@@ -67,7 +67,7 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
         else
         {
             // result of the CTRL is the produced value
-            ari_set_move(&(ctx->result), &prodctx.value);
+            refda_exec_ctx_set_result_move(ctx, &prodctx.value);
         }
 
         refda_valprod_ctx_deinit(&prodctx);
@@ -78,13 +78,19 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
     return res;
 }
 
+static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *item)
+{
+    atomic_store(&(item->waiting), false);
+    return true;
+}
+
 /** CTRL execution callback for ari://ietf-dtnma-agent/CTRL/wait-for
  * Description:
  *   This control causes the execution to pause for a given amount of time.
  *   This is intended to be used within a macro to separate controls
  *   in time.";
  */
-int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
+static int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
 {
     const ari_t *duration = refda_exec_ctx_get_aparam_index(ctx, 0);
 
@@ -97,10 +103,11 @@ int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t *obj _U
     }
 
     refda_timeline_event_t event = {
-        .ts  = timespec_add(nowtime, duration->as_lit.value.as_timespec),
-        .ref = ctx,
+        .ts       = timespec_add(nowtime, duration->as_lit.value.as_timespec),
+        .item     = ctx->item,
+        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
-    refda_timeline_push(ctx->parent->agent->exec_timeline, event);
+    refda_timeline_push(ctx->runctx->agent->exec_timeline, event);
 
     refda_exec_ctx_set_waiting(ctx);
     return 0;

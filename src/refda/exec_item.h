@@ -22,17 +22,22 @@
 #include <cace/amm/lookup.h>
 #include <cace/ari.h>
 #include <m-atomic.h>
-#include <m-deque.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Forward declaration
+typedef struct refda_exec_seq_s refda_exec_seq_t;
 
 /** Each item in an execution sequence, which corresponds to a
  * dereferenced control.
  */
 typedef struct
 {
+    /// Weak reference to a parent execution sequence
+    refda_exec_seq_t *seq;
+
     /** A copy of the single-CTRL reference which created this item.
      */
     ari_t ref;
@@ -41,7 +46,17 @@ typedef struct
      */
     cace_amm_lookup_t deref;
 
+    /** Indicator if this item is waiting on some external event to finish.
+     * While true this item cannot be executed and will not yet have a
+     * valid #result.
+     */
     atomic_bool waiting;
+
+    /** Storage for an optional result value.
+     * This is initialized as undefined and may be set to any other value
+     * to indicate that a result is produced.
+     */
+    ari_t result;
 
 } refda_exec_item_t;
 
@@ -51,34 +66,6 @@ void refda_exec_item_deinit(refda_exec_item_t *obj);
 
 /// M*LIB OPLIST for refda_exec_item_t
 #define M_OPL_refda_exec_item_t() (INIT(API_2(refda_exec_item_init)), CLEAR(API_2(refda_exec_item_deinit)))
-
-/// @cond Doxygen_Suppress
-DEQUE_DEF(refda_exec_item_list, refda_exec_item_t)
-/// @endcond
-
-/** The state of a single execution within an Agent.
- * Each item has an original target and a sequence of
- */
-typedef struct
-{
-    /** Remaining list of items to be executed in this sequence.
-     * As executions complete, this list is manipulated to pop off each
-     * front item.
-     */
-    refda_exec_item_list_t items;
-
-} refda_exec_seq_t;
-
-void refda_exec_seq_init(refda_exec_seq_t *obj);
-
-void refda_exec_seq_deinit(refda_exec_seq_t *obj);
-
-/// M*LIB OPLIST for refda_exec_seq_t
-#define M_OPL_refda_exec_seq_t() (INIT(API_2(refda_exec_seq_init)), CLEAR(API_2(refda_exec_seq_deinit)))
-
-/// @cond Doxygen_Suppress
-DEQUE_DEF(refda_exec_seq_list, refda_exec_seq_t)
-/// @endcond
 
 #ifdef __cplusplus
 } // extern C

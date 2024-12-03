@@ -20,7 +20,7 @@
 #define REFDA_AGENT_H_
 
 #include "msgdata.h"
-#include "exec_item.h"
+#include "exec_seq.h"
 #include "rpt_agg.h"
 #include "timeline.h"
 #include <cace/util/daemon_run.h>
@@ -76,7 +76,10 @@ typedef struct refda_agent_s
      * This is owned by the refda_exec_worker() thread.
      */
     refda_exec_seq_list_t exec_state;
-    refda_timeline_t      exec_timeline;
+    /** Execution wait timeline.
+     * This is owned by the refda_exec_worker() thread.
+     */
+    refda_timeline_t exec_timeline;
 
     /// Egress RPTSET queue
     refda_msgdata_queue_t rptgs;

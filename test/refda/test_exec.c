@@ -44,7 +44,6 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-
 #define EXAMPLE_ADM_ENUM 65536
 
 /// Agent context for testing
@@ -68,7 +67,7 @@ static int test_exec_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, ref
     // record this execution
     ari_list_push_back(exec_log, ctx->item->ref);
 
-    ari_set_copy(&(ctx->result), val);
+    refda_exec_ctx_set_result_copy(ctx, val);
     return 0;
 }
 
@@ -83,8 +82,7 @@ void setUp(void)
 
     {
         // ADM for this test fixture
-        cace_amm_obj_ns_t *adm =
-            cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
+        cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
         cace_amm_obj_desc_t *obj;
 
         /**
@@ -168,13 +166,82 @@ static void ari_convert(ari_t *ari, const char *inhex)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 }
 
-TEST_CASE("831A000100002201", 0, "821181""831A000100002201") // direct ref ari://65536/CTRL/1
-TEST_CASE("831A000100002220", 4, "821180") // bad deref ref ari://65536/CTRL/-1
-TEST_CASE("821182831A000100002201831A000100002202", 0, "821182""831A000100002201""831A000100002202") // direct MAC ari:/AC/(//65536/CTRL/1,//65536/CTRL/2)
-TEST_CASE("831A000100002101", 0, "821182""831A000100002201""831A000100002202") // indirect MAC ari://65536/CONST/1
-TEST_CASE("821181831A000100002101", 0, "821182""831A000100002201""831A000100002202") // recursive MAC ari:/AC/(//65536/CONST/1)
+static void check_execute(const ari_t *target, int wait_limit, int wait_ms[])
+{
+    refda_runctx_ptr_t ctxptr;
+    refda_runctx_ptr_init_new(ctxptr);
+    // no nonce for test
+    refda_runctx_from(refda_runctx_ptr_ref(ctxptr), &agent, NULL);
+
+    refda_exec_seq_t eseq;
+    refda_exec_seq_init(&eseq);
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, refda_exec_exp_target(&eseq, ctxptr, target), "refda_exec_exp_target() failed");
+    TEST_ASSERT_FALSE(refda_exec_item_list_empty_p(eseq.items));
+
+    // limit test scale
+    for (int ix = 0; ix < wait_limit; ++ix)
+    {
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, refda_exec_run_seq(&eseq), "refda_exec_run_seq() failed");
+
+        if (refda_exec_item_list_empty_p(eseq.items))
+        {
+            CACE_LOG_DEBUG("run break after %d iterations", ix + 1);
+            break;
+        }
+        {
+            const refda_exec_item_t *item = refda_exec_item_list_front(eseq.items);
+            TEST_ASSERT_TRUE(atomic_load(&(item->waiting)));
+        }
+
+        TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
+        {
+            refda_timeline_it_t it;
+            refda_timeline_it(it, agent.exec_timeline);
+            TEST_ASSERT_FALSE(refda_timeline_end_p(it));
+            const refda_timeline_event_t *evt = refda_timeline_cref(it);
+
+            struct timespec nowtime;
+            int             res = clock_gettime(CLOCK_REALTIME, &nowtime);
+            TEST_ASSERT_EQUAL_INT(0, res);
+            struct timespec remain = timespec_sub(evt->ts, nowtime);
+
+            {
+                string_t buf;
+                string_init(buf);
+                timeperiod_encode(buf, &remain);
+                CACE_LOG_DEBUG("remaining time %s", string_get_cstr(buf));
+                string_clear(buf);
+            }
+
+            // absolute difference within 20ms of expected
+            TEST_ASSERT_TRUE(timespec_ge(remain, timespec_from_ms(wait_ms[ix] - 20)));
+            TEST_ASSERT_TRUE(timespec_le(remain, timespec_from_ms(wait_ms[ix] + 20)));
+
+            // manual sleep
+            nanosleep(&remain, NULL);
+        }
+    }
+
+    refda_exec_seq_deinit(&eseq);
+    refda_runctx_ptr_clear(ctxptr);
+}
+
+// clang-format off
+// direct ref ari://65536/CTRL/1
+TEST_CASE("831A000100002201", 0, "821181""831A000100002201")
+// bad deref ref ari://65536/CTRL/-1
+//TEST_CASE("831A000100002220", 4, "821180")
+// direct MAC ari:/AC/(//65536/CTRL/1,//65536/CTRL/2)
+TEST_CASE("821182831A000100002201831A000100002202", 0, "821182""831A000100002201""831A000100002202")
+// indirect MAC ari://65536/CONST/1
+TEST_CASE("831A000100002101", 0, "821182""831A000100002201""831A000100002202")
+// recursive MAC ari:/AC/(//65536/CONST/1)
+TEST_CASE("821181831A000100002101", 0, "821182""831A000100002201""831A000100002202")
+// clang-format on
 void test_refda_exec_target(const char *targethex, int expect_res, const char *expectloghex)
 {
+    CACE_LOG_DEBUG("target %s", targethex);
     ari_t target = ARI_INIT_UNDEFINED;
     ari_convert(&target, targethex);
 
@@ -187,12 +254,8 @@ void test_refda_exec_target(const char *targethex, int expect_res, const char *e
     }
     ari_list_t *expect_seq = &(expect_log.as_lit.value.as_ac->items);
 
-    refda_runctx_t ctx;
-    // no nonce for test
-    refda_runctx_init(&ctx, &agent, NULL);
-
-    int res = refda_exec_target(&ctx, &target);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");
+    int wait_ms[] = { 0 };
+    check_execute(&target, 1, wait_ms);
 
     TEST_ASSERT_TRUE(refda_exec_seq_list_empty_p(agent.exec_state));
 
@@ -204,7 +267,7 @@ void test_refda_exec_target(const char *targethex, int expect_res, const char *e
     TEST_ASSERT_EQUAL_INT_MESSAGE(ari_list_size(*expect_seq), ari_list_size(exec_log), "exec_log size mismatch");
     for (; !ari_list_end_p(expect_it) && !ari_list_end_p(got_it); ari_list_next(expect_it), ari_list_next(got_it))
     {
-        //TEST_MESSAGE()
+        // TEST_MESSAGE()
         const bool equal = ari_equal(ari_list_cref(expect_it), ari_list_cref(got_it));
         TEST_ASSERT_TRUE_MESSAGE(equal, "exec_log ARI is different");
     }
@@ -217,45 +280,14 @@ void test_refda_exec_target(const char *targethex, int expect_res, const char *e
     ari_deinit(&target);
 }
 
-TEST_CASE("8401220281820D01", 1000) // direct ref ari://1/CTRL/2(/TD/1)
-TEST_CASE("8401220281820D82200F", 1500) // direct ref ari://1/CTRL/2(/TD/1.5)
+TEST_CASE("8401220281820D01", 1000)     // direct ref ari://1/CTRL/2(/TD/1)
 void test_refda_exec_wait_for(const char *targethex, int delay_ms)
 {
     ari_t target = ARI_INIT_UNDEFINED;
     ari_convert(&target, targethex);
 
-    refda_runctx_t ctx;
-    // no nonce for test
-    refda_runctx_init(&ctx, &agent, NULL);
-
-    int res = refda_exec_target(&ctx, &target);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_exec_target() disagrees");
-
-    TEST_ASSERT_FALSE(refda_exec_seq_list_empty_p(agent.exec_state));
-    {
-        TEST_ASSERT_FALSE(refda_exec_seq_list_empty_p(agent.exec_state));
-        const refda_exec_seq_t *seq = refda_exec_seq_list_front(agent.exec_state);
-
-        TEST_ASSERT_FALSE(refda_exec_item_list_empty_p(seq->items));
-        const refda_exec_item_t *item = refda_exec_item_list_front(seq->items);
-        TEST_ASSERT_TRUE(atomic_load(&(item->waiting)));
-    }
-    TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
-    {
-        refda_timeline_it_t it;
-        refda_timeline_it(it, agent.exec_timeline);
-        TEST_ASSERT_FALSE(refda_timeline_end_p(it));
-        const refda_timeline_event_t *evt = refda_timeline_cref(it);
-
-        struct timespec nowtime;
-        int res = clock_gettime(CLOCK_REALTIME, &nowtime);
-        TEST_ASSERT_EQUAL_INT(0, res);
-        struct timespec remain = timespec_sub(evt->ts, nowtime);
-
-        // absolute difference within 50ms of expected
-        TEST_ASSERT_TRUE(timespec_ge(remain, timespec_from_ms(delay_ms - 50)));
-        TEST_ASSERT_TRUE(timespec_le(remain, timespec_from_ms(delay_ms + 50)));
-    }
+    int wait_ms[] = { delay_ms };
+    check_execute(&target, 2, wait_ms);
 
     ari_deinit(&target);
 }

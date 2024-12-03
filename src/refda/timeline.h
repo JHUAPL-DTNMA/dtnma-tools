@@ -19,6 +19,7 @@
 #ifndef REFDA_TIMELINE_H_
 #define REFDA_TIMELINE_H_
 
+#include "exec_item.h"
 #include <m-rbtree.h>
 #include <sys/time.h>
 
@@ -31,8 +32,16 @@ typedef struct
     /** Specific time at which the event should occur.
      */
     struct timespec ts;
-    /// Reference to user data for this event
-    void *ref;
+    /// Execution item which created the wait
+    refda_exec_item_t *item;
+    /** Execution-defined callback, which should not be null.
+     *
+     * @param[in] item The associated execution item.
+     * @return True if work is done on the item and it should be considered
+     * finished. False to continue waiting.
+     */
+    bool (*callback)(refda_exec_item_t *item);
+
 } refda_timeline_event_t;
 
 /** Compare timestamps of two events.
@@ -45,6 +54,13 @@ int refda_timeline_event_cmp(const refda_timeline_event_t *lt, const refda_timel
 /// @cond Doxygen_Suppress
 RBTREE_DEF(refda_timeline, refda_timeline_event_t)
 /// @endcond
+
+/** Get the earliest absolute time in the timeline.
+ *
+ * @param[in] The timeline to check.
+ * @return Pointer to the earliest item time or NULL if empty.
+ */
+// const refda_timeline_event_t *refda_timeline_front(refda_timeline_t line);
 
 #ifdef __cplusplus
 } // extern C

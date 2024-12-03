@@ -21,26 +21,18 @@
 void refda_exec_item_init(refda_exec_item_t *obj)
 {
     CHKVOID(obj);
+    obj->seq = NULL;
     ari_init(&(obj->ref));
     cace_amm_lookup_init(&(obj->deref));
     atomic_init(&(obj->waiting), false);
+    ari_init(&(obj->result));
 }
 
 void refda_exec_item_deinit(refda_exec_item_t *obj)
 {
     CHKVOID(obj);
+    ari_deinit(&(obj->result));
     cace_amm_lookup_deinit(&(obj->deref));
     ari_deinit(&(obj->ref));
-}
-
-void refda_exec_seq_init(refda_exec_seq_t *obj)
-{
-    CHKVOID(obj);
-    refda_exec_item_list_init(obj->items);
-}
-
-void refda_exec_seq_deinit(refda_exec_seq_t *obj)
-{
-    CHKVOID(obj);
-    refda_exec_item_list_clear(obj->items);
+    obj->seq = NULL;
 }

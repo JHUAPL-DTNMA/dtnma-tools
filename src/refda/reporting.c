@@ -25,7 +25,7 @@
 
 int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *result)
 {
-    if (!(runctx->mgr_ident))
+    if (cace_data_is_empty(&(runctx->mgr_ident)))
     {
         // nothing to do
         return 0;
@@ -35,7 +35,7 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
     refda_msgdata_init(&msg);
 
     ari_rptset_t *rpts = ari_set_rptset(&msg.value);
-    ari_set_copy(&(rpts->nonce), runctx->nonce);
+    ari_set_copy(&(rpts->nonce), &(runctx->nonce));
     refda_agent_nowtime(runctx->agent, &(rpts->reftime));
     {
         ari_report_t *rpt = ari_report_list_push_back_new(rpts->reports);
@@ -258,7 +258,7 @@ int refda_reporting_target(refda_runctx_t *runctx, const ari_t *target)
 
     if (!retval)
     {
-        refda_reporting_gen(runctx->agent, runctx->mgr_ident, target, rptctx.items);
+        refda_reporting_gen(runctx->agent, &(runctx->mgr_ident), target, rptctx.items);
     }
 
     refda_reporting_ctx_deinit(&rptctx);

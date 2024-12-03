@@ -20,6 +20,7 @@
 
 #include "cace/ari/base.h"
 #include "cace/amm/lookup.h"
+#include <m-shared.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,25 +70,36 @@ typedef struct
 
     /** During execution, a reference to the manager identity which caused
      * the execution.
-     * When triggered by the agent itself this will be null.
+     * When triggered by the agent itself this will be empty.
      */
-    const cace_data_t *mgr_ident;
+    cace_data_t mgr_ident;
 
     /** During execution, a reference to a context nonce value.
-     * This can be null if there is no context nonce.
+     * Otherwise this will be the undefined value.
      */
-    const ari_t *nonce;
+    ari_t nonce;
 
 } refda_runctx_t;
 
-/** Initialize a runtime context.
+void refda_runctx_init(refda_runctx_t *ctx);
+
+void refda_runctx_deinit(refda_runctx_t *ctx);
+
+/** Take values for a runtime context.
  *
  * @param[out] ctx The contect to initialize.
  * @param[in] agent The agent being run within.
  * @param[in] msg The optional EXECSET message being run within.
  * @return Zero if successful.
  */
-int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
+int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
+
+/// M*LIB OPLIST for refda_runctx_t
+#define M_OPL_refda_runctx_t() (INIT(API_2(refda_runctx_init)), CLEAR(API_2(refda_runctx_deinit)))
+
+/// @cond Doxygen_Suppress
+SHARED_PTR_DEF(refda_runctx_ptr, refda_runctx_t)
+/// @endcond
 
 #ifdef __cplusplus
 } // extern C

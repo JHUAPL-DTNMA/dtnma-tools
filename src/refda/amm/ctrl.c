@@ -44,13 +44,13 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, &(ctx->result), ARI_TEXT_ENC_OPTS_DEFAULT);
+        ari_text_encode(buf, &(ctx->item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("execution finished with status %d and result %s", res, string_get_cstr(buf));
         string_clear(buf);
     }
     if (res)
     {
-        ari_set_undefined(&(ctx->result));
+        ari_set_undefined(&(ctx->item->result));
         return 2;
     }
 
@@ -66,25 +66,25 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
         // force result type
         ari_t tmp;
         ari_init(&tmp);
-        res = amm_type_convert(&(obj->res_type), &tmp, &(ctx->result));
-        ari_set_move(&(ctx->result), &tmp);
+        res = amm_type_convert(&(obj->res_type), &tmp, &(ctx->item->result));
+        ari_set_move(&(ctx->item->result), &tmp);
         if (res)
         {
-            ari_set_undefined(&(ctx->result));
+            ari_set_undefined(&(ctx->item->result));
             retval = 3;
         }
     }
     else
     {
         // success is treated as a null value
-        if (ari_is_undefined(&(ctx->result)))
+        if (ari_is_undefined(&(ctx->item->result)))
         {
-            ari_set_null(&(ctx->result));
+            ari_set_null(&(ctx->item->result));
         }
-        else if (!ari_is_null(&(ctx->result)))
+        else if (!ari_is_null(&(ctx->item->result)))
         {
             // should not have a result
-            ari_set_undefined(&(ctx->result));
+            ari_set_undefined(&(ctx->item->result));
             retval = 4;
         }
     }
@@ -92,7 +92,7 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, &(ctx->result), ARI_TEXT_ENC_OPTS_DEFAULT);
+        ari_text_encode(buf, &(ctx->item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("result converted to %s", string_get_cstr(buf));
         string_clear(buf);
     }

@@ -236,8 +236,10 @@ int refda_agent_send_hello(refda_agent_t *agent)
     cace_data_copy_from(&(msg.ident), strlen(src) - 1, (cace_data_ptr_t)src);
 
     refda_runctx_t runctx;
-    int            retval = 0;
-    int            res    = refda_runctx_init(&runctx, agent, &msg);
+    refda_runctx_init(&runctx);
+    int retval = 0;
+
+    int res = refda_runctx_from(&runctx, agent, &msg);
     if (res)
     {
         retval = 2;

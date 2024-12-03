@@ -30,3 +30,14 @@ int refda_timeline_event_cmp(const refda_timeline_event_t *lt, const refda_timel
     }
     return timespec_cmp(lt->ts, rt->ts);
 }
+
+const refda_timeline_event_t *refda_timeline_front(refda_timeline_t line)
+{
+    refda_timeline_it_t it;
+    refda_timeline_it(it, line);
+    if (refda_timeline_end_p(it))
+    {
+        return NULL;
+    }
+    return refda_timeline_cref(it);
+}

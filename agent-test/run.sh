@@ -24,4 +24,4 @@ pip3 install -e agent-test/deps/dtnma-ace
 pip3 install -r ./agent-test/requirements.txt
 
 echo "Executing tests..."
-python3 -m pytest agent-test --capture=no --log-cli-level=info
+python3 -m pytest agent-test --capture=no --log-cli-level=info $@

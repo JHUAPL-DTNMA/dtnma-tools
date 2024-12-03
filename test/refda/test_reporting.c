@@ -42,7 +42,6 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-
 #define EXAMPLE_ADM_ENUM 65536
 
 /// Agent context for testing
@@ -90,8 +89,7 @@ void setUp(void)
 
     {
         // ADM for this test fixture
-        cace_amm_obj_ns_t *adm =
-            cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
+        cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
         cace_amm_obj_desc_t *obj;
 
         /**
@@ -180,7 +178,7 @@ static void ari_convert(ari_t *ari, const char *inhex)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 }
 
-static ari_report_t * assert_rptset_items(ari_t *val)
+static ari_report_t *assert_rptset_items(ari_t *val)
 {
     TEST_ASSERT_FALSE(val->is_ref);
     TEST_ASSERT_TRUE(val->as_lit.has_ari_type);
@@ -190,6 +188,7 @@ static ari_report_t * assert_rptset_items(ari_t *val)
     return ari_report_list_front(*rpts);
 }
 
+// clang-format off
 // direct RPTT ari:/AC/(//65536/EDD/1,//65536/VAR/1) -> (/VAST/1,/VAST/123456)
 TEST_CASE("821182831A000100002301831A000100002A01", 0, "821182""820601""82061A0001E240")
 // indirect RPTT ari://65536/CONST/1 -> (/VAST/1,/VAST/123456)
@@ -197,6 +196,7 @@ TEST_CASE("831A000100002101", 0, "821182""820601""82061A0001E240")
 // direct with simple (one-item) expressions
 // ari:/AC/(/AC/(//65536/EDD/1),/AC/(//65536/VAR/1)) -> (/VAST/1,/VAST/123456)
 TEST_CASE("821182821181831A000100002301821181831A000100002A01", 0, "821182""820601""82061A0001E240")
+// clang-format on
 void test_refda_reporting_target(const char *targethex, int expect_res, const char *expectloghex)
 {
     ari_t target = ARI_INIT_UNDEFINED;
@@ -208,9 +208,10 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     TEST_ASSERT_NOT_NULL(expect_seq);
 
     refda_runctx_t runctx;
+    refda_runctx_init(&runctx);
     // no nonce for test
-    refda_runctx_init(&runctx, &agent, NULL);
-    runctx.mgr_ident = &mgr;
+    refda_runctx_from(&runctx, &agent, NULL);
+    cace_data_copy(&runctx.mgr_ident, &mgr);
 
     int res = refda_reporting_target(&runctx, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");
@@ -237,6 +238,7 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     }
 
     refda_msgdata_deinit(&got_rptset);
+    refda_runctx_deinit(&runctx);
     ari_deinit(&expect_rpt_items);
     ari_deinit(&target);
 }

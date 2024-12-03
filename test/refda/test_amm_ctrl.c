@@ -49,7 +49,7 @@ static int mock_ctrl_exec_none(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_
         CACE_LOG_DEBUG("execution with mock result %s", string_get_cstr(buf));
         string_clear(buf);
     }
-    ari_set_copy(&(ctx->result), &mock_result_store);
+    refda_exec_ctx_set_result_copy(ctx, &mock_result_store);
     return 0;
 }
 
@@ -64,7 +64,7 @@ static int mock_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_ex
         CACE_LOG_DEBUG("execution with parameter %s", string_get_cstr(buf));
         string_clear(buf);
     }
-    ari_set_copy(&(ctx->result), val);
+    refda_exec_ctx_set_result_copy(ctx, val);
     return 0;
 }
 
@@ -90,8 +90,19 @@ static void ari_convert(ari_t *ari, const char *inhex)
 static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const cace_amm_formal_param_list_t fparams,
                           const char *refhex, const char *outhex, int expect_res)
 {
+    refda_runctx_ptr_t ctxptr;
+    refda_runctx_ptr_init_new(ctxptr);
+    // no nonce for test
+    refda_runctx_from(refda_runctx_ptr_ref(ctxptr), NULL, NULL);
+
+    refda_exec_seq_t eseq;
+    refda_exec_seq_init(&eseq);
+    refda_runctx_ptr_set(eseq.runctx, ctxptr);
+
     refda_exec_item_t eitem;
     refda_exec_item_init(&eitem);
+    eitem.seq = &eseq;
+
     ari_t inref = ARI_INIT_UNDEFINED;
     ari_convert(&inref, refhex);
     TEST_ASSERT_TRUE_MESSAGE(inref.is_ref, "invalid reference");
@@ -104,21 +115,23 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_exec_ctx_t ctx;
-    refda_exec_ctx_init(&ctx, NULL, &eitem);
+    refda_exec_ctx_init(&ctx, &eitem);
 
     res = refda_amm_ctrl_desc_execute(obj, &ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_ctrl_desc_execute() disagrees");
 
-    TEST_ASSERT_TRUE_MESSAGE(ari_equal(&outval, &(ctx.result)), "result value mismatch");
+    TEST_ASSERT_TRUE_MESSAGE(ari_equal(&outval, &(eitem.result)), "result value mismatch");
 
     if (result)
     {
         // move out result value
-        TEST_ASSERT_EQUAL_INT(0, ari_set_move(result, &(ctx.result)));
+        TEST_ASSERT_EQUAL_INT(0, ari_set_move(result, &(eitem.result)));
     }
 
     refda_exec_ctx_deinit(&ctx);
     refda_exec_item_deinit(&eitem);
+    refda_exec_seq_deinit(&eseq);
+    refda_runctx_ptr_clear(ctxptr);
 
     ari_deinit(&outval);
     ari_deinit(&inref);
@@ -175,7 +188,7 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex, int
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
 
-        fparam->index              = 0;
+        fparam->index = 0;
         string_set_str(fparam->name, "hi");
 
         amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
