@@ -79,7 +79,7 @@ int ari_get_bool(const ari_t *ari, bool *out)
     return 0;
 }
 
-void ari_set_bool(ari_t *ari, ari_bool src)
+void ari_set_prim_bool(ari_t *ari, ari_bool src)
 {
     CHKVOID(ari);
     ari_deinit(ari);
@@ -269,6 +269,18 @@ void ari_set_bstr(ari_t *ari, cace_data_t *src, bool copy)
         (ari_lit_t) { .has_ari_type = false, .prim_type = ARI_PRIM_BSTR, .value = { .as_data = data } };
 }
 
+int ari_get_tp(const ari_t *ari, struct timespec *out)
+{
+    CHKERR1(ari);
+    CHKERR1(out);
+    if (!ari_is_lit_typed(ari, ARI_TYPE_TP))
+    {
+        return 2;
+    }
+    *out = ari->as_lit.value.as_timespec;
+    return 0;
+}
+
 void ari_set_tp(ari_t *ari, struct timespec dtntime)
 {
     CHKVOID(ari);
@@ -277,6 +289,18 @@ void ari_set_tp(ari_t *ari, struct timespec dtntime)
                                        .ari_type     = ARI_TYPE_TP,
                                        .prim_type    = ARI_PRIM_TIMESPEC,
                                        .value        = { .as_timespec = dtntime } };
+}
+
+int ari_get_td(const ari_t *ari, struct timespec *out)
+{
+    CHKERR1(ari);
+    CHKERR1(out);
+    if (!ari_is_lit_typed(ari, ARI_TYPE_TD))
+    {
+        return 2;
+    }
+    *out = ari->as_lit.value.as_timespec;
+    return 0;
 }
 
 void ari_set_td(ari_t *ari, struct timespec delta)
@@ -288,14 +312,23 @@ void ari_set_td(ari_t *ari, struct timespec delta)
     };
 }
 
-struct ari_ac_s *ari_get_ac(const ari_t *ari)
+bool ari_is_lit_typed(const ari_t *ari, ari_type_t typ)
 {
-    CHKNULL(ari);
-    if (ari->is_ref)
+    return (ari && !(ari->is_ref) && ari->as_lit.has_ari_type && (ari->as_lit.ari_type == typ));
+}
+
+const int64_t *ari_get_aritype(const ari_t *ari)
+{
+    if (!ari_is_lit_typed(ari, ARI_TYPE_ARITYPE))
     {
         return NULL;
     }
-    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_AC))
+    return &(ari->as_lit.value.as_int64);
+}
+
+struct ari_ac_s *ari_get_ac(const ari_t *ari)
+{
+    if (!ari_is_lit_typed(ari, ARI_TYPE_AC))
     {
         return NULL;
     }
@@ -324,12 +357,7 @@ void ari_set_ac(ari_t *ari, struct ari_ac_s *src)
 
 struct ari_am_s *ari_get_am(const ari_t *ari)
 {
-    CHKNULL(ari);
-    if (ari->is_ref)
-    {
-        return NULL;
-    }
-    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_AM))
+    if (!ari_is_lit_typed(ari, ARI_TYPE_AM))
     {
         return NULL;
     }
@@ -358,12 +386,7 @@ void ari_set_am(ari_t *ari, struct ari_am_s *src)
 
 struct ari_tbl_s *ari_get_tbl(const ari_t *ari)
 {
-    CHKNULL(ari);
-    if (ari->is_ref)
-    {
-        return NULL;
-    }
-    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_TBL))
+    if (!ari_is_lit_typed(ari, ARI_TYPE_TBL))
     {
         return NULL;
     }
@@ -393,12 +416,7 @@ void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src)
 
 struct ari_execset_s *ari_get_execset(const ari_t *ari)
 {
-    CHKNULL(ari);
-    if (ari->is_ref)
-    {
-        return NULL;
-    }
-    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_EXECSET))
+    if (!ari_is_lit_typed(ari, ARI_TYPE_EXECSET))
     {
         return NULL;
     }
@@ -425,12 +443,7 @@ struct ari_execset_s *ari_set_execset(ari_t *ari)
 
 struct ari_rptset_s *ari_get_rptset(const ari_t *ari)
 {
-    CHKNULL(ari);
-    if (ari->is_ref)
-    {
-        return NULL;
-    }
-    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_RPTSET))
+    if (!ari_is_lit_typed(ari, ARI_TYPE_RPTSET))
     {
         return NULL;
     }

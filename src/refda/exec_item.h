@@ -21,6 +21,7 @@
 
 #include <cace/amm/lookup.h>
 #include <cace/ari.h>
+#include <m-atomic.h>
 #include <m-deque.h>
 
 #ifdef __cplusplus

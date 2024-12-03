@@ -17,6 +17,7 @@
  */
 #include <refda/eval.h>
 #include <refda/register.h>
+#include <refda/adm/ietf.h>
 #include <refda/amm/const.h>
 #include <refda/amm/edd.h>
 #include <cace/amm/semtype.h>
@@ -159,6 +160,9 @@ static int test_reporting_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_e
 void setUp(void)
 {
     refda_agent_init(&agent);
+    // ADM initialization
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(&agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(&agent));
 
     {
         // ADM for this test fixture
@@ -226,7 +230,7 @@ void setUp(void)
         {
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-// FIXME           amm_type_set_use_direct(&(objdata->val_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            amm_type_set_use_direct(&(objdata->res_type), amm_type_get_builtin(ARI_TYPE_VAST));
             objdata->evaluate = test_reporting_oper_add;
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("oper1", 1), objdata);
@@ -238,8 +242,7 @@ void setUp(void)
     }
 
     int res = refda_agent_bindrefs(&agent);
-    (void)res;
-//    TEST_ASSERT_EQUAL_INT(0, res);
+    TEST_ASSERT_EQUAL_INT(0, res);
 }
 
 void tearDown(void)

@@ -17,6 +17,7 @@
  */
 #include <refda/exec.h>
 #include <refda/register.h>
+#include <refda/adm/ietf.h>
 #include <refda/amm/const.h>
 #include <refda/amm/ctrl.h>
 #include <refda/adm/ietf.h>
@@ -75,8 +76,8 @@ void setUp(void)
 {
     refda_agent_init(&agent);
     // ADM initialization
-    refda_adm_ietf_amm_init(&agent);
-    refda_adm_ietf_dtnma_agent_init(&agent);
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(&agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(&agent));
 
     ari_list_init(exec_log);
 
@@ -143,8 +144,7 @@ void setUp(void)
     }
 
     int res = refda_agent_bindrefs(&agent);
-    (void)res;
-//    TEST_ASSERT_EQUAL_INT(0, res);
+    TEST_ASSERT_EQUAL_INT(0, res);
 }
 
 void tearDown(void)

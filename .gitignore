@@ -10,4 +10,4 @@ build
 testroot
 /.pytest_cache/
 
-agent-test/adms/
+agent-test/deps/

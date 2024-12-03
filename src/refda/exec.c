@@ -53,15 +53,15 @@ static int refda_exec_ctrl(refda_runctx_t *runctx, refda_exec_seq_t *seq)
     }
     else
     {
-        // done with this item
-        refda_exec_item_list_pop_front(NULL, seq->items);
-
         if (ctx.parent->nonce && !ari_is_null(ctx.parent->nonce))
         {
             // generate report regardless of production
             CACE_LOG_DEBUG("Pushing execution result");
             refda_reporting_ctrl(runctx, &(item->ref), &ctx.result);
         }
+
+        // done with this item
+        refda_exec_item_list_pop_front(NULL, seq->items);
     }
 
     refda_exec_ctx_deinit(&ctx);

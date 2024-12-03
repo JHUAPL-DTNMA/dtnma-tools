@@ -325,7 +325,7 @@ int main(int argc, char *argv[])
         if (failures)
         {
             // Warn but continue on
-            CACE_LOG_WARNING("ADM reference binding failed for %d objects", failures);
+            CACE_LOG_WARNING("ADM reference binding failed for %d type references", failures);
         }
         else
         {

@@ -225,7 +225,7 @@ void test_ari_text_encode_lit_typed_ac_2item(void)
         }
         {
             ari_t *item = ari_list_push_back_new(ctr.items);
-            ari_set_bool(item, false);
+            ari_set_prim_bool(item, false);
         }
 
         ari_t ari = ARI_INIT_UNDEFINED;
@@ -256,7 +256,7 @@ void test_ari_text_encode_lit_typed_am_2item(void)
             ari_init(&key);
             ari_set_prim_uint64(&key, 2);
             ari_t *val = ari_tree_safe_get(ctr.items, key);
-            ari_set_bool(val, false);
+            ari_set_prim_bool(val, false);
             ari_deinit(&key);
         }
 

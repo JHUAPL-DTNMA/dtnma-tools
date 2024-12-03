@@ -161,7 +161,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         /**
          * Register CTRL objects
          */
-        {
+        { // ari://ietf-dtnma-agent/CTRL/inspect
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_inspect;

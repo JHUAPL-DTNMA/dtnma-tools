@@ -21,6 +21,7 @@ include(GNUInstallDirs)
 
 set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/binding.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/msgdata.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ingress.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/egress.h"
@@ -46,6 +47,7 @@ set(HFILES
 )
 set(CFILES
     "agent.c"
+    "binding.c"
     "msgdata.c"
     "ingress.c"
     "egress.c"

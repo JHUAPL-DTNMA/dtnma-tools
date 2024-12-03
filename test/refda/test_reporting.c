@@ -17,6 +17,7 @@
  */
 #include <refda/reporting.h>
 #include <refda/register.h>
+#include <refda/adm/ietf.h>
 #include <refda/amm/const.h>
 #include <refda/amm/edd.h>
 #include <cace/amm/semtype.h>
@@ -75,6 +76,10 @@ static void test_reporting_edd_one_int(const refda_amm_edd_desc_t *obj _U_, refd
 void setUp(void)
 {
     refda_agent_init(&agent);
+    // ADM initialization
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(&agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(&agent));
+
     cace_data_init(&mgr);
 
     static const char *data = "test";
@@ -145,14 +150,13 @@ void setUp(void)
             amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_VAST));
             objdata->produce = test_reporting_edd_one_int;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd1", 2), objdata);
+            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd2", 2), objdata);
             // no parameters
         }
     }
 
     int res = refda_agent_bindrefs(&agent);
-    (void)res;
-//    TEST_ASSERT_EQUAL_INT(0, res);
+    TEST_ASSERT_EQUAL_INT(0, res);
 }
 
 void tearDown(void)

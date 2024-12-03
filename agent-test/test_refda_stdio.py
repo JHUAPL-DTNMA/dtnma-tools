@@ -22,16 +22,18 @@ class TestStdioAgent(unittest.TestCase):
     ''' Verify whole-agent behavior with the stdio_agent '''
 
     def setUp(self):
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+
         path = os.path.abspath(os.path.join(OWNPATH, '..'))
         os.chdir(path)
         LOGGER.info('Working in %s', path)
 
-        args = ['bash', 'run.sh', 'refda-stdio', '-l', 'debug']
+        args = ['./run.sh', 'refda-stdio', '-l', 'debug']
         self._agent = CmdRunner(args)
 
         # ADM handling
-        adms = AdmSet()
-        adms.load_from_dirs([os.path.join(OWNPATH, 'adms')])
+        adms = AdmSet(cache_dir=False)
+        adms.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
         self._adms = adms
 
     def tearDown(self):
@@ -86,7 +88,7 @@ class TestStdioAgent(unittest.TestCase):
         self._start()
 #        self._agent.wait_for_text(HEXSTR)
 
-        LOGGER.debug('Sending SIGINT')
+        LOGGER.info('Sending SIGINT')
         self._agent.proc.send_signal(signal.SIGINT)
         self.assertEqual(0, self._agent.proc.wait(timeout=5))
         self.assertEqual(0, self._agent.proc.returncode)
@@ -94,7 +96,7 @@ class TestStdioAgent(unittest.TestCase):
     def test_start_close(self):
         self._start()
 
-        LOGGER.debug('Closing stdin')
+        LOGGER.info('Closing stdin')
         self._agent.proc.stdin.close()
         self.assertEqual(0, self._agent.proc.wait(timeout=5))
         self.assertEqual(0, self._agent.proc.returncode)
@@ -109,6 +111,7 @@ class TestStdioAgent(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf-dtnma-agent/ctrl/inspect(//ietf-dtnma-agent/EDD/sw-version)'), rpt.source)
         # items of the report

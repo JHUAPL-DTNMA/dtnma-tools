@@ -8,7 +8,6 @@ import threading
 from typing import List
 import queue
 
-
 LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
 
@@ -45,7 +44,7 @@ class CmdRunner:
         while not self._stdout_lines.empty():
             self._stdout_lines.get()
 
-        LOGGER.debug('Starting process: %s', self._fmt_args())
+        LOGGER.info('Starting process: %s', self._fmt_args())
         self.proc = subprocess.Popen(
             self._args,
             stdin=subprocess.PIPE,
@@ -69,7 +68,7 @@ class CmdRunner:
             return None
 
         if self.proc.returncode is None:
-            LOGGER.debug('Stopping process: %s', self._fmt_args())
+            LOGGER.info('Stopping process: %s', self._fmt_args())
             self.proc.send_signal(signal.SIGINT)
             try:
                 self.proc.wait(timeout=timeout)
@@ -79,7 +78,7 @@ class CmdRunner:
 
         ret = self.proc.returncode
         self.proc = None
-        LOGGER.debug('Stopped with exit code: %s', ret)
+        LOGGER.info('Stopped with exit code: %s', ret)
 
         self._reader.join()
         self._reader = None

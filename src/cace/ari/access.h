@@ -31,34 +31,61 @@ extern "C" {
 #endif
 
 /** Determine if this is the @c undefined value.
+ *
+ * @param[in] ari The value to check.
  * @sa ARI_UNDEFINED ari_init()
  */
 bool ari_is_undefined(const ari_t *ari);
 
-/** Force the ARI value to be undefined.
+/** Set the ARI value to be undefined.
+ *
+ * @param[in,out] ari The value to set.
  */
 void ari_set_undefined(ari_t *ari);
 
+/** Determine if this is a typed or untyped null value.
+ *
+ * @param[in] ari The value to check.
+ * @sa ari_set_null()
+ */
 bool ari_is_null(const ari_t *ari);
 
+/** Set the ARI value to be untyped null.
+ *
+ * @param[in,out] ari The value to set.
+ */
 void ari_set_null(ari_t *ari);
 
 /** Determine if this ARI contains a primitive boolean type.
  *
- * @param ari Non-null pointer to the ARI to read.
+ * @param[in] ari Non-null pointer to the ARI to read.
  * @return True if the primitive is boolean.
  */
 bool ari_is_bool(const ari_t *ari);
 
 /** Extract a boolean value, if present, from an ARI.
+ * This works for both typed and untyped literal values.
  *
- * @param ari Non-null pointer to the ARI to read.
+ * @param[in] ari Non-null pointer to the ARI to read.
  * @param[out] out The value to output.
  * @return Zero upon success.
  */
 int ari_get_bool(const ari_t *ari, ari_bool *out);
 
-void ari_set_bool(ari_t *ari, ari_bool src);
+/// @overload
+int ari_get_int(ari_t *ari, ari_int *out);
+
+/// @overload
+int ari_get_uint(ari_t *ari, ari_uint *out);
+
+/// @overload
+int ari_get_uvast(const ari_t *ari, ari_uvast *out);
+
+/// @overload
+int ari_get_tp(const ari_t *ari, struct timespec *out);
+
+/// @overload
+int ari_get_td(const ari_t *ari, struct timespec *out);
 
 /** Set an ARI as an untyped literal value.
  *
@@ -66,6 +93,9 @@ void ari_set_bool(ari_t *ari, ari_bool src);
  * This must have been initialized.
  * @param src The primitive value to set to.
  */
+void ari_set_prim_bool(ari_t *ari, ari_bool src);
+
+/// @overload
 void ari_set_prim_uint64(ari_t *ari, uint64_t src);
 
 /// @overload
@@ -74,29 +104,47 @@ void ari_set_prim_int64(ari_t *ari, int64_t src);
 /// @overload
 void ari_set_prim_float64(ari_t *ari, ari_real64 src);
 
-int ari_get_int(ari_t *ari, ari_int *out);
-
+/// @overload
 void ari_set_int(ari_t *ari, ari_int src);
 
-int ari_get_uint(ari_t *ari, ari_uint *out);
-
+/// @overload
 void ari_set_uint(ari_t *ari, ari_uint src);
 
+/// @overload
 void ari_set_vast(ari_t *ari, ari_vast src);
 
+/// @overload
 void ari_set_uvast(ari_t *ari, ari_uvast src);
 
-int ari_get_uvast(const ari_t *ari, ari_uvast *out);
-
+/// @overload
 void ari_set_real64(ari_t *ari, ari_real64 src);
 
+/// @overload
 void ari_set_tstr(ari_t *ari, const char *buf, bool copy);
 
+/// @overload
 void ari_set_bstr(ari_t *ari, cace_data_t *src, bool copy);
 
+/// @overload
 void ari_set_tp(ari_t *ari, struct timespec dtntime);
 
+/// @overload
 void ari_set_td(ari_t *ari, struct timespec delta);
+
+/** Determine if this is a typed literal of a specific type.
+ *
+ * @param[in] ari The value to check.
+ * @param typ The type to compare with.
+ * @return True if the value is of that type.
+ */
+bool ari_is_lit_typed(const ari_t *ari, ari_type_t typ);
+
+/** Require an ARITYPE literal value.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained type value, if present, otherwise NULL.
+ */
+const int64_t *ari_get_aritype(const ari_t *ari);
 
 /** Require an AC value and extract a pointer to its item list.
  *

@@ -20,16 +20,16 @@
 #include "cace/util/defs.h"
 #include <math.h>
 
-static int ari_visit_ari(const ari_t *ari, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx);
+static int ari_visit_ari(ari_t *ari, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx);
 
-static int ari_visit_ac(const ari_ac_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
+static int ari_visit_ac(ari_ac_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
 {
     int retval;
 
     ari_list_it_t it;
     for (ari_list_it(it, obj->items); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_t *item = ari_list_cref(it);
+        ari_t *item = ari_list_ref(it);
 
         retval = ari_visit_ari(item, visitor, ctx);
         CHKERRVAL(retval);
@@ -37,14 +37,14 @@ static int ari_visit_ac(const ari_ac_t *obj, const ari_visitor_t *visitor, const
     return 0;
 }
 
-static int ari_visit_am(const ari_am_t *obj, const ari_visitor_t *visitor, ari_visit_ctx_t *ctx)
+static int ari_visit_am(ari_am_t *obj, const ari_visitor_t *visitor, ari_visit_ctx_t *ctx)
 {
     int retval;
 
     ari_tree_it_t it;
     for (ari_tree_it(it, obj->items); !ari_tree_end_p(it); ari_tree_next(it))
     {
-        const ari_tree_subtype_ct *pair = ari_tree_cref(it);
+        ari_tree_subtype_ct *pair = ari_tree_ref(it);
 
         ctx->is_map_key = true;
         retval          = ari_visit_ari(pair->key_ptr, visitor, ctx);
@@ -57,14 +57,14 @@ static int ari_visit_am(const ari_am_t *obj, const ari_visitor_t *visitor, ari_v
     return 0;
 }
 
-static int ari_visit_tbl(const ari_tbl_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
+static int ari_visit_tbl(ari_tbl_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
 {
     int retval;
 
     ari_array_it_t it;
     for (ari_array_it(it, obj->items); !ari_array_end_p(it); ari_array_next(it))
     {
-        const ari_t *item = ari_array_cref(it);
+        ari_t *item = ari_array_ref(it);
 
         retval = ari_visit_ari(item, visitor, ctx);
         CHKERRVAL(retval);
@@ -72,14 +72,14 @@ static int ari_visit_tbl(const ari_tbl_t *obj, const ari_visitor_t *visitor, con
     return 0;
 }
 
-static int ari_visit_execset(const ari_execset_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
+static int ari_visit_execset(ari_execset_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
 {
     int retval;
 
     ari_list_it_t it;
     for (ari_list_it(it, obj->targets); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_t *item = ari_list_cref(it);
+        ari_t *item = ari_list_ref(it);
 
         retval = ari_visit_ari(item, visitor, ctx);
         CHKERRVAL(retval);
@@ -87,7 +87,7 @@ static int ari_visit_execset(const ari_execset_t *obj, const ari_visitor_t *visi
     return 0;
 }
 
-static int ari_visit_report(const ari_report_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
+static int ari_visit_report(ari_report_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
 {
     int retval;
 
@@ -100,7 +100,7 @@ static int ari_visit_report(const ari_report_t *obj, const ari_visitor_t *visito
     ari_list_it_t it;
     for (ari_list_it(it, obj->items); !ari_list_end_p(it); ari_list_next(it))
     {
-        const ari_t *item = ari_list_cref(it);
+        ari_t *item = ari_list_ref(it);
 
         retval = ari_visit_ari(item, visitor, ctx);
         CHKERRVAL(retval);
@@ -108,7 +108,7 @@ static int ari_visit_report(const ari_report_t *obj, const ari_visitor_t *visito
     return 0;
 }
 
-static int ari_visit_rptset(const ari_rptset_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
+static int ari_visit_rptset(ari_rptset_t *obj, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
 {
     int retval;
 
@@ -121,7 +121,7 @@ static int ari_visit_rptset(const ari_rptset_t *obj, const ari_visitor_t *visito
     ari_report_list_it_t it;
     for (ari_report_list_it(it, obj->reports); !ari_report_list_end_p(it); ari_report_list_next(it))
     {
-        const ari_report_t *item = ari_report_list_cref(it);
+        ari_report_t *item = ari_report_list_ref(it);
 
         retval = ari_visit_report(item, visitor, ctx);
         CHKERRVAL(retval);
@@ -129,7 +129,7 @@ static int ari_visit_rptset(const ari_rptset_t *obj, const ari_visitor_t *visito
     return 0;
 }
 
-static int ari_visit_ari(const ari_t *ari, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
+static int ari_visit_ari(ari_t *ari, const ari_visitor_t *visitor, const ari_visit_ctx_t *ctx)
 {
     int retval;
 
@@ -223,7 +223,7 @@ static int ari_visit_ari(const ari_t *ari, const ari_visitor_t *visitor, const a
     return retval;
 }
 
-int ari_visit(const ari_t *ari, const ari_visitor_t *visitor, void *user_data)
+int ari_visit(ari_t *ari, const ari_visitor_t *visitor, void *user_data)
 {
     CHKERR1(ari);
     CHKERR1(visitor);
@@ -424,7 +424,7 @@ int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translato
     return ari_translate_ari(out, in, translator, &sub_ctx);
 }
 
-static int ari_hash_visit_objpath(const ari_objpath_t *path, const ari_visit_ctx_t *ctx)
+static int ari_hash_visit_objpath(ari_objpath_t *path, const ari_visit_ctx_t *ctx)
 {
     size_t *accum = ctx->user_data;
     M_HASH_UP(*accum, ari_idseg_hash(&(path->ns_id)));
@@ -440,7 +440,7 @@ static int ari_hash_visit_objpath(const ari_objpath_t *path, const ari_visit_ctx
     return 0;
 }
 
-static int ari_hash_visit_lit(const ari_lit_t *obj, const ari_visit_ctx_t *ctx)
+static int ari_hash_visit_lit(ari_lit_t *obj, const ari_visit_ctx_t *ctx)
 {
     size_t *accum = ctx->user_data;
 
@@ -500,7 +500,8 @@ size_t ari_hash(const ari_t *ari)
     };
 
     M_HASH_DECL(accum);
-    ari_visit(ari, &visitor, &accum);
+    // the visit functions keep the value const
+    ari_visit((ari_t *)ari, &visitor, &accum);
     accum = M_HASH_FINAL(accum);
     return accum;
 }

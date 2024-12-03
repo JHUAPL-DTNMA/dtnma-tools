@@ -22,6 +22,7 @@
 #include "reporting.h"
 #include "amm/typedef.h"
 #include "adm/ietf.h"
+#include "binding.h"
 #include "cace/amm/lookup.h"
 #include "cace/util/threadset.h"
 #include "cace/util/logging.h"
@@ -124,8 +125,59 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         ++failcnt;
     }
 
+    /* FIXME replace
+    agent->expr_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM, 18);
+    if (!agent->expr_type)
+    {
+        ++failcnt;
+    }
+
+    agent->rptt_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM, 24);
+    if (!agent->rptt_type)
+    {
+        ++failcnt;
+    }
+    */
+    if (failcnt)
+    {
+        CACE_LOG_WARNING("agent required type binding failures: %d", failcnt);
+    }
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_ref(ns_it);
+
+        cace_amm_obj_ns_ctr_dict_it_t objtype_it;
+        for (cace_amm_obj_ns_ctr_dict_it(objtype_it, ns->object_types); !cace_amm_obj_ns_ctr_dict_end_p(objtype_it);
+             cace_amm_obj_ns_ctr_dict_next(objtype_it))
+        {
+            cace_amm_obj_ns_ctr_dict_itref_t *pair = cace_amm_obj_ns_ctr_dict_ref(objtype_it);
+
+            ari_type_t             obj_type = pair->key;
+            cace_amm_obj_ns_ctr_t *obj_ctr  = &(pair->value);
+
+            cace_amm_obj_desc_list_it_t obj_it;
+            for (cace_amm_obj_desc_list_it(obj_it, obj_ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+                 cace_amm_obj_desc_list_next(obj_it))
+            {
+                cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_ref(obj_it);
+
+                const int objfailcnt = refda_binding_obj(obj_type, obj, &(agent->objs));
+                if (objfailcnt)
+                {
+                    CACE_LOG_WARNING("binding NS %s obj-type %d name %s; failures %d", string_get_cstr(ns->name), obj_type,
+                            string_get_cstr(obj->name), objfailcnt);
+                }
+                failcnt += objfailcnt;
+            }
+        }
+    }
+
     REFDA_AGENT_UNLOCK(agent);
 
+    CACE_LOG_INFO("binding finished with %d failures", failcnt);
     return failcnt;
 }
 

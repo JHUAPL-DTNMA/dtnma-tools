@@ -23,7 +23,6 @@
 #include "obj_store.h"
 #include "parameters.h"
 #include "cace/ari.h"
-#include <m-shared.h>
 
 #ifdef __cplusplus
 extern "C" {
