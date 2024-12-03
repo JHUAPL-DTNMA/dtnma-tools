@@ -167,8 +167,8 @@ int refda_agent_bindrefs(refda_agent_t *agent)
                 const int objfailcnt = refda_binding_obj(obj_type, obj, &(agent->objs));
                 if (objfailcnt)
                 {
-                    CACE_LOG_WARNING("binding NS %s obj-type %d name %s; failures %d", string_get_cstr(ns->name), obj_type,
-                            string_get_cstr(obj->name), objfailcnt);
+                    CACE_LOG_WARNING("binding NS %s obj-type %d name %s; failures %d", string_get_cstr(ns->name),
+                                     obj_type, string_get_cstr(obj->name), objfailcnt);
                 }
                 failcnt += objfailcnt;
             }

@@ -227,7 +227,7 @@ int refda_binding_typedef(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *
     CHKERR1(desc);
 
     int failcnt = 0;
-    failcnt     += refda_binding_typeobj(&(desc->typeobj), store);
+    failcnt += refda_binding_typeobj(&(desc->typeobj), store);
     return failcnt;
 }
 
@@ -294,7 +294,7 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
     CHKERR1(desc);
 
     int failcnt = 0;
-    //FIXME operand types
+    // FIXME operand types
     failcnt += refda_binding_typeobj(&(desc->res_type), store);
     failcnt += refda_binding_fparams(obj->fparams, store);
     return failcnt;
