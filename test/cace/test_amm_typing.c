@@ -163,7 +163,7 @@ TEST_CASE("8211820102", true)   // ari:/AC/(1,2)
 TEST_CASE("821183010203", true) // ari:/AC/(1,2,3)
 TEST_CASE("82118201F5", false)  // ari:/AC/(1,true)
 TEST_CASE("8212A10102", false)  // ari:/AM/(1=2)
-TEST_CASE("82138102", false)    // ari:/TBL/c=3;
+TEST_CASE("82138102", false)    // ari:/TBL/c=2;
 void test_amm_type_match_semtype_ulist_1(const char *inhex, bool expect)
 {
     amm_type_t mytype;
@@ -189,7 +189,7 @@ TEST_CASE("8211820102", false)   // ari:/AC/(1,2) bad item type
 TEST_CASE("82118201F5", true)    // ari:/AC/(1,true)
 TEST_CASE("82118301F503", false) // ari:/AC/(1,true,3) too many items
 TEST_CASE("8212A10102", false)   // ari:/AM/(1=2)
-TEST_CASE("82138102", false)     // ari:/TBL/c=3;
+TEST_CASE("82138102", false)     // ari:/TBL/c=2;
 void test_amm_type_match_semtype_dlist_2item(const char *inhex, bool expect)
 {
     // diverse list of int and bool
@@ -223,7 +223,7 @@ TEST_CASE("82118301F5F4", true)    // ari:/AC/(1,true,false)
 TEST_CASE("82118401F5F4F5", false) // ari:/AC/(1,true,false,true)
 TEST_CASE("82118301F503", false)   // ari:/AC/(1,true,3) unmatched items
 TEST_CASE("8212A10102", false)     // ari:/AM/(1=2)
-TEST_CASE("82138102", false)       // ari:/TBL/c=3;
+TEST_CASE("82138102", false)       // ari:/TBL/c=2;
 void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, bool expect)
 {
     // diverse list of int and seq-of-bool
@@ -260,7 +260,7 @@ TEST_CASE("8211820102", false) // ari:/AC/(1,2)
 TEST_CASE("82118201F5", false) // ari:/AC/(1,true)
 TEST_CASE("8212A10102", false) // ari:/AM/(1=2)
 TEST_CASE("8212A101F5", true)  // ari:/AM/(1=true)
-TEST_CASE("82138102", false)   // ari:/TBL/c=3;
+TEST_CASE("82138102", false)   // ari:/TBL/c=2;
 void test_amm_type_match_semtype_umap_1(const char *inhex, bool expect)
 {
     amm_type_t mytype;
@@ -280,8 +280,8 @@ void test_amm_type_match_semtype_umap_1(const char *inhex, bool expect)
 TEST_CASE("F6", false)          // ari:null
 TEST_CASE("8211820102", false)  // ari:/AC/(1,2)
 TEST_CASE("82118201F5", false)  // ari:/AC/(1,true)
-TEST_CASE("82138102", true)     // ari:/TBL/c=3;
-TEST_CASE("8213830201F5", true) // ari:/TBL/c=3;(1,2,3)
+TEST_CASE("82138102", true)     // ari:/TBL/c=2;
+TEST_CASE("8213830201F5", true) // ari:/TBL/c=2;(1,true)
 void test_amm_type_match_semtype_tblt_1(const char *inhex, bool expect)
 {
     amm_type_t mytype;

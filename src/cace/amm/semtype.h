@@ -76,7 +76,7 @@ typedef struct
 {
     /// True if this interval has a finite minimum
     bool has_min;
-    /// The minimum value of the interval, valid if #has_max is true
+    /// The minimum value of the interval, valid if #has_min is true
     size_t i_min;
     /// True if this interval has a finite maximum
     bool has_max;
