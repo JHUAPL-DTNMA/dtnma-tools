@@ -54,48 +54,5 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
         return 2;
     }
 
-    // don't process result if still waiting
-    if (atomic_load(&(ctx->item->waiting)))
-    {
-        return 0;
-    }
-
-    int retval = 0;
-    if (amm_type_is_valid(&(obj->res_type)))
-    {
-        // force result type
-        ari_t tmp;
-        ari_init(&tmp);
-        res = amm_type_convert(&(obj->res_type), &tmp, &(ctx->item->result));
-        ari_set_move(&(ctx->item->result), &tmp);
-        if (res)
-        {
-            ari_set_undefined(&(ctx->item->result));
-            retval = 3;
-        }
-    }
-    else
-    {
-        // success is treated as a null value
-        if (ari_is_undefined(&(ctx->item->result)))
-        {
-            ari_set_null(&(ctx->item->result));
-        }
-        else if (!ari_is_null(&(ctx->item->result)))
-        {
-            // should not have a result
-            ari_set_undefined(&(ctx->item->result));
-            retval = 4;
-        }
-    }
-    if (cace_log_is_enabled_for(LOG_DEBUG))
-    {
-        string_t buf;
-        string_init(buf);
-        ari_text_encode(buf, &(ctx->item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("result converted to %s", string_get_cstr(buf));
-        string_clear(buf);
-    }
-
-    return retval;
+    return 0;
 }

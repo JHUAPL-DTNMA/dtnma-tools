@@ -123,12 +123,23 @@ class TestStdioAgent(unittest.TestCase):
         self._send_execset(
             'ari:/EXECSET/n=123;(/AC/(//ietf-dtnma-agent/CTRL/wait-for(/TD/PT1.5S),//ietf-dtnma-agent/CTRL/inspect(//ietf-dtnma-agent/EDD/sw-version)))'
         )
+
         rptset = self._wait_rptset().value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
         LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
-        self.assertEqual(self._ari_text_to_obj('//ietf-dtnma-agent/ctrl/inspect(//ietf-dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf-dtnma-agent/CTRL/wait-for(/TD/PT1.5S)'), rpt.source)
+        # items of the report
+        self.assertEqual([ari.LiteralARI(None)], rpt.items)
+
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf-dtnma-agent/CTRL/inspect(//ietf-dtnma-agent/EDD/sw-version)'), rpt.source)
         # items of the report
         self.assertEqual([ari.LiteralARI('0.0.0')], rpt.items)

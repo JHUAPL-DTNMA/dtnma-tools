@@ -280,7 +280,7 @@ void test_refda_exec_target(const char *targethex, int expect_res, const char *e
     ari_deinit(&target);
 }
 
-TEST_CASE("8401220281820D01", 1000)     // direct ref ari://1/CTRL/2(/TD/1)
+TEST_CASE("8401220281820D01", 1000) // direct ref ari://1/CTRL/2(/TD/1)
 void test_refda_exec_wait_for(const char *targethex, int delay_ms)
 {
     ari_t target = ARI_INIT_UNDEFINED;
