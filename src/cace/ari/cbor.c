@@ -940,6 +940,33 @@ static int ari_cbor_decode_primval(QCBORDecodeContext *dec, ari_lit_t *lit)
     return 0;
 }
 
+static int ari_cbor_decode_label(QCBORDecodeContext *dec, ari_lit_t *lit)
+{
+    QCBORItem decitem;
+    QCBORDecode_VGetNext(dec, &decitem);
+
+    switch (decitem.uDataType)
+    {
+        case QCBOR_TYPE_INT64:
+            lit->prim_type      = ARI_PRIM_INT64;
+            lit->value.as_int64 = decitem.val.int64;
+            break;
+        case QCBOR_TYPE_UINT64:
+            lit->prim_type       = ARI_PRIM_UINT64;
+            lit->value.as_uint64 = decitem.val.uint64;
+            break;
+        case QCBOR_TYPE_TEXT_STRING:
+            lit->prim_type = ARI_PRIM_TSTR;
+            cace_data_init(&(lit->value.as_data));
+            cace_data_copy_from(&(lit->value.as_data), decitem.val.string.len, (cace_data_ptr_t)decitem.val.string.ptr);
+            cace_data_append_byte(&(lit->value.as_data), 0);
+            break;
+        default:
+            return 3;
+    }
+    return 0;
+}
+
 int ari_cbor_decode(ari_t *ari, const cace_data_t *buf, size_t *used, const char **errm)
 {
     CHKERR1(ari);
@@ -1056,6 +1083,13 @@ int ari_cbor_decode_stream(QCBORDecodeContext *dec, ari_t *ari)
                         retval = 3;
                     }
                     break;
+                case ARI_TYPE_LABEL:
+                    if (ari_cbor_decode_label(dec, obj))
+                    {
+                        retval = 3;
+                    }
+                    break;
+
                 case ARI_TYPE_AC:
                     ari_lit_init_container(obj, ARI_TYPE_AC);
                     if (ari_cbor_decode_ac(dec, obj->value.as_ac))
