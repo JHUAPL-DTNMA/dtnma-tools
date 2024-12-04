@@ -156,14 +156,18 @@ void test_amm_type_match_semtype_use_1(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F6", false)          // ari:null
-TEST_CASE("82040A", false)      // ari:/INT/10
-TEST_CASE("82118101", false)    // ari:/AC/(1)
-TEST_CASE("8211820102", true)   // ari:/AC/(1,2)
-TEST_CASE("821183010203", true) // ari:/AC/(1,2,3)
-TEST_CASE("82118201F5", false)  // ari:/AC/(1,true)
-TEST_CASE("8212A10102", false)  // ari:/AM/(1=2)
-TEST_CASE("82138102", false)    // ari:/TBL/c=2;
+TEST_CASE("F7", false)               // ari:undefined
+TEST_CASE("F6", false)               // ari:null
+TEST_CASE("F4", false)               // ari:false
+TEST_CASE("F5", false)               // ari:true
+TEST_CASE("82040A", false)           // ari:/INT/10
+TEST_CASE("82118101", false)         // ari:/AC/(1)
+TEST_CASE("8211820102", true)        // ari:/AC/(1,2)
+TEST_CASE("821183010203", true)      // ari:/AC/(1,2,3)
+TEST_CASE("82118201F5", false)       // ari:/AC/(1,true)
+TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
+TEST_CASE("82138102", false)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
 void test_amm_type_match_semtype_ulist_1(const char *inhex, bool expect)
 {
     amm_type_t mytype;
@@ -182,14 +186,18 @@ void test_amm_type_match_semtype_ulist_1(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F6", false)           // ari:null
-TEST_CASE("82040A", false)       // ari:/INT/10
-TEST_CASE("82118101", false)     // ari:/AC/(1) too few items
-TEST_CASE("8211820102", false)   // ari:/AC/(1,2) bad item type
-TEST_CASE("82118201F5", true)    // ari:/AC/(1,true)
-TEST_CASE("82118301F503", false) // ari:/AC/(1,true,3) too many items
-TEST_CASE("8212A10102", false)   // ari:/AM/(1=2)
-TEST_CASE("82138102", false)     // ari:/TBL/c=2;
+TEST_CASE("F7", false)               // ari:undefined
+TEST_CASE("F6", false)               // ari:null
+TEST_CASE("F4", false)               // ari:false
+TEST_CASE("F5", false)               // ari:true
+TEST_CASE("82040A", false)           // ari:/INT/10
+TEST_CASE("82118101", false)         // ari:/AC/(1) too few items
+TEST_CASE("8211820102", false)       // ari:/AC/(1,2) bad item type
+TEST_CASE("82118201F5", true)        // ari:/AC/(1,true)
+TEST_CASE("82118301F503", false)     // ari:/AC/(1,true,3) too many items
+TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
+TEST_CASE("82138102", false)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
 void test_amm_type_match_semtype_dlist_2item(const char *inhex, bool expect)
 {
     // diverse list of int and bool
@@ -214,16 +222,20 @@ void test_amm_type_match_semtype_dlist_2item(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F6", false)             // ari:null
-TEST_CASE("82040A", false)         // ari:/INT/10
-TEST_CASE("82118101", false)       // ari:/AC/(1) too few items
-TEST_CASE("8211820102", false)     // ari:/AC/(1,2) bad item type
-TEST_CASE("82118201F5", true)      // ari:/AC/(1,true)
-TEST_CASE("82118301F5F4", true)    // ari:/AC/(1,true,false)
-TEST_CASE("82118401F5F4F5", false) // ari:/AC/(1,true,false,true)
-TEST_CASE("82118301F503", false)   // ari:/AC/(1,true,3) unmatched items
-TEST_CASE("8212A10102", false)     // ari:/AM/(1=2)
-TEST_CASE("82138102", false)       // ari:/TBL/c=2;
+TEST_CASE("F7", false)               // ari:undefined
+TEST_CASE("F6", false)               // ari:null
+TEST_CASE("F4", false)               // ari:false
+TEST_CASE("F5", false)               // ari:true
+TEST_CASE("82040A", false)           // ari:/INT/10
+TEST_CASE("82118101", false)         // ari:/AC/(1) too few items
+TEST_CASE("8211820102", false)       // ari:/AC/(1,2) bad item type
+TEST_CASE("82118201F5", true)        // ari:/AC/(1,true)
+TEST_CASE("82118301F5F4", true)      // ari:/AC/(1,true,false)
+TEST_CASE("82118401F5F4F5", false)   // ari:/AC/(1,true,false,true)
+TEST_CASE("82118301F503", false)     // ari:/AC/(1,true,3) unmatched items
+TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
+TEST_CASE("82138102", false)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
 void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, bool expect)
 {
     // diverse list of int and seq-of-bool
@@ -254,13 +266,17 @@ void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, bool expect
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F6", false)         // ari:null
-TEST_CASE("82040A", false)     // ari:/INT/10
-TEST_CASE("8211820102", false) // ari:/AC/(1,2)
-TEST_CASE("82118201F5", false) // ari:/AC/(1,true)
-TEST_CASE("8212A10102", false) // ari:/AM/(1=2)
-TEST_CASE("8212A101F5", true)  // ari:/AM/(1=true)
-TEST_CASE("82138102", false)   // ari:/TBL/c=2;
+TEST_CASE("F7", false)               // ari:undefined
+TEST_CASE("F6", false)               // ari:null
+TEST_CASE("F4", false)               // ari:false
+TEST_CASE("F5", false)               // ari:true
+TEST_CASE("82040A", false)           // ari:/INT/10
+TEST_CASE("8211820102", false)       // ari:/AC/(1,2)
+TEST_CASE("82118201F5", false)       // ari:/AC/(1,true)
+TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
+TEST_CASE("8212A101F5", true)        // ari:/AM/(1=true)
+TEST_CASE("82138102", false)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
 void test_amm_type_match_semtype_umap_1(const char *inhex, bool expect)
 {
     amm_type_t mytype;
