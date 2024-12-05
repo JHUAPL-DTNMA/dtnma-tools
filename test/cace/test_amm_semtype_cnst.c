@@ -158,3 +158,30 @@ void test_amm_semtype_cnst_strlen_2intvl_finite(const char *inhex, bool expect)
     check_cnst(&cnst, inhex, expect);
     amm_semtype_cnst_deinit(&cnst);
 }
+
+TEST_CASE("F7", false)     // ari:undefined
+TEST_CASE("F6", false)     // ari:null
+TEST_CASE("F4", false)     // ari:false
+TEST_CASE("626869", false) // ari:"hi"
+TEST_CASE("426869", false) // ari:'hi'
+TEST_CASE("29", false)     // ari:-10
+TEST_CASE("25", false)     // ari:-6
+TEST_CASE("24", true)      // ari:-5
+TEST_CASE("00", true)      // ari:0
+TEST_CASE("05", true)      // ari:5
+TEST_CASE("06", false)     // ari:6
+TEST_CASE("0A", false)     // ari:10
+void test_amm_semtype_cnst_range_int64_1intvl_finite(const char *inhex, bool expect)
+{
+    amm_semtype_cnst_t cnst;
+    amm_semtype_cnst_init(&cnst);
+    cace_amm_range_int64_t *range = amm_semtype_cnst_set_range_int64(&cnst);
+    {
+        cace_amm_range_intvl_int64_t intvl;
+        cace_amm_range_intvl_int64_set_finite(&intvl, -5, 5);
+        cace_amm_range_intvl_int64_seq_push(range->intvls, intvl);
+    }
+
+    check_cnst(&cnst, inhex, expect);
+    amm_semtype_cnst_deinit(&cnst);
+}

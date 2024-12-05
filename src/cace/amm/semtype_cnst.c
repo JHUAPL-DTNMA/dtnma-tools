@@ -35,6 +35,18 @@ cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj)
     return cnst;
 }
 
+cace_amm_range_int64_t *amm_semtype_cnst_set_range_int64(amm_semtype_cnst_t *obj)
+{
+    CHKNULL(obj);
+    amm_semtype_cnst_deinit(obj);
+
+    obj->type                    = AMM_SEMTYPE_CNST_RANGE_INT64;
+    cace_amm_range_int64_t *cnst = &(obj->as_range_int64);
+    cace_amm_range_int64_init(cnst);
+
+    return cnst;
+}
+
 bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
 {
     bool retval = false;
@@ -44,7 +56,6 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
             break;
         case AMM_SEMTYPE_CNST_STRLEN:
         {
-            const cace_amm_range_size_t *cnst = &(obj->as_strlen);
             if (val->is_ref)
             {
                 return false;
@@ -62,6 +73,8 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
                 default:
                     return false;
             }
+            const cace_amm_range_size_t *cnst = &(obj->as_strlen);
+
             retval = cace_amm_range_size_contains(cnst, len);
             break;
         }
@@ -73,7 +86,8 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
                 return false;
             }
             const cace_amm_range_int64_t *cnst = &(obj->as_range_int64);
-            retval                             = cace_amm_range_int64_contains(cnst, intval);
+
+            retval = cace_amm_range_int64_contains(cnst, intval);
             break;
         }
     }
