@@ -112,7 +112,21 @@ struct ari_ac_s *ari_get_ac(const ari_t *ari);
  */
 void ari_set_ac(ari_t *ari, struct ari_ac_s *src);
 
+/** Require an AM value and extract a pointer to its item list.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained AM struct, if present, otherwise NULL.
+ */
+struct ari_am_s *ari_get_am(const ari_t *ari);
+
+/** Set the ARI as an AM, optionally moving values from an external source.
+ *
+ * @param[in,out] ari The ARI value to modify.
+ * @param[in,out] src An optional existing value struct to move from.
+ */
 void ari_set_am(ari_t *ari, struct ari_am_s *src);
+
+struct ari_tbl_s *ari_get_tbl(const ari_t *ari);
 
 void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
 

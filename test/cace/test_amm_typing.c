@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cace/amm/semtype.h>
 #include <cace/amm/typing.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -156,6 +157,171 @@ void test_amm_type_match_semtype_use_1(const char *inhex, bool expect)
 }
 
 TEST_CASE("F7", false)               // ari:undefined
+TEST_CASE("F6", false)               // ari:null
+TEST_CASE("F4", false)               // ari:false
+TEST_CASE("F5", false)               // ari:true
+TEST_CASE("82040A", false)           // ari:/INT/10
+TEST_CASE("82118101", false)         // ari:/AC/(1)
+TEST_CASE("8211820102", true)        // ari:/AC/(1,2)
+TEST_CASE("821183010203", true)      // ari:/AC/(1,2,3)
+TEST_CASE("82118201F5", false)       // ari:/AC/(1,true)
+TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
+TEST_CASE("82138102", false)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_ulist_1(const char *inhex, bool expect)
+{
+    amm_type_t mytype;
+    amm_type_init(&mytype);
+    {
+        amm_semtype_ulist_t *semtype = amm_type_set_ulist(&mytype);
+        TEST_ASSERT_NOT_NULL(semtype);
+
+        amm_type_set_use_direct(&(semtype->item_type), amm_type_get_builtin(ARI_TYPE_INT));
+
+        semtype->size.has_min = true;
+        semtype->size.i_min   = 2;
+    }
+
+    check_match(&mytype, inhex, expect);
+    amm_type_deinit(&mytype);
+}
+
+TEST_CASE("F7", false)               // ari:undefined
+TEST_CASE("F6", false)               // ari:null
+TEST_CASE("F4", false)               // ari:false
+TEST_CASE("F5", false)               // ari:true
+TEST_CASE("82040A", false)           // ari:/INT/10
+TEST_CASE("82118101", false)         // ari:/AC/(1) too few items
+TEST_CASE("8211820102", false)       // ari:/AC/(1,2) bad item type
+TEST_CASE("82118201F5", true)        // ari:/AC/(1,true)
+TEST_CASE("82118301F503", false)     // ari:/AC/(1,true,3) too many items
+TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
+TEST_CASE("82138102", false)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_dlist_2item(const char *inhex, bool expect)
+{
+    // diverse list of int and bool
+    amm_type_t mytype;
+    amm_type_init(&mytype);
+    {
+        amm_semtype_dlist_t *semtype = amm_type_set_dlist(&mytype, 2);
+        TEST_ASSERT_NOT_NULL(semtype);
+        {
+            amm_type_t *typ = amm_type_array_get(semtype->types, 0);
+            TEST_ASSERT_NOT_NULL(typ);
+            amm_type_set_use_direct(typ, amm_type_get_builtin(ARI_TYPE_INT));
+        }
+        {
+            amm_type_t *typ = amm_type_array_get(semtype->types, 1);
+            TEST_ASSERT_NOT_NULL(typ);
+            amm_type_set_use_direct(typ, amm_type_get_builtin(ARI_TYPE_BOOL));
+        }
+    }
+
+    check_match(&mytype, inhex, expect);
+    amm_type_deinit(&mytype);
+}
+
+TEST_CASE("F7", false)               // ari:undefined
+TEST_CASE("F6", false)               // ari:null
+TEST_CASE("F4", false)               // ari:false
+TEST_CASE("F5", false)               // ari:true
+TEST_CASE("82040A", false)           // ari:/INT/10
+TEST_CASE("82118101", false)         // ari:/AC/(1) too few items
+TEST_CASE("8211820102", false)       // ari:/AC/(1,2) bad item type
+TEST_CASE("82118201F5", true)        // ari:/AC/(1,true)
+TEST_CASE("82118301F5F4", true)      // ari:/AC/(1,true,false)
+TEST_CASE("82118401F5F4F5", false)   // ari:/AC/(1,true,false,true)
+TEST_CASE("82118301F503", false)     // ari:/AC/(1,true,3) unmatched items
+TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
+TEST_CASE("82138102", false)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, bool expect)
+{
+    // diverse list of int and seq-of-bool
+    amm_type_t mytype;
+    amm_type_init(&mytype);
+    {
+        amm_semtype_dlist_t *semtype = amm_type_set_dlist(&mytype, 2);
+        TEST_ASSERT_NOT_NULL(semtype);
+        {
+            amm_type_t *typ = amm_type_array_get(semtype->types, 0);
+            TEST_ASSERT_NOT_NULL(typ);
+            amm_type_set_use_direct(typ, amm_type_get_builtin(ARI_TYPE_INT));
+        }
+        {
+            amm_type_t *typ = amm_type_array_get(semtype->types, 1);
+            TEST_ASSERT_NOT_NULL(typ);
+            amm_semtype_seq_t *seq = amm_type_set_seq(typ);
+
+            amm_type_set_use_direct(&(seq->item_type), amm_type_get_builtin(ARI_TYPE_BOOL));
+            seq->size.has_min = true;
+            seq->size.i_min   = 1;
+            seq->size.has_max = true;
+            seq->size.i_max   = 2;
+        }
+    }
+
+    check_match(&mytype, inhex, expect);
+    amm_type_deinit(&mytype);
+}
+
+TEST_CASE("F7", false)               // ari:undefined
+TEST_CASE("F6", false)               // ari:null
+TEST_CASE("F4", false)               // ari:false
+TEST_CASE("F5", false)               // ari:true
+TEST_CASE("82040A", false)           // ari:/INT/10
+TEST_CASE("8211820102", false)       // ari:/AC/(1,2)
+TEST_CASE("82118201F5", false)       // ari:/AC/(1,true)
+TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
+TEST_CASE("8212A101F5", true)        // ari:/AM/(1=true)
+TEST_CASE("82138102", false)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_umap_1(const char *inhex, bool expect)
+{
+    amm_type_t mytype;
+    amm_type_init(&mytype);
+    {
+        amm_semtype_umap_t *semtype = amm_type_set_umap(&mytype);
+        TEST_ASSERT_NOT_NULL(semtype);
+
+        amm_type_set_use_direct(&(semtype->key_type), amm_type_get_builtin(ARI_TYPE_INT));
+        amm_type_set_use_direct(&(semtype->val_type), amm_type_get_builtin(ARI_TYPE_BOOL));
+    }
+
+    check_match(&mytype, inhex, expect);
+    amm_type_deinit(&mytype);
+}
+
+TEST_CASE("F6", false)          // ari:null
+TEST_CASE("8211820102", false)  // ari:/AC/(1,2)
+TEST_CASE("82118201F5", false)  // ari:/AC/(1,true)
+TEST_CASE("82138102", true)     // ari:/TBL/c=2;
+TEST_CASE("8213830201F5", true) // ari:/TBL/c=2;(1,true)
+void test_amm_type_match_semtype_tblt_1(const char *inhex, bool expect)
+{
+    amm_type_t mytype;
+    amm_type_init(&mytype);
+    {
+        amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&mytype, 2);
+        TEST_ASSERT_NOT_NULL(semtype);
+        {
+            amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 0);
+            TEST_ASSERT_NOT_NULL(col);
+            amm_type_set_use_direct(&(col->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
+        }
+        {
+            amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 1);
+            TEST_ASSERT_NOT_NULL(col);
+            amm_type_set_use_direct(&(col->typeobj), amm_type_get_builtin(ARI_TYPE_BOOL));
+        }
+    }
+
+    check_match(&mytype, inhex, expect);
+    amm_type_deinit(&mytype);
+}
+
+TEST_CASE("F7", false)               // ari:undefined
 TEST_CASE("F6", true)                // ari:null
 TEST_CASE("F4", false)               // ari:false
 TEST_CASE("F5", false)               // ari:true
@@ -168,14 +334,15 @@ void test_amm_type_match_semtype_union_1(const char *inhex, bool expect)
     amm_type_t mytype;
     amm_type_init(&mytype);
     {
-        TEST_ASSERT_EQUAL_INT(0, amm_type_set_union_size(&mytype, 2));
+        amm_semtype_union_t *semtype = amm_type_set_union_size(&mytype, 2);
+        TEST_ASSERT_NOT_NULL(semtype);
         {
-            amm_type_t *choice = amm_type_set_union_get(&mytype, 0);
+            amm_type_t *choice = amm_type_array_get(semtype->choices, 0);
             TEST_ASSERT_NOT_NULL(choice);
             amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_INT));
         }
         {
-            amm_type_t *choice = amm_type_set_union_get(&mytype, 1);
+            amm_type_t *choice = amm_type_array_get(semtype->choices, 1);
             TEST_ASSERT_NOT_NULL(choice);
             amm_type_set_use_direct(choice, amm_type_get_builtin(ARI_TYPE_NULL));
         }

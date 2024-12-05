@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include <refda/amm/ctrl.h>
+#include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
 #include <cace/util/logging.h>
@@ -153,7 +154,7 @@ void test_ctrl_execute_param_none(ari_type_t restype, const char *refhex, const 
 
     ari_deinit(&result);
     cace_amm_formal_param_list_clear(fparams);
-    refda_amm_ctrl_desc_init(&obj);
+    refda_amm_ctrl_desc_deinit(&obj);
 }
 
 // References are based on ari://2/CONST/4
@@ -187,5 +188,5 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex, int
 
     ari_deinit(&result);
     cace_amm_formal_param_list_clear(fparams);
-    refda_amm_ctrl_desc_init(&obj);
+    refda_amm_ctrl_desc_deinit(&obj);
 }

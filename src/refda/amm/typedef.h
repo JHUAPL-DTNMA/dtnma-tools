@@ -24,17 +24,15 @@
 extern "C" {
 #endif
 
-/** An Externally Defined Data (EDD) descriptor.
- * This defines the properties of an EDD in an Agent and includes common
- * object metadata.
+/** An named type definition (TYPEDEF) descriptor.
  */
 typedef struct
 {
-    /** The required type for the produced value.
+    /** The type being named by this TYPEDEF.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t semtype;
+    amm_type_t typeobj;
 
 } refda_amm_typedef_desc_t;
 

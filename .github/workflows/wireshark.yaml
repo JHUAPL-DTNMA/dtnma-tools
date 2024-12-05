@@ -1,9 +1,9 @@
 name: Build and test wireshark dissector
 on:
   push:
-    paths:
-      - .github/workflows/wireshark.yaml
-      - wireshark/**
+    branches:
+      - main
+      - 'apl-fy[0-9][0-9]'
 
 jobs:
   test:
