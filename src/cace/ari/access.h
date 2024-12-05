@@ -73,7 +73,8 @@ bool ari_is_bool(const ari_t *ari);
 int ari_get_bool(const ari_t *ari, ari_bool *out);
 
 /** Extract an integer value, if present, from an ARI.
- * This works for both typed and untyped literal values and will coerce signed and unsigned values to the desired type where possible.
+ * This works for both typed and untyped literal values and will coerce signed and unsigned values to the desired type
+ * where possible.
  *
  * @param[in] ari Non-null pointer to the ARI to read.
  * @param[out] out The value to output.
@@ -89,6 +90,21 @@ int ari_get_vast(const ari_t *ari, ari_vast *out);
 
 /// @overload
 int ari_get_uvast(const ari_t *ari, ari_uvast *out);
+
+/** Determine if this is a typed literal of a specific type.
+ *
+ * @param[in] ari The value to check.
+ * @param typ The type to compare with.
+ * @return True if the value is of that type.
+ */
+bool ari_is_lit_typed(const ari_t *ari, ari_type_t typ);
+
+/** Require an ARITYPE literal value.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained type value, if present, otherwise NULL.
+ */
+const int64_t *ari_get_aritype(const ari_t *ari);
 
 /// @overload
 int ari_get_tp(const ari_t *ari, struct timespec *out);
@@ -139,14 +155,25 @@ void ari_set_tp(ari_t *ari, struct timespec dtntime);
 /// @overload
 void ari_set_td(ari_t *ari, struct timespec delta);
 
-==== BASE ====
-==== BASE ====
+/** Require a TEXTSTR value and get the pointer to its storage.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained data, if present, otherwise NULL.
+ * @notice This data will always have a terminating null byte.
+ */
+const cace_data_t *ari_cget_tstr(const ari_t *ari);
+
+/// @overload
+const cace_data_t *ari_cget_bstr(const ari_t *ari);
+
 /** Require an AC value and extract a pointer to its item list.
  *
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained AC struct, if present, otherwise NULL.
  */
-struct ari_ac_s *ari_get_ac(const ari_t *ari);
+struct ari_ac_s *ari_get_ac(ari_t *ari);
+/// @overload
+const struct ari_ac_s *ari_cget_ac(const ari_t *ari);
 
 /** Set the ARI as an AC, optionally moving values from an external source.
  *
@@ -160,7 +187,9 @@ void ari_set_ac(ari_t *ari, struct ari_ac_s *src);
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained AM struct, if present, otherwise NULL.
  */
-struct ari_am_s *ari_get_am(const ari_t *ari);
+struct ari_am_s *ari_get_am(ari_t *ari);
+/// @overload
+const struct ari_am_s *ari_cget_am(const ari_t *ari);
 
 /** Set the ARI as an AM, optionally moving values from an external source.
  *
@@ -169,7 +198,9 @@ struct ari_am_s *ari_get_am(const ari_t *ari);
  */
 void ari_set_am(ari_t *ari, struct ari_am_s *src);
 
-struct ari_tbl_s *ari_get_tbl(const ari_t *ari);
+struct ari_tbl_s *ari_get_tbl(ari_t *ari);
+/// @overload
+const struct ari_tbl_s *ari_cget_tbl(const ari_t *ari);
 
 void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
 
@@ -178,7 +209,9 @@ void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained struct, if present, otherwise NULL.
  */
-struct ari_execset_s *ari_get_execset(const ari_t *ari);
+struct ari_execset_s *ari_get_execset(ari_t *ari);
+/// @overload
+const struct ari_execset_s *ari_cget_execset(const ari_t *ari);
 
 /** Set an ARI as an EXECSET literal value.
  * Any previous value is de-initialized.
@@ -193,7 +226,9 @@ struct ari_execset_s *ari_set_execset(ari_t *ari);
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained struct, if present, otherwise NULL.
  */
-struct ari_rptset_s *ari_get_rptset(const ari_t *ari);
+struct ari_rptset_s *ari_get_rptset(ari_t *ari);
+/// @overload
+const struct ari_rptset_s *ari_cget_rptset(const ari_t *ari);
 
 /** Set an ARI as an RPTSET literal value.
  * Any previous value is de-initialized.

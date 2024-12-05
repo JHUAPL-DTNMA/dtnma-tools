@@ -104,12 +104,12 @@ typedef struct
 static inline void amm_semtype_ulist_init(amm_semtype_ulist_t *obj)
 {
     amm_type_init(&(obj->item_type));
-    cace_amm_range_intvl_size_init(&(obj->size));
+    cace_amm_range_intvl_size_set_infinite(&(obj->size));
 }
 
 static inline void amm_semtype_ulist_deinit(amm_semtype_ulist_t *obj)
 {
-    cace_amm_range_intvl_size_deinit(&(obj->size));
+    cace_amm_range_intvl_size_set_infinite(&(obj->size));
     amm_type_deinit(&(obj->item_type));
 }
 
@@ -286,12 +286,12 @@ typedef struct
 static inline void amm_semtype_seq_init(amm_semtype_seq_t *obj)
 {
     amm_type_init(&(obj->item_type));
-    cace_amm_range_intvl_size_init(&(obj->size));
+    cace_amm_range_intvl_size_set_infinite(&(obj->size));
 }
 
 static inline void amm_semtype_seq_deinit(amm_semtype_seq_t *obj)
 {
-    cace_amm_range_intvl_size_deinit(&(obj->size));
+    cace_amm_range_intvl_size_set_infinite(&(obj->size));
     amm_type_deinit(&(obj->item_type));
 }
 

@@ -59,6 +59,8 @@ void amm_semtype_cnst_init(amm_semtype_cnst_t *obj);
 
 void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj);
 
+cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj);
+
 /** Determine if a specific value is valid according to a constraint.
  *
  * @param[in] obj The constraint to check against.

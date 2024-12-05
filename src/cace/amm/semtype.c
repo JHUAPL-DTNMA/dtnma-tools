@@ -121,7 +121,7 @@ static bool amm_semtype_ulist_match(const amm_type_t *self, const ari_t *ari)
 {
     const amm_semtype_ulist_t *semtype = self->as_semtype;
 
-    struct ari_ac_s *val = ari_get_ac(ari);
+    const struct ari_ac_s *val = ari_cget_ac(ari);
     if (!val)
     {
         return false;
@@ -162,7 +162,7 @@ static int amm_semtype_ulist_convert(const amm_type_t *self, ari_t *out, const a
 {
     const amm_semtype_ulist_t *semtype = self->as_semtype;
 
-    struct ari_ac_s *inval = ari_get_ac(in);
+    const struct ari_ac_s *inval = ari_cget_ac(in);
     if (!inval)
     {
         return CACE_AMM_ERR_CONVERT_BADVALUE;
@@ -298,7 +298,7 @@ static bool amm_semtype_dlist_match(const amm_type_t *self, const ari_t *ari)
 {
     const amm_semtype_dlist_t *semtype = self->as_semtype;
 
-    struct ari_ac_s *val = ari_get_ac(ari);
+    const struct ari_ac_s *val = ari_cget_ac(ari);
     if (!val)
     {
         return false;
@@ -355,7 +355,7 @@ static int amm_semtype_dlist_convert(const amm_type_t *self, ari_t *out, const a
     const amm_semtype_dlist_t *semtype = self->as_semtype;
     M_ASSERT(semtype);
 
-    struct ari_ac_s *inval = ari_get_ac(in);
+    const struct ari_ac_s *inval = ari_cget_ac(in);
     if (!inval)
     {
         return CACE_AMM_ERR_CONVERT_BADVALUE;
@@ -442,7 +442,7 @@ static bool amm_semtype_umap_match(const amm_type_t *self, const ari_t *ari)
 {
     const amm_semtype_umap_t *semtype = self->as_semtype;
 
-    struct ari_am_s *val = ari_get_am(ari);
+    const struct ari_am_s *val = ari_cget_am(ari);
     if (!val)
     {
         return false;
@@ -470,7 +470,7 @@ static int amm_semtype_umap_convert(const amm_type_t *self, ari_t *out, const ar
 {
     const amm_semtype_umap_t *semtype = self->as_semtype;
 
-    struct ari_am_s *inval = ari_get_am(in);
+    const struct ari_am_s *inval = ari_cget_am(in);
     if (!inval)
     {
         return CACE_AMM_ERR_CONVERT_BADVALUE;
@@ -535,7 +535,7 @@ static bool amm_semtype_tblt_match(const amm_type_t *self, const ari_t *ari)
 {
     const amm_semtype_tblt_t *semtype = self->as_semtype;
 
-    struct ari_tbl_s *val = ari_get_tbl(ari);
+    const struct ari_tbl_s *val = ari_cget_tbl(ari);
     if (!val)
     {
         return false;
@@ -573,7 +573,7 @@ static int amm_semtype_tblt_convert(const amm_type_t *self, ari_t *out, const ar
 {
     const amm_semtype_tblt_t *semtype = self->as_semtype;
 
-    struct ari_tbl_s *inval = ari_get_tbl(in);
+    const struct ari_tbl_s *inval = ari_cget_tbl(in);
     if (!inval)
     {
         return CACE_AMM_ERR_CONVERT_BADVALUE;

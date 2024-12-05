@@ -76,7 +76,7 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
             cace_data_clear(&(ctx->mgr_ident));
         }
 
-        const ari_execset_t *eset = ari_get_execset(&(msg->value));
+        const ari_execset_t *eset = ari_cget_execset(&(msg->value));
         // should not be null, but guard anyway
         if (eset)
         {

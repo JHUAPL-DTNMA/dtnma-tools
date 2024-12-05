@@ -101,7 +101,7 @@ int refda_eval_target(refda_runctx_t *runctx, ari_t *result, const ari_t *ari)
     }
     */
 
-    const ari_ac_t *ac = ari_get_ac(ari);
+    const ari_ac_t *ac = ari_cget_ac(ari);
     if (!ac)
     {
         return REFDA_EVAL_ERR_BAD_TYPE;

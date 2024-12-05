@@ -110,7 +110,7 @@ void ari_set_prim_float64(ari_t *ari, ari_real64 src)
         (ari_lit_t) { .has_ari_type = false, .prim_type = ARI_PRIM_FLOAT64, .value = { .as_float64 = src } };
 }
 
-int ari_get_int(ari_t *ari, ari_int *out)
+int ari_get_int(const ari_t *ari, ari_int *out)
 {
     CHKERR1(ari);
     CHKERR1(out);
@@ -118,24 +118,35 @@ int ari_get_int(ari_t *ari, ari_int *out)
     {
         return 1;
     }
-    if (ari->as_lit.prim_type != ARI_PRIM_INT64)
+    switch (ari->as_lit.prim_type)
     {
-        return 2;
+        case ARI_PRIM_UINT64:
+        {
+            const uint64_t *val = &(ari->as_lit.value.as_uint64);
+            if (*val > INT32_MAX)
+            {
+                return 3;
+            }
+            *out = *val;
+            break;
+        }
+        case ARI_PRIM_INT64:
+        {
+            const int64_t *val = &(ari->as_lit.value.as_int64);
+            if ((*val < INT32_MIN) || (*val > INT32_MAX))
+            {
+                return 3;
+            }
+            *out = *val;
+            break;
+        }
+        default:
+            return 2;
     }
-    *out = ari->as_lit.value.as_int64;
     return 0;
 }
 
-void ari_set_int(ari_t *ari, ari_int src)
-{
-    CHKVOID(ari);
-    ari_deinit(ari);
-    *ari_init_lit(ari) = (ari_lit_t) {
-        .has_ari_type = true, .ari_type = ARI_TYPE_INT, .prim_type = ARI_PRIM_INT64, .value = { .as_int64 = src }
-    };
-}
-
-int ari_get_uint(ari_t *ari, ari_uint *out)
+int ari_get_uint(const ari_t *ari, ari_uint *out)
 {
     CHKERR1(ari);
     CHKERR1(out);
@@ -143,44 +154,32 @@ int ari_get_uint(ari_t *ari, ari_uint *out)
     {
         return 1;
     }
-    if (ari->as_lit.prim_type != ARI_PRIM_UINT64)
+    switch (ari->as_lit.prim_type)
     {
-        return 2;
+        case ARI_PRIM_UINT64:
+        {
+            const uint64_t *val = &(ari->as_lit.value.as_uint64);
+            if (*val > UINT32_MAX)
+            {
+                return 3;
+            }
+            *out = *val;
+            break;
+        }
+        case ARI_PRIM_INT64:
+        {
+            const int64_t *val = &(ari->as_lit.value.as_int64);
+            if ((*val < 0) || (*val > UINT32_MAX))
+            {
+                return 3;
+            }
+            *out = *val;
+            break;
+        }
+        default:
+            return 2;
     }
-    uint64_t *val = &(ari->as_lit.value.as_uint64);
-    if (*val > UINT32_MAX)
-    {
-        return 3;
-    }
-    *out = *val;
     return 0;
-}
-
-void ari_set_uint(ari_t *ari, ari_uint src)
-{
-    CHKVOID(ari);
-    ari_deinit(ari);
-    *ari_init_lit(ari) = (ari_lit_t) {
-        .has_ari_type = true, .ari_type = ARI_TYPE_UINT, .prim_type = ARI_PRIM_UINT64, .value = { .as_uint64 = src }
-    };
-}
-
-void ari_set_vast(ari_t *ari, ari_vast src)
-{
-    CHKVOID(ari);
-    ari_deinit(ari);
-    *ari_init_lit(ari) = (ari_lit_t) {
-        .has_ari_type = true, .ari_type = ARI_TYPE_VAST, .prim_type = ARI_PRIM_INT64, .value = { .as_int64 = src }
-    };
-}
-
-void ari_set_uvast(ari_t *ari, ari_uvast src)
-{
-    CHKVOID(ari);
-    ari_deinit(ari);
-    *ari_init_lit(ari) = (ari_lit_t) {
-        .has_ari_type = true, .ari_type = ARI_TYPE_UVAST, .prim_type = ARI_PRIM_UINT64, .value = { .as_uint64 = src }
-    };
 }
 
 int ari_get_vast(const ari_t *ari, ari_vast *out)
@@ -193,7 +192,8 @@ int ari_get_vast(const ari_t *ari, ari_vast *out)
     }
     switch (ari->as_lit.prim_type)
     {
-        case ARI_PRIM_UINT64: {
+        case ARI_PRIM_UINT64:
+        {
             const uint64_t *val = &(ari->as_lit.value.as_uint64);
             if (*val > INT64_MAX)
             {
@@ -240,6 +240,42 @@ int ari_get_uvast(const ari_t *ari, ari_uvast *out)
     return 0;
 }
 
+void ari_set_int(ari_t *ari, ari_int src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_INT, .prim_type = ARI_PRIM_INT64, .value = { .as_int64 = src }
+    };
+}
+
+void ari_set_uint(ari_t *ari, ari_uint src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_UINT, .prim_type = ARI_PRIM_UINT64, .value = { .as_uint64 = src }
+    };
+}
+
+void ari_set_vast(ari_t *ari, ari_vast src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_VAST, .prim_type = ARI_PRIM_INT64, .value = { .as_int64 = src }
+    };
+}
+
+void ari_set_uvast(ari_t *ari, ari_uvast src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_UVAST, .prim_type = ARI_PRIM_UINT64, .value = { .as_uint64 = src }
+    };
+}
+
 void ari_set_real64(ari_t *ari, ari_real64 src)
 {
     CHKVOID(ari);
@@ -249,7 +285,7 @@ void ari_set_real64(ari_t *ari, ari_real64 src)
     };
 }
 
-const cace_data_t * ari_cget_tstr(const ari_t *ari)
+const cace_data_t *ari_cget_tstr(const ari_t *ari)
 {
     if (ari->is_ref || (ari->as_lit.prim_type != ARI_PRIM_TSTR))
     {
@@ -284,6 +320,15 @@ void ari_set_tstr(ari_t *ari, const char *buf, bool copy)
 
     *ari_init_lit(ari) =
         (ari_lit_t) { .has_ari_type = false, .prim_type = ARI_PRIM_TSTR, .value = { .as_data = data } };
+}
+
+const cace_data_t *ari_cget_bstr(const ari_t *ari)
+{
+    if (ari->is_ref || (ari->as_lit.prim_type != ARI_PRIM_BSTR))
+    {
+        return NULL;
+    }
+    return &(ari->as_lit.value.as_data);
 }
 
 void ari_set_bstr(ari_t *ari, cace_data_t *src, bool copy)
@@ -363,7 +408,16 @@ const int64_t *ari_get_aritype(const ari_t *ari)
     return &(ari->as_lit.value.as_int64);
 }
 
-struct ari_ac_s *ari_get_ac(const ari_t *ari)
+struct ari_ac_s *ari_get_ac(ari_t *ari)
+{
+    if (!ari_is_lit_typed(ari, ARI_TYPE_AC))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_ac;
+}
+
+const struct ari_ac_s *ari_cget_ac(const ari_t *ari)
 {
     if (!ari_is_lit_typed(ari, ARI_TYPE_AC))
     {
@@ -392,7 +446,16 @@ void ari_set_ac(ari_t *ari, struct ari_ac_s *src)
                                        } };
 }
 
-struct ari_am_s *ari_get_am(const ari_t *ari)
+struct ari_am_s *ari_get_am(ari_t *ari)
+{
+    if (!ari_is_lit_typed(ari, ARI_TYPE_AM))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_am;
+}
+
+const struct ari_am_s *ari_cget_am(const ari_t *ari)
 {
     if (!ari_is_lit_typed(ari, ARI_TYPE_AM))
     {
@@ -421,7 +484,16 @@ void ari_set_am(ari_t *ari, struct ari_am_s *src)
                                        } };
 }
 
-struct ari_tbl_s *ari_get_tbl(const ari_t *ari)
+struct ari_tbl_s *ari_get_tbl(ari_t *ari)
+{
+    if (!ari_is_lit_typed(ari, ARI_TYPE_TBL))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_tbl;
+}
+
+const struct ari_tbl_s *ari_cget_tbl(const ari_t *ari)
 {
     if (!ari_is_lit_typed(ari, ARI_TYPE_TBL))
     {
@@ -451,7 +523,16 @@ void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src)
                                        } };
 }
 
-struct ari_execset_s *ari_get_execset(const ari_t *ari)
+struct ari_execset_s *ari_get_execset(ari_t *ari)
+{
+    if (!ari_is_lit_typed(ari, ARI_TYPE_EXECSET))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_execset;
+}
+
+const struct ari_execset_s *ari_cget_execset(const ari_t *ari)
 {
     if (!ari_is_lit_typed(ari, ARI_TYPE_EXECSET))
     {
@@ -478,7 +559,16 @@ struct ari_execset_s *ari_set_execset(ari_t *ari)
     return ctr;
 }
 
-struct ari_rptset_s *ari_get_rptset(const ari_t *ari)
+struct ari_rptset_s *ari_get_rptset(ari_t *ari)
+{
+    if (!ari_is_lit_typed(ari, ARI_TYPE_RPTSET))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_rptset;
+}
+
+const struct ari_rptset_s *ari_cget_rptset(const ari_t *ari)
 {
     if (!ari_is_lit_typed(ari, ARI_TYPE_RPTSET))
     {
