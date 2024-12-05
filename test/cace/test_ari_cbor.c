@@ -543,6 +543,7 @@ TEST_CASE("821182A0820417")                     // AC with item having bad major
 TEST_CASE("8364746573740A6474686174")           // ari://test/TEXTSTR/that
 TEST_CASE("820C82290C")                         // TP with decimal fraction exponent of -10
 TEST_CASE("820C820A0C")                         // TP with decimal fraction exponent of 10
+TEST_CASE("820EFB3FF3333333333333")             // ari:/LABEL/1.2
 TEST_CASE("821386030102030405")                 // ari:/TBL/c=3;(1,2,3)(4,5)
 TEST_CASE("821380")                             // ari:/TBL/
 TEST_CASE("8213816474657374")                   // ari:/TBL/test
@@ -648,32 +649,30 @@ TEST_CASE("82041864")
 TEST_CASE("82051864")
 TEST_CASE("82061864")
 TEST_CASE("82071864")
-TEST_CASE("8212A303F50A626869626F6804")     // ari:/AM/(3=true,10=hi,oh=4) AM key ordering
-TEST_CASE("8464746573742A6474686174811822") // ari://test/-11/that(34)
-TEST_CASE("F5")                             // ari:true
-TEST_CASE("F4")                             // ari:false
-TEST_CASE("1904D2")                         // ari:1234
-TEST_CASE("626869")                         // ari:hi
-TEST_CASE("686869207468657265")             // ari:%22hi%20there%22
-TEST_CASE("426869")                         // ari:h'6869'
-TEST_CASE("8200F6")                         // ari:/NULL/null
-TEST_CASE("8201F4")                         // ari:/BOOL/false
-TEST_CASE("8201F5")                         // ari:/BOOL/true
-TEST_CASE("82040A")                         // ari:/INT/10
-TEST_CASE("820429")                         // ari:/INT/-10
-TEST_CASE("8208F94900")                     // ari:/REAL32/10
-TEST_CASE("8208FB4024333333333333")         // ari:/REAL32/10.1
-TEST_CASE("8208FB3FB999999999999A")         // ari:/REAL32/0.1
-TEST_CASE("8208F97E00")                     // ari:/REAL32/NaN
-TEST_CASE("8209F97C00")                     // ari:/REAL64/+Infinity
-TEST_CASE("8209F9FC00")                     // ari:/REAL64/-Infinity
-TEST_CASE("820B426869")                     // ari:/BYTESTR/h'6869'
-TEST_CASE("820A626869")                     // ari:/TEXTSTR/hi
-TEST_CASE("820A686869207468657265")         // ari:/TEXTSTR/%22hi%20there%22
-TEST_CASE("820E626869")                     // ari:/LABEL/hi
-TEST_CASE("820E01")                         // ari:/LABEL/1
-// FIXME: expect this one to fail
-TEST_CASE("820EFB3FF3333333333333")           // ari:/LABEL/1.2
+TEST_CASE("8212A303F50A626869626F6804")       // ari:/AM/(3=true,10=hi,oh=4) AM key ordering
+TEST_CASE("8464746573742A6474686174811822")   // ari://test/-11/that(34)
+TEST_CASE("F5")                               // ari:true
+TEST_CASE("F4")                               // ari:false
+TEST_CASE("1904D2")                           // ari:1234
+TEST_CASE("626869")                           // ari:hi
+TEST_CASE("686869207468657265")               // ari:%22hi%20there%22
+TEST_CASE("426869")                           // ari:h'6869'
+TEST_CASE("8200F6")                           // ari:/NULL/null
+TEST_CASE("8201F4")                           // ari:/BOOL/false
+TEST_CASE("8201F5")                           // ari:/BOOL/true
+TEST_CASE("82040A")                           // ari:/INT/10
+TEST_CASE("820429")                           // ari:/INT/-10
+TEST_CASE("8208F94900")                       // ari:/REAL32/10
+TEST_CASE("8208FB4024333333333333")           // ari:/REAL32/10.1
+TEST_CASE("8208FB3FB999999999999A")           // ari:/REAL32/0.1
+TEST_CASE("8208F97E00")                       // ari:/REAL32/NaN
+TEST_CASE("8209F97C00")                       // ari:/REAL64/+Infinity
+TEST_CASE("8209F9FC00")                       // ari:/REAL64/-Infinity
+TEST_CASE("820B426869")                       // ari:/BYTESTR/h'6869'
+TEST_CASE("820A626869")                       // ari:/TEXTSTR/hi
+TEST_CASE("820A686869207468657265")           // ari:/TEXTSTR/%22hi%20there%22
+TEST_CASE("820E626869")                       // ari:/LABEL/hi
+TEST_CASE("820E01")                           // ari:/LABEL/1
 TEST_CASE("820C1A2B450625")                   // ari:/TP/20230102T030405Z
 TEST_CASE("821180")                           // ari:/AC/()
 TEST_CASE("8211816161")                       // ari:/AC/(a)
