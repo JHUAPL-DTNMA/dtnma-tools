@@ -29,13 +29,20 @@
 extern "C" {
 #endif
 
-/// Types of constraints on a amm_semtype_use_t
+/** Types of constraints on a amm_semtype_use_t.
+ * This library does not implement constraints for:
+ *  * text pattern regular expressions
+ *  * integer enumerated values
+ *  * integer bitwise values
+ *  * CBOR CDDL
+ */
 enum amm_semtype_cnst_type_e
 {
     /// An initial invalid type with no associated value
     AMM_SEMTYPE_CNST_INVALID,
+    /// Text- or byte-string length range
     AMM_SEMTYPE_CNST_STRLEN,
-    // FIXME    AMM_SEMTYPE_CNST_TEXTPAT,
+    /// A signed 64-bit integer multi-interval range
     AMM_SEMTYPE_CNST_RANGE_INT64,
 };
 
@@ -59,8 +66,23 @@ void amm_semtype_cnst_init(amm_semtype_cnst_t *obj);
 
 void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj);
 
+/** Configure a constraint on text-string or byte-string size.
+ * This applies to ARI_TYPE_TEXTSTR and ARI_TYPE_BYTESTR as well as untyped
+ * primitive strings.
+ *
+ * @param[in,out] obj The struct to set the state of.
+ * @return The specific parameters for this constraint type.
+ */
 cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj);
 
+/** Configure a constraint on integer values based on signed 64-bit ranges.
+ * This applies to ARI_TYPE_BYTE, ARI_TYPE_INT, ARI_TYPE_UINT, ARI_TYPE_VAST,
+ * and a limited domain of ARI_TYPE_UVAST as well as untyped primitive
+ * integer values.
+ *
+ * @param[in,out] obj The struct to set the state of.
+ * @return The specific parameters for this constraint type.
+ */
 cace_amm_range_int64_t *amm_semtype_cnst_set_range_int64(amm_semtype_cnst_t *obj);
 
 /** Determine if a specific value is valid according to a constraint.

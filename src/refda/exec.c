@@ -31,7 +31,6 @@ static void refda_exec_ctrl_fix_result(refda_exec_item_t *item)
     refda_amm_ctrl_desc_t *ctrl = item->deref.obj->app_data.ptr;
     CHKVOID(ctrl);
 
-    int retval = 0;
     if (amm_type_is_valid(&(ctrl->res_type)))
     {
         // force result type

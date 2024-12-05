@@ -36,22 +36,36 @@ void amm_semtype_tblt_col_deinit(amm_semtype_tblt_col_t *obj)
     string_clear(obj->name);
 }
 
+static bool amm_semtype_use_constraints(const amm_semtype_use_t *semtype, const ari_t *val)
+{
+    amm_semtype_cnst_array_it_t it;
+    for (amm_semtype_cnst_array_it(it, semtype->constraints); !amm_semtype_cnst_array_end_p(it); amm_semtype_cnst_array_next(it))
+    {
+        const amm_semtype_cnst_t *cnst = amm_semtype_cnst_array_cref(it);
+        if (!amm_semtype_cnst_is_valid(cnst, val))
+        {
+            CACE_LOG_WARNING("type use constraint %d failed", cnst->type);
+            // first failure wins
+            return false;
+        }
+    }
+    // no constraints are valid also
+    return true;
+}
+
 static bool amm_semtype_use_match(const amm_type_t *self, const ari_t *ari)
 {
     const amm_semtype_use_t *semtype = self->as_semtype;
     CHKFALSE(semtype);
     const amm_type_t *base = semtype->base;
     CHKFALSE(base);
-    CHKFALSE(base->match);
 
-    if (!base->match(base, ari))
+    if (!amm_type_match(base, ari))
     {
         return false;
     }
 
-    // FIXME add constraint checking
-
-    return true;
+    return amm_semtype_use_constraints(semtype, ari);
 }
 
 static int amm_semtype_use_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
@@ -60,12 +74,14 @@ static int amm_semtype_use_convert(const amm_type_t *self, ari_t *out, const ari
     CHKFALSE(semtype);
     const amm_type_t *base = semtype->base;
     CHKERR1(base);
-    CHKRET(base->convert, CACE_AMM_ERR_CONVERT_NULLFUNC);
 
-    int res = base->convert(base, out, in);
+    int res = amm_type_convert(base, out, in);
     CHKERRVAL(res);
 
-    // FIXME add constraint checking
+    if (!amm_semtype_use_constraints(semtype, out))
+    {
+        return CACE_AMM_ERR_CONVERT_FAILED_CONSTRAINT;
+    }
 
     return 0;
 }
