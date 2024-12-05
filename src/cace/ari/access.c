@@ -322,6 +322,20 @@ void ari_set_ac(ari_t *ari, struct ari_ac_s *src)
                                        } };
 }
 
+struct ari_am_s *ari_get_am(const ari_t *ari)
+{
+    CHKNULL(ari);
+    if (ari->is_ref)
+    {
+        return NULL;
+    }
+    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_AM))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_am;
+}
+
 void ari_set_am(ari_t *ari, struct ari_am_s *src)
 {
     CHKVOID(ari);
@@ -340,6 +354,20 @@ void ari_set_am(ari_t *ari, struct ari_am_s *src)
                                        .value        = {
                                                   .as_am = ctr,
                                        } };
+}
+
+struct ari_tbl_s *ari_get_tbl(const ari_t *ari)
+{
+    CHKNULL(ari);
+    if (ari->is_ref)
+    {
+        return NULL;
+    }
+    if (!ari->as_lit.has_ari_type || (ari->as_lit.ari_type != ARI_TYPE_TBL))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_tbl;
 }
 
 void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src)

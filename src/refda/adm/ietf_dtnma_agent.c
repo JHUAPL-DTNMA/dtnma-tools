@@ -20,6 +20,7 @@
 #include "refda/register.h"
 #include "refda/valprod.h"
 #include "refda/reporting.h"
+#include "cace/amm/semtype.h"
 #include "cace/ari/text.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"

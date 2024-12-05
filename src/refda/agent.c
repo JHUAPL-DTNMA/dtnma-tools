@@ -97,7 +97,7 @@ amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, int64_t ns_id, int64_t
         refda_amm_typedef_desc_t *typedesc = deref.obj->app_data.ptr;
         if (typedesc)
         {
-            found = &(typedesc->semtype);
+            found = &(typedesc->typeobj);
         }
     }
 

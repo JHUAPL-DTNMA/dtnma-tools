@@ -24,6 +24,8 @@
 #include <getopt.h>
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
+#include <strings.h>
 
 typedef enum
 {

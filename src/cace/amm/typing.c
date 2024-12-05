@@ -847,7 +847,12 @@ const amm_type_t *amm_type_get_builtin(ari_type_t ari_type)
 void amm_typeptr_init(amm_typeptr_t *ptr)
 {
     CHKVOID(ptr);
-    ptr->obj = NULL;
+
+    ptr->obj = ARI_MALLOC(sizeof(amm_type_t));
+    if (ptr->obj)
+    {
+        amm_type_init(ptr->obj);
+    }
 }
 
 void amm_typeptr_deinit(amm_typeptr_t *ptr)
@@ -876,157 +881,37 @@ void amm_type_init(amm_type_t *type)
 
 void amm_type_deinit(amm_type_t *type)
 {
-    CHKVOID(type)
+    CHKVOID(type);
+
+    // clean up semtype state
     switch (type->type_class)
     {
         case AMM_TYPE_INVALID:
-            break;
         case AMM_TYPE_BUILTIN:
-            // should not happen
             break;
-        case AMM_TYPE_USE:
-            break;
-        case AMM_TYPE_UNION:
-            amm_typeptr_array_clear(type->as_union.choices);
-            break;
+        default:
+            if (type->as_semtype_deinit)
+            {
+                type->as_semtype_deinit(type->as_semtype);
+            }
+
+            ARI_FREE(type->as_semtype);
+            type->as_semtype = NULL;
     }
+
     *type = AMM_TYPE_INIT_INVALID;
 }
 
 void amm_type_reset(amm_type_t *type)
 {
-    CHKVOID(type)
-    switch (type->type_class)
-    {
-        case AMM_TYPE_INVALID:
-            break;
-        case AMM_TYPE_BUILTIN:
-            // should not happen
-            break;
-        case AMM_TYPE_USE:
-            break;
-        case AMM_TYPE_UNION:
-            amm_typeptr_array_clear(type->as_union.choices);
-            break;
-    }
-    *type = AMM_TYPE_INIT_INVALID;
+    amm_type_deinit(type);
+    // left in a good state above
 }
 
 bool amm_type_is_valid(const amm_type_t *type)
 {
     CHKFALSE(type)
     return type->type_class != AMM_TYPE_INVALID;
-}
-
-static bool amm_type_use_match(const amm_type_t *self, const ari_t *ari)
-{
-    const amm_type_t *base = self->as_use.base;
-    CHKFALSE(base);
-    CHKFALSE(base->match);
-
-    if (!base->match(base, ari))
-    {
-        return false;
-    }
-
-    // FIXME add constraint checking
-
-    return true;
-}
-
-static int amm_type_use_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
-{
-    const amm_type_t *base = self->as_use.base;
-    CHKERR1(base);
-
-    CHKRET(base->convert, CACE_AMM_ERR_CONVERT_NULLFUNC);
-
-    int res = base->convert(base, out, in);
-    CHKERRVAL(res);
-
-    // FIXME add constraint checking
-
-    return 0;
-}
-
-int amm_type_set_use_ref(amm_type_t *type, const ari_t *name)
-{
-    CHKERR1(type);
-    CHKERR1(name);
-    amm_type_reset(type);
-
-    type->match      = amm_type_use_match;
-    type->convert    = amm_type_use_convert;
-    type->type_class = AMM_TYPE_USE;
-    ari_set_copy(&(type->as_use.name), name);
-    type->as_use.base = NULL;
-
-    return 0;
-}
-
-int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base)
-{
-    CHKERR1(type);
-    CHKERR1(base);
-    amm_type_reset(type);
-
-    type->match       = amm_type_use_match;
-    type->convert     = amm_type_use_convert;
-    type->type_class  = AMM_TYPE_USE;
-    type->as_use.name = ARI_INIT_UNDEFINED;
-    type->as_use.base = base;
-
-    return 0;
-}
-
-static bool amm_type_union_match(const amm_type_t *self, const ari_t *ari)
-{
-    amm_typeptr_array_it_t it;
-    for (amm_typeptr_array_it(it, self->as_union.choices); !amm_typeptr_array_end_p(it); amm_typeptr_array_next(it))
-    {
-        const amm_typeptr_t *choice = amm_typeptr_array_ref(it);
-        if (!(choice->obj))
-        {
-            CACE_LOG_WARNING("type union choice with null pointer");
-            continue;
-        }
-
-        if (choice->obj->match(choice->obj, ari))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-int amm_type_set_union_size(amm_type_t *type, size_t num_choices)
-{
-    CHKERR1(type);
-    amm_type_reset(type);
-
-    type->match      = amm_type_union_match;
-    type->convert    = NULL; // FIXME replace
-    type->type_class = AMM_TYPE_UNION;
-    amm_typeptr_array_init(type->as_union.choices);
-    amm_typeptr_array_resize(type->as_union.choices, num_choices);
-
-    for (size_t ix = 0; ix < num_choices; ++ix)
-    {
-        amm_typeptr_t *ptr    = amm_typeptr_array_get(type->as_union.choices, ix);
-        amm_type_t    *choice = ARI_MALLOC(sizeof(amm_type_t));
-        amm_type_init(choice);
-        amm_typeptr_take(ptr, choice);
-    }
-
-    return 0;
-}
-
-amm_type_t *amm_type_set_union_get(amm_type_t *type, size_t ix)
-{
-    CHKNULL(type);
-    CHKNULL(type->type_class == AMM_TYPE_UNION);
-
-    return amm_typeptr_array_get(type->as_union.choices, ix)->obj;
 }
 
 bool amm_type_match(const amm_type_t *type, const ari_t *ari)

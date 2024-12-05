@@ -19,6 +19,7 @@
 #include <refda/register.h>
 #include <refda/amm/const.h>
 #include <refda/amm/edd.h>
+#include <cace/amm/semtype.h>
 #include <cace/amm/numeric.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
