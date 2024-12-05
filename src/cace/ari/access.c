@@ -183,6 +183,34 @@ void ari_set_uvast(ari_t *ari, ari_uvast src)
     };
 }
 
+int ari_get_vast(const ari_t *ari, ari_vast *out)
+{
+    CHKERR1(ari);
+    CHKERR1(out);
+    if (ari->is_ref)
+    {
+        return 1;
+    }
+    switch (ari->as_lit.prim_type)
+    {
+        case ARI_PRIM_UINT64: {
+            const uint64_t *val = &(ari->as_lit.value.as_uint64);
+            if (*val > INT64_MAX)
+            {
+                return 3;
+            }
+            *out = *val;
+            break;
+        }
+        case ARI_PRIM_INT64:
+            *out = ari->as_lit.value.as_int64;
+            break;
+        default:
+            return 2;
+    }
+    return 0;
+}
+
 int ari_get_uvast(const ari_t *ari, ari_uvast *out)
 {
     CHKERR1(ari);
@@ -219,6 +247,15 @@ void ari_set_real64(ari_t *ari, ari_real64 src)
     *ari_init_lit(ari) = (ari_lit_t) {
         .has_ari_type = true, .ari_type = ARI_TYPE_REAL64, .prim_type = ARI_PRIM_FLOAT64, .value = { .as_float64 = src }
     };
+}
+
+const cace_data_t * ari_cget_tstr(const ari_t *ari)
+{
+    if (ari->is_ref || (ari->as_lit.prim_type != ARI_PRIM_TSTR))
+    {
+        return NULL;
+    }
+    return &(ari->as_lit.value.as_data);
 }
 
 void ari_set_tstr(ari_t *ari, const char *buf, bool copy)

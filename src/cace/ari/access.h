@@ -72,11 +72,20 @@ bool ari_is_bool(const ari_t *ari);
  */
 int ari_get_bool(const ari_t *ari, ari_bool *out);
 
-/// @overload
-int ari_get_int(ari_t *ari, ari_int *out);
+/** Extract an integer value, if present, from an ARI.
+ * This works for both typed and untyped literal values and will coerce signed and unsigned values to the desired type where possible.
+ *
+ * @param[in] ari Non-null pointer to the ARI to read.
+ * @param[out] out The value to output.
+ * @return Zero upon success.
+ */
+int ari_get_int(const ari_t *ari, ari_int *out);
 
 /// @overload
-int ari_get_uint(ari_t *ari, ari_uint *out);
+int ari_get_uint(const ari_t *ari, ari_uint *out);
+
+/// @overload
+int ari_get_vast(const ari_t *ari, ari_vast *out);
 
 /// @overload
 int ari_get_uvast(const ari_t *ari, ari_uvast *out);
@@ -110,7 +119,6 @@ void ari_set_int(ari_t *ari, ari_int src);
 /// @overload
 void ari_set_uint(ari_t *ari, ari_uint src);
 
-/// @overload
 void ari_set_vast(ari_t *ari, ari_vast src);
 
 /// @overload
@@ -131,21 +139,8 @@ void ari_set_tp(ari_t *ari, struct timespec dtntime);
 /// @overload
 void ari_set_td(ari_t *ari, struct timespec delta);
 
-/** Determine if this is a typed literal of a specific type.
- *
- * @param[in] ari The value to check.
- * @param typ The type to compare with.
- * @return True if the value is of that type.
- */
-bool ari_is_lit_typed(const ari_t *ari, ari_type_t typ);
-
-/** Require an ARITYPE literal value.
- *
- * @param[in] ari The ARI to read.
- * @return Pointer to the contained type value, if present, otherwise NULL.
- */
-const int64_t *ari_get_aritype(const ari_t *ari);
-
+==== BASE ====
+==== BASE ====
 /** Require an AC value and extract a pointer to its item list.
  *
  * @param[in] ari The ARI to read.
