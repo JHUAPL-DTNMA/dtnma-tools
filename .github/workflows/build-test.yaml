@@ -22,7 +22,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y
           cmake ninja-build
           ruby build-essential autoconf libtool
-          flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev
+          flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev
           valgrind gcovr xmlstarlet
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -61,7 +61,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y
           cmake ninja-build
           ruby build-essential autoconf libtool
-          flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev
+          flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev
           valgrind gcovr
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2

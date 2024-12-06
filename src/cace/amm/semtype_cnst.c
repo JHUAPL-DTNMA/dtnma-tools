@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "semtype_cnst.h"
+#include "cace/util/logging.h"
 
 void amm_semtype_cnst_init(amm_semtype_cnst_t *obj)
 {
@@ -35,7 +36,8 @@ void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj)
             break;
 #if defined(PCRE_FOUND)
         case AMM_SEMTYPE_CNST_TEXTPAT:
-            regfree(&(obj->as_textpat));
+            pcre2_code_free(obj->as_textpat);
+            obj->as_textpat = NULL;
             break;
 #endif /* PCRE_FOUND */
         case AMM_SEMTYPE_CNST_RANGE_INT64:
@@ -59,19 +61,23 @@ cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj)
 
 #if defined(PCRE_FOUND)
 
-regex_t *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat)
+pcre2_code *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat)
 {
     CHKNULL(obj);
     amm_semtype_cnst_deinit(obj);
 
-    obj->type    = AMM_SEMTYPE_CNST_TEXTPAT;
-    regex_t *cfg = &(obj->as_textpat);
-    int      res = regcomp(cfg, pat, REG_NOSUB | REG_EXTENDED);
-    if (res)
+    const int   opts        = PCRE2_ANCHORED | PCRE2_ENDANCHORED;
+    int         errorcode   = 0;
+    PCRE2_SIZE  erroroffset = 0;
+    pcre2_code *cfg         = pcre2_compile((PCRE2_SPTR8)pat, strlen(pat), opts, &errorcode, &erroroffset, NULL);
+    if (!cfg)
     {
-        obj->type = AMM_SEMTYPE_CNST_INVALID;
+        CACE_LOG_ERR("Failed to compile regex pattern (error %d at %z): %s", errorcode, erroroffset, pat);
         return NULL;
     }
+
+    obj->type       = AMM_SEMTYPE_CNST_TEXTPAT;
+    obj->as_textpat = cfg;
 
     return cfg;
 }
@@ -129,11 +135,22 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
             {
                 return false;
             }
-            const regex_t *cfg = &(obj->as_textpat);
+            const pcre2_code *cfg = obj->as_textpat;
 
-            int res = regexec(cfg, (const char *)(data->ptr), 0, NULL, 0);
+            pcre2_match_data *md   = pcre2_match_data_create_from_pattern(cfg, NULL);
+            const int         opts = 0;
+            // ignore terminating null
+            int res = pcre2_match(cfg, (PCRE2_SPTR8)(data->ptr), data->len - 1, 0, opts, md, NULL);
+#if 0
+            {
+                char buf[128];
+                pcre2_get_error_message(res, buf, sizeof(buf));
+                CACE_LOG_DEBUG("Match regex result %d (%s) for: %s", res, buf, (const char *)(data->ptr));
+            }
+#endif
+            pcre2_match_data_free(md);
 
-            retval = (res == 0);
+            retval = (res > 0);
             break;
         }
 #endif /* PCRE_FOUND */

@@ -23,9 +23,10 @@
 #define CACE_AMM_SEMTYPE_USE_H_
 
 #include "range.h"
+#include "cace/config.h"
 #include "cace/ari.h"
 #if defined(PCRE_FOUND)
-#include <pcre2posix.h>
+#include <pcre2.h>
 #endif /* PCRE_FOUND */
 
 #ifdef __cplusplus
@@ -65,7 +66,7 @@ typedef struct amm_semtype_cnst_s
         /// Used when #type is ::AMM_SEMTYPE_CNST_STRLEN
         cace_amm_range_size_t as_strlen;
         /// Used when #type is ::AMM_SEMTYPE_CNST_TEXTPAT
-        regex_t as_textpat;
+        pcre2_code *as_textpat;
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
         cace_amm_range_int64_t as_range_int64;
     };
@@ -90,16 +91,16 @@ cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj);
  * This applies to ARI_TYPE_TEXTSTR as well as untyped
  * primitive text strings.
  *
- * @note The @c pat parameter is the full POSIX 2008 pattern, which must be
- * adapted from the original ADM pattern according to
- * RFC 9485 @cite rfc9485 to include a leading "^" and trailing "$" match.
+ * @note The @c pat parameter is the start- and end-anchored PCRE pattern,
+ * which conforms to the I-Regexp standard of RFC 9485 @cite rfc9485.
+ * This pattern does not need to include leading "\A(?" or trailing ")\z" parts.
  *
  *
  * @param[in,out] obj The struct to set the state of.
  * @param[in] pat The regular expression to compile.
  * @return The specific parameters for this constraint type.
  */
-regex_t *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat);
+pcre2_code *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat);
 
 #endif /* PCRE_FOUND */
 

@@ -154,7 +154,7 @@ find_package(QCBOR REQUIRED)
 find_package(MLIB REQUIRED)
 find_package(timespec REQUIRED)
 # Optional dependencies
-pkg_search_module(PCRE libpcre2-posix IMPORTED_TARGET)
+pkg_search_module(PCRE libpcre2-8 IMPORTED_TARGET)
 
 if(ARI_TEXT_PARSE)
   find_package(FLEX REQUIRED)
