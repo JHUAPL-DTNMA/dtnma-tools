@@ -39,7 +39,8 @@ void amm_semtype_tblt_col_deinit(amm_semtype_tblt_col_t *obj)
 static bool amm_semtype_use_constraints(const amm_semtype_use_t *semtype, const ari_t *val)
 {
     amm_semtype_cnst_array_it_t it;
-    for (amm_semtype_cnst_array_it(it, semtype->constraints); !amm_semtype_cnst_array_end_p(it); amm_semtype_cnst_array_next(it))
+    for (amm_semtype_cnst_array_it(it, semtype->constraints); !amm_semtype_cnst_array_end_p(it);
+         amm_semtype_cnst_array_next(it))
     {
         const amm_semtype_cnst_t *cnst = amm_semtype_cnst_array_cref(it);
         if (!amm_semtype_cnst_is_valid(cnst, val))

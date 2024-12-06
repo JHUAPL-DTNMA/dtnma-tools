@@ -24,6 +24,7 @@
 
 #include "range.h"
 #include "cace/ari.h"
+#include <regex.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,6 +43,8 @@ enum amm_semtype_cnst_type_e
     AMM_SEMTYPE_CNST_INVALID,
     /// Text- or byte-string length range
     AMM_SEMTYPE_CNST_STRLEN,
+    /// Text-string pattern expression
+    AMM_SEMTYPE_CNST_TEXTPAT,
     /// A signed 64-bit integer multi-interval range
     AMM_SEMTYPE_CNST_RANGE_INT64,
 };
@@ -57,6 +60,8 @@ typedef struct amm_semtype_cnst_s
     {
         /// Used when #type is ::AMM_SEMTYPE_CNST_STRLEN
         cace_amm_range_size_t as_strlen;
+        /// Used when #type is ::AMM_SEMTYPE_CNST_TEXTPAT
+        regex_t as_textpat;
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
         cace_amm_range_int64_t as_range_int64;
     };
@@ -68,12 +73,27 @@ void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj);
 
 /** Configure a constraint on text-string or byte-string size.
  * This applies to ARI_TYPE_TEXTSTR and ARI_TYPE_BYTESTR as well as untyped
- * primitive strings.
+ * primitive text- and byte-strings.
  *
  * @param[in,out] obj The struct to set the state of.
  * @return The specific parameters for this constraint type.
  */
 cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj);
+
+/** Configure a constraint on text-string regular expression pattern.
+ * This applies to ARI_TYPE_TEXTSTR as well as untyped
+ * primitive text strings.
+ *
+ * @note The @c pat parameter is the full POSIX 2008 pattern, which must be
+ * adapted from the original ADM pattern according to
+ * RFC 9485 @cite rfc9485 to include a leading "^" and trailing "$" match.
+ *
+ *
+ * @param[in,out] obj The struct to set the state of.
+ * @param[in] pat The regular expression to compile.
+ * @return The specific parameters for this constraint type.
+ */
+regex_t *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat);
 
 /** Configure a constraint on integer values based on signed 64-bit ranges.
  * This applies to ARI_TYPE_BYTE, ARI_TYPE_INT, ARI_TYPE_UINT, ARI_TYPE_VAST,

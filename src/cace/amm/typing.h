@@ -37,9 +37,9 @@
 extern "C" {
 #endif
 
-#define CACE_AMM_ERR_CONVERT_NULLFUNC 2
-#define CACE_AMM_ERR_CONVERT_BADVALUE 3
-#define CACE_AMM_ERR_CONVERT_NOCHOICE 4
+#define CACE_AMM_ERR_CONVERT_NULLFUNC          2
+#define CACE_AMM_ERR_CONVERT_BADVALUE          3
+#define CACE_AMM_ERR_CONVERT_NOCHOICE          4
 #define CACE_AMM_ERR_CONVERT_FAILED_CONSTRAINT 5
 
 // Forward declaration to allow recursive references
