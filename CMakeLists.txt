@@ -152,10 +152,14 @@ find_package(ION)
 find_package(QCBOR REQUIRED)
 find_package(MLIB REQUIRED)
 find_package(timespec REQUIRED)
+# Optional dependencies
+pkg_search_module(PCRE libpcre2-posix IMPORTED_TARGET)
+
 if(ARI_TEXT_PARSE)
   find_package(FLEX REQUIRED)
   find_package(BISON REQUIRED)
 endif(ARI_TEXT_PARSE)
+
 if(BUILD_MANAGER)
   # All these are optional
   pkg_search_module(MYSQLCLIENT mysqlclient IMPORTED_TARGET)

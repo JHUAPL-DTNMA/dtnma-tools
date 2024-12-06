@@ -33,9 +33,11 @@ void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj)
         case AMM_SEMTYPE_CNST_STRLEN:
             cace_amm_range_size_deinit(&(obj->as_strlen));
             break;
+#if defined(PCRE_FOUND)
         case AMM_SEMTYPE_CNST_TEXTPAT:
             regfree(&(obj->as_textpat));
             break;
+#endif /* PCRE_FOUND */
         case AMM_SEMTYPE_CNST_RANGE_INT64:
             cace_amm_range_int64_deinit(&(obj->as_range_int64));
             break;
@@ -55,6 +57,8 @@ cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj)
     return cfg;
 }
 
+#if defined(PCRE_FOUND)
+
 regex_t *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat)
 {
     CHKNULL(obj);
@@ -71,6 +75,8 @@ regex_t *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat)
 
     return cfg;
 }
+
+#endif /* PCRE_FOUND */
 
 cace_amm_range_int64_t *amm_semtype_cnst_set_range_int64(amm_semtype_cnst_t *obj)
 {
@@ -115,6 +121,7 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
             retval = cace_amm_range_size_contains(cfg, len);
             break;
         }
+#if defined(PCRE_FOUND)
         case AMM_SEMTYPE_CNST_TEXTPAT:
         {
             const cace_data_t *data = ari_cget_tstr(val);
@@ -129,6 +136,7 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
             retval = (res == 0);
             break;
         }
+#endif /* PCRE_FOUND */
         case AMM_SEMTYPE_CNST_RANGE_INT64:
         {
             int64_t intval;

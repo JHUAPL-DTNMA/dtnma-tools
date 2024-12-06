@@ -39,6 +39,9 @@ ruby
 build-essential
 autoconf
 libtool
+flex libfl-dev
+bison
+libpcre2-dev
 civetweb
 libcivetweb-dev
 libssl-dev

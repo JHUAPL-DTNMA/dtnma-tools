@@ -110,14 +110,13 @@ target_include_directories(
   cace PUBLIC
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
-target_compile_definitions(cace PRIVATE
-  -D_XOPEN_SOURCE
-  -D_POSIX_C_SOURCE=200809L
-)
 target_link_libraries(cace PUBLIC ${FLEX_LIBRARIES})
 target_link_libraries(cace PUBLIC MLIB::mlib)
 target_link_libraries(cace PUBLIC qcbor)
 target_link_libraries(cace PUBLIC m)
+if(PCRE_FOUND)
+    target_link_libraries(cace PUBLIC PkgConfig::PCRE)
+endif(PCRE_FOUND)
 
 
 # Stand-alone ARI manipulation tool

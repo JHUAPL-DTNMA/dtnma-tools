@@ -32,7 +32,10 @@ extern "C" {
 /* Enable look-up table (LUT) caching at runtime. */
 #cmakedefine ENABLE_LUT_CACHE
 
-/* Ablet o use GNU Getopt extensions. */
+/* Use the PCRE2 library. */
+#cmakedefine PCRE_FOUND
+
+/* Able to use GNU Getopt extensions. */
 #cmakedefine HAVE_GETOPT_LONG
 
 #ifndef ARI_MALLOC

@@ -24,7 +24,9 @@
 
 #include "range.h"
 #include "cace/ari.h"
-#include <regex.h>
+#if defined(PCRE_FOUND)
+#include <pcre2posix.h>
+#endif /* PCRE_FOUND */
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,8 +45,10 @@ enum amm_semtype_cnst_type_e
     AMM_SEMTYPE_CNST_INVALID,
     /// Text- or byte-string length range
     AMM_SEMTYPE_CNST_STRLEN,
+#if defined(PCRE_FOUND)
     /// Text-string pattern expression
     AMM_SEMTYPE_CNST_TEXTPAT,
+#endif /* PCRE_FOUND */
     /// A signed 64-bit integer multi-interval range
     AMM_SEMTYPE_CNST_RANGE_INT64,
 };
@@ -80,6 +84,8 @@ void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj);
  */
 cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj);
 
+#if defined(PCRE_FOUND)
+
 /** Configure a constraint on text-string regular expression pattern.
  * This applies to ARI_TYPE_TEXTSTR as well as untyped
  * primitive text strings.
@@ -94,6 +100,8 @@ cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj);
  * @return The specific parameters for this constraint type.
  */
 regex_t *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat);
+
+#endif /* PCRE_FOUND */
 
 /** Configure a constraint on integer values based on signed 64-bit ranges.
  * This applies to ARI_TYPE_BYTE, ARI_TYPE_INT, ARI_TYPE_UINT, ARI_TYPE_VAST,
