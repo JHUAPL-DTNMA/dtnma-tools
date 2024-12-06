@@ -57,7 +57,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 # Force specific POSIX compatibility version
 add_definitions(
-  "-D_POSIX_C_SOURCE=200809L"
+  -D_XOPEN_SOURCE
+  -D_POSIX_C_SOURCE=200809L
 )
 
 # Generic warn/error options
