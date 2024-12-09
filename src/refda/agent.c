@@ -22,6 +22,7 @@
 #include "reporting.h"
 #include "amm/typedef.h"
 #include "adm/ietf.h"
+#include "adm/ietf_dtnma_agent.h"
 #include "binding.h"
 #include "cace/amm/lookup.h"
 #include "cace/util/threadset.h"
@@ -226,7 +227,7 @@ int refda_agent_send_hello(refda_agent_t *agent)
 {
     ari_t ref = ARI_INIT_UNDEFINED;
     // ari:/ietf-dtnma-agent/CONST/hello
-    ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_DTNMA_AGENT_ENUM, ARI_TYPE_CONST, 0);
+    ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CONST, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
 
     // dummy message source
     refda_msgdata_t msg;

@@ -74,6 +74,16 @@ extern "C" {
             .i_max   = val,                                                                              \
         };                                                                                               \
     }                                                                                                    \
+    static inline void M_C(intvl, _set_min)(M_C(intvl, _t) * obj, type val)                        \
+    {                                                                                                    \
+        obj->has_min = true;                                                                             \
+        obj->i_min   = val;                                                                              \
+    }                                                                                                    \
+    static inline void M_C(intvl, _set_max)(M_C(intvl, _t) * obj, type val)                        \
+    {                                                                                                    \
+        obj->has_max = true;                                                                             \
+        obj->i_max   = val;                                                                              \
+    }                                                                                                    \
     static inline void M_C(intvl, _set_finite)(M_C(intvl, _t) * obj, type min_val, type max_val)         \
     {                                                                                                    \
         *obj = (M_C(intvl, _t)) {                                                                        \

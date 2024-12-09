@@ -17,6 +17,7 @@
  */
 #include "refda/agent.h"
 #include "refda/adm/ietf.h"
+#include "refda/adm/ietf_dtnma_agent.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include "cace/ari/text_util.h"

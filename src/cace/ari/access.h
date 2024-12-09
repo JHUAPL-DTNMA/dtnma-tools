@@ -155,6 +155,9 @@ void ari_set_tp(ari_t *ari, struct timespec dtntime);
 /// @overload
 void ari_set_td(ari_t *ari, struct timespec delta);
 
+/// @overload
+void ari_set_aritype(ari_t *ari, ari_type_t type);
+
 /** Require a TEXTSTR value and get the pointer to its storage.
  *
  * @param[in] ari The ARI to read.
