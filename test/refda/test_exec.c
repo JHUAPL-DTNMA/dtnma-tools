@@ -17,11 +17,10 @@
  */
 #include <refda/exec.h>
 #include <refda/register.h>
-#include <refda/adm/ietf.h>
+#include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/amm/const.h>
 #include <refda/amm/ctrl.h>
-#include <refda/adm/ietf.h>
 #include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>

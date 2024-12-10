@@ -44,7 +44,7 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/edd.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/ctrl.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/oper.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_amm.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_dtnma_agent.h"
 )
 set(CFILES

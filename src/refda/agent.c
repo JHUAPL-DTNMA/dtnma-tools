@@ -21,7 +21,7 @@
 #include "exec.h"
 #include "reporting.h"
 #include "amm/typedef.h"
-#include "adm/ietf.h"
+#include "adm/ietf_amm.h"
 #include "adm/ietf_dtnma_agent.h"
 #include "binding.h"
 #include "cace/amm/lookup.h"

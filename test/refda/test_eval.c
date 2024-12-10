@@ -17,7 +17,7 @@
  */
 #include <refda/eval.h>
 #include <refda/register.h>
-#include <refda/adm/ietf.h>
+#include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/amm/const.h>
 #include <refda/amm/edd.h>

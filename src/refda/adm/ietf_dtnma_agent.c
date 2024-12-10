@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Delay-Tolerant Networking Management
+ * Architecture (DTNMA) Tools package.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "ietf_dtnma_agent.h"
 #include "refda/agent.h"
 #include "refda/register.h"
@@ -9,15 +26,9 @@
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
-#include <timespec.h>
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
-static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *item)
-{
-    atomic_store(&(item->waiting), false);
-    return true;
-}
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
 
@@ -54,7 +65,6 @@ static void refda_adm_ietf_dtnma_agent_edd_sw_version(const refda_amm_edd_desc_t
 	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-    ari_set_tstr(&(ctx->value), "0.0.0", false);
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
@@ -393,25 +403,6 @@ static int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t 
 	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-    const ari_t *duration = refda_exec_ctx_get_aparam_index(ctx, 0);
-
-    struct timespec nowtime;
-
-    int res = clock_gettime(CLOCK_REALTIME, &nowtime);
-    if (res)
-    {
-        return 2;
-    }
-
-    refda_timeline_event_t event = {
-        .ts       = timespec_add(nowtime, duration->as_lit.value.as_timespec),
-        .item     = ctx->item,
-        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
-    };
-    refda_timeline_push(ctx->runctx->agent->exec_timeline, event);
-
-    refda_exec_ctx_set_waiting(ctx);
-    return 0;
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
@@ -490,49 +481,6 @@ static int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *
 	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-    CACE_LOG_WARNING("executed!");
-
-    const ari_t *ref = refda_exec_ctx_get_aparam_index(ctx, 0);
-
-    // FIXME mutex-serialize object store access
-    cace_amm_lookup_t deref;
-    cace_amm_lookup_init(&deref);
-    int res = cace_amm_lookup_deref(&deref, &(ctx->runctx->agent->objs), ref);
-
-    if (cace_log_is_enabled_for(LOG_DEBUG))
-    {
-        string_t buf;
-        string_init(buf);
-        ari_text_encode_objpath(buf, &(ref->as_ref.objpath), ARI_TEXT_ARITYPE_TEXT);
-        CACE_LOG_DEBUG("Lookup reference to %s", string_get_cstr(buf));
-        string_clear(buf);
-    }
-    if (res)
-    {
-        CACE_LOG_WARNING("inspect lookup failed with status %d", res);
-    }
-    else
-    {
-        refda_valprod_ctx_t prodctx;
-        refda_valprod_ctx_init(&prodctx, ctx->runctx, &deref);
-
-        res = refda_valprod_run(&prodctx);
-        if (res)
-        {
-            CACE_LOG_WARNING("inspect production failed with status %d", res);
-        }
-        else
-        {
-            // result of the CTRL is the produced value
-            refda_exec_ctx_set_result_move(ctx, &prodctx.value);
-        }
-
-        refda_valprod_ctx_deinit(&prodctx);
-    }
-
-    cace_amm_lookup_deinit(&deref);
-
-    return res;
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
@@ -1163,7 +1111,7 @@ static int refda_adm_ietf_dtnma_agent_oper_tbl_filter(const refda_amm_oper_desc_
 int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 {
     CHKERR1(agent);
-    CACE_LOG_DEBUG("Registering ADM: ietf-dtnma-agent");
+    CACE_LOG_DEBUG("Registering ADM: " "ietf-dtnma-agent");
     REFDA_AGENT_LOCK(agent);
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-dtnma-agent", true, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM);
@@ -1172,12 +1120,70 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         cace_amm_obj_desc_t *obj;
 
         /**
+         * Register TYPEDEF objects
+         */
+        { // For ./TYPEDEF/hellotyp
+            refda_amm_typedef_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named type:
+            {
+                // union
+                amm_semtype_union_t *semtype = amm_type_set_union_size(&(objdata->typeobj), 2);
+                {
+                    amm_type_t *choice = amm_type_array_get(semtype->choices, 0);
+                    {
+                        ari_t name = ARI_INIT_UNDEFINED;
+                        ari_set_aritype(&name, ARI_TYPE_BYTE);
+                        amm_type_set_use_ref_move(choice, &name);
+                    }
+                }
+                {
+                    amm_type_t *choice = amm_type_array_get(semtype->choices, 1);
+                    {
+                        ari_t name = ARI_INIT_UNDEFINED;
+                        ari_set_aritype(&name, ARI_TYPE_UINT);
+                        amm_type_set_use_ref_move(choice, &name);
+                    }
+                }
+            }
+            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("hellotyp", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_HELLOTYP), objdata);
+            // no parameters possible
+        }
+        { // For ./TYPEDEF/column-id
+            refda_amm_typedef_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named type:
+            {
+                // union
+                amm_semtype_union_t *semtype = amm_type_set_union_size(&(objdata->typeobj), 2);
+                {
+                    amm_type_t *choice = amm_type_array_get(semtype->choices, 0);
+                    {
+                        ari_t name = ARI_INIT_UNDEFINED;
+                        ari_set_aritype(&name, ARI_TYPE_UVAST);
+                        amm_type_set_use_ref_move(choice, &name);
+                    }
+                }
+                {
+                    amm_type_t *choice = amm_type_array_get(semtype->choices, 1);
+                    {
+                        ari_t name = ARI_INIT_UNDEFINED;
+                        ari_set_aritype(&name, ARI_TYPE_TEXTSTR);
+                        amm_type_set_use_ref_move(choice, &name);
+                    }
+                }
+            }
+            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("column-id", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_COLUMN_ID), objdata);
+            // no parameters possible
+        }
+
+        /**
          * Register CONST objects
          */
         { // For ./CONST/hello
             refda_amm_const_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_const_desc_t));
             refda_amm_const_desc_init(objdata);
-            // constant value
+            // constant value:
             {
                 ari_ac_t acinit;
                 ari_ac_init(&acinit);
@@ -1202,7 +1208,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // no parameters
 
         }
-
 
         /**
          * Register EDD objects
