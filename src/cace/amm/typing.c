@@ -182,7 +182,7 @@ static int builtin_bool_convert(const amm_type_t *self, ari_t *out, const ari_t 
         }
     }
 
-    ari_set_bool(out, result);
+    ari_set_prim_bool(out, result);
     ari_force_lit_type(out, self->as_builtin.ari_type);
     return 0;
 }
@@ -647,6 +647,7 @@ static bool builtin_anyobj_match(const amm_type_t *self, const ari_t *ari)
 }
 
 static amm_type_t amm_builtins[] = {
+    // literal types below
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_LITERAL,
@@ -779,8 +780,7 @@ static amm_type_t amm_builtins[] = {
         .match               = builtin_common_lit_match,
         .convert             = builtin_default_convert,
     },
-    // FIXME add containers
-
+    // object types below
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_OBJECT,
@@ -793,7 +793,54 @@ static amm_type_t amm_builtins[] = {
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
-    // FIXME add objects
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_TYPEDEF,
+        .match               = builtin_anyobj_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_CONST,
+        .match               = builtin_anyobj_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_VAR,
+        .match               = builtin_anyobj_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_EDD,
+        .match               = builtin_anyobj_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_CTRL,
+        .match               = builtin_anyobj_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_OPER,
+        .match               = builtin_anyobj_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_SBR,
+        .match               = builtin_anyobj_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = ARI_TYPE_TBR,
+        .match               = builtin_anyobj_match,
+        .convert             = builtin_default_convert,
+    },
 };
 
 #ifdef ENABLE_LUT_CACHE
@@ -824,6 +871,10 @@ const amm_type_t *amm_type_get_builtin(ari_type_t ari_type)
 {
     pthread_once(&amm_builtin_dict_ctrl, amm_builtin_dict_init);
     const amm_type_t **found = amm_type_lookup_get(amm_builtin_dict, ari_type);
+    if (!found)
+    {
+        CACE_LOG_WARNING("failed to get builtin type for %d", ari_type);
+    }
     return found ? *found : NULL;
 }
 
@@ -966,7 +1017,7 @@ static bool amm_builtin_validate_lit(const ari_t *ari, bool is_map_key)
 }
 
 /// Adapt to the visitor interface
-static int amm_builtin_validate_visit_ari(const ari_t *ari, const ari_visit_ctx_t *ctx)
+static int amm_builtin_validate_visit_ari(ari_t *ari, const ari_visit_ctx_t *ctx)
 {
     return amm_builtin_validate_lit(ari, ctx->is_map_key) ? 0 : 1;
 }
@@ -978,5 +1029,6 @@ bool amm_builtin_validate(const ari_t *ari)
         .visit_ari = amm_builtin_validate_visit_ari,
     };
 
-    return (ari_visit(ari, &visitor, NULL) == 0);
+    // the visit functions keep the value const
+    return (ari_visit((ari_t *)ari, &visitor, NULL) == 0);
 }

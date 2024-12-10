@@ -40,48 +40,18 @@ int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx
     CHKERR1(obj->execute)
 
     int res = (obj->execute)(obj, ctx);
+    if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, &(ctx->result), ARI_TEXT_ENC_OPTS_DEFAULT);
+        ari_text_encode(buf, &(ctx->item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("execution finished with status %d and result %s", res, string_get_cstr(buf));
         string_clear(buf);
     }
     if (res)
     {
-        ari_set_undefined(&(ctx->result));
+        ari_set_undefined(&(ctx->item->result));
         return 2;
-    }
-
-    // FIXME skip type checking
-    return 0;
-    if (amm_type_is_valid(&(obj->res_type)))
-    {
-        // force result type
-        ari_t tmp;
-        ari_init(&tmp);
-        res = amm_type_convert(&(obj->res_type), &tmp, &(ctx->result));
-        ari_set_move(&(ctx->result), &tmp);
-        if (res)
-        {
-            ari_set_undefined(&(ctx->result));
-            return 3;
-        }
-    }
-    else
-    {
-        // success is treated as a null value
-        if (ari_is_undefined(&(ctx->result)))
-        {
-            ari_set_null(&(ctx->result));
-        }
-
-        if (!ari_is_null(&(ctx->result)))
-        {
-            // should not have a result
-            ari_set_undefined(&(ctx->result));
-            return 4;
-        }
     }
 
     return 0;

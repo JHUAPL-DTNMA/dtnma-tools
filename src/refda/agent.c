@@ -22,6 +22,7 @@
 #include "reporting.h"
 #include "amm/typedef.h"
 #include "adm/ietf.h"
+#include "binding.h"
 #include "cace/amm/lookup.h"
 #include "cace/util/threadset.h"
 #include "cace/util/logging.h"
@@ -40,6 +41,9 @@ void refda_agent_init(refda_agent_t *agent)
     refda_msgdata_queue_init(agent->execs, AGENT_QUEUE_SIZE);
     sem_init(&(agent->execs_sem), 0, 0);
 
+    refda_exec_seq_list_init(agent->exec_state);
+    refda_timeline_init(agent->exec_timeline);
+
     refda_msgdata_queue_init(agent->rptgs, AGENT_QUEUE_SIZE);
     sem_init(&(agent->rptgs_sem), 0, 0);
 }
@@ -48,6 +52,9 @@ void refda_agent_deinit(refda_agent_t *agent)
 {
     sem_destroy(&(agent->rptgs_sem));
     refda_msgdata_queue_clear(agent->rptgs);
+
+    refda_timeline_clear(agent->exec_timeline);
+    refda_exec_seq_list_clear(agent->exec_state);
 
     sem_destroy(&(agent->execs_sem));
     refda_msgdata_queue_clear(agent->execs);
@@ -118,8 +125,59 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         ++failcnt;
     }
 
+    /* FIXME replace
+    agent->expr_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM, 18);
+    if (!agent->expr_type)
+    {
+        ++failcnt;
+    }
+
+    agent->rptt_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM, 24);
+    if (!agent->rptt_type)
+    {
+        ++failcnt;
+    }
+    */
+    if (failcnt)
+    {
+        CACE_LOG_WARNING("agent required type binding failures: %d", failcnt);
+    }
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_ref(ns_it);
+
+        cace_amm_obj_ns_ctr_dict_it_t objtype_it;
+        for (cace_amm_obj_ns_ctr_dict_it(objtype_it, ns->object_types); !cace_amm_obj_ns_ctr_dict_end_p(objtype_it);
+             cace_amm_obj_ns_ctr_dict_next(objtype_it))
+        {
+            cace_amm_obj_ns_ctr_dict_itref_t *pair = cace_amm_obj_ns_ctr_dict_ref(objtype_it);
+
+            ari_type_t             obj_type = pair->key;
+            cace_amm_obj_ns_ctr_t *obj_ctr  = &(pair->value);
+
+            cace_amm_obj_desc_list_it_t obj_it;
+            for (cace_amm_obj_desc_list_it(obj_it, obj_ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+                 cace_amm_obj_desc_list_next(obj_it))
+            {
+                cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_ref(obj_it);
+
+                const int objfailcnt = refda_binding_obj(obj_type, obj, &(agent->objs));
+                if (objfailcnt)
+                {
+                    CACE_LOG_WARNING("binding NS %s obj-type %d name %s; failures %d", string_get_cstr(ns->name),
+                                     obj_type, string_get_cstr(obj->name), objfailcnt);
+                }
+                failcnt += objfailcnt;
+            }
+        }
+    }
+
     REFDA_AGENT_UNLOCK(agent);
 
+    CACE_LOG_INFO("binding finished with %d failures", failcnt);
     return failcnt;
 }
 
@@ -178,8 +236,10 @@ int refda_agent_send_hello(refda_agent_t *agent)
     cace_data_copy_from(&(msg.ident), strlen(src) - 1, (cace_data_ptr_t)src);
 
     refda_runctx_t runctx;
-    int            retval = 0;
-    int            res    = refda_runctx_init(&runctx, agent, &msg);
+    refda_runctx_init(&runctx);
+    int retval = 0;
+
+    int res = refda_runctx_from(&runctx, agent, &msg);
     if (res)
     {
         retval = 2;

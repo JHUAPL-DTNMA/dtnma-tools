@@ -18,18 +18,42 @@
 #include "exec_ctx.h"
 #include "cace/util/defs.h"
 
-void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_runctx_t *parent, const cace_amm_lookup_t *deref)
+void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_exec_item_t *item)
 {
     CHKVOID(obj);
-    CHKVOID(deref);
+    CHKVOID(item);
 
-    obj->parent = parent;
-    obj->deref  = deref;
-    ari_init(&(obj->result));
+    obj->runctx = refda_runctx_ptr_ref(item->seq->runctx);
+    obj->item   = item;
 }
 
 void refda_exec_ctx_deinit(refda_exec_ctx_t *obj)
 {
     CHKVOID(obj);
-    ari_deinit(&(obj->result));
+}
+
+const ari_t *refda_exec_ctx_get_aparam_index(refda_exec_ctx_t *ctx, size_t index)
+{
+    return ari_array_cget(ctx->item->deref.aparams.ordered, index);
+}
+
+const ari_t *refda_exec_ctx_get_aparam_name(refda_exec_ctx_t *ctx, const char *name)
+{
+    return *named_ari_ptr_dict_cget(ctx->item->deref.aparams.named, name);
+}
+
+void refda_exec_ctx_set_waiting(refda_exec_ctx_t *ctx)
+{
+    CHKVOID(ctx);
+    atomic_store(&(ctx->item->waiting), true);
+}
+
+void refda_exec_ctx_set_result_move(refda_exec_ctx_t *ctx, ari_t *value)
+{
+    ari_set_move(&(ctx->item->result), value);
+}
+
+void refda_exec_ctx_set_result_copy(refda_exec_ctx_t *ctx, const ari_t *value)
+{
+    ari_set_copy(&(ctx->item->result), value);
 }

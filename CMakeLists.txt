@@ -149,8 +149,9 @@ include(FindPkgConfig)
 
 # Libaries in deps but built separately
 find_package(ION)
-find_package(QCBOR)
-find_package(MLIB)
+find_package(QCBOR REQUIRED)
+find_package(MLIB REQUIRED)
+find_package(timespec REQUIRED)
 if(ARI_TEXT_PARSE)
   find_package(FLEX REQUIRED)
   find_package(BISON REQUIRED)

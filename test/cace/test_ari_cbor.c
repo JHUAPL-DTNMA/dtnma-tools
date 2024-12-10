@@ -24,10 +24,22 @@
 #include <cace/ari/cbor.h>
 #include <cace/ari/text_util.h>
 #include <cace/amm/typing.h>
+#include <cace/util/logging.h>
 #include <unity.h>
 
 // Allow this macro
 #define TEST_CASE(...)
+
+void suiteSetUp(void)
+{
+    cace_openlog();
+}
+
+int suiteTearDown(int failures)
+{
+    cace_closelog();
+    return failures;
+}
 
 /// Resource cleanup for failure messages
 static const char *errm = NULL;

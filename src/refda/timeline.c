@@ -15,26 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "timeline.h"
+#include <timespec.h>
 
-#ifndef CACE_UTIL_THREADSET_H_
-#define CACE_UTIL_THREADSET_H_
-
-#include "cace/config.h"
-#include <pthread.h>
-#include <m-list.h>
-
-/// @cond Doxygen_Suppress
-LIST_DEF(threadset, pthread_t)
-/// @endcond
-
-typedef struct
+int refda_timeline_event_cmp(const refda_timeline_event_t *lt, const refda_timeline_event_t *rt)
 {
-    void *(*func)(void *);
-    const char *name;
-} threadinfo_t;
+    if (!lt)
+    {
+        return 1;
+    }
+    if (!rt)
+    {
+        return -1;
+    }
+    return timespec_cmp(lt->ts, rt->ts);
+}
 
-int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, void *arg);
-
-int threadset_join(threadset_t tset);
-
-#endif /* CACE_UTIL_THREADSET_H_ */
+const refda_timeline_event_t *refda_timeline_front(refda_timeline_t line)
+{
+    refda_timeline_it_t it;
+    refda_timeline_it(it, line);
+    if (refda_timeline_end_p(it))
+    {
+        return NULL;
+    }
+    return refda_timeline_cref(it);
+}

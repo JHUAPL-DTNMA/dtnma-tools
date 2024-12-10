@@ -293,11 +293,12 @@ void test_amm_type_match_semtype_umap_1(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F6", false)          // ari:null
-TEST_CASE("8211820102", false)  // ari:/AC/(1,2)
-TEST_CASE("82118201F5", false)  // ari:/AC/(1,true)
-TEST_CASE("82138102", true)     // ari:/TBL/c=2;
-TEST_CASE("8213830201F5", true) // ari:/TBL/c=2;(1,true)
+TEST_CASE("F6", false)           // ari:null
+TEST_CASE("8211820102", false)   // ari:/AC/(1,2)
+TEST_CASE("82118201F5", false)   // ari:/AC/(1,true)
+TEST_CASE("82138102", true)      // ari:/TBL/c=2;
+TEST_CASE("8213830201F5", true)  // ari:/TBL/c=2;(1,true)
+TEST_CASE("821383020103", false) // ari:/TBL/c=2;(1,3)
 void test_amm_type_match_semtype_tblt_1(const char *inhex, bool expect)
 {
     amm_type_t mytype;

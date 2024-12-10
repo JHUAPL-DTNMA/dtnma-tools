@@ -30,7 +30,7 @@ BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"
 echo "Installing to ${DESTDIR}"
 
-if [ false && ! -e ${DESTDIR}/usr/include/ion.h ]
+if [ -z "false" -a ! -e ${DESTDIR}/usr/include/ion.h ]
 then
   mkdir -p ${BUILDDIR}
   rsync --recursive ${DEPSDIR}/ion/ ${BUILDDIR}/ion/
@@ -103,6 +103,23 @@ then
   cmake --build ${BUILDDIR}/unity -v
   cmake --install ${BUILDDIR}/unity
   rm -rf ${BUILDDIR}/unity
+  popd
+fi
+
+if [ ! -e ${DESTDIR}/usr/include/timespec.h ]
+then
+  echo "Building timespec..."
+  rsync --recursive ${DEPSDIR}/timespec/ ${BUILDDIR}/timespec/
+  rsync ${DEPSDIR}/timespec-CMakeLists.txt ${BUILDDIR}/timespec/CMakeLists.txt
+  pushd ${BUILDDIR}/timespec
+  cmake -S ${BUILDDIR}/timespec -B ${BUILDDIR}/timespec \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+    -DBUILD_TESTING=ON
+  cmake --build ${BUILDDIR}/timespec -v
+  cmake --build ${BUILDDIR}/timespec --target test
+  cmake --install ${BUILDDIR}/timespec
+  rm -rf ${BUILDDIR}/timespec
   popd
 fi
 

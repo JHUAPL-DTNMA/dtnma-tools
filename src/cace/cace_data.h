@@ -168,6 +168,8 @@ void cace_data_move(cace_data_t *data, cace_data_t *src);
  */
 void cace_data_swap(cace_data_t *data, cace_data_t *other);
 
+bool cace_data_is_empty(const cace_data_t *data);
+
 /** Interface for M*LIB items.
  */
 size_t cace_data_hash(const cace_data_t *data);

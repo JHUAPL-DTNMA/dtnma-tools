@@ -21,6 +21,7 @@ include(GNUInstallDirs)
 
 set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/binding.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/msgdata.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ingress.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/egress.h"
@@ -29,10 +30,13 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/valprod.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/exec.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/exec_ctx.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/exec_item.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/exec_seq.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/eval.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/eval_ctx.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/reporting.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/reporting_ctx.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/timeline.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/ident.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/typedef.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/const.h"
@@ -44,6 +48,7 @@ set(HFILES
 )
 set(CFILES
     "agent.c"
+    "binding.c"
     "msgdata.c"
     "ingress.c"
     "egress.c"
@@ -52,10 +57,13 @@ set(CFILES
     "valprod.c"
     "exec.c"
     "exec_ctx.c"
+    "exec_item.c"
+    "exec_seq.c"
     "eval.c"
     "eval_ctx.c"
     "reporting.c"
     "reporting_ctx.c"
+    "timeline.c"
     "amm/ident.c"
     "amm/typedef.c"
     "amm/const.c"
@@ -74,6 +82,7 @@ target_include_directories(
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
 target_link_libraries(refda PUBLIC cace)
+target_link_libraries(refda PUBLIC timespec::timespec)
 
 install(TARGETS refda)
 install(

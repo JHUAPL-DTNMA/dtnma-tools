@@ -21,7 +21,6 @@
 
 #include <cace/ari.h>
 #include <m-buffer.h>
-#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +29,7 @@ extern "C" {
 /** A combination of ARI and authenticated peer identity.
  * This applies to incoming EXECSET and outgoing RPTSET values.
  */
-typedef struct
+typedef struct refda_msgdata_s
 {
     /// The peer identity as opaque encoded data
     cace_data_t ident;

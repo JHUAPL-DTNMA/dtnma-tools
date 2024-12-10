@@ -57,6 +57,10 @@ void refda_valprod_ctx_init(refda_valprod_ctx_t *ctx, refda_runctx_t *parent, co
 
 void refda_valprod_ctx_deinit(refda_valprod_ctx_t *ctx);
 
+const ari_t *refda_valprod_ctx_get_aparam_index(refda_valprod_ctx_t *ctx, size_t index);
+
+const ari_t *refda_valprod_ctx_get_aparam_name(refda_valprod_ctx_t *ctx, const char *name);
+
 /** Perform an object-type-specific procedure to produce a value.
  *
  * @param[in,out] ctx The production context to use.

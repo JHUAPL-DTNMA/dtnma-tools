@@ -44,21 +44,27 @@ extern "C" {
 cace_amm_obj_desc_t *refda_register_ident(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                           refda_amm_ident_desc_t *desc);
 
+/// @overload
 cace_amm_obj_desc_t *refda_register_typedef(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                             refda_amm_typedef_desc_t *desc);
 
+/// @overload
 cace_amm_obj_desc_t *refda_register_const(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                           refda_amm_const_desc_t *desc);
 
+/// @overload
 cace_amm_obj_desc_t *refda_register_var(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                         refda_amm_var_desc_t *desc);
 
+/// @overload
 cace_amm_obj_desc_t *refda_register_edd(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                         refda_amm_edd_desc_t *desc);
 
+/// @overload
 cace_amm_obj_desc_t *refda_register_ctrl(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                          refda_amm_ctrl_desc_t *desc);
 
+/// @overload
 cace_amm_obj_desc_t *refda_register_oper(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
                                          refda_amm_oper_desc_t *desc);
 

@@ -58,19 +58,19 @@ typedef struct
      * @param[in] ctx Visitor context information.
      * @return Zero to continue iterating, or non-zero to stop immediately.
      */
-    int (*visit_ari)(const ari_t *ari, const ari_visit_ctx_t *ctx);
+    int (*visit_ari)(ari_t *ari, const ari_visit_ctx_t *ctx);
 
     /// @overload
-    int (*visit_ref)(const ari_ref_t *obj, const ari_visit_ctx_t *ctx);
+    int (*visit_ref)(ari_ref_t *obj, const ari_visit_ctx_t *ctx);
 
     /// @overload
-    int (*visit_objpath)(const ari_objpath_t *obj, const ari_visit_ctx_t *ctx);
+    int (*visit_objpath)(ari_objpath_t *obj, const ari_visit_ctx_t *ctx);
 
     /** @overload
      * This is called before and in addition to any visiting of container
      * contents.
      */
-    int (*visit_lit)(const ari_lit_t *obj, const ari_visit_ctx_t *ctx);
+    int (*visit_lit)(ari_lit_t *obj, const ari_visit_ctx_t *ctx);
 
 } ari_visitor_t;
 
@@ -82,7 +82,7 @@ typedef struct
  * @return Zero upon success, or non-zero if one of the visitor functions
  * returned non-zero.
  */
-int ari_visit(const ari_t *ari, const ari_visitor_t *visitor, void *user_data);
+int ari_visit(ari_t *ari, const ari_visitor_t *visitor, void *user_data);
 
 /** Context used for ari_translator_t functions.
  */

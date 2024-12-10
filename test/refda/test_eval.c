@@ -17,6 +17,7 @@
  */
 #include <refda/eval.h>
 #include <refda/register.h>
+#include <refda/adm/ietf.h>
 #include <refda/amm/const.h>
 #include <refda/amm/edd.h>
 #include <cace/amm/semtype.h>
@@ -42,7 +43,6 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-
 #define EXAMPLE_ADM_ENUM 65536
 
 /// Agent context for testing
@@ -50,7 +50,7 @@ static refda_agent_t agent;
 
 static void test_reporting_edd_one_int(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
 {
-    const ari_t *val = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    const ari_t *val = refda_valprod_ctx_get_aparam_index(ctx, 0);
     CHKVOID(val)
     {
         string_t buf;
@@ -71,8 +71,8 @@ static int ari_numeric_add(ari_t *result, const ari_t *lt_val, const ari_t *rt_v
     }
 
     const amm_type_t *amm_promote = amm_type_get_builtin(promote);
-    ari_t lt_prom = ARI_INIT_UNDEFINED;
-    ari_t rt_prom = ARI_INIT_UNDEFINED;
+    ari_t             lt_prom     = ARI_INIT_UNDEFINED;
+    ari_t             rt_prom     = ARI_INIT_UNDEFINED;
     amm_type_convert(amm_promote, &lt_prom, lt_val);
     amm_type_convert(amm_promote, &rt_prom, rt_val);
 
@@ -82,26 +82,26 @@ static int ari_numeric_add(ari_t *result, const ari_t *lt_val, const ari_t *rt_v
     int retval = 0;
     switch (lt_prom.as_lit.prim_type)
     {
-    case ARI_PRIM_UINT64:
-        res_lit->value.as_uint64 = lt_prom.as_lit.value.as_uint64 + rt_prom.as_lit.value.as_uint64;
-        break;
-    case ARI_PRIM_INT64:
-        res_lit->value.as_int64 = lt_prom.as_lit.value.as_int64 + rt_prom.as_lit.value.as_int64;
-        break;
-    case ARI_PRIM_FLOAT64:
-        res_lit->value.as_float64 = lt_prom.as_lit.value.as_float64 + rt_prom.as_lit.value.as_float64;
-        break;
-    default:
-        // leave lit as default undefined
-        retval = 3;
-        break;
+        case ARI_PRIM_UINT64:
+            res_lit->value.as_uint64 = lt_prom.as_lit.value.as_uint64 + rt_prom.as_lit.value.as_uint64;
+            break;
+        case ARI_PRIM_INT64:
+            res_lit->value.as_int64 = lt_prom.as_lit.value.as_int64 + rt_prom.as_lit.value.as_int64;
+            break;
+        case ARI_PRIM_FLOAT64:
+            res_lit->value.as_float64 = lt_prom.as_lit.value.as_float64 + rt_prom.as_lit.value.as_float64;
+            break;
+        default:
+            // leave lit as default undefined
+            retval = 3;
+            break;
     }
 
     if (!retval)
     {
-        res_lit->prim_type = lt_prom.as_lit.prim_type;
+        res_lit->prim_type    = lt_prom.as_lit.prim_type;
         res_lit->has_ari_type = true;
-        res_lit->ari_type = promote;
+        res_lit->ari_type     = promote;
     }
 
     ari_deinit(&lt_prom);
@@ -112,12 +112,12 @@ static int ari_numeric_add(ari_t *result, const ari_t *lt_val, const ari_t *rt_v
 static int test_reporting_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx)
 {
     // FIXME process stack outside this callback
-    ari_t left = ARI_INIT_UNDEFINED;
+    ari_t left  = ARI_INIT_UNDEFINED;
     ari_t right = ARI_INIT_UNDEFINED;
     ari_list_pop_back_move(&left, ctx->stack);
     ari_list_pop_back_move(&right, ctx->stack);
 
-    const ari_t *more = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    const ari_t *more = refda_eval_ctx_get_aparam_index(ctx, 0);
     {
         string_t buf;
         string_init(buf);
@@ -126,9 +126,9 @@ static int test_reporting_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_e
         string_clear(buf);
     }
 
-    int retval = 0;
-    ari_t tmp1 = ARI_INIT_UNDEFINED;
-    ari_t tmp2 = ARI_INIT_UNDEFINED;
+    int   retval = 0;
+    ari_t tmp1   = ARI_INIT_UNDEFINED;
+    ari_t tmp2   = ARI_INIT_UNDEFINED;
     if (ari_numeric_add(&tmp1, &left, &right))
     {
         retval = 2;
@@ -159,11 +159,13 @@ static int test_reporting_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_e
 void setUp(void)
 {
     refda_agent_init(&agent);
+    // ADM initialization
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(&agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(&agent));
 
     {
         // ADM for this test fixture
-        cace_amm_obj_ns_t *adm =
-            cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
+        cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
         cace_amm_obj_desc_t *obj;
 
         /**
@@ -226,7 +228,7 @@ void setUp(void)
         {
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-// FIXME           amm_type_set_use_direct(&(objdata->val_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            amm_type_set_use_direct(&(objdata->res_type), amm_type_get_builtin(ARI_TYPE_VAST));
             objdata->evaluate = test_reporting_oper_add;
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("oper1", 1), objdata);
@@ -238,8 +240,7 @@ void setUp(void)
     }
 
     int res = refda_agent_bindrefs(&agent);
-    (void)res;
-//    TEST_ASSERT_EQUAL_INT(0, res);
+    TEST_ASSERT_EQUAL_INT(0, res);
 }
 
 void tearDown(void)
@@ -280,11 +281,12 @@ void test_refda_eval_target_valid(const char *targethex, const char *expectloghe
     TEST_ASSERT_FALSE(ari_is_undefined(&expect_result));
 
     refda_runctx_t runctx;
+    refda_runctx_init(&runctx);
     // no nonce for test
-    refda_runctx_init(&runctx, &agent, NULL);
+    refda_runctx_from(&runctx, &agent, NULL);
 
     ari_t result = ARI_INIT_UNDEFINED;
-    int res = refda_eval_target(&runctx, &result, &target);
+    int   res    = refda_eval_target(&runctx, &result, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_eval_target() disagrees");
 
     // verify result value
@@ -292,11 +294,12 @@ void test_refda_eval_target_valid(const char *targethex, const char *expectloghe
     TEST_ASSERT_TRUE_MESSAGE(equal, "result ARI is different");
 
     ari_deinit(&result);
+    refda_runctx_deinit(&runctx);
     ari_deinit(&expect_result);
     ari_deinit(&target);
 }
 
-TEST_CASE("821180", 6) // Empty stack ari:/AC/()
+TEST_CASE("821180", 6)             // Empty stack ari:/AC/()
 TEST_CASE("821182820601820602", 6) // Extra stack ari:/AC/(/VAST/1,/VAST/2)
 void test_refda_eval_target_failure(const char *targethex, int expect_res)
 {
@@ -305,13 +308,15 @@ void test_refda_eval_target_failure(const char *targethex, int expect_res)
     ari_convert(&target, targethex);
 
     refda_runctx_t runctx;
+    refda_runctx_init(&runctx);
     // no nonce for test
-    refda_runctx_init(&runctx, &agent, NULL);
+    refda_runctx_from(&runctx, &agent, NULL);
 
     ari_t result = ARI_INIT_UNDEFINED;
-    int res = refda_eval_target(&runctx, &result, &target);
+    int   res    = refda_eval_target(&runctx, &result, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_eval_target() disagrees");
 
+    refda_runctx_deinit(&runctx);
     ari_deinit(&result);
     ari_deinit(&target);
 }

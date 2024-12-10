@@ -126,6 +126,15 @@ void cace_data_swap(cace_data_t *data, cace_data_t *other)
     *other          = tmp;
 }
 
+bool cace_data_is_empty(const cace_data_t *data)
+{
+    if (!data)
+    {
+        return true;
+    }
+    return data->len == 0;
+}
+
 size_t cace_data_hash(const cace_data_t *data)
 {
     CHKRET(data, 0);

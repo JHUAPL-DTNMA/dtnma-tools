@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 #include "runctx.h"
+#include "agent.h"
+#include "msgdata.h"
 #include "cace/util/defs.h"
 
 void refda_amm_modval_state_init(refda_amm_modval_state_t *obj)
@@ -41,7 +43,23 @@ void refda_amm_modval_state_inc(refda_amm_modval_state_t *obj)
     }
 }
 
-int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg)
+void refda_runctx_init(refda_runctx_t *ctx)
+{
+    CHKVOID(ctx);
+    ctx->agent = NULL;
+    cace_data_init(&(ctx->mgr_ident));
+    ari_init(&(ctx->nonce));
+}
+
+void refda_runctx_deinit(refda_runctx_t *ctx)
+{
+    CHKVOID(ctx);
+    ari_deinit(&(ctx->nonce));
+    cace_data_deinit(&(ctx->mgr_ident));
+    ctx->agent = NULL;
+}
+
+int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg)
 {
     CHKERR1(ctx);
 
@@ -49,16 +67,30 @@ int refda_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
 
     if (msg)
     {
-        ctx->mgr_ident = msg->ident.ptr ? &(msg->ident) : NULL;
+        if (msg->ident.ptr)
+        {
+            cace_data_copy(&(ctx->mgr_ident), &(msg->ident));
+        }
+        else
+        {
+            cace_data_clear(&(ctx->mgr_ident));
+        }
 
         const ari_execset_t *eset = ari_get_execset(&(msg->value));
         // should not be null, but guard anyway
-        ctx->nonce = eset ? &(eset->nonce) : NULL;
+        if (eset)
+        {
+            ari_set_copy(&(ctx->nonce), &(eset->nonce));
+        }
+        else
+        {
+            ari_reset(&(ctx->nonce));
+        }
     }
     else
     {
-        ctx->mgr_ident = NULL;
-        ctx->nonce     = NULL;
+        cace_data_clear(&(ctx->mgr_ident));
+        ari_reset(&(ctx->nonce));
     }
 
     return 0;

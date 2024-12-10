@@ -28,6 +28,11 @@
 extern "C" {
 #endif
 
+typedef enum
+{
+    REFDA_EXEC_STATE_
+} refda_exec_state_t;
+
 /** Context for execution activities.
  */
 typedef struct
@@ -35,31 +40,34 @@ typedef struct
     /** Parent running context.
      * This will never be null.
      */
-    refda_runctx_t *parent;
+    refda_runctx_t *runctx;
 
-    /** Dereference result for CTRL which led to this execution.
+    /** Internal execution bookkeeping item.
      * This will never be null.
      */
-    const cace_amm_lookup_t *deref;
-
-    /** Storage for an optional result value.
-     * This is initialized as undefined and may be set to any other value
-     * to indicate that a result is produced.
-     */
-    ari_t result;
+    refda_exec_item_t *item;
 } refda_exec_ctx_t;
 
 /** Initialize a context based on an object reference ARI and
  * a target object's formal parameters.
  *
  * @param[out] obj The context to initialize.
- * @param[in] parent The parent runtime context.
- * @param[in] deref The dereference result.
+ * @param[in] item The internal execution item.
  * The result must outlive this context.
  */
-void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_runctx_t *parent, const cace_amm_lookup_t *deref);
+void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_exec_item_t *item);
 
 void refda_exec_ctx_deinit(refda_exec_ctx_t *obj);
+
+const ari_t *refda_exec_ctx_get_aparam_index(refda_exec_ctx_t *ctx, size_t index);
+
+const ari_t *refda_exec_ctx_get_aparam_name(refda_exec_ctx_t *ctx, const char *name);
+
+void refda_exec_ctx_set_waiting(refda_exec_ctx_t *ctx);
+
+void refda_exec_ctx_set_result_copy(refda_exec_ctx_t *ctx, const ari_t *value);
+
+void refda_exec_ctx_set_result_move(refda_exec_ctx_t *ctx, ari_t *value);
 
 #ifdef __cplusplus
 } // extern C

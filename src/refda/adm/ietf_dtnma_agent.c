@@ -20,10 +20,11 @@
 #include "refda/register.h"
 #include "refda/valprod.h"
 #include "refda/reporting.h"
-#include "cace/amm/semtype.h"
-#include "cace/ari/text.h"
-#include "cace/util/logging.h"
-#include "cace/util/defs.h"
+#include <cace/amm/semtype.h>
+#include <cace/ari/text.h>
+#include <cace/util/logging.h>
+#include <cace/util/defs.h>
+#include <timespec.h>
 
 void refda_adm_ietf_dtnma_agent_edd_sw_version(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
 {
@@ -34,12 +35,12 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
 {
     CACE_LOG_WARNING("executed!");
 
-    const ari_t *ref = ari_array_cget(ctx->deref->aparams.ordered, 0);
+    const ari_t *ref = refda_exec_ctx_get_aparam_index(ctx, 0);
 
     // FIXME mutex-serialize object store access
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
-    int res = cace_amm_lookup_deref(&deref, &(ctx->parent->agent->objs), ref);
+    int res = cace_amm_lookup_deref(&deref, &(ctx->runctx->agent->objs), ref);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
@@ -56,7 +57,7 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
     else
     {
         refda_valprod_ctx_t prodctx;
-        refda_valprod_ctx_init(&prodctx, ctx->parent, &deref);
+        refda_valprod_ctx_init(&prodctx, ctx->runctx, &deref);
 
         res = refda_valprod_run(&prodctx);
         if (res)
@@ -66,7 +67,7 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
         else
         {
             // result of the CTRL is the produced value
-            ari_set_move(&(ctx->result), &prodctx.value);
+            refda_exec_ctx_set_result_move(ctx, &prodctx.value);
         }
 
         refda_valprod_ctx_deinit(&prodctx);
@@ -75,6 +76,41 @@ int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_
     cace_amm_lookup_deinit(&deref);
 
     return res;
+}
+
+static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *item)
+{
+    atomic_store(&(item->waiting), false);
+    return true;
+}
+
+/** CTRL execution callback for ari://ietf-dtnma-agent/CTRL/wait-for
+ * Description:
+ *   This control causes the execution to pause for a given amount of time.
+ *   This is intended to be used within a macro to separate controls
+ *   in time.";
+ */
+static int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
+{
+    const ari_t *duration = refda_exec_ctx_get_aparam_index(ctx, 0);
+
+    struct timespec nowtime;
+
+    int res = clock_gettime(CLOCK_REALTIME, &nowtime);
+    if (res)
+    {
+        return 2;
+    }
+
+    refda_timeline_event_t event = {
+        .ts       = timespec_add(nowtime, duration->as_lit.value.as_timespec),
+        .item     = ctx->item,
+        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
+    };
+    refda_timeline_push(ctx->runctx->agent->exec_timeline, event);
+
+    refda_exec_ctx_set_waiting(ctx);
+    return 0;
 }
 
 int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
@@ -132,11 +168,16 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         /**
          * Register CTRL objects
          */
-        {
+        { // ari://ietf-dtnma-agent/CTRL/inspect
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            // FIXME set result type
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_inspect;
+            {
+                // Result type ari://ietf-amm/TYPEDEF/any
+                ari_t ref = ARI_INIT_UNDEFINED;
+                ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_AMM_ENUM, ARI_TYPE_TYPEDEF, 8);
+                amm_type_set_use_ref_move(&(objdata->res_type), &ref);
+            }
 
             obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("inspect", 5), objdata);
             {
@@ -144,6 +185,20 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
                 amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_OBJECT));
                 // FIXME: above should really be a type use of //ietf-amm/TYPEDEF/VALUE-OBJ
+            }
+        }
+        {
+            refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
+            refda_amm_ctrl_desc_init(objdata);
+            objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_wait_for;
+            // No result type
+
+            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("wait-for", 2), objdata);
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "duration");
+
+                amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_TD));
+                // FIXME: above should really be a type use of /ARITYPE/TD
             }
         }
     }

@@ -15,26 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "exec_item.h"
+#include <cace/util/defs.h>
 
-#ifndef CACE_UTIL_THREADSET_H_
-#define CACE_UTIL_THREADSET_H_
-
-#include "cace/config.h"
-#include <pthread.h>
-#include <m-list.h>
-
-/// @cond Doxygen_Suppress
-LIST_DEF(threadset, pthread_t)
-/// @endcond
-
-typedef struct
+void refda_exec_item_init(refda_exec_item_t *obj)
 {
-    void *(*func)(void *);
-    const char *name;
-} threadinfo_t;
+    CHKVOID(obj);
+    obj->seq = NULL;
+    ari_init(&(obj->ref));
+    cace_amm_lookup_init(&(obj->deref));
+    atomic_init(&(obj->waiting), false);
+    ari_init(&(obj->result));
+}
 
-int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, void *arg);
-
-int threadset_join(threadset_t tset);
-
-#endif /* CACE_UTIL_THREADSET_H_ */
+void refda_exec_item_deinit(refda_exec_item_t *obj)
+{
+    CHKVOID(obj);
+    ari_deinit(&(obj->result));
+    cace_amm_lookup_deinit(&(obj->deref));
+    ari_deinit(&(obj->ref));
+    obj->seq = NULL;
+}

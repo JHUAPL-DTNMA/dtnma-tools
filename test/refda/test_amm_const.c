@@ -110,7 +110,7 @@ void test_const_produce_param_none(const char *valhex, const char *refhex, const
 
 // References are based on ari://2/CONST/4
 TEST_CASE("0A", "83022104", "0A", 0)
-TEST_CASE("0A", "84022104810A", "0A", 0)   // [10] not used, but not an error
+TEST_CASE("0A", "84022104810A", "0A", 0) // [10] not used, but not an error
 // FIXME: TEST_CASE("820E00", "84022104810A", "0A", 0)     // [10] label substituted by index
 // FIXME: TEST_CASE("820E626869", "84022104810A", "0A", 0) // [10] label substituted by name
 void test_const_produce_param_one_int(const char *valhex, const char *refhex, const char *outhex, int expect_res)
@@ -123,7 +123,7 @@ void test_const_produce_param_one_int(const char *valhex, const char *refhex, co
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
 
-        fparam->index              = 0;
+        fparam->index = 0;
         string_set_str(fparam->name, "hi");
 
         amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));

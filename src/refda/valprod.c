@@ -39,13 +39,22 @@ void refda_valprod_ctx_deinit(refda_valprod_ctx_t *obj)
     ari_deinit(&(obj->value));
 }
 
+const ari_t *refda_valprod_ctx_get_aparam_index(refda_valprod_ctx_t *ctx, size_t index)
+{
+    return ari_array_cget(ctx->deref->aparams.ordered, index);
+}
+
+const ari_t *refda_valprod_ctx_get_aparam_name(refda_valprod_ctx_t *ctx, const char *name)
+{
+    return *named_ari_ptr_dict_cget(ctx->deref->aparams.named, name);
+}
+
 int refda_valprod_run(refda_valprod_ctx_t *ctx)
 {
     CHKERR1(ctx);
     CHKERR1(ctx->deref);
-    CHKERR1(ctx->deref->ref);
     CHKERR1(ctx->deref->obj);
-    CACE_LOG_DEBUG("Producing value for reference type %s", ari_type_to_name(ctx->deref->ref->as_ref.objpath.ari_type));
+    CACE_LOG_DEBUG("Producing value for reference type %s", ari_type_to_name(ctx->deref->obj_type));
 
     int retval = 0;
     switch (ctx->deref->obj_type)

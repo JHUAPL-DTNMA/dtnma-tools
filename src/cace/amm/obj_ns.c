@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "obj_ns.h"
+#include "cace/ari/text.h"
 #include "cace/util/logging.h"
 
 void cace_amm_obj_ns_ctr_init(cace_amm_obj_ns_ctr_t *obj)
@@ -48,6 +49,19 @@ void cace_amm_obj_ns_deinit(cace_amm_obj_ns_t *ns)
 
 cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type, const cace_amm_obj_id_t obj_id)
 {
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        ari_t ref = ARI_INIT_UNDEFINED;
+        ari_set_objref_path_textid(&ref, string_get_cstr(ns->name), obj_type, obj_id.name);
+
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &ref, ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("registering object at %s", string_get_cstr(buf));
+        string_clear(buf);
+
+        ari_deinit(&ref);
+    }
     cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_dict_safe_get(ns->object_types, obj_type);
 
     cace_amm_obj_desc_t **found = cace_amm_obj_desc_by_name_get(ctr->obj_by_name, obj_id.name);

@@ -24,6 +24,7 @@
  */
 #include "cbor.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 #include <qcbor/qcbor_spiffy_decode.h>
 
 int ari_cbor_encode(cace_data_t *buf, const ari_t *ari)
@@ -37,6 +38,7 @@ int ari_cbor_encode(cace_data_t *buf, const ari_t *ari)
     size_t needlen;
     if (QCBOR_SUCCESS != QCBOREncode_FinishGetSize(&encoder, &needlen))
     {
+        CACE_LOG_WARNING("CBOR early encoding did not complete properly");
         return 2;
     }
 
@@ -46,11 +48,12 @@ int ari_cbor_encode(cace_data_t *buf, const ari_t *ari)
     UsefulBufC encdata;
     if (QCBOR_SUCCESS != QCBOREncode_Finish(&encoder, &encdata))
     {
+        CACE_LOG_WARNING("CBOR late encoding did not complete properly");
         return 3;
     }
     if (encdata.len != needlen)
     {
-        // FIXME warn about this
+        CACE_LOG_WARNING("CBOR encoding size mismatch");
     }
 
     return 0;
@@ -538,8 +541,12 @@ static int ari_cbor_encode_report(QCBOREncodeContext *enc, const ari_report_t *o
     int retval = 0;
     QCBOREncode_OpenArray(enc);
 
-    // FIXME check type
-    if (ari_cbor_encode_timespec(enc, &(obj->reltime.as_lit.value.as_timespec)))
+    struct timespec ts;
+    if (ari_get_td(&(obj->reltime), &ts))
+    {
+        return 2;
+    }
+    if (ari_cbor_encode_timespec(enc, &ts))
     {
         return 2;
     }
@@ -638,8 +645,12 @@ static int ari_cbor_encode_rptset(QCBOREncodeContext *enc, const ari_rptset_t *o
         return 2;
     }
 
-    // FIXME check type
-    if (ari_cbor_encode_timespec(enc, &(obj->reftime.as_lit.value.as_timespec)))
+    struct timespec ts;
+    if (ari_get_tp(&(obj->reftime), &ts))
+    {
+        return 2;
+    }
+    if (ari_cbor_encode_timespec(enc, &ts))
     {
         return 2;
     }
