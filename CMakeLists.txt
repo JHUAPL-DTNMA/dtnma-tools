@@ -149,11 +149,11 @@ endif(BUILD_TESTING)
 include(FindPkgConfig)
 
 # Libaries in deps but built separately
-find_package(ION)
 find_package(QCBOR REQUIRED)
 find_package(MLIB REQUIRED)
 find_package(timespec REQUIRED)
 # Optional dependencies
+find_package(ION)
 pkg_search_module(PCRE libpcre2-8 IMPORTED_TARGET)
 
 if(ARI_TEXT_PARSE)

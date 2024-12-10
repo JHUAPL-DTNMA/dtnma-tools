@@ -24,11 +24,18 @@
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
+#include <timespec.h>
 
 /*   START CUSTOM INCLUDES HERE  */
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
+
+static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *item)
+{
+    atomic_store(&(item->waiting), false);
+    return true;
+}
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
 
@@ -65,6 +72,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sw_version(const refda_amm_edd_desc_t
 	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
 	 * +-------------------------------------------------------------------------+
 	 */
+    ari_set_tstr(&(ctx->value), "0.0.0", false);
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
@@ -403,6 +411,24 @@ static int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t 
 	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
 	 * +-------------------------------------------------------------------------+
 	 */
+    const ari_t *duration = refda_exec_ctx_get_aparam_index(ctx, 0);
+
+    struct timespec nowtime;
+
+    int res = clock_gettime(CLOCK_REALTIME, &nowtime);
+    if (res)
+    {
+        return 2;
+    }
+
+    refda_timeline_event_t event = {
+        .ts       = timespec_add(nowtime, duration->as_lit.value.as_timespec),
+        .item     = ctx->item,
+        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
+    };
+    refda_timeline_push(ctx->runctx->agent->exec_timeline, event);
+
+    refda_exec_ctx_set_waiting(ctx);
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
@@ -481,6 +507,49 @@ static int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *
 	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
 	 * +-------------------------------------------------------------------------+
 	 */
+    CACE_LOG_WARNING("executed!");
+
+    const ari_t *ref = refda_exec_ctx_get_aparam_index(ctx, 0);
+
+    // FIXME mutex-serialize object store access
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(ctx->runctx->agent->objs), ref);
+
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode_objpath(buf, &(ref->as_ref.objpath), ARI_TEXT_ARITYPE_TEXT);
+        CACE_LOG_DEBUG("Lookup reference to %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+    if (res)
+    {
+        CACE_LOG_WARNING("inspect lookup failed with status %d", res);
+    }
+    else
+    {
+        refda_valprod_ctx_t prodctx;
+        refda_valprod_ctx_init(&prodctx, ctx->runctx, &deref);
+
+        res = refda_valprod_run(&prodctx);
+        if (res)
+        {
+            CACE_LOG_WARNING("inspect production failed with status %d", res);
+        }
+        else
+        {
+            // result of the CTRL is the produced value
+            refda_exec_ctx_set_result_move(ctx, &prodctx.value);
+        }
+
+        refda_valprod_ctx_deinit(&prodctx);
+    }
+
+    cace_amm_lookup_deinit(&deref);
+
+    return res;
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
