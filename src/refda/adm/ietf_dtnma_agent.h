@@ -32,6 +32,14 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM 1
 
 /*
+ * Enumerations for TYPEDEF objects
+ */
+/// For ./TYPEDEF/hellotyp
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_HELLOTYP 0
+/// For ./TYPEDEF/column-id
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_COLUMN_ID 1
+
+/*
  * Enumerations for CONST objects
  */
 /// For ./CONST/hello

@@ -1206,7 +1206,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             }
             obj = refda_register_const(adm, cace_amm_obj_id_withenum("hello", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO), objdata);
             // no parameters
-
         }
 
         /**
@@ -1226,7 +1225,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("sw-vendor", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VENDOR), objdata);
             // no parameters
-
         }
         { // For ./EDD/sw-version
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1242,7 +1240,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("sw-version", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION), objdata);
             // no parameters
-
         }
         { // For ./EDD/capability
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1296,7 +1293,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("capability", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_CAPABILITY), objdata);
             // no parameters
-
         }
         { // For ./EDD/num-msg-rx
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1313,7 +1309,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-msg-rx", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_RX), objdata);
             // no parameters
-
         }
         { // For ./EDD/num-msg-rx-failed
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1330,7 +1325,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-msg-rx-failed", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_RX_FAILED), objdata);
             // no parameters
-
         }
         { // For ./EDD/num-msg-tx
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1347,7 +1341,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-msg-tx", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX), objdata);
             // no parameters
-
         }
         { // For ./EDD/num-exec-started
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1364,7 +1357,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-exec-started", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_STARTED), objdata);
             // no parameters
-
         }
         { // For ./EDD/num-exec-succeeded
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1381,7 +1373,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-exec-succeeded", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_SUCCEEDED), objdata);
             // no parameters
-
         }
         { // For ./EDD/num-exec-failed
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1398,7 +1389,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-exec-failed", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_FAILED), objdata);
             // no parameters
-
         }
         { // For ./EDD/exec-running
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1441,7 +1431,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("exec-running", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_EXEC_RUNNING), objdata);
             // no parameters
-
         }
         { // For ./EDD/typedef-list
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1474,7 +1463,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 
             }
-
         }
         { // For ./EDD/var-list
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1517,7 +1505,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 
             }
-
         }
         { // For ./EDD/sbr-list
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1589,7 +1576,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("sbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SBR_LIST), objdata);
             // no parameters
-
         }
         { // For ./EDD/tbr-list
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -1651,7 +1637,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("tbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TBR_LIST), objdata);
             // no parameters
-
         }
 
 
@@ -1731,7 +1716,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 
             }
-
         }
         { // For ./CTRL/catch
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -1781,7 +1765,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 
             }
-
         }
         { // For ./CTRL/wait-for
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -1800,7 +1783,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
-
         }
         { // For ./CTRL/wait-until
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -1819,7 +1801,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
-
         }
         { // For ./CTRL/wait-cond
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -1839,7 +1820,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
-
         }
         { // For ./CTRL/inspect
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -1865,7 +1845,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
-
         }
         { // For ./CTRL/report-on
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -1885,7 +1864,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
-
         }
         { // For ./CTRL/var-reset
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -1904,7 +1882,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
-
         }
         { // For ./CTRL/var-store
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -1932,7 +1909,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
-
         }
         { // For ./CTRL/ensure-var
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -1985,7 +1961,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 
             }
-
         }
         { // For ./CTRL/discard-var
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
@@ -2004,7 +1979,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
-
         }
 
 
@@ -2026,7 +2000,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("negate", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_NEGATE), objdata);
             // no parameters
-
         }
         { // For ./OPER/add
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2043,7 +2016,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("add", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_ADD), objdata);
             // no parameters
-
         }
         { // For ./OPER/sub
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2060,7 +2032,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("sub", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_SUB), objdata);
             // no parameters
-
         }
         { // For ./OPER/multiply
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2077,7 +2048,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("multiply", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MULTIPLY), objdata);
             // no parameters
-
         }
         { // For ./OPER/divide
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2094,7 +2064,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("divide", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_DIVIDE), objdata);
             // no parameters
-
         }
         { // For ./OPER/remainder
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2111,7 +2080,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("remainder", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_REMAINDER), objdata);
             // no parameters
-
         }
         { // For ./OPER/bit-not
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2128,7 +2096,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bit-not", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_NOT), objdata);
             // no parameters
-
         }
         { // For ./OPER/bit-and
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2145,7 +2112,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bit-and", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_AND), objdata);
             // no parameters
-
         }
         { // For ./OPER/bit-or
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2162,7 +2128,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bit-or", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_OR), objdata);
             // no parameters
-
         }
         { // For ./OPER/bit-xor
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2179,7 +2144,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bit-xor", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_XOR), objdata);
             // no parameters
-
         }
         { // For ./OPER/bool-not
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2195,7 +2159,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bool-not", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_NOT), objdata);
             // no parameters
-
         }
         { // For ./OPER/bool-and
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2211,7 +2174,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bool-and", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_AND), objdata);
             // no parameters
-
         }
         { // For ./OPER/bool-or
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2227,7 +2189,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bool-or", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_OR), objdata);
             // no parameters
-
         }
         { // For ./OPER/bool-xor
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2243,7 +2204,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bool-xor", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_XOR), objdata);
             // no parameters
-
         }
         { // For ./OPER/compare-eq
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2259,7 +2219,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-eq", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_EQ), objdata);
             // no parameters
-
         }
         { // For ./OPER/compare-ne
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2275,7 +2234,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-ne", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_NE), objdata);
             // no parameters
-
         }
         { // For ./OPER/compare-gt
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2291,7 +2249,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-gt", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_GT), objdata);
             // no parameters
-
         }
         { // For ./OPER/compare-ge
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2307,7 +2264,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-ge", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_GE), objdata);
             // no parameters
-
         }
         { // For ./OPER/compare-lt
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2323,7 +2279,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-lt", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LT), objdata);
             // no parameters
-
         }
         { // For ./OPER/compare-le
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2339,7 +2294,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-le", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LE), objdata);
             // no parameters
-
         }
         { // For ./OPER/tbl-filter
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
@@ -2379,7 +2333,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
             }
-
         }
 
     }

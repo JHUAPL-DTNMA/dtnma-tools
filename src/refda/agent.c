@@ -120,25 +120,27 @@ int refda_agent_bindrefs(refda_agent_t *agent)
     REFDA_AGENT_LOCK(agent);
     int failcnt = 0;
 
-    agent->mac_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM, 21);
+    agent->mac_type =
+        refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM_ADM, REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_MAC);
     if (!agent->mac_type)
     {
         ++failcnt;
     }
 
-    /* FIXME replace
-    agent->expr_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM, 18);
+    agent->expr_type =
+        refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM_ADM, REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXPR);
     if (!agent->expr_type)
     {
         ++failcnt;
     }
 
-    agent->rptt_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM, 24);
+    agent->rptt_type =
+        refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM_ADM, REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPTT);
     if (!agent->rptt_type)
     {
         ++failcnt;
     }
-    */
+
     if (failcnt)
     {
         CACE_LOG_WARNING("agent required type binding failures: %d", failcnt);
@@ -149,6 +151,7 @@ int refda_agent_bindrefs(refda_agent_t *agent)
          cace_amm_obj_ns_list_next(ns_it))
     {
         cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_ref(ns_it);
+        CACE_LOG_DEBUG("Binding namespace ari:/%s/", string_get_cstr(ns->name));
 
         cace_amm_obj_ns_ctr_dict_it_t objtype_it;
         for (cace_amm_obj_ns_ctr_dict_it(objtype_it, ns->object_types); !cace_amm_obj_ns_ctr_dict_end_p(objtype_it);
@@ -227,7 +230,8 @@ int refda_agent_send_hello(refda_agent_t *agent)
 {
     ari_t ref = ARI_INIT_UNDEFINED;
     // ari:/ietf-dtnma-agent/CONST/hello
-    ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CONST, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
+    ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CONST,
+                              REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
 
     // dummy message source
     refda_msgdata_t msg;
