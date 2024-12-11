@@ -15,45 +15,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "exec_ctx.h"
+#include "ctrl_exec_ctx.h"
+#include "cace/util/logging.h"
+#include "cace/ari/text.h"
 #include "cace/util/defs.h"
 
-void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_exec_item_t *item)
+void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, const refda_amm_ctrl_desc_t *ctrl, refda_exec_item_t *item)
 {
     CHKVOID(obj);
     CHKVOID(item);
 
     obj->runctx = refda_runctx_ptr_ref(item->seq->runctx);
+    obj->ctrl = ctrl;
     obj->item   = item;
 }
 
-void refda_exec_ctx_deinit(refda_exec_ctx_t *obj)
+void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj)
 {
     CHKVOID(obj);
 }
 
-const ari_t *refda_exec_ctx_get_aparam_index(refda_exec_ctx_t *ctx, size_t index)
+const ari_t *refda_ctrl_exec_ctx_get_aparam_index(refda_ctrl_exec_ctx_t *ctx, size_t index)
 {
     return ari_array_cget(ctx->item->deref.aparams.ordered, index);
 }
 
-const ari_t *refda_exec_ctx_get_aparam_name(refda_exec_ctx_t *ctx, const char *name)
+const ari_t *refda_ctrl_exec_ctx_get_aparam_name(refda_ctrl_exec_ctx_t *ctx, const char *name)
 {
     return *named_ari_ptr_dict_cget(ctx->item->deref.aparams.named, name);
 }
 
-void refda_exec_ctx_set_waiting(refda_exec_ctx_t *ctx)
+void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx)
 {
     CHKVOID(ctx);
     atomic_store(&(ctx->item->waiting), true);
 }
 
-void refda_exec_ctx_set_result_move(refda_exec_ctx_t *ctx, ari_t *value)
+void refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value)
 {
     ari_set_move(&(ctx->item->result), value);
 }
 
-void refda_exec_ctx_set_result_copy(refda_exec_ctx_t *ctx, const ari_t *value)
+void refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value)
 {
     ari_set_copy(&(ctx->item->result), value);
 }

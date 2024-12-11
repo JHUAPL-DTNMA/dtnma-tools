@@ -17,6 +17,7 @@
  */
 #include <refda/exec.h>
 #include <refda/register.h>
+#include <refda/ctrl_exec_ctx.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/amm/const.h>
@@ -52,10 +53,10 @@ static refda_agent_t agent;
 /// Sequence of executions
 static ari_list_t exec_log;
 
-static int test_exec_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
+static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
 {
-    const ari_t *val = refda_exec_ctx_get_aparam_index(ctx, 0);
-    CHKERR1(val)
+    const ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    CHKVOID(val)
     {
         string_t buf;
         string_init(buf);
@@ -67,8 +68,7 @@ static int test_exec_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, ref
     // record this execution
     ari_list_push_back(exec_log, ctx->item->ref);
 
-    refda_exec_ctx_set_result_copy(ctx, val);
-    return 0;
+    refda_ctrl_exec_ctx_set_result_copy(ctx, val);
 }
 
 void setUp(void)

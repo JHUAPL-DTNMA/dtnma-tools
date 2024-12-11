@@ -15,12 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/** @file
+ * This is the header for the implementation of the
+ * ADM "ietf-dtnma-agent" for the C-language reference DA.
+ * This contains defines for each enumeration in the ADM and
+ * declarations of module-level initialization functions.
+ */
+
 #include "refda/agent.h"
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
 /*             TODO              */
 /*   STOP CUSTOM INCLUDES HERE  */
+
 #ifndef REFDA_ADM_IETF_DTNMA_AGENT_H_
 #define REFDA_ADM_IETF_DTNMA_AGENT_H_
 

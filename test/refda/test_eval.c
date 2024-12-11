@@ -17,6 +17,7 @@
  */
 #include <refda/eval.h>
 #include <refda/register.h>
+#include <refda/edd_prod_ctx.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/amm/const.h>
@@ -49,18 +50,18 @@ int suiteTearDown(int failures)
 /// Agent context for testing
 static refda_agent_t agent;
 
-static void test_reporting_edd_one_int(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
+static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
 {
-    const ari_t *val = refda_valprod_ctx_get_aparam_index(ctx, 0);
-    CHKVOID(val)
+    const ari_t *param = refda_edd_prod_ctx_get_aparam_index(ctx, 0);
+    CHKVOID(param);
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, val, ARI_TEXT_ENC_OPTS_DEFAULT);
+        ari_text_encode(buf, param, ARI_TEXT_ENC_OPTS_DEFAULT);
         TEST_PRINTF("EDD production with parameter %s", string_get_cstr(buf));
         string_clear(buf);
     }
-    ari_set_copy(&(ctx->value), val);
+    refda_edd_prod_ctx_set_result_copy(ctx, param);
 }
 
 static int ari_numeric_add(ari_t *result, const ari_t *lt_val, const ari_t *rt_val)

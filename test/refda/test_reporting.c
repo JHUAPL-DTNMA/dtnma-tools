@@ -17,6 +17,7 @@
  */
 #include <refda/reporting.h>
 #include <refda/register.h>
+#include <refda/edd_prod_ctx.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/amm/const.h>
@@ -52,25 +53,27 @@ static cace_data_t mgr;
 
 static atomic_int edd_one_state = ATOMIC_VAR_INIT(0);
 
-static void test_reporting_edd_int(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
+static void test_reporting_edd_int(refda_edd_prod_ctx_t *ctx)
 {
     int oldval = atomic_fetch_add(&edd_one_state, 1);
     TEST_PRINTF("EDD production to counter %d", oldval);
-    ari_set_int(&(ctx->value), oldval);
+    ari_t result = ARI_INIT_UNDEFINED;
+    ari_set_int(&result, oldval);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
 }
 
-static void test_reporting_edd_one_int(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx)
+static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
 {
-    const ari_t *val = refda_valprod_ctx_get_aparam_index(ctx, 0);
-    CHKVOID(val)
+    const ari_t *param = refda_edd_prod_ctx_get_aparam_index(ctx, 0);
+    CHKVOID(param)
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, val, ARI_TEXT_ENC_OPTS_DEFAULT);
+        ari_text_encode(buf, param, ARI_TEXT_ENC_OPTS_DEFAULT);
         TEST_PRINTF("EDD production with parameter %s", string_get_cstr(buf));
         string_clear(buf);
     }
-    ari_set_copy(&(ctx->value), val);
+    refda_edd_prod_ctx_set_result_copy(ctx, param);
 }
 
 void setUp(void)

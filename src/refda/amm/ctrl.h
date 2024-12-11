@@ -19,21 +19,20 @@
 #define REFDA_AMM_CTRL_H_
 
 #include "refda/exec.h"
-#include "refda/exec_ctx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // forward declaration for callback reference
-struct refda_amm_ctrl_desc_s;
-typedef struct refda_amm_ctrl_desc_s refda_amm_ctrl_desc_t;
+struct refda_ctrl_exec_ctx_s;
+typedef struct refda_ctrl_exec_ctx_s refda_ctrl_exec_ctx_t;
 
 /** A control (CTRL) descriptor.
  * This defines the properties of a CTRL in an Agent and includes common
  * object metadata.
  */
-struct refda_amm_ctrl_desc_s
+typedef struct
 {
     /** An optional type for the result value.
      * All type references are fully recursively resolved.
@@ -43,24 +42,15 @@ struct refda_amm_ctrl_desc_s
 
     /** Execution callback for this object.
      *
-     * @param[in] obj Pointer to this descriptor.
      * @param[in,out] ctx The execution context, including result storage.
      * @return Zero upon success, or any other value for failure.
      */
-    int (*execute)(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx_t *ctx);
-};
+    void (*execute)(refda_ctrl_exec_ctx_t *ctx);
+} refda_amm_ctrl_desc_t;
 
 void refda_amm_ctrl_desc_init(refda_amm_ctrl_desc_t *obj);
 
 void refda_amm_ctrl_desc_deinit(refda_amm_ctrl_desc_t *obj);
-
-/** Perform the execution procedure on a CTRL.
- *
- * @param obj The object to execute.
- * @param ctx The execution context.
- * @return Zero upon success.
- */
-int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

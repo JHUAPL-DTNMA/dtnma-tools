@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "exec.h"
+#include "ctrl_exec_ctx.h"
 #include "valprod.h"
 #include "reporting.h"
 #include "amm/ctrl.h"
@@ -74,6 +75,15 @@ static void refda_exec_ctrl_fix_result(refda_exec_item_t *item)
  */
 static int refda_exec_ctrl_finish(refda_exec_item_t *item)
 {
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("execution finished with result %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
     refda_runctx_t *runctx = refda_runctx_ptr_ref(item->seq->runctx);
 
     if (!ari_is_null(&(runctx->nonce)))
@@ -102,6 +112,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
     CHKERR1(item->deref.obj);
     refda_amm_ctrl_desc_t *ctrl = item->deref.obj->app_data.ptr;
     CHKERR1(ctrl);
+    CHKERR1(ctrl->execute);
 
     if (cace_log_is_enabled_for(LOG_INFO))
     {
@@ -111,12 +122,14 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
         CACE_LOG_DEBUG("Execution item %s", string_get_cstr(buf));
         string_clear(buf);
     }
+    {
+        refda_ctrl_exec_ctx_t ctx;
+        refda_ctrl_exec_ctx_init(&ctx, ctrl, item);
+        (ctrl->execute)(&ctx);
+        refda_ctrl_exec_ctx_deinit(&ctx);
+        CACE_LOG_DEBUG("execution callback returned");
+    }
 
-    refda_exec_ctx_t ctx;
-    refda_exec_ctx_init(&ctx, item);
-
-    int res = refda_amm_ctrl_desc_execute(ctrl, &ctx);
-    CACE_LOG_INFO("Execution callback returned with status %d", res);
     if (atomic_load(&(item->waiting)))
     {
         CACE_LOG_INFO("Control is still waiting to finish");
@@ -126,9 +139,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
         refda_exec_ctrl_finish(item);
     }
 
-    refda_exec_ctx_deinit(&ctx);
-
-    return res;
+    return 0;
 }
 
 int refda_exec_run_seq(refda_exec_seq_t *seq)

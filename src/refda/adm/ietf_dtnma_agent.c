@@ -15,18 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/** @file
+ * This is the compilation unit for the implementation of the
+ * ADM "ietf-dtnma-agent" for the C-language reference DA.
+ * This contains definitions of every AMM object instance in the ADM and
+ * file-local callback functions for all EDDs, CTRLs, and OPERs.
+ */
+
 #include "ietf_dtnma_agent.h"
 #include "refda/agent.h"
 #include "refda/register.h"
-#include "refda/valprod.h"
-#include "refda/reporting.h"
+#include "refda/edd_prod_ctx.h"
+#include "refda/ctrl_exec_ctx.h"
+//#include "refda/reporting.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
-#include <timespec.h>
 
 /*   START CUSTOM INCLUDES HERE  */
+#include <timespec.h>
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
@@ -42,9 +51,12 @@ static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *ite
 /* Name: sw-vendor
  * Description:
  *   The vendor for this Agent implementation.
+ *
  * Parameters: none
+ *
+ * Produced type: use of ari:/ARITYPE/TEXTSTR
  */
-static void refda_adm_ietf_dtnma_agent_edd_sw_vendor(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_sw_vendor(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -63,16 +75,21 @@ static void refda_adm_ietf_dtnma_agent_edd_sw_vendor(const refda_amm_edd_desc_t 
 /* Name: sw-version
  * Description:
  *   The version for this Agent implementation.
+ *
  * Parameters: none
+ *
+ * Produced type: use of ari:/ARITYPE/TEXTSTR
  */
-static void refda_adm_ietf_dtnma_agent_edd_sw_version(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_sw_version(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-    ari_set_tstr(&(ctx->value), "0.0.0", false);
+    ari_t result = ARI_INIT_UNDEFINED;
+    ari_set_tstr(&result, "0.0.0", false);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
@@ -85,9 +102,12 @@ static void refda_adm_ietf_dtnma_agent_edd_sw_version(const refda_amm_edd_desc_t
 /* Name: capability
  * Description:
  *   A table to indicate the ADM capability of the sending agent.
+ *
  * Parameters: none
+ *
+ * Produced type: TBLT with 4 columns (use of ari:/ARITYPE/TEXTSTR, use of ari:/ARITYPE/VAST, use of ari:/ARITYPE/TEXTSTR, ulist of use of ari:/ARITYPE/TEXTSTR)
  */
-static void refda_adm_ietf_dtnma_agent_edd_capability(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -104,12 +124,13 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(const refda_amm_edd_desc_t
 
 
 /* Name: num-msg-rx
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Produced type: use of ari://ietf-amm/TYPEDEF/counter64
  */
-static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -126,12 +147,13 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx(const refda_amm_edd_desc_t
 
 
 /* Name: num-msg-rx-failed
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Produced type: use of ari://ietf-amm/TYPEDEF/counter64
  */
-static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -148,12 +170,13 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed(const refda_amm_edd
 
 
 /* Name: num-msg-tx
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Produced type: use of ari://ietf-amm/TYPEDEF/counter64
  */
-static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -170,12 +193,13 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx(const refda_amm_edd_desc_t
 
 
 /* Name: num-exec-started
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Produced type: use of ari://ietf-amm/TYPEDEF/counter64
  */
-static void refda_adm_ietf_dtnma_agent_edd_num_exec_started(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_num_exec_started(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -192,12 +216,13 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_started(const refda_amm_edd_
 
 
 /* Name: num-exec-succeeded
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Produced type: use of ari://ietf-amm/TYPEDEF/counter64
  */
-static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -214,12 +239,13 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(const refda_amm_ed
 
 
 /* Name: num-exec-failed
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Produced type: use of ari://ietf-amm/TYPEDEF/counter64
  */
-static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -236,12 +262,13 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(const refda_amm_edd_d
 
 
 /* Name: exec-running
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Produced type: TBLT with 3 columns (use of ari:/ARITYPE/UVAST, use of ari://ietf-amm/TYPEDEF/ANY, use of ari:/ARITYPE/BYTE)
  */
-static void refda_adm_ietf_dtnma_agent_edd_exec_running(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -260,10 +287,13 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(const refda_amm_edd_desc
 /* Name: typedef-list
  * Description:
  *   A table of TYPEDEF within the agent.
- * Parameters::
- * include-adm
+ *
+ * Parameters list:
+ *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *
+ * Produced type: TBLT with 1 columns (use of ari:/ARITYPE/TYPEDEF)
  */
-static void refda_adm_ietf_dtnma_agent_edd_typedef_list(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -282,10 +312,13 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(const refda_amm_edd_desc
 /* Name: var-list
  * Description:
  *   A table of VAR within the agent.
- * Parameters::
- * include-adm
+ *
+ * Parameters list:
+ *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *
+ * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/VAR, use of ari://ietf-amm/TYPEDEF/TYPE-REF)
  */
-static void refda_adm_ietf_dtnma_agent_edd_var_list(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -302,12 +335,13 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(const refda_amm_edd_desc_t *
 
 
 /* Name: sbr-list
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Produced type: TBLT with 6 columns (use of ari:/ARITYPE/SBR, use of ari://ietf-amm/TYPEDEF/MAC, use of ari://ietf-amm/TYPEDEF/TIME, use of ari://ietf-amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
  */
-static void refda_adm_ietf_dtnma_agent_edd_sbr_list(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -324,12 +358,13 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(const refda_amm_edd_desc_t *
 
 
 /* Name: tbr-list
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Produced type: TBLT with 5 columns (use of ari:/ARITYPE/TBR, use of ari://ietf-amm/TYPEDEF/MAC, use of ari://ietf-amm/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
  */
-static void refda_adm_ietf_dtnma_agent_edd_tbr_list(const refda_amm_edd_desc_t *obj _U_, refda_valprod_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -347,14 +382,17 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(const refda_amm_edd_desc_t *
 
 /* Name: if-then-else
  * Description:
- *   Evaluate an expression and follow one of two branches of
- * further evaluation.
- * Parameters::
- * condition
- * on-truthy
- * on-falsy
+ *   Evaluate an expression and follow one of two branches of further
+ *   evaluation.
+ *
+ * Parameters list:
+ *  * Index 0, name "condition", type: use of ari://ietf-amm/TYPEDEF/eval-tgt
+ *  * Index 1, name "on-truthy", type: union of 2 types (use of ari://ietf-amm/TYPEDEF/exec-tgt, use of ari:/ARITYPE/NULL)
+ *  * Index 2, name "on-falsy", type: union of 2 types (use of ari://ietf-amm/TYPEDEF/exec-tgt, use of ari:/ARITYPE/NULL)
+ *
+ * Result name "branch", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_if_then_else(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -366,20 +404,21 @@ static int refda_adm_ietf_dtnma_agent_ctrl_if_then_else(const refda_amm_ctrl_des
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: catch
  * Description:
- *   Attempt to execute a target, and if there is some failure catch it
- * and execute an alternative target.
- * Parameters::
- * try
- * on-failure
+ *   Attempt to execute a target, and if there is some failure catch it and
+ *   execute an alternative target.
+ *
+ * Parameters list:
+ *  * Index 0, name "try", type: use of ari://ietf-amm/TYPEDEF/exec-tgt
+ *  * Index 1, name "on-failure", type: union of 2 types (use of ari://ietf-amm/TYPEDEF/exec-tgt, use of ari:/ARITYPE/NULL)
+ *
+ * Result name "try-success", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_catch(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -391,34 +430,36 @@ static int refda_adm_ietf_dtnma_agent_ctrl_catch(const refda_amm_ctrl_desc_t *ob
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: wait-for
  * Description:
  *   This control causes the execution to pause for a given amount of time.
- * This is intended to be used within a macro to separate controls
- * in time.
- * Parameters::
- * duration
+ *   This is intended to be used within a macro to separate controls in
+ *   time.
+ *
+ * Parameters list:
+ *  * Index 0, name "duration", type: use of ari:/ARITYPE/TD
+ *
+ * Result: none
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-    const ari_t *duration = refda_exec_ctx_get_aparam_index(ctx, 0);
+    const ari_t *duration = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
     struct timespec nowtime;
 
     int res = clock_gettime(CLOCK_REALTIME, &nowtime);
     if (res)
     {
-        return 2;
+        // handled as failure
+        return;
     }
 
     refda_timeline_event_t event = {
@@ -428,28 +469,28 @@ static int refda_adm_ietf_dtnma_agent_ctrl_wait_for(const refda_amm_ctrl_desc_t 
     };
     refda_timeline_push(ctx->runctx->agent->exec_timeline, event);
 
-    refda_exec_ctx_set_waiting(ctx);
+    refda_ctrl_exec_ctx_set_waiting(ctx);
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: wait-until
  * Description:
  *   This control causes the execution to pause until a specific absolute
- * time point.
- * This is intended to be used within a macro to separate controls
- * in time or as a first macro item to delay execution after the time
- * of reception.
- * Parameters::
- * time
+ *   time point. This is intended to be used within a macro to separate
+ *   controls in time or as a first macro item to delay execution after the
+ *   time of reception.
+ *
+ * Parameters list:
+ *  * Index 0, name "time", type: use of ari:/ARITYPE/TP
+ *
+ * Result: none
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_wait_until(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -461,22 +502,22 @@ static int refda_adm_ietf_dtnma_agent_ctrl_wait_until(const refda_amm_ctrl_desc_
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_until BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: wait-cond
  * Description:
- *   This control causes the execution to pause until a condition expression
- * evaluates to truthy.
- * This is intended to be used within a macro to separate controls
- * in time or as a first macro item to delay execution until the
- * condition is met.
- * Parameters::
- * condition
+ *   This control causes the execution to pause until a condition
+ *   expression evaluates to truthy. This is intended to be used within a
+ *   macro to separate controls in time or as a first macro item to delay
+ *   execution until the condition is met.
+ *
+ * Parameters list:
+ *  * Index 0, name "condition", type: use of ari://ietf-amm/TYPEDEF/eval-tgt
+ *
+ * Result: none
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_wait_cond(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -488,19 +529,20 @@ static int refda_adm_ietf_dtnma_agent_ctrl_wait_cond(const refda_amm_ctrl_desc_t
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: inspect
  * Description:
- *   Produce a result value to inspect the agent state.
- * This does not perform any EXPR evaluation or RPTT handling.
- * Parameters::
- * ref
+ *   Produce a result value to inspect the agent state. This does not
+ *   perform any EXPR evaluation or RPTT handling.
+ *
+ * Parameters list:
+ *  * Index 0, name "ref", type: use of ari://ietf-amm/TYPEDEF/VALUE-OBJ
+ *
+ * Result name "val", type: use of ari://ietf-amm/TYPEDEF/ANY
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -509,7 +551,7 @@ static int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *
 	 */
     CACE_LOG_WARNING("executed!");
 
-    const ari_t *ref = refda_exec_ctx_get_aparam_index(ctx, 0);
+    const ari_t *ref = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
     // FIXME mutex-serialize object store access
     cace_amm_lookup_t deref;
@@ -536,41 +578,41 @@ static int refda_adm_ietf_dtnma_agent_ctrl_inspect(const refda_amm_ctrl_desc_t *
         res = refda_valprod_run(&prodctx);
         if (res)
         {
+            // not setting a result will be treated as failure
             CACE_LOG_WARNING("inspect production failed with status %d", res);
         }
         else
         {
             // result of the CTRL is the produced value
-            refda_exec_ctx_set_result_move(ctx, &prodctx.value);
+            refda_ctrl_exec_ctx_set_result_move(ctx, &prodctx.value);
         }
 
         refda_valprod_ctx_deinit(&prodctx);
     }
 
     cace_amm_lookup_deinit(&deref);
-
-    return res;
 	/*
 	 * +-------------------------------------------------------------------------+
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: report-on
  * Description:
  *   Generate a report on an object without needing to define an object.
- * The parameter is a single RPTT list that would be produced by an object.
- * If used for more than one-shot diagnostics, defining a RPTT
- * (e.g. in a VAR) is more efficient because the RPTT item would not
- * be present in the report.
- * Parameters::
- * rptt
+ *   The parameter is a single RPTT list that would be produced by an
+ *   object. If used for more than one-shot diagnostics, defining a RPTT
+ *   (e.g. in a VAR) is more efficient because the RPTT item would not be
+ *   present in the report.
+ *
+ * Parameters list:
+ *  * Index 0, name "rptt", type: use of ari://ietf-amm/TYPEDEF/rpt-tgt
+ *
+ * Result: none
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_report_on(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -582,18 +624,19 @@ static int refda_adm_ietf_dtnma_agent_ctrl_report_on(const refda_amm_ctrl_desc_t
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: var-reset
  * Description:
  *   Modify a VAR state to its default value.
- * Parameters::
- * target
+ *
+ * Parameters list:
+ *  * Index 0, name "target", type: use of ari:/ARITYPE/VAR
+ *
+ * Result: none
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_var_reset(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -605,19 +648,20 @@ static int refda_adm_ietf_dtnma_agent_ctrl_var_reset(const refda_amm_ctrl_desc_t
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: var-store
  * Description:
  *   Modify a VAR state to a specific value.
- * Parameters::
- * target
- * value
+ *
+ * Parameters list:
+ *  * Index 0, name "target", type: use of ari:/ARITYPE/VAR
+ *  * Index 1, name "value", type: use of ari://ietf-amm/TYPEDEF/ANY
+ *
+ * Result: none
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_var_store(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -629,20 +673,21 @@ static int refda_adm_ietf_dtnma_agent_ctrl_var_store(const refda_amm_ctrl_desc_t
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: ensure-var
  * Description:
  *   Ensure a specific VAR is present.
- * Parameters::
- * obj
- * type
- * init
+ *
+ * Parameters list:
+ *  * Index 0, name "obj", type: use of ari:/ARITYPE/VAR
+ *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/TYPE-REF
+ *  * Index 2, name "init", type: union of 2 types (use of ari:/ARITYPE/NULL, use of ari://ietf-amm/TYPEDEF/EXPR)
+ *
+ * Result: none
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_ensure_var(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -654,18 +699,19 @@ static int refda_adm_ietf_dtnma_agent_ctrl_ensure_var(const refda_amm_ctrl_desc_
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: discard-var
  * Description:
  *   Discard a specific VAR if it is present.
- * Parameters::
- * obj
+ *
+ * Parameters list:
+ *  * Index 0, name "obj", type: use of ari:/ARITYPE/VAR
+ *
+ * Result: none
  */
-static int refda_adm_ietf_dtnma_agent_ctrl_discard_var(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_discard_var(refda_ctrl_exec_ctx_t *ctx)
 {
 	/*
 	 * +-------------------------------------------------------------------------+
@@ -677,17 +723,17 @@ static int refda_adm_ietf_dtnma_agent_ctrl_discard_var(const refda_amm_ctrl_desc
 	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_discard_var BODY
 	 * +-------------------------------------------------------------------------+
 	 */
-
-    return 0; //FIXME
 }
 
 
 /* Name: negate
  * Description:
- *   Negate a value.
- * This is equivalent to multiplying by -1 but a shorter
- * expression.
+ *   Negate a value. This is equivalent to multiplying by -1 but a shorter
+ *   expression.
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
 static int refda_adm_ietf_dtnma_agent_oper_negate(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -708,10 +754,12 @@ static int refda_adm_ietf_dtnma_agent_oper_negate(const refda_amm_oper_desc_t *o
 
 /* Name: add
  * Description:
- *   Add two numeric values.
- * The operands are cast to the least compatible numeric type
- * before the arithmetic.
+ *   Add two numeric values. The operands are cast to the least compatible
+ *   numeric type before the arithmetic.
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
 static int refda_adm_ietf_dtnma_agent_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -731,10 +779,11 @@ static int refda_adm_ietf_dtnma_agent_oper_add(const refda_amm_oper_desc_t *obj 
 
 
 /* Name: sub
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
 static int refda_adm_ietf_dtnma_agent_oper_sub(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -754,10 +803,11 @@ static int refda_adm_ietf_dtnma_agent_oper_sub(const refda_amm_oper_desc_t *obj 
 
 
 /* Name: multiply
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
 static int refda_adm_ietf_dtnma_agent_oper_multiply(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -777,10 +827,11 @@ static int refda_adm_ietf_dtnma_agent_oper_multiply(const refda_amm_oper_desc_t 
 
 
 /* Name: divide
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
 static int refda_adm_ietf_dtnma_agent_oper_divide(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -800,10 +851,11 @@ static int refda_adm_ietf_dtnma_agent_oper_divide(const refda_amm_oper_desc_t *o
 
 
 /* Name: remainder
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
 static int refda_adm_ietf_dtnma_agent_oper_remainder(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -823,10 +875,11 @@ static int refda_adm_ietf_dtnma_agent_oper_remainder(const refda_amm_oper_desc_t
 
 
 /* Name: bit-not
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/INTEGER
  */
 static int refda_adm_ietf_dtnma_agent_oper_bit_not(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -846,10 +899,11 @@ static int refda_adm_ietf_dtnma_agent_oper_bit_not(const refda_amm_oper_desc_t *
 
 
 /* Name: bit-and
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/INTEGER
  */
 static int refda_adm_ietf_dtnma_agent_oper_bit_and(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -869,10 +923,11 @@ static int refda_adm_ietf_dtnma_agent_oper_bit_and(const refda_amm_oper_desc_t *
 
 
 /* Name: bit-or
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/INTEGER
  */
 static int refda_adm_ietf_dtnma_agent_oper_bit_or(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -892,10 +947,11 @@ static int refda_adm_ietf_dtnma_agent_oper_bit_or(const refda_amm_oper_desc_t *o
 
 
 /* Name: bit-xor
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari://ietf-amm/TYPEDEF/INTEGER
  */
 static int refda_adm_ietf_dtnma_agent_oper_bit_xor(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -915,10 +971,11 @@ static int refda_adm_ietf_dtnma_agent_oper_bit_xor(const refda_amm_oper_desc_t *
 
 
 /* Name: bool-not
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_bool_not(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -938,10 +995,11 @@ static int refda_adm_ietf_dtnma_agent_oper_bool_not(const refda_amm_oper_desc_t 
 
 
 /* Name: bool-and
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_bool_and(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -961,10 +1019,11 @@ static int refda_adm_ietf_dtnma_agent_oper_bool_and(const refda_amm_oper_desc_t 
 
 
 /* Name: bool-or
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_bool_or(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -984,10 +1043,11 @@ static int refda_adm_ietf_dtnma_agent_oper_bool_or(const refda_amm_oper_desc_t *
 
 
 /* Name: bool-xor
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_bool_xor(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -1007,10 +1067,11 @@ static int refda_adm_ietf_dtnma_agent_oper_bool_xor(const refda_amm_oper_desc_t 
 
 
 /* Name: compare-eq
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_compare_eq(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -1030,10 +1091,11 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_eq(const refda_amm_oper_desc_
 
 
 /* Name: compare-ne
- * Description:
- *   
- *   
+ * Description MISSING
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_compare_ne(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -1054,11 +1116,13 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_ne(const refda_amm_oper_desc_
 
 /* Name: compare-gt
  * Description:
- *   Compare two numbers by value.
- * The result is true if the left value is greater than the right.
- * The operands are cast to the least compatible numeric type
- * before the comparison.
+ *   Compare two numbers by value. The result is true if the left value is
+ *   greater than the right. The operands are cast to the least compatible
+ *   numeric type before the comparison.
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_compare_gt(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -1079,12 +1143,13 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_gt(const refda_amm_oper_desc_
 
 /* Name: compare-ge
  * Description:
- *   Compare two numbers by value.
- * The result is true if the left value is greater than or equal
- * to the right.
- * The operands are cast to the least compatible numeric type
- * before the comparison.
+ *   Compare two numbers by value. The result is true if the left value is
+ *   greater than or equal to the right. The operands are cast to the least
+ *   compatible numeric type before the comparison.
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_compare_ge(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -1105,11 +1170,13 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_ge(const refda_amm_oper_desc_
 
 /* Name: compare-lt
  * Description:
- *   Compare two operands by value.
- * The result is true if the left value is less than the right.
- * The operands are cast to the least compatible numeric type
- * before the comparison.
+ *   Compare two operands by value. The result is true if the left value is
+ *   less than the right. The operands are cast to the least compatible
+ *   numeric type before the comparison.
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_compare_lt(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -1130,12 +1197,13 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_lt(const refda_amm_oper_desc_
 
 /* Name: compare-le
  * Description:
- *   Compare two operands by value.
- * The result is true if the left value is less than or
- * equal to the right.
- * The operands are cast to the least compatible numeric type
- * before the comparison.
+ *   Compare two operands by value. The result is true if the left value is
+ *   less than or equal to the right. The operands are cast to the least
+ *   compatible numeric type before the comparison.
+ *
  * Parameters: none
+ *
+ * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
 static int refda_adm_ietf_dtnma_agent_oper_compare_le(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -1157,9 +1225,12 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_le(const refda_amm_oper_desc_
 /* Name: tbl-filter
  * Description:
  *   Filter a table first by rows and then by columns.
- * Parameters::
- * row-match
- * columns
+ *
+ * Parameters list:
+ *  * Index 0, name "row-match", type: ulist of use of ari://ietf-amm/TYPEDEF/EXPR
+ *  * Index 1, name "columns", type: ulist of use of ari://ietf-dtnma-agent/TYPEDEF/column-id
+ *
+ * Result name "out", type: use of ari:/ARITYPE/TBL
  */
 static int refda_adm_ietf_dtnma_agent_oper_tbl_filter(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
 {
@@ -1708,7 +1779,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // no parameters
         }
 
-
         /**
          * Register CTRL objects
          */
@@ -2049,7 +2119,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
             }
         }
-
 
         /**
          * Register OPER objects
