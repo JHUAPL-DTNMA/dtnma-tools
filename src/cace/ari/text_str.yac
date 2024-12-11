@@ -381,7 +381,7 @@ tblrowlist:
     | tblrowlist acbracket {
         $$ = $1;
 
-        int res = ari_tbl_move_row($$.value.as_tbl, $2.value.as_ac);
+        int res = ari_tbl_move_row_ac($$.value.as_tbl, $2.value.as_ac);
         ari_lit_deinit(&$2);
         if (res)
         {

@@ -15,11 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/** @file
+ * This is the compilation unit for the implementation of the
+ * ADM "ietf-amm" for the C-language reference DA.
+ * This contains definitions of every AMM object instance in the ADM and
+ * file-local callback functions for all EDDs, CTRLs, and OPERs.
+ */
+
 #include "ietf_amm.h"
 #include "refda/agent.h"
 #include "refda/register.h"
-#include "refda/valprod.h"
-#include "refda/reporting.h"
+#include "refda/edd_prod_ctx.h"
+#include "refda/ctrl_exec_ctx.h"
+#include "refda/oper_eval_ctx.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
@@ -38,7 +47,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                    "ietf-amm");
     REFDA_AGENT_LOCK(agent);
 
-    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-amm", true, REFDA_ADM_IETF_AMM_ENUM_ADM);
+    cace_amm_obj_ns_t *adm =
+        cace_amm_obj_store_add_ns(&(agent->objs), "ietf-amm", "2024-07-03", true, REFDA_ADM_IETF_AMM_ENUM_ADM);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;

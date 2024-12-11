@@ -23,15 +23,15 @@
  * declarations of module-level initialization functions.
  */
 
+#ifndef REFDA_ADM_IETF_DTNMA_AGENT_H_
+#define REFDA_ADM_IETF_DTNMA_AGENT_H_
+
 #include "refda/agent.h"
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
 /*             TODO              */
 /*   STOP CUSTOM INCLUDES HERE  */
-
-#ifndef REFDA_ADM_IETF_DTNMA_AGENT_H_
-#define REFDA_ADM_IETF_DTNMA_AGENT_H_
 
 #ifdef __cplusplus
 extern "C" {

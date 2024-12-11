@@ -36,6 +36,7 @@ void cace_amm_obj_ns_ctr_deinit(cace_amm_obj_ns_ctr_t *obj)
 void cace_amm_obj_ns_init(cace_amm_obj_ns_t *ns)
 {
     m_string_init(ns->name);
+    m_string_init(ns->revision);
     string_tree_set_init(ns->feature_supp);
     cace_amm_obj_ns_ctr_dict_init(ns->object_types);
 }
@@ -44,6 +45,7 @@ void cace_amm_obj_ns_deinit(cace_amm_obj_ns_t *ns)
 {
     cace_amm_obj_ns_ctr_dict_clear(ns->object_types);
     string_tree_set_clear(ns->feature_supp);
+    m_string_clear(ns->revision);
     m_string_clear(ns->name);
 }
 

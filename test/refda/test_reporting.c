@@ -93,7 +93,7 @@ void setUp(void)
 
     {
         // ADM for this test fixture
-        cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
+        cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", "", true, EXAMPLE_ADM_ENUM);
         cace_amm_obj_desc_t *obj;
 
         /**

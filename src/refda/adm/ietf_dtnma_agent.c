@@ -62,6 +62,9 @@ static void refda_adm_ietf_dtnma_agent_edd_sw_vendor(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_vendor BODY
      * +-------------------------------------------------------------------------+
      */
+    ari_t result = ARI_INIT_UNDEFINED;
+    ari_set_tstr(&result, "JHU/APL", false);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_vendor BODY
@@ -110,6 +113,67 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    if (pthread_mutex_lock(&(agent->objs_mutex)))
+    {
+        CACE_LOG_ERR("failed to lock agent objects");
+        return;
+    }
+
+    ari_t     result = ARI_INIT_UNDEFINED;
+    ari_tbl_t table;
+    ari_tbl_init(&table, 4, 0);
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_cref(ns_it);
+        if (ns->intenum < 0)
+        {
+            // ignore ODMs
+            continue;
+        }
+
+        ari_array_t row;
+        ari_array_init(row);
+        ari_array_resize(row, 4);
+
+        ari_set_tstr(ari_array_get(row, 0), m_string_get_cstr(ns->name), true);
+        if (ns->has_enum)
+        {
+            ari_set_vast(ari_array_get(row, 1), ns->intenum);
+        }
+        ari_set_tstr(ari_array_get(row, 2), m_string_get_cstr(ns->revision), true);
+        {
+            ari_t   *col = ari_array_get(row, 3);
+            ari_ac_t list;
+            ari_ac_init(&list);
+
+            string_tree_set_it_t feat_it;
+            for (string_tree_set_it(feat_it, ns->feature_supp); !string_tree_set_end_p(feat_it);
+                 string_tree_set_next(feat_it))
+            {
+                const m_string_t *feat = string_tree_set_cref(feat_it);
+                ari_t            *item = ari_list_push_back_new(list.items);
+                ari_set_tstr(item, m_string_get_cstr(*feat), true);
+            }
+
+            ari_set_ac(col, &list);
+        }
+
+        // append the row
+        ari_tbl_move_row_array(&table, row);
+    }
+
+    ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    if (pthread_mutex_unlock(&(agent->objs_mutex)))
+    {
+        CACE_LOG_ERR("failed to unlock agent objects");
+        return;
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
@@ -1160,8 +1224,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                    "ietf-dtnma-agent");
     REFDA_AGENT_LOCK(agent);
 
-    cace_amm_obj_ns_t *adm =
-        cace_amm_obj_store_add_ns(&(agent->objs), "ietf-dtnma-agent", true, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM);
+    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-dtnma-agent", "2024-07-03", true,
+                                                       REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;

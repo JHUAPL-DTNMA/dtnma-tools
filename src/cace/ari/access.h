@@ -159,6 +159,27 @@ void ari_set_td(ari_t *ari, struct timespec delta);
 /// @overload
 void ari_set_aritype(ari_t *ari, ari_type_t type);
 
+/** Set the ARI as an AC, optionally moving values from an external source.
+ *
+ * @param[in,out] ari The ARI value to modify.
+ * @param[in,out] src An optional existing value struct to move from.
+ */
+void ari_set_ac(ari_t *ari, struct ari_ac_s *src);
+
+/** Set the ARI as an AM, optionally moving values from an external source.
+ *
+ * @param[in,out] ari The ARI value to modify.
+ * @param[in,out] src An optional existing value struct to move from.
+ */
+void ari_set_am(ari_t *ari, struct ari_am_s *src);
+
+/** Set the ARI as a TBL, optionally moving values from an external source.
+ *
+ * @param[in,out] ari The ARI value to modify.
+ * @param[in,out] src An optional existing value struct to move from.
+ */
+void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
+
 /** Require a TEXTSTR value and get the pointer to its storage.
  *
  * @param[in] ari The ARI to read.
@@ -179,13 +200,6 @@ struct ari_ac_s *ari_get_ac(ari_t *ari);
 /// @overload
 const struct ari_ac_s *ari_cget_ac(const ari_t *ari);
 
-/** Set the ARI as an AC, optionally moving values from an external source.
- *
- * @param[in,out] ari The ARI value to modify.
- * @param[in,out] src An optional existing value struct to move from.
- */
-void ari_set_ac(ari_t *ari, struct ari_ac_s *src);
-
 /** Require an AM value and extract a pointer to its item list.
  *
  * @param[in] ari The ARI to read.
@@ -195,18 +209,9 @@ struct ari_am_s *ari_get_am(ari_t *ari);
 /// @overload
 const struct ari_am_s *ari_cget_am(const ari_t *ari);
 
-/** Set the ARI as an AM, optionally moving values from an external source.
- *
- * @param[in,out] ari The ARI value to modify.
- * @param[in,out] src An optional existing value struct to move from.
- */
-void ari_set_am(ari_t *ari, struct ari_am_s *src);
-
 struct ari_tbl_s *ari_get_tbl(ari_t *ari);
 /// @overload
 const struct ari_tbl_s *ari_cget_tbl(const ari_t *ari);
-
-void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
 
 /** Require an EXECSET value and extract a pointer to its struct.
  *
