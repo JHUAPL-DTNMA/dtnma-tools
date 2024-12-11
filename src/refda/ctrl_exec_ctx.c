@@ -26,7 +26,7 @@ void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, const refda_amm_ctrl_d
     CHKVOID(item);
 
     obj->runctx = refda_runctx_ptr_ref(item->seq->runctx);
-    obj->ctrl = ctrl;
+    obj->ctrl   = ctrl;
     obj->item   = item;
 }
 
@@ -51,12 +51,12 @@ void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx)
     atomic_store(&(ctx->item->waiting), true);
 }
 
-void refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value)
-{
-    ari_set_move(&(ctx->item->result), value);
-}
-
 void refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value)
 {
     ari_set_copy(&(ctx->item->result), value);
+}
+
+void refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value)
+{
+    ari_set_move(&(ctx->item->result), value);
 }

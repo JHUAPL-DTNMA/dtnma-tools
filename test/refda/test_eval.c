@@ -18,6 +18,7 @@
 #include <refda/eval.h>
 #include <refda/register.h>
 #include <refda/edd_prod_ctx.h>
+#include <refda/oper_eval_ctx.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/amm/const.h>
@@ -111,15 +112,12 @@ static int ari_numeric_add(ari_t *result, const ari_t *lt_val, const ari_t *rt_v
     return retval;
 }
 
-static int test_reporting_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx)
+static void test_reporting_oper_add(refda_oper_eval_ctx_t *ctx)
 {
-    // FIXME process stack outside this callback
-    ari_t left  = ARI_INIT_UNDEFINED;
-    ari_t right = ARI_INIT_UNDEFINED;
-    ari_list_pop_back_move(&left, ctx->stack);
-    ari_list_pop_back_move(&right, ctx->stack);
+    const ari_t *left  = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
 
-    const ari_t *more = refda_eval_ctx_get_aparam_index(ctx, 0);
+    const ari_t *more = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
     {
         string_t buf;
         string_init(buf);
@@ -131,7 +129,7 @@ static int test_reporting_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_e
     int   retval = 0;
     ari_t tmp1   = ARI_INIT_UNDEFINED;
     ari_t tmp2   = ARI_INIT_UNDEFINED;
-    if (ari_numeric_add(&tmp1, &left, &right))
+    if (ari_numeric_add(&tmp1, left, right))
     {
         retval = 2;
     }
@@ -143,19 +141,15 @@ static int test_reporting_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_e
         }
     }
     ari_deinit(&tmp1);
-    ari_deinit(&left);
-    ari_deinit(&right);
 
     if (!retval)
     {
-        ari_list_push_back_move(ctx->stack, &tmp2);
+        refda_oper_eval_ctx_set_result_move(ctx, &tmp2);
     }
     else
     {
         ari_deinit(&tmp2);
     }
-
-    return retval;
 }
 
 void setUp(void)
@@ -230,7 +224,20 @@ void setUp(void)
         {
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
+
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                amm_type_set_use_direct(&(operand->typeobj), amm_type_get_builtin(ARI_TYPE_VAST));
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                amm_type_set_use_direct(&(operand->typeobj), amm_type_get_builtin(ARI_TYPE_VAST));
+            }
             amm_type_set_use_direct(&(objdata->res_type), amm_type_get_builtin(ARI_TYPE_VAST));
+
             objdata->evaluate = test_reporting_oper_add;
 
             obj = refda_register_oper(adm, cace_amm_obj_id_withenum("oper1", 1), objdata);

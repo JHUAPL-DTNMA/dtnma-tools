@@ -16,7 +16,10 @@
  * limitations under the License.
  */
 #include <refda/amm/const.h>
+#include <refda/valprod.h>
 #include <cace/amm/semtype.h>
+#include <cace/amm/parameters.h>
+#include <cace/amm/lookup.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
 #include <cace/util/logging.h>
@@ -37,6 +40,25 @@ int suiteTearDown(int failures)
     return failures;
 }
 
+static cace_amm_obj_desc_t    obj;
+static refda_amm_const_desc_t desc;
+
+void setUp(void)
+{
+    cace_amm_obj_desc_init(&obj);
+
+    refda_amm_const_desc_init(&desc);
+    obj.app_data.ptr = &desc;
+
+    // leave formal parameter list empty
+}
+
+void tearDown(void)
+{
+    refda_amm_const_desc_deinit(&desc);
+    cace_amm_obj_desc_deinit(&obj);
+}
+
 static void ari_convert(ari_t *ari, const char *inhex)
 {
     string_t intext;
@@ -52,8 +74,7 @@ static void ari_convert(ari_t *ari, const char *inhex)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 }
 
-static void check_produce(ari_t *value, const refda_amm_const_desc_t *cnst, const cace_amm_formal_param_list_t fparams,
-                          const char *refhex, const char *outhex, int expect_res)
+static void check_produce(ari_t *value, const char *refhex, const char *outhex, int expect_res)
 {
     ari_t inref = ARI_INIT_UNDEFINED;
     ari_convert(&inref, refhex);
@@ -61,14 +82,16 @@ static void check_produce(ari_t *value, const refda_amm_const_desc_t *cnst, cons
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
+    deref.obj_type = ARI_TYPE_CONST;
+    deref.obj      = &obj;
 
-    int res = cace_amm_actual_param_set_populate(&(deref.aparams), fparams, &(inref.as_ref.params));
+    int res = cace_amm_actual_param_set_populate(&(deref.aparams), obj.fparams, &(inref.as_ref.params));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_valprod_ctx_t ctx;
     refda_valprod_ctx_init(&ctx, NULL, &deref);
 
-    res = refda_amm_const_desc_produce(cnst, &ctx);
+    res = refda_valprod_run(&ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_const_desc_produce() mismatch");
 
     ari_t outval = ARI_INIT_UNDEFINED;
@@ -90,22 +113,13 @@ static void check_produce(ari_t *value, const refda_amm_const_desc_t *cnst, cons
 TEST_CASE("0A", "83022104", "0A", 0)
 void test_const_produce_param_none(const char *valhex, const char *refhex, const char *outhex, int expect_res)
 {
-    refda_amm_const_desc_t obj;
-    refda_amm_const_desc_init(&obj);
-
-    // leave formal parameter list empty
-    cace_amm_formal_param_list_t fparams;
-    cace_amm_formal_param_list_init(fparams);
-
     // initial state
-    ari_convert(&(obj.value), valhex);
+    ari_convert(&(desc.value), valhex);
 
     ari_t value = ARI_INIT_UNDEFINED;
-    check_produce(&value, &obj, fparams, refhex, outhex, expect_res);
+    check_produce(&value, refhex, outhex, expect_res);
 
     ari_deinit(&value);
-    cace_amm_formal_param_list_clear(fparams);
-    refda_amm_const_desc_deinit(&obj);
 }
 
 // References are based on ari://2/CONST/4
@@ -115,13 +129,8 @@ TEST_CASE("0A", "84022104810A", "0A", 0) // [10] not used, but not an error
 // FIXME: TEST_CASE("820E626869", "84022104810A", "0A", 0) // [10] label substituted by name
 void test_const_produce_param_one_int(const char *valhex, const char *refhex, const char *outhex, int expect_res)
 {
-    refda_amm_const_desc_t obj;
-    refda_amm_const_desc_init(&obj);
-
-    cace_amm_formal_param_list_t fparams;
-    cace_amm_formal_param_list_init(fparams);
     {
-        cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
+        cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj.fparams);
 
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
@@ -130,12 +139,10 @@ void test_const_produce_param_one_int(const char *valhex, const char *refhex, co
     }
 
     // initial state
-    ari_convert(&(obj.value), valhex);
+    ari_convert(&(desc.value), valhex);
 
     ari_t value = ARI_INIT_UNDEFINED;
-    check_produce(&value, &obj, fparams, refhex, outhex, expect_res);
+    check_produce(&value, refhex, outhex, expect_res);
 
     ari_deinit(&value);
-    cace_amm_formal_param_list_clear(fparams);
-    refda_amm_const_desc_deinit(&obj);
 }

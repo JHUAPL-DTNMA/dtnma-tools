@@ -25,6 +25,44 @@
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
 
+static int refda_valprod_const_run(const refda_amm_const_desc_t *obj, refda_valprod_ctx_t *ctx)
+{
+    CHKERR1(obj);
+    CHKERR1(ctx);
+
+    ari_set_copy(&(ctx->value), &(obj->value));
+    // FIXME use ctx parameters to substitute
+
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(ctx->value), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
+    return 0;
+}
+
+static int refda_valprod_var_run(const refda_amm_var_desc_t *obj, refda_valprod_ctx_t *ctx)
+{
+    CHKERR1(obj);
+    CHKERR1(ctx);
+
+    ari_set_copy(&(ctx->value), &(obj->value));
+    // FIXME use ctx parameters to substitute
+
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(ctx->value), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
+    return 0;
+}
 
 static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_ctx_t *prodctx)
 {
@@ -92,19 +130,22 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
         case ARI_TYPE_CONST:
         {
             refda_amm_const_desc_t *cnst = ctx->deref->obj->app_data.ptr;
-            retval                       = refda_amm_const_desc_produce(cnst, ctx);
+
+            retval = refda_valprod_const_run(cnst, ctx);
             break;
         }
         case ARI_TYPE_VAR:
         {
             refda_amm_var_desc_t *var = ctx->deref->obj->app_data.ptr;
-            retval                    = refda_amm_var_desc_produce(var, ctx);
+
+            retval = refda_valprod_var_run(var, ctx);
             break;
         }
         case ARI_TYPE_EDD:
         {
             refda_amm_edd_desc_t *edd = ctx->deref->obj->app_data.ptr;
-            retval                    = refda_valprod_edd_run(edd, ctx);
+
+            retval = refda_valprod_edd_run(edd, ctx);
             break;
         }
         default:

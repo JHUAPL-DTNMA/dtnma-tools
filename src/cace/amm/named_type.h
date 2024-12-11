@@ -15,42 +15,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef REFDA_AMM_VAR_H_
-#define REFDA_AMM_VAR_H_
+#ifndef CACE_AMM_NAMED_TYPE_H_
+#define CACE_AMM_NAMED_TYPE_H_
 
-#include <cace/amm/typing.h>
-#include <cace/ari.h>
+#include "typing.h"
+#include <m-string.h>
+#include <m-array.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** A VAR descriptor.
- * This defines the properties of a VAR in an Agent and includes common
- * object metadata.
- */
+/// A named semantic type
 typedef struct
 {
-    /** The required type for the stored value and result value.
+    /// The unique name of the column.
+    m_string_t name;
+
+    /** The type of the column.
      * All type references are fully recursively resolved.
-     * The type object is owned by this descriptor.
+     * The type object is owned by this column.
      */
-    amm_type_t val_type;
+    amm_type_t typeobj;
+} amm_named_type_t;
 
-    /** Storage for the value.
-     * This is initialized as undefined and must be set to any other value
-     * to indicate successful production.
-     */
-    ari_t value;
+void amm_named_type_init(amm_named_type_t *obj);
 
-} refda_amm_var_desc_t;
+void amm_named_type_deinit(amm_named_type_t *obj);
 
-void refda_amm_var_desc_init(refda_amm_var_desc_t *obj);
+/// OPLIST for the amm_named_type_s
+#define M_OPL_amm_named_type_t() (INIT(API_2(amm_named_type_init)), CLEAR(API_2(amm_named_type_deinit)))
 
-void refda_amm_var_desc_deinit(refda_amm_var_desc_t *obj);
+/** @struct amm_named_type_array_t
+ * An array of amm_named_type_t instances.
+ */
+/// @cond Doxygen_Suppress
+ARRAY_DEF(amm_named_type_array, amm_named_type_t)
+/// @endcond
 
 #ifdef __cplusplus
-} // extern C
+}
 #endif
 
-#endif /* REFDA_AMM_VAR_H_ */
+#endif /* CACE_AMM_NAMED_TYPE_H_ */

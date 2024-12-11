@@ -23,6 +23,7 @@
 #define CACE_AMM_SEMTYPE_H_
 
 #include "typing.h"
+#include "named_type.h"
 #include "range.h"
 #include "semtype_cnst.h"
 #include <m-array.h>
@@ -91,7 +92,7 @@ typedef struct
 {
     /** The type for each item of the list.
      * All type references are fully recursively resolved.
-     * The type object is owned by this column.
+     * The type object is owned by this semtype.
      */
     amm_type_t item_type;
 
@@ -126,7 +127,7 @@ typedef struct
     /** The ordered list of semantic types for each sub-sequence of
      * the list.
      * All type references are fully recursively resolved.
-     * The type object is owned by this column.
+     * The type object is owned by this semtype.
      */
     amm_type_array_t types;
 
@@ -155,12 +156,12 @@ typedef struct
 {
     /** The type for each key of the map.
      * All type references are fully recursively resolved.
-     * The type object is owned by this column.
+     * The type object is owned by this semtype.
      */
     amm_type_t key_type;
     /** The type for each value of the map.
      * All type references are fully recursively resolved.
-     * The type object is owned by this column.
+     * The type object is owned by this semtype.
      */
     amm_type_t val_type;
 
@@ -185,48 +186,23 @@ static inline void amm_semtype_umap_deinit(amm_semtype_umap_t *obj)
  */
 amm_semtype_umap_t *amm_type_set_umap(amm_type_t *type);
 
-/// Configuration of a table template column
-typedef struct
-{
-    /// The unique name of the column.
-    string_t name;
-
-    /** The type of the column.
-     * All type references are fully recursively resolved.
-     * The type object is owned by this column.
-     */
-    amm_type_t typeobj;
-} amm_semtype_tblt_col_t;
-
-void amm_semtype_tblt_col_init(amm_semtype_tblt_col_t *obj);
-
-void amm_semtype_tblt_col_deinit(amm_semtype_tblt_col_t *obj);
-
-/// OPLIST for the amm_semtype_tblt_col_s
-#define M_OPL_amm_semtype_tblt_col_t() \
-    (INIT(API_2(amm_semtype_tblt_col_init)), CLEAR(API_2(amm_semtype_tblt_col_deinit)))
-
-/// @cond Doxygen_Suppress
-ARRAY_DEF(amm_semtype_tblt_col_array, amm_semtype_tblt_col_t)
-/// @endcond
-
 /// Configuration for a table template
 typedef struct
 {
     /** The ordered list of types in this union.
      * Ownership of these objects is managed by the container.
      */
-    amm_semtype_tblt_col_array_t columns;
+    amm_named_type_array_t columns;
 } amm_semtype_tblt_t;
 
 static inline void amm_semtype_tblt_init(amm_semtype_tblt_t *obj)
 {
-    amm_semtype_tblt_col_array_init(obj->columns);
+    amm_named_type_array_init(obj->columns);
 }
 
 static inline void amm_semtype_tblt_deinit(amm_semtype_tblt_t *obj)
 {
-    amm_semtype_tblt_col_array_clear(obj->columns);
+    amm_named_type_array_clear(obj->columns);
 }
 
 /** Create a table template based on a set of typed columns.
@@ -273,7 +249,7 @@ typedef struct
 {
     /** The type for each item of the list.
      * All type references are fully recursively resolved.
-     * The type object is owned by this column.
+     * The type object is owned by this semtype.
      */
     amm_type_t item_type;
 

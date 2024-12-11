@@ -55,7 +55,7 @@ static void mock_ctrl_exec_none(refda_ctrl_exec_ctx_t *ctx)
 static void mock_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
 {
     const ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
-    CHKERR1(val)
+    CHKVOID(val)
     {
         string_t buf;
         string_init(buf);

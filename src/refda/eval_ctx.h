@@ -45,11 +45,6 @@ typedef struct
      */
     refda_runctx_t *parent;
 
-    /** Dereference result for OPER which led to this evaluation.
-     * This will never be null while an operator is evaluating.
-     */
-    const cace_amm_lookup_t *deref;
-
     /** Storage for the input expanded list.
      */
     refda_eval_list_t input;
@@ -69,10 +64,6 @@ typedef struct
 void refda_eval_ctx_init(refda_eval_ctx_t *obj, refda_runctx_t *parent);
 
 void refda_eval_ctx_deinit(refda_eval_ctx_t *obj);
-
-const ari_t *refda_eval_ctx_get_aparam_index(refda_eval_ctx_t *ctx, size_t index);
-
-const ari_t *refda_eval_ctx_get_aparam_name(refda_eval_ctx_t *ctx, const char *name);
 
 #ifdef __cplusplus
 } // extern C

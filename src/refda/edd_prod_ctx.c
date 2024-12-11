@@ -25,7 +25,7 @@ void refda_edd_prod_ctx_init(refda_edd_prod_ctx_t *obj, const refda_amm_edd_desc
     CHKVOID(obj);
 
     obj->prodctx = prodctx;
-    obj->edd = edd;
+    obj->edd     = edd;
 }
 
 void refda_edd_prod_ctx_deinit(refda_edd_prod_ctx_t *obj)

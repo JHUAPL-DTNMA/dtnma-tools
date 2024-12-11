@@ -307,12 +307,12 @@ void test_amm_type_match_semtype_tblt_1(const char *inhex, bool expect)
         amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&mytype, 2);
         TEST_ASSERT_NOT_NULL(semtype);
         {
-            amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 0);
+            amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 0);
             TEST_ASSERT_NOT_NULL(col);
             amm_type_set_use_direct(&(col->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
         }
         {
-            amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 1);
+            amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 1);
             TEST_ASSERT_NOT_NULL(col);
             amm_type_set_use_direct(&(col->typeobj), amm_type_get_builtin(ARI_TYPE_BOOL));
         }

@@ -16,12 +16,10 @@
  * limitations under the License.
  */
 #include "oper.h"
-#include "cace/util/logging.h"
-#include "cace/ari/text.h"
-#include "cace/util/defs.h"
 
 void refda_amm_oper_desc_init(refda_amm_oper_desc_t *obj)
 {
+    amm_named_type_array_init(obj->operand_types);
     amm_type_init(&(obj->res_type));
     obj->evaluate = NULL;
 }
@@ -29,44 +27,7 @@ void refda_amm_oper_desc_init(refda_amm_oper_desc_t *obj)
 void refda_amm_oper_desc_deinit(refda_amm_oper_desc_t *obj)
 {
     amm_type_deinit(&(obj->res_type));
+    amm_named_type_array_clear(obj->operand_types);
     // not necessary but helpful
     memset(obj, 0, sizeof(*obj));
-}
-
-int refda_amm_oper_desc_evaluate(const refda_amm_oper_desc_t *obj, refda_eval_ctx_t *ctx)
-{
-    CHKERR1(obj)
-    CHKERR1(ctx)
-    CHKERR1(obj->evaluate)
-
-    int    res = (obj->evaluate)(obj, ctx);
-    ari_t *top = ari_list_back(ctx->stack);
-    {
-        string_t buf;
-        string_init(buf);
-        ari_text_encode(buf, top, ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("evaluation finished with status %d and result %s", res, string_get_cstr(buf));
-        string_clear(buf);
-    }
-    if (res)
-    {
-        return 2;
-    }
-
-    // FIXME skip type checking
-    return 0;
-    if (amm_type_is_valid(&(obj->res_type)))
-    {
-        // force result type
-        ari_t tmp;
-        ari_init(&tmp);
-        res = amm_type_convert(&(obj->res_type), &tmp, top);
-        ari_set_move(top, &tmp);
-        if (res)
-        {
-            return 3;
-        }
-    }
-
-    return 0;
 }

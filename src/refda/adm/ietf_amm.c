@@ -34,7 +34,8 @@
 int refda_adm_ietf_amm_init(refda_agent_t *agent)
 {
     CHKERR1(agent);
-    CACE_LOG_DEBUG("Registering ADM: " "ietf-amm");
+    CACE_LOG_DEBUG("Registering ADM: "
+                   "ietf-amm");
     REFDA_AGENT_LOCK(agent);
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-amm", true, REFDA_ADM_IETF_AMM_ENUM_ADM);
@@ -50,9 +51,10 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // no IDENT bases
 
-            obj = refda_register_ident(adm, cace_amm_obj_id_withenum("display-hint", REFDA_ADM_IETF_AMM_ENUM_OBJID_IDENT_DISPLAY_HINT), objdata);
+            obj = refda_register_ident(
+                adm, cace_amm_obj_id_withenum("display-hint", REFDA_ADM_IETF_AMM_ENUM_OBJID_IDENT_DISPLAY_HINT),
+                objdata);
             // no parameters
-
         }
 
         /**
@@ -82,7 +84,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("type-ref", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_TYPE_REF), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("type-ref", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_TYPE_REF), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/integer
@@ -133,7 +136,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("integer", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_INTEGER), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("integer", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_INTEGER), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/float
@@ -160,7 +164,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("float", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_FLOAT), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("float", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_FLOAT), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/numeric
@@ -189,7 +194,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("numeric", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_NUMERIC), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("numeric", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_NUMERIC), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/primitive
@@ -241,7 +247,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("primitive", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_PRIMITIVE), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("primitive", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_PRIMITIVE), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/time
@@ -268,7 +275,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("time", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_TIME), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("time", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_TIME), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/simple
@@ -297,7 +305,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("simple", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_SIMPLE), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("simple", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_SIMPLE), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/nested
@@ -332,7 +341,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("nested", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_NESTED), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("nested", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_NESTED), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/any
@@ -359,7 +369,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("any", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_ANY), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("any", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_ANY), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/value-obj
@@ -394,7 +405,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("value-obj", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_VALUE_OBJ), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("value-obj", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_VALUE_OBJ), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/nonce
@@ -429,7 +441,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("nonce", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_NONCE), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("nonce", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_NONCE), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/counter32
@@ -441,7 +454,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                 ari_set_aritype(&name, ARI_TYPE_UINT);
                 amm_type_set_use_ref_move(&(objdata->typeobj), &name);
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("counter32", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_COUNTER32), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("counter32", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_COUNTER32), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/counter64
@@ -453,7 +467,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                 ari_set_aritype(&name, ARI_TYPE_UVAST);
                 amm_type_set_use_ref_move(&(objdata->typeobj), &name);
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("counter64", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_COUNTER64), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("counter64", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_COUNTER64), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/gauge32
@@ -465,7 +480,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                 ari_set_aritype(&name, ARI_TYPE_INT);
                 amm_type_set_use_ref_move(&(objdata->typeobj), &name);
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("gauge32", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_GAUGE32), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("gauge32", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_GAUGE32), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/gauge64
@@ -477,7 +493,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                 ari_set_aritype(&name, ARI_TYPE_VAST);
                 amm_type_set_use_ref_move(&(objdata->typeobj), &name);
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("gauge64", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_GAUGE64), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("gauge64", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_GAUGE64), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/timestamp
@@ -489,7 +506,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                 ari_set_aritype(&name, ARI_TYPE_TP);
                 amm_type_set_use_ref_move(&(objdata->typeobj), &name);
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("timestamp", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_TIMESTAMP), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("timestamp", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_TIMESTAMP), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/eval-tgt
@@ -527,7 +545,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("eval-tgt", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EVAL_TGT), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("eval-tgt", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EVAL_TGT), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/expr-item
@@ -581,7 +600,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("expr-item", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXPR_ITEM), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("expr-item", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXPR_ITEM), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/expr
@@ -597,7 +617,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(semtype->item_type), &name);
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("expr", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXPR), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("expr", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXPR), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/exec-tgt
@@ -626,7 +647,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("exec-tgt", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXEC_TGT), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("exec-tgt", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXEC_TGT), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/exec-item
@@ -654,7 +676,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("exec-item", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXEC_ITEM), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("exec-item", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXEC_ITEM), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/mac
@@ -670,7 +693,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(semtype->item_type), &name);
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("mac", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_MAC), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("mac", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_MAC), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/rpt-tgt
@@ -699,7 +723,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("rpt-tgt", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPT_TGT), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("rpt-tgt", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPT_TGT), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/rptt-item
@@ -728,7 +753,8 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("rptt-item", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPTT_ITEM), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("rptt-item", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPTT_ITEM), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/rptt
@@ -744,14 +770,10 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                     amm_type_set_use_ref_move(&(semtype->item_type), &name);
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("rptt", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPTT), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("rptt", REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPTT), objdata);
             // no parameters possible
         }
-
-
-
-
-
     }
     REFDA_AGENT_UNLOCK(agent);
     return 0;

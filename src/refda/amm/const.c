@@ -16,9 +16,6 @@
  * limitations under the License.
  */
 #include "const.h"
-#include "cace/util/logging.h"
-#include "cace/ari/text.h"
-#include "cace/util/defs.h"
 
 void refda_amm_const_desc_init(refda_amm_const_desc_t *obj)
 {
@@ -29,24 +26,4 @@ void refda_amm_const_desc_deinit(refda_amm_const_desc_t *obj)
 {
     ari_deinit(&(obj->value));
     memset(obj, 0, sizeof(*obj));
-}
-
-int refda_amm_const_desc_produce(const refda_amm_const_desc_t *obj, refda_valprod_ctx_t *ctx)
-{
-    CHKERR1(obj);
-    CHKERR1(ctx);
-
-    ari_set_copy(&(ctx->value), &(obj->value));
-    // FIXME use ctx parameters to substitute
-
-    if (cace_log_is_enabled_for(LOG_DEBUG))
-    {
-        string_t buf;
-        string_init(buf);
-        ari_text_encode(buf, &(ctx->value), ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
-        string_clear(buf);
-    }
-
-    return 0;
 }

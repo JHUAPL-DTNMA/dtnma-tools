@@ -28,7 +28,7 @@
 #include "refda/register.h"
 #include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"
-//#include "refda/reporting.h"
+// #include "refda/reporting.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
@@ -47,7 +47,6 @@ static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *ite
 }
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
-
 /* Name: sw-vendor
  * Description:
  *   The vendor for this Agent implementation.
@@ -58,19 +57,17 @@ static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *ite
  */
 static void refda_adm_ietf_dtnma_agent_edd_sw_vendor(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_vendor BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_vendor BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_vendor BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_vendor BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: sw-version
  * Description:
@@ -82,22 +79,20 @@ static void refda_adm_ietf_dtnma_agent_edd_sw_vendor(refda_edd_prod_ctx_t *ctx)
  */
 static void refda_adm_ietf_dtnma_agent_edd_sw_version(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
+     * +-------------------------------------------------------------------------+
+     */
     ari_t result = ARI_INIT_UNDEFINED;
     ari_set_tstr(&result, "0.0.0", false);
     refda_edd_prod_ctx_set_result_move(ctx, &result);
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sw_version BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: capability
  * Description:
@@ -105,23 +100,22 @@ static void refda_adm_ietf_dtnma_agent_edd_sw_version(refda_edd_prod_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Produced type: TBLT with 4 columns (use of ari:/ARITYPE/TEXTSTR, use of ari:/ARITYPE/VAST, use of ari:/ARITYPE/TEXTSTR, ulist of use of ari:/ARITYPE/TEXTSTR)
+ * Produced type: TBLT with 4 columns (use of ari:/ARITYPE/TEXTSTR, use of ari:/ARITYPE/VAST, use of
+ * ari:/ARITYPE/TEXTSTR, ulist of use of ari:/ARITYPE/TEXTSTR)
  */
 static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: num-msg-rx
  * Description MISSING
@@ -132,19 +126,17 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
  */
 static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: num-msg-rx-failed
  * Description MISSING
@@ -155,19 +147,17 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx(refda_edd_prod_ctx_t *ctx)
  */
 static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: num-msg-tx
  * Description MISSING
@@ -178,19 +168,17 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed(refda_edd_prod_ctx_
  */
 static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: num-exec-started
  * Description MISSING
@@ -201,19 +189,17 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx(refda_edd_prod_ctx_t *ctx)
  */
 static void refda_adm_ietf_dtnma_agent_edd_num_exec_started(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_started BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_started BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_started BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_started BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: num-exec-succeeded
  * Description MISSING
@@ -224,19 +210,17 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_started(refda_edd_prod_ctx_t
  */
 static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: num-exec-failed
  * Description MISSING
@@ -247,42 +231,39 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(refda_edd_prod_ctx
  */
 static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: exec-running
  * Description MISSING
  *
  * Parameters: none
  *
- * Produced type: TBLT with 3 columns (use of ari:/ARITYPE/UVAST, use of ari://ietf-amm/TYPEDEF/ANY, use of ari:/ARITYPE/BYTE)
+ * Produced type: TBLT with 3 columns (use of ari:/ARITYPE/UVAST, use of ari://ietf-amm/TYPEDEF/ANY, use of
+ * ari:/ARITYPE/BYTE)
  */
 static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_exec_running BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_exec_running BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_exec_running BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_exec_running BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: typedef-list
  * Description:
@@ -295,19 +276,17 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
  */
 static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_typedef_list BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_typedef_list BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_typedef_list BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_typedef_list BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: var-list
  * Description:
@@ -320,65 +299,61 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
  */
 static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_var_list BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_var_list BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_var_list BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_var_list BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: sbr-list
  * Description MISSING
  *
  * Parameters: none
  *
- * Produced type: TBLT with 6 columns (use of ari:/ARITYPE/SBR, use of ari://ietf-amm/TYPEDEF/MAC, use of ari://ietf-amm/TYPEDEF/TIME, use of ari://ietf-amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
+ * Produced type: TBLT with 6 columns (use of ari:/ARITYPE/SBR, use of ari://ietf-amm/TYPEDEF/MAC, use of
+ * ari://ietf-amm/TYPEDEF/TIME, use of ari://ietf-amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
  */
 static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sbr_list BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sbr_list BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sbr_list BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sbr_list BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: tbr-list
  * Description MISSING
  *
  * Parameters: none
  *
- * Produced type: TBLT with 5 columns (use of ari:/ARITYPE/TBR, use of ari://ietf-amm/TYPEDEF/MAC, use of ari://ietf-amm/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
+ * Produced type: TBLT with 5 columns (use of ari:/ARITYPE/TBR, use of ari://ietf-amm/TYPEDEF/MAC, use of
+ * ari://ietf-amm/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
  */
 static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_tbr_list BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_tbr_list BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_tbr_list BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_tbr_list BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: if-then-else
  * Description:
@@ -387,25 +362,26 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
  *
  * Parameters list:
  *  * Index 0, name "condition", type: use of ari://ietf-amm/TYPEDEF/eval-tgt
- *  * Index 1, name "on-truthy", type: union of 2 types (use of ari://ietf-amm/TYPEDEF/exec-tgt, use of ari:/ARITYPE/NULL)
- *  * Index 2, name "on-falsy", type: union of 2 types (use of ari://ietf-amm/TYPEDEF/exec-tgt, use of ari:/ARITYPE/NULL)
+ *  * Index 1, name "on-truthy", type: union of 2 types (use of ari://ietf-amm/TYPEDEF/exec-tgt, use of
+ * ari:/ARITYPE/NULL)
+ *  * Index 2, name "on-falsy", type: union of 2 types (use of ari://ietf-amm/TYPEDEF/exec-tgt, use of
+ * ari:/ARITYPE/NULL)
  *
  * Result name "branch", type: use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: catch
  * Description:
@@ -414,24 +390,24 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
  *
  * Parameters list:
  *  * Index 0, name "try", type: use of ari://ietf-amm/TYPEDEF/exec-tgt
- *  * Index 1, name "on-failure", type: union of 2 types (use of ari://ietf-amm/TYPEDEF/exec-tgt, use of ari:/ARITYPE/NULL)
+ *  * Index 1, name "on-failure", type: union of 2 types (use of ari://ietf-amm/TYPEDEF/exec-tgt, use of
+ * ari:/ARITYPE/NULL)
  *
  * Result name "try-success", type: use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: wait-for
  * Description:
@@ -446,11 +422,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
+     * +-------------------------------------------------------------------------+
+     */
     const ari_t *duration = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
     struct timespec nowtime;
@@ -470,13 +446,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
     refda_timeline_push(ctx->runctx->agent->exec_timeline, event);
 
     refda_ctrl_exec_ctx_set_waiting(ctx);
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: wait-until
  * Description:
@@ -492,18 +467,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_until BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_until BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_until BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_until BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: wait-cond
  * Description:
@@ -519,18 +493,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: inspect
  * Description:
@@ -544,11 +517,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
+     * +-------------------------------------------------------------------------+
+     */
     CACE_LOG_WARNING("executed!");
 
     const ari_t *ref = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
@@ -591,13 +564,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
     }
 
     cace_amm_lookup_deinit(&deref);
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: report-on
  * Description:
@@ -614,18 +586,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: var-reset
  * Description:
@@ -638,18 +609,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: var-store
  * Description:
@@ -663,18 +633,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: ensure-var
  * Description:
@@ -689,18 +658,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: discard-var
  * Description:
@@ -713,18 +681,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_discard_var(refda_ctrl_exec_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_discard_var BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_discard_var BODY
-	 * +-------------------------------------------------------------------------+
-	 */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_discard_var BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_discard_var BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: negate
  * Description:
@@ -735,22 +702,19 @@ static void refda_adm_ietf_dtnma_agent_ctrl_discard_var(refda_ctrl_exec_ctx_t *c
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
-static int refda_adm_ietf_dtnma_agent_oper_negate(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_negate BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_negate BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_negate BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_negate BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: add
  * Description:
@@ -761,22 +725,19 @@ static int refda_adm_ietf_dtnma_agent_oper_negate(const refda_amm_oper_desc_t *o
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
-static int refda_adm_ietf_dtnma_agent_oper_add(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_add BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_add BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_add BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_add BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: sub
  * Description MISSING
@@ -785,22 +746,19 @@ static int refda_adm_ietf_dtnma_agent_oper_add(const refda_amm_oper_desc_t *obj 
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
-static int refda_adm_ietf_dtnma_agent_oper_sub(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_sub BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_sub BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_sub BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_sub BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: multiply
  * Description MISSING
@@ -809,22 +767,19 @@ static int refda_adm_ietf_dtnma_agent_oper_sub(const refda_amm_oper_desc_t *obj 
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
-static int refda_adm_ietf_dtnma_agent_oper_multiply(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_multiply BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_multiply BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_multiply BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_multiply BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: divide
  * Description MISSING
@@ -833,22 +788,19 @@ static int refda_adm_ietf_dtnma_agent_oper_multiply(const refda_amm_oper_desc_t 
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
-static int refda_adm_ietf_dtnma_agent_oper_divide(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_divide BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_divide BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_divide BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_divide BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: remainder
  * Description MISSING
@@ -857,22 +809,19 @@ static int refda_adm_ietf_dtnma_agent_oper_divide(const refda_amm_oper_desc_t *o
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/NUMERIC
  */
-static int refda_adm_ietf_dtnma_agent_oper_remainder(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_remainder BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_remainder BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_remainder BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_remainder BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: bit-not
  * Description MISSING
@@ -881,22 +830,19 @@ static int refda_adm_ietf_dtnma_agent_oper_remainder(const refda_amm_oper_desc_t
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/INTEGER
  */
-static int refda_adm_ietf_dtnma_agent_oper_bit_not(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_not BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_not BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_not BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_not BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: bit-and
  * Description MISSING
@@ -905,22 +851,19 @@ static int refda_adm_ietf_dtnma_agent_oper_bit_not(const refda_amm_oper_desc_t *
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/INTEGER
  */
-static int refda_adm_ietf_dtnma_agent_oper_bit_and(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_and BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_and BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_and BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_and BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: bit-or
  * Description MISSING
@@ -929,22 +872,19 @@ static int refda_adm_ietf_dtnma_agent_oper_bit_and(const refda_amm_oper_desc_t *
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/INTEGER
  */
-static int refda_adm_ietf_dtnma_agent_oper_bit_or(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_or BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_or BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_or BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_or BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: bit-xor
  * Description MISSING
@@ -953,22 +893,19 @@ static int refda_adm_ietf_dtnma_agent_oper_bit_or(const refda_amm_oper_desc_t *o
  *
  * Result name "result", type: use of ari://ietf-amm/TYPEDEF/INTEGER
  */
-static int refda_adm_ietf_dtnma_agent_oper_bit_xor(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_xor BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_xor BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_xor BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_xor BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: bool-not
  * Description MISSING
@@ -977,22 +914,19 @@ static int refda_adm_ietf_dtnma_agent_oper_bit_xor(const refda_amm_oper_desc_t *
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_bool_not(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_not BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_not BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_not BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_not BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: bool-and
  * Description MISSING
@@ -1001,22 +935,19 @@ static int refda_adm_ietf_dtnma_agent_oper_bool_not(const refda_amm_oper_desc_t 
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_bool_and(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_and BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_and BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_and BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_and BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: bool-or
  * Description MISSING
@@ -1025,22 +956,19 @@ static int refda_adm_ietf_dtnma_agent_oper_bool_and(const refda_amm_oper_desc_t 
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_bool_or(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_or BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_or BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_or BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_or BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: bool-xor
  * Description MISSING
@@ -1049,22 +977,19 @@ static int refda_adm_ietf_dtnma_agent_oper_bool_or(const refda_amm_oper_desc_t *
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_bool_xor(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_xor BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_xor BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_xor BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_xor BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: compare-eq
  * Description MISSING
@@ -1073,22 +998,19 @@ static int refda_adm_ietf_dtnma_agent_oper_bool_xor(const refda_amm_oper_desc_t 
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_compare_eq(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_eq BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_eq BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_eq BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_eq BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: compare-ne
  * Description MISSING
@@ -1097,22 +1019,19 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_eq(const refda_amm_oper_desc_
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_compare_ne(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ne BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ne BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ne BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ne BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: compare-gt
  * Description:
@@ -1124,22 +1043,19 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_ne(const refda_amm_oper_desc_
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_compare_gt(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_gt BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_gt BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_gt BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_gt BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: compare-ge
  * Description:
@@ -1151,22 +1067,19 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_gt(const refda_amm_oper_desc_
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_compare_ge(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ge BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ge BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ge BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ge BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: compare-lt
  * Description:
@@ -1178,22 +1091,19 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_ge(const refda_amm_oper_desc_
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_compare_lt(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_lt BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_lt BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_lt BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_lt BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: compare-le
  * Description:
@@ -1205,22 +1115,19 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_lt(const refda_amm_oper_desc_
  *
  * Result name "result", type: use of ari:/ARITYPE/BOOL
  */
-static int refda_adm_ietf_dtnma_agent_oper_compare_le(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_le BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_le BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_le BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_le BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
-
 
 /* Name: tbl-filter
  * Description:
@@ -1232,29 +1139,29 @@ static int refda_adm_ietf_dtnma_agent_oper_compare_le(const refda_amm_oper_desc_
  *
  * Result name "out", type: use of ari:/ARITYPE/TBL
  */
-static int refda_adm_ietf_dtnma_agent_oper_tbl_filter(const refda_amm_oper_desc_t *obj _U_, refda_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ctx)
 {
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_filter BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-	/*
-	 * +-------------------------------------------------------------------------+
-	 * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_filter BODY
-	 * +-------------------------------------------------------------------------+
-	 */
-
-    return 0; //FIXME
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_filter BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_filter BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
 
 int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 {
     CHKERR1(agent);
-    CACE_LOG_DEBUG("Registering ADM: " "ietf-dtnma-agent");
+    CACE_LOG_DEBUG("Registering ADM: "
+                   "ietf-dtnma-agent");
     REFDA_AGENT_LOCK(agent);
 
-    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-dtnma-agent", true, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM);
+    cace_amm_obj_ns_t *adm =
+        cace_amm_obj_store_add_ns(&(agent->objs), "ietf-dtnma-agent", true, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -1286,7 +1193,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("hellotyp", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_HELLOTYP), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("hellotyp", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_HELLOTYP),
+                objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/column-id
@@ -1313,7 +1222,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
             }
-            obj = refda_register_typedef(adm, cace_amm_obj_id_withenum("column-id", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_COLUMN_ID), objdata);
+            obj = refda_register_typedef(
+                adm, cace_amm_obj_id_withenum("column-id", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_COLUMN_ID),
+                objdata);
             // no parameters possible
         }
 
@@ -1344,7 +1255,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 ari_set_ac(&(objdata->value), &acinit);
             }
-            obj = refda_register_const(adm, cace_amm_obj_id_withenum("hello", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO), objdata);
+            obj = refda_register_const(
+                adm, cace_amm_obj_id_withenum("hello", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO), objdata);
             // no parameters
         }
 
@@ -1363,7 +1275,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_sw_vendor;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("sw-vendor", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VENDOR), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("sw-vendor", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VENDOR),
+                objdata);
             // no parameters
         }
         { // For ./EDD/sw-version
@@ -1378,7 +1292,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_sw_version;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("sw-version", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("sw-version", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION),
+                objdata);
             // no parameters
         }
         { // For ./EDD/capability
@@ -1389,7 +1305,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 // table template
                 amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&(objdata->prod_type), 4);
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 0);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "adm-name");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1398,7 +1314,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 1);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "enum");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1407,7 +1323,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 2);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "revision");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1416,7 +1332,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 3);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "features");
                     {
                         amm_semtype_ulist_t *semtype = amm_type_set_ulist(&(col->typeobj));
@@ -1431,7 +1347,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_capability;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("capability", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_CAPABILITY), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("capability", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_CAPABILITY),
+                objdata);
             // no parameters
         }
         { // For ./EDD/num-msg-rx
@@ -1447,7 +1365,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_msg_rx;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-msg-rx", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_RX), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("num-msg-rx", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_RX),
+                objdata);
             // no parameters
         }
         { // For ./EDD/num-msg-rx-failed
@@ -1463,7 +1383,11 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-msg-rx-failed", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_RX_FAILED), objdata);
+            obj = refda_register_edd(
+                adm,
+                cace_amm_obj_id_withenum("num-msg-rx-failed",
+                                         REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_RX_FAILED),
+                objdata);
             // no parameters
         }
         { // For ./EDD/num-msg-tx
@@ -1479,7 +1403,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_msg_tx;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-msg-tx", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("num-msg-tx", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX),
+                objdata);
             // no parameters
         }
         { // For ./EDD/num-exec-started
@@ -1495,7 +1421,11 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_exec_started;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-exec-started", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_STARTED), objdata);
+            obj =
+                refda_register_edd(adm,
+                                   cace_amm_obj_id_withenum("num-exec-started",
+                                                            REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_STARTED),
+                                   objdata);
             // no parameters
         }
         { // For ./EDD/num-exec-succeeded
@@ -1511,7 +1441,11 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-exec-succeeded", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_SUCCEEDED), objdata);
+            obj = refda_register_edd(
+                adm,
+                cace_amm_obj_id_withenum("num-exec-succeeded",
+                                         REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_SUCCEEDED),
+                objdata);
             // no parameters
         }
         { // For ./EDD/num-exec-failed
@@ -1527,7 +1461,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_exec_failed;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("num-exec-failed", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_FAILED), objdata);
+            obj = refda_register_edd(
+                adm,
+                cace_amm_obj_id_withenum("num-exec-failed", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_FAILED),
+                objdata);
             // no parameters
         }
         { // For ./EDD/exec-running
@@ -1538,7 +1475,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 // table template
                 amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&(objdata->prod_type), 3);
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 0);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "pid");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1547,7 +1484,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 1);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "target");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1557,7 +1494,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 2);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "state");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1569,7 +1506,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_exec_running;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("exec-running", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_EXEC_RUNNING), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("exec-running", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_EXEC_RUNNING),
+                objdata);
             // no parameters
         }
         { // For ./EDD/typedef-list
@@ -1580,7 +1519,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 // table template
                 amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&(objdata->prod_type), 1);
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 0);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1592,7 +1531,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_typedef_list;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("typedef-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TYPEDEF_LIST), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("typedef-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TYPEDEF_LIST),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
@@ -1601,7 +1542,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     ari_set_aritype(&name, ARI_TYPE_BOOL);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
-                
             }
         }
         { // For ./EDD/var-list
@@ -1612,7 +1552,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 // table template
                 amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&(objdata->prod_type), 2);
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 0);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1621,7 +1561,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 1);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "type");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1634,7 +1574,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_var_list;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("var-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_VAR_LIST), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("var-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_VAR_LIST), objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
@@ -1643,7 +1584,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     ari_set_aritype(&name, ARI_TYPE_BOOL);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
-                
             }
         }
         { // For ./EDD/sbr-list
@@ -1654,7 +1594,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 // table template
                 amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&(objdata->prod_type), 6);
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 0);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1663,7 +1603,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 1);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "action");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1673,7 +1613,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 2);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "start-time");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1683,7 +1623,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 3);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "condition");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1693,7 +1633,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 4);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 4);
                     m_string_set_cstr(col->name, "min-interval");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1702,7 +1642,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 5);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 5);
                     m_string_set_cstr(col->name, "max-count");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1714,7 +1654,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_sbr_list;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("sbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SBR_LIST), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("sbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SBR_LIST), objdata);
             // no parameters
         }
         { // For ./EDD/tbr-list
@@ -1725,7 +1666,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 // table template
                 amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&(objdata->prod_type), 5);
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 0);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1734,7 +1675,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 1);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "action");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1744,7 +1685,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 2);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "start-time");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1754,7 +1695,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 3);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "period");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1763,7 +1704,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_get(semtype->columns, 4);
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 4);
                     m_string_set_cstr(col->name, "max-count");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
@@ -1775,7 +1716,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_tbr_list;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("tbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TBR_LIST), objdata);
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("tbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TBR_LIST), objdata);
             // no parameters
         }
 
@@ -1794,7 +1736,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_if_then_else;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("if-then-else", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_IF_THEN_ELSE), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("if-then-else", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_IF_THEN_ELSE),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "condition");
@@ -1828,7 +1772,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
-                
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "on-falsy");
@@ -1853,7 +1796,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
-                
             }
         }
         { // For ./CTRL/catch
@@ -1868,7 +1810,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_catch;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("catch", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_CATCH), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("catch", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_CATCH), objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "try");
@@ -1902,7 +1845,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
-                
             }
         }
         { // For ./CTRL/wait-for
@@ -1912,7 +1854,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_wait_for;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("wait-for", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_FOR), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("wait-for", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_FOR),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "duration");
@@ -1930,7 +1874,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_wait_until;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("wait-until", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_UNTIL), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("wait-until", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_UNTIL),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "time");
@@ -1948,7 +1894,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_wait_cond;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("wait-cond", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_COND), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("wait-cond", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_COND),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "condition");
@@ -1973,7 +1921,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_inspect;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("inspect", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_INSPECT), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("inspect", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_INSPECT), objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "ref");
@@ -1992,7 +1941,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_report_on;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("report-on", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_REPORT_ON), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("report-on", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_REPORT_ON),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "rptt");
@@ -2011,7 +1962,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_var_reset;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("var-reset", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_RESET), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("var-reset", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_RESET),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
@@ -2029,7 +1982,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_var_store;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("var-store", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_STORE), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("var-store", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_STORE),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
@@ -2056,7 +2011,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_ensure_var;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("ensure-var", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_VAR), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("ensure-var", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_VAR),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj");
@@ -2098,7 +2055,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
-                
             }
         }
         { // For ./CTRL/discard-var
@@ -2108,7 +2064,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_discard_var;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("discard-var", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_DISCARD_VAR), objdata);
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("discard-var", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_DISCARD_VAR),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj");
@@ -2126,7 +2084,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         { // For ./OPER/negate
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "val");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/NUMERIC
@@ -2136,13 +2106,36 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_negate;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("negate", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_NEGATE), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("negate", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_NEGATE), objdata);
             // no parameters
         }
         { // For ./OPER/add
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/NUMERIC
@@ -2152,13 +2145,36 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_add;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("add", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_ADD), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("add", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_ADD), objdata);
             // no parameters
         }
         { // For ./OPER/sub
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/NUMERIC
@@ -2168,13 +2184,36 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_sub;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("sub", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_SUB), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("sub", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_SUB), objdata);
             // no parameters
         }
         { // For ./OPER/multiply
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/NUMERIC
@@ -2184,13 +2223,37 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_multiply;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("multiply", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MULTIPLY), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("multiply", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MULTIPLY),
+                objdata);
             // no parameters
         }
         { // For ./OPER/divide
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/NUMERIC
@@ -2200,13 +2263,36 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_divide;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("divide", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_DIVIDE), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("divide", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_DIVIDE), objdata);
             // no parameters
         }
         { // For ./OPER/remainder
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/NUMERIC
@@ -2216,13 +2302,27 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_remainder;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("remainder", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_REMAINDER), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("remainder", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_REMAINDER),
+                objdata);
             // no parameters
         }
         { // For ./OPER/bit-not
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "val");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/INTEGER
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 1);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/INTEGER
@@ -2232,13 +2332,36 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bit_not;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bit-not", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_NOT), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("bit-not", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_NOT), objdata);
             // no parameters
         }
         { // For ./OPER/bit-and
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/INTEGER
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 1);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/INTEGER
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 1);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/INTEGER
@@ -2248,13 +2371,36 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bit_and;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bit-and", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_AND), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("bit-and", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_AND), objdata);
             // no parameters
         }
         { // For ./OPER/bit-or
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/INTEGER
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 1);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/INTEGER
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 1);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/INTEGER
@@ -2264,13 +2410,36 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bit_or;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bit-or", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_OR), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("bit-or", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_OR), objdata);
             // no parameters
         }
         { // For ./OPER/bit-xor
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/INTEGER
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 1);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/INTEGER
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 1);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 // ari://ietf-amm/TYPEDEF/INTEGER
@@ -2280,13 +2449,34 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bit_xor;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bit-xor", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_XOR), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("bit-xor", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BIT_XOR), objdata);
             // no parameters
         }
         { // For ./OPER/bool-not
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_BOOL);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_BOOL);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2295,13 +2485,35 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bool_not;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bool-not", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_NOT), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("bool-not", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_NOT),
+                objdata);
             // no parameters
         }
         { // For ./OPER/bool-and
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_BOOL);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_BOOL);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2310,13 +2522,35 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bool_and;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bool-and", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_AND), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("bool-and", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_AND),
+                objdata);
             // no parameters
         }
         { // For ./OPER/bool-or
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_BOOL);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_BOOL);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2325,13 +2559,34 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bool_or;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bool-or", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_OR), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("bool-or", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_OR), objdata);
             // no parameters
         }
         { // For ./OPER/bool-xor
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_BOOL);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_BOOL);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2340,13 +2595,37 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bool_xor;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("bool-xor", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_XOR), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("bool-xor", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_BOOL_XOR),
+                objdata);
             // no parameters
         }
         { // For ./OPER/compare-eq
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/ANY
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 8);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/ANY
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 8);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2355,13 +2634,37 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_eq;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-eq", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_EQ), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("compare-eq", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_EQ),
+                objdata);
             // no parameters
         }
         { // For ./OPER/compare-ne
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/ANY
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 8);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/ANY
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 8);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2370,13 +2673,37 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_ne;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-ne", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_NE), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("compare-ne", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_NE),
+                objdata);
             // no parameters
         }
         { // For ./OPER/compare-gt
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2385,13 +2712,37 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_gt;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-gt", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_GT), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("compare-gt", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_GT),
+                objdata);
             // no parameters
         }
         { // For ./OPER/compare-ge
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2400,13 +2751,37 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_ge;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-ge", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_GE), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("compare-ge", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_GE),
+                objdata);
             // no parameters
         }
         { // For ./OPER/compare-lt
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2415,13 +2790,37 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_lt;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-lt", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LT), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("compare-lt", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LT),
+                objdata);
             // no parameters
         }
         { // For ./OPER/compare-le
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "left");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 1);
+                string_set_str(operand->name, "right");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/NUMERIC
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 3);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_BOOL);
@@ -2430,13 +2829,26 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_le;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("compare-le", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LE), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("compare-le", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LE),
+                objdata);
             // no parameters
         }
         { // For ./OPER/tbl-filter
             refda_amm_oper_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
-            // result type
+            // operands:
+            amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                amm_named_type_t *operand = amm_named_type_array_get(objdata->operand_types, 0);
+                string_set_str(operand->name, "in");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_TBL);
+                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                }
+            }
+            // result type:
             {
                 ari_t name = ARI_INIT_UNDEFINED;
                 ari_set_aritype(&name, ARI_TYPE_TBL);
@@ -2445,7 +2857,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_tbl_filter;
 
-            obj = refda_register_oper(adm, cace_amm_obj_id_withenum("tbl-filter", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_TBL_FILTER), objdata);
+            obj = refda_register_oper(
+                adm, cace_amm_obj_id_withenum("tbl-filter", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_TBL_FILTER),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "row-match");
@@ -2472,7 +2886,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
             }
         }
-
     }
     REFDA_AGENT_UNLOCK(agent);
     return 0;

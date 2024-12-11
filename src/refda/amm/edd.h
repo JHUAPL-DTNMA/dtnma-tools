@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-// Forward declaration
+// forward declaration for callback reference
 struct refda_edd_prod_ctx_s;
 typedef struct refda_edd_prod_ctx_s refda_edd_prod_ctx_t;
 

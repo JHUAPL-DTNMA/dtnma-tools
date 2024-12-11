@@ -22,20 +22,6 @@
 #include "cace/config.h"
 #include <m-dict.h>
 
-void amm_semtype_tblt_col_init(amm_semtype_tblt_col_t *obj)
-{
-    CHKVOID(obj);
-    string_init(obj->name);
-    amm_type_init(&(obj->typeobj));
-}
-
-void amm_semtype_tblt_col_deinit(amm_semtype_tblt_col_t *obj)
-{
-    CHKVOID(obj);
-    amm_type_deinit(&(obj->typeobj));
-    string_clear(obj->name);
-}
-
 static bool amm_semtype_use_constraints(const amm_semtype_use_t *semtype, const ari_t *val)
 {
     amm_semtype_cnst_array_it_t it;
@@ -558,25 +544,25 @@ static bool amm_semtype_tblt_match(const amm_type_t *self, const ari_t *ari)
         return false;
     }
 
-    if (val->ncols != amm_semtype_tblt_col_array_size(semtype->columns))
+    if (val->ncols != amm_named_type_array_size(semtype->columns))
     {
         return false;
     }
 
-    amm_semtype_tblt_col_array_it_t col_it;
-    amm_semtype_tblt_col_array_it(col_it, semtype->columns);
+    amm_named_type_array_it_t col_it;
+    amm_named_type_array_it(col_it, semtype->columns);
 
     ari_array_it_t val_it;
     for (ari_array_it(val_it, val->items); !ari_array_end_p(val_it);
-         ari_array_next(val_it), amm_semtype_tblt_col_array_next(col_it))
+         ari_array_next(val_it), amm_named_type_array_next(col_it))
     {
         const ari_t *val_item = ari_array_cref(val_it);
 
-        if (amm_semtype_tblt_col_array_end_p(col_it))
+        if (amm_named_type_array_end_p(col_it))
         {
-            amm_semtype_tblt_col_array_it(col_it, semtype->columns);
+            amm_named_type_array_it(col_it, semtype->columns);
         }
-        const amm_type_t *typeobj = &(amm_semtype_tblt_col_array_ref(col_it)->typeobj);
+        const amm_type_t *typeobj = &(amm_named_type_array_ref(col_it)->typeobj);
 
         if (!amm_type_match(typeobj, val_item))
         {
@@ -596,7 +582,7 @@ static int amm_semtype_tblt_convert(const amm_type_t *self, ari_t *out, const ar
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
 
-    if (inval->ncols != amm_semtype_tblt_col_array_size(semtype->columns))
+    if (inval->ncols != amm_named_type_array_size(semtype->columns))
     {
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
@@ -606,22 +592,22 @@ static int amm_semtype_tblt_convert(const amm_type_t *self, ari_t *out, const ar
     ari_tbl_init(&outval, inval->ncols, nrows);
     int retval = 0;
 
-    amm_semtype_tblt_col_array_it_t col_it;
-    amm_semtype_tblt_col_array_it(col_it, semtype->columns);
+    amm_named_type_array_it_t col_it;
+    amm_named_type_array_it(col_it, semtype->columns);
 
     // input and output have exact same size
     ari_array_it_t inval_it, outval_it;
     for (ari_array_it(inval_it, inval->items), ari_array_it(outval_it, outval.items); !ari_array_end_p(inval_it);
-         ari_array_next(inval_it), ari_array_next(outval_it), amm_semtype_tblt_col_array_next(col_it))
+         ari_array_next(inval_it), ari_array_next(outval_it), amm_named_type_array_next(col_it))
     {
         const ari_t *in_item  = ari_array_cref(inval_it);
         ari_t       *out_item = ari_array_ref(outval_it);
 
-        if (amm_semtype_tblt_col_array_end_p(col_it))
+        if (amm_named_type_array_end_p(col_it))
         {
-            amm_semtype_tblt_col_array_it(col_it, semtype->columns);
+            amm_named_type_array_it(col_it, semtype->columns);
         }
-        const amm_type_t *typeobj = &(amm_semtype_tblt_col_array_ref(col_it)->typeobj);
+        const amm_type_t *typeobj = &(amm_named_type_array_ref(col_it)->typeobj);
 
         int res = amm_type_convert(typeobj, out_item, in_item);
         if (res)
@@ -647,7 +633,7 @@ amm_semtype_tblt_t *amm_type_set_tblt_size(amm_type_t *type, size_t num_cols)
 
     amm_semtype_tblt_t *semtype = ARI_MALLOC(sizeof(amm_semtype_tblt_t));
     amm_semtype_tblt_init(semtype);
-    amm_semtype_tblt_col_array_resize(semtype->columns, num_cols);
+    amm_named_type_array_resize(semtype->columns, num_cols);
 
     type->as_semtype        = semtype;
     type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_tblt_deinit;

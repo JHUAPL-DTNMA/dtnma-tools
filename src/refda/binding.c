@@ -134,11 +134,10 @@ static int refda_binding_semtype_tblt(amm_semtype_tblt_t *semtype, const cace_am
 {
     int failcnt = 0;
 
-    amm_semtype_tblt_col_array_it_t it;
-    for (amm_semtype_tblt_col_array_it(it, semtype->columns); !amm_semtype_tblt_col_array_end_p(it);
-         amm_semtype_tblt_col_array_next(it))
+    amm_named_type_array_it_t it;
+    for (amm_named_type_array_it(it, semtype->columns); !amm_named_type_array_end_p(it); amm_named_type_array_next(it))
     {
-        amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_ref(it);
+        amm_named_type_t *col = amm_named_type_array_ref(it);
 
         failcnt += refda_binding_typeobj(&(col->typeobj), store);
     }
