@@ -43,7 +43,7 @@ typedef struct
     /** Actual parameters normalized for this object from the given parameters.
      * This is set if the #obj is non-null and parameter processing succeeded
      */
-    cace_amm_actual_param_set_t aparams;
+    cace_ari_itemized_t aparams;
 
 } cace_amm_lookup_t;
 

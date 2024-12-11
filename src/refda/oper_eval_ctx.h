@@ -23,6 +23,7 @@
 #include "eval_ctx.h"
 #include "refda/amm/oper.h"
 #include <cace/ari.h>
+#include <cace/ari/itemized.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,7 +52,7 @@ typedef struct refda_oper_eval_ctx_s
      * converted to the OPER-specific operand types.
      * The order of these operands is the same as the OPER definition.
      */
-    ari_array_t operands;
+    cace_ari_itemized_t operands;
 
     /** Storage for the evaluation result.
      * This is initialized as undefined and must be set to any other value

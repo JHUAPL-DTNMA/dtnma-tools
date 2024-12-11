@@ -24,7 +24,7 @@
 // Allow this macro
 #define TEST_CASE(...)
 
-static void check_normalize(cace_amm_actual_param_set_t *aparams, const cace_amm_formal_param_list_t fparams,
+static void check_normalize(cace_ari_itemized_t *aparams, const cace_amm_formal_param_list_t fparams,
                             const char *inhex, int expect_res)
 {
     string_t intext;
@@ -61,11 +61,11 @@ void test_fparam_empty(const char *inhex, int expect_res)
     cace_amm_formal_param_list_t fparams;
     cace_amm_formal_param_list_init(fparams);
 
-    cace_amm_actual_param_set_t aparams;
-    cace_amm_actual_param_set_init(&aparams);
+    cace_ari_itemized_t aparams;
+    cace_ari_itemized_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
 
-    cace_amm_actual_param_set_deinit(&aparams);
+    cace_ari_itemized_deinit(&aparams);
     cace_amm_formal_param_list_clear(fparams);
 }
 
@@ -86,11 +86,11 @@ void test_fparam_one_bool(const char *inhex, int expect_res)
         amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_BOOL));
     }
 
-    cace_amm_actual_param_set_t aparams;
-    cace_amm_actual_param_set_init(&aparams);
+    cace_ari_itemized_t aparams;
+    cace_ari_itemized_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
 
-    cace_amm_actual_param_set_deinit(&aparams);
+    cace_ari_itemized_deinit(&aparams);
     cace_amm_formal_param_list_clear(fparams);
 }
 
@@ -116,11 +116,11 @@ void test_fparam_one_int(const char *inhex, int expect_res)
         amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
     }
 
-    cace_amm_actual_param_set_t aparams;
-    cace_amm_actual_param_set_init(&aparams);
+    cace_ari_itemized_t aparams;
+    cace_ari_itemized_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
 
-    cace_amm_actual_param_set_deinit(&aparams);
+    cace_ari_itemized_deinit(&aparams);
     cace_amm_formal_param_list_clear(fparams);
 }
 
@@ -139,10 +139,10 @@ void test_fparam_one_object(const char *inhex, int expect_res)
         amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_OBJECT));
     }
 
-    cace_amm_actual_param_set_t aparams;
-    cace_amm_actual_param_set_init(&aparams);
+    cace_ari_itemized_t aparams;
+    cace_ari_itemized_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
 
-    cace_amm_actual_param_set_deinit(&aparams);
+    cace_ari_itemized_deinit(&aparams);
     cace_amm_formal_param_list_clear(fparams);
 }
