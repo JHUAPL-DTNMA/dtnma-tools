@@ -176,7 +176,8 @@ static void check_execute(const ari_t *target, int expect_exp, int wait_limit, i
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_exp, refda_exec_exp_target(&eseq, ctxptr, target), "refda_exec_exp_target() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_exp, refda_exec_exp_target(&eseq, ctxptr, target),
+                                  "refda_exec_exp_target() failed");
     TEST_ASSERT_EQUAL((expect_exp != 0), refda_exec_item_list_empty_p(eseq.items));
 
     // limit test scale
@@ -255,7 +256,7 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
     ari_list_t *expect_seq = &(expect_log.as_lit.value.as_ac->items);
 
     int wait_limit = expect_exp == 0 ? 1 : 0;
-    int wait_ms[] = { 0 };
+    int wait_ms[]  = { 0 };
     check_execute(&target, expect_exp, wait_limit, wait_ms);
 
     TEST_ASSERT_TRUE(refda_exec_seq_list_empty_p(agent.exec_state));

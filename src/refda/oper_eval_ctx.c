@@ -69,7 +69,7 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
         ari_t *operand = ari_array_ref(val_it);
         named_ari_ptr_dict_set_at(obj->operands.named, m_string_get_cstr(typ->name), operand);
 
-        int    res     = amm_type_convert(&(typ->typeobj), operand, &orig);
+        int res = amm_type_convert(&(typ->typeobj), operand, &orig);
         ari_deinit(&orig);
         if (res)
         {

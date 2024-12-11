@@ -24,8 +24,8 @@
 // Allow this macro
 #define TEST_CASE(...)
 
-static void check_normalize(cace_ari_itemized_t *aparams, const cace_amm_formal_param_list_t fparams,
-                            const char *inhex, int expect_res)
+static void check_normalize(cace_ari_itemized_t *aparams, const cace_amm_formal_param_list_t fparams, const char *inhex,
+                            int expect_res)
 {
     string_t intext;
     string_init_set_str(intext, inhex);
