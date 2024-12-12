@@ -22,6 +22,6 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y \
               clang-format python3-pip
-	  pip3 install licenseheaders
+          pip3 install licenseheaders
       - name: Check code formatting
         run: ./check_format.sh
