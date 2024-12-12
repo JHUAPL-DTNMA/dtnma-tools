@@ -343,7 +343,7 @@ static int refda_exec_waiting(refda_agent_t *agent)
         int res = refda_exec_run_seq(seq);
         if (res)
         {
-            CACE_LOG_WARNING("execution of sequence PID %"PRIu64" failed, continuing", seq->pid);
+            CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " failed, continuing", seq->pid);
         }
     }
     refda_exec_seq_ptr_list_clear(ready);
