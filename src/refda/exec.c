@@ -275,7 +275,7 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
         string_t buf;
         string_init(buf);
         ari_text_encode(buf, target, ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Expanding target %s", string_get_cstr(buf));
+        CACE_LOG_DEBUG("Expanding PID %" PRIu64 " target %s", seq->pid, string_get_cstr(buf));
         string_clear(buf);
     }
 
@@ -294,10 +294,29 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
 
 static int refda_exec_waiting(refda_agent_t *agent)
 {
+
+    refda_exec_seq_ptr_list_t ready;
+    refda_exec_seq_ptr_list_init(ready);
+
+    // lock only to collect the ready sequences
+    // the sequences themselves will not be touched outside of this worker
+    if (pthread_mutex_lock(&(agent->exec_state_mutex)))
+    {
+        CACE_LOG_ERR("failed to lock exec_state_mutex");
+        return 2;
+    }
+
     refda_exec_seq_list_it_t seq_it;
     for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);)
     {
         refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
+
+        if (refda_exec_item_list_empty_p(seq->items))
+        {
+            // no need to keep around
+            refda_exec_seq_list_remove(agent->exec_state, seq_it);
+            continue;
+        }
 
         if (atomic_load(&(refda_exec_item_list_front(seq->items)->waiting)))
         {
@@ -305,22 +324,30 @@ static int refda_exec_waiting(refda_agent_t *agent)
             continue;
         }
 
+        refda_exec_seq_ptr_list_push_back(ready, seq);
+        refda_exec_seq_list_next(seq_it);
+    }
+
+    if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
+    {
+        CACE_LOG_ERR("failed to unlock exec_state_mutex");
+        return 2;
+    }
+
+    refda_exec_seq_ptr_list_it_t ready_it;
+    for (refda_exec_seq_ptr_list_it(ready_it, ready); !refda_exec_seq_ptr_list_end_p(ready_it);
+         refda_exec_seq_ptr_list_next(ready_it))
+    {
+        refda_exec_seq_t *seq = *refda_exec_seq_ptr_list_ref(ready_it);
+
         int res = refda_exec_run_seq(seq);
         if (res)
         {
-            CACE_LOG_WARNING("execution of sequence failed, continuing");
-        }
-
-        if (refda_exec_item_list_empty_p(seq->items))
-        {
-            // no need to keep around
-            refda_exec_seq_list_remove(agent->exec_state, seq_it);
-        }
-        else
-        {
-            refda_exec_seq_list_next(seq_it);
+            CACE_LOG_WARNING("execution of sequence PID %"PRIu64" failed, continuing", seq->pid);
         }
     }
+    refda_exec_seq_ptr_list_clear(ready);
+
     return 0;
 }
 
@@ -347,13 +374,26 @@ static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *m
     {
         const ari_t *tgt = ari_list_cref(tgtit);
 
+        if (pthread_mutex_lock(&(agent->exec_state_mutex)))
+        {
+            CACE_LOG_ERR("failed to lock exec_state_mutex");
+            continue;
+        }
+
         refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+
+        seq->pid = agent->exec_next_pid++;
         // Even if an individual execution fails, continue on with others
         int res = refda_exec_exp_target(seq, ctxptr, tgt);
         if (res)
         {
             // clean up useless sequence
             refda_exec_seq_list_pop_back(NULL, agent->exec_state);
+        }
+
+        if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
+        {
+            CACE_LOG_ERR("failed to unlock exec_state_mutex");
         }
     }
 

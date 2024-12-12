@@ -120,7 +120,6 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
         return;
     }
 
-    ari_t     result = ARI_INIT_UNDEFINED;
     ari_tbl_t table;
     ari_tbl_init(&table, 4, 0);
 
@@ -166,6 +165,7 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
         ari_tbl_move_row_array(&table, row);
     }
 
+    ari_t result = ARI_INIT_UNDEFINED;
     ari_set_tbl(&result, &table);
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
@@ -322,6 +322,67 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_exec_running BODY
      * +-------------------------------------------------------------------------+
      */
+    enum exec_state_e
+    {
+        EXEC_WAITING = 0,
+        EXEC_RUNNING = 1,
+    };
+
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    if (pthread_mutex_lock(&(agent->exec_state_mutex)))
+    {
+        CACE_LOG_ERR("failed to lock exec_state_mutex");
+        return;
+    }
+
+    ari_tbl_t table;
+    ari_tbl_init(&table, 3, 0);
+
+    refda_exec_seq_list_it_t seq_it;
+    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);
+         refda_exec_seq_list_next(seq_it))
+    {
+        const refda_exec_seq_t  *seq   = refda_exec_seq_list_ref(seq_it);
+        if (refda_exec_item_list_empty_p(seq->items))
+        {
+            // intermediate state
+            continue;
+        }
+        const refda_exec_item_t *front = refda_exec_item_list_front(seq->items);
+
+        ari_array_t row;
+        ari_array_init(row);
+        ari_array_resize(row, 3);
+
+        ari_set_uvast(ari_array_get(row, 0), seq->pid);
+
+        ari_set_copy(ari_array_get(row, 1), &(front->ref));
+        {
+            int state;
+            if (atomic_load(&(front->waiting)))
+            {
+                state = EXEC_WAITING;
+            }
+            else
+            {
+                state = EXEC_RUNNING;
+            }
+            ari_set_int(ari_array_get(row, 2), state);
+        }
+
+        // append the row
+        ari_tbl_move_row_array(&table, row);
+    }
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
+    {
+        CACE_LOG_ERR("failed to unlock exec_state_mutex");
+        return;
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_exec_running BODY
@@ -381,7 +442,8 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
  * Parameters: none
  *
  * Produced type: TBLT with 6 columns (use of ari:/ARITYPE/SBR, use of ari://ietf-amm/TYPEDEF/MAC, use of
- * ari://ietf-amm/TYPEDEF/TIME, use of ari://ietf-amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
+ * ari://ietf-amm/TYPEDEF/TIME, use of ari://ietf-amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of
+ * ari:/ARITYPE/UVAST)
  */
 static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 {

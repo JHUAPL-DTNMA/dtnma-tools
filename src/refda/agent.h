@@ -72,10 +72,14 @@ typedef struct refda_agent_s
     /// Semaphore for items in #execs
     sem_t execs_sem;
 
+    /// The next-to-use execution PID
+    uint64_t exec_next_pid;
     /** Execution sequence state table.
      * This is owned by the refda_exec_worker() thread.
      */
     refda_exec_seq_list_t exec_state;
+    /// Mutex for the state of #exec_state
+    pthread_mutex_t exec_state_mutex;
     /** Execution wait timeline.
      * This is owned by the refda_exec_worker() thread.
      */

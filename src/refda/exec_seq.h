@@ -39,6 +39,11 @@ typedef struct refda_exec_seq_s
     /// Context for the source of this sequence
     refda_runctx_ptr_t runctx;
 
+    /** Internal unique processing identifier for the execution.
+     * Zero is an invalid value and will not be assigned.
+     */
+    uint64_t pid;
+
     /** Remaining list of items to be executed in this sequence.
      * As executions complete, this list is manipulated to pop off each
      * front item.
@@ -56,6 +61,7 @@ void refda_exec_seq_deinit(refda_exec_seq_t *obj);
 
 /// @cond Doxygen_Suppress
 DEQUE_DEF(refda_exec_seq_list, refda_exec_seq_t)
+DEQUE_DEF(refda_exec_seq_ptr_list, refda_exec_seq_t *, M_PTR_OPLIST)
 /// @endcond
 
 #ifdef __cplusplus

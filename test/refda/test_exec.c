@@ -259,7 +259,9 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
     int wait_ms[]  = { 0 };
     check_execute(&target, expect_exp, wait_limit, wait_ms);
 
+    TEST_ASSERT_EQUAL_INT(0, pthread_mutex_lock(&(agent.exec_state_mutex)));
     TEST_ASSERT_TRUE(refda_exec_seq_list_empty_p(agent.exec_state));
+    TEST_ASSERT_EQUAL_INT(0, pthread_mutex_unlock(&(agent.exec_state_mutex)));
 
     // verify execution sequence
     ari_list_it_t expect_it;
