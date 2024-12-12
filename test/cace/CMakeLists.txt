@@ -31,6 +31,9 @@ target_link_libraries(test_ari_text_cbor_loopback PUBLIC cace)
 add_unity_test(SOURCE "test_ari_algo.c")
 target_link_libraries(test_ari_algo PUBLIC cace)
 
+add_unity_test(SOURCE "test_amm_semtype_cnst.c")
+target_link_libraries(test_amm_semtype_cnst PUBLIC cace)
+
 add_unity_test(SOURCE "test_amm_typing.c")
 target_link_libraries(test_amm_typing PUBLIC cace)
 

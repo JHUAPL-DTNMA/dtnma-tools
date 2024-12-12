@@ -23,11 +23,17 @@
 #define CACE_AMM_SEMTYPE_H_
 
 #include "typing.h"
+#include "range.h"
+#include "semtype_cnst.h"
 #include <m-array.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/// @cond Doxygen_Suppress
+ARRAY_DEF(amm_semtype_cnst_array, amm_semtype_cnst_t)
+/// @endcond
 
 /// Configuration for an augmented use of another type
 typedef struct
@@ -39,17 +45,23 @@ typedef struct
      */
     const amm_type_t *base;
 
-    // FIXME Other constraints and attributes TBD
+    /** Optional constraints on this use.
+     * The order matches the source ADM but is not significant to the outcome.
+     */
+    amm_semtype_cnst_array_t constraints;
+
 } amm_semtype_use_t;
 
 static inline void amm_semtype_use_init(amm_semtype_use_t *obj)
 {
     ari_init(&(obj->name));
     obj->base = NULL;
+    amm_semtype_cnst_array_init(obj->constraints);
 }
 
 static inline void amm_semtype_use_deinit(amm_semtype_use_t *obj)
 {
+    amm_semtype_cnst_array_clear(obj->constraints);
     ari_deinit(&(obj->name));
     obj->base = NULL;
 }
@@ -74,28 +86,6 @@ int amm_type_set_use_ref_move(amm_type_t *type, ari_t *name);
  */
 int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base);
 
-/** A closed interval of size_t values with optional minimum and maximum.
- */
-typedef struct
-{
-    /// True if this interval has a finite minimum
-    bool has_min;
-    /// The minimum value of the interval, valid if #has_min is true
-    size_t i_min;
-    /// True if this interval has a finite maximum
-    bool has_max;
-    /// The maximum value of the interval, valid if #has_max is true
-    size_t i_max;
-} amm_semtype_size_intvl_t;
-
-static inline void amm_semtype_size_intvl_init(amm_semtype_size_intvl_t *obj)
-{
-    *obj = (amm_semtype_size_intvl_t) {
-        .has_min = false,
-        .has_max = false,
-    };
-}
-
 /// Configuration for a uniform list within an AC
 typedef struct
 {
@@ -107,18 +97,19 @@ typedef struct
 
     /** Constraint on the number of items.
      */
-    amm_semtype_size_intvl_t size;
+    cace_amm_range_intvl_size_t size;
 
 } amm_semtype_ulist_t;
 
 static inline void amm_semtype_ulist_init(amm_semtype_ulist_t *obj)
 {
     amm_type_init(&(obj->item_type));
-    amm_semtype_size_intvl_init(&(obj->size));
+    cace_amm_range_intvl_size_set_infinite(&(obj->size));
 }
 
 static inline void amm_semtype_ulist_deinit(amm_semtype_ulist_t *obj)
 {
+    cace_amm_range_intvl_size_set_infinite(&(obj->size));
     amm_type_deinit(&(obj->item_type));
 }
 
@@ -288,18 +279,19 @@ typedef struct
 
     /** Constraint on the number of items.
      */
-    amm_semtype_size_intvl_t size;
+    cace_amm_range_intvl_size_t size;
 
 } amm_semtype_seq_t;
 
 static inline void amm_semtype_seq_init(amm_semtype_seq_t *obj)
 {
     amm_type_init(&(obj->item_type));
-    amm_semtype_size_intvl_init(&(obj->size));
+    cace_amm_range_intvl_size_set_infinite(&(obj->size));
 }
 
 static inline void amm_semtype_seq_deinit(amm_semtype_seq_t *obj)
 {
+    cace_amm_range_intvl_size_set_infinite(&(obj->size));
     amm_type_deinit(&(obj->item_type));
 }
 

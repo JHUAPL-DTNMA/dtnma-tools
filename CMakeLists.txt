@@ -57,7 +57,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 # Force specific POSIX compatibility version
 add_definitions(
-  "-D_POSIX_C_SOURCE=200809L"
+  -D_XOPEN_SOURCE
+  -D_POSIX_C_SOURCE=200809L
 )
 
 # Generic warn/error options
@@ -148,14 +149,18 @@ endif(BUILD_TESTING)
 include(FindPkgConfig)
 
 # Libaries in deps but built separately
-find_package(ION)
 find_package(QCBOR REQUIRED)
 find_package(MLIB REQUIRED)
 find_package(timespec REQUIRED)
+# Optional dependencies
+pkg_search_module(PCRE libpcre2-8 IMPORTED_TARGET)
+find_package(ION)
+
 if(ARI_TEXT_PARSE)
   find_package(FLEX REQUIRED)
   find_package(BISON REQUIRED)
 endif(ARI_TEXT_PARSE)
+
 if(BUILD_MANAGER)
   # All these are optional
   pkg_search_module(MYSQLCLIENT mysqlclient IMPORTED_TARGET)

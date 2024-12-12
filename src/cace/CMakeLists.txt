@@ -37,6 +37,8 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/text_util.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/text.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/typing.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amm/range.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amm/semtype_cnst.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/semtype.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/numeric.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/parameters.h"
@@ -60,6 +62,8 @@ set(CFILES
     "ari/text_util.c"
     "ari/text_enc.c"
     "amm/typing.c"
+    "amm/range.c"
+    "amm/semtype_cnst.c"
     "amm/semtype.c"
     "amm/numeric.c"
     "amm/parameters.c"
@@ -106,14 +110,13 @@ target_include_directories(
   cace PUBLIC
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
-target_compile_definitions(cace PRIVATE
-  -D_XOPEN_SOURCE
-  -D_POSIX_C_SOURCE=200809L
-)
 target_link_libraries(cace PUBLIC ${FLEX_LIBRARIES})
 target_link_libraries(cace PUBLIC MLIB::mlib)
 target_link_libraries(cace PUBLIC qcbor)
 target_link_libraries(cace PUBLIC m)
+if(PCRE_FOUND)
+    target_link_libraries(cace PUBLIC PkgConfig::PCRE)
+endif(PCRE_FOUND)
 
 
 # Stand-alone ARI manipulation tool
