@@ -135,6 +135,7 @@ void ari_set_int(ari_t *ari, ari_int src);
 /// @overload
 void ari_set_uint(ari_t *ari, ari_uint src);
 
+/// @overload
 void ari_set_vast(ari_t *ari, ari_vast src);
 
 /// @overload
