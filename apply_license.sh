@@ -45,7 +45,7 @@ fi
 
 echo "Applying markings to source..."
 # Directory trees
-for DIRNAME in cmake src test testenv doc .github
+for DIRNAME in cmake src test agent-test testenv doc .github
 do
     licenseheaders ${LICENSEOPTS} --dir ${SELFDIR}/${DIRNAME}
 done
@@ -54,8 +54,3 @@ for FILEPATH in $(find "${SELFDIR}" -maxdepth 1 -type f)
 do
     licenseheaders ${LICENSEOPTS} --file ${FILEPATH}
 done
-# Restore non-managed files
-git restore ${SELFDIR}/src/ion_if/agent/adm_*
-git restore ${SELFDIR}/src/ion_if/mgr/adm_*
-git restore ${SELFDIR}/src/ion_if/shared/adm/adm_*
-git restore ${SELFDIR}/src/ion_if/bpv7/adm/adm_*
