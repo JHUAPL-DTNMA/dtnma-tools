@@ -40,24 +40,6 @@ static bool amm_semtype_use_constraints(const amm_semtype_use_t *semtype, const 
     return true;
 }
 
-static bool amm_semtype_use_constraints(const amm_semtype_use_t *semtype, const ari_t *val)
-{
-    amm_semtype_cnst_array_it_t it;
-    for (amm_semtype_cnst_array_it(it, semtype->constraints); !amm_semtype_cnst_array_end_p(it);
-         amm_semtype_cnst_array_next(it))
-    {
-        const amm_semtype_cnst_t *cnst = amm_semtype_cnst_array_cref(it);
-        if (!amm_semtype_cnst_is_valid(cnst, val))
-        {
-            CACE_LOG_WARNING("type use constraint %d failed", cnst->type);
-            // first failure wins
-            return false;
-        }
-    }
-    // no constraints are valid also
-    return true;
-}
-
 static bool amm_semtype_use_match(const amm_type_t *self, const ari_t *ari)
 {
     const amm_semtype_use_t *semtype = self->as_semtype;
