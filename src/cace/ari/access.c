@@ -394,6 +394,15 @@ void ari_set_td(ari_t *ari, struct timespec delta)
     };
 }
 
+void ari_set_aritype(ari_t *ari, ari_type_t type)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_ARITYPE, .prim_type = ARI_PRIM_INT64, .value = { .as_int64 = type }
+    };
+}
+
 bool ari_is_lit_typed(const ari_t *ari, ari_type_t typ)
 {
     return (ari && !(ari->is_ref) && ari->as_lit.has_ari_type && (ari->as_lit.ari_type == typ));
@@ -402,6 +411,10 @@ bool ari_is_lit_typed(const ari_t *ari, ari_type_t typ)
 const int64_t *ari_get_aritype(const ari_t *ari)
 {
     if (!ari_is_lit_typed(ari, ARI_TYPE_ARITYPE))
+    {
+        return NULL;
+    }
+    if (ari->as_lit.prim_type != ARI_PRIM_INT64)
     {
         return NULL;
     }

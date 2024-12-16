@@ -53,8 +53,16 @@ void cace_amm_obj_store_init(cace_amm_obj_store_t *store);
 
 void cace_amm_obj_store_deinit(cace_amm_obj_store_t *store);
 
-cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const char *name, bool has_enum,
-                                             int64_t intenum);
+/** Attempt to add a new namespace to the object store.
+ *
+ * @param[in,out] store The store to add to.
+ * @param[in] name The unique namespace ID.
+ * @param[in] revision Optional specific revision of an ADM.
+ * @param has_enum True if this NS has an enumeration.
+ * @param intenum The optional enumeration.
+ */
+cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const char *name, const char *revision,
+                                             bool has_enum, int64_t intenum);
 
 cace_amm_obj_ns_t *cace_amm_obj_store_find_ns_name(const cace_amm_obj_store_t *store, const char *name);
 

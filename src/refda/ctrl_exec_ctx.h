@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef REFDA_EXEC_CTX_H_
-#define REFDA_EXEC_CTX_H_
+#ifndef REFDA_CTRL_EXEC_CTX_H_
+#define REFDA_CTRL_EXEC_CTX_H_
 
 #include "agent.h"
 #include "runctx.h"
+#include "refda/amm/ctrl.h"
 #include <cace/amm/lookup.h>
 #include <cace/ari.h>
 
@@ -28,25 +29,25 @@
 extern "C" {
 #endif
 
-typedef enum
-{
-    REFDA_EXEC_STATE_
-} refda_exec_state_t;
-
-/** Context for execution activities.
+/** Context for CTRL execution activities.
  */
-typedef struct
+typedef struct refda_ctrl_exec_ctx_s
 {
     /** Parent running context.
      * This will never be null.
      */
     refda_runctx_t *runctx;
 
+    /** Descriptor for the CTRL being executed.
+     * This will never be null.
+     */
+    const refda_amm_ctrl_desc_t *ctrl;
+
     /** Internal execution bookkeeping item.
      * This will never be null.
      */
     refda_exec_item_t *item;
-} refda_exec_ctx_t;
+} refda_ctrl_exec_ctx_t;
 
 /** Initialize a context based on an object reference ARI and
  * a target object's formal parameters.
@@ -55,22 +56,24 @@ typedef struct
  * @param[in] item The internal execution item.
  * The result must outlive this context.
  */
-void refda_exec_ctx_init(refda_exec_ctx_t *obj, refda_exec_item_t *item);
+void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, const refda_amm_ctrl_desc_t *ctrl, refda_exec_item_t *item);
 
-void refda_exec_ctx_deinit(refda_exec_ctx_t *obj);
+void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj);
 
-const ari_t *refda_exec_ctx_get_aparam_index(refda_exec_ctx_t *ctx, size_t index);
+const ari_t *refda_ctrl_exec_ctx_get_aparam_index(refda_ctrl_exec_ctx_t *ctx, size_t index);
 
-const ari_t *refda_exec_ctx_get_aparam_name(refda_exec_ctx_t *ctx, const char *name);
+const ari_t *refda_ctrl_exec_ctx_get_aparam_name(refda_ctrl_exec_ctx_t *ctx, const char *name);
 
-void refda_exec_ctx_set_waiting(refda_exec_ctx_t *ctx);
+void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx);
 
-void refda_exec_ctx_set_result_copy(refda_exec_ctx_t *ctx, const ari_t *value);
+void refda_ctrl_exec_ctx_set_result_none(refda_ctrl_exec_ctx_t *ctx, const ari_t *value);
 
-void refda_exec_ctx_set_result_move(refda_exec_ctx_t *ctx, ari_t *value);
+void refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value);
+
+void refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* REFDA_EXEC_CTX_H_ */
+#endif /* REFDA_CTRL_EXEC_CTX_H_ */

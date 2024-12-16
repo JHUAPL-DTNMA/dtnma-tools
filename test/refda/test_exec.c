@@ -17,10 +17,11 @@
  */
 #include <refda/exec.h>
 #include <refda/register.h>
-#include <refda/adm/ietf.h>
+#include <refda/ctrl_exec_ctx.h>
+#include <refda/adm/ietf_amm.h>
+#include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/amm/const.h>
 #include <refda/amm/ctrl.h>
-#include <refda/adm/ietf.h>
 #include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -52,10 +53,10 @@ static refda_agent_t agent;
 /// Sequence of executions
 static ari_list_t exec_log;
 
-static int test_exec_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, refda_exec_ctx_t *ctx)
+static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
 {
-    const ari_t *val = refda_exec_ctx_get_aparam_index(ctx, 0);
-    CHKERR1(val)
+    const ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    CHKVOID(val)
     {
         string_t buf;
         string_init(buf);
@@ -67,8 +68,7 @@ static int test_exec_ctrl_exec_one_int(const refda_amm_ctrl_desc_t *obj _U_, ref
     // record this execution
     ari_list_push_back(exec_log, ctx->item->ref);
 
-    refda_exec_ctx_set_result_copy(ctx, val);
-    return 0;
+    refda_ctrl_exec_ctx_set_result_copy(ctx, val);
 }
 
 void setUp(void)
@@ -82,7 +82,7 @@ void setUp(void)
 
     {
         // ADM for this test fixture
-        cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", true, EXAMPLE_ADM_ENUM);
+        cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", "", true, EXAMPLE_ADM_ENUM);
         cace_amm_obj_desc_t *obj;
 
         /**
@@ -166,7 +166,7 @@ static void ari_convert(ari_t *ari, const char *inhex)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 }
 
-static void check_execute(const ari_t *target, int wait_limit, int wait_ms[])
+static void check_execute(const ari_t *target, int expect_exp, int wait_limit, int wait_ms[])
 {
     refda_runctx_ptr_t ctxptr;
     refda_runctx_ptr_init_new(ctxptr);
@@ -176,8 +176,9 @@ static void check_execute(const ari_t *target, int wait_limit, int wait_ms[])
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, refda_exec_exp_target(&eseq, ctxptr, target), "refda_exec_exp_target() failed");
-    TEST_ASSERT_FALSE(refda_exec_item_list_empty_p(eseq.items));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_exp, refda_exec_exp_target(&eseq, ctxptr, target),
+                                  "refda_exec_exp_target() failed");
+    TEST_ASSERT_EQUAL((expect_exp != 0), refda_exec_item_list_empty_p(eseq.items));
 
     // limit test scale
     for (int ix = 0; ix < wait_limit; ++ix)
@@ -231,7 +232,7 @@ static void check_execute(const ari_t *target, int wait_limit, int wait_ms[])
 // direct ref ari://65536/CTRL/1
 TEST_CASE("831A000100002201", 0, "821181""831A000100002201")
 // bad deref ref ari://65536/CTRL/-1
-//TEST_CASE("831A000100002220", 4, "821180")
+TEST_CASE("831A000100002220", 4, "821180")
 // direct MAC ari:/AC/(//65536/CTRL/1,//65536/CTRL/2)
 TEST_CASE("821182831A000100002201831A000100002202", 0, "821182""831A000100002201""831A000100002202")
 // indirect MAC ari://65536/CONST/1
@@ -239,7 +240,7 @@ TEST_CASE("831A000100002101", 0, "821182""831A000100002201""831A000100002202")
 // recursive MAC ari:/AC/(//65536/CONST/1)
 TEST_CASE("821181831A000100002101", 0, "821182""831A000100002201""831A000100002202")
 // clang-format on
-void test_refda_exec_target(const char *targethex, int expect_res, const char *expectloghex)
+void test_refda_exec_target(const char *targethex, int expect_exp, const char *expectloghex)
 {
     CACE_LOG_DEBUG("target %s", targethex);
     ari_t target = ARI_INIT_UNDEFINED;
@@ -254,10 +255,13 @@ void test_refda_exec_target(const char *targethex, int expect_res, const char *e
     }
     ari_list_t *expect_seq = &(expect_log.as_lit.value.as_ac->items);
 
-    int wait_ms[] = { 0 };
-    check_execute(&target, 1, wait_ms);
+    int wait_limit = expect_exp == 0 ? 1 : 0;
+    int wait_ms[]  = { 0 };
+    check_execute(&target, expect_exp, wait_limit, wait_ms);
 
+    TEST_ASSERT_EQUAL_INT(0, pthread_mutex_lock(&(agent.exec_state_mutex)));
     TEST_ASSERT_TRUE(refda_exec_seq_list_empty_p(agent.exec_state));
+    TEST_ASSERT_EQUAL_INT(0, pthread_mutex_unlock(&(agent.exec_state_mutex)));
 
     // verify execution sequence
     ari_list_it_t expect_it;
@@ -287,7 +291,7 @@ void test_refda_exec_wait_for(const char *targethex, int delay_ms)
     ari_convert(&target, targethex);
 
     int wait_ms[] = { delay_ms };
-    check_execute(&target, 2, wait_ms);
+    check_execute(&target, 0, 2, wait_ms);
 
     ari_deinit(&target);
 }

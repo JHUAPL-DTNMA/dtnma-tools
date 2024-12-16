@@ -18,26 +18,29 @@
 #ifndef REFDA_AMM_OPER_H_
 #define REFDA_AMM_OPER_H_
 
-#include "refda/eval.h"
-#include "refda/eval_ctx.h"
+#include <cace/amm/typing.h>
+#include <cace/amm/named_type.h>
+#include <cace/ari.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // forward declaration for callback reference
-struct refda_amm_oper_desc_s;
-typedef struct refda_amm_oper_desc_s refda_amm_oper_desc_t;
+struct refda_oper_eval_ctx_s;
+typedef struct refda_oper_eval_ctx_s refda_oper_eval_ctx_t;
 
 /** An operator (OPER) descriptor.
  * This defines the properties of a OPER in an Agent and includes common
  * object metadata.
  */
-struct refda_amm_oper_desc_s
+typedef struct
 {
-    // FIXME add operand types
+    /** Types for each of the operands in original order.
+     */
+    amm_named_type_array_t operand_types;
 
-    /** An optional type for the result value.
+    /** Required type for the result value.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
@@ -45,24 +48,16 @@ struct refda_amm_oper_desc_s
 
     /** Evaluation callback for this object.
      *
-     * @param[in] obj Pointer to this descriptor.
-     * @param[in,out] ctx The evaluation context, including value stack.
-     * @return Zero upon success, or any other value for failure.
+     * @param[in,out] ctx The evaluation context, including extracted
+     * parameters and result placeholder.
+     * A successful evaluation will set a result value.
      */
-    int (*evaluate)(const refda_amm_oper_desc_t *obj, refda_eval_ctx_t *ctx);
-};
+    void (*evaluate)(refda_oper_eval_ctx_t *ctx);
+} refda_amm_oper_desc_t;
 
 void refda_amm_oper_desc_init(refda_amm_oper_desc_t *obj);
 
 void refda_amm_oper_desc_deinit(refda_amm_oper_desc_t *obj);
-
-/** Perform the evaluation procedure on an OPER.
- *
- * @param obj The object to execute.
- * @param ctx The execution context.
- * @return Zero upon success.
- */
-int refda_amm_oper_desc_evaluate(const refda_amm_oper_desc_t *obj, refda_eval_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

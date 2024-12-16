@@ -39,35 +39,6 @@ void cace_amm_formal_param_deinit(cace_amm_formal_param_t *obj)
     memset(obj, 0, sizeof(cace_amm_formal_param_t));
 }
 
-void cace_amm_actual_param_set_init(cace_amm_actual_param_set_t *obj)
-{
-    CHKVOID(obj);
-    ari_array_init(obj->ordered);
-    named_ari_ptr_dict_init(obj->named);
-}
-
-void cace_amm_actual_param_set_init_move(cace_amm_actual_param_set_t *obj, cace_amm_actual_param_set_t *src)
-{
-    CHKVOID(obj);
-    CHKVOID(src);
-    ari_array_init_move(obj->ordered, src->ordered);
-    named_ari_ptr_dict_init_move(obj->named, src->named);
-}
-
-void cace_amm_actual_param_set_deinit(cace_amm_actual_param_set_t *obj)
-{
-    CHKVOID(obj);
-    named_ari_ptr_dict_clear(obj->named);
-    ari_array_clear(obj->ordered);
-}
-
-void cace_amm_actual_param_set_reset(cace_amm_actual_param_set_t *obj)
-{
-    CHKVOID(obj);
-    ari_array_reset(obj->ordered);
-    named_ari_ptr_dict_reset(obj->named);
-}
-
 static int normalize_key(ari_t *out, const ari_t *in)
 {
     CHKERR1(out);
@@ -101,7 +72,7 @@ static int normalize_key(ari_t *out, const ari_t *in)
     return 0;
 }
 
-int cace_amm_actual_param_set_populate(cace_amm_actual_param_set_t *obj, const cace_amm_formal_param_list_t fparams,
+int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_formal_param_list_t fparams,
                                        const ari_params_t *gparams)
 {
     CHKERR1(obj);

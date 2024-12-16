@@ -15,45 +15,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef REFDA_AMM_CTRL_H_
-#define REFDA_AMM_CTRL_H_
+#ifndef CACE_AMM_NAMED_TYPE_H_
+#define CACE_AMM_NAMED_TYPE_H_
 
-#include "refda/exec.h"
+#include "typing.h"
+#include <m-string.h>
+#include <m-array.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// forward declaration for callback reference
-struct refda_ctrl_exec_ctx_s;
-typedef struct refda_ctrl_exec_ctx_s refda_ctrl_exec_ctx_t;
-
-/** A control (CTRL) descriptor.
- * This defines the properties of a CTRL in an Agent and includes common
- * object metadata.
- */
+/// A named semantic type
 typedef struct
 {
-    /** An optional type for the result value.
+    /// The unique name of the column.
+    m_string_t name;
+
+    /** The type of the column.
      * All type references are fully recursively resolved.
-     * The type object is owned by this descriptor.
+     * The type object is owned by this column.
      */
-    amm_type_t res_type;
+    amm_type_t typeobj;
+} amm_named_type_t;
 
-    /** Execution callback for this object.
-     *
-     * @param[in,out] ctx The execution context, including result storage.
-     * @return Zero upon success, or any other value for failure.
-     */
-    void (*execute)(refda_ctrl_exec_ctx_t *ctx);
-} refda_amm_ctrl_desc_t;
+void amm_named_type_init(amm_named_type_t *obj);
 
-void refda_amm_ctrl_desc_init(refda_amm_ctrl_desc_t *obj);
+void amm_named_type_deinit(amm_named_type_t *obj);
 
-void refda_amm_ctrl_desc_deinit(refda_amm_ctrl_desc_t *obj);
+/// OPLIST for the amm_named_type_s
+#define M_OPL_amm_named_type_t() (INIT(API_2(amm_named_type_init)), CLEAR(API_2(amm_named_type_deinit)))
+
+/** @struct amm_named_type_array_t
+ * An array of amm_named_type_t instances.
+ */
+/// @cond Doxygen_Suppress
+ARRAY_DEF(amm_named_type_array, amm_named_type_t)
+/// @endcond
 
 #ifdef __cplusplus
-} // extern C
+}
 #endif
 
-#endif /* REFDA_AMM_CTRL_H_ */
+#endif /* CACE_AMM_NAMED_TYPE_H_ */

@@ -16,9 +16,6 @@
  * limitations under the License.
  */
 #include "ctrl.h"
-#include "cace/util/logging.h"
-#include "cace/ari/text.h"
-#include "cace/util/defs.h"
 
 void refda_amm_ctrl_desc_init(refda_amm_ctrl_desc_t *obj)
 {
@@ -31,28 +28,4 @@ void refda_amm_ctrl_desc_deinit(refda_amm_ctrl_desc_t *obj)
     amm_type_deinit(&(obj->res_type));
     // not necessary but helpful
     memset(obj, 0, sizeof(*obj));
-}
-
-int refda_amm_ctrl_desc_execute(const refda_amm_ctrl_desc_t *obj, refda_exec_ctx_t *ctx)
-{
-    CHKERR1(obj)
-    CHKERR1(ctx)
-    CHKERR1(obj->execute)
-
-    int res = (obj->execute)(obj, ctx);
-    if (cace_log_is_enabled_for(LOG_DEBUG))
-    {
-        string_t buf;
-        string_init(buf);
-        ari_text_encode(buf, &(ctx->item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("execution finished with status %d and result %s", res, string_get_cstr(buf));
-        string_clear(buf);
-    }
-    if (res)
-    {
-        ari_set_undefined(&(ctx->item->result));
-        return 2;
-    }
-
-    return 0;
 }

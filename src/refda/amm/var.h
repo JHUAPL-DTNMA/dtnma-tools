@@ -18,7 +18,8 @@
 #ifndef REFDA_AMM_VAR_H_
 #define REFDA_AMM_VAR_H_
 
-#include "refda/valprod.h"
+#include <cace/amm/typing.h>
+#include <cace/ari.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,14 +48,6 @@ typedef struct
 void refda_amm_var_desc_init(refda_amm_var_desc_t *obj);
 
 void refda_amm_var_desc_deinit(refda_amm_var_desc_t *obj);
-
-/** Perform value production procedure on a VAR.
- *
- * @param obj The object to produce from.
- * @param ctx The production context.
- * @return Zero upon success.
- */
-int refda_amm_var_desc_produce(const refda_amm_var_desc_t *obj, refda_valprod_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

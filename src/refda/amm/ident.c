@@ -17,12 +17,26 @@
  */
 #include "ident.h"
 
+void refda_amm_ident_base_init(refda_amm_ident_base_t *obj)
+{
+    ari_init(&(obj->name));
+    obj->ident = NULL;
+}
+
+void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj)
+{
+    obj->ident = NULL;
+    ari_deinit(&(obj->name));
+}
+
 void refda_amm_ident_desc_init(refda_amm_ident_desc_t *obj)
 {
+    refda_amm_ident_base_list_init(obj->bases);
     cace_amm_user_data_init(&(obj->user_data));
 }
 
 void refda_amm_ident_desc_deinit(refda_amm_ident_desc_t *obj)
 {
     cace_amm_user_data_deinit(&(obj->user_data));
+    refda_amm_ident_base_list_clear(obj->bases);
 }

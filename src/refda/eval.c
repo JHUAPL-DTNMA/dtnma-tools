@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 #include "eval.h"
+#include "eval_ctx.h"
+#include "oper_eval_ctx.h"
 #include "valprod.h"
 #include "amm/oper.h"
 #include "cace/ari/text.h"
@@ -86,6 +88,59 @@ static int refda_eval_expand(refda_runctx_t *runctx, refda_eval_item_t out, cons
     return retval;
 }
 
+static int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx)
+{
+    const refda_amm_oper_desc_t *desc = deref->obj->app_data.ptr;
+    CHKRET(desc->evaluate, 2);
+    CHKRET(amm_type_is_valid(&(desc->res_type)), 3);
+
+    refda_oper_eval_ctx_t operctx;
+    refda_oper_eval_ctx_init(&operctx);
+
+    int res = refda_oper_eval_ctx_populate(&operctx, deref, desc, ctx);
+    if (res)
+    {
+        CACE_LOG_WARNING("Failed to populate an OPER evaluation context, code %d", res);
+        refda_oper_eval_ctx_deinit(&operctx);
+        return 2;
+    }
+
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        CACE_LOG_DEBUG("Evaluating OPER %s with %d operands", string_get_cstr(deref->obj->name),
+                       ari_array_size(operctx.operands.ordered));
+    }
+    (desc->evaluate)(&operctx);
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(operctx.result), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("evaluation finished with result %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
+    int retval = 0;
+    {
+        // force result type
+        ari_t tmp;
+        ari_init(&tmp);
+        res = amm_type_convert(&(desc->res_type), &tmp, &(operctx.result));
+        if (res)
+        {
+            ari_deinit(&tmp);
+            retval = 4;
+        }
+        else
+        {
+            ari_list_push_back_move(ctx->stack, &tmp);
+        }
+    }
+
+    refda_oper_eval_ctx_deinit(&operctx);
+    return retval;
+}
+
 int refda_eval_target(refda_runctx_t *runctx, ari_t *result, const ari_t *ari)
 {
     CHKERR1(runctx);
@@ -151,12 +206,7 @@ int refda_eval_target(refda_runctx_t *runctx, ari_t *result, const ari_t *ari)
                 {
                     case ARI_TYPE_OPER:
                     {
-                        const refda_amm_oper_desc_t *desc = as_obj->obj->app_data.ptr;
-                        CACE_LOG_DEBUG("Evaluating OPER %s", string_get_cstr(as_obj->obj->name));
-
-                        eval_ctx.deref = as_obj;
-                        int res        = refda_amm_oper_desc_evaluate(desc, &eval_ctx);
-                        eval_ctx.deref = NULL;
+                        int res = refda_eval_oper(as_obj, &eval_ctx);
                         CACE_LOG_DEBUG("Evaluation return code %d", res);
                         if (res)
                         {

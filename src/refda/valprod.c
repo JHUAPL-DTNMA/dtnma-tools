@@ -16,12 +16,90 @@
  * limitations under the License.
  */
 #include "valprod.h"
+#include "edd_prod_ctx.h"
 #include "amm/const.h"
 #include "amm/var.h"
 #include "amm/edd.h"
 #include "cace/ari/type.h"
+#include "cace/ari/text.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
+
+static int refda_valprod_const_run(const refda_amm_const_desc_t *obj, refda_valprod_ctx_t *ctx)
+{
+    CHKERR1(obj);
+    CHKERR1(ctx);
+
+    ari_set_copy(&(ctx->value), &(obj->value));
+    // FIXME use ctx parameters to substitute
+
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(ctx->value), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
+    return 0;
+}
+
+static int refda_valprod_var_run(const refda_amm_var_desc_t *obj, refda_valprod_ctx_t *ctx)
+{
+    CHKERR1(obj);
+    CHKERR1(ctx);
+
+    ari_set_copy(&(ctx->value), &(obj->value));
+    // FIXME use ctx parameters to substitute
+
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(ctx->value), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
+    return 0;
+}
+
+static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_ctx_t *prodctx)
+{
+    CHKERR1(obj)
+    CHKERR1(prodctx)
+    CHKERR1(amm_type_is_valid(&(obj->prod_type)))
+    CHKERR1(obj->produce)
+
+    refda_edd_prod_ctx_t eddctx;
+    refda_edd_prod_ctx_init(&eddctx, obj, prodctx);
+
+    (obj->produce)(&eddctx);
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(prodctx->value), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
+    if (ari_is_undefined(&(prodctx->value)))
+    {
+        return 2;
+    }
+
+    // force output type
+    ari_t tmp;
+    ari_init(&tmp);
+    int res = amm_type_convert(&(obj->prod_type), &tmp, &(prodctx->value));
+    ari_set_move(&(prodctx->value), &tmp);
+    if (res)
+    {
+        return 3;
+    }
+
+    return 0;
+}
 
 void refda_valprod_ctx_init(refda_valprod_ctx_t *obj, refda_runctx_t *parent, const cace_amm_lookup_t *deref)
 {
@@ -39,16 +117,6 @@ void refda_valprod_ctx_deinit(refda_valprod_ctx_t *obj)
     ari_deinit(&(obj->value));
 }
 
-const ari_t *refda_valprod_ctx_get_aparam_index(refda_valprod_ctx_t *ctx, size_t index)
-{
-    return ari_array_cget(ctx->deref->aparams.ordered, index);
-}
-
-const ari_t *refda_valprod_ctx_get_aparam_name(refda_valprod_ctx_t *ctx, const char *name)
-{
-    return *named_ari_ptr_dict_cget(ctx->deref->aparams.named, name);
-}
-
 int refda_valprod_run(refda_valprod_ctx_t *ctx)
 {
     CHKERR1(ctx);
@@ -62,19 +130,22 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
         case ARI_TYPE_CONST:
         {
             refda_amm_const_desc_t *cnst = ctx->deref->obj->app_data.ptr;
-            retval                       = refda_amm_const_desc_produce(cnst, ctx);
+
+            retval = refda_valprod_const_run(cnst, ctx);
             break;
         }
         case ARI_TYPE_VAR:
         {
             refda_amm_var_desc_t *var = ctx->deref->obj->app_data.ptr;
-            retval                    = refda_amm_var_desc_produce(var, ctx);
+
+            retval = refda_valprod_var_run(var, ctx);
             break;
         }
         case ARI_TYPE_EDD:
         {
             refda_amm_edd_desc_t *edd = ctx->deref->obj->app_data.ptr;
-            retval                    = refda_amm_edd_desc_produce(edd, ctx);
+
+            retval = refda_valprod_edd_run(edd, ctx);
             break;
         }
         default:

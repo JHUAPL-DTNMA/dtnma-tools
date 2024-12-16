@@ -36,7 +36,7 @@ void suiteSetUp(void)
     cace_amm_obj_store_init(&store);
 
     // initial population
-    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&store, "example-adm", true, 25);
+    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&store, "example-adm", "", true, 25);
     TEST_ASSERT_NOT_NULL(adm);
     cace_amm_obj_desc_t *obj;
 

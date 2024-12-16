@@ -39,15 +39,18 @@ extern "C" {
  *
  * Functions for the interval struct are the following:
  *
- * `intvl_init()` Initialize a fully infinite interval.
- * `intvl_deinit()` Clean up state.
- * `intvl_is_infinite()` Determine if this interval is open on both ends (is fully infinite).
- * `intvl_cmp()` Compare to intervals by their extents.
- * `intvl_contains()` Determine if a value is within the interval.
+ * * `intvl_init()` Initialize a fully infinite interval.
+ * * `intvl_deinit()` Clean up state.
+ * * `intvl_set_finite()` Set the state to a fully finite interval.
+ * * `intvl_set_min()` Set just the minimum finite extent.
+ * * `intvl_set_max()` Set just the maximum finite extent.
+ * * `intvl_is_infinite()` Determine if this interval is open on both ends (is fully infinite).
+ * * `intvl_cmp()` Compare to intervals by their extents.
+ * * `intvl_contains()` Determine if a value is within the interval.
  *
  * Functions for the range struct are the following:
  *
- * `range_contains()` Determine if a value is within the range.
+ * * `range_contains()` Determine if a value is within the range.
  */
 #define CACE_RANGE_DEF(range, intvl, type)                                                               \
     typedef struct                                                                                       \
@@ -73,6 +76,16 @@ extern "C" {
             .has_max = true,                                                                             \
             .i_max   = val,                                                                              \
         };                                                                                               \
+    }                                                                                                    \
+    static inline void M_C(intvl, _set_min)(M_C(intvl, _t) * obj, type val)                              \
+    {                                                                                                    \
+        obj->has_min = true;                                                                             \
+        obj->i_min   = val;                                                                              \
+    }                                                                                                    \
+    static inline void M_C(intvl, _set_max)(M_C(intvl, _t) * obj, type val)                              \
+    {                                                                                                    \
+        obj->has_max = true;                                                                             \
+        obj->i_max   = val;                                                                              \
     }                                                                                                    \
     static inline void M_C(intvl, _set_finite)(M_C(intvl, _t) * obj, type min_val, type max_val)         \
     {                                                                                                    \

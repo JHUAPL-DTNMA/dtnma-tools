@@ -23,13 +23,13 @@ void cace_amm_lookup_init(cace_amm_lookup_t *res)
     CHKVOID(res);
     res->ns  = NULL;
     res->obj = NULL;
-    cace_amm_actual_param_set_init(&(res->aparams));
+    cace_ari_itemized_init(&(res->aparams));
 }
 
 void cace_amm_lookup_deinit(cace_amm_lookup_t *res)
 {
     CHKVOID(res);
-    cace_amm_actual_param_set_deinit(&(res->aparams));
+    cace_ari_itemized_deinit(&(res->aparams));
     res->ns       = NULL;
     res->obj      = NULL;
     res->obj_type = ARI_TYPE_NULL;
@@ -45,7 +45,7 @@ void cace_amm_lookup_init_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src)
     src->obj      = NULL;
     res->obj_type = src->obj_type;
     src->obj_type = ARI_TYPE_NULL;
-    cace_amm_actual_param_set_init_move(&(res->aparams), &(src->aparams));
+    cace_ari_itemized_init_move(&(res->aparams), &(src->aparams));
 }
 
 void cace_amm_lookup_set_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src)
@@ -65,7 +65,7 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
     res->ns       = NULL;
     res->obj      = NULL;
     res->obj_type = ARI_TYPE_NULL;
-    cace_amm_actual_param_set_reset(&(res->aparams));
+    cace_ari_itemized_reset(&(res->aparams));
 
     const ari_objpath_t *path = &(ref->as_ref.objpath);
     // no possible match in this store

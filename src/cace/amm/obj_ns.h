@@ -68,6 +68,8 @@ typedef struct
     int64_t intenum;
     /// Mandatory name for this namespace
     m_string_t name;
+    /// Revision being supported
+    m_string_t revision;
 
     /// Features supported within this namespace
     string_tree_set_t feature_supp;

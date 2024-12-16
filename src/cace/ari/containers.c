@@ -204,7 +204,7 @@ bool ari_tbl_equal(const ari_tbl_t *left, const ari_tbl_t *right)
     return ((left->ncols == right->ncols) && ari_array_equal_p(left->items, right->items));
 }
 
-int ari_tbl_move_row(ari_tbl_t *obj, ari_ac_t *row)
+int ari_tbl_move_row_ac(ari_tbl_t *obj, ari_ac_t *row)
 {
     CHKERR1(obj);
     CHKERR1(row);
@@ -221,6 +221,19 @@ int ari_tbl_move_row(ari_tbl_t *obj, ari_ac_t *row)
         ari_array_push_move(obj->items, &item);
         ari_deinit(&item);
     }
+    return 0;
+}
+
+int ari_tbl_move_row_array(ari_tbl_t *obj, ari_array_t row)
+{
+    CHKERR1(obj);
+    CHKERR1(row);
+    if (ari_array_size(row) != obj->ncols)
+    {
+        return 2;
+    }
+
+    ari_array_splice(obj->items, row);
     return 0;
 }
 

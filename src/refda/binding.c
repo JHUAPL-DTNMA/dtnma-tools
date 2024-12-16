@@ -67,7 +67,7 @@ static int refda_binding_semtype_use(amm_semtype_use_t *semtype, const cace_amm_
                 }
                 else
                 {
-                    CACE_LOG_WARNING("Binding failed because object has no typedef descriptor");
+                    CACE_LOG_WARNING("Binding failed because object has no TYPEDEF descriptor");
                     failcnt = 1;
                 }
             }
@@ -79,7 +79,7 @@ static int refda_binding_semtype_use(amm_semtype_use_t *semtype, const cace_amm_
         }
         else
         {
-            CACE_LOG_WARNING("Binding failed because lookup failed");
+            CACE_LOG_WARNING("Binding failed because TYPEDEF lookup failed");
             failcnt = 1;
         }
 
@@ -90,7 +90,7 @@ static int refda_binding_semtype_use(amm_semtype_use_t *semtype, const cace_amm_
         const int64_t *aritype = ari_get_aritype(&(semtype->name));
         if (aritype)
         {
-            semtype->base = amm_type_get_builtin(*aritype);
+            semtype->base = amm_type_get_builtin((ari_type_t)*aritype);
         }
         else
         {
@@ -134,11 +134,10 @@ static int refda_binding_semtype_tblt(amm_semtype_tblt_t *semtype, const cace_am
 {
     int failcnt = 0;
 
-    amm_semtype_tblt_col_array_it_t it;
-    for (amm_semtype_tblt_col_array_it(it, semtype->columns); !amm_semtype_tblt_col_array_end_p(it);
-         amm_semtype_tblt_col_array_next(it))
+    amm_named_type_array_it_t it;
+    for (amm_named_type_array_it(it, semtype->columns); !amm_named_type_array_end_p(it); amm_named_type_array_next(it))
     {
-        amm_semtype_tblt_col_t *col = amm_semtype_tblt_col_array_ref(it);
+        amm_named_type_t *col = amm_named_type_array_ref(it);
 
         failcnt += refda_binding_typeobj(&(col->typeobj), store);
     }
@@ -200,8 +199,63 @@ static int refda_binding_fparams(cace_amm_formal_param_list_t fparams, const cac
          cace_amm_formal_param_list_next(fit))
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_ref(fit);
-
+        CACE_LOG_DEBUG("Binding formal parameter \"%s\" (index %zd)", string_get_cstr(fparam->name), fparam->index);
         failcnt += refda_binding_typeobj(&(fparam->typeobj), store);
+    }
+
+    return failcnt;
+}
+
+static int refda_binding_ident_bases(refda_amm_ident_base_list_t bases, const cace_amm_obj_store_t *store)
+{
+    int failcnt = 0;
+
+    refda_amm_ident_base_list_it_t it;
+    for (refda_amm_ident_base_list_it(it, bases); !refda_amm_ident_base_list_end_p(it);
+         refda_amm_ident_base_list_next(it))
+    {
+        refda_amm_ident_base_t *base = refda_amm_ident_base_list_ref(it);
+
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            string_t buf;
+            string_init(buf);
+            ari_text_encode(buf, &(base->name), ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("Binding IDENT base of %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+
+        cace_amm_lookup_t deref;
+        cace_amm_lookup_init(&deref);
+
+        if (!cace_amm_lookup_deref(&deref, store, &(base->name)))
+        {
+            if (deref.obj_type == ARI_TYPE_IDENT)
+            {
+                refda_amm_ident_desc_t *desc = deref.obj->app_data.ptr;
+                if (desc)
+                {
+                    base->ident = desc;
+                }
+                else
+                {
+                    CACE_LOG_WARNING("Binding failed because object has no IDENT descriptor");
+                    failcnt += 1;
+                }
+            }
+            else
+            {
+                CACE_LOG_WARNING("Binding failed because object is not an IDENT");
+                failcnt += 1;
+            }
+        }
+        else
+        {
+            CACE_LOG_WARNING("Binding failed because IDENT lookup failed");
+            failcnt += 1;
+        }
+
+        cace_amm_lookup_deinit(&deref);
     }
 
     return failcnt;
@@ -216,6 +270,7 @@ int refda_binding_ident(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *st
 
     int failcnt = 0;
     failcnt += refda_binding_fparams(obj->fparams, store);
+    failcnt += refda_binding_ident_bases(desc->bases, store);
     return failcnt;
 }
 
@@ -302,6 +357,7 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
 
 int refda_binding_obj(ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
 {
+    CACE_LOG_DEBUG("Binding object ./%s/%s", ari_type_to_name(obj_type), string_get_cstr(obj->name));
     switch (obj_type)
     {
         case ARI_TYPE_IDENT:

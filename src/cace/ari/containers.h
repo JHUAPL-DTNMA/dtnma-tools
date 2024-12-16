@@ -108,7 +108,16 @@ void ari_tbl_deinit(ari_tbl_t *obj);
 bool ari_tbl_cmp(const ari_tbl_t *left, const ari_tbl_t *right);
 bool ari_tbl_equal(const ari_tbl_t *left, const ari_tbl_t *right);
 
-int ari_tbl_move_row(ari_tbl_t *obj, ari_ac_t *row);
+/** Append a row to a table, moving data from the source.
+ *
+ * @param[in,out] obj The table to append to.
+ * @param[in,out] row The row to move items from.
+ * @return Zero if successful.
+ * 2 if the row size is mismatched.
+ */
+int ari_tbl_move_row_ac(ari_tbl_t *obj, ari_ac_t *row);
+/// @overload
+int ari_tbl_move_row_array(ari_tbl_t *obj, ari_array_t row);
 
 /*
  * An Execution Set (EXECSET) value is an ordered collection of

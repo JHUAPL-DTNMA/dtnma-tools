@@ -32,8 +32,8 @@ void cace_amm_obj_store_deinit(cace_amm_obj_store_t *store)
     cace_amm_obj_ns_list_clear(store->ns_list);
 }
 
-cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const char *name, bool has_enum,
-                                             int64_t intenum)
+cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const char *name, const char *revision,
+                                             bool has_enum, int64_t intenum)
 {
     cace_amm_obj_ns_t **found = cace_amm_obj_ns_by_name_get(store->ns_by_name, name);
     if (found)
@@ -53,6 +53,7 @@ cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const 
 
     cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_push_back_new(store->ns_list);
     string_set_str(ns->name, name);
+    string_set_str(ns->revision, revision);
     ns->has_enum = has_enum;
     ns->intenum  = intenum;
 
