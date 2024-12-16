@@ -19,8 +19,8 @@
  * @ingroup ari
  * This file contains definitions constraints on semantic type use.
  */
-#ifndef CACE_AMM_SEMTYPE_USE_H_
-#define CACE_AMM_SEMTYPE_USE_H_
+#ifndef CACE_AMM_SEMTYPE_CNST_H_
+#define CACE_AMM_SEMTYPE_CNST_H_
 
 #include "range.h"
 #include "cace/config.h"
@@ -52,6 +52,8 @@ enum amm_semtype_cnst_type_e
 #endif /* PCRE_FOUND */
     /// A signed 64-bit integer multi-interval range
     AMM_SEMTYPE_CNST_RANGE_INT64,
+    /// A required IDENT base object
+    AMM_SEMTYPE_CNST_IDENT_BASE,
 };
 
 /** A single constraint on a amm_semtype_use_t
@@ -69,6 +71,12 @@ typedef struct amm_semtype_cnst_s
         pcre2_code *as_textpat;
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
         cace_amm_range_int64_t as_range_int64;
+        /// Used when #type is ::AMM_SEMTYPE_CNST_IDENT_BASE
+        struct
+        {
+            ari_t                             ref;
+            const struct cace_amm_obj_desc_s *obj;
+        } as_ident_base;
     };
 } amm_semtype_cnst_t;
 
@@ -114,6 +122,15 @@ pcre2_code *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pa
  */
 cace_amm_range_int64_t *amm_semtype_cnst_set_range_int64(amm_semtype_cnst_t *obj);
 
+/** Configure a constraint on IDENT reference values based on a required
+ * base IDENT.
+ * This applies to ARI_TYPE_IDENT only.
+ *
+ * @param[in,out] obj The struct to set the state of.
+ * @return The specific parameters for this constraint type.
+ */
+cace_amm_range_int64_t *amm_semtype_cnst_set_range_int64(amm_semtype_cnst_t *obj);
+
 /** Determine if a specific value is valid according to a constraint.
  *
  * @param[in] obj The constraint to check against.
@@ -129,4 +146,4 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val);
 }
 #endif
 
-#endif /* CACE_AMM_SEMTYPE_USE_H_ */
+#endif /* CACE_AMM_SEMTYPE_CNST_H_ */

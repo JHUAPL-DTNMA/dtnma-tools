@@ -88,6 +88,7 @@ void test_amm_semtype_cnst_strlen_empty(const char *inhex, bool expect)
     amm_semtype_cnst_t cnst;
     amm_semtype_cnst_init(&cnst);
     cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    // leave empty
 
     check_cnst(&cnst, inhex, expect);
     amm_semtype_cnst_deinit(&cnst);

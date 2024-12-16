@@ -75,39 +75,6 @@ void amm_type_reset(amm_type_t *type);
 /// M*LIB OPLIST for the amm_type_t
 #define M_OPL_amm_type_t() (INIT(API_2(amm_type_init)), CLEAR(API_2(amm_type_deinit)), RESET(API_2(amm_type_reset)))
 
-/** A pointer to amm_type_t with ownership semantics.
- *
- * The M_SHARED_PTR_RELAXED_DEF cannot be used here because it requires a
- * concrete type defintion and cannot be used with forward-declared types.
- */
-typedef struct
-{
-    /// Pointer to the managed object
-    amm_type_t *obj;
-} amm_typeptr_t;
-
-/** Initialize a type pointer to an allocated and initialized type object.
- *
- * @param[out] ptr The type to initialize.
- */
-void amm_typeptr_init(amm_typeptr_t *ptr);
-
-/** Free any allocated type object.
- *
- * @param[in,out] ptr The object to de-initialize.
- */
-void amm_typeptr_deinit(amm_typeptr_t *ptr);
-
-/** Take ownership of a pointed-to object.
- *
- * @param[in,out] ptr The object to set.
- * @param[in] obj The object to own.
- */
-void amm_typeptr_take(amm_typeptr_t *ptr, amm_type_t *obj);
-
-/// OPLIST for the amm_typeptr_t
-#define M_OPL_amm_typeptr_t() (INIT(API_2(amm_typeptr_init)), CLEAR(API_2(amm_typeptr_deinit)))
-
 /// Configuration for a built-in type
 struct amm_type_builtin_s
 {
@@ -115,6 +82,10 @@ struct amm_type_builtin_s
     ari_type_t ari_type;
 };
 
+/** De-initializing function for amm_type_s::as_semtype when it is valid.
+ * @param[in] semtype The pointer to struct being de-initialized.
+ * @post After this call the pointed-to memory can be free'd.
+ */
 typedef void (*amm_semtype_deinit_f)(void *semtype);
 
 /** Descriptor for each built-in (ARI type) and semantic type within the AMM.

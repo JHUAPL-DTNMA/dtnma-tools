@@ -29,7 +29,7 @@ extern "C" {
 
 /** A generic object descriptor common to all AMM object types in an Agent.
  */
-typedef struct
+typedef struct cace_amm_obj_desc_s
 {
     /// Indication of whether this object has an enumeration assigned
     bool has_enum;
@@ -41,7 +41,8 @@ typedef struct
     /// Formal parameters of this object instance, which may be empty
     cace_amm_formal_param_list_t fparams;
 
-    /** Object-type-specific application data.
+    /** Object-type-specific data.
+     * This will ultimately be one of the object-type descriptor instances.
      */
     cace_amm_user_data_t app_data;
 

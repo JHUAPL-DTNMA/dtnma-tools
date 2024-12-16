@@ -895,35 +895,6 @@ const amm_type_t *amm_type_get_builtin(ari_type_t ari_type)
 
 #endif /* ENABLE_LUT_CACHE */
 
-void amm_typeptr_init(amm_typeptr_t *ptr)
-{
-    CHKVOID(ptr);
-
-    ptr->obj = ARI_MALLOC(sizeof(amm_type_t));
-    if (ptr->obj)
-    {
-        amm_type_init(ptr->obj);
-    }
-}
-
-void amm_typeptr_deinit(amm_typeptr_t *ptr)
-{
-    CHKVOID(ptr);
-    if (ptr->obj)
-    {
-        ARI_FREE(ptr->obj);
-        ptr->obj = NULL;
-    }
-}
-
-void amm_typeptr_take(amm_typeptr_t *ptr, amm_type_t *obj)
-{
-    CHKVOID(ptr);
-    amm_typeptr_deinit(ptr);
-
-    ptr->obj = obj;
-}
-
 void amm_type_init(amm_type_t *type)
 {
     CHKVOID(type)

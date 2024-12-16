@@ -43,6 +43,10 @@ void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj)
         case AMM_SEMTYPE_CNST_RANGE_INT64:
             cace_amm_range_int64_deinit(&(obj->as_range_int64));
             break;
+        case AMM_SEMTYPE_CNST_IDENT_BASE:
+            ari_deinit(&(obj->as_ident_base.ref));
+            obj->as_ident_base.obj = NULL;
+            break;
     }
     obj->type = AMM_SEMTYPE_CNST_INVALID;
 }
@@ -164,6 +168,11 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
             const cace_amm_range_int64_t *cfg = &(obj->as_range_int64);
 
             retval = cace_amm_range_int64_contains(cfg, intval);
+            break;
+        }
+        case AMM_SEMTYPE_CNST_IDENT_BASE:
+        {
+
             break;
         }
     }
