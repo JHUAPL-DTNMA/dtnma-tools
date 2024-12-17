@@ -240,6 +240,24 @@ int ari_get_uvast(const ari_t *ari, ari_uvast *out)
     return 0;
 }
 
+void ari_set_bool(ari_t *ari, ari_bool src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_BOOL, .prim_type = ARI_PRIM_BOOL, .value = { .as_bool = src }
+    };
+}
+
+void ari_set_byte(ari_t *ari, ari_byte src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_BYTE, .prim_type = ARI_PRIM_INT64, .value = { .as_int64 = src }
+    };
+}
+
 void ari_set_int(ari_t *ari, ari_int src)
 {
     CHKVOID(ari);
@@ -273,6 +291,15 @@ void ari_set_uvast(ari_t *ari, ari_uvast src)
     ari_deinit(ari);
     *ari_init_lit(ari) = (ari_lit_t) {
         .has_ari_type = true, .ari_type = ARI_TYPE_UVAST, .prim_type = ARI_PRIM_UINT64, .value = { .as_uint64 = src }
+    };
+}
+
+void ari_set_real32(ari_t *ari, ari_real32 src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_REAL32, .prim_type = ARI_PRIM_FLOAT64, .value = { .as_float64 = src }
     };
 }
 

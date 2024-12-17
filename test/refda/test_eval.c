@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "util/ari.h"
+#include "util/runctx.h"
 #include <refda/eval.h>
 #include <refda/register.h>
 #include <refda/edd_prod_ctx.h>
@@ -257,21 +259,6 @@ void tearDown(void)
     refda_agent_deinit(&agent);
 }
 
-static void ari_convert(ari_t *ari, const char *inhex)
-{
-    string_t intext;
-    string_init_set_str(intext, inhex);
-    cace_data_t indata;
-    cace_data_init(&indata);
-    int res = base16_decode(&indata, intext);
-    string_clear(intext);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "base16_decode() failed");
-
-    res = ari_cbor_decode(ari, &indata, NULL, NULL);
-    cace_data_deinit(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
-}
-
 // direct EXPR ari:/AC/(/VAST/1) -> /VAST/1
 TEST_CASE("821181820601", "820601")
 // ref EXPR ari:/AC/(//65536/EDD/2(10)) -> /VAST/10
@@ -283,16 +270,14 @@ TEST_CASE("821183841A000100002302810A831A000100002A01841A000100002501810A", "820
 void test_refda_eval_target_valid(const char *targethex, const char *expectloghex)
 {
     ari_t target = ARI_INIT_UNDEFINED;
-    ari_convert(&target, targethex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
 
     ari_t expect_result = ARI_INIT_UNDEFINED;
-    ari_convert(&expect_result, expectloghex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_result, expectloghex));
     TEST_ASSERT_FALSE(ari_is_undefined(&expect_result));
 
     refda_runctx_t runctx;
-    refda_runctx_init(&runctx);
-    // no nonce for test
-    refda_runctx_from(&runctx, &agent, NULL);
+    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
     ari_t result = ARI_INIT_UNDEFINED;
     int   res    = refda_eval_target(&runctx, &result, &target);
@@ -314,12 +299,10 @@ void test_refda_eval_target_failure(const char *targethex, int expect_res)
 {
 
     ari_t target = ARI_INIT_UNDEFINED;
-    ari_convert(&target, targethex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
 
     refda_runctx_t runctx;
-    refda_runctx_init(&runctx);
-    // no nonce for test
-    refda_runctx_from(&runctx, &agent, NULL);
+    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
     ari_t result = ARI_INIT_UNDEFINED;
     int   res    = refda_eval_target(&runctx, &result, &target);

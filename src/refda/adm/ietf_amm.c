@@ -45,7 +45,7 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
     CHKERR1(agent);
     CACE_LOG_DEBUG("Registering ADM: "
                    "ietf-amm");
-    REFDA_AGENT_LOCK(agent);
+    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     cace_amm_obj_ns_t *adm =
         cace_amm_obj_store_add_ns(&(agent->objs), "ietf-amm", "2024-07-03", true, REFDA_ADM_IETF_AMM_ENUM_ADM);
@@ -785,6 +785,6 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
             // no parameters possible
         }
     }
-    REFDA_AGENT_UNLOCK(agent);
+    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     return 0;
 }

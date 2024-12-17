@@ -114,11 +114,7 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
      * +-------------------------------------------------------------------------+
      */
     refda_agent_t *agent = ctx->prodctx->parent->agent;
-    if (pthread_mutex_lock(&(agent->objs_mutex)))
-    {
-        CACE_LOG_ERR("failed to lock agent objects");
-        return;
-    }
+    REFDA_AGENT_LOCK(agent, );
 
     ari_tbl_t table;
     ari_tbl_init(&table, 4, 0);
@@ -163,17 +159,14 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
 
         // append the row
         ari_tbl_move_row_array(&table, row);
+        ari_array_clear(row);
     }
 
     ari_t result = ARI_INIT_UNDEFINED;
     ari_set_tbl(&result, &table);
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    if (pthread_mutex_unlock(&(agent->objs_mutex)))
-    {
-        CACE_LOG_ERR("failed to unlock agent objects");
-        return;
-    }
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
@@ -372,6 +365,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
 
         // append the row
         ari_tbl_move_row_array(&table, row);
+        ari_array_clear(row);
     }
 
     ari_t result = ARI_INIT_UNDEFINED;
@@ -406,6 +400,60 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_typedef_list BODY
      * +-------------------------------------------------------------------------+
      */
+    bool include_adm;
+    if (ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    ari_tbl_t table;
+    ari_tbl_init(&table, 1, 0);
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_cref(ns_it);
+        if ((ns->intenum >= 0) && !include_adm)
+        {
+            // ignore ADMs
+            continue;
+        }
+
+        cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_dict_get(ns->object_types, ARI_TYPE_TYPEDEF);
+        if (!ctr)
+        {
+            continue;
+        }
+
+        cace_amm_obj_desc_list_it_t obj_it;
+        for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+             cace_amm_obj_desc_list_next(obj_it))
+        {
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_cref(obj_it);
+
+            ari_array_t row;
+            ari_array_init(row);
+            ari_array_resize(row, 1);
+
+            // FIXME intenum are optional, handle when missing
+            ari_set_objref_path_intid(ari_array_get(row, 0), ns->intenum, ARI_TYPE_TYPEDEF, obj->intenum);
+
+            // append the row
+            ari_tbl_move_row_array(&table, row);
+            ari_array_clear(row);
+        }
+    }
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_typedef_list BODY
@@ -442,8 +490,7 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
  * Parameters: none
  *
  * Produced type: TBLT with 6 columns (use of ari:/ARITYPE/SBR, use of ari://ietf-amm/TYPEDEF/MAC, use of
- * ari://ietf-amm/TYPEDEF/TIME, use of ari://ietf-amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of
- * ari:/ARITYPE/UVAST)
+ * ari://ietf-amm/TYPEDEF/TIME, use of ari://ietf-amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
  */
 static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1284,7 +1331,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
     CHKERR1(agent);
     CACE_LOG_DEBUG("Registering ADM: "
                    "ietf-dtnma-agent");
-    REFDA_AGENT_LOCK(agent);
+    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-dtnma-agent", "2024-07-03", true,
                                                        REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM);
@@ -1668,6 +1715,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     ari_set_aritype(&name, ARI_TYPE_BOOL);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
+                ari_set_bool(&(fparam->defval), false);
             }
         }
         { // For ./EDD/var-list
@@ -1710,6 +1758,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     ari_set_aritype(&name, ARI_TYPE_BOOL);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
+                ari_set_bool(&(fparam->defval), false);
             }
         }
         { // For ./EDD/sbr-list
@@ -1898,6 +1947,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
+                ari_set_null(&(fparam->defval));
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "on-falsy");
@@ -1922,6 +1972,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
+                ari_set_null(&(fparam->defval));
             }
         }
         { // For ./CTRL/catch
@@ -1971,6 +2022,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
+                ari_set_null(&(fparam->defval));
             }
         }
         { // For ./CTRL/wait-for
@@ -2181,6 +2233,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
+                ari_set_null(&(fparam->defval));
             }
         }
         { // For ./CTRL/discard-var
@@ -3013,6 +3066,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             }
         }
     }
-    REFDA_AGENT_UNLOCK(agent);
+    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     return 0;
 }

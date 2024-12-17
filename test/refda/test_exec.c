@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "util/ari.h"
 #include <refda/exec.h>
 #include <refda/register.h>
 #include <refda/ctrl_exec_ctx.h>
@@ -151,21 +152,6 @@ void tearDown(void)
     refda_agent_deinit(&agent);
 }
 
-static void ari_convert(ari_t *ari, const char *inhex)
-{
-    string_t intext;
-    string_init_set_str(intext, inhex);
-    cace_data_t indata;
-    cace_data_init(&indata);
-    int res = base16_decode(&indata, intext);
-    string_clear(intext);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "base16_decode() failed");
-
-    res = ari_cbor_decode(ari, &indata, NULL, NULL);
-    cace_data_deinit(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
-}
-
 static void check_execute(const ari_t *target, int expect_exp, int wait_limit, int wait_ms[])
 {
     refda_runctx_ptr_t ctxptr;
@@ -244,10 +230,10 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
 {
     CACE_LOG_DEBUG("target %s", targethex);
     ari_t target = ARI_INIT_UNDEFINED;
-    ari_convert(&target, targethex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
 
     ari_t expect_log = ARI_INIT_UNDEFINED;
-    ari_convert(&expect_log, expectloghex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_log, expectloghex));
     {
         const amm_type_t *ac_type = amm_type_get_builtin(ARI_TYPE_AC);
         TEST_ASSERT_NOT_NULL(ac_type);
@@ -288,7 +274,7 @@ TEST_CASE("8401220281820D01", 1000) // direct ref ari://1/CTRL/2(/TD/1)
 void test_refda_exec_wait_for(const char *targethex, int delay_ms)
 {
     ari_t target = ARI_INIT_UNDEFINED;
-    ari_convert(&target, targethex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
 
     int wait_ms[] = { delay_ms };
     check_execute(&target, 0, 2, wait_ms);

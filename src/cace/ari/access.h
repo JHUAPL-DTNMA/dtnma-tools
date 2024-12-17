@@ -129,6 +129,17 @@ void ari_set_prim_int64(ari_t *ari, int64_t src);
 /// @overload
 void ari_set_prim_float64(ari_t *ari, ari_real64 src);
 
+/** Set an ARI as a typed literal value.
+ *
+ * @param[in,out] ari The ARI to set the value on.
+ * This must have been initialized.
+ * @param src The value to set to.
+ */
+void ari_set_bool(ari_t *ari, ari_bool src);
+
+/// @overload
+void ari_set_byte(ari_t *ari, ari_byte src);
+
 /// @overload
 void ari_set_int(ari_t *ari, ari_int src);
 
@@ -140,6 +151,9 @@ void ari_set_vast(ari_t *ari, ari_vast src);
 
 /// @overload
 void ari_set_uvast(ari_t *ari, ari_uvast src);
+
+/// @overload
+void ari_set_real32(ari_t *ari, ari_real32 src);
 
 /// @overload
 void ari_set_real64(ari_t *ari, ari_real64 src);

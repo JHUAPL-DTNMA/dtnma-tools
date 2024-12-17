@@ -15,16 +15,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ]]
-set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
-find_package(unitytools)
 
-include_directories(
-  BEFORE
-  ${CMAKE_BINARY_DIR}/src
-  ${CMAKE_SOURCE_DIR}/src
-  ${CMAKE_SOURCE_DIR}/test
+set(HFILES
+    ari.h
+    runctx.h
 )
-
-add_subdirectory(util)
-add_subdirectory(cace)
-add_subdirectory(refda)
+set(CFILES
+    ari.c
+    runctx.c
+)
+add_library(test_util)
+target_sources(test_util PRIVATE ${HFILES})
+target_sources(test_util PRIVATE ${CFILES})
+target_include_directories(
+  test_util PUBLIC
+)
+target_link_libraries(test_util PUBLIC cace)

@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "util/ari.h"
+#include "util/runctx.h"
 #include <refda/reporting.h>
 #include <refda/register.h>
 #include <refda/edd_prod_ctx.h>
@@ -48,8 +50,6 @@ int suiteTearDown(int failures)
 
 /// Agent context for testing
 static refda_agent_t agent;
-/// Manager identity
-static cace_data_t mgr;
 
 static atomic_int edd_one_state = ATOMIC_VAR_INIT(0);
 
@@ -82,12 +82,6 @@ void setUp(void)
     // ADM initialization
     TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(&agent));
     TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(&agent));
-
-    cace_data_init(&mgr);
-
-    static const char *data = "test";
-    // CACE data does not include terminating null
-    cace_data_copy_from(&mgr, strlen(data), (cace_data_ptr_t)data);
 
     atomic_store(&edd_one_state, 1);
 
@@ -163,23 +157,7 @@ void setUp(void)
 
 void tearDown(void)
 {
-    cace_data_deinit(&mgr);
     refda_agent_deinit(&agent);
-}
-
-static void ari_convert(ari_t *ari, const char *inhex)
-{
-    string_t intext;
-    string_init_set_str(intext, inhex);
-    cace_data_t indata;
-    cace_data_init(&indata);
-    int res = base16_decode(&indata, intext);
-    string_clear(intext);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "base16_decode() failed");
-
-    res = ari_cbor_decode(ari, &indata, NULL, NULL);
-    cace_data_deinit(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 }
 
 static ari_report_t *assert_rptset_items(ari_t *val)
@@ -204,18 +182,15 @@ TEST_CASE("821182821181831A000100002301821181831A000100002A01", 0, "821182""8206
 void test_refda_reporting_target(const char *targethex, int expect_res, const char *expectloghex)
 {
     ari_t target = ARI_INIT_UNDEFINED;
-    ari_convert(&target, targethex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
 
     ari_t expect_rpt_items = ARI_INIT_UNDEFINED;
-    ari_convert(&expect_rpt_items, expectloghex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_rpt_items, expectloghex));
     ari_ac_t *expect_seq = ari_get_ac(&expect_rpt_items);
     TEST_ASSERT_NOT_NULL(expect_seq);
 
     refda_runctx_t runctx;
-    refda_runctx_init(&runctx);
-    // no nonce for test
-    refda_runctx_from(&runctx, &agent, NULL);
-    cace_data_copy(&runctx.mgr_ident, &mgr);
+    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
     int res = refda_reporting_target(&runctx, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");

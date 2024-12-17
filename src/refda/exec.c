@@ -282,12 +282,12 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
     refda_runctx_ptr_set(seq->runctx, runctxp);
 
     // FIXME: lock more fine-grained level
-    REFDA_AGENT_LOCK(runctx->agent)
+    REFDA_AGENT_LOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     int retval = refda_exec_exp_item(runctx, seq, target);
 
     // FIXME: lock more fine-grained level
-    REFDA_AGENT_UNLOCK(runctx->agent)
+    REFDA_AGENT_UNLOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     return retval;
 }
