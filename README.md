@@ -46,6 +46,7 @@ civetweb
 libcivetweb-dev
 libssl-dev
 libcjson-dev
+gcovr
 ```
 
 To use the systemd wrapper utility around the executables, also install the PIP package
@@ -55,6 +56,7 @@ systemd-python
 
 Once dependencies are installed, the following scripts can be run to build and test the project:
 ```
+./deps.sh
 ./prep.sh
 ./build.sh check
 ```
