@@ -54,18 +54,19 @@ jobs:
     runs-on: ubuntu-22.04
     container: redhat/ubi9
     steps:
+      - name: Set up OS
+        run: >
+          sudo dnf install -y
+          git
+          cmake ninja-build
+          ruby build-essential autoconf libtool
+          flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev
+          valgrind gcovr xmlstarlet
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
-      - name: Set up OS
-        run: >
-          sudo dnf install -y
-          cmake ninja-build
-          ruby build-essential autoconf libtool
-          flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev
-          valgrind gcovr xmlstarlet
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
