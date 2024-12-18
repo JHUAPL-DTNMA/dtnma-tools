@@ -273,7 +273,6 @@ static inline void ari_set_objref_path_textid(ari_t *ari, const char *ns_id, ari
     ari_objpath_set_textid(&(ari_set_objref(ari)->objpath), ns_id, type_id, obj_id);
 }
 
-
 /** Set just the parameters of an object reference ARI.
  *
  * @param[in,out] ari The ARI value to modify, which must already be
