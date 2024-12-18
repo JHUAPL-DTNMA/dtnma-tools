@@ -10,6 +10,7 @@ on:
 
 jobs:
   unit-test-ubuntu:
+    name: Unit Test (Ubuntu 22.04)
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -40,7 +41,7 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-coverage
+          name: ${{github.job}}-coverage
           path: build/default/coverage*
       - name: Report coverage
         run: |
@@ -52,6 +53,7 @@ jobs:
           echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
 
   unit-test-rhel:
+    name: Unit Test (RHEL 9)
     runs-on: ubuntu-22.04
     container: quay.io/centos/centos:stream9
     steps:
@@ -86,7 +88,7 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-coverage
+          name: ${{github.job}}-coverage
           path: build/default/coverage*
       - name: Report coverage
         run: |
@@ -97,7 +99,8 @@ jobs:
           SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-refda-xml.xml)
           echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
 
-  agent-test:
+  agent-test-ubuntu:
+    name: Agent Test (Ubuntu 22.04)
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -106,12 +109,13 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          cmake ninja-build
-          ruby build-essential autoconf libtool
-          flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev
-          valgrind gcovr
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y \
+              cmake ninja-build \
+              ruby build-essential autoconf libtool \
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev \
+              valgrind gcovr xmlstarlet
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
