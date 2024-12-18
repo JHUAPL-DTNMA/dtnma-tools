@@ -58,7 +58,7 @@ jobs:
       - name: Set up OS
         run: |
           dnf config-manager --set-enabled crb
-          dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+          dnf install -y epel-release
           dnf install -y \
               git rsync \
               cmake ninja-build \
