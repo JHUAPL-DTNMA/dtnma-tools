@@ -62,8 +62,8 @@ jobs:
           dnf install -y \
               git \
               cmake ninja-build \
-              ruby gcc autoconf libtool \
-              flex bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
+              ruby gcc ccache autoconf libtool \
+              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
