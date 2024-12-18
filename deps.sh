@@ -54,7 +54,8 @@ then
   pushd ${DEPSDIR}/QCBOR
   cmake -S . -B ${BUILDDIR}/QCBOR \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
+    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+    -DBUILD_SHARED_LIBS=YES
   cmake --build ${BUILDDIR}/QCBOR
   cmake --install ${BUILDDIR}/QCBOR
   rm -rf ${BUILDDIR}/QCBOR
