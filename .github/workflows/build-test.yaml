@@ -18,12 +18,13 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          cmake ninja-build
-          ruby build-essential autoconf libtool
-          flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev
-          valgrind gcovr xmlstarlet
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y \
+              cmake ninja-build \
+              ruby build-essential autoconf libtool \
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev \
+              valgrind gcovr xmlstarlet
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -55,13 +56,14 @@ jobs:
     container: redhat/ubi9
     steps:
       - name: Set up OS
-        run: >
-          sudo dnf install -y
-          git
-          cmake ninja-build
-          ruby build-essential autoconf libtool
-          flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev
-          valgrind gcovr xmlstarlet
+        run: |
+          dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+          dnf install -y \
+              git \
+              cmake ninja-build \
+              ruby build-essential autoconf libtool \
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev \
+              valgrind gcovr xmlstarlet
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
