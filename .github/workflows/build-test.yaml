@@ -60,7 +60,7 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
           dnf install -y \
-              git \
+              git rsync \
               cmake ninja-build \
               ruby gcc ccache autoconf libtool \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
