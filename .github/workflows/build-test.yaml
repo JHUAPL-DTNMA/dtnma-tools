@@ -53,17 +53,19 @@ jobs:
 
   unit-test-rhel:
     runs-on: ubuntu-22.04
-    container: redhat/ubi9
+    container: quay.io/centos/centos:stream9
     steps:
       - name: Set up OS
         run: |
+          dnf config-manager --set-enabled crb
           dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
           dnf install -y \
               git \
               cmake ninja-build \
-              ruby build-essential autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev \
-              valgrind gcovr xmlstarlet
+              ruby gcc autoconf libtool \
+              flex bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
+              valgrind xmlstarlet python3-pip
+          pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
