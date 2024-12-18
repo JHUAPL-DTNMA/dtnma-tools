@@ -54,7 +54,6 @@ then
   pushd ${DEPSDIR}/QCBOR
   cmake -S . -B ${BUILDDIR}/QCBOR \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_C_FLAGS="-fPIC " \
     -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
   cmake --build ${BUILDDIR}/QCBOR
   cmake --install ${BUILDDIR}/QCBOR
