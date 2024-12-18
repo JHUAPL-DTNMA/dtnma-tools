@@ -9,7 +9,7 @@ on:
   pull_request: {} # any target
 
 jobs:
-  unit-test:
+  unit-test-ubuntu:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -43,6 +43,50 @@ jobs:
           path: build/default/coverage*
       - name: Report coverage
         run: |
+          echo "## Ubuntu 22.04 Unit Test" >> $GITHUB_STEP_SUMMARY
+          echo >> $GITHUB_STEP_SUMMARY
+          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-cace-xml.xml)
+          echo "CACE coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
+          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-refda-xml.xml)
+          echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
+
+  unit-test-rhel:
+    runs-on: ubuntu-22.04
+    container: redhat/ubi9
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Set up OS
+        run: >
+          sudo dnf install -y
+          cmake ninja-build
+          ruby build-essential autoconf libtool
+          flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev
+          valgrind gcovr xmlstarlet
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+      - name: Prep
+        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF
+      - name: Build
+        run: ./build.sh
+      - name: Test
+        run: ./build.sh check
+      - name: Collect coverage
+        run: ./build.sh coverage
+      - name: Archive coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: build/default/coverage*
+      - name: Report coverage
+        run: |
+          echo "## RHEL UBI-9 Unit Test" >> $GITHUB_STEP_SUMMARY
+          echo >> $GITHUB_STEP_SUMMARY
           SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-cace-xml.xml)
           echo "CACE coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
           SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-refda-xml.xml)
