@@ -264,6 +264,72 @@ int ari_objpath_derive_type(ari_objpath_t *path)
     return path->has_ari_type ? 0 : 2;
 }
 
+void ari_objpath_set_textid(ari_objpath_t *path, const char *ns_id, ari_type_t type_id, const char *obj_id)
+{
+    ari_objpath_set_textid_opt(path, ns_id, &type_id, obj_id);
+}
+
+void ari_objpath_set_textid_opt(ari_objpath_t *path, const char *ns_id, const ari_type_t *type_id, const char *obj_id)
+{
+    CHKVOID(path);
+    ari_objpath_deinit(path);
+
+    if (ns_id)
+    {
+        path->ns_id.form = ARI_IDSEG_TEXT;
+        string_t *value  = &(path->ns_id.as_text);
+        string_init_set_str(*value, ns_id);
+    }
+    if (type_id)
+    {
+        // FIXME better way to handle this?
+        const char *type_name = ari_type_to_name(*type_id);
+        path->type_id.form    = ARI_IDSEG_TEXT;
+        string_t *value       = &(path->type_id.as_text);
+        string_init_set_str(*value, type_name);
+
+        path->has_ari_type = true;
+        path->ari_type     = *type_id;
+    }
+    if (obj_id)
+    {
+        path->obj_id.form = ARI_IDSEG_TEXT;
+        string_t *value   = &(path->obj_id.as_text);
+        string_init_set_str(*value, obj_id);
+    }
+}
+
+void ari_objpath_set_intid(ari_objpath_t *path, int64_t ns_id, ari_type_t type_id, int64_t obj_id)
+{
+    ari_objpath_set_intid_opt(path, &ns_id, &type_id, &obj_id);
+}
+
+void ari_objpath_set_intid_opt(ari_objpath_t *path, const int64_t *ns_id, const ari_type_t *type_id,
+                               const int64_t *obj_id)
+{
+    CHKVOID(path);
+    ari_objpath_deinit(path);
+
+    if (ns_id)
+    {
+        path->ns_id.form   = ARI_IDSEG_INT;
+        path->ns_id.as_int = *ns_id;
+    }
+    if (type_id)
+    {
+        path->type_id.form   = ARI_IDSEG_INT;
+        path->type_id.as_int = *type_id;
+
+        path->has_ari_type = true;
+        path->ari_type     = *type_id;
+    }
+    if (obj_id)
+    {
+        path->obj_id.form   = ARI_IDSEG_INT;
+        path->obj_id.as_int = *obj_id;
+    }
+}
+
 int ari_params_deinit(ari_params_t *obj)
 {
     CHKERR1(obj);
@@ -472,6 +538,13 @@ ari_ref_t *ari_init_objref(ari_t *ari)
     ari_state_reset(ari);
     ari->is_ref = true;
     return &(ari->as_ref);
+}
+
+ari_ref_t *ari_set_objref(ari_t *ari)
+{
+    CHKNULL(ari);
+    ari_deinit_parts(ari);
+    return ari_init_objref(ari);
 }
 
 int ari_init_copy(ari_t *ari, const ari_t *src)

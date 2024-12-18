@@ -202,7 +202,7 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
             case ARI_TYPE_EDD:
             {
                 refda_valprod_ctx_t prodctx;
-                refda_valprod_ctx_init(&prodctx, runctx, &deref);
+                refda_valprod_ctx_init(&prodctx, runctx, target, &deref);
                 retval = refda_valprod_run(&prodctx);
                 if (!retval)
                 {

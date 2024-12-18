@@ -312,7 +312,7 @@ TEST_CASE(18, ARI_TYPE_IDENT, 34, "ari://18/IDENT/34")
 void test_ari_text_encode_objref_int(int64_t ns_id, ari_type_t type_id, int64_t obj_id, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_objref_path_intid(&ari, ns_id, type_id, obj_id);
+    ari_objpath_set_intid(&(ari_set_objref(&ari)->objpath), ns_id, type_id, obj_id);
 
     ari_text_enc_opts_t opts = ARI_TEXT_ENC_OPTS_DEFAULT;
     check_encode(&ari, expect, opts);

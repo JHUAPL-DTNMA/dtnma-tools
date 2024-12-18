@@ -91,6 +91,12 @@ int ari_get_vast(const ari_t *ari, ari_vast *out);
 /// @overload
 int ari_get_uvast(const ari_t *ari, ari_uvast *out);
 
+/// @overload
+int ari_get_tp(const ari_t *ari, struct timespec *out);
+
+/// @overload
+int ari_get_td(const ari_t *ari, struct timespec *out);
+
 /** Determine if this is a typed literal of a specific type.
  *
  * @param[in] ari The value to check.
@@ -105,12 +111,6 @@ bool ari_is_lit_typed(const ari_t *ari, ari_type_t typ);
  * @return Pointer to the contained type value, if present, otherwise NULL.
  */
 const int64_t *ari_get_aritype(const ari_t *ari);
-
-/// @overload
-int ari_get_tp(const ari_t *ari, struct timespec *out);
-
-/// @overload
-int ari_get_td(const ari_t *ari, struct timespec *out);
 
 /** Set an ARI as an untyped literal value.
  *
@@ -261,45 +261,18 @@ const struct ari_rptset_s *ari_cget_rptset(const ari_t *ari);
  */
 struct ari_rptset_s *ari_set_rptset(ari_t *ari);
 
-/** Set the ARI as an object reference with a specific text-named path.
- *
- * @param[in,out] ari The ARI value to modify.
- * @param[in] ns_id The namespace path segment.
- * @param type_id The object type path segment.
- * @param[in] obj_id The object ID path segment.
+/** Convenience setter.
  */
-void ari_set_objref_path_textid(ari_t *ari, const char *ns_id, ari_type_t type_id, const char *obj_id);
+static inline void ari_set_objref_path_intid(ari_t *ari, int64_t ns_id, ari_type_t type_id, int64_t obj_id)
+{
+    ari_objpath_set_intid(&(ari_set_objref(ari)->objpath), ns_id, type_id, obj_id);
+}
+/// @overload
+static inline void ari_set_objref_path_textid(ari_t *ari, const char *ns_id, ari_type_t type_id, const char *obj_id)
+{
+    ari_objpath_set_textid(&(ari_set_objref(ari)->objpath), ns_id, type_id, obj_id);
+}
 
-/** Set the ARI as an object reference with a specific text-named path.
- *
- * @param[in,out] ari The ARI value to modify.
- * @param[in] ns_id The namespace path segment, or NULL for none.
- * @param type_id The object type path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
- * function call.
- * @param[in] obj_id The object ID path segment, or NULL for none.
- */
-void ari_set_objref_path_textid_opt(ari_t *ari, const char *ns_id, const ari_type_t *type_id, const char *obj_id);
-
-/** Set the ARI as an object reference with a specific integer-enumerated path.
- *
- * @param[in,out] ari The ARI value to modify.
- * @param ns_id The namespace path segment.
- * @param type_id The object type path segment.
- * @param obj_id The object ID path segment.
- */
-void ari_set_objref_path_intid(ari_t *ari, int64_t ns_id, ari_type_t type_id, int64_t obj_id);
-
-/** Set the ARI as an object reference with a specific integer-enumerated path.
- *
- * @param[in,out] ari The ARI value to modify.
- * @param ns_id The namespace path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
- * function call.
- * @param type_id The object type path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
- * function call.
- * @param obj_id The object ID path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
- * function call.
- */
-void ari_set_objref_path_intid_opt(ari_t *ari, const int64_t *ns_id, const ari_type_t *type_id, const int64_t *obj_id);
 
 /** Set just the parameters of an object reference ARI.
  *

@@ -185,9 +185,8 @@ TEST_CASE("!test", true, ARI_TYPE_CONST, "that", "83652174657374216474686174")  
 void test_ari_cbor_encode_objref_path_text(const char *ns_id, bool has_type, ari_type_t type_id, const char *obj_id,
                                            const char *expect)
 {
-    ari_t ari    = ARI_INIT_UNDEFINED;
-    bool  has_ns = ns_id != NULL, has_obj = obj_id != NULL;
-    ari_set_objref_path_textid_opt(&ari, has_ns ? ns_id : NULL, has_type ? &type_id : NULL, has_obj ? obj_id : NULL);
+    ari_t ari = ARI_INIT_UNDEFINED;
+    ari_objpath_set_textid_opt(&(ari_set_objref(&ari)->objpath), ns_id, has_type ? &type_id : NULL, obj_id);
 
     check_encoding(&ari, expect);
 
@@ -203,7 +202,8 @@ void test_ari_cbor_encode_objref_path_int(bool has_ns, int64_t ns_id, bool has_t
                                           int64_t obj_id, const char *expect)
 {
     ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_objref_path_intid_opt(&ari, has_ns ? &ns_id : NULL, has_type ? &type_id : NULL, has_obj ? &obj_id : NULL);
+    ari_objpath_set_intid_opt(&(ari_set_objref(&ari)->objpath), has_ns ? &ns_id : NULL, has_type ? &type_id : NULL,
+                              has_obj ? &obj_id : NULL);
 
     check_encoding(&ari, expect);
 

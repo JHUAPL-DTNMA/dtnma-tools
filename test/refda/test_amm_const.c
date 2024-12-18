@@ -75,7 +75,7 @@ static void check_produce(ari_t *value, const char *refhex, const char *outhex, 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_valprod_ctx_t ctx;
-    refda_valprod_ctx_init(&ctx, NULL, &deref);
+    refda_valprod_ctx_init(&ctx, NULL, NULL, &deref);
 
     res = refda_valprod_run(&ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_const_desc_produce() mismatch");

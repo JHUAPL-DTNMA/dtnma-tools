@@ -73,10 +73,18 @@ TEST_CASE("83012300", 0, ARI_PRIM_TSTR, 0)
 TEST_CASE("83012301", 0, ARI_PRIM_TSTR, 0)
 // ari://1/EDD/2 -> ari:/TBL/c=4;
 TEST_CASE("83012302", 0, ARI_PRIM_OTHER, ARI_TYPE_TBL)
-// ari://1/EDD/10 -> ari:/TBL/c=1;
+// ari://1/EDD/typedef-list -> ari:/TBL/c=1;
 TEST_CASE("8301230A", 0, ARI_PRIM_OTHER, ARI_TYPE_TBL)
-// ari://1/EDD/10(true) -> ari:/TBL/c=1;(...)
+// ari://1/EDD/typedef-list(true) -> ari:/TBL/c=1;(...)
 TEST_CASE("8401230A81F5", 0, ARI_PRIM_OTHER, ARI_TYPE_TBL)
+// ari://1/EDD/var-list -> ari:/TBL/c=2;
+TEST_CASE("8301230B", 0, ARI_PRIM_OTHER, ARI_TYPE_TBL)
+// ari://1/EDD/var-list(true) -> ari:/TBL/c=2;
+TEST_CASE("8401230B81F5", 0, ARI_PRIM_OTHER, ARI_TYPE_TBL)
+// ari://1/EDD/const-list -> ari:/TBL/c=2;
+TEST_CASE("8301230E", 0, ARI_PRIM_OTHER, ARI_TYPE_TBL)
+// ari://1/EDD/const-list(true) -> ari:/TBL/c=2;
+TEST_CASE("8401230E81F5", 0, ARI_PRIM_OTHER, ARI_TYPE_TBL)
 // clang-format on
 void test_refda_adm_ietf_dtnma_agent_edd_produce(const char *targethex, int expect_res,
                                                  enum ari_prim_type_e expect_prim, ari_type_t expect_type)
@@ -92,7 +100,7 @@ void test_refda_adm_ietf_dtnma_agent_edd_produce(const char *targethex, int expe
     TEST_ASSERT_EQUAL_INT(0, cace_amm_lookup_deref(&deref, &(agent.objs), &target));
 
     refda_valprod_ctx_t prodctx;
-    refda_valprod_ctx_init(&prodctx, &runctx, &deref);
+    refda_valprod_ctx_init(&prodctx, &runctx, &target, &deref);
 
     int res = refda_valprod_run(&prodctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_valprod_run() disagrees");
