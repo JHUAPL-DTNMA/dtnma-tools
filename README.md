@@ -64,6 +64,7 @@ git submodule update --recursive
 
 Once dependencies are installed, the following scripts can be run to build and test the project:
 ```
+./deps.sh
 ./prep.sh
 ./build.sh check
 ```

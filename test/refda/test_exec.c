@@ -290,7 +290,7 @@ void test_refda_exec_wait_for(const char *targethex, int delay_ms)
     ari_t target = ARI_INIT_UNDEFINED;
     ari_convert(&target, targethex);
 
-    int wait_ms[] = { delay_ms };
+    int wait_ms[] = { delay_ms, 0 };
     check_execute(&target, 0, 2, wait_ms);
 
     ari_deinit(&target);
