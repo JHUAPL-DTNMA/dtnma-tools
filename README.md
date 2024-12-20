@@ -54,6 +54,14 @@ To use the systemd wrapper utility around the executables, also install the PIP 
 systemd-python
 ```
 
+In addition to the above, this project also has dependencies provided as git submodules. These may be retrieved and built using the following commands:
+
+```
+git submodule init
+git submodule update --recursive
+./deps.sh
+```
+
 Once dependencies are installed, the following scripts can be run to build and test the project:
 ```
 ./deps.sh
