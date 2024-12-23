@@ -35,9 +35,7 @@ then
     cmake --install ${BUILDDIR} "$@"
 elif [ "$1" = "check" ]
 then
-    ctest --test-dir ${BUILDDIR} \
-        --output-junit testresults.xml \
-        --verbose
+    cmake --build ${BUILDDIR} --target test
 elif [ "$1" = "coverage" ]
 then
     cmake --build ${BUILDDIR} -j1 --target \
