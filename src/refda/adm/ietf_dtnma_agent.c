@@ -503,7 +503,7 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
  * Parameters list:
  *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/CONST, use of ari://ietf-amm/TYPEDEF/TYPE-REF)
+ * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/CONST, use of ari://ietf-amm/TYPEDEF/semtype)
  */
 static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -584,7 +584,7 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
  * Parameters list:
  *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/VAR, use of ari://ietf-amm/TYPEDEF/TYPE-REF)
+ * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/VAR, use of ari://ietf-amm/TYPEDEF/semtype)
  */
 static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -998,7 +998,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
  *
  * Parameters list:
  *  * Index 0, name "obj", type: use of ari:/ARITYPE/CONST
- *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/TYPE-REF
+ *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/semtype
  *  * Index 2, name "init", type: use of ari://ietf-amm/TYPEDEF/EXPR
  *
  * Result: none
@@ -1046,7 +1046,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_discard_const(refda_ctrl_exec_ctx_t 
  *
  * Parameters list:
  *  * Index 0, name "obj", type: use of ari:/ARITYPE/VAR
- *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/TYPE-REF
+ *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/semtype
  *  * Index 2, name "init", type: union of 2 types (use of ari:/ARITYPE/NULL, use of ari://ietf-amm/TYPEDEF/EXPR)
  *
  * Result: none
@@ -1964,8 +1964,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "type");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
-                        // ari://ietf-amm/TYPEDEF/TYPE-REF
-                        ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                        // ari://ietf-amm/TYPEDEF/semtype
+                        ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 25);
                         amm_type_set_use_ref_move(&(col->typeobj), &name);
                     }
                 }
@@ -2008,8 +2008,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "type");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
-                        // ari://ietf-amm/TYPEDEF/TYPE-REF
-                        ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                        // ari://ietf-amm/TYPEDEF/semtype
+                        ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 25);
                         amm_type_set_use_ref_move(&(col->typeobj), &name);
                     }
                 }
@@ -2474,8 +2474,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "type");
                 {
                     ari_t name = ARI_INIT_UNDEFINED;
-                    // ari://ietf-amm/TYPEDEF/TYPE-REF
-                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                    // ari://ietf-amm/TYPEDEF/semtype
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 25);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
@@ -2533,8 +2533,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "type");
                 {
                     ari_t name = ARI_INIT_UNDEFINED;
-                    // ari://ietf-amm/TYPEDEF/TYPE-REF
-                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                    // ari://ietf-amm/TYPEDEF/semtype
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 25);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }

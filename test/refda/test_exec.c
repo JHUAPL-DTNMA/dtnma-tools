@@ -162,18 +162,24 @@ static void check_execute(const ari_t *target, int expect_exp, int wait_limit, i
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_exp, refda_exec_exp_target(&eseq, ctxptr, target),
-                                  "refda_exec_exp_target() failed");
-    TEST_ASSERT_EQUAL((expect_exp != 0), refda_exec_item_list_empty_p(eseq.items));
+    int res = refda_exec_exp_target(&eseq, ctxptr, target);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_exp, res, "refda_exec_exp_target() failed");
+    if (expect_exp)
+    {
+        TEST_ASSERT_EQUAL(0, refda_exec_item_list_empty_p(eseq.items));
+        return;
+    }
 
     // limit test scale
-    for (int ix = 0; ix < wait_limit; ++ix)
+    bool success = false;
+    for (int ix = 0; !success && (ix < wait_limit); ++ix)
     {
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, refda_exec_run_seq(&eseq), "refda_exec_run_seq() failed");
 
         if (refda_exec_item_list_empty_p(eseq.items))
         {
             CACE_LOG_DEBUG("run break after %d iterations", ix + 1);
+            success = true;
             break;
         }
         {
@@ -182,16 +188,17 @@ static void check_execute(const ari_t *target, int expect_exp, int wait_limit, i
         }
 
         TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
+        refda_timeline_it_t tl_it;
+        refda_timeline_it(tl_it, agent.exec_timeline);
+        if (!refda_timeline_end_p(tl_it))
         {
-            refda_timeline_it_t it;
-            refda_timeline_it(it, agent.exec_timeline);
-            TEST_ASSERT_FALSE(refda_timeline_end_p(it));
-            const refda_timeline_event_t *evt = refda_timeline_cref(it);
+            const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+            TEST_ASSERT_NOT_NULL(next);
 
             struct timespec nowtime;
             int             res = clock_gettime(CLOCK_REALTIME, &nowtime);
             TEST_ASSERT_EQUAL_INT(0, res);
-            struct timespec remain = timespec_sub(evt->ts, nowtime);
+            struct timespec remain = timespec_sub(next->ts, nowtime);
 
             {
                 string_t buf;
@@ -207,11 +214,28 @@ static void check_execute(const ari_t *target, int expect_exp, int wait_limit, i
 
             // manual sleep
             nanosleep(&remain, NULL);
+
+            TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
+            refda_timeline_it(tl_it, agent.exec_timeline);
+            if (!refda_timeline_end_p(tl_it))
+            {
+                const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+
+                bool finished = (next->callback)(next->item);
+                if (finished)
+                {
+                    CACE_LOG_DEBUG("callback finished after %d iterations", ix + 1);
+                    success = true;
+                }
+
+                refda_timeline_remove(agent.exec_timeline, tl_it);
+            }
         }
     }
 
     refda_exec_seq_deinit(&eseq);
     refda_runctx_ptr_clear(ctxptr);
+    TEST_ASSERT_TRUE(success);
 }
 
 // clang-format off

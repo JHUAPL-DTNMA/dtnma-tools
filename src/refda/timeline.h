@@ -55,13 +55,6 @@ int refda_timeline_event_cmp(const refda_timeline_event_t *lt, const refda_timel
 RBTREE_DEF(refda_timeline, refda_timeline_event_t)
 /// @endcond
 
-/** Get the earliest absolute time in the timeline.
- *
- * @param[in] The timeline to check.
- * @return Pointer to the earliest item time or NULL if empty.
- */
-// const refda_timeline_event_t *refda_timeline_front(refda_timeline_t line);
-
 #ifdef __cplusplus
 } // extern C
 #endif

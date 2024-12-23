@@ -434,9 +434,16 @@ void *refda_exec_worker(void *arg)
             struct timespec nowtime;
             clock_gettime(CLOCK_REALTIME, &nowtime);
 
-            // execute appropriate callbacks now
-            while (next && timespec_le(next->ts, nowtime))
+            // execute appropriate callbacks (up to and including nowtime)
+            refda_timeline_it(tl_it, agent->exec_timeline);
+            while (!refda_timeline_end_p(tl_it))
             {
+                const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+                if (timespec_gt(next->ts, nowtime))
+                {
+                    break;
+                }
+
                 CACE_LOG_DEBUG("running deferred callback");
                 bool finished = (next->callback)(next->item);
                 if (finished)
@@ -445,8 +452,6 @@ void *refda_exec_worker(void *arg)
                 }
 
                 refda_timeline_remove(agent->exec_timeline, tl_it);
-                // try to advance
-                next = refda_timeline_end_p(tl_it) ? NULL : refda_timeline_cref(tl_it);
             }
         }
         else
