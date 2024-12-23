@@ -36,3 +36,24 @@ void refda_exec_item_deinit(refda_exec_item_t *obj)
     ari_deinit(&(obj->ref));
     obj->seq = NULL;
 }
+
+void refda_exec_item_set_result_copy(refda_exec_item_t *obj, const ari_t *value)
+{
+    CHKVOID(obj);
+    ari_set_copy(&(obj->result), value);
+    atomic_store(&(obj->waiting), false);
+}
+
+void refda_exec_item_set_result_move(refda_exec_item_t *obj, ari_t *value)
+{
+    CHKVOID(obj);
+    ari_set_copy(&(obj->result), value);
+    atomic_store(&(obj->waiting), false);
+}
+
+void refda_exec_item_set_result_null(refda_exec_item_t *obj)
+{
+    CHKVOID(obj);
+    ari_set_null(&(obj->result));
+    atomic_store(&(obj->waiting), false);
+}

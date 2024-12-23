@@ -58,15 +58,18 @@ void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_tim
 
 void refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value)
 {
+    CHKVOID(ctx);
     ari_set_copy(&(ctx->item->result), value);
 }
 
 void refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value)
 {
+    CHKVOID(ctx);
     ari_set_move(&(ctx->item->result), value);
 }
 
 void refda_ctrl_exec_ctx_set_result_null(refda_ctrl_exec_ctx_t *ctx)
 {
+    CHKVOID(ctx);
     ari_set_null(&(ctx->item->result));
 }

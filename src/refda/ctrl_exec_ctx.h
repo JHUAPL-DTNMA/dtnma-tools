@@ -65,9 +65,11 @@ const ari_t *refda_ctrl_exec_ctx_get_aparam_index(refda_ctrl_exec_ctx_t *ctx, si
 const ari_t *refda_ctrl_exec_ctx_get_aparam_name(refda_ctrl_exec_ctx_t *ctx, const char *name);
 
 /** Mark this control run as waiting for some finish condition.
+ * The finished state is communicated in the callback by its context.
  *
  * @param[in,out] ctx The context to update.
  * @param[in] event An optional callback event to check the finished condition later.
+ * @sa refda_exec_item_set_result_copy(), refda_exec_item_set_result_move(), refda_exec_item_set_result_null()
  */
 void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_timeline_event_t *event);
 

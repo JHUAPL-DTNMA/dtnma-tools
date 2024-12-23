@@ -42,7 +42,7 @@
 
 static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *item)
 {
-    atomic_store(&(item->waiting), false);
+    refda_exec_item_set_result_null(item);
     return true;
 }
 
