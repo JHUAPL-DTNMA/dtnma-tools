@@ -99,6 +99,7 @@ if(BUILD_TESTING)
     set(MEMCHECK_OPTIONS
       "--tool=memcheck"
       "--trace-children=yes"
+      "--track-origins=yes"
       "--leak-check=full" "--show-leak-kinds=all"
       "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/memcheck.supp"
       "--error-exitcode=2"
