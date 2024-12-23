@@ -143,7 +143,7 @@ if(BUILD_TESTING)
   include(CTest)
   set(CMAKE_CTEST_ARGUMENTS
     --output-junit testresults.xml
-    --verbose
+    --output-on-failure
   )
 endif(BUILD_TESTING)
 
