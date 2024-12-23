@@ -164,14 +164,15 @@ static void check_execute(const ari_t *target, int expect_exp, int wait_limit, i
 
     int res = refda_exec_exp_target(&eseq, ctxptr, target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_exp, res, "refda_exec_exp_target() failed");
+
+    bool success = false;
     if (expect_exp)
     {
-        TEST_ASSERT_EQUAL(0, refda_exec_item_list_empty_p(eseq.items));
-        return;
+        // don't actually run, but clean up after
+        success = true;
     }
 
     // limit test scale
-    bool success = false;
     for (int ix = 0; !success && (ix < wait_limit); ++ix)
     {
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, refda_exec_run_seq(&eseq), "refda_exec_run_seq() failed");
