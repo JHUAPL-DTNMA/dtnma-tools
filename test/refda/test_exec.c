@@ -154,6 +154,14 @@ void tearDown(void)
 
 static void check_execute(const ari_t *target, int expect_exp, int wait_limit, int wait_ms[])
 {
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, target, ARI_TEXT_ENC_OPTS_DEFAULT);
+        TEST_PRINTF("execution target %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
     refda_runctx_ptr_t ctxptr;
     refda_runctx_ptr_init_new(ctxptr);
     // no nonce for test
@@ -295,11 +303,54 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
     ari_deinit(&target);
 }
 
-TEST_CASE("8401220281820D01", 1000) // direct ref ari://1/CTRL/2(/TD/1)
-void test_refda_exec_wait_for(const char *targethex, int delay_ms)
+TEST_CASE(1000)
+void test_refda_exec_wait_for(int delay_ms)
 {
+    // synthesize the target
     ari_t target = ARI_INIT_UNDEFINED;
-    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
+    {
+        ari_ref_t *ref = ari_set_objref(&target);
+        ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CTRL,
+                              REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_FOR);
+
+        ari_list_t params;
+        ari_list_init(params);
+        {
+            ari_t *param = ari_list_push_back_new(params);
+            ari_set_td(param, timespec_from_ms(delay_ms));
+        }
+        ari_params_set_ac(&(ref->params), params);
+    }
+
+    int wait_ms[] = { delay_ms, 0 };
+    check_execute(&target, 0, 2, wait_ms);
+
+    ari_deinit(&target);
+}
+
+TEST_CASE(1000)
+void test_refda_exec_wait_until(int delay_ms)
+{
+    struct timespec nowtime;
+    int             res = clock_gettime(CLOCK_REALTIME, &nowtime);
+    TEST_ASSERT_EQUAL_INT(0, res);
+    struct timespec abstime = timespec_add(timespec_from_ms(delay_ms), nowtime);
+
+    // synthesize the target
+    ari_t target = ARI_INIT_UNDEFINED;
+    {
+        ari_ref_t *ref = ari_set_objref(&target);
+        ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CTRL,
+                              REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_UNTIL);
+
+        ari_list_t params;
+        ari_list_init(params);
+        {
+            ari_t *param = ari_list_push_back_new(params);
+            ari_set_tp_posix(param, abstime);
+        }
+        ari_params_set_ac(&(ref->params), params);
+    }
 
     int wait_ms[] = { delay_ms, 0 };
     check_execute(&target, 0, 2, wait_ms);

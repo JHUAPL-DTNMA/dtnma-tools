@@ -774,25 +774,30 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
      * +-------------------------------------------------------------------------+
      */
-    const ari_t *duration = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const ari_t *p_duration = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
-    struct timespec nowtime;
+    struct timespec nowtime, duration;
+
+    if (ari_get_td(p_duration, &duration))
+    {
+        CACE_LOG_ERR("No time duration given");
+        return;
+    }
 
     int res = clock_gettime(CLOCK_REALTIME, &nowtime);
     if (res)
     {
         // handled as failure
+        CACE_LOG_ERR("Failed clock_gettime()");
         return;
     }
 
     refda_timeline_event_t event = {
-        .ts       = timespec_add(nowtime, duration->as_lit.value.as_timespec),
+        .ts       = timespec_add(nowtime, duration),
         .item     = ctx->item,
         .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
-    refda_timeline_push(ctx->runctx->agent->exec_timeline, event);
-
-    refda_ctrl_exec_ctx_set_waiting(ctx);
+    refda_ctrl_exec_ctx_set_waiting(ctx, &event);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
@@ -819,6 +824,22 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_until BODY
      * +-------------------------------------------------------------------------+
      */
+    const ari_t *p_abstime = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    struct timespec abstime;
+
+    if (ari_get_tp_posix(p_abstime, &abstime))
+    {
+        CACE_LOG_ERR("No time point given");
+        return;
+    }
+
+    refda_timeline_event_t event = {
+        .ts       = abstime,
+        .item     = ctx->item,
+        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
+    };
+    refda_ctrl_exec_ctx_set_waiting(ctx, &event);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_until BODY

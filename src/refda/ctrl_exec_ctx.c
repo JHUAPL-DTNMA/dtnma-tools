@@ -45,10 +45,15 @@ const ari_t *refda_ctrl_exec_ctx_get_aparam_name(refda_ctrl_exec_ctx_t *ctx, con
     return *named_ari_ptr_dict_cget(ctx->item->deref.aparams.named, name);
 }
 
-void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx)
+void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_timeline_event_t *event)
 {
     CHKVOID(ctx);
     atomic_store(&(ctx->item->waiting), true);
+
+    if (event)
+    {
+        refda_timeline_push(ctx->runctx->agent->exec_timeline, *event);
+    }
 }
 
 void refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value)
@@ -59,4 +64,9 @@ void refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t
 void refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value)
 {
     ari_set_move(&(ctx->item->result), value);
+}
+
+void refda_ctrl_exec_ctx_set_result_null(refda_ctrl_exec_ctx_t *ctx)
+{
+    ari_set_null(&(ctx->item->result));
 }

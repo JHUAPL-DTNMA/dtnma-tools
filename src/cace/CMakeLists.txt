@@ -29,6 +29,8 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/util/daemon_run.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/type.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ari/lit.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ari/ref.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/base.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/algo.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/containers.h"
@@ -56,6 +58,8 @@ set(CFILES
     "util/threadset.c"
     "util/daemon_run.c"
     "ari/type.c"
+    "ari/lit.c"
+    "ari/ref.c"
     "ari/base.c"
     "ari/algo.c"
     "ari/containers.c"
@@ -117,6 +121,7 @@ target_include_directories(
 target_link_libraries(cace PUBLIC ${FLEX_LIBRARIES})
 target_link_libraries(cace PUBLIC MLIB::mlib)
 target_link_libraries(cace PUBLIC qcbor)
+target_link_libraries(cace PUBLIC timespec::timespec)
 target_link_libraries(cace PUBLIC m)
 if(PCRE_FOUND)
     target_link_libraries(cace PUBLIC PkgConfig::PCRE)

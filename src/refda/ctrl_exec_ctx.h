@@ -64,13 +64,25 @@ const ari_t *refda_ctrl_exec_ctx_get_aparam_index(refda_ctrl_exec_ctx_t *ctx, si
 
 const ari_t *refda_ctrl_exec_ctx_get_aparam_name(refda_ctrl_exec_ctx_t *ctx, const char *name);
 
-void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx);
+/** Mark this control run as waiting for some finish condition.
+ *
+ * @param[in,out] ctx The context to update.
+ * @param[in] event An optional callback event to check the finished condition later.
+ */
+void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_timeline_event_t *event);
 
-void refda_ctrl_exec_ctx_set_result_none(refda_ctrl_exec_ctx_t *ctx, const ari_t *value);
-
+/** Set the result for an execution, which marks it as finished.
+ *
+ * @param[in,out] ctx The context to update.
+ * @param[in] value The value to use as the execution result.
+ */
 void refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value);
-
+/// @overload
 void refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value);
+/** @overload
+ * Convenience member to mark the result as successful but null-value.
+ */
+void refda_ctrl_exec_ctx_set_result_null(refda_ctrl_exec_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

@@ -87,7 +87,6 @@ target_include_directories(
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
 target_link_libraries(refda PUBLIC cace)
-target_link_libraries(refda PUBLIC timespec::timespec)
 
 install(TARGETS refda)
 install(
