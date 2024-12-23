@@ -54,7 +54,7 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t o
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         ari_t ref = ARI_INIT_UNDEFINED;
-        ari_set_objref_path_textid(&ref, string_get_cstr(ns->name), obj_type, obj_id.name);
+        ari_objpath_set_textid(&(ari_set_objref(&ref)->objpath), string_get_cstr(ns->name), obj_type, obj_id.name);
 
         string_t buf;
         string_init(buf);

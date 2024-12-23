@@ -85,6 +85,7 @@ static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_
 
     if (ari_is_undefined(&(prodctx->value)))
     {
+        CACE_LOG_WARNING("production finished with value undefined");
         return 2;
     }
 
@@ -95,18 +96,21 @@ static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_
     ari_set_move(&(prodctx->value), &tmp);
     if (res)
     {
+        CACE_LOG_WARNING("production finished with non-convertable value");
         return 3;
     }
 
     return 0;
 }
 
-void refda_valprod_ctx_init(refda_valprod_ctx_t *obj, refda_runctx_t *parent, const cace_amm_lookup_t *deref)
+void refda_valprod_ctx_init(refda_valprod_ctx_t *obj, refda_runctx_t *parent, const ari_t *ref,
+                            const cace_amm_lookup_t *deref)
 {
     CHKVOID(obj);
     CHKVOID(deref);
 
     obj->parent = parent;
+    obj->ref    = ref;
     obj->deref  = deref;
     ari_init(&(obj->value));
 }
@@ -115,6 +119,7 @@ void refda_valprod_ctx_deinit(refda_valprod_ctx_t *obj)
 {
     CHKVOID(obj);
     ari_deinit(&(obj->value));
+    memset(obj, 0, sizeof(refda_valprod_ctx_t));
 }
 
 int refda_valprod_run(refda_valprod_ctx_t *ctx)
@@ -122,7 +127,15 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
     CHKERR1(ctx);
     CHKERR1(ctx->deref);
     CHKERR1(ctx->deref->obj);
-    CACE_LOG_DEBUG("Producing value for reference type %s", ari_type_to_name(ctx->deref->obj_type));
+
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, ctx->ref, ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("production for object %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
 
     int retval = 0;
     switch (ctx->deref->obj_type)

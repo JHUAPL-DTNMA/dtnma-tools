@@ -202,7 +202,7 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
             case ARI_TYPE_EDD:
             {
                 refda_valprod_ctx_t prodctx;
-                refda_valprod_ctx_init(&prodctx, runctx, &deref);
+                refda_valprod_ctx_init(&prodctx, runctx, target, &deref);
                 retval = refda_valprod_run(&prodctx);
                 if (!retval)
                 {
@@ -282,12 +282,12 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
     refda_runctx_ptr_set(seq->runctx, runctxp);
 
     // FIXME: lock more fine-grained level
-    REFDA_AGENT_LOCK(runctx->agent)
+    REFDA_AGENT_LOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     int retval = refda_exec_exp_item(runctx, seq, target);
 
     // FIXME: lock more fine-grained level
-    REFDA_AGENT_UNLOCK(runctx->agent)
+    REFDA_AGENT_UNLOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     return retval;
 }

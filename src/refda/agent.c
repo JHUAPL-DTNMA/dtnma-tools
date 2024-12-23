@@ -121,7 +121,7 @@ amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, int64_t ns_id, int64_t
 
 int refda_agent_bindrefs(refda_agent_t *agent)
 {
-    REFDA_AGENT_LOCK(agent);
+    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     int failcnt = 0;
 
     agent->mac_type =
@@ -183,7 +183,7 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         }
     }
 
-    REFDA_AGENT_UNLOCK(agent);
+    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     CACE_LOG_INFO("binding finished with %d failures", failcnt);
     return failcnt;

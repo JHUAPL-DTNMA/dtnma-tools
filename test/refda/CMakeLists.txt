@@ -17,16 +17,19 @@ limitations under the License.
 ]]
 
 add_unity_test(SOURCE "test_amm_const.c")
-target_link_libraries(test_amm_const PUBLIC refda)
+target_link_libraries(test_amm_const PUBLIC refda test_util)
 
 add_unity_test(SOURCE "test_amm_ctrl.c")
-target_link_libraries(test_amm_ctrl PUBLIC refda)
+target_link_libraries(test_amm_ctrl PUBLIC refda test_util)
 
 add_unity_test(SOURCE "test_exec.c")
-target_link_libraries(test_exec PUBLIC refda)
+target_link_libraries(test_exec PUBLIC refda test_util)
 
 add_unity_test(SOURCE "test_eval.c")
-target_link_libraries(test_eval PUBLIC refda)
+target_link_libraries(test_eval PUBLIC refda test_util)
 
 add_unity_test(SOURCE "test_reporting.c")
-target_link_libraries(test_reporting PUBLIC refda)
+target_link_libraries(test_reporting PUBLIC refda test_util)
+
+add_unity_test(SOURCE "test_adm_ietf_dtnma_agent.c")
+target_link_libraries(test_adm_ietf_dtnma_agent PUBLIC refda test_util)

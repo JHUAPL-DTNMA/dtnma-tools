@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "util/ari.h"
 #include <refda/amm/const.h>
 #include <refda/valprod.h>
 #include <cace/amm/semtype.h>
@@ -59,25 +60,10 @@ void tearDown(void)
     cace_amm_obj_desc_deinit(&obj);
 }
 
-static void ari_convert(ari_t *ari, const char *inhex)
-{
-    string_t intext;
-    string_init_set_str(intext, inhex);
-    cace_data_t indata;
-    cace_data_init(&indata);
-    int res = base16_decode(&indata, intext);
-    string_clear(intext);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "base16_decode() failed");
-
-    res = ari_cbor_decode(ari, &indata, NULL, NULL);
-    cace_data_deinit(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
-}
-
 static void check_produce(ari_t *value, const char *refhex, const char *outhex, int expect_res)
 {
     ari_t inref = ARI_INIT_UNDEFINED;
-    ari_convert(&inref, refhex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&inref, refhex));
     TEST_ASSERT_TRUE_MESSAGE(inref.is_ref, "invalid reference");
 
     cace_amm_lookup_t deref;
@@ -89,13 +75,13 @@ static void check_produce(ari_t *value, const char *refhex, const char *outhex, 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_valprod_ctx_t ctx;
-    refda_valprod_ctx_init(&ctx, NULL, &deref);
+    refda_valprod_ctx_init(&ctx, NULL, NULL, &deref);
 
     res = refda_valprod_run(&ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_const_desc_produce() mismatch");
 
     ari_t outval = ARI_INIT_UNDEFINED;
-    ari_convert(&outval, outhex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));
 
     TEST_ASSERT_TRUE_MESSAGE(ari_equal(&outval, &(ctx.value)), "produced value mismatch");
 
@@ -114,7 +100,7 @@ TEST_CASE("0A", "83022104", "0A", 0)
 void test_const_produce_param_none(const char *valhex, const char *refhex, const char *outhex, int expect_res)
 {
     // initial state
-    ari_convert(&(desc.value), valhex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(desc.value), valhex));
 
     ari_t value = ARI_INIT_UNDEFINED;
     check_produce(&value, refhex, outhex, expect_res);
@@ -139,7 +125,7 @@ void test_const_produce_param_one_int(const char *valhex, const char *refhex, co
     }
 
     // initial state
-    ari_convert(&(desc.value), valhex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(desc.value), valhex));
 
     ari_t value = ARI_INIT_UNDEFINED;
     check_produce(&value, refhex, outhex, expect_res);

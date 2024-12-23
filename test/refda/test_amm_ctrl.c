@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "util/ari.h"
 #include <refda/ctrl_exec_ctx.h>
 #include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
@@ -66,21 +67,6 @@ static void mock_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
     refda_ctrl_exec_ctx_set_result_copy(ctx, val);
 }
 
-static void ari_convert(ari_t *ari, const char *inhex)
-{
-    string_t intext;
-    string_init_set_str(intext, inhex);
-    cace_data_t indata;
-    cace_data_init(&indata);
-    int res = base16_decode(&indata, intext);
-    string_clear(intext);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "base16_decode() failed");
-
-    res = ari_cbor_decode(ari, &indata, NULL, NULL);
-    cace_data_deinit(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
-}
-
 static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const cace_amm_formal_param_list_t fparams,
                           const char *refhex, const char *outhex)
 {
@@ -98,11 +84,11 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     eitem.seq = &eseq;
 
     ari_t inref = ARI_INIT_UNDEFINED;
-    ari_convert(&inref, refhex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&inref, refhex));
     TEST_ASSERT_TRUE_MESSAGE(inref.is_ref, "invalid reference");
 
     ari_t outval = ARI_INIT_UNDEFINED;
-    ari_convert(&outval, outhex);
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));
     TEST_ASSERT_EQUAL_INT(0, ari_set_copy(&mock_result_store, &outval));
 
     int res = cace_amm_actual_param_set_populate(&(eitem.deref.aparams), fparams, &(inref.as_ref.params));

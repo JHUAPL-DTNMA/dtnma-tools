@@ -51,7 +51,7 @@ static int refda_eval_expand(refda_runctx_t *runctx, refda_eval_item_t out, cons
                 case ARI_TYPE_EDD:
                 {
                     refda_valprod_ctx_t prodctx;
-                    refda_valprod_ctx_init(&prodctx, runctx, &deref);
+                    refda_valprod_ctx_init(&prodctx, runctx, in, &deref);
                     retval = refda_valprod_run(&prodctx);
                     if (!retval)
                     {

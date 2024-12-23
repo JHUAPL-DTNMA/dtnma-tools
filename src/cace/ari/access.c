@@ -240,6 +240,24 @@ int ari_get_uvast(const ari_t *ari, ari_uvast *out)
     return 0;
 }
 
+void ari_set_bool(ari_t *ari, ari_bool src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_BOOL, .prim_type = ARI_PRIM_BOOL, .value = { .as_bool = src }
+    };
+}
+
+void ari_set_byte(ari_t *ari, ari_byte src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_BYTE, .prim_type = ARI_PRIM_INT64, .value = { .as_int64 = src }
+    };
+}
+
 void ari_set_int(ari_t *ari, ari_int src)
 {
     CHKVOID(ari);
@@ -273,6 +291,15 @@ void ari_set_uvast(ari_t *ari, ari_uvast src)
     ari_deinit(ari);
     *ari_init_lit(ari) = (ari_lit_t) {
         .has_ari_type = true, .ari_type = ARI_TYPE_UVAST, .prim_type = ARI_PRIM_UINT64, .value = { .as_uint64 = src }
+    };
+}
+
+void ari_set_real32(ari_t *ari, ari_real32 src)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_REAL32, .prim_type = ARI_PRIM_FLOAT64, .value = { .as_float64 = src }
     };
 }
 
@@ -606,73 +633,6 @@ struct ari_rptset_s *ari_set_rptset(ari_t *ari)
                                        } };
 
     return ctr;
-}
-
-void ari_set_objref_path_textid(ari_t *ari, const char *ns_id, ari_type_t type_id, const char *obj_id)
-{
-    ari_set_objref_path_textid_opt(ari, ns_id, &type_id, obj_id);
-}
-
-void ari_set_objref_path_textid_opt(ari_t *ari, const char *ns_id, const ari_type_t *type_id, const char *obj_id)
-{
-    CHKVOID(ari);
-    ari_deinit(ari);
-
-    ari_ref_t *ref = ari_init_objref(ari);
-    if (ns_id)
-    {
-        ref->objpath.ns_id.form = ARI_IDSEG_TEXT;
-        string_t *value         = &(ref->objpath.ns_id.as_text);
-        string_init_set_str(*value, ns_id);
-    }
-    if (type_id)
-    {
-        // FIXME better way to handle this?
-        const char *type_name     = ari_type_to_name(*type_id);
-        ref->objpath.type_id.form = ARI_IDSEG_TEXT;
-        string_t *value           = &(ref->objpath.type_id.as_text);
-        string_init_set_str(*value, type_name);
-
-        ref->objpath.has_ari_type = true;
-        ref->objpath.ari_type     = *type_id;
-    }
-    if (obj_id)
-    {
-        ref->objpath.obj_id.form = ARI_IDSEG_TEXT;
-        string_t *value          = &(ref->objpath.obj_id.as_text);
-        string_init_set_str(*value, obj_id);
-    }
-}
-
-void ari_set_objref_path_intid(ari_t *ari, int64_t ns_id, ari_type_t type_id, int64_t obj_id)
-{
-    ari_set_objref_path_intid_opt(ari, &ns_id, &type_id, &obj_id);
-}
-
-void ari_set_objref_path_intid_opt(ari_t *ari, const int64_t *ns_id, const ari_type_t *type_id, const int64_t *obj_id)
-{
-    CHKVOID(ari);
-    ari_deinit(ari);
-
-    ari_ref_t *ref = ari_init_objref(ari);
-    if (ns_id)
-    {
-        ref->objpath.ns_id.form   = ARI_IDSEG_INT;
-        ref->objpath.ns_id.as_int = *ns_id;
-    }
-    if (type_id)
-    {
-        ref->objpath.type_id.form   = ARI_IDSEG_INT;
-        ref->objpath.type_id.as_int = *type_id;
-
-        ref->objpath.has_ari_type = true;
-        ref->objpath.ari_type     = *type_id;
-    }
-    if (obj_id)
-    {
-        ref->objpath.obj_id.form   = ARI_IDSEG_INT;
-        ref->objpath.obj_id.as_int = *obj_id;
-    }
 }
 
 void ari_set_objref_params_ac(ari_t *ari, struct ari_ac_s *src)

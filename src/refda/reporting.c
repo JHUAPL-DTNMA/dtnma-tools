@@ -101,7 +101,7 @@ static int refda_reporting_item_ref(refda_runctx_t *parent, ari_t *rpt_item, con
             case ARI_TYPE_EDD:
             {
                 refda_valprod_ctx_t prodctx;
-                refda_valprod_ctx_init(&prodctx, parent, &deref);
+                refda_valprod_ctx_init(&prodctx, parent, rptt_item, &deref);
                 retval = refda_valprod_run(&prodctx);
                 if (!retval)
                 {
@@ -209,7 +209,7 @@ static int refda_reporting_rptt_ref(refda_reporting_ctx_t *rptctx, const ari_t *
             case ARI_TYPE_EDD:
             {
                 refda_valprod_ctx_t prodctx;
-                refda_valprod_ctx_init(&prodctx, rptctx->parent, &deref);
+                refda_valprod_ctx_init(&prodctx, rptctx->parent, target, &deref);
                 retval = refda_valprod_run(&prodctx);
                 if (!retval)
                 {

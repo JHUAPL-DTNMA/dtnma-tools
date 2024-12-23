@@ -45,6 +45,38 @@ static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *ite
     atomic_store(&(item->waiting), false);
     return true;
 }
+
+static void refda_adm_ietf_dtnma_agent_set_objpath(ari_objpath_t *path, const cace_amm_obj_ns_t *ns,
+                                                   ari_type_t obj_type, const cace_amm_obj_desc_t *obj)
+{
+    if (ns->has_enum)
+    {
+        path->ns_id.form   = ARI_IDSEG_INT;
+        path->ns_id.as_int = ns->intenum;
+    }
+    else
+    {
+        path->ns_id.form = ARI_IDSEG_TEXT;
+        string_init_set_str(path->ns_id.as_text, string_get_cstr(ns->name));
+    }
+
+    path->type_id.form   = ARI_IDSEG_INT;
+    path->type_id.as_int = obj_type;
+    path->has_ari_type   = true;
+    path->ari_type       = obj_type;
+
+    if (obj->has_enum)
+    {
+        path->obj_id.form   = ARI_IDSEG_INT;
+        path->obj_id.as_int = obj->intenum;
+    }
+    else
+    {
+        path->obj_id.form = ARI_IDSEG_TEXT;
+        string_init_set_str(path->obj_id.as_text, string_get_cstr(obj->name));
+    }
+}
+
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
 /* Name: sw-vendor
@@ -114,11 +146,7 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
      * +-------------------------------------------------------------------------+
      */
     refda_agent_t *agent = ctx->prodctx->parent->agent;
-    if (pthread_mutex_lock(&(agent->objs_mutex)))
-    {
-        CACE_LOG_ERR("failed to lock agent objects");
-        return;
-    }
+    REFDA_AGENT_LOCK(agent, );
 
     ari_tbl_t table;
     ari_tbl_init(&table, 4, 0);
@@ -163,17 +191,14 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
 
         // append the row
         ari_tbl_move_row_array(&table, row);
+        ari_array_clear(row);
     }
 
     ari_t result = ARI_INIT_UNDEFINED;
     ari_set_tbl(&result, &table);
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    if (pthread_mutex_unlock(&(agent->objs_mutex)))
-    {
-        CACE_LOG_ERR("failed to unlock agent objects");
-        return;
-    }
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
@@ -372,6 +397,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
 
         // append the row
         ari_tbl_move_row_array(&table, row);
+        ari_array_clear(row);
     }
 
     ari_t result = ARI_INIT_UNDEFINED;
@@ -406,9 +432,147 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_typedef_list BODY
      * +-------------------------------------------------------------------------+
      */
+    bool include_adm;
+    if (ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    ari_tbl_t table;
+    ari_tbl_init(&table, 1, 0);
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_cref(ns_it);
+        if ((ns->intenum >= 0) && !include_adm)
+        {
+            // ignore ADMs
+            continue;
+        }
+
+        const ari_type_t       obj_type = ARI_TYPE_TYPEDEF;
+        cace_amm_obj_ns_ctr_t *ctr      = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
+        if (!ctr)
+        {
+            continue;
+        }
+
+        cace_amm_obj_desc_list_it_t obj_it;
+        for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+             cace_amm_obj_desc_list_next(obj_it))
+        {
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_cref(obj_it);
+
+            ari_array_t row;
+            ari_array_init(row);
+            ari_array_resize(row, 1);
+
+            {
+                ari_ref_t *ref = ari_set_objref(ari_array_get(row, 0));
+                refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
+            }
+
+            // append the row
+            ari_tbl_move_row_array(&table, row);
+            ari_array_clear(row);
+        }
+    }
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_typedef_list BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: const-list
+ * Description:
+ *   A table of CONST within the agent.
+ *
+ * Parameters list:
+ *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *
+ * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/CONST, use of ari://ietf-amm/TYPEDEF/TYPE-REF)
+ */
+static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_const_list BODY
+     * +-------------------------------------------------------------------------+
+     */
+    bool include_adm;
+    if (ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    ari_tbl_t table;
+    ari_tbl_init(&table, 2, 0);
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_cref(ns_it);
+        if ((ns->intenum >= 0) && !include_adm)
+        {
+            // ignore ADMs
+            continue;
+        }
+
+        const ari_type_t       obj_type = ARI_TYPE_CONST;
+        cace_amm_obj_ns_ctr_t *ctr      = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
+        if (!ctr)
+        {
+            continue;
+        }
+
+        cace_amm_obj_desc_list_it_t obj_it;
+        for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+             cace_amm_obj_desc_list_next(obj_it))
+        {
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_cref(obj_it);
+
+            ari_array_t row;
+            ari_array_init(row);
+            ari_array_resize(row, 2);
+
+            {
+                ari_ref_t *ref = ari_set_objref(ari_array_get(row, 0));
+                refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
+            }
+            ari_array_get(row, 1); // FIXME populate this column
+
+            // append the row
+            ari_tbl_move_row_array(&table, row);
+            ari_array_clear(row);
+        }
+    }
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    REFDA_AGENT_UNLOCK(agent, );
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_const_list BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -429,6 +593,64 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_var_list BODY
      * +-------------------------------------------------------------------------+
      */
+    bool include_adm;
+    if (ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    ari_tbl_t table;
+    ari_tbl_init(&table, 2, 0);
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_cref(ns_it);
+        if ((ns->intenum >= 0) && !include_adm)
+        {
+            // ignore ADMs
+            continue;
+        }
+
+        const ari_type_t       obj_type = ARI_TYPE_VAR;
+        cace_amm_obj_ns_ctr_t *ctr      = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
+        if (!ctr)
+        {
+            continue;
+        }
+
+        cace_amm_obj_desc_list_it_t obj_it;
+        for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+             cace_amm_obj_desc_list_next(obj_it))
+        {
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_cref(obj_it);
+
+            ari_array_t row;
+            ari_array_init(row);
+            ari_array_resize(row, 2);
+
+            {
+                ari_ref_t *ref = ari_set_objref(ari_array_get(row, 0));
+                refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
+            }
+            ari_array_get(row, 1); // FIXME populate this column
+
+            // append the row
+            ari_tbl_move_row_array(&table, row);
+            ari_array_clear(row);
+        }
+    }
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_var_list BODY
@@ -442,8 +664,7 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
  * Parameters: none
  *
  * Produced type: TBLT with 6 columns (use of ari:/ARITYPE/SBR, use of ari://ietf-amm/TYPEDEF/MAC, use of
- * ari://ietf-amm/TYPEDEF/TIME, use of ari://ietf-amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of
- * ari:/ARITYPE/UVAST)
+ * ari://ietf-amm/TYPEDEF/TIME, use of ari://ietf-amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
  */
 static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -672,7 +893,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
     else
     {
         refda_valprod_ctx_t prodctx;
-        refda_valprod_ctx_init(&prodctx, ctx->runctx, &deref);
+        refda_valprod_ctx_init(&prodctx, ctx->runctx, ref, &deref);
 
         res = refda_valprod_run(&prodctx);
         if (res)
@@ -767,6 +988,54 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: ensure-const
+ * Description:
+ *   Ensure a specific CONST is present.
+ *
+ * Parameters list:
+ *  * Index 0, name "obj", type: use of ari:/ARITYPE/CONST
+ *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/TYPE-REF
+ *  * Index 2, name "init", type: use of ari://ietf-amm/TYPEDEF/EXPR
+ *
+ * Result: none
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: discard-const
+ * Description:
+ *   Discard a specific CONST if it is present.
+ *
+ * Parameters list:
+ *  * Index 0, name "obj", type: use of ari:/ARITYPE/CONST
+ *
+ * Result: none
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_discard_const(refda_ctrl_exec_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_discard_const BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_discard_const BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -1284,7 +1553,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
     CHKERR1(agent);
     CACE_LOG_DEBUG("Registering ADM: "
                    "ietf-dtnma-agent");
-    REFDA_AGENT_LOCK(agent);
+    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&(agent->objs), "ietf-dtnma-agent", "2024-07-03", true,
                                                        REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM);
@@ -1319,6 +1588,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
             }
+
             obj = refda_register_typedef(
                 adm, cace_amm_obj_id_withenum("hellotyp", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_HELLOTYP),
                 objdata);
@@ -1348,6 +1618,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
             }
+
             obj = refda_register_typedef(
                 adm, cace_amm_obj_id_withenum("column-id", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_COLUMN_ID),
                 objdata);
@@ -1381,6 +1652,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 ari_set_ac(&(objdata->value), &acinit);
             }
+
             obj = refda_register_const(
                 adm, cace_amm_obj_id_withenum("hello", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO), objdata);
             // no parameters
@@ -1668,6 +1940,51 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     ari_set_aritype(&name, ARI_TYPE_BOOL);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
+                ari_set_bool(&(fparam->defval), false);
+            }
+        }
+        { // For ./EDD/const-list
+            refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_init(objdata);
+            // produced type
+            {
+                // table template
+                amm_semtype_tblt_t *semtype = amm_type_set_tblt_size(&(objdata->prod_type), 2);
+                {
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 0);
+                    m_string_set_cstr(col->name, "obj");
+                    {
+                        ari_t name = ARI_INIT_UNDEFINED;
+                        ari_set_aritype(&name, ARI_TYPE_CONST);
+                        amm_type_set_use_ref_move(&(col->typeobj), &name);
+                    }
+                }
+                {
+                    amm_named_type_t *col = amm_named_type_array_get(semtype->columns, 1);
+                    m_string_set_cstr(col->name, "type");
+                    {
+                        ari_t name = ARI_INIT_UNDEFINED;
+                        // ari://ietf-amm/TYPEDEF/TYPE-REF
+                        ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                        amm_type_set_use_ref_move(&(col->typeobj), &name);
+                    }
+                }
+            }
+            // callback:
+            objdata->produce = refda_adm_ietf_dtnma_agent_edd_const_list;
+
+            obj = refda_register_edd(
+                adm, cace_amm_obj_id_withenum("const-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_CONST_LIST),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_BOOL);
+                    amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+                ari_set_bool(&(fparam->defval), false);
             }
         }
         { // For ./EDD/var-list
@@ -1710,6 +2027,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     ari_set_aritype(&name, ARI_TYPE_BOOL);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
+                ari_set_bool(&(fparam->defval), false);
             }
         }
         { // For ./EDD/sbr-list
@@ -1898,6 +2216,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
+                ari_set_null(&(fparam->defval));
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "on-falsy");
@@ -1922,6 +2241,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
+                ari_set_null(&(fparam->defval));
             }
         }
         { // For ./CTRL/catch
@@ -1971,6 +2291,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
+                ari_set_null(&(fparam->defval));
             }
         }
         { // For ./CTRL/wait-for
@@ -2130,6 +2451,65 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
             }
         }
+        { // For ./CTRL/ensure-const
+            refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
+            refda_amm_ctrl_desc_init(objdata);
+            // no result type
+            // callback:
+            objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_ensure_const;
+
+            obj = refda_register_ctrl(
+                adm, cace_amm_obj_id_withenum("ensure-const", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_CONST),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_CONST);
+                    amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "type");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/TYPE-REF
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                    amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "init");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    // ari://ietf-amm/TYPEDEF/EXPR
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 18);
+                    amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+            }
+        }
+        { // For ./CTRL/discard-const
+            refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
+            refda_amm_ctrl_desc_init(objdata);
+            // no result type
+            // callback:
+            objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_discard_const;
+
+            obj = refda_register_ctrl(
+                adm,
+                cace_amm_obj_id_withenum("discard-const", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_DISCARD_CONST),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj");
+                {
+                    ari_t name = ARI_INIT_UNDEFINED;
+                    ari_set_aritype(&name, ARI_TYPE_CONST);
+                    amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+            }
+        }
         { // For ./CTRL/ensure-var
             refda_amm_ctrl_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
@@ -2181,6 +2561,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         }
                     }
                 }
+                ari_set_null(&(fparam->defval));
             }
         }
         { // For ./CTRL/discard-var
@@ -3013,6 +3394,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             }
         }
     }
-    REFDA_AGENT_UNLOCK(agent);
+    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     return 0;
 }
