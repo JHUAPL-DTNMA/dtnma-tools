@@ -68,9 +68,13 @@ static void mock_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
     refda_ctrl_exec_ctx_set_result_copy(ctx, val);
 }
 
-static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const cace_amm_formal_param_list_t fparams,
+static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *ctrl, const cace_amm_formal_param_list_t fparams,
                           const char *refhex, const char *outhex)
 {
+    cace_amm_obj_desc_t obj;
+    cace_amm_obj_desc_init(&obj);
+    cace_amm_user_data_set_from(&(obj.app_data), (void *)ctrl, false, NULL);
+
     refda_runctx_ptr_t ctxptr;
     refda_runctx_ptr_init_new(ctxptr);
     // no nonce for test
@@ -84,6 +88,7 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     refda_exec_item_init(&eitem);
     eitem.seq = &eseq;
 
+    // fudge these contents
     ari_t inref = ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&inref, refhex));
     TEST_ASSERT_TRUE_MESSAGE(inref.is_ref, "invalid reference");
@@ -92,12 +97,14 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));
     TEST_ASSERT_EQUAL_INT(0, ari_set_copy(&mock_result_store, &outval));
 
+    eitem.deref.obj_type = ARI_TYPE_CTRL;
+    eitem.deref.obj = &obj;
     int res = cace_amm_actual_param_set_populate(&(eitem.deref.aparams), fparams, &(inref.as_ref.params));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_ctrl_exec_ctx_t ctx;
     refda_ctrl_exec_ctx_init(&ctx, &eitem);
-    (obj->execute)(&ctx);
+    (ctrl->execute)(&ctx);
     refda_ctrl_exec_ctx_deinit(&ctx);
 
     TEST_ASSERT_TRUE_MESSAGE(ari_equal(&outval, &(eitem.result)), "result value mismatch");
@@ -111,6 +118,7 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     refda_exec_item_deinit(&eitem);
     refda_exec_seq_deinit(&eseq);
     refda_runctx_ptr_clear(ctxptr);
+    cace_amm_obj_desc_deinit(&obj);
 
     ari_deinit(&outval);
     ari_deinit(&inref);
