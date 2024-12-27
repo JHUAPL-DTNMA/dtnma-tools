@@ -134,7 +134,7 @@ void setUp(void)
         {
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
-            amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_int;
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd1", 1), objdata);
@@ -143,7 +143,7 @@ void setUp(void)
         {
             refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
-            amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_VAST));
+            amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_one_int;
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd2", 2), objdata);
@@ -171,13 +171,13 @@ static ari_report_t *assert_rptset_items(ari_t *val)
 }
 
 // clang-format off
-// direct RPTT ari:/AC/(//65536/EDD/1,//65536/VAR/1) -> (/VAST/1,/VAST/123456)
-TEST_CASE("821182831A000100002301831A000100002A01", 0, "821182""820601""82061A0001E240")
-// indirect RPTT ari://65536/CONST/1 -> (/VAST/1,/VAST/123456)
-TEST_CASE("831A000100002101", 0, "821182""820601""82061A0001E240")
+// direct RPTT ari:/AC/(//65536/EDD/1,//65536/VAR/1) -> (/INT/1,/VAST/123456)
+TEST_CASE("821182831A000100002301831A000100002A01", 0, "821182""820401""82061A0001E240")
+// indirect RPTT ari://65536/CONST/1 -> (/INT/1,/VAST/123456)
+TEST_CASE("831A000100002101", 0, "821182""820401""82061A0001E240")
 // direct with simple (one-item) expressions
-// ari:/AC/(/AC/(//65536/EDD/1),/AC/(//65536/VAR/1)) -> (/VAST/1,/VAST/123456)
-TEST_CASE("821182821181831A000100002301821181831A000100002A01", 0, "821182""820601""82061A0001E240")
+// ari:/AC/(/AC/(//65536/EDD/1),/AC/(//65536/VAR/1)) -> (/INT/1,/VAST/123456)
+TEST_CASE("821182821181831A000100002301821181831A000100002A01", 0, "821182""820401""82061A0001E240")
 // clang-format on
 void test_refda_reporting_target(const char *targethex, int expect_res, const char *expectloghex)
 {

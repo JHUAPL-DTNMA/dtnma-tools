@@ -86,20 +86,8 @@ static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_
     if (ari_is_undefined(&(prodctx->value)))
     {
         CACE_LOG_WARNING("production finished with value undefined");
-        return 2;
+        // not really a failure
     }
-
-    // force output type
-    ari_t tmp;
-    ari_init(&tmp);
-    int res = amm_type_convert(&(obj->prod_type), &tmp, &(prodctx->value));
-    ari_set_move(&(prodctx->value), &tmp);
-    if (res)
-    {
-        CACE_LOG_WARNING("production finished with non-convertable value");
-        return 3;
-    }
-
     return 0;
 }
 

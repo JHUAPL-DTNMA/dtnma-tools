@@ -43,12 +43,35 @@ const ari_t *refda_edd_prod_ctx_get_aparam_name(const refda_edd_prod_ctx_t *ctx,
     return *named_ari_ptr_dict_cget(ctx->prodctx->deref->aparams.named, name);
 }
 
-void refda_edd_prod_ctx_set_result_move(refda_edd_prod_ctx_t *ctx, ari_t *value)
+static int refda_edd_prod_check_result(refda_edd_prod_ctx_t *ctx)
 {
-    ari_set_move(&(ctx->prodctx->value), value);
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(ctx->prodctx->value), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("EDD result value %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
+    bool valid = amm_type_match(&(ctx->edd->prod_type), &(ctx->prodctx->value));
+    if (!valid)
+    {
+        CACE_LOG_ERR("EDD result type failed to match a produced value");
+        ari_set_undefined(&(ctx->prodctx->value));
+    }
+
+    return valid ? 0 : REFDA_EDD_PROD_RESULT_TYPE_NOMATCH;
 }
 
-void refda_edd_prod_ctx_set_result_copy(refda_edd_prod_ctx_t *ctx, const ari_t *value)
+int refda_edd_prod_ctx_set_result_move(refda_edd_prod_ctx_t *ctx, ari_t *value)
+{
+    ari_set_move(&(ctx->prodctx->value), value);
+    return refda_edd_prod_check_result(ctx);
+}
+
+int refda_edd_prod_ctx_set_result_copy(refda_edd_prod_ctx_t *ctx, const ari_t *value)
 {
     ari_set_copy(&(ctx->prodctx->value), value);
+    return refda_edd_prod_check_result(ctx);
 }

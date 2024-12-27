@@ -205,7 +205,7 @@ static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, co
     }
     else
     {
-        if (!amm_type_match(runctx->agent->mac_type, target) && false) // FIXME need to implement typedefs
+        if (!amm_type_match(runctx->agent->mac_type, target))
         {
             CACE_LOG_WARNING("Attempt to execute a non-MAC literal");
             retval = REFDA_EXEC_ERR_BAD_TYPE;

@@ -57,7 +57,7 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
 static int refda_reporting_item_lit(refda_runctx_t *parent, ari_t *rpt_item, const ari_t *rptt_item)
 {
     int retval = 0;
-    if (!amm_type_match(parent->agent->expr_type, rptt_item) && false) // FIXME need to implement typedefs
+    if (!amm_type_match(parent->agent->expr_type, rptt_item))
     {
         CACE_LOG_WARNING("Attempted reporting on a non-EXPR literal");
         retval = REFDA_REPORTING_ERR_BAD_TYPE;
@@ -170,7 +170,7 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const ari_t *
 static int refda_reporting_rptt_lit(refda_reporting_ctx_t *rptctx, const ari_t *value)
 {
     int retval = 0;
-    if (!amm_type_match(rptctx->parent->agent->rptt_type, value) && false) // FIXME need to implement typedefs
+    if (!amm_type_match(rptctx->parent->agent->rptt_type, value))
     {
         CACE_LOG_WARNING("Attempted reporting on a non-RPTT literal");
         retval = REFDA_REPORTING_ERR_BAD_TYPE;

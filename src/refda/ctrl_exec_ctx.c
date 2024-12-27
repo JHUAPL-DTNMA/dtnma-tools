@@ -61,13 +61,22 @@ void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_tim
 
 static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
 {
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, &(ctx->item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("CTRL result value %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
     bool valid = false;
     if (amm_type_is_valid(&(ctx->ctrl->res_type)))
     {
         valid = amm_type_match(&(ctx->ctrl->res_type), &(ctx->item->result));
         if (!valid)
         {
-            CACE_LOG_ERR("CTRL result value failed to match");
+            CACE_LOG_ERR("CTRL result type failed to match a result value");
             ari_set_undefined(&(ctx->item->result));
         }
     }
@@ -90,15 +99,6 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
             // should not have a result
             ari_set_undefined(&(ctx->item->result));
         }
-    }
-
-    if (cace_log_is_enabled_for(LOG_DEBUG))
-    {
-        string_t buf;
-        string_init(buf);
-        ari_text_encode(buf, &(ctx->item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("CTRL result value %s", string_get_cstr(buf));
-        string_clear(buf);
     }
 
     if (valid)

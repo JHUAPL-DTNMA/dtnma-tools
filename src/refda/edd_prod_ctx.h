@@ -29,6 +29,8 @@
 extern "C" {
 #endif
 
+#define REFDA_EDD_PROD_RESULT_TYPE_NOMATCH 2
+
 /** Context for CTRL execution activities.
  */
 typedef struct refda_edd_prod_ctx_s
@@ -57,13 +59,26 @@ void refda_edd_prod_ctx_init(refda_edd_prod_ctx_t *obj, const refda_amm_edd_desc
 
 void refda_edd_prod_ctx_deinit(refda_edd_prod_ctx_t *obj);
 
+/** Get an actual parameter for this production.
+ *
+ * @param[in] ctx The production context.
+ * @param[in] index The index into the parameter list.
+ * @return A pointer to the parameter value or NULL if no such parameter is present.
+ */
 const ari_t *refda_edd_prod_ctx_get_aparam_index(const refda_edd_prod_ctx_t *ctx, size_t index);
-
+/// @overload
 const ari_t *refda_edd_prod_ctx_get_aparam_name(const refda_edd_prod_ctx_t *ctx, const char *name);
 
-void refda_edd_prod_ctx_set_result_copy(refda_edd_prod_ctx_t *ctx, const ari_t *value);
-
-void refda_edd_prod_ctx_set_result_move(refda_edd_prod_ctx_t *ctx, ari_t *value);
+/** Set the result for a value production.
+ *
+ * @param[in,out] ctx The context to update.
+ * @param[in] value The value to use as the production result.
+ * @return Zero if successful and the value has a matching type.
+ * Otherwise REFDA_EDD_PROD_RESULT_TYPE_NOMATCH.
+ */
+int refda_edd_prod_ctx_set_result_copy(refda_edd_prod_ctx_t *ctx, const ari_t *value);
+/// @overload
+int refda_edd_prod_ctx_set_result_move(refda_edd_prod_ctx_t *ctx, ari_t *value);
 
 #ifdef __cplusplus
 } // extern C
