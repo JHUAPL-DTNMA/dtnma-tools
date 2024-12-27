@@ -26,6 +26,12 @@
 #include <float.h>
 #include <fenv.h>
 
+/// Name any builtin type
+static void builtin_ari_name(const amm_type_t *self, ari_t *name)
+{
+    ari_set_aritype_text(name, self->as_builtin.ari_type);
+}
+
 /** Implement common match logic.
  * This checks that the object-reference or literal type, if present, is
  * as required by the type object.
@@ -651,132 +657,154 @@ static amm_type_t amm_builtins[] = {
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_LITERAL,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_literal_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_NULL,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_null_match,
         .convert             = builtin_null_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_BOOL,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_bool_match,
         .convert             = builtin_bool_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_BYTE,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_byte_match,
         .convert             = builtin_byte_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_INT,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_int_match,
         .convert             = builtin_int_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_UINT,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_uint_match,
         .convert             = builtin_uint_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_VAST,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_vast_match,
         .convert             = builtin_vast_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_UVAST,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_uvast_match,
         .convert             = builtin_uvast_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_REAL32,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_real32_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_REAL64,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_real64_match,
         .convert             = builtin_real64_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TEXTSTR,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_textstr_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_BYTESTR,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_bytestr_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TP,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_common_lit_match,
         .convert             = builtin_time_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TD,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_common_lit_match,
         .convert             = builtin_time_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_LABEL,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_idseg_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_CBOR,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_common_lit_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_ARITYPE,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_idseg_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_AC,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_common_lit_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_AM,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_common_lit_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TBL,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_common_lit_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_EXECSET,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_common_lit_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_RPTSET,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_common_lit_match,
         .convert             = builtin_default_convert,
     },
@@ -784,60 +812,70 @@ static amm_type_t amm_builtins[] = {
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_OBJECT,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_object_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_IDENT,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TYPEDEF,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_CONST,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_VAR,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_EDD,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_CTRL,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_OPER,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_SBR,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TBR,
+        .ari_name            = builtin_ari_name,
         .match               = builtin_anyobj_match,
         .convert             = builtin_default_convert,
     },
@@ -963,6 +1001,19 @@ bool amm_type_is_valid(const amm_type_t *type)
 {
     CHKFALSE(type)
     return type->type_class != AMM_TYPE_INVALID;
+}
+
+bool amm_type_get_name(const amm_type_t *type, ari_t *name)
+{
+    CHKFALSE(type);
+    CHKFALSE(name);
+    if (!(type->ari_name))
+    {
+        return false;
+    }
+
+    type->ari_name(type, name);
+    return true;
 }
 
 bool amm_type_match(const amm_type_t *type, const ari_t *ari)

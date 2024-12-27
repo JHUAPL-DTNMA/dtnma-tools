@@ -64,19 +64,6 @@ void refda_exec_item_init(refda_exec_item_t *obj);
 
 void refda_exec_item_deinit(refda_exec_item_t *obj);
 
-/** Set the result for an execution, which marks it as finished.
- *
- * @param[in,out] obj The state to update.
- * @param[in] value The value to use as the execution result.
- */
-void refda_exec_item_set_result_copy(refda_exec_item_t *obj, const ari_t *value);
-/// @overload
-void refda_exec_item_set_result_move(refda_exec_item_t *obj, ari_t *value);
-/** @overload
- * Convenience member to mark the result as successful but null-value.
- */
-void refda_exec_item_set_result_null(refda_exec_item_t *obj);
-
 /// M*LIB OPLIST for refda_exec_item_t
 #define M_OPL_refda_exec_item_t() (INIT(API_2(refda_exec_item_init)), CLEAR(API_2(refda_exec_item_deinit)))
 

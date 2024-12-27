@@ -185,6 +185,8 @@ void ari_set_td(ari_t *ari, struct timespec delta);
 
 /// @overload
 void ari_set_aritype(ari_t *ari, ari_type_t type);
+/// @overload
+void ari_set_aritype_text(ari_t *ari, ari_type_t type);
 
 /** Set the ARI as an AC, optionally moving values from an external source.
  *

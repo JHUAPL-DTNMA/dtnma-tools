@@ -17,6 +17,7 @@
  */
 #include "util/ari.h"
 #include <refda/ctrl_exec_ctx.h>
+#include <refda/exec_seq.h>
 #include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -95,7 +96,7 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_ctrl_exec_ctx_t ctx;
-    refda_ctrl_exec_ctx_init(&ctx, obj, &eitem);
+    refda_ctrl_exec_ctx_init(&ctx, &eitem);
     (obj->execute)(&ctx);
     refda_ctrl_exec_ctx_deinit(&ctx);
 

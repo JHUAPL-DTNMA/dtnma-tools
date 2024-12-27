@@ -128,6 +128,13 @@ typedef void (*amm_semtype_deinit_f)(void *semtype);
  */
 struct amm_type_s
 {
+    /** Get an ARI representation of a name for this type.
+     *
+     * @param[in] self Pointer to the associated type object.
+     * @param[out] name The already initialized output object.
+     */
+    void (*ari_name)(const amm_type_t *self, ari_t *name);
+
     /** Determine if a specific value matches this type.
      *
      * @param[in] self Pointer to the associated type object.
@@ -204,6 +211,14 @@ bool amm_type_is_valid(const amm_type_t *type);
 /// @cond Doxygen_Suppress
 ARRAY_DEF(amm_type_array, amm_type_t)
 /// @endcond
+
+/** Get a human-friendly name for a type object.
+ *
+ * @param[in] type The type to name.
+ * @param[out] name The generated name.
+ * @return True if a name was set.
+ */
+bool amm_type_get_name(const amm_type_t *type, ari_t *name);
 
 /** Determine if a type (built-in or semantic) matches a specific value.
  *

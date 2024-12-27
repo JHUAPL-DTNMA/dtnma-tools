@@ -17,6 +17,7 @@
  */
 #include "util/ari.h"
 #include "util/runctx.h"
+#include <refda/valprod.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/amm/const.h>

@@ -89,6 +89,41 @@ static void check_convert(const amm_type_t *type, const char *inhex, const char 
     ari_deinit(&outval);
 }
 
+TEST_CASE(ARI_TYPE_NULL)
+TEST_CASE(ARI_TYPE_BOOL)
+TEST_CASE(ARI_TYPE_BYTE)
+TEST_CASE(ARI_TYPE_INT)
+TEST_CASE(ARI_TYPE_UINT)
+TEST_CASE(ARI_TYPE_VAST)
+TEST_CASE(ARI_TYPE_UVAST)
+TEST_CASE(ARI_TYPE_REAL32)
+TEST_CASE(ARI_TYPE_REAL64)
+TEST_CASE(ARI_TYPE_TEXTSTR)
+TEST_CASE(ARI_TYPE_BYTESTR)
+TEST_CASE(ARI_TYPE_TP)
+TEST_CASE(ARI_TYPE_TD)
+TEST_CASE(ARI_TYPE_LABEL)
+TEST_CASE(ARI_TYPE_CBOR)
+TEST_CASE(ARI_TYPE_ARITYPE)
+TEST_CASE(ARI_TYPE_AC)
+TEST_CASE(ARI_TYPE_AM)
+TEST_CASE(ARI_TYPE_TBL)
+TEST_CASE(ARI_TYPE_EXECSET)
+TEST_CASE(ARI_TYPE_RPTSET)
+void test_amm_type_get_name(ari_type_t type)
+{
+    const amm_type_t *typeobj = amm_type_get_builtin(type);
+    TEST_ASSERT_NOT_NULL(typeobj);
+
+    ari_t name = ARI_INIT_UNDEFINED;
+    TEST_ASSERT_TRUE(amm_type_get_name(typeobj, &name));
+
+    TEST_ASSERT_TRUE(ari_is_lit_typed(&name, ARI_TYPE_ARITYPE));
+    const cace_data_t *data = ari_cget_tstr(&name);
+    TEST_ASSERT_NOT_NULL(data);
+    TEST_PRINTF("got name %s", (const char *)(data->ptr));
+}
+
 TEST_CASE("F7", false)               // ari:undefined
 TEST_CASE("F6", true)                // ari:null
 TEST_CASE("F4", false)               // ari:false

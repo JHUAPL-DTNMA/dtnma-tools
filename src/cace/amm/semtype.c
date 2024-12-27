@@ -17,6 +17,7 @@
  */
 #include "semtype.h"
 #include "cace/ari/algo.h"
+#include "cace/ari/text.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
 #include "cace/config.h"
@@ -38,6 +39,35 @@ static bool amm_semtype_use_constraints(const amm_semtype_use_t *semtype, const 
     }
     // no constraints are valid also
     return true;
+}
+
+static void amm_semtype_use_name(const amm_type_t *self, ari_t *name)
+{
+    const amm_semtype_use_t *semtype = self->as_semtype;
+    CHKVOID(semtype);
+
+    ari_ref_t *ref = ari_set_objref(name);
+    ari_objpath_set_textid(&(ref->objpath), "ietf-amm", ARI_TYPE_IDENT, "semtype-use");
+
+    ari_tree_t params;
+    ari_tree_init(params);
+    {
+        ari_t key = ARI_INIT_UNDEFINED;
+        ari_set_tstr(&key, "name", false);
+        ari_t val = ARI_INIT_UNDEFINED;
+        ari_set_copy(&val, &(semtype->name));
+        ari_tree_set_at(params, key, val);
+    }
+#if 0
+    {
+        ari_t key = ARI_INIT_UNDEFINED;
+        ari_set_tstr(&key, "resolved", false);
+        ari_t val = ARI_INIT_UNDEFINED;
+        amm_type_get_name(semtype->base, &val);
+        ari_tree_set_at(params, key, val);
+    }
+#endif
+    ari_params_set_am(&(ref->params), params);
 }
 
 static bool amm_semtype_use_match(const amm_type_t *self, const ari_t *ari)
@@ -86,6 +116,7 @@ int amm_type_set_use_ref_move(amm_type_t *type, ari_t *name)
     CHKERR1(name);
     amm_type_reset(type);
 
+    type->ari_name   = amm_semtype_use_name;
     type->match      = amm_semtype_use_match;
     type->convert    = amm_semtype_use_convert;
     type->type_class = AMM_TYPE_USE;
@@ -118,6 +149,27 @@ int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base)
     type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_use_deinit;
 
     return 0;
+}
+
+static void amm_semtype_ulist_name(const amm_type_t *self, ari_t *name)
+{
+    const amm_semtype_ulist_t *semtype = self->as_semtype;
+    CHKVOID(semtype);
+
+    ari_ref_t *ref = ari_set_objref(name);
+    ari_objpath_set_textid(&(ref->objpath), "ietf-amm", ARI_TYPE_IDENT, "semtype-ulist");
+
+    ari_tree_t params;
+    ari_tree_init(params);
+    {
+        ari_t key = ARI_INIT_UNDEFINED;
+        ari_set_tstr(&key, "item-type", false);
+        ari_t val = ARI_INIT_UNDEFINED;
+        amm_type_get_name(&(semtype->item_type), &val);
+        ari_tree_set_at(params, key, val);
+    }
+    // FIXME other parameters
+    ari_params_set_am(&(ref->params), params);
 }
 
 static bool amm_semtype_ulist_match(const amm_type_t *self, const ari_t *ari)
@@ -221,6 +273,7 @@ amm_semtype_ulist_t *amm_type_set_ulist(amm_type_t *type)
     CHKNULL(type);
     amm_type_reset(type);
 
+    type->ari_name   = amm_semtype_ulist_name;
     type->match      = amm_semtype_ulist_match;
     type->convert    = amm_semtype_ulist_convert;
     type->type_class = AMM_TYPE_ULIST;
@@ -641,6 +694,39 @@ amm_semtype_tblt_t *amm_type_set_tblt_size(amm_type_t *type, size_t num_cols)
     return semtype;
 }
 
+static void amm_semtype_union_name(const amm_type_t *self, ari_t *name)
+{
+    const amm_semtype_union_t *semtype = self->as_semtype;
+    CHKVOID(semtype);
+
+    ari_ref_t *ref = ari_set_objref(name);
+    ari_objpath_set_textid(&(ref->objpath), "ietf-amm", ARI_TYPE_IDENT, "semtype-union");
+
+    ari_tree_t params;
+    ari_tree_init(params);
+    {
+        ari_t key = ARI_INIT_UNDEFINED;
+        ari_set_tstr(&key, "choices", false);
+        ari_t val = ARI_INIT_UNDEFINED;
+        {
+            ari_ac_t list;
+            ari_ac_init(&list);
+
+            amm_type_array_it_t it;
+            for (amm_type_array_it(it, semtype->choices); !amm_type_array_end_p(it); amm_type_array_next(it))
+            {
+                const amm_type_t *choice   = amm_type_array_ref(it);
+                ari_t            *listitem = ari_list_push_back_new(list.items);
+                amm_type_get_name(choice, listitem);
+            }
+
+            ari_set_ac(&val, &list);
+        }
+        ari_tree_set_at(params, key, val);
+    }
+    ari_params_set_am(&(ref->params), params);
+}
+
 static bool amm_semtype_union_match(const amm_type_t *self, const ari_t *ari)
 {
     const amm_semtype_union_t *semtype = self->as_semtype;
@@ -660,19 +746,60 @@ static bool amm_semtype_union_match(const amm_type_t *self, const ari_t *ari)
 static int amm_semtype_union_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
 {
     const amm_semtype_union_t *semtype = self->as_semtype;
+    CACE_LOG_DEBUG("type union with %d choices", amm_type_array_size(semtype->choices));
 
+    const amm_type_t *found = NULL;
+    // First try matching without conversion
     amm_type_array_it_t it;
-    for (amm_type_array_it(it, semtype->choices); !amm_type_array_end_p(it); amm_type_array_next(it))
+    for (amm_type_array_it(it, semtype->choices); !found && !amm_type_array_end_p(it); amm_type_array_next(it))
     {
         const amm_type_t *choice = amm_type_array_ref(it);
-        int               res    = amm_type_convert(choice, out, in);
+        if (amm_type_match(choice, in))
+        {
+            ari_set_copy(out, in);
+            found = choice;
+        }
+    }
+    //FIXME: add match-only option
+    // Then try more strict conversion
+    for (amm_type_array_it(it, semtype->choices); !found && !amm_type_array_end_p(it); amm_type_array_next(it))
+    {
+        const amm_type_t *choice = amm_type_array_ref(it);
+
+        int res = amm_type_convert(choice, out, in);
         // first valid conversion wins
         if (res == 0)
         {
-            return 0;
+            found = choice;
         }
     }
-    return CACE_AMM_ERR_CONVERT_NOCHOICE;
+
+    if (found)
+    {
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            ari_t ariname = ARI_INIT_UNDEFINED;
+            amm_type_get_name(found, &ariname);
+
+            string_t buf;
+            string_init(buf);
+            ari_text_encode(buf, &ariname, ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("type union converted for choice %s", string_get_cstr(buf));
+            string_clear(buf);
+            ari_deinit(&ariname);
+
+            string_init(buf);
+            ari_text_encode(buf, out, ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("got value %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+        return 0;
+    }
+    else
+    {
+        CACE_LOG_DEBUG("type union found no choice");
+        return CACE_AMM_ERR_CONVERT_NOCHOICE;
+    }
 }
 
 amm_semtype_union_t *amm_type_set_union_size(amm_type_t *type, size_t num_choices)
@@ -680,6 +807,7 @@ amm_semtype_union_t *amm_type_set_union_size(amm_type_t *type, size_t num_choice
     CHKNULL(type);
     amm_type_reset(type);
 
+    type->ari_name   = amm_semtype_union_name;
     type->match      = amm_semtype_union_match;
     type->convert    = amm_semtype_union_convert;
     type->type_class = AMM_TYPE_UNION;

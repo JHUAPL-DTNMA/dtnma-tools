@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "parameters.h"
+#include "cace/ari/text.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
 
@@ -114,22 +115,52 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                  cace_amm_formal_param_list_next(fit), ++pix)
             {
                 const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
+                CACE_LOG_DEBUG("converting formal parameter #%d \"%s\"", fparam->index, string_get_cstr(fparam->name));
+                if (cace_log_is_enabled_for(LOG_DEBUG))
+                {
+                    ari_t ariname = ARI_INIT_UNDEFINED;
+                    amm_type_get_name(&(fparam->typeobj), &ariname);
+
+                    string_t buf;
+                    string_init(buf);
+                    ari_text_encode(buf, &ariname, ARI_TEXT_ENC_OPTS_DEFAULT);
+                    CACE_LOG_DEBUG("  type %s", string_get_cstr(buf));
+                    string_clear(buf);
+                    ari_deinit(&ariname);
+                }
 
                 ari_t *aparam = ari_array_get(obj->ordered, pix);
                 named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
 
                 if (ari_list_end_p(gparam_it))
                 {
-                    // no given parameter
+                    CACE_LOG_DEBUG("no given parameter");
                     ari_set_copy(aparam, &(fparam->defval));
                 }
                 else
                 {
                     const ari_t *gparam = ari_list_cref(gparam_it);
+                    if (cace_log_is_enabled_for(LOG_DEBUG))
+                    {
+                        string_t buf;
+                        string_init(buf);
+                        ari_text_encode(buf, gparam, ARI_TEXT_ENC_OPTS_DEFAULT);
+                        CACE_LOG_DEBUG("  given parameter %s", string_get_cstr(buf));
+                        string_clear(buf);
+                    }
                     if (amm_type_convert(&(fparam->typeobj), aparam, gparam))
                     {
+                        CACE_LOG_WARNING("  given parameter failed to convert");
                         retval = 2;
                         break;
+                    }
+                    if (cace_log_is_enabled_for(LOG_DEBUG))
+                    {
+                        string_t buf;
+                        string_init(buf);
+                        ari_text_encode(buf, aparam, ARI_TEXT_ENC_OPTS_DEFAULT);
+                        CACE_LOG_DEBUG("  actual parameter %s", string_get_cstr(buf));
+                        string_clear(buf);
                     }
 
                     ari_list_next(gparam_it);

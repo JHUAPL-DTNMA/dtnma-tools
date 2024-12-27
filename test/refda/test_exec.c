@@ -192,6 +192,7 @@ static void check_execute(const ari_t *target, int expect_exp, int wait_limit, i
             break;
         }
         {
+            // if there are more items the first must be waiting
             const refda_exec_item_t *item = refda_exec_item_list_front(eseq.items);
             TEST_ASSERT_TRUE(atomic_load(&(item->waiting)));
         }
@@ -218,8 +219,8 @@ static void check_execute(const ari_t *target, int expect_exp, int wait_limit, i
             }
 
             // absolute difference within 20ms of expected
-            TEST_ASSERT_TRUE(timespec_ge(remain, timespec_from_ms(wait_ms[ix] - 20)));
-            TEST_ASSERT_TRUE(timespec_le(remain, timespec_from_ms(wait_ms[ix] + 20)));
+            TEST_ASSERT_GREATER_OR_EQUAL(wait_ms[ix] - 30, timespec_to_ms(remain));
+            TEST_ASSERT_LESS_OR_EQUAL(wait_ms[ix] + 20, timespec_to_ms(remain));
 
             // manual sleep
             nanosleep(&remain, NULL);
@@ -230,8 +231,12 @@ static void check_execute(const ari_t *target, int expect_exp, int wait_limit, i
             {
                 const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
 
-                bool finished = (next->callback)(next->item);
-                if (finished)
+                refda_ctrl_exec_ctx_t ctx;
+                refda_ctrl_exec_ctx_init(&ctx, next->item);
+                (next->callback)(&ctx);
+                refda_ctrl_exec_ctx_deinit(&ctx);
+
+                if (!atomic_load(&(next->item->waiting)))
                 {
                     CACE_LOG_DEBUG("callback finished after %d iterations", ix + 1);
                     success = true;
@@ -354,6 +359,41 @@ void test_refda_exec_wait_until(int delay_ms)
 
     int wait_ms[] = { delay_ms, 0 };
     check_execute(&target, 0, 2, wait_ms);
+
+    ari_deinit(&target);
+}
+
+TEST_CASE(1000)
+void test_refda_exec_wait_cond(int delay_ms)
+{
+    // synthesize the target
+    ari_t target = ARI_INIT_UNDEFINED;
+    {
+        ari_ref_t *ref = ari_set_objref(&target);
+        ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CTRL,
+                              REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_COND);
+
+        ari_list_t params;
+        ari_list_init(params);
+        {
+            ari_t *param = ari_list_push_back_new(params);
+
+            ari_ac_t expr;
+            ari_ac_init(&expr);
+            {
+                ari_t     *expr_item = ari_list_push_back_new(expr.items);
+                ari_ref_t *pref      = ari_set_objref(expr_item);
+                // will always evaluate truthy
+                ari_objpath_set_intid(&(pref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_EDD,
+                                      REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION);
+            }
+            ari_set_ac(param, &expr);
+        }
+        ari_params_set_ac(&(ref->params), params);
+    }
+
+    int wait_ms[] = { 0 };
+    check_execute(&target, 0, 1, wait_ms);
 
     ari_deinit(&target);
 }

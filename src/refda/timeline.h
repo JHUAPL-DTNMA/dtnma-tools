@@ -20,6 +20,7 @@
 #define REFDA_TIMELINE_H_
 
 #include "exec_item.h"
+#include "ctrl_exec_ctx.h"
 #include <m-rbtree.h>
 #include <sys/time.h>
 
@@ -27,7 +28,11 @@
 extern "C" {
 #endif
 
-typedef struct
+// forward declaration for callback reference
+struct refda_ctrl_exec_ctx_s;
+typedef struct refda_ctrl_exec_ctx_s refda_ctrl_exec_ctx_t;
+
+typedef struct refda_timeline_event_s
 {
     /** Specific time at which the event should occur.
      */
@@ -36,11 +41,10 @@ typedef struct
     refda_exec_item_t *item;
     /** Execution-defined callback, which should not be null.
      *
-     * @param[in] item The associated execution item.
-     * @return True if work is done on the item and it should be considered
-     * finished. False to continue waiting.
+     * @param[in,out] ctx The associated execution context.
+     * A result value is set when the execution has finished.
      */
-    bool (*callback)(refda_exec_item_t *item);
+    void (*callback)(refda_ctrl_exec_ctx_t *ctx);
 
 } refda_timeline_event_t;
 

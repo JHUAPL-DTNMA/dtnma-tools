@@ -19,8 +19,8 @@
 #ifndef REFDA_CTRL_EXEC_CTX_H_
 #define REFDA_CTRL_EXEC_CTX_H_
 
-#include "agent.h"
 #include "runctx.h"
+#include "exec_item.h"
 #include "refda/amm/ctrl.h"
 #include <cace/amm/lookup.h>
 #include <cace/ari.h>
@@ -28,6 +28,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define REFDA_CTRL_EXEC_RESULT_TYPE_NOMATCH 2
 
 /** Context for CTRL execution activities.
  */
@@ -56,13 +58,23 @@ typedef struct refda_ctrl_exec_ctx_s
  * @param[in] item The internal execution item.
  * The result must outlive this context.
  */
-void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, const refda_amm_ctrl_desc_t *ctrl, refda_exec_item_t *item);
+void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *item);
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj);
 
-const ari_t *refda_ctrl_exec_ctx_get_aparam_index(refda_ctrl_exec_ctx_t *ctx, size_t index);
+/** Get an actual parameter for this execution.
+ *
+ * @param[in] ctx The execution context.
+ * @param[in] index The index into the parameter list.
+ * @return A pointer to the parameter value or NULL if no such parameter is present.
+ */
+const ari_t *refda_ctrl_exec_ctx_get_aparam_index(const refda_ctrl_exec_ctx_t *ctx, size_t index);
+/// @overload
+const ari_t *refda_ctrl_exec_ctx_get_aparam_name(const refda_ctrl_exec_ctx_t *ctx, const char *name);
 
-const ari_t *refda_ctrl_exec_ctx_get_aparam_name(refda_ctrl_exec_ctx_t *ctx, const char *name);
+// forward declaration for callback reference
+struct refda_timeline_event_s;
+typedef struct refda_timeline_event_s refda_timeline_event_t;
 
 /** Mark this control run as waiting for some finish condition.
  * The finished state is communicated in the callback by its context.
@@ -77,14 +89,17 @@ void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_tim
  *
  * @param[in,out] ctx The context to update.
  * @param[in] value The value to use as the execution result.
+ * @return Zero if successful and the value has a matching type.
+ * Otherwise REFDA_CTRL_EXEC_RESULT_TYPE_NOMATCH.
  */
-void refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value);
+int refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value);
 /// @overload
-void refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value);
+int refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value);
 /** @overload
  * Convenience member to mark the result as successful but null-value.
+ * The null type is the default CTRL result type.
  */
-void refda_ctrl_exec_ctx_set_result_null(refda_ctrl_exec_ctx_t *ctx);
+int refda_ctrl_exec_ctx_set_result_null(refda_ctrl_exec_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

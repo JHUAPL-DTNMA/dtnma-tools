@@ -57,9 +57,9 @@ void refda_edd_prod_ctx_init(refda_edd_prod_ctx_t *obj, const refda_amm_edd_desc
 
 void refda_edd_prod_ctx_deinit(refda_edd_prod_ctx_t *obj);
 
-const ari_t *refda_edd_prod_ctx_get_aparam_index(refda_edd_prod_ctx_t *ctx, size_t index);
+const ari_t *refda_edd_prod_ctx_get_aparam_index(const refda_edd_prod_ctx_t *ctx, size_t index);
 
-const ari_t *refda_edd_prod_ctx_get_aparam_name(refda_edd_prod_ctx_t *ctx, const char *name);
+const ari_t *refda_edd_prod_ctx_get_aparam_name(const refda_edd_prod_ctx_t *ctx, const char *name);
 
 void refda_edd_prod_ctx_set_result_copy(refda_edd_prod_ctx_t *ctx, const ari_t *value);
 

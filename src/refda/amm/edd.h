@@ -18,7 +18,6 @@
 #ifndef REFDA_AMM_EDD_H_
 #define REFDA_AMM_EDD_H_
 
-#include "refda/valprod.h"
 #include "cace/amm/typing.h"
 
 #ifdef __cplusplus

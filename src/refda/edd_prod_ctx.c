@@ -33,12 +33,12 @@ void refda_edd_prod_ctx_deinit(refda_edd_prod_ctx_t *obj)
     CHKVOID(obj);
 }
 
-const ari_t *refda_edd_prod_ctx_get_aparam_index(refda_edd_prod_ctx_t *ctx, size_t index)
+const ari_t *refda_edd_prod_ctx_get_aparam_index(const refda_edd_prod_ctx_t *ctx, size_t index)
 {
     return ari_array_cget(ctx->prodctx->deref->aparams.ordered, index);
 }
 
-const ari_t *refda_edd_prod_ctx_get_aparam_name(refda_edd_prod_ctx_t *ctx, const char *name)
+const ari_t *refda_edd_prod_ctx_get_aparam_name(const refda_edd_prod_ctx_t *ctx, const char *name)
 {
     return *named_ari_ptr_dict_cget(ctx->prodctx->deref->aparams.named, name);
 }

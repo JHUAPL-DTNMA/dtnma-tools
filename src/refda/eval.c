@@ -146,6 +146,15 @@ int refda_eval_target(refda_runctx_t *runctx, ari_t *result, const ari_t *ari)
     CHKERR1(runctx);
     CHKERR1(ari);
 
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        ari_text_encode(buf, ari, ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("Evaluation input %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
     /* FIXME: handle target of object reference for rule/ctrl conditions.
      * This is not reachable for reporting alone.
     ari_t tgt_exp;
@@ -161,7 +170,6 @@ int refda_eval_target(refda_runctx_t *runctx, ari_t *result, const ari_t *ari)
     {
         return REFDA_EVAL_ERR_BAD_TYPE;
     }
-    CACE_LOG_DEBUG("Evaluating EXPR with %d items", ari_list_size(ac->items));
 
     refda_eval_ctx_t eval_ctx;
     refda_eval_ctx_init(&eval_ctx, runctx);

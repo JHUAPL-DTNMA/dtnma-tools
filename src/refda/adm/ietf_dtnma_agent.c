@@ -35,15 +35,78 @@
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
+#include "refda/eval.h"
 #include <timespec.h>
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
 
-static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *item)
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_ctrl_exec_ctx_t *ctx)
 {
-    refda_exec_item_set_result_null(item);
-    return true;
+    refda_ctrl_exec_ctx_set_result_null(ctx);
+}
+
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_t *ctx)
+{
+    const ari_t *cond = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    if (!cond)
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    int   res    = refda_eval_target(ctx->runctx, &result, cond);
+    if (res)
+    {
+        CACE_LOG_ERR("failed to evaluate condition, error %d", res);
+        ari_set_bool(&result, false);
+    }
+
+    ari_t             as_bool = ARI_INIT_UNDEFINED;
+    const amm_type_t *typeobj = amm_type_get_builtin(ARI_TYPE_BOOL);
+    res                       = amm_type_convert(typeobj, &as_bool, &result);
+    if (res)
+    {
+        CACE_LOG_ERR("failed to get bool state, error %d", res);
+        ari_set_bool(&as_bool, false);
+    }
+
+    bool truthy;
+    if (ari_get_bool(&as_bool, &truthy))
+    {
+        CACE_LOG_ERR("failed to get bool value");
+        truthy = false;
+    }
+
+    if (truthy)
+    {
+        refda_ctrl_exec_ctx_set_result_copy(ctx, &result);
+    }
+    else
+    {
+        struct timespec nowtime;
+
+        int res = clock_gettime(CLOCK_REALTIME, &nowtime);
+        if (res)
+        {
+            // handled as failure
+            CACE_LOG_ERR("Failed clock_gettime()");
+        }
+        else
+        {
+            // check again in 1s
+            refda_timeline_event_t event = {
+                .ts       = timespec_add(nowtime, timespec_from_ms(1000)),
+                .item     = ctx->item,
+                .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
+            };
+            refda_ctrl_exec_ctx_set_waiting(ctx, &event);
+        }
+    }
+
+    ari_deinit(&as_bool);
+    ari_deinit(&result);
 }
 
 static void refda_adm_ietf_dtnma_agent_set_objpath(ari_objpath_t *path, const cace_amm_obj_ns_t *ns,
@@ -866,6 +929,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
      * +-------------------------------------------------------------------------+
      */
+    // initial check and kickoff timers
+    refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
@@ -2210,7 +2275,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 {
                     ari_t name = ARI_INIT_UNDEFINED;
                     // ari://ietf-amm/TYPEDEF/eval-tgt
-                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 16);
+                    //                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 16);
+                    ari_set_aritype(&name, ARI_TYPE_AC);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }

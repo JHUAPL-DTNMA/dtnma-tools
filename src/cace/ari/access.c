@@ -449,6 +449,22 @@ void ari_set_aritype(ari_t *ari, ari_type_t type)
     };
 }
 
+void ari_set_aritype_text(ari_t *ari, ari_type_t type)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+
+    const char *buf = ari_type_to_name(type);
+
+    cace_data_t  data;
+    const size_t len = strlen(buf) + 1;
+    cace_data_init_view(&data, len, (cace_data_ptr_t)buf);
+
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_ARITYPE, .prim_type = ARI_PRIM_TSTR, .value = { .as_data = data }
+    };
+}
+
 bool ari_is_lit_typed(const ari_t *ari, ari_type_t typ)
 {
     return (ari && !(ari->is_ref) && ari->as_lit.has_ari_type && (ari->as_lit.ari_type == typ));

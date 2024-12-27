@@ -18,7 +18,7 @@
 #ifndef REFDA_AMM_CTRL_H_
 #define REFDA_AMM_CTRL_H_
 
-#include "refda/exec.h"
+#include "cace/amm/typing.h"
 
 #ifdef __cplusplus
 extern "C" {

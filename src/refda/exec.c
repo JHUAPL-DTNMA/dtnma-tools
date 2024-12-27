@@ -27,49 +27,6 @@
 #include <cace/util/defs.h>
 #include <timespec.h>
 
-static void refda_exec_ctrl_fix_result(refda_exec_item_t *item)
-{
-    refda_amm_ctrl_desc_t *ctrl = item->deref.obj->app_data.ptr;
-    CHKVOID(ctrl);
-
-    if (amm_type_is_valid(&(ctrl->res_type)))
-    {
-        // force result type
-        ari_t tmp;
-        ari_init(&tmp);
-        int res = amm_type_convert(&(ctrl->res_type), &tmp, &(item->result));
-        ari_set_move(&(item->result), &tmp);
-        if (res)
-        {
-            CACE_LOG_ERR("CTRL result value failed to convert");
-            ari_set_undefined(&(item->result));
-        }
-    }
-    else
-    {
-        // success is treated as a null value
-        if (ari_is_undefined(&(item->result)))
-        {
-            ari_set_null(&(item->result));
-        }
-        else if (!ari_is_null(&(item->result)))
-        {
-            CACE_LOG_ERR("CTRL result value without result type");
-            // should not have a result
-            ari_set_undefined(&(item->result));
-        }
-    }
-
-    if (cace_log_is_enabled_for(LOG_DEBUG))
-    {
-        string_t buf;
-        string_init(buf);
-        ari_text_encode(buf, &(item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("result converted to %s", string_get_cstr(buf));
-        string_clear(buf);
-    }
-}
-
 /** Finish the execution of an item.
  * Also report on a result if requested.
  */
@@ -88,9 +45,7 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
 
     if (!ari_is_null(&(runctx->nonce)))
     {
-        refda_exec_ctrl_fix_result(item);
-
-        // generate report regardless of production
+        // generate report regardless of success or failure
         CACE_LOG_DEBUG("Pushing execution result");
         refda_reporting_ctrl(runctx, &(item->ref), &(item->result));
     }
@@ -124,7 +79,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
     }
     {
         refda_ctrl_exec_ctx_t ctx;
-        refda_ctrl_exec_ctx_init(&ctx, ctrl, item);
+        refda_ctrl_exec_ctx_init(&ctx, item);
         (ctrl->execute)(&ctx);
         refda_ctrl_exec_ctx_deinit(&ctx);
         CACE_LOG_DEBUG("execution callback returned");
@@ -445,8 +400,13 @@ void *refda_exec_worker(void *arg)
                 }
 
                 CACE_LOG_DEBUG("running deferred callback");
-                bool finished = (next->callback)(next->item);
-                if (finished)
+                {
+                    refda_ctrl_exec_ctx_t ctx;
+                    refda_ctrl_exec_ctx_init(&ctx, next->item);
+                    (next->callback)(&ctx);
+                    refda_ctrl_exec_ctx_deinit(&ctx);
+                }
+                if (!atomic_load(&(next->item->waiting)))
                 {
                     refda_exec_ctrl_finish(next->item);
                 }
