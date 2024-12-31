@@ -54,17 +54,17 @@ static void amm_semtype_use_name(const amm_type_t *self, ari_t *name)
     {
         ari_t key = ARI_INIT_UNDEFINED;
         ari_set_tstr(&key, "name", false);
-        ari_t val = ARI_INIT_UNDEFINED;
-        ari_set_copy(&val, &(semtype->name));
-        ari_tree_set_at(params, key, val);
+        ari_t *val = ari_tree_safe_get(params, key);
+        ari_set_copy(val, &(semtype->name));
+        ari_deinit(&key);
     }
 #if 0
     {
         ari_t key = ARI_INIT_UNDEFINED;
         ari_set_tstr(&key, "resolved", false);
-        ari_t val = ARI_INIT_UNDEFINED;
-        amm_type_get_name(semtype->base, &val);
-        ari_tree_set_at(params, key, val);
+        ari_t *val = ari_tree_safe_get(params, key);
+        amm_type_get_name(semtype->base, val);
+        ari_deinit(&key);
     }
 #endif
     ari_params_set_am(&(ref->params), params);
@@ -170,9 +170,9 @@ static void amm_semtype_ulist_name(const amm_type_t *self, ari_t *name)
     {
         ari_t key = ARI_INIT_UNDEFINED;
         ari_set_tstr(&key, "item-type", false);
-        ari_t val = ARI_INIT_UNDEFINED;
-        amm_type_get_name(&(semtype->item_type), &val);
-        ari_tree_set_at(params, key, val);
+        ari_t *val = ari_tree_safe_get(params, key);
+        amm_type_get_name(&(semtype->item_type), val);
+        ari_deinit(&key);
     }
     // FIXME other parameters
     ari_params_set_am(&(ref->params), params);
