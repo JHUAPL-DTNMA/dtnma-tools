@@ -2275,8 +2275,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 {
                     ari_t name = ARI_INIT_UNDEFINED;
                     // ari://ietf-amm/TYPEDEF/eval-tgt
-                    //                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 16);
-                    ari_set_aritype(&name, ARI_TYPE_AC);
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 16);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }

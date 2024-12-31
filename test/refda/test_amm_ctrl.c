@@ -98,8 +98,8 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *ctrl, cons
     TEST_ASSERT_EQUAL_INT(0, ari_set_copy(&mock_result_store, &outval));
 
     eitem.deref.obj_type = ARI_TYPE_CTRL;
-    eitem.deref.obj = &obj;
-    int res = cace_amm_actual_param_set_populate(&(eitem.deref.aparams), fparams, &(inref.as_ref.params));
+    eitem.deref.obj      = &obj;
+    int res              = cace_amm_actual_param_set_populate(&(eitem.deref.aparams), fparams, &(inref.as_ref.params));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_ctrl_exec_ctx_t ctx;

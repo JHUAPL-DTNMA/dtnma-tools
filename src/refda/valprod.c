@@ -53,6 +53,7 @@ static int refda_valprod_var_run(const refda_amm_var_desc_t *obj, refda_valprod_
     ari_set_copy(&(ctx->value), &(obj->value));
     // FIXME use ctx parameters to substitute
 
+    if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         string_t buf;
         string_init(buf);
@@ -75,6 +76,8 @@ static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_
     refda_edd_prod_ctx_init(&eddctx, obj, prodctx);
 
     (obj->produce)(&eddctx);
+
+    if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         string_t buf;
         string_init(buf);
@@ -83,11 +86,6 @@ static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_
         string_clear(buf);
     }
 
-    if (ari_is_undefined(&(prodctx->value)))
-    {
-        CACE_LOG_WARNING("production finished with value undefined");
-        // not really a failure
-    }
     return 0;
 }
 

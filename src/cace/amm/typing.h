@@ -117,6 +117,25 @@ struct amm_type_builtin_s
 
 typedef void (*amm_semtype_deinit_f)(void *semtype);
 
+/// Result status for type matching
+typedef enum
+{
+    /// The result was not positive or negative
+    AMM_TYPE_MATCH_NOINFO,
+    /// The result was a negative (non-match)
+    AMM_TYPE_MATCH_NEGATIVE,
+    /// The result was a positive (match)
+    AMM_TYPE_MATCH_POSITIVE,
+    AMM_TYPE_MATCH_UNDEFINED,
+} amm_type_match_res_t;
+
+/** Return either a postive or negative match depending on a condition.
+ */
+static inline amm_type_match_res_t amm_type_match_pos_neg(bool cond)
+{
+    return cond ? AMM_TYPE_MATCH_POSITIVE : AMM_TYPE_MATCH_NEGATIVE;
+}
+
 /** Descriptor for each built-in (ARI type) and semantic type within the AMM.
  * Users of this struct must treat it as opaque and not access any individual
  * members directly, instead use amm_type_set_* functions to set its state
@@ -141,7 +160,7 @@ struct amm_type_s
      * @param[in] ari The value to check.
      * @return True if the value matches this type.
      */
-    bool (*match)(const amm_type_t *self, const ari_t *ari);
+    amm_type_match_res_t (*match)(const amm_type_t *self, const ari_t *ari);
 
     /** Convert a value to this type if possible.
      * It is expected that many input values will not be convertible to any
@@ -225,9 +244,9 @@ bool amm_type_get_name(const amm_type_t *type, ari_t *name);
  * @param[in] type The type to check against.
  * @param[in] ari The value to check.
  * This struct must be initialized.
- * @return True if the type fully matches the value.
+ * @return AMM_TYPE_MATCH_POSITIVE if the type fully matches the value.
  */
-bool amm_type_match(const amm_type_t *type, const ari_t *ari);
+amm_type_match_res_t amm_type_match(const amm_type_t *type, const ari_t *ari);
 
 /** Force a value to be converted to a specific type (built-in or semantic).
  *

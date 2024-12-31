@@ -24,7 +24,7 @@
 // Allow this macro
 #define TEST_CASE(...)
 
-static void check_match(const amm_type_t *type, const char *inhex, bool expect)
+static void check_match(const amm_type_t *type, const char *inhex, amm_type_match_res_t expect)
 {
     string_t intext;
     string_init_set_str(intext, inhex);
@@ -39,8 +39,8 @@ static void check_match(const amm_type_t *type, const char *inhex, bool expect)
     cace_data_deinit(&indata);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
 
-    res = amm_type_match(type, &val);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect, res, "amm_type_match() failed");
+    amm_type_match_res_t got = amm_type_match(type, &val);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect, got, "amm_type_match() failed");
 
     ari_deinit(&val);
 }
@@ -89,6 +89,7 @@ static void check_convert(const amm_type_t *type, const char *inhex, const char 
     ari_deinit(&outval);
 }
 
+TEST_CASE(ARI_TYPE_LITERAL)
 TEST_CASE(ARI_TYPE_NULL)
 TEST_CASE(ARI_TYPE_BOOL)
 TEST_CASE(ARI_TYPE_BYTE)
@@ -110,6 +111,16 @@ TEST_CASE(ARI_TYPE_AM)
 TEST_CASE(ARI_TYPE_TBL)
 TEST_CASE(ARI_TYPE_EXECSET)
 TEST_CASE(ARI_TYPE_RPTSET)
+TEST_CASE(ARI_TYPE_OBJECT)
+TEST_CASE(ARI_TYPE_IDENT)
+TEST_CASE(ARI_TYPE_TYPEDEF)
+TEST_CASE(ARI_TYPE_CONST)
+TEST_CASE(ARI_TYPE_VAR)
+TEST_CASE(ARI_TYPE_EDD)
+TEST_CASE(ARI_TYPE_CTRL)
+TEST_CASE(ARI_TYPE_OPER)
+TEST_CASE(ARI_TYPE_SBR)
+TEST_CASE(ARI_TYPE_TBR)
 void test_amm_type_get_name(ari_type_t type)
 {
     const amm_type_t *typeobj = amm_type_get_builtin(type);
@@ -124,61 +135,61 @@ void test_amm_type_get_name(ari_type_t type)
     TEST_PRINTF("got name %s", (const char *)(data->ptr));
 }
 
-TEST_CASE("F7", false)               // ari:undefined
-TEST_CASE("F6", true)                // ari:null
-TEST_CASE("F4", false)               // ari:false
-TEST_CASE("F5", false)               // ari:true
-TEST_CASE("0A", false)               // ari:10
-TEST_CASE("8201F5", false)           // ari:/BOOL/true
-TEST_CASE("82041864", false)         // ari:/INT/100 matches
-TEST_CASE("82061864", false)         // ari:/VAST/100 explicitly not an INT
-TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
-void test_amm_type_match_null(const char *inhex, bool expect)
+TEST_CASE("F7", AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
+TEST_CASE("F6", AMM_TYPE_MATCH_POSITIVE)               // ari:null
+TEST_CASE("F4", AMM_TYPE_MATCH_NEGATIVE)               // ari:false
+TEST_CASE("F5", AMM_TYPE_MATCH_NEGATIVE)               // ari:true
+TEST_CASE("0A", AMM_TYPE_MATCH_NEGATIVE)               // ari:10
+TEST_CASE("8201F5", AMM_TYPE_MATCH_NEGATIVE)           // ari:/BOOL/true
+TEST_CASE("82041864", AMM_TYPE_MATCH_NEGATIVE)         // ari:/INT/100 matches
+TEST_CASE("82061864", AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100 explicitly not an INT
+TEST_CASE("8402200481626869", AMM_TYPE_MATCH_NEGATIVE) // ari://2/-1/4(hi)
+void test_amm_type_match_null(const char *inhex, amm_type_match_res_t expect)
 {
     const amm_type_t *type = amm_type_get_builtin(ARI_TYPE_NULL);
     check_match(type, inhex, expect);
 }
 
-TEST_CASE("F7", false)               // ari:undefined
-TEST_CASE("F6", false)               // ari:null
-TEST_CASE("F4", false)               // ari:false
-TEST_CASE("F5", false)               // ari:true
-TEST_CASE("0A", true)                // ari:10
-TEST_CASE("82041864", true)          // ari:/INT/100 matches
-TEST_CASE("82061864", false)         // ari:/VAST/100 explicitly not an INT
-TEST_CASE("FA49864700", true)        // ari:1.1e+06
-TEST_CASE("8208FA49864700", false)   // ari:/REAL32/1.1e+06 explicitly not an INT
-TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
-void test_amm_type_match_int(const char *inhex, bool expect)
+TEST_CASE("F7", AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
+TEST_CASE("F6", AMM_TYPE_MATCH_NEGATIVE)               // ari:null
+TEST_CASE("F4", AMM_TYPE_MATCH_NEGATIVE)               // ari:false
+TEST_CASE("F5", AMM_TYPE_MATCH_NEGATIVE)               // ari:true
+TEST_CASE("0A", AMM_TYPE_MATCH_POSITIVE)               // ari:10
+TEST_CASE("82041864", AMM_TYPE_MATCH_POSITIVE)         // ari:/INT/100 matches
+TEST_CASE("82061864", AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100 explicitly not an INT
+TEST_CASE("FA49864700", AMM_TYPE_MATCH_POSITIVE)       // ari:1.1e+06
+TEST_CASE("8208FA49864700", AMM_TYPE_MATCH_NEGATIVE)   // ari:/REAL32/1.1e+06 explicitly not an INT
+TEST_CASE("8402200481626869", AMM_TYPE_MATCH_NEGATIVE) // ari://2/-1/4(hi)
+void test_amm_type_match_int(const char *inhex, amm_type_match_res_t expect)
 {
     const amm_type_t *type = amm_type_get_builtin(ARI_TYPE_INT);
     check_match(type, inhex, expect);
 }
 
-TEST_CASE("F7", false)              // ari:undefined
-TEST_CASE("F6", false)              // ari:null
-TEST_CASE("F4", false)              // ari:false
-TEST_CASE("F5", false)              // ari:true
-TEST_CASE("0A", false)              // ari:10
-TEST_CASE("82041864", false)        // ari:/INT/100
-TEST_CASE("82061864", false)        // ari:/VAST/100
-TEST_CASE("FA49864700", false)      // ari:1.1e+06
-TEST_CASE("8402200481626869", true) // ari://2/-1/4(hi)
-void test_amm_type_match_ident(const char *inhex, bool expect)
+TEST_CASE("F7", AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
+TEST_CASE("F6", AMM_TYPE_MATCH_NEGATIVE)               // ari:null
+TEST_CASE("F4", AMM_TYPE_MATCH_NEGATIVE)               // ari:false
+TEST_CASE("F5", AMM_TYPE_MATCH_NEGATIVE)               // ari:true
+TEST_CASE("0A", AMM_TYPE_MATCH_NEGATIVE)               // ari:10
+TEST_CASE("82041864", AMM_TYPE_MATCH_NEGATIVE)         // ari:/INT/100
+TEST_CASE("82061864", AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100
+TEST_CASE("FA49864700", AMM_TYPE_MATCH_NEGATIVE)       // ari:1.1e+06
+TEST_CASE("8402200481626869", AMM_TYPE_MATCH_POSITIVE) // ari://2/-1/4(hi)
+void test_amm_type_match_ident(const char *inhex, amm_type_match_res_t expect)
 {
     const amm_type_t *type = amm_type_get_builtin(ARI_TYPE_IDENT);
     check_match(type, inhex, expect);
 }
 
-TEST_CASE("F7", false)               // ari:undefined
-TEST_CASE("F6", false)               // ari:null
-TEST_CASE("F4", false)               // ari:false
-TEST_CASE("F5", false)               // ari:true
-TEST_CASE("0A", true)                // ari:10
-TEST_CASE("82041864", true)          // ari:/INT/100 matches
-TEST_CASE("82061864", false)         // ari:/VAST/100 explicitly not an INT
-TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
-void test_amm_type_match_semtype_use_1(const char *inhex, bool expect)
+TEST_CASE("F7", AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
+TEST_CASE("F6", AMM_TYPE_MATCH_NEGATIVE)               // ari:null
+TEST_CASE("F4", AMM_TYPE_MATCH_NEGATIVE)               // ari:false
+TEST_CASE("F5", AMM_TYPE_MATCH_NEGATIVE)               // ari:true
+TEST_CASE("0A", AMM_TYPE_MATCH_POSITIVE)               // ari:10
+TEST_CASE("82041864", AMM_TYPE_MATCH_POSITIVE)         // ari:/INT/100 matches
+TEST_CASE("82061864", AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100 explicitly not an INT
+TEST_CASE("8402200481626869", AMM_TYPE_MATCH_NEGATIVE) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_use_1(const char *inhex, amm_type_match_res_t expect)
 {
     amm_type_t mytype;
     amm_type_init(&mytype);
@@ -191,19 +202,19 @@ void test_amm_type_match_semtype_use_1(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", false)               // ari:undefined
-TEST_CASE("F6", false)               // ari:null
-TEST_CASE("F4", false)               // ari:false
-TEST_CASE("F5", false)               // ari:true
-TEST_CASE("82040A", false)           // ari:/INT/10
-TEST_CASE("82118101", false)         // ari:/AC/(1)
-TEST_CASE("8211820102", true)        // ari:/AC/(1,2)
-TEST_CASE("821183010203", true)      // ari:/AC/(1,2,3)
-TEST_CASE("82118201F5", false)       // ari:/AC/(1,true)
-TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
-TEST_CASE("82138102", false)         // ari:/TBL/c=2;
-TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
-void test_amm_type_match_semtype_ulist_1(const char *inhex, bool expect)
+TEST_CASE("F7", AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
+TEST_CASE("F6", AMM_TYPE_MATCH_NEGATIVE)               // ari:null
+TEST_CASE("F4", AMM_TYPE_MATCH_NEGATIVE)               // ari:false
+TEST_CASE("F5", AMM_TYPE_MATCH_NEGATIVE)               // ari:true
+TEST_CASE("82040A", AMM_TYPE_MATCH_NEGATIVE)           // ari:/INT/10
+TEST_CASE("82118101", AMM_TYPE_MATCH_NEGATIVE)         // ari:/AC/(1)
+TEST_CASE("8211820102", AMM_TYPE_MATCH_POSITIVE)       // ari:/AC/(1,2)
+TEST_CASE("821183010203", AMM_TYPE_MATCH_POSITIVE)     // ari:/AC/(1,2,3)
+TEST_CASE("82118201F5", AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,true)
+TEST_CASE("8212A10102", AMM_TYPE_MATCH_NEGATIVE)       // ari:/AM/(1=2)
+TEST_CASE("82138102", AMM_TYPE_MATCH_NEGATIVE)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", AMM_TYPE_MATCH_NEGATIVE) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_ulist_1(const char *inhex, amm_type_match_res_t expect)
 {
     amm_type_t mytype;
     amm_type_init(&mytype);
@@ -221,19 +232,19 @@ void test_amm_type_match_semtype_ulist_1(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", false)               // ari:undefined
-TEST_CASE("F6", false)               // ari:null
-TEST_CASE("F4", false)               // ari:false
-TEST_CASE("F5", false)               // ari:true
-TEST_CASE("82040A", false)           // ari:/INT/10
-TEST_CASE("82118101", false)         // ari:/AC/(1) too few items
-TEST_CASE("8211820102", false)       // ari:/AC/(1,2) bad item type
-TEST_CASE("82118201F5", true)        // ari:/AC/(1,true)
-TEST_CASE("82118301F503", false)     // ari:/AC/(1,true,3) too many items
-TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
-TEST_CASE("82138102", false)         // ari:/TBL/c=2;
-TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
-void test_amm_type_match_semtype_dlist_2item(const char *inhex, bool expect)
+TEST_CASE("F7", AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
+TEST_CASE("F6", AMM_TYPE_MATCH_NEGATIVE)               // ari:null
+TEST_CASE("F4", AMM_TYPE_MATCH_NEGATIVE)               // ari:false
+TEST_CASE("F5", AMM_TYPE_MATCH_NEGATIVE)               // ari:true
+TEST_CASE("82040A", AMM_TYPE_MATCH_NEGATIVE)           // ari:/INT/10
+TEST_CASE("82118101", AMM_TYPE_MATCH_NEGATIVE)         // ari:/AC/(1) too few items
+TEST_CASE("8211820102", AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,2) bad item type
+TEST_CASE("82118201F5", AMM_TYPE_MATCH_POSITIVE)       // ari:/AC/(1,true)
+TEST_CASE("82118301F503", AMM_TYPE_MATCH_NEGATIVE)     // ari:/AC/(1,true,3) too many items
+TEST_CASE("8212A10102", AMM_TYPE_MATCH_NEGATIVE)       // ari:/AM/(1=2)
+TEST_CASE("82138102", AMM_TYPE_MATCH_NEGATIVE)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", AMM_TYPE_MATCH_NEGATIVE) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_dlist_2item(const char *inhex, amm_type_match_res_t expect)
 {
     // diverse list of int and bool
     amm_type_t mytype;
@@ -257,21 +268,21 @@ void test_amm_type_match_semtype_dlist_2item(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", false)               // ari:undefined
-TEST_CASE("F6", false)               // ari:null
-TEST_CASE("F4", false)               // ari:false
-TEST_CASE("F5", false)               // ari:true
-TEST_CASE("82040A", false)           // ari:/INT/10
-TEST_CASE("82118101", false)         // ari:/AC/(1) too few items
-TEST_CASE("8211820102", false)       // ari:/AC/(1,2) bad item type
-TEST_CASE("82118201F5", true)        // ari:/AC/(1,true)
-TEST_CASE("82118301F5F4", true)      // ari:/AC/(1,true,false)
-TEST_CASE("82118401F5F4F5", false)   // ari:/AC/(1,true,false,true)
-TEST_CASE("82118301F503", false)     // ari:/AC/(1,true,3) unmatched items
-TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
-TEST_CASE("82138102", false)         // ari:/TBL/c=2;
-TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
-void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, bool expect)
+TEST_CASE("F7", AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
+TEST_CASE("F6", AMM_TYPE_MATCH_NEGATIVE)               // ari:null
+TEST_CASE("F4", AMM_TYPE_MATCH_NEGATIVE)               // ari:false
+TEST_CASE("F5", AMM_TYPE_MATCH_NEGATIVE)               // ari:true
+TEST_CASE("82040A", AMM_TYPE_MATCH_NEGATIVE)           // ari:/INT/10
+TEST_CASE("82118101", AMM_TYPE_MATCH_NEGATIVE)         // ari:/AC/(1) too few items
+TEST_CASE("8211820102", AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,2) bad item type
+TEST_CASE("82118201F5", AMM_TYPE_MATCH_POSITIVE)       // ari:/AC/(1,true)
+TEST_CASE("82118301F5F4", AMM_TYPE_MATCH_POSITIVE)     // ari:/AC/(1,true,false)
+TEST_CASE("82118401F5F4F5", AMM_TYPE_MATCH_NEGATIVE)   // ari:/AC/(1,true,false,true)
+TEST_CASE("82118301F503", AMM_TYPE_MATCH_NEGATIVE)     // ari:/AC/(1,true,3) unmatched items
+TEST_CASE("8212A10102", AMM_TYPE_MATCH_NEGATIVE)       // ari:/AM/(1=2)
+TEST_CASE("82138102", AMM_TYPE_MATCH_NEGATIVE)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", AMM_TYPE_MATCH_NEGATIVE) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, amm_type_match_res_t expect)
 {
     // diverse list of int and seq-of-bool
     amm_type_t mytype;
@@ -301,18 +312,18 @@ void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, bool expect
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", false)               // ari:undefined
-TEST_CASE("F6", false)               // ari:null
-TEST_CASE("F4", false)               // ari:false
-TEST_CASE("F5", false)               // ari:true
-TEST_CASE("82040A", false)           // ari:/INT/10
-TEST_CASE("8211820102", false)       // ari:/AC/(1,2)
-TEST_CASE("82118201F5", false)       // ari:/AC/(1,true)
-TEST_CASE("8212A10102", false)       // ari:/AM/(1=2)
-TEST_CASE("8212A101F5", true)        // ari:/AM/(1=true)
-TEST_CASE("82138102", false)         // ari:/TBL/c=2;
-TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
-void test_amm_type_match_semtype_umap_1(const char *inhex, bool expect)
+TEST_CASE("F7", AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
+TEST_CASE("F6", AMM_TYPE_MATCH_NEGATIVE)               // ari:null
+TEST_CASE("F4", AMM_TYPE_MATCH_NEGATIVE)               // ari:false
+TEST_CASE("F5", AMM_TYPE_MATCH_NEGATIVE)               // ari:true
+TEST_CASE("82040A", AMM_TYPE_MATCH_NEGATIVE)           // ari:/INT/10
+TEST_CASE("8211820102", AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,2)
+TEST_CASE("82118201F5", AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,true)
+TEST_CASE("8212A10102", AMM_TYPE_MATCH_NEGATIVE)       // ari:/AM/(1=2)
+TEST_CASE("8212A101F5", AMM_TYPE_MATCH_POSITIVE)       // ari:/AM/(1=true)
+TEST_CASE("82138102", AMM_TYPE_MATCH_NEGATIVE)         // ari:/TBL/c=2;
+TEST_CASE("8402200481626869", AMM_TYPE_MATCH_NEGATIVE) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_umap_1(const char *inhex, amm_type_match_res_t expect)
 {
     amm_type_t mytype;
     amm_type_init(&mytype);
@@ -328,13 +339,13 @@ void test_amm_type_match_semtype_umap_1(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F6", false)           // ari:null
-TEST_CASE("8211820102", false)   // ari:/AC/(1,2)
-TEST_CASE("82118201F5", false)   // ari:/AC/(1,true)
-TEST_CASE("82138102", true)      // ari:/TBL/c=2;
-TEST_CASE("8213830201F5", true)  // ari:/TBL/c=2;(1,true)
-TEST_CASE("821383020103", false) // ari:/TBL/c=2;(1,3)
-void test_amm_type_match_semtype_tblt_1(const char *inhex, bool expect)
+TEST_CASE("F6", AMM_TYPE_MATCH_NEGATIVE)           // ari:null
+TEST_CASE("8211820102", AMM_TYPE_MATCH_NEGATIVE)   // ari:/AC/(1,2)
+TEST_CASE("82118201F5", AMM_TYPE_MATCH_NEGATIVE)   // ari:/AC/(1,true)
+TEST_CASE("82138102", AMM_TYPE_MATCH_POSITIVE)     // ari:/TBL/c=2;
+TEST_CASE("8213830201F5", AMM_TYPE_MATCH_POSITIVE) // ari:/TBL/c=2;(1,true)
+TEST_CASE("821383020103", AMM_TYPE_MATCH_NEGATIVE) // ari:/TBL/c=2;(1,3)
+void test_amm_type_match_semtype_tblt_1(const char *inhex, amm_type_match_res_t expect)
 {
     amm_type_t mytype;
     amm_type_init(&mytype);
@@ -357,15 +368,15 @@ void test_amm_type_match_semtype_tblt_1(const char *inhex, bool expect)
     amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", false)               // ari:undefined
-TEST_CASE("F6", true)                // ari:null
-TEST_CASE("F4", false)               // ari:false
-TEST_CASE("F5", false)               // ari:true
-TEST_CASE("0A", true)                // ari:10
-TEST_CASE("82041864", true)          // ari:/INT/100 matches
-TEST_CASE("82061864", false)         // ari:/VAST/100 explicitly not an INT
-TEST_CASE("8402200481626869", false) // ari://2/-1/4(hi)
-void test_amm_type_match_semtype_union_1(const char *inhex, bool expect)
+TEST_CASE("F7", AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
+TEST_CASE("F6", AMM_TYPE_MATCH_POSITIVE)               // ari:null
+TEST_CASE("F4", AMM_TYPE_MATCH_NEGATIVE)               // ari:false
+TEST_CASE("F5", AMM_TYPE_MATCH_NEGATIVE)               // ari:true
+TEST_CASE("0A", AMM_TYPE_MATCH_POSITIVE)               // ari:10
+TEST_CASE("82041864", AMM_TYPE_MATCH_POSITIVE)         // ari:/INT/100 matches
+TEST_CASE("82061864", AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100 explicitly not an INT
+TEST_CASE("8402200481626869", AMM_TYPE_MATCH_NEGATIVE) // ari://2/-1/4(hi)
+void test_amm_type_match_semtype_union_1(const char *inhex, amm_type_match_res_t expect)
 {
     amm_type_t mytype;
     amm_type_init(&mytype);

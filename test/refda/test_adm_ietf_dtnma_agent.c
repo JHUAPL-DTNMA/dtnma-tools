@@ -49,8 +49,6 @@ int suiteTearDown(int failures)
 /// Agent context for testing
 static refda_agent_t agent;
 
-static atomic_int edd_one_state = ATOMIC_VAR_INIT(0);
-
 void setUp(void)
 {
     refda_agent_init(&agent);

@@ -36,13 +36,17 @@ static void builtin_ari_name(const amm_type_t *self, ari_t *name)
  * This checks that the object-reference or literal type, if present, is
  * as required by the type object.
  *
- * @return False if the common logic failed the match.
+ * @return Whether the common logic positively or negatively matched.
  */
-static bool builtin_common_lit_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_common_lit_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (ari->is_ref)
+    if (ari_is_undefined(ari))
     {
-        return false;
+        return AMM_TYPE_MATCH_UNDEFINED;
+    }
+    else if (ari->is_ref)
+    {
+        return AMM_TYPE_MATCH_NEGATIVE;
     }
     else
     {
@@ -50,10 +54,10 @@ static bool builtin_common_lit_match(const amm_type_t *self, const ari_t *ari)
         // explicit type matching
         if (obj->has_ari_type && (obj->ari_type != self->as_builtin.ari_type))
         {
-            return false;
+            return AMM_TYPE_MATCH_NEGATIVE;
         }
     }
-    return true;
+    return AMM_TYPE_MATCH_NOINFO;
 }
 
 /** Implement common conversion logic.
@@ -77,9 +81,24 @@ static void ari_force_lit_type(ari_t *out, ari_type_t ari_type)
     out->as_lit.ari_type     = ari_type;
 }
 
-static bool builtin_literal_match(const amm_type_t *self _U_, const ari_t *ari)
+static amm_type_match_res_t builtin_literal_match(const amm_type_t *self _U_, const ari_t *ari)
 {
-    return !(ari->is_ref);
+    if (ari_is_undefined(ari))
+    {
+        return AMM_TYPE_MATCH_UNDEFINED;
+    }
+    return amm_type_match_pos_neg(!(ari->is_ref));
+}
+
+static amm_type_match_res_t builtin_default_match(const amm_type_t *self, const ari_t *ari)
+{
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got == AMM_TYPE_MATCH_NOINFO)
+    {
+        // no other conditions here
+        got = AMM_TYPE_MATCH_POSITIVE;
+    }
+    return got;
 }
 
 /** A default convert function that simply copies a value that matches using
@@ -95,21 +114,27 @@ static int builtin_default_convert(const amm_type_t *self, ari_t *out, const ari
     {
         return CACE_AMM_ERR_CONVERT_NULLFUNC;
     }
-    if (!(self->match)(self, in))
+    amm_type_match_res_t got = self->match(self, in);
+    switch (got)
     {
-        return CACE_AMM_ERR_CONVERT_BADVALUE;
+        case AMM_TYPE_MATCH_NOINFO:
+        case AMM_TYPE_MATCH_NEGATIVE:
+            return CACE_AMM_ERR_CONVERT_BADVALUE;
+        default:
+            break;
     }
     ari_set_copy(out, in);
     return 0;
 }
 
-static bool builtin_null_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_null_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return ari->as_lit.prim_type == ARI_PRIM_NULL;
+    return amm_type_match_pos_neg(ari->as_lit.prim_type == ARI_PRIM_NULL);
 }
 
 static int builtin_null_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
@@ -123,13 +148,14 @@ static int builtin_null_convert(const amm_type_t *self, ari_t *out, const ari_t 
     return 0;
 }
 
-static bool builtin_bool_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_bool_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return ari->as_lit.prim_type == ARI_PRIM_BOOL;
+    return amm_type_match_pos_neg(ari->as_lit.prim_type == ARI_PRIM_BOOL);
 }
 
 static int builtin_bool_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
@@ -332,13 +358,14 @@ static bool builtin_anyfloat_constraints(const ari_type_anyfloat_constraints_t *
     return (isnan(value) || isinf(value) || ((value >= cnst->float_min) && (value <= cnst->float_max)));
 }
 
-static bool builtin_byte_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_byte_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return builtin_anyint_constraints(&ari_builtin_byte_cnst, ari);
+    return amm_type_match_pos_neg(builtin_anyint_constraints(&ari_builtin_byte_cnst, ari));
 }
 
 static int builtin_byte_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
@@ -363,13 +390,14 @@ static int builtin_byte_convert(const amm_type_t *self, ari_t *out, const ari_t 
     }
 }
 
-static bool builtin_int_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_int_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return builtin_anyint_constraints(&ari_builtin_int_cnst, ari);
+    return amm_type_match_pos_neg(builtin_anyint_constraints(&ari_builtin_int_cnst, ari));
 }
 
 static int builtin_int_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
@@ -394,13 +422,14 @@ static int builtin_int_convert(const amm_type_t *self, ari_t *out, const ari_t *
     }
 }
 
-static bool builtin_uint_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_uint_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return builtin_anyint_constraints(&ari_builtin_uint_cnst, ari);
+    return amm_type_match_pos_neg(builtin_anyint_constraints(&ari_builtin_uint_cnst, ari));
 }
 
 static int builtin_uint_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
@@ -425,13 +454,14 @@ static int builtin_uint_convert(const amm_type_t *self, ari_t *out, const ari_t 
     }
 }
 
-static bool builtin_vast_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_vast_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return builtin_anyint_constraints(&ari_builtin_vast_cnst, ari);
+    return amm_type_match_pos_neg(builtin_anyint_constraints(&ari_builtin_vast_cnst, ari));
 }
 
 static int builtin_vast_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
@@ -456,13 +486,14 @@ static int builtin_vast_convert(const amm_type_t *self, ari_t *out, const ari_t 
     }
 }
 
-static bool builtin_uvast_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_uvast_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return builtin_anyint_constraints(&ari_builtin_uvast_cnst, ari);
+    return amm_type_match_pos_neg(builtin_anyint_constraints(&ari_builtin_uvast_cnst, ari));
 }
 
 static int builtin_uvast_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
@@ -487,22 +518,24 @@ static int builtin_uvast_convert(const amm_type_t *self, ari_t *out, const ari_t
     }
 }
 
-static bool builtin_real32_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_real32_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return builtin_anyfloat_constraints(&ari_builtin_real32_cnst, NULL, ari);
+    return amm_type_match_pos_neg(builtin_anyfloat_constraints(&ari_builtin_real32_cnst, NULL, ari));
 }
 
-static bool builtin_real64_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_real64_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return builtin_anyfloat_constraints(&ari_builtin_real64_cnst, NULL, ari);
+    return amm_type_match_pos_neg(builtin_anyfloat_constraints(&ari_builtin_real64_cnst, NULL, ari));
 }
 
 static int builtin_real64_convert(const amm_type_t *self, ari_t *out, const ari_t *in)
@@ -602,54 +635,62 @@ static int builtin_time_convert(const amm_type_t *self, ari_t *out, const ari_t 
     }
 }
 
-static bool builtin_textstr_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_textstr_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return ari->as_lit.prim_type == ARI_PRIM_TSTR;
+    return amm_type_match_pos_neg(ari->as_lit.prim_type == ARI_PRIM_TSTR);
 }
 
-static bool builtin_bytestr_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_bytestr_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return ari->as_lit.prim_type == ARI_PRIM_BSTR;
+    return amm_type_match_pos_neg(ari->as_lit.prim_type == ARI_PRIM_BSTR);
 }
 
-static bool builtin_idseg_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_idseg_match(const amm_type_t *self, const ari_t *ari)
 {
-    if (!builtin_common_lit_match(self, ari))
+    amm_type_match_res_t got = builtin_common_lit_match(self, ari);
+    if (got != AMM_TYPE_MATCH_NOINFO)
     {
-        return false;
+        return got;
     }
-    return ((ari->as_lit.prim_type == ARI_PRIM_TSTR) || (ari->as_lit.prim_type == ARI_PRIM_INT64));
+    return amm_type_match_pos_neg((ari->as_lit.prim_type == ARI_PRIM_TSTR)
+                                  || (ari->as_lit.prim_type == ARI_PRIM_INT64));
 }
 
-static bool builtin_object_match(const amm_type_t *self _U_, const ari_t *ari)
+static amm_type_match_res_t builtin_object_match(const amm_type_t *self _U_, const ari_t *ari)
 {
-    return ari->is_ref;
+    if (ari_is_undefined(ari))
+    {
+        return AMM_TYPE_MATCH_UNDEFINED;
+    }
+    return amm_type_match_pos_neg(ari->is_ref);
 }
 
-static bool builtin_anyobj_match(const amm_type_t *self, const ari_t *ari)
+static amm_type_match_res_t builtin_common_objref_match(const amm_type_t *self, const ari_t *ari)
 {
+    if (ari_is_undefined(ari))
+    {
+        return AMM_TYPE_MATCH_UNDEFINED;
+    }
     if (!(ari->is_ref))
     {
-        return false;
+        return AMM_TYPE_MATCH_NEGATIVE;
     }
     const ari_ref_t *obj = &(ari->as_ref);
     if (!(obj->objpath.has_ari_type))
     {
-        return false;
+        return AMM_TYPE_MATCH_NEGATIVE;
     }
-    if (obj->objpath.ari_type != self->as_builtin.ari_type)
-    {
-        return false;
-    }
-    return true;
+    return amm_type_match_pos_neg(obj->objpath.ari_type == self->as_builtin.ari_type);
 }
 
 static amm_type_t amm_builtins[] = {
@@ -742,14 +783,14 @@ static amm_type_t amm_builtins[] = {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TP,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_common_lit_match,
+        .match               = builtin_default_match,
         .convert             = builtin_time_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TD,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_common_lit_match,
+        .match               = builtin_default_match,
         .convert             = builtin_time_convert,
     },
     {
@@ -763,7 +804,7 @@ static amm_type_t amm_builtins[] = {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_CBOR,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_common_lit_match,
+        .match               = builtin_default_match,
         .convert             = builtin_default_convert,
     },
     {
@@ -777,35 +818,35 @@ static amm_type_t amm_builtins[] = {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_AC,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_common_lit_match,
+        .match               = builtin_default_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_AM,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_common_lit_match,
+        .match               = builtin_default_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TBL,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_common_lit_match,
+        .match               = builtin_default_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_EXECSET,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_common_lit_match,
+        .match               = builtin_default_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_RPTSET,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_common_lit_match,
+        .match               = builtin_default_match,
         .convert             = builtin_default_convert,
     },
     // object types below
@@ -820,63 +861,63 @@ static amm_type_t amm_builtins[] = {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_IDENT,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_anyobj_match,
+        .match               = builtin_common_objref_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TYPEDEF,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_anyobj_match,
+        .match               = builtin_common_objref_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_CONST,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_anyobj_match,
+        .match               = builtin_common_objref_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_VAR,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_anyobj_match,
+        .match               = builtin_common_objref_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_EDD,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_anyobj_match,
+        .match               = builtin_common_objref_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_CTRL,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_anyobj_match,
+        .match               = builtin_common_objref_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_OPER,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_anyobj_match,
+        .match               = builtin_common_objref_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_SBR,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_anyobj_match,
+        .match               = builtin_common_objref_match,
         .convert             = builtin_default_convert,
     },
     {
         .type_class          = AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = ARI_TYPE_TBR,
         .ari_name            = builtin_ari_name,
-        .match               = builtin_anyobj_match,
+        .match               = builtin_common_objref_match,
         .convert             = builtin_default_convert,
     },
 };
@@ -1016,13 +1057,13 @@ bool amm_type_get_name(const amm_type_t *type, ari_t *name)
     return true;
 }
 
-bool amm_type_match(const amm_type_t *type, const ari_t *ari)
+amm_type_match_res_t amm_type_match(const amm_type_t *type, const ari_t *ari)
 {
-    CHKFALSE(type);
-    CHKFALSE(ari);
+    CHKRET(type, AMM_TYPE_MATCH_NEGATIVE);
+    CHKRET(ari, AMM_TYPE_MATCH_NEGATIVE);
     if (!(type->match))
     {
-        return false;
+        return AMM_TYPE_MATCH_NEGATIVE;
     }
 
     return type->match(type, ari);
@@ -1064,7 +1105,7 @@ static bool amm_builtin_validate_lit(const ari_t *ari, bool is_map_key)
         // failed lookup
         return false;
     }
-    return typ->match(typ, ari);
+    return amm_type_match(typ, ari) == AMM_TYPE_MATCH_POSITIVE;
 }
 
 /// Adapt to the visitor interface
