@@ -1090,7 +1090,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
     else
     {
         refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
-        //FIXME need agent access control
+        // FIXME need agent access control
 
         if (var && !ari_is_undefined(&(var->init_val)))
         {
@@ -1150,7 +1150,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
     else
     {
         refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
-        //FIXME need agent access control
+        // FIXME need agent access control
 
         if (var)
         {

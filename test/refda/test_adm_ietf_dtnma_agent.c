@@ -170,9 +170,7 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_reset(void)
         }
         ari_set_int(&objdata->init_val, 100);
 
-        obj = refda_register_var(
-            ex_adm, cace_amm_obj_id_withenum("test", test_var_enum),
-            objdata);
+        obj = refda_register_var(ex_adm, cace_amm_obj_id_withenum("test", test_var_enum), objdata);
         // no parameters
     }
     int res = refda_binding_obj(ARI_TYPE_VAR, obj, &agent.objs);
@@ -204,13 +202,15 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_reset(void)
         ari_t ctrl_ref;
         {
             ari_ref_t *ref = ari_init_objref(&ctrl_ref);
-            ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CTRL, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_RESET);
+            ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CTRL,
+                                  REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_RESET);
 
             ari_list_t params;
             ari_list_init(params);
             {
                 ari_t *param = ari_list_push_back_new(params);
-                ari_objpath_set_intid(&(ari_init_objref(param)->objpath), EXAMPLE_ADM_ENUM, ARI_TYPE_VAR, test_var_enum);
+                ari_objpath_set_intid(&(ari_init_objref(param)->objpath), EXAMPLE_ADM_ENUM, ARI_TYPE_VAR,
+                                      test_var_enum);
             }
             ari_params_set_ac(&(ref->params), params);
         }
@@ -252,9 +252,7 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_store(void)
             amm_type_set_use_ref_move(&objdata->val_type, &name);
         }
 
-        obj = refda_register_var(
-            ex_adm, cace_amm_obj_id_withenum("test", test_var_enum),
-            objdata);
+        obj = refda_register_var(ex_adm, cace_amm_obj_id_withenum("test", test_var_enum), objdata);
         // no parameters
     }
     int res = refda_binding_obj(ARI_TYPE_VAR, obj, &agent.objs);
@@ -286,13 +284,15 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_store(void)
         ari_t ctrl_ref;
         {
             ari_ref_t *ref = ari_init_objref(&ctrl_ref);
-            ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CTRL, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_STORE);
+            ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CTRL,
+                                  REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_STORE);
 
             ari_list_t params;
             ari_list_init(params);
             {
                 ari_t *param = ari_list_push_back_new(params);
-                ari_objpath_set_intid(&(ari_init_objref(param)->objpath), EXAMPLE_ADM_ENUM, ARI_TYPE_VAR, test_var_enum);
+                ari_objpath_set_intid(&(ari_init_objref(param)->objpath), EXAMPLE_ADM_ENUM, ARI_TYPE_VAR,
+                                      test_var_enum);
             }
             {
                 ari_t *param = ari_list_push_back_new(params);
