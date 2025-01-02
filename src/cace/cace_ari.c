@@ -113,13 +113,20 @@ static int read_text(ari_t *inval, FILE *source)
     free(buf);
 
     const char *errm = NULL;
-    res              = ari_text_decode(inval, intext, &errm);
+#if defined(ARI_TEXT_PARSE)
+    res = ari_text_decode(inval, intext, &errm);
     string_clear(intext);
     if (res)
     {
         fprintf(stderr, "Failed to decode text ARI (err %d): %s\n", res, errm);
         return 2;
     }
+#else
+    {
+        fprintf(stderr, "No support for decoding text ARI\n");
+        return 2;
+    }
+#endif /* ARI_TEXT_PARSE */
 
     return 0;
 }

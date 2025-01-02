@@ -19,6 +19,7 @@ limitations under the License.
 add_unity_test(SOURCE "test_ari_cbor.c")
 target_link_libraries(test_ari_cbor PUBLIC cace)
 
+if(ARI_TEXT_PARSE)
 add_unity_test(SOURCE "test_ari_text.c")
 target_link_libraries(test_ari_text PUBLIC cace)
 
@@ -27,6 +28,7 @@ target_link_libraries(test_ari_text_util PUBLIC cace)
 
 add_unity_test(SOURCE "test_ari_text_cbor_loopback.c")
 target_link_libraries(test_ari_text_cbor_loopback PUBLIC cace)
+endif(ARI_TEXT_PARSE)
 
 add_unity_test(SOURCE "test_ari_algo.c")
 target_link_libraries(test_ari_algo PUBLIC cace)
