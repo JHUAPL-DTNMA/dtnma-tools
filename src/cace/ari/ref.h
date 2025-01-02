@@ -126,15 +126,6 @@ void ari_objpath_set_textid(ari_objpath_t *path, const char *ns_id, ari_type_t t
 /** Set the ARI as an object reference with a specific text-named path.
  *
  * @param[in,out] path The path to modify.
- * @param[in] ns_id The namespace path segment.
- * @param type_id The object type path segment.
- * @param[in] obj_id The object ID path segment.
- */
-void ari_objpath_set_textid(ari_objpath_t *path, const char *ns_id, ari_type_t type_id, const char *obj_id);
-
-/** Set the ARI as an object reference with a specific text-named path.
- *
- * @param[in,out] path The path to modify.
  * @param[in] ns_id The namespace path segment, or NULL for none.
  * @param type_id The object type path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
  * function call.

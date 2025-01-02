@@ -35,6 +35,7 @@ typedef struct refda_edd_prod_ctx_s refda_edd_prod_ctx_t;
 typedef struct
 {
     /** The required type for the produced value.
+     * This type will not change during the lifetime of the EDD.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */

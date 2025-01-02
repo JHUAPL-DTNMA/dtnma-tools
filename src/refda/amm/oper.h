@@ -37,10 +37,12 @@ typedef struct refda_oper_eval_ctx_s refda_oper_eval_ctx_t;
 typedef struct
 {
     /** Types for each of the operands in original order.
+     * This list will not change during the lifetime of the OPER.
      */
     amm_named_type_array_t operand_types;
 
     /** Required type for the result value.
+     * This type will not change during the lifetime of the OPER.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */

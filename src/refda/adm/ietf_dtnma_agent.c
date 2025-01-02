@@ -29,6 +29,7 @@
 #include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"
 #include "refda/oper_eval_ctx.h"
+#include "refda/reporting.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
@@ -620,7 +621,12 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
                 ari_ref_t *ref = ari_set_objref(ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-            ari_array_get(row, 1); // FIXME populate this column
+
+            const refda_amm_const_desc_t *cnst = obj->app_data.ptr;
+            if (cnst)
+            {
+                amm_type_get_name(&(cnst->val_type), ari_array_get(row, 1));
+            }
 
             // append the row
             ari_tbl_move_row_array(&table, row);
@@ -701,7 +707,12 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
                 ari_ref_t *ref = ari_set_objref(ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-            ari_array_get(row, 1); // FIXME populate this column
+
+            const refda_amm_var_desc_t *var = obj->app_data.ptr;
+            if (var)
+            {
+                amm_type_get_name(&(var->val_type), ari_array_get(row, 1));
+            }
 
             // append the row
             ari_tbl_move_row_array(&table, row);
@@ -840,7 +851,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
     const ari_t *p_duration = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
     struct timespec nowtime, duration;
-
     if (ari_get_td(p_duration, &duration))
     {
         CACE_LOG_ERR("No time duration given");
@@ -890,7 +900,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
     const ari_t *p_abstime = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
     struct timespec abstime;
-
     if (ari_get_tp_posix(p_abstime, &abstime))
     {
         CACE_LOG_ERR("No time point given");
@@ -955,14 +964,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
      * +-------------------------------------------------------------------------+
      */
-    CACE_LOG_WARNING("executed!");
-
     const ari_t *ref = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
-    // FIXME mutex-serialize object store access
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
     int res = cace_amm_lookup_deref(&deref, &(ctx->runctx->agent->objs), ref);
+
+    REFDA_AGENT_UNLOCK(agent, );
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
@@ -974,7 +986,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
     }
     if (res)
     {
-        CACE_LOG_WARNING("inspect lookup failed with status %d", res);
+        CACE_LOG_WARNING("lookup failed with status %d", res);
     }
     else
     {
@@ -985,7 +997,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
         if (res)
         {
             // not setting a result will be treated as failure
-            CACE_LOG_WARNING("inspect production failed with status %d", res);
+            CACE_LOG_WARNING("production failed with status %d", res);
         }
         else
         {
@@ -1024,6 +1036,20 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
      * +-------------------------------------------------------------------------+
      */
+    const ari_t *tgt = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    if (!tgt)
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    // ignore return code because failure cannot be handled here
+    refda_reporting_target(ctx->runctx, tgt);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
@@ -1047,6 +1073,41 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
      * +-------------------------------------------------------------------------+
      */
+    const ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else
+    {
+        refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
+        //FIXME need agent access control
+
+        if (var && !ari_is_undefined(&(var->init_val)))
+        {
+            if (cace_log_is_enabled_for(LOG_DEBUG))
+            {
+                string_t buf;
+                string_init(buf);
+                ari_text_encode_objpath(buf, &(target->as_ref.objpath), ARI_TEXT_ARITYPE_TEXT);
+                CACE_LOG_DEBUG("resetting state of %s", string_get_cstr(buf));
+                string_clear(buf);
+            }
+            ari_set_copy(&(var->value), &(var->init_val));
+        }
+    }
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
@@ -1071,6 +1132,42 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
      * +-------------------------------------------------------------------------+
      */
+    const ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const ari_t *value  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else
+    {
+        refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
+        //FIXME need agent access control
+
+        if (var)
+        {
+            if (cace_log_is_enabled_for(LOG_DEBUG))
+            {
+                string_t buf;
+                string_init(buf);
+                ari_text_encode_objpath(buf, &(target->as_ref.objpath), ARI_TEXT_ARITYPE_TEXT);
+                CACE_LOG_DEBUG("setting state of %s", string_get_cstr(buf));
+                string_clear(buf);
+            }
+            ari_set_copy(&(var->value), value);
+        }
+    }
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
