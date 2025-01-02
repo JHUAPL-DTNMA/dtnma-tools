@@ -21,6 +21,7 @@
 #include "obj_desc.h"
 #include "cace/util/nocase.h"
 #include <m-rbtree.h>
+#include <m-shared-ptr.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,8 +36,10 @@ extern "C" {
  * list members.
  */
 /// @cond Doxygen_Suppress
-RBTREE_DEF(string_tree_set, m_string_t)
-DEQUE_DEF(cace_amm_obj_desc_list, cace_amm_obj_desc_t)
+M_RBTREE_DEF(string_tree_set, m_string_t)
+M_SHARED_WEAK_PTR_DEF(cace_amm_obj_desc_ptr, cace_amm_obj_desc_t)
+M_DEQUE_DEF(cace_amm_obj_desc_list, cace_amm_obj_desc_ptr_t *,
+            M_SHARED_PTR_OPLIST(cace_amm_obj_desc_ptr, M_OPL_cace_amm_obj_desc_t()))
 M_BPTREE_DEF2(cace_amm_obj_desc_by_enum, 4, int64_t, M_BASIC_OPLIST, cace_amm_obj_desc_t *, M_PTR_OPLIST)
 M_BPTREE_DEF2(cace_amm_obj_desc_by_name, 4, const char *, M_CSTR_NOCASE_OPLIST, cace_amm_obj_desc_t *, M_PTR_OPLIST)
 /// @endcond
@@ -56,8 +59,13 @@ void cace_amm_obj_ns_ctr_deinit(cace_amm_obj_ns_ctr_t *obj);
 
 #define M_OPL_cace_amm_obj_ns_ctr_t() (INIT(API_2(cace_amm_obj_ns_ctr_init)), CLEAR(API_2(cace_amm_obj_ns_ctr_deinit)))
 
+/** @struct cace_amm_obj_ns_ctr_dict_t
+ * A mapping from ari_type_t integer enumeration to cace_amm_obj_ns_ctr_t
+ * object containers.
+ */
 /// @cond Doxygen_Suppress
-M_DICT_DEF2(cace_amm_obj_ns_ctr_dict, ari_type_t, M_BASIC_OPLIST, cace_amm_obj_ns_ctr_t, M_OPL_cace_amm_obj_ns_ctr_t())
+M_DICT_DEF2(cace_amm_obj_ns_ctr_dict, ari_type_t, M_OPL_ari_type_t(), cace_amm_obj_ns_ctr_t,
+            M_OPL_cace_amm_obj_ns_ctr_t())
 /// @endcond
 
 typedef struct
@@ -98,22 +106,9 @@ typedef struct
  * @param The object enumeration.
  * @return The full object ID.
  */
-static inline cace_amm_obj_id_t cace_amm_obj_id_withenum(const char *name, int64_t intenum)
-{
-    return (cace_amm_obj_id_t) {
-        .name     = name,
-        .has_enum = true,
-        .intenum  = intenum,
-    };
-}
+cace_amm_obj_id_t cace_amm_obj_id_withenum(const char *name, int64_t intenum);
 /// @overload
-static inline cace_amm_obj_id_t cace_amm_obj_id_noenum(const char *name)
-{
-    return (cace_amm_obj_id_t) {
-        .name     = name,
-        .has_enum = false,
-    };
-}
+cace_amm_obj_id_t cace_amm_obj_id_noenum(const char *name);
 
 cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type,
                                              const cace_amm_obj_id_t obj_id);

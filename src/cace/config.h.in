@@ -23,6 +23,7 @@
 #define CACE_CONFIG_H_
 
 #ifdef __cplusplus
+#include <cstdlib>
 extern "C" {
 #endif
 
@@ -62,20 +63,20 @@ extern "C" {
 /** Define to override value/struct allocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_ALLOC(type) ARI_MALLOC(sizeof(type));
+#define M_MEMORY_ALLOC(type) ((type *) ARI_MALLOC(sizeof(type)))
 /** Define to override value/struct deallocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_DEL(ptr) ARI_FREE(ptr);
+#define M_MEMORY_DEL(ptr) ARI_FREE(ptr)
 
 /** Define to override array allocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? NULL : ARI_REALLOC((ptr), (n)*sizeof (type)))
+#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? (type *) NULL : (type *) ARI_REALLOC((ptr), (n)*sizeof (type)))
 /** Define to override array deallocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_FREE(ptr) ARI_FREE(ptr);
+#define M_MEMORY_FREE(ptr) ARI_FREE(ptr)
 
 #ifdef __cplusplus
 } // extern C

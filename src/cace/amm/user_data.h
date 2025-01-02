@@ -32,7 +32,7 @@ extern "C" {
  */
 typedef void (*cace_amm_user_data_deinit_f)(void *ptr);
 
-typedef struct
+typedef struct cace_amm_user_data_s
 {
     /// Pointer to the opaque user data being managed
     void *ptr;
@@ -42,6 +42,12 @@ typedef struct
     bool owned;
     /// An optional cleanup function for the #ptr.
     cace_amm_user_data_deinit_f deinit;
+
+#ifdef __cplusplus
+    cace_amm_user_data_s(const cace_amm_user_data_s &)            = delete;
+    cace_amm_user_data_s &operator=(const cace_amm_user_data_s &) = delete;
+#endif
+
 } cace_amm_user_data_t;
 
 void cace_amm_user_data_init(cace_amm_user_data_t *obj);

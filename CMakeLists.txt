@@ -47,7 +47,6 @@ STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS "${GIT
 message(STATUS "Using git label ${GIT_TAG_REV} to version ${GIT_TAG_VERS}")
 
 project(nm
-    LANGUAGES C
     VERSION ${GIT_TAG_VERS}
 )
 
@@ -60,6 +59,10 @@ add_definitions(
   -D_XOPEN_SOURCE
   -D_POSIX_C_SOURCE=200809L
 )
+# CXX used for compilation tests
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Generic warn/error options
 add_compile_options(

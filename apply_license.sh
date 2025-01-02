@@ -29,7 +29,7 @@ set -e
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 
 LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/apply_license.tmpl"
-LICENSEOPTS="${LICENSEOPTS} --years 2011-$(date +%Y)"
+LICENSEOPTS="${LICENSEOPTS} --years 2011-2024"
 # Excludes only apply to directory (--dir) mode and not file mode
 LICENSEOPTS="${LICENSEOPTS} --exclude *.yml *.yaml *.min.* "
 

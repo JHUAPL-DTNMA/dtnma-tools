@@ -531,7 +531,7 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
         for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
              cace_amm_obj_desc_list_next(obj_it))
         {
-            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_cref(obj_it);
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
             ari_array_t row;
             ari_array_init(row);
@@ -611,7 +611,7 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
         for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
              cace_amm_obj_desc_list_next(obj_it))
         {
-            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_cref(obj_it);
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
             ari_array_t row;
             ari_array_init(row);
@@ -697,7 +697,7 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
         for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
              cace_amm_obj_desc_list_next(obj_it))
         {
-            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_cref(obj_it);
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
             ari_array_t row;
             ari_array_init(row);

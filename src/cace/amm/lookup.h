@@ -47,13 +47,25 @@ typedef struct
 
 } cace_amm_lookup_t;
 
+/** State initializer.
+ */
 void cace_amm_lookup_init(cace_amm_lookup_t *res);
 
+/** State de-initializer.
+ */
 void cace_amm_lookup_deinit(cace_amm_lookup_t *res);
+
+/** Initializer with copy semantics.
+ */
+void cace_amm_lookup_init_set(cace_amm_lookup_t *res, const cace_amm_lookup_t *src);
 
 /** Initializer with move semantics.
  */
 void cace_amm_lookup_init_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src);
+
+/** Setter with copy semantics.
+ */
+void cace_amm_lookup_set(cace_amm_lookup_t *res, const cace_amm_lookup_t *src);
 
 /** Setter with move semantics.
  */

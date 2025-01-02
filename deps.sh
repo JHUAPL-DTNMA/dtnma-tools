@@ -84,6 +84,7 @@ fi
 if [ ! -e ${DESTDIR}/usr/include/m-lib ]
 then
   echo "Building MLIB..."
+  mkdir -p ${BUILDDIR}/mlib/
   rsync --recursive ${DEPSDIR}/mlib/ ${BUILDDIR}/mlib/
   pushd ${BUILDDIR}/mlib
   
