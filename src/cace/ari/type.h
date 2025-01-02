@@ -96,6 +96,10 @@ const char *ari_type_to_name(int32_t typenum);
  */
 int ari_type_from_name(int32_t *typenum, const char *name);
 
+/** M*LIB OPLIST for the enum ari_type_t.
+ */
+#define M_OPL_ari_type_t() M_ENUM_OPLIST(ari_type_t, ARI_TYPE_NULL)
+
 #ifdef __cplusplus
 }
 #endif

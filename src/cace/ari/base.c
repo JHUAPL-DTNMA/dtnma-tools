@@ -46,27 +46,27 @@ int ari_lit_deinit(ari_lit_t *obj)
             case ARI_TYPE_AC:
                 CHKERR1(obj->value.as_ac);
                 ari_ac_deinit(obj->value.as_ac);
-                M_MEMORY_DEL(obj->value.as_ac);
+                ARI_FREE(obj->value.as_ac);
                 break;
             case ARI_TYPE_AM:
                 CHKERR1(obj->value.as_am);
                 ari_am_deinit(obj->value.as_am);
-                M_MEMORY_DEL(obj->value.as_am);
+                ARI_FREE(obj->value.as_am);
                 break;
             case ARI_TYPE_TBL:
                 CHKERR1(obj->value.as_tbl);
                 ari_tbl_deinit(obj->value.as_tbl);
-                M_MEMORY_DEL(obj->value.as_tbl);
+                ARI_FREE(obj->value.as_tbl);
                 break;
             case ARI_TYPE_EXECSET:
                 CHKERR1(obj->value.as_execset);
                 ari_execset_deinit(obj->value.as_execset);
-                M_MEMORY_DEL(obj->value.as_execset);
+                ARI_FREE(obj->value.as_execset);
                 break;
             case ARI_TYPE_RPTSET:
                 CHKERR1(obj->value.as_rptset);
                 ari_rptset_deinit(obj->value.as_rptset);
-                M_MEMORY_DEL(obj->value.as_rptset);
+                ARI_FREE(obj->value.as_rptset);
                 break;
             default:
                 // do nothing
@@ -340,12 +340,12 @@ int ari_params_deinit(ari_params_t *obj)
         case ARI_PARAMS_AC:
             CHKERR1(obj->as_ac);
             ari_ac_deinit(obj->as_ac);
-            M_MEMORY_DEL(obj->as_ac);
+            ARI_FREE(obj->as_ac);
             break;
         case ARI_PARAMS_AM:
             CHKERR1(obj->as_am);
             ari_am_deinit(obj->as_am);
-            M_MEMORY_DEL(obj->as_am);
+            ARI_FREE(obj->as_am);
             break;
     }
     return 0;
@@ -364,18 +364,26 @@ int ari_params_copy(ari_params_t *obj, const ari_params_t *src)
             break;
         case ARI_PARAMS_AC:
         {
-            ari_ac_t *ctr = M_MEMORY_ALLOC(ari_ac_t);
-            obj->state    = src->state;
-            obj->as_ac    = ctr;
-            ari_list_init_set(ctr->items, src->as_ac->items);
+            ari_ac_t *ctr = ARI_MALLOC(sizeof(ari_ac_t));
+            if (ctr)
+            {
+                ari_ac_init(ctr);
+                obj->state = src->state;
+                obj->as_ac = ctr;
+                ari_list_set(ctr->items, src->as_ac->items);
+            }
         }
         break;
         case ARI_PARAMS_AM:
         {
-            ari_am_t *ctr = M_MEMORY_ALLOC(ari_am_t);
-            obj->state    = src->state;
-            obj->as_am    = ctr;
-            ari_tree_init_set(ctr->items, src->as_am->items);
+            ari_am_t *ctr = ARI_MALLOC(sizeof(ari_am_t));
+            if (ctr)
+            {
+                ari_am_init(ctr);
+                obj->state = src->state;
+                obj->as_am = ctr;
+                ari_tree_set(ctr->items, src->as_am->items);
+            }
         }
         break;
     }
@@ -461,41 +469,60 @@ int ari_lit_copy(ari_lit_t *lit, const ari_lit_t *src)
                 break;
             case ARI_TYPE_AC:
             {
-                ari_ac_t *ctr    = M_MEMORY_ALLOC(ari_ac_t);
-                lit->value.as_ac = ctr;
-                ari_list_init_set(ctr->items, src->value.as_ac->items);
+                ari_ac_t *ctr = ARI_MALLOC(sizeof(ari_ac_t));
+                if (ctr)
+                {
+                    ari_ac_init(ctr);
+                    lit->value.as_ac = ctr;
+                    ari_list_set(ctr->items, src->value.as_ac->items);
+                }
                 break;
             }
             case ARI_TYPE_AM:
             {
-                ari_am_t *ctr    = M_MEMORY_ALLOC(ari_am_t);
-                lit->value.as_am = ctr;
-                ari_tree_init_set(ctr->items, src->value.as_am->items);
+                ari_am_t *ctr = ARI_MALLOC(sizeof(ari_am_t));
+                if (ctr)
+                {
+                    ari_am_init(ctr);
+                    lit->value.as_am = ctr;
+                    ari_tree_set(ctr->items, src->value.as_am->items);
+                }
                 break;
             }
             case ARI_TYPE_TBL:
             {
-                ari_tbl_t *ctr    = M_MEMORY_ALLOC(ari_tbl_t);
-                lit->value.as_tbl = ctr;
-                ctr->ncols        = src->value.as_tbl->ncols;
-                ari_array_init_set(ctr->items, src->value.as_tbl->items);
+                ari_tbl_t *ctr = ARI_MALLOC(sizeof(ari_tbl_t));
+                if (ctr)
+                {
+                    ari_tbl_init(ctr, src->value.as_tbl->ncols, 0);
+                    lit->value.as_tbl = ctr;
+                    ari_array_set(ctr->items, src->value.as_tbl->items);
+                }
                 break;
             }
             case ARI_TYPE_EXECSET:
             {
-                ari_execset_t *ctr    = M_MEMORY_ALLOC(ari_execset_t);
-                lit->value.as_execset = ctr;
-                ari_init_copy(&(ctr->nonce), &(src->value.as_execset->nonce));
-                ari_list_init_set(ctr->targets, src->value.as_execset->targets);
+                ari_execset_t *ctr = ARI_MALLOC(sizeof(ari_execset_t));
+                if (ctr)
+                {
+                    ari_execset_init(ctr);
+                    lit->value.as_execset = ctr;
+                    ari_set_copy(&(ctr->nonce), &(src->value.as_execset->nonce));
+                    ari_list_set(ctr->targets, src->value.as_execset->targets);
+                }
                 break;
             }
             case ARI_TYPE_RPTSET:
             {
-                ari_rptset_t *ctr    = M_MEMORY_ALLOC(ari_rptset_t);
-                lit->value.as_rptset = ctr;
-                ari_init_copy(&(ctr->nonce), &(src->value.as_rptset->nonce));
-                ari_init_copy(&(ctr->reftime), &(src->value.as_rptset->reftime));
-                ari_report_list_init_set(ctr->reports, src->value.as_rptset->reports);
+                ari_rptset_t *ctr = ARI_MALLOC(sizeof(ari_rptset_t));
+                if (ctr)
+                {
+                    ari_rptset_init(ctr);
+                    lit->value.as_rptset = ctr;
+                    ari_set_copy(&(ctr->nonce), &(src->value.as_rptset->nonce));
+                    ari_set_copy(&(ctr->reftime), &(src->value.as_rptset->reftime));
+                    ari_report_list_set(ctr->reports, src->value.as_rptset->reports);
+                }
                 break;
             }
             default:

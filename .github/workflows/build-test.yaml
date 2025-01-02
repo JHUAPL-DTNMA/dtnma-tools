@@ -64,7 +64,7 @@ jobs:
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby gcc ccache autoconf libtool \
+              ruby gcc g++ ccache autoconf libtool \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr

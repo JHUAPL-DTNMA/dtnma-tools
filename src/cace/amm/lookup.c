@@ -35,6 +35,16 @@ void cace_amm_lookup_deinit(cace_amm_lookup_t *res)
     res->obj_type = ARI_TYPE_NULL;
 }
 
+void cace_amm_lookup_init_set(cace_amm_lookup_t *res, const cace_amm_lookup_t *src)
+{
+    CHKVOID(res);
+    CHKVOID(src);
+    res->ns       = src->ns;
+    res->obj      = src->obj;
+    res->obj_type = src->obj_type;
+    cace_ari_itemized_init_set(&(res->aparams), &(src->aparams));
+}
+
 void cace_amm_lookup_init_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src)
 {
     CHKVOID(res);
@@ -46,6 +56,12 @@ void cace_amm_lookup_init_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src)
     res->obj_type = src->obj_type;
     src->obj_type = ARI_TYPE_NULL;
     cace_ari_itemized_init_move(&(res->aparams), &(src->aparams));
+}
+
+void cace_amm_lookup_set(cace_amm_lookup_t *res, const cace_amm_lookup_t *src)
+{
+    cace_amm_lookup_deinit(res);
+    cace_amm_lookup_init_set(res, src);
 }
 
 void cace_amm_lookup_set_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src)

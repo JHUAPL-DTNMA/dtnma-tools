@@ -29,6 +29,7 @@
 
 #define MAX_HEXMSG_SIZE 10240
 
+/// Per-process state
 static refda_agent_t agent;
 
 static void daemon_signal_handler(int signum)

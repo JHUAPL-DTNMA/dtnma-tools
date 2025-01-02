@@ -28,6 +28,17 @@ void refda_exec_item_init(refda_exec_item_t *obj)
     ari_init(&(obj->result));
 }
 
+void refda_exec_item_init_set(refda_exec_item_t *obj, const refda_exec_item_t *src)
+{
+    CHKVOID(obj);
+    CHKVOID(src);
+    obj->seq = NULL;
+    ari_init_copy(&(obj->ref), &(src->ref));
+    cace_amm_lookup_init_set(&(obj->deref), &(src->deref));
+    atomic_init(&(obj->waiting), atomic_load(&(src->waiting)));
+    ari_init_copy(&(obj->result), &(src->result));
+}
+
 void refda_exec_item_deinit(refda_exec_item_t *obj)
 {
     CHKVOID(obj);
@@ -35,4 +46,15 @@ void refda_exec_item_deinit(refda_exec_item_t *obj)
     cace_amm_lookup_deinit(&(obj->deref));
     ari_deinit(&(obj->ref));
     obj->seq = NULL;
+}
+
+void refda_exec_item_set(refda_exec_item_t *obj, const refda_exec_item_t *src)
+{
+    CHKVOID(obj);
+    CHKVOID(src);
+    obj->seq = src->seq;
+    ari_set_copy(&(obj->ref), &(src->ref));
+    cace_amm_lookup_set(&(obj->deref), &(src->deref));
+    atomic_store(&(obj->waiting), atomic_load(&(src->waiting)));
+    ari_set_copy(&(obj->result), &(src->result));
 }
