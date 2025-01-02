@@ -49,8 +49,16 @@ typedef struct
  */
 void cace_ari_itemized_init(cace_ari_itemized_t *obj);
 
+/** Initializer with copy semantics.
+ */
+void cace_ari_itemized_init_set(cace_ari_itemized_t *obj, const cace_ari_itemized_t *src);
+
+/** Initializer with move semantics.
+ */
 void cace_ari_itemized_init_move(cace_ari_itemized_t *obj, cace_ari_itemized_t *src);
 
+/** State de-initializer.
+ */
 void cace_ari_itemized_deinit(cace_ari_itemized_t *obj);
 
 /** Clear out any parameters present.
