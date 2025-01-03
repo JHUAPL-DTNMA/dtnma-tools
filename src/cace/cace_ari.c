@@ -115,7 +115,7 @@ static int read_text(ari_t *inval, FILE *source)
     free(buf);
 
     const char *errm = NULL;
-    res = ari_text_decode(inval, intext, &errm);
+    res              = ari_text_decode(inval, intext, &errm);
     string_clear(intext);
     if (res)
     {
@@ -361,7 +361,11 @@ static void show_usage(const char *argv0)
     fprintf(stderr,
             "Usage: %s {-l <log-level>} "
             "[--source {filename or -}] "
+#if defined(ARI_TEXT_PARSE)
             "[--inform {auto,text,cbor,cborhex}] "
+#else
+            "[--inform {cbor,cborhex}] "
+#endif /* ARI_TEXT_PARSE */
             "[--dest {filename or -}] "
             "[--outform {auto,text,cbor,cborhex}]\n",
             argv0);
@@ -433,6 +437,13 @@ int main(int argc, char *argv[])
                 break;
             case 'i':
                 inform = get_form(optarg);
+#if !defined(ARI_TEXT_PARSE)
+                if (inform == ARI_FORM_INVALID || inform == ARI_FORM_TEXT || inform == ARI_FORM_AUTO)
+                {
+                    retval = 1;
+                    cont   = false;
+                }
+#endif /* ARI_TEXT_PARSE */
                 if (inform == ARI_FORM_INVALID)
                 {
                     retval = 1;
