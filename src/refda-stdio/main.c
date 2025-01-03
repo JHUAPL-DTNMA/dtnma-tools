@@ -242,7 +242,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} -a <agent EID>\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <agent EID>\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, "hl:a:")) != -1)
+            while ((opt = getopt(argc, argv, ":hl:a:")) != -1)
             {
                 switch (opt)
                 {
