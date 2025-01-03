@@ -100,6 +100,7 @@ static FILE *get_file(const char *name, const char *mode)
  */
 static int read_text(ari_t *inval, FILE *source)
 {
+#if defined(ARI_TEXT_PARSE)
     char  *buf = NULL;
     size_t len = 0;
     int    res = getline(&buf, &len, source);
@@ -114,7 +115,6 @@ static int read_text(ari_t *inval, FILE *source)
     free(buf);
 
     const char *errm = NULL;
-#if defined(ARI_TEXT_PARSE)
     res = ari_text_decode(inval, intext, &errm);
     string_clear(intext);
     if (res)
@@ -122,14 +122,12 @@ static int read_text(ari_t *inval, FILE *source)
         fprintf(stderr, "Failed to decode text ARI (err %d): %s\n", res, errm);
         return 2;
     }
-#else
-    {
-        fprintf(stderr, "No support for decoding text ARI\n");
-        return 2;
-    }
-#endif /* ARI_TEXT_PARSE */
 
     return 0;
+#else
+    fprintf(stderr, "No support for decoding text ARI\n");
+    return 2;
+#endif /* ARI_TEXT_PARSE */
 }
 
 #define CBOR_STORE_WANT 1024
