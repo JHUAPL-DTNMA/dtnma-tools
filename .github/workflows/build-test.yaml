@@ -30,8 +30,10 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
+      - name: Dependencies
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF
+        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
       - name: Test
@@ -64,7 +66,7 @@ jobs:
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby gcc ccache autoconf libtool \
+              ruby gcc gcc-c++ ccache autoconf libtool \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
@@ -77,8 +79,10 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
+      - name: Dependencies
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF
+        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
       - name: Test
@@ -120,8 +124,10 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
+      - name: Dependencies
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
+        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
       - name: Build
         run: ./build.sh
       - name: Install
@@ -145,7 +151,7 @@ jobs:
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby gcc ccache autoconf libtool \
+              ruby gcc gcc-c++ ccache autoconf libtool \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
@@ -158,8 +164,10 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
+      - name: Dependencies
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
+        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
       - name: Build
         run: ./build.sh
       - name: Install
