@@ -81,7 +81,7 @@ jobs:
           paths:
           - src
           - test
-          - agent-test
+          - item-test
 
     - name: Build
       if: matrix.build-mode == 'manual'
