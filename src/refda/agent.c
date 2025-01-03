@@ -170,7 +170,7 @@ int refda_agent_bindrefs(refda_agent_t *agent)
             for (cace_amm_obj_desc_list_it(obj_it, obj_ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
                  cace_amm_obj_desc_list_next(obj_it))
             {
-                cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_ref(obj_it);
+                cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_ref(obj_it));
 
                 const int objfailcnt = refda_binding_obj(obj_type, obj, &(agent->objs));
                 if (objfailcnt)

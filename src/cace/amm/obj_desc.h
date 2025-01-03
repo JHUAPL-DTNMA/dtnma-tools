@@ -29,7 +29,7 @@ extern "C" {
 
 /** A generic object descriptor common to all AMM object types in an Agent.
  */
-typedef struct
+typedef struct cace_amm_obj_desc_s
 {
     /// Indication of whether this object has an enumeration assigned
     bool has_enum;
@@ -45,13 +45,19 @@ typedef struct
      */
     cace_amm_user_data_t app_data;
 
+#ifdef __cplusplus
+    cace_amm_obj_desc_s(const cace_amm_obj_desc_s &)            = delete;
+    cace_amm_obj_desc_s &operator=(const cace_amm_obj_desc_s &) = delete;
+#endif
+
 } cace_amm_obj_desc_t;
 
 void cace_amm_obj_desc_init(cace_amm_obj_desc_t *obj);
 
 void cace_amm_obj_desc_deinit(cace_amm_obj_desc_t *obj);
 
-#define M_OPL_cace_amm_obj_desc_t() (INIT(API_2(cace_amm_obj_desc_init)), CLEAR(API_2(cace_amm_obj_desc_deinit)))
+#define M_OPL_cace_amm_obj_desc_t() \
+    (INIT(API_2(cace_amm_obj_desc_init)), INIT_SET(0), SET(0), CLEAR(API_2(cace_amm_obj_desc_deinit)))
 
 #ifdef __cplusplus
 } // extern C

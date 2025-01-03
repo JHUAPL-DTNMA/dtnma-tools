@@ -49,6 +49,23 @@ void cace_amm_obj_ns_deinit(cace_amm_obj_ns_t *ns)
     m_string_clear(ns->name);
 }
 
+cace_amm_obj_id_t cace_amm_obj_id_withenum(const char *name, int64_t intenum)
+{
+    return (cace_amm_obj_id_t) {
+        .name     = name,
+        .has_enum = true,
+        .intenum  = intenum,
+    };
+}
+
+cace_amm_obj_id_t cace_amm_obj_id_noenum(const char *name)
+{
+    return (cace_amm_obj_id_t) {
+        .name     = name,
+        .has_enum = false,
+    };
+}
+
 cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type, const cace_amm_obj_id_t obj_id)
 {
     if (cace_log_is_enabled_for(LOG_DEBUG))
@@ -82,7 +99,8 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t o
         }
     }
 
-    cace_amm_obj_desc_t *obj = cace_amm_obj_desc_list_push_back_new(ctr->obj_list);
+    cace_amm_obj_desc_ptr_t **ptr = cace_amm_obj_desc_list_push_back_new(ctr->obj_list);
+    cace_amm_obj_desc_t      *obj = cace_amm_obj_desc_ptr_ref(*ptr);
     string_set_str(obj->name, obj_id.name);
     obj->has_enum = obj_id.has_enum;
     obj->intenum  = obj_id.intenum;
