@@ -44,4 +44,4 @@ ${PYTHON} -m pip install -e ./deps/dtnma-ace
 ${PYTHON} -m pip install -r requirements.txt
 
 echo "Executing tests..."
-${PYTHON} -m pytest . --capture=no --log-cli-level=info $@
+${PYTHON} -m pytest . $@
