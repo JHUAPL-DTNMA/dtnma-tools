@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -46,7 +46,6 @@
 #include <pthread.h>
 #include <unistd.h>
 
-
 // Application includes
 #include "shared/platform.h"
 #include "shared/nm.h"
@@ -61,7 +60,6 @@
 
 #include "shared/msg/msg.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -70,15 +68,14 @@ extern "C" {
 #include "nm_mgr_sql.h"
 #endif
 
-
 /* Constants */
 #define NM_MGR_MAX_META (1024)
 
-
-typedef enum mgr_ui_mode_enum {
-   MGR_UI_STANDARD, // Standard Shell-Based UI
-   MGR_UI_NCURSES, // NCURSES-Based UI (currently a compile-time flag mutually exclusive with MGR_UI_STANDARD)
-   MGR_UI_AUTOMATOR, // Special Altenrative UI Optimized for Automation
+typedef enum mgr_ui_mode_enum
+{
+    MGR_UI_STANDARD,  // Standard Shell-Based UI
+    MGR_UI_NCURSES,   // NCURSES-Based UI (currently a compile-time flag mutually exclusive with MGR_UI_STANDARD)
+    MGR_UI_AUTOMATOR, // Special Altenrative UI Optimized for Automation
 } mgr_ui_mode_enum;
 
 #ifdef USE_NCURSES
@@ -87,29 +84,28 @@ typedef enum mgr_ui_mode_enum {
 #define MGR_UI_DEFAULT MGR_UI_STANDARD
 #endif
 
-
-typedef struct {
-  //FIXME: this is not thread safe storage
-  mgr_ui_mode_enum mgr_ui_mode;
-  /// Running state
-  daemon_run_t running;
-  /// Messaging configuration
-  mif_cfg_t mif;
-  /// Threads associated with the mgr
-  list_thread_t threads;
+typedef struct
+{
+    // FIXME: this is not thread safe storage
+    mgr_ui_mode_enum mgr_ui_mode;
+    /// Running state
+    daemon_run_t running;
+    /// Messaging configuration
+    mif_cfg_t mif;
+    /// Threads associated with the mgr
+    list_thread_t threads;
 
 } nmmgr_t;
 
-
 typedef struct
 {
-	vector_t agents;  /* (agent_t *) */
-	rhht_t metadata; /* (metadata_t*) */
-	amp_uvast tot_rpts;
-	amp_uvast tot_tbls;
+    vector_t  agents;   /* (agent_t *) */
+    rhht_t    metadata; /* (metadata_t*) */
+    amp_uvast tot_rpts;
+    amp_uvast tot_tbls;
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-	sql_db_t sql_info;
+    sql_db_t sql_info;
 #endif
 } mgr_db_t;
 
@@ -131,4 +127,4 @@ int nmmgr_stop(nmmgr_t *mgr);
 }
 #endif
 
-#endif  /* NMMGR_H */
+#endif /* NMMGR_H */

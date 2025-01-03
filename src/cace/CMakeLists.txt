@@ -18,7 +18,7 @@ limitations under the License.
 
 include(GNUInstallDirs)
 
-# ARI handling library
+# AMM and ARI handling library
 configure_file("config.h.in" "config.h")
 set(HFILES
     "${CMAKE_CURRENT_BINARY_DIR}/config.h"

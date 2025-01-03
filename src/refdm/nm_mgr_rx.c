@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -59,7 +59,6 @@
 
 #include "nm_mgr_print.h" // For direct report file logging
 
-
 /******************************************************************************
  *
  * \par Function Name: msg_rx_data_rpt
@@ -86,30 +85,29 @@
 
 void rx_data_rpt(msg_metadata_t *meta, msg_rpt_t *msg)
 {
-    agent_t *agent = NULL;
-    int result = -1;
+    agent_t *agent  = NULL;
+    int      result = -1;
 
     CHKVOID(meta);
     CHKVOID(msg);
 
     // TODO: Check to see if we are listed as a recipient for this report.
 
-	/* Step 1: Retrieve stored information about this agent. */
-	if((agent = agent_get(&(meta->source))) == NULL)
-	{
-		AMP_DEBUG_WARN("msg_rx_data_rpt",
-				        "Received group is from an unknown sender (%s); ignoring it.",
-						meta->source.name);
-        agent_t *agent = (agent_t*) vec_at(&gMgrDB.agents, 0);
-	}
-	else
-	{
-		vecit_t it;
+    /* Step 1: Retrieve stored information about this agent. */
+    if ((agent = agent_get(&(meta->source))) == NULL)
+    {
+        AMP_DEBUG_WARN("msg_rx_data_rpt", "Received group is from an unknown sender (%s); ignoring it.",
+                       meta->source.name);
+        agent_t *agent = (agent_t *)vec_at(&gMgrDB.agents, 0);
+    }
+    else
+    {
+        vecit_t it;
 
-		for(it = vecit_first(&(msg->rpts)); vecit_valid(it); it = vecit_next(it))
-		{
-			rpt_t *rpt = vecit_data(it);
-            int status = vec_push(&(agent->rpts), rpt);
+        for (it = vecit_first(&(msg->rpts)); vecit_valid(it); it = vecit_next(it))
+        {
+            rpt_t *rpt    = vecit_data(it);
+            int    status = vec_push(&(agent->rpts), rpt);
 
             if (agent->log_fd != NULL)
             {
@@ -128,7 +126,7 @@ void rx_data_rpt(msg_metadata_t *meta, msg_rpt_t *msg)
                 }
 #endif
             }
-            
+
             if (status == VEC_OK)
             {
                 gMgrDB.tot_rpts++;
@@ -139,19 +137,20 @@ void rx_data_rpt(msg_metadata_t *meta, msg_rpt_t *msg)
                 AMP_DEBUG_WARN("rx_data_rpt", "Failed to push rpt, discarding", NULL);
                 rpt_release(rpt, 1);
             }
-		}
+        }
 
-        if (agent->log_fd != NULL && agent_log_cfg.rx_rpt) {
+        if (agent->log_fd != NULL && agent_log_cfg.rx_rpt)
+        {
             fflush(agent->log_fd); // Flush file after we've written set
 
             // And check for file rotation (we won't break up a set between files)
-            agent_rotate_log(agent,0);
+            agent_rotate_log(agent, 0);
         }
-	}
+    }
 
-	// Make sure we don't delete items when we delete report
-	// since we shallow-copied them into the agent report list.
-	msg->rpts.delete_fn = NULL;
+    // Make sure we don't delete items when we delete report
+    // since we shallow-copied them into the agent report list.
+    msg->rpts.delete_fn = NULL;
 }
 
 /******************************************************************************
@@ -180,33 +179,31 @@ void rx_data_rpt(msg_metadata_t *meta, msg_rpt_t *msg)
 
 void rx_data_tbl(msg_metadata_t *meta, msg_tbl_t *msg)
 {
-    agent_t *agent = NULL;
-    int result = -1;
+    agent_t *agent  = NULL;
+    int      result = -1;
 
     CHKVOID(meta);
     CHKVOID(msg);
 
     // TODO: Check to see if we are listed as a recipient for this report.
 
-	/* Step 1: Retrieve stored information about this agent. */
-	if((agent = agent_get(&(meta->source))) == NULL)
-	{
-		AMP_DEBUG_WARN("msg_rx_data_tbl",
-				        "Received group is from an unknown sender (%s); ignoring it.",
-						meta->source);
-	}
-	else
-	{
-		vecit_t it;
+    /* Step 1: Retrieve stored information about this agent. */
+    if ((agent = agent_get(&(meta->source))) == NULL)
+    {
+        AMP_DEBUG_WARN("msg_rx_data_tbl", "Received group is from an unknown sender (%s); ignoring it.", meta->source);
+    }
+    else
+    {
+        vecit_t it;
 
-		for(it = vecit_first(&(msg->tbls)); vecit_valid(it); it = vecit_next(it))
-		{
-			tbl_t *tbl = vecit_data(it);
-            int status = vec_push(&(agent->tbls), tbl);
+        for (it = vecit_first(&(msg->tbls)); vecit_valid(it); it = vecit_next(it))
+        {
+            tbl_t *tbl    = vecit_data(it);
+            int    status = vec_push(&(agent->tbls), tbl);
 
             if (agent->log_fd != NULL)
             {
-                if(agent_log_cfg.rx_tbl)
+                if (agent_log_cfg.rx_tbl)
                 {
                     ui_print_cfg_t fd = INIT_UI_PRINT_CFG_FD(agent->log_fd);
                     ui_fprint_table(&fd, tbl);
@@ -220,7 +217,6 @@ void rx_data_tbl(msg_metadata_t *meta, msg_tbl_t *msg)
                     agent->log_fd_cnt++;
                 }
 #endif
-
             }
 
             if (status == VEC_OK)
@@ -233,19 +229,20 @@ void rx_data_tbl(msg_metadata_t *meta, msg_tbl_t *msg)
                 AMP_DEBUG_WARN("rx_data_tbl", "Failed to push tbl, discarding", NULL);
                 tbl_release(tbl, 1);
             }
-		}
+        }
 
-        if (agent->log_fd != NULL && agent_log_cfg.rx_tbl) {
+        if (agent->log_fd != NULL && agent_log_cfg.rx_tbl)
+        {
             fflush(agent->log_fd); // Flush file after we've written set
 
             // And check for file rotation (we won't break up a set between files)
-            agent_rotate_log(agent,0);
+            agent_rotate_log(agent, 0);
         }
-	}
+    }
 
-	// Make sure we don't delete items when we delete report
-	// since we shallow-copied them into the agent report list.
-	msg->tbls.delete_fn = NULL;
+    // Make sure we don't delete items when we delete report
+    // since we shallow-copied them into the agent report list.
+    msg->tbls.delete_fn = NULL;
 }
 
 void rx_agent_reg(msg_metadata_t *meta, msg_agent_t *msg)
@@ -253,8 +250,7 @@ void rx_agent_reg(msg_metadata_t *meta, msg_agent_t *msg)
     CHKVOID(meta);
     CHKVOID(msg);
 
-	agent_add(msg->agent_id);
-
+    agent_add(msg->agent_id);
 }
 
 /******************************************************************************
@@ -279,37 +275,39 @@ void rx_agent_reg(msg_metadata_t *meta, msg_agent_t *msg)
 
 void *mgr_rx_thread(void *arg)
 {
-  nmmgr_t *mgr = arg;
-  AMP_DEBUG_ENTRY("mgr_rx_thread","mgr (%p)", mgr);
-    
-    AMP_DEBUG_INFO("mgr_rx_thread","Receiver thread running...", NULL);
-    
+    nmmgr_t *mgr = arg;
+    AMP_DEBUG_ENTRY("mgr_rx_thread", "mgr (%p)", mgr);
+
+    AMP_DEBUG_INFO("mgr_rx_thread", "Receiver thread running...", NULL);
+
     vecit_t it;
 
-    int success;
-    blob_t *buf = NULL;
-    msg_grp_t *grp = NULL;
+    int            success;
+    blob_t        *buf = NULL;
+    msg_grp_t     *grp = NULL;
     msg_metadata_t meta;
-    int msg_type;
+    int            msg_type;
 
-
-    /* 
+    /*
      * g_running controls the overall execution of threads in the
      * NM Agent.
      */
-    while(daemon_run_get(&mgr->running)) {
+    while (daemon_run_get(&mgr->running))
+    {
 
         /* Step 1: Receive a message from the Bundle Protocol Agent. */
         buf = mif_receive(&mgr->mif, &meta, &mgr->running, &success);
-        if(success != AMP_OK)
+        if (success != AMP_OK)
         {
-          daemon_run_stop(&mgr->running);
+            daemon_run_stop(&mgr->running);
         }
-        else if(buf != NULL)
+        else if (buf != NULL)
         {
-            if (agent_log_cfg.rx_cbor == 1) {
+            if (agent_log_cfg.rx_cbor == 1)
+            {
                 agent_t *agent = agent_get(&(meta.source));
-                if (agent && agent->log_fd) {
+                if (agent && agent->log_fd)
+                {
                     char *tmp = utils_hex_to_string(buf->value, buf->length);
                     fprintf(agent->log_fd, "RX: msgs:%s\n", tmp);
                     fflush(agent->log_fd);
@@ -321,77 +319,76 @@ void *mgr_rx_thread(void *arg)
             char *tmp = utils_hex_to_string(buf->value, buf->length);
             printf("RX from %s: msgs:%s\n", meta.source.name, tmp);
 
-        	grp = msg_grp_deserialize(buf, &success);
-        	blob_release(buf, 1);
+            grp = msg_grp_deserialize(buf, &success);
+            blob_release(buf, 1);
 
-    		if((grp == NULL) || (success != AMP_OK))
-    		{
+            if ((grp == NULL) || (success != AMP_OK))
+            {
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
                 // Log discarded message in DB
                 db_incoming_finalize(0, AMP_FAIL, meta.source.name, tmp);
 #endif
                 SRELEASE(tmp);
-    			AMP_DEBUG_ERR("mgr_rx_thread","Discarding invalid message.", NULL);
-    			continue;
-    		}
+                AMP_DEBUG_ERR("mgr_rx_thread", "Discarding invalid message.", NULL);
+                continue;
+            }
 
-    		AMP_DEBUG_INFO("mgr_rx_thread","Group had %d msgs", vec_num_entries(grp->msgs));
-//FIXME:	AMP_DEBUG_INFO("mgr_rx_thread","Group timestamp %lu", grp->timestamp);
+            AMP_DEBUG_INFO("mgr_rx_thread", "Group had %d msgs", vec_num_entries(grp->msgs));
+            // FIXME:	AMP_DEBUG_INFO("mgr_rx_thread","Group timestamp %lu", grp->timestamp);
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
             /* Copy the message group to the database tables */
             uint32_t incoming_idx = db_incoming_initialize(grp->timestamp, meta.source);
-            int32_t db_status = AMP_OK;
+            int32_t  db_status    = AMP_OK;
 #endif
 
             /* For each message in the group. */
-            for(it = vecit_first(&(grp->msgs)); vecit_valid(it); it = vecit_next(it))
+            for (it = vecit_first(&(grp->msgs)); vecit_valid(it); it = vecit_next(it))
             {
-            	vec_idx_t i = vecit_idx(it);
-            	blob_t *msg_data = (blob_t*) vecit_data(it);
+                vec_idx_t i        = vecit_idx(it);
+                blob_t   *msg_data = (blob_t *)vecit_data(it);
 
-            	/* Get the message type. */
-            	msg_type = msg_grp_get_type(grp, i);
-            	success = AMP_FAIL;
-            	switch(msg_type)
-            	{
-            		case MSG_TYPE_RPT_SET:
-            		{
-            			msg_rpt_t *rpt_msg = msg_rpt_deserialize(msg_data, &success);
+                /* Get the message type. */
+                msg_type = msg_grp_get_type(grp, i);
+                success  = AMP_FAIL;
+                switch (msg_type)
+                {
+                    case MSG_TYPE_RPT_SET:
+                    {
+                        msg_rpt_t *rpt_msg = msg_rpt_deserialize(msg_data, &success);
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
                         db_insert_msg_rpt_set(incoming_idx, rpt_msg, &db_status);
 #endif
-            			rx_data_rpt(&meta, rpt_msg);
+                        rx_data_rpt(&meta, rpt_msg);
                         msg_rpt_release(rpt_msg, 1);
-            			break;
-            		}
-            		case MSG_TYPE_TBL_SET:
-            		{
-            			msg_tbl_t *tbl_msg = msg_tbl_deserialize(msg_data, &success);
-            			rx_data_tbl(&meta, tbl_msg);
+                        break;
+                    }
+                    case MSG_TYPE_TBL_SET:
+                    {
+                        msg_tbl_t *tbl_msg = msg_tbl_deserialize(msg_data, &success);
+                        rx_data_tbl(&meta, tbl_msg);
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
                         db_insert_msg_tbl_set(incoming_idx, tbl_msg, &db_status);
 #endif
                         msg_tbl_release(tbl_msg, 1);
 
-            			break;
-            		}
-            		case MSG_TYPE_REG_AGENT:
-            		{
-            			msg_agent_t *agent_msg = msg_agent_deserialize(msg_data, &success);
-            			rx_agent_reg(&meta, agent_msg);
+                        break;
+                    }
+                    case MSG_TYPE_REG_AGENT:
+                    {
+                        msg_agent_t *agent_msg = msg_agent_deserialize(msg_data, &success);
+                        rx_agent_reg(&meta, agent_msg);
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 
                         db_insert_msg_reg_agent(incoming_idx, agent_msg, &db_status);
 #endif
                         msg_agent_release(agent_msg, 1);
-            			break;
-            		}
-            		default:
-            			AMP_DEBUG_WARN("mgr_rx_thread","Unknown message type: %d", msg_type);
-            			break;
-            	}
-
+                        break;
+                    }
+                    default:
+                        AMP_DEBUG_WARN("mgr_rx_thread", "Unknown message type: %d", msg_type);
+                        break;
+                }
             }
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
@@ -403,11 +400,9 @@ void *mgr_rx_thread(void *arg)
             memset(&meta, 0, sizeof(meta));
         }
     }
-   
 
     AMP_DEBUG_ALWAYS("mgr_rx_thread", "Exiting.", NULL);
-    AMP_DEBUG_EXIT("mgr_rx_thread","->.", NULL);
+    AMP_DEBUG_EXIT("mgr_rx_thread", "->.", NULL);
     pthread_exit(NULL);
     return NULL;
 }
-

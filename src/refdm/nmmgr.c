@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -53,10 +53,7 @@
 #include "agents.h"
 #include "nmmgr.h"
 
-
 mgr_db_t gMgrDB;
-
-
 
 /******************************************************************************
  *
@@ -78,20 +75,18 @@ int nmmgr_destroy(nmmgr_t *mgr)
 {
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-	db_mgt_close();
+    db_mgt_close();
 #endif
 
-	vec_release(&(gMgrDB.agents), 0);
-	rhht_release(&(gMgrDB.metadata), 0);
+    vec_release(&(gMgrDB.agents), 0);
+    rhht_release(&(gMgrDB.metadata), 0);
 
-	db_destroy();
+    db_destroy();
 
-	utils_mem_teardown();
+    utils_mem_teardown();
 
-	return AMP_OK;
+    return AMP_OK;
 }
-
-
 
 /******************************************************************************
  *
@@ -110,84 +105,81 @@ int nmmgr_destroy(nmmgr_t *mgr)
  *****************************************************************************/
 int nmmgr_init(nmmgr_t *mgr)
 {
-	int success;
-	AMP_DEBUG_ENTRY("nmmgr_init","mgr(%p)", mgr);
+    int success;
+    AMP_DEBUG_ENTRY("nmmgr_init", "mgr(%p)", mgr);
 
-	memset(mgr, 0, sizeof(nmmgr_t));
-	mgr->mgr_ui_mode = MGR_UI_DEFAULT;
+    memset(mgr, 0, sizeof(nmmgr_t));
+    mgr->mgr_ui_mode = MGR_UI_DEFAULT;
 
-	/* Initialize the non-volatile database.
-	 *   Note: Initializing the structure here allows some attributes to be pre-defined by
-	 *   command line parsing if not re-initialized later.
-	 */
-	memset(&gMgrDB, 0, sizeof(gMgrDB));
+    /* Initialize the non-volatile database.
+     *   Note: Initializing the structure here allows some attributes to be pre-defined by
+     *   command line parsing if not re-initialized later.
+     */
+    memset(&gMgrDB, 0, sizeof(gMgrDB));
 
-	/* Step 1: Initialize MGR-specific data.*/
-	gMgrDB.agents = vec_create(AGENT_DEF_NUM_AGTS, agent_cb_del,agent_cb_comp, NULL, 0, &success);
-	if(success != VEC_OK)
-	{
-		AMP_DEBUG_ERR("nmmgr_init", "Can't make agents vec.", NULL);
-		return AMP_FAIL;
-	}
+    /* Step 1: Initialize MGR-specific data.*/
+    gMgrDB.agents = vec_create(AGENT_DEF_NUM_AGTS, agent_cb_del, agent_cb_comp, NULL, 0, &success);
+    if (success != VEC_OK)
+    {
+        AMP_DEBUG_ERR("nmmgr_init", "Can't make agents vec.", NULL);
+        return AMP_FAIL;
+    }
 
-	gMgrDB.metadata = rhht_create(NM_MGR_MAX_META, ari_cb_comp_no_parm_fn, ari_cb_hash, meta_cb_del, &success);
-	if(success != RH_OK)
-	{
-		AMP_DEBUG_ERR("nmmgr_init", "Can't make parmspec ht.", NULL);
-		return AMP_FAIL;
-	}
+    gMgrDB.metadata = rhht_create(NM_MGR_MAX_META, ari_cb_comp_no_parm_fn, ari_cb_hash, meta_cb_del, &success);
+    if (success != RH_OK)
+    {
+        AMP_DEBUG_ERR("nmmgr_init", "Can't make parmspec ht.", NULL);
+        return AMP_FAIL;
+    }
 
+    gMgrDB.tot_rpts = 0;
+    gMgrDB.tot_tbls = 0;
 
-	gMgrDB.tot_rpts = 0;
-	gMgrDB.tot_tbls = 0;
+    if ((utils_mem_int() != AMP_OK) || (db_init("nmmgr_db", &adm_common_init) != AMP_OK))
+    {
+        db_destroy();
+        AMP_DEBUG_ERR("nmmgr_init", "Unable to initialize DB.", NULL);
+        return AMP_FAIL;
+    }
 
-	if((utils_mem_int() != AMP_OK) ||
-			(db_init("nmmgr_db", &adm_common_init) != AMP_OK))
-	{
-		db_destroy();
-		AMP_DEBUG_ERR("nmmgr_init","Unable to initialize DB.", NULL);
-		return AMP_FAIL;
-	}
+    success = AMP_OK;
 
-
-	success = AMP_OK;
-
-	return success;
+    return success;
 }
 
 int nmmgr_start(nmmgr_t *mgr)
 {
-  AMP_DEBUG_ENTRY("nmmgr_start","(%"PRIxPTR")", mgr);
+    AMP_DEBUG_ENTRY("nmmgr_start", "(%" PRIxPTR ")", mgr);
 
-  threadinfo_t threadinfo[] = {
-      {&mgr_rx_thread, "nm_mgr_rx"},
-      {&ui_thread, "nm_mgr_ui"},
-      {NULL, NULL},
-  };
+    threadinfo_t threadinfo[] = {
+        { &mgr_rx_thread, "nm_mgr_rx" },
+        { &ui_thread, "nm_mgr_ui" },
+        { NULL, NULL },
+    };
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-  threadinfo[2] = (threadinfo_t){&db_mgt_daemon, "nm_mgr_db"};
+    threadinfo[2] = (threadinfo_t) { &db_mgt_daemon, "nm_mgr_db" };
 #endif
-  if (threadset_start(&mgr->threads, threadinfo, sizeof(threadinfo)/sizeof(threadinfo_t), mgr) != AMP_OK)
-  {
-    return AMP_SYSERR;
-  }
+    if (threadset_start(&mgr->threads, threadinfo, sizeof(threadinfo) / sizeof(threadinfo_t), mgr) != AMP_OK)
+    {
+        return AMP_SYSERR;
+    }
 
-  #ifdef USE_CIVETWEB
-  nm_rest_start(mgr);
-  #endif
+#ifdef USE_CIVETWEB
+    nm_rest_start(mgr);
+#endif
 
-  return AMP_OK;
+    return AMP_OK;
 }
 
 int nmmgr_stop(nmmgr_t *mgr)
 {
-  /* Notify threads */
-  daemon_run_stop(&mgr->running);
-  threadset_join(&mgr->threads);
+    /* Notify threads */
+    daemon_run_stop(&mgr->running);
+    threadset_join(&mgr->threads);
 
 #ifdef USE_CIVETWEB
-  nm_rest_stop();
+    nm_rest_stop();
 #endif
 
-  return AMP_OK;
+    return AMP_OK;
 }

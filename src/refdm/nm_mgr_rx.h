@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -45,10 +45,10 @@
 extern "C" {
 #endif
 
-void*    mgr_rx_thread(void *arg);
+void *mgr_rx_thread(void *arg);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* NM_MGR_RX_H_ */
+#endif /* NM_MGR_RX_H_ */
