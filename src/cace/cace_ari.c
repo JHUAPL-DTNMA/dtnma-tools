@@ -93,6 +93,7 @@ static FILE *get_file(const char *name, const char *mode)
     return file;
 }
 
+#if defined(ARI_TEXT_PARSE)
 /** Read a single value and indicate whether to continue reading.
  *
  * @return Zero upon success.
@@ -100,7 +101,6 @@ static FILE *get_file(const char *name, const char *mode)
  */
 static int read_text(ari_t *inval, FILE *source)
 {
-#if defined(ARI_TEXT_PARSE)
     char  *buf = NULL;
     size_t len = 0;
     int    res = getline(&buf, &len, source);
@@ -124,11 +124,8 @@ static int read_text(ari_t *inval, FILE *source)
     }
 
     return 0;
-#else
-    fprintf(stderr, "No support for decoding text ARI\n");
-    return 2;
-#endif /* ARI_TEXT_PARSE */
 }
+#endif /* ARI_TEXT_PARSE */
 
 #define CBOR_STORE_WANT 1024
 
@@ -235,6 +232,7 @@ static int read_cborhex(ari_t *inval, FILE *source)
     return 0;
 }
 
+#if defined(ARI_TEXT_PARSE)
 static int read_auto(ari_form_t *inform, ari_form_t *outform, ari_t *inval, FILE *source)
 {
     // check only the first line
@@ -275,6 +273,7 @@ static int read_auto(ari_form_t *inform, ari_form_t *outform, ari_t *inval, FILE
     }
     return res;
 }
+#endif /* ARI_TEXT_PARSE */
 
 static int write_text(const ari_t *val, FILE *dest, ari_text_enc_opts_t opts)
 {
@@ -488,10 +487,14 @@ int main(int argc, char *argv[])
         switch (inform)
         {
             case ARI_FORM_AUTO:
+#if defined(ARI_TEXT_PARSE)
                 res = read_auto(&inform, &outform, &inval, source);
+#endif /* ARI_TEXT_PARSE */
                 break;
             case ARI_FORM_TEXT:
+#if defined(ARI_TEXT_PARSE)
                 res = read_text(&inval, source);
+#endif /* ARI_TEXT_PARSE */
                 break;
             case ARI_FORM_CBOR:
                 res = read_cbor(&inval, source);
