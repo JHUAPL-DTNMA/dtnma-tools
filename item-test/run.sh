@@ -22,11 +22,13 @@
 set -e
 
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+PYTHON=${PYTHON:=python3}
+echo "Using ${PYTHON}"
 
 cd ${SELFDIR}
 
 echo "Installing virtualenv..."
-python3 -m venv ./build/venv
+${PYTHON} -m venv ./build/venv
 source ./build/venv/bin/activate
 
 echo "Installing dependencies..."
@@ -38,8 +40,8 @@ if [[ ! -d ./deps/dtnma-ace ]]
 then
     git clone --branch apl-fy24 https://github.com/JHUAPL-DTNMA/dtnma-ace.git ./deps/dtnma-ace
 fi
-pip3 install -e ./deps/dtnma-ace
-pip3 install -r requirements.txt
+${PYTHON} -m pip install -e ./deps/dtnma-ace
+${PYTHON} -m pip install -r requirements.txt
 
 echo "Executing tests..."
-python3 -m pytest . --capture=no --log-cli-level=info $@
+${PYTHON} -m pytest . --capture=no --log-cli-level=info $@
