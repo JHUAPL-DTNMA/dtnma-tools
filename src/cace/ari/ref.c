@@ -295,6 +295,7 @@ int ari_params_deinit(ari_params_t *obj)
             ARI_FREE(obj->as_am);
             break;
     }
+    obj->state = ARI_PARAMS_NONE;
     return 0;
 }
 
@@ -314,9 +315,10 @@ int ari_params_copy(ari_params_t *obj, const ari_params_t *src)
             ari_ac_t *ctr = ARI_MALLOC(sizeof(ari_ac_t));
             if (ctr)
             {
+                ari_ac_init(ctr);
+                ari_list_set(ctr->items, src->as_ac->items);
                 obj->state = src->state;
                 obj->as_ac = ctr;
-                ari_list_init_set(ctr->items, src->as_ac->items);
             }
             else
             {
@@ -329,9 +331,10 @@ int ari_params_copy(ari_params_t *obj, const ari_params_t *src)
             ari_am_t *ctr = ARI_MALLOC(sizeof(ari_am_t));
             if (ctr)
             {
+                ari_am_init(ctr);
+                ari_tree_set(ctr->items, src->as_am->items);
                 obj->state = src->state;
                 obj->as_am = ctr;
-                ari_tree_init_set(ctr->items, src->as_am->items);
             }
             else
             {

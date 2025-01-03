@@ -114,41 +114,45 @@ int ari_lit_copy(ari_lit_t *lit, const ari_lit_t *src)
                 break;
             case ARI_TYPE_AC:
             {
-                ari_ac_t *ctr    = M_MEMORY_ALLOC(ari_ac_t);
+                ari_ac_t *ctr = M_MEMORY_ALLOC(ari_ac_t);
+                ari_ac_init(ctr);
+                ari_list_set(ctr->items, src->value.as_ac->items);
                 lit->value.as_ac = ctr;
-                ari_list_init_set(ctr->items, src->value.as_ac->items);
                 break;
             }
             case ARI_TYPE_AM:
             {
-                ari_am_t *ctr    = M_MEMORY_ALLOC(ari_am_t);
+                ari_am_t *ctr = M_MEMORY_ALLOC(ari_am_t);
+                ari_am_init(ctr);
+                ari_tree_set(ctr->items, src->value.as_am->items);
                 lit->value.as_am = ctr;
-                ari_tree_init_set(ctr->items, src->value.as_am->items);
                 break;
             }
             case ARI_TYPE_TBL:
             {
-                ari_tbl_t *ctr    = M_MEMORY_ALLOC(ari_tbl_t);
+                ari_tbl_t *ctr = M_MEMORY_ALLOC(ari_tbl_t);
+                ari_tbl_init(ctr, src->value.as_tbl->ncols, 0);
+                ari_array_set(ctr->items, src->value.as_tbl->items);
                 lit->value.as_tbl = ctr;
-                ctr->ncols        = src->value.as_tbl->ncols;
-                ari_array_init_set(ctr->items, src->value.as_tbl->items);
                 break;
             }
             case ARI_TYPE_EXECSET:
             {
-                ari_execset_t *ctr    = M_MEMORY_ALLOC(ari_execset_t);
+                ari_execset_t *ctr = M_MEMORY_ALLOC(ari_execset_t);
+                ari_execset_init(ctr);
+                ari_set_copy(&(ctr->nonce), &(src->value.as_execset->nonce));
+                ari_list_set(ctr->targets, src->value.as_execset->targets);
                 lit->value.as_execset = ctr;
-                ari_init_copy(&(ctr->nonce), &(src->value.as_execset->nonce));
-                ari_list_init_set(ctr->targets, src->value.as_execset->targets);
                 break;
             }
             case ARI_TYPE_RPTSET:
             {
-                ari_rptset_t *ctr    = M_MEMORY_ALLOC(ari_rptset_t);
+                ari_rptset_t *ctr = M_MEMORY_ALLOC(ari_rptset_t);
+                ari_rptset_init(ctr);
+                ari_set_copy(&(ctr->nonce), &(src->value.as_rptset->nonce));
+                ari_set_copy(&(ctr->reftime), &(src->value.as_rptset->reftime));
+                ari_report_list_set(ctr->reports, src->value.as_rptset->reports);
                 lit->value.as_rptset = ctr;
-                ari_init_copy(&(ctr->nonce), &(src->value.as_rptset->nonce));
-                ari_init_copy(&(ctr->reftime), &(src->value.as_rptset->reftime));
-                ari_report_list_init_set(ctr->reports, src->value.as_rptset->reports);
                 break;
             }
             default:
