@@ -171,6 +171,8 @@ void test_amm_semtype_cnst_strlen_2intvl_finite(const char *inhex, bool expect)
     amm_semtype_cnst_deinit(&cnst);
 }
 
+#if defined(PCRE_FOUND)
+
 TEST_CASE("[a-z]+", "F7", false)           // ari:undefined
 TEST_CASE("[a-z]+", "F6", false)           // ari:null
 TEST_CASE("[a-z]+", "F4", false)           // ari:false
@@ -189,6 +191,8 @@ void test_amm_semtype_cnst_textpat(const char *pat, const char *inhex, bool expe
     check_cnst(&cnst, inhex, expect);
     amm_semtype_cnst_deinit(&cnst);
 }
+
+#endif /* PCRE_FOUND */
 
 TEST_CASE("F7", false)     // ari:undefined
 TEST_CASE("F6", false)     // ari:null
