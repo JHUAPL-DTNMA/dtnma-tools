@@ -59,11 +59,11 @@ cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj)
     return cfg;
 }
 
-#if defined(PCRE_FOUND)
-
-pcre2_code *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat)
+int amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat)
 {
-    CHKNULL(obj);
+    CHKERR1(obj);
+    CHKERR1(pat);
+#if defined(PCRE_FOUND)
     amm_semtype_cnst_deinit(obj);
 
     const int   opts        = PCRE2_ANCHORED | PCRE2_ENDANCHORED;
@@ -73,16 +73,17 @@ pcre2_code *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pa
     if (!cfg)
     {
         CACE_LOG_ERR("Failed to compile regex pattern (error %d at %z): %s", errorcode, erroroffset, pat);
-        return NULL;
+        return 2;
     }
 
     obj->type       = AMM_SEMTYPE_CNST_TEXTPAT;
     obj->as_textpat = cfg;
 
-    return cfg;
-}
-
+    return 0;
+#else /* PCRE_FOUND */
+    return 100;
 #endif /* PCRE_FOUND */
+}
 
 cace_amm_range_int64_t *amm_semtype_cnst_set_range_int64(amm_semtype_cnst_t *obj)
 {
