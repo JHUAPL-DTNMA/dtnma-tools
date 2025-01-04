@@ -65,8 +65,10 @@ typedef struct amm_semtype_cnst_s
     {
         /// Used when #type is ::AMM_SEMTYPE_CNST_STRLEN
         cace_amm_range_size_t as_strlen;
+#if defined(PCRE_FOUND)
         /// Used when #type is ::AMM_SEMTYPE_CNST_TEXTPAT
         pcre2_code *as_textpat;
+#endif /* PCRE_FOUND */
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
         cace_amm_range_int64_t as_range_int64;
     };
