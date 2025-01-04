@@ -193,11 +193,11 @@ void test_amm_semtype_cnst_textpat(const char *pat, const char *inhex, bool expe
     int res = amm_semtype_cnst_set_textpat(&cnst, pat);
 #if defined(PCRE_FOUND)
     TEST_ASSERT_EQUAL_INT(0, res);
+    check_cnst(&cnst, inhex, expect);
 #else /* PCRE_FOUND */
     TEST_ASSERT_EQUAL_INT(100, res);
 #endif /* PCRE_FOUND */
 
-    check_cnst(&cnst, inhex, expect);
     amm_semtype_cnst_deinit(&cnst);
 }
 
