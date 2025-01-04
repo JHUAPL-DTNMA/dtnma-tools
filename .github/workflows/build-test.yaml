@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-22.04', 'centos-9']
-	deps: ['full', 'minimal']
+        deps: ['full', 'minimal']
     name: Unit Test (${{matrix.os}} deps=${{matrix.deps}})
     runs-on: ubuntu-22.04
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
