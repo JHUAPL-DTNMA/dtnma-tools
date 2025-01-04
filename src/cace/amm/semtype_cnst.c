@@ -80,7 +80,7 @@ int amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat)
     obj->as_textpat = cfg;
 
     return 0;
-#else /* PCRE_FOUND */
+#else  /* PCRE_FOUND */
     return 100;
 #endif /* PCRE_FOUND */
 }
