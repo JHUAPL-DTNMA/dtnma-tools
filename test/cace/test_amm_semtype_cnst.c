@@ -71,6 +71,7 @@ void test_amm_semtype_cnst_strlen_1intvl_finite(const char *inhex, bool expect)
     amm_semtype_cnst_t cnst;
     amm_semtype_cnst_init(&cnst);
     cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_finite(&intvl, 3, 5);
@@ -88,6 +89,7 @@ void test_amm_semtype_cnst_strlen_empty(const char *inhex, bool expect)
     amm_semtype_cnst_t cnst;
     amm_semtype_cnst_init(&cnst);
     cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
 
     check_cnst(&cnst, inhex, expect);
     amm_semtype_cnst_deinit(&cnst);
@@ -101,6 +103,7 @@ void test_amm_semtype_cnst_strlen_1intvl_infinite(const char *inhex, bool expect
     amm_semtype_cnst_t cnst;
     amm_semtype_cnst_init(&cnst);
     cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_infinite(&intvl);
@@ -119,6 +122,7 @@ void test_amm_semtype_cnst_strlen_1intvl_lowindef(const char *inhex, bool expect
     amm_semtype_cnst_t cnst;
     amm_semtype_cnst_init(&cnst);
     cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_infinite(&intvl);
@@ -139,6 +143,7 @@ void test_amm_semtype_cnst_strlen_1intvl_highindef(const char *inhex, bool expec
     amm_semtype_cnst_t cnst;
     amm_semtype_cnst_init(&cnst);
     cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_infinite(&intvl);
@@ -159,6 +164,7 @@ void test_amm_semtype_cnst_strlen_2intvl_finite(const char *inhex, bool expect)
     amm_semtype_cnst_t cnst;
     amm_semtype_cnst_init(&cnst);
     cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_finite(&intvl, 0, 3);
@@ -184,9 +190,14 @@ void test_amm_semtype_cnst_textpat(const char *pat, const char *inhex, bool expe
 {
     amm_semtype_cnst_t cnst;
     amm_semtype_cnst_init(&cnst);
-    amm_semtype_cnst_set_textpat(&cnst, pat);
-
+    int res = amm_semtype_cnst_set_textpat(&cnst, pat);
+#if defined(PCRE_FOUND)
+    TEST_ASSERT_EQUAL_INT(0, res);
     check_cnst(&cnst, inhex, expect);
+#else  /* PCRE_FOUND */
+    TEST_ASSERT_EQUAL_INT(100, res);
+#endif /* PCRE_FOUND */
+
     amm_semtype_cnst_deinit(&cnst);
 }
 
@@ -207,6 +218,7 @@ void test_amm_semtype_cnst_range_int64_1intvl_finite(const char *inhex, bool exp
     amm_semtype_cnst_t cnst;
     amm_semtype_cnst_init(&cnst);
     cace_amm_range_int64_t *range = amm_semtype_cnst_set_range_int64(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_int64_t intvl;
         cace_amm_range_intvl_int64_set_finite(&intvl, -5, 5);

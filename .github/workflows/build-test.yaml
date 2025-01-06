@@ -9,57 +9,27 @@ on:
   pull_request: {} # any target
 
 jobs:
-  unit-test-ubuntu:
-    name: Unit Test (Ubuntu 22.04)
+  unit-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-22.04', 'centos-9']
+        deps: ['full', 'minimal']
+    name: Unit Test (${{matrix.os}} deps=${{matrix.deps}})
     runs-on: ubuntu-22.04
+    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
       - name: Set up OS
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
               ruby build-essential autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev \
+              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev' || ''}} \
               valgrind gcovr xmlstarlet
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          create-symlink: true
-      - name: Dependencies
-        run: ./deps.sh
-      - name: Prep
-        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=ON
-      - name: Build
-        run: ./build.sh
-      - name: Test
-        run: ./build.sh check
-      - name: Collect coverage
-        run: ./build.sh coverage
-      - name: Archive coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{github.job}}-coverage
-          path: build/default/coverage*
-      - name: Report coverage
-        run: |
-          echo "## Ubuntu 22.04 Unit Test" >> $GITHUB_STEP_SUMMARY
-          echo >> $GITHUB_STEP_SUMMARY
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-cace-xml.xml)
-          echo "CACE coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-refda-xml.xml)
-          echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
-
-  unit-test-rhel:
-    name: Unit Test (RHEL 9)
-    runs-on: ubuntu-22.04
-    container: quay.io/centos/centos:stream9
-    steps:
       - name: Set up OS
+        if: startsWith(matrix.os, 'centos')
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
@@ -67,7 +37,7 @@ jobs:
               git rsync \
               cmake ninja-build \
               ruby gcc gcc-c++ ccache autoconf libtool \
-              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
+              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel' || ''}} \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
@@ -82,7 +52,7 @@ jobs:
       - name: Dependencies
         run: ./deps.sh
       - name: Prep
-        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=ON
+        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=ON -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}}
       - name: Build
         run: ./build.sh
       - name: Test
@@ -92,12 +62,10 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
-          name: ${{github.job}}-coverage
+          name: ${{github.job}}-${{matrix.os}}-${{matrix.deps}}-coverage
           path: build/default/coverage*
       - name: Report coverage
         run: |
-          echo "## RHEL UBI-9 Unit Test" >> $GITHUB_STEP_SUMMARY
-          echo >> $GITHUB_STEP_SUMMARY
           SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-cace-xml.xml)
           echo "CACE coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
           SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-refda-xml.xml)
