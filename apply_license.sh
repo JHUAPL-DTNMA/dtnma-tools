@@ -45,7 +45,7 @@ fi
 
 echo "Applying markings to source..."
 # Directory trees
-for DIRNAME in cmake src test agent-test testenv doc .github
+for DIRNAME in cmake src test item-test testenv doc .github
 do
     licenseheaders ${LICENSEOPTS} --dir ${SELFDIR}/${DIRNAME}
 done
