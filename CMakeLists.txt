@@ -21,7 +21,7 @@ option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_DOCS "Enable autodoc building" OFF)
 option(BUILD_AGENT "Build the Agent library and executable" ON)
 option(BUILD_MANAGER "Build the Manager library and executable" OFF) # FIXME default to ON
-option(ARI_TEXT_PARSE "Build ARI text-form parsing capability" OFF)
+option(ARI_TEXT_PARSE "Build ARI text-form parsing capability" ON)
 option(ENABLE_LUT_CACHE "Enable runtime lookup caching" ON)
 option(BUILD_TESTING "Enable test fixtures and libraries" OFF)
 option(TEST_MEMCHECK "Enable test runtime memory checking" OFF)
