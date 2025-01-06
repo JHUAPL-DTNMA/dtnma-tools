@@ -110,6 +110,20 @@ class TestCaceAri(unittest.TestCase):
         got = runner.wait_for_line()
         self.assertEqual('0A\n', got)
 
+    def test_translate_inform_auto(self):
+        runner = self._start('--inform=auto', '--outform=cborhex')
+
+        runner.send_stdin('ari:10\n')
+        got = runner.wait_for_line()
+        self.assertEqual('0A\n', got)
+
+    def test_translate_inform_auto_hex(self):
+        runner = self._start('--inform=auto')
+
+        runner.send_stdin('0A\n')
+        got = runner.wait_for_line()
+        self.assertEqual('ari:10\n', got)
+
     def test_translate_inform_cborhex(self):
         runner = self._start('--inform=cborhex', '--outform=text')
 
