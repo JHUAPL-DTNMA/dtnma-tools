@@ -190,6 +190,22 @@ void ari_rptset_deinit(ari_rptset_t *obj);
 int  ari_rptset_cmp(const ari_rptset_t *left, const ari_rptset_t *right);
 bool ari_rptset_equal(const ari_rptset_t *left, const ari_rptset_t *right);
 
+/** Combine multiple RPTSET into a single value.
+ * Each of the source values must have identical nonce parameters.
+ *
+ * @param[in,out] out The result to combine into.
+ * @param[in,out] src The source list to move values from.
+ * @return Zero if successful.
+ */
+int ari_rptset_join_move(ari_rptset_t *out, ari_list_t *src);
+
+/** Split a single RPTSET into a list where each result contains exactly
+ * one report.
+ *
+ * @return Zero if successful.
+ */
+int ari_rptset_split_move(ari_list_t *out, ari_rptset_t *src);
+
 /** Helper to assign a new container to a literal ARI.
  *
  * @param[in,out] The literal value to modify.

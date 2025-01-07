@@ -18,7 +18,7 @@
 #ifndef __NM_REST_H__
 #define __NM_REST_H__
 
-#include "nmmgr.h"
+#include "mgr.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,8 +33,8 @@ extern "C" {
 #define HOST_INFO "https://localhost:8843"
 #endif
 
-int  nm_rest_start(nmmgr_t *mgr);
-void nm_rest_stop(void);
+int  nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr);
+void nm_rest_stop(struct mg_context *ctx);
 
 // Standard HTTP Status Codes
 #define HTTP_OK                 200

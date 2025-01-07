@@ -147,31 +147,13 @@ static int read_cbor(ari_t *inval, FILE *source)
             cace_data_append_from(&store, got, buf);
         }
 
-#if 0
-    QCBORDecodeContext dec;
-    UsefulBufC indata = { .ptr = store.ptr, .len = store.len };
-    QCBORDecode_Init(&dec, indata, QCBOR_DECODE_MODE_NORMAL);
-
-    QCBORItem decitem;
-    QCBORDecode_VGetNextConsume(&dec, &decitem);
-
-    size_t used;
-    int res = QCBORDecode_PartialFinish(&dec, &used);
-    if (res && (res != QCBOR_ERR_EXTRA_BYTES))
-    {
-      // cannot handle this case and cannot reset the input cursor
-      cace_data_clear(&store);
-      fprintf(stderr, "Failed to seek CBOR item (%d): %s\n", res, qcbor_err_to_str(res));
-      return 2;
-    }
-#else
-        int    res;
-        size_t used;
-#endif
+        int         res;
+        size_t      used;
         const char *errm = NULL;
         res              = ari_cbor_decode(inval, &store, &used, &errm);
         if (used)
         {
+            // chop off used data
             cace_data_extend_front(&store, -used);
         }
 
@@ -181,7 +163,7 @@ static int read_cbor(ari_t *inval, FILE *source)
         }
         if (errm)
         {
-            M_MEMORY_FREE((char *)errm);
+            ARI_FREE((char *)errm);
         }
         if (res)
         {

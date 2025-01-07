@@ -16,26 +16,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-# All directories will be reflected in installed include path
-include_directories(
-  BEFORE
-  ${CMAKE_CURRENT_BINARY_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}
+include(GNUInstallDirs)
+
+
+set(HFILES
 )
+set(CFILES
+    "main.c"
+)
+add_executable(refdm-socket)
+target_sources(refdm-socket PUBLIC )
+target_sources(refdm-socket PRIVATE ${HFILES} ${CFILES})
+target_link_libraries(refdm-socket PUBLIC refdm)
 
-add_subdirectory(cace)
-
-if(BUILD_AGENT)
-    add_subdirectory(refda)
-    add_subdirectory(refda-stdio)
-    if(ION_FOUND)
-        add_subdirectory(refda-ion)
-    endif(ION_FOUND)
-endif(BUILD_AGENT)
-if(BUILD_MANAGER)
-    add_subdirectory(refdm)
-    add_subdirectory(refdm-socket)
-    if(ION_FOUND)
-        add_subdirectory(refdm-ion)
-    endif(ION_FOUND)
-endif(BUILD_MANAGER)
+install(TARGETS refdm-socket)

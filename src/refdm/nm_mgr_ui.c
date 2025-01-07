@@ -53,10 +53,10 @@
 #include "../shared/msg/msg.h"
 
 #include "nm_mgr_ui.h"
-#include "nmmgr.h"
 #include "ui_input.h"
 #include "nm_mgr_print.h"
 #include "metadata.h"
+#include "mgr.h"
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 #include "nm_mgr_sql.h"

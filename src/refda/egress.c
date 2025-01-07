@@ -52,10 +52,13 @@ void *refda_egress_worker(void *arg)
             if (send_res)
             {
                 CACE_LOG_WARNING("Got mif.send result=%d", send_res);
+                atomic_fetch_add(&agent->instr.num_rptset_sent_failure, 1);
             }
 
             ari_list_clear(data);
             cace_amm_msg_if_metadata_deinit(&meta);
+
+            atomic_fetch_add(&agent->instr.num_rptset_sent, 1);
         }
         refda_msgdata_deinit(&item);
         if (at_end)

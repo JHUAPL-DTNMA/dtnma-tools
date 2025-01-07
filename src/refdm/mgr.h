@@ -38,38 +38,25 @@
  **  10/06/18   E. Birrane     Update to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
-#ifndef NMMGR_H
-#define NMMGR_H
+#ifndef REFDM_MGR_H_
+#define REFDM_MGR_H_
 
-// Standard includes
-#include <stdint.h>
-#include <pthread.h>
-#include <unistd.h>
-
-// Application includes
-#include "shared/platform.h"
-#include "shared/nm.h"
-#include "shared/msg/msg_if.h"
-#include "shared/utils/daemon_run.h"
-#include "shared/utils/nm_types.h"
-#include "shared/utils/threadset.h"
-
-#include "shared/adm/adm.h"
-
-#include "shared/primitives/report.h"
-
-#include "shared/msg/msg.h"
+#include "agents.h"
+#include "instr.h"
+#include "refdm/config.h"
+#include <cace/amm/msg_if.h>
+#include <cace/util/daemon_run.h>
+#include <cace/util/threadset.h>
+#include <m-dict.h>
+#include <m-string.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-#include "nm_mgr_sql.h"
-#endif
-
-/* Constants */
-#define NM_MGR_MAX_META (1024)
+// Forward declarations
+struct mg_context;
+struct refdm_db_s;
 
 typedef enum mgr_ui_mode_enum
 {
@@ -84,47 +71,57 @@ typedef enum mgr_ui_mode_enum
 #define MGR_UI_DEFAULT MGR_UI_STANDARD
 #endif
 
-typedef struct
+M_DICT_DEF2(refdm_agent_dict, const char *, M_CSTR_OPLIST, refdm_agent_t *, M_PTR_OPLIST)
+
+typedef struct refdm_mgr_s
 {
+    /// Manager endpoint ID as URI text
+    m_string_t own_eid;
+
     // FIXME: this is not thread safe storage
     mgr_ui_mode_enum mgr_ui_mode;
+    /// Message logging options
+    refdm_agent_autologging_cfg_t agent_log_cfg;
+
     /// Running state
     daemon_run_t running;
     /// Messaging configuration
-    mif_cfg_t mif;
+    cace_amm_msg_if_t mif;
+    /// Instrumentation counters
+    refdm_instr_t instr;
     /// Threads associated with the mgr
-    list_thread_t threads;
+    threadset_t threads;
 
-} nmmgr_t;
+    /// Agent state storage
+    refdm_agent_dict_t agents;
+    /// Access control for #agents
+    pthread_mutex_t agents_mutex;
 
-typedef struct
-{
-    vector_t  agents;   /* (agent_t *) */
-    rhht_t    metadata; /* (metadata_t*) */
-    amp_uvast tot_rpts;
-    amp_uvast tot_tbls;
-
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    sql_db_t sql_info;
+#if defined(CIVETWEB_FOUND)
+    /// HTTP server state, managed by a background thread
+    struct mg_context *rest;
 #endif
-} mgr_db_t;
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    /// SQL client state, managed by a background thread
+    struct refdm_db_s *sql_info;
+#endif
 
-extern mgr_db_t gMgrDB;
+} refdm_mgr_t;
 
-// ============================= Global Data ===============================
+void refdm_mgr_init(refdm_mgr_t *mgr);
 
-/* Function Prototypes */
+void refdm_mgr_deinit(refdm_mgr_t *mgr);
 
-int nmmgr_init(nmmgr_t *mgr);
+int refdm_mgr_start(refdm_mgr_t *mgr);
 
-int nmmgr_destroy(nmmgr_t *mgr);
+int refdm_mgr_stop(refdm_mgr_t *mgr);
 
-int nmmgr_start(nmmgr_t *mgr);
+refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid);
 
-int nmmgr_stop(nmmgr_t *mgr);
+refdm_agent_t *refdm_mgr_agent_get(refdm_mgr_t *mgr, const char *agent_eid);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* NMMGR_H */
+#endif /* REFDM_MGR_H_ */

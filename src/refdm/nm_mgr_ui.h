@@ -50,7 +50,7 @@
 #include "../shared/adm/adm.h"
 #include "../shared/primitives/report.h"
 #include "../shared/primitives/rules.h"
-#include "nmmgr.h"
+#include "mgr.h"
 
 #ifdef __cplusplus
 extern "C" {

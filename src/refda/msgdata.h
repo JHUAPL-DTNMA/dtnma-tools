@@ -43,9 +43,18 @@ void refda_msgdata_init_move(refda_msgdata_t *obj, refda_msgdata_t *src);
 
 void refda_msgdata_deinit(refda_msgdata_t *obj);
 
+void refda_msgdata_set(refda_msgdata_t *obj, const refda_msgdata_t *src);
+
+static inline void refda_msgdata_init_set(refda_msgdata_t *obj, const refda_msgdata_t *src)
+{
+    refda_msgdata_init(obj);
+    refda_msgdata_set(obj, src);
+}
+
 /// OPLIST for refda_msgdata_t
-#define M_OPL_refda_msgdata_t() \
-    (INIT(API_2(refda_msgdata_init)), INIT_MOVE(API_6(refda_msgdata_init_move)), CLEAR(API_2(refda_msgdata_deinit)))
+#define M_OPL_refda_msgdata_t()                                                \
+    (INIT(API_2(refda_msgdata_init)), INIT_SET(API_6(refda_msgdata_init_set)), \
+     INIT_MOVE(API_6(refda_msgdata_init_move)), CLEAR(API_2(refda_msgdata_deinit)), SET(API_6(refda_msgdata_set)))
 
 /// @cond Doxygen_Suppress
 QUEUE_SPSC_DEF(refda_msgdata_queue, refda_msgdata_t, BUFFER_QUEUE | BUFFER_PUSH_INIT_POP_MOVE)

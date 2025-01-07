@@ -15,36 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "msgdata.h"
+/** @file
+ * @ingroup refda
+ * Agent Instrumentation definitions.
+ */
+#include "instr.h"
 #include <cace/util/defs.h>
 
-void refda_msgdata_init(refda_msgdata_t *obj)
+void refda_instr_init(refda_instr_t *obj)
 {
-    CHKVOID(obj);
-    cace_data_init(&(obj->ident));
-    ari_init(&(obj->value));
+    atomic_init(&(obj->num_execset_recv), 0);
+    atomic_init(&(obj->num_rptset_sent), 0);
+    atomic_init(&(obj->num_rptset_sent_failure), 0);
+    atomic_init(&(obj->num_tbrs), 0);
+    atomic_init(&(obj->num_tbrs_trig), 0);
+    atomic_init(&(obj->num_sbrs), 0);
+    atomic_init(&(obj->num_sbrs_trig), 0);
+    atomic_init(&(obj->num_ctrls_run), 0);
 }
 
-void refda_msgdata_init_move(refda_msgdata_t *obj, refda_msgdata_t *src)
+void refda_instr_deinit(refda_instr_t *obj _U_)
 {
-    CHKVOID(obj);
-    CHKVOID(src);
-    cace_data_init(&(obj->ident));
-    cace_data_move(&(obj->ident), &(src->ident));
-    ari_init_move(&(obj->value), &(src->value));
-}
-
-void refda_msgdata_deinit(refda_msgdata_t *obj)
-{
-    CHKVOID(obj);
-    ari_deinit(&(obj->value));
-    cace_data_deinit(&(obj->ident));
-}
-
-void refda_msgdata_set(refda_msgdata_t *obj, const refda_msgdata_t *src)
-{
-    CHKVOID(obj);
-    CHKVOID(src);
-    cace_data_copy(&(obj->ident), &(src->ident));
-    ari_set_copy(&(obj->value), &(src->value));
+    // no corresponding clear functions
 }

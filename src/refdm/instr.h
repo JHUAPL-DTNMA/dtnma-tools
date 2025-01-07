@@ -15,23 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef REFDA_INGRESS_H_
-#define REFDA_INGRESS_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** Work thread function for the Agent transport ingress.
- *
- * @param[in] arg The context ::refda_agent_t pointer.
- * @return Always NULL pointer.
+/** @file
+ * @ingroup refdm
+ * Agent Instrumentation declarations.
  */
-void *refda_ingress_worker(void *arg);
+#ifndef REFDM_INSTR_H_
+#define REFDM_INSTR_H_
 
-#ifdef __cplusplus
-} // extern C
-#endif
+#include <m-atomic.h>
 
-#endif /* REFDA_INGRESS_H_ */
+/** Instrumentation counters for a Manager.
+ */
+typedef struct
+{
+    /// Count of EXECSET values sent to any Agent
+    atomic_ullong num_execset_sent;
+    /// Count of EXECSET values failed to send
+    atomic_ullong num_execset_sent_failure;
+    /// Count of RPTSET values received from any Agent
+    atomic_ullong num_rptset_recv;
+} refdm_instr_t;
+
+/** Initialize counters to zero.
+ */
+void refdm_instr_init(refdm_instr_t *obj);
+
+/** Reset counters to zero.
+ */
+void refdm_instr_deinit(refdm_instr_t *obj);
+
+#endif /* REFDM_INSTR_H_ */

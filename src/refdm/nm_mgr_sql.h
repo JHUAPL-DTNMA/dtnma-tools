@@ -56,19 +56,7 @@
 #include <libpq-fe.h>
 #endif // HAVE_POSTGRESQL
 
-#include "shared/platform.h"
-
-/* Application headers. */
-#include "shared/adm/adm.h"
-#include "shared/msg/msg_if.h"
-#include "shared/msg/msg.h"
-#include "shared/primitives/report.h"
-#include "shared/primitives/rules.h"
-#include "shared/primitives/ctrl.h"
-
-#include "shared/utils/db.h"
-#include "shared/utils/utils.h"
-#include "shared/utils/vector.h"
+#include <cace/ari.h>
 
 #include "agents.h"
 
@@ -151,7 +139,7 @@ typedef struct
     char password[UI_SQL_ACCTLEN];
     char database[UI_SQL_DBLEN];
 
-    db_desc_t desc;
+    //    db_desc_t desc;
 } sql_db_t;
 
 /*
@@ -161,7 +149,7 @@ typedef struct
  */
 
 /* Functions to write primitives to associated database tables. */
-int32_t db_add_agent(eid_t agent_eid);
+int32_t db_add_agent(const cace_data_t *agent_eid);
 
 /* Database Management Functions. */
 void    *db_mgt_daemon(void *arg);

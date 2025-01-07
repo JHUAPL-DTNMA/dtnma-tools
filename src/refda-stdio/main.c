@@ -27,8 +27,6 @@
 #include <signal.h>
 #include <unistd.h>
 
-#define MAX_HEXMSG_SIZE 10240
-
 /// Per-process state
 static refda_agent_t agent;
 
@@ -117,8 +115,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
         int res = poll(pfds, sizeof(pfds) / sizeof(struct pollfd), 1000);
         if (res < 0)
         {
-            return 2;
-            break;
+            return CACE_AMM_MSG_IF_RECV_END;
         }
         else if (res == 0)
         {
@@ -126,7 +123,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
             if (!daemon_run_get(running))
             {
                 CACE_LOG_DEBUG("returning due to running state change");
-                return 2;
+                return CACE_AMM_MSG_IF_RECV_END;
             }
             continue;
         }
@@ -141,7 +138,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
             {
                 CACE_LOG_DEBUG("returning due to end of input %d", res);
                 free(lineptr);
-                return 2;
+                return CACE_AMM_MSG_IF_RECV_END;
             }
             else
             {
@@ -234,7 +231,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
         {
             // input has closed
             CACE_LOG_DEBUG("returning due to hangup");
-            return 2;
+            return CACE_AMM_MSG_IF_RECV_END;
         }
     }
 

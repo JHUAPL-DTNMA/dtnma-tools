@@ -43,7 +43,7 @@
 #include "../shared/utils/nm_types.h"
 #include "../shared/adm/adm.h"
 #include "../shared/primitives/ari.h"
-#include "nmmgr.h"
+#include "mgr.h"
 
 #ifdef __cplusplus
 extern "C" {

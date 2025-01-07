@@ -16,11 +16,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-include(GNUInstallDirs)
-
-
 set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/instr.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/binding.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/msgdata.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ingress.h"
@@ -51,6 +49,7 @@ set(HFILES
 )
 set(CFILES
     "agent.c"
+    "instr.c"
     "binding.c"
     "msgdata.c"
     "ingress.c"
@@ -89,6 +88,8 @@ target_include_directories(
 target_link_libraries(refda PUBLIC cace)
 target_link_libraries(refda PUBLIC timespec::timespec)
 
+
+include(GNUInstallDirs)
 install(TARGETS refda)
 install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"

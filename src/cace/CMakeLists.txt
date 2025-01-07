@@ -16,8 +16,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-include(GNUInstallDirs)
-
 # AMM and ARI handling library
 configure_file("config.h.in" "config.h")
 set(HFILES
@@ -129,6 +127,7 @@ target_sources(cace_ari PRIVATE cace_ari.c)
 target_link_libraries(cace_ari PUBLIC cace)
 
 
+include(GNUInstallDirs)
 install(
     TARGETS cace cace_ari
 )

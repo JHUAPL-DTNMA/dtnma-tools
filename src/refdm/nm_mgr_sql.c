@@ -48,7 +48,6 @@
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 
 #include <string.h>
-#include <osapi-task.h>
 #include <arpa/inet.h>
 
 #include "nmmgr.h"
@@ -808,7 +807,7 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
             queries[idx][MSGS_AGENT_GROUP_ADD_NAME] =
                 db_mgr_sql_prepare(idx, "SELECT insert_message_group_agent_name(?, ?)"); // group_id, agent_name
             //		queries[idx][MSGS_AGENT_GROUP_ADD_ID] = db_mgr_sql_prepare(idx,"SELECT
-            //insert_message_group_agent_id(?, ?)"); // group_id, agent_id
+            // insert_message_group_agent_id(?, ?)"); // group_id, agent_id
             queries[idx][MSGS_AGENT_MSG_ADD] =
                 db_mgr_sql_prepare(idx, "CALL SP__insert_message_entry_agent(?, ?)"); // message_id, agent_name
 
@@ -964,7 +963,7 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
                 db_mgr_sql_prepare(idx, "SELECT insert_message_group_agent_name($1::int4, $2::varchar)",
                                    "MSGS_AGENT_GROUP_ADD_NAME", 2, NULL); // group_id, agent_name
             //		queries[idx][MSGS_AGENT_GROUP_ADD_ID] = db_mgr_sql_prepare(idx,"SELECT
-            //insert_message_group_agent_id($1, $2)", "MSGS_AGENT_GROUP_ADD_ID", 2, NULL); // group_id, agent_id
+            // insert_message_group_agent_id($1, $2)", "MSGS_AGENT_GROUP_ADD_ID", 2, NULL); // group_id, agent_id
             queries[idx][MSGS_AGENT_MSG_ADD] =
                 db_mgr_sql_prepare(idx, "CALL SP__insert_message_entry_agent($1::int4, $2::varchar)",
                                    "MSGS_AGENT_MSG_ADD", 2, NULL); // message_id, agent_name

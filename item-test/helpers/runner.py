@@ -24,13 +24,10 @@ import time
 import threading
 from typing import List
 import queue
+from .failure import Timeout
 
 LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
-
-
-class Timeout(RuntimeError):
-    ''' Represent a timeout for the CmdRunner class '''
 
 
 class CmdRunner:

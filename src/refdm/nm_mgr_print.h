@@ -49,7 +49,7 @@
 #include "../shared/adm/adm.h"
 #include "nm_mgr_ui.h"
 #include "metadata.h"
-#include "nmmgr.h"
+#include "mgr.h"
 
 #ifdef __cplusplus
 extern "C" {

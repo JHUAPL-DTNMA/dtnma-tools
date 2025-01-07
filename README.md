@@ -112,6 +112,29 @@ A loopback text output can be converted with:
 echo -ne "ari:/EXECSET/n=1234;(//1/CTRL/5(//1/EDD/sw-version))" | ./run.sh cace_ari | ./run.sh refda-stdio -l debug | ./run.sh cace_ari
 ```
 
+## Socket-transport Manager
+
+The manager (and others) are built and installed to the local `testroot` with:
+```
+./build.sh
+./build.sh install
+```
+
+The manager can be run from the local installation using:
+```
+./run.sh gdb --args refdm-socket -l debug -a /tmp/mgr.sock
+```
+
+A manual RPTSET can be sent to the manger via command:
+```
+echo -n 821583f61a2d2639a58382250083012205f6 | xxd -r -p | socat STDIO UNIX-SENDTO:/tmp/mgr.sock,bind=/tmp/agent.sock
+```
+
+Checking that the report was received with:
+```
+curl -qv http://localhost:8089/nm/api/agents/eid/file%3A%2Ftmp%2Fagent.sock/reports/hex | json_reformat
+```
+
 ## Support
 The wiki for this project contains additional details outside of the source and API documentation, and the issue tracker for this project is used for defect reports and enhancement requests.
 Additional details are in the [Contributing](CONTRIBUTING.md) document.

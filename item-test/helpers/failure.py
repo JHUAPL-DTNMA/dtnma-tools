@@ -16,6 +16,6 @@
 # limitations under the License.
 #
 
-from .failure import Timeout
-from .runner import CmdRunner
-from .timer import Timer
+
+class Timeout(RuntimeError):
+    ''' Represent a timeout for a test class '''

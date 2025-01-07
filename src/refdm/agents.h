@@ -37,61 +37,55 @@
 #ifndef REFDM_AGENTS_H_
 #define REFDM_AGENTS_H_
 
-#include "cace/ari/type.h"
+#include <cace/cace_data.h>
+#include <cace/ari.h>
+#include <m-string.h>
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define AGENT_DEF_NUM_AGTS (4)
-#define AGENT_DEF_NUM_RPTS (8)
-#define AGENT_DEF_NUM_TBLS (8)
 
 /**
  * Data structure representing a managed remote agent.
  **/
 typedef struct
 {
-    eid_t     eid;
-    vec_idx_t idx;
-    vector_t  rpts;
-    vector_t  tbls;
+    /// Endpoint ID (opaque URI) for this agent
+    m_string_t eid;
 
-    FILE *log_fd;
-    int   log_fd_cnt;
-    int   log_file_num;
-} agent_t;
+    /// Received RPTSET values
+    ari_list_t rptsets;
+
+    /// Mutex for #log_fd and related data
+    pthread_mutex_t log_mutex;
+    FILE           *log_fd;
+    int             log_fd_cnt;
+    int             log_file_num;
+} refdm_agent_t;
+
+void refdm_agent_init(refdm_agent_t *obj);
+
+void refdm_agent_deinit(refdm_agent_t *obj);
+
+#define M_OPL_refdm_agent_t() (INIT(API_2(refdm_agent_init)), CLEAR(API_2(refdm_agent_deinit)))
 
 /**
  * Global Configuration Settings for Automatic Logging
  */
 typedef struct
 {
-    int enabled;
-    int tx_cbor; // Log transmitted controls as raw CBOR HEX strings, ie: TX: msgs:0x...
-    int rx_cbor; // Log received data as raw CBOR HEX strings, ie: RX: msgs:0x...
-    int rx_rpt;  // Log all reports to files upon receipt
-    int rx_tbl;  // Log all tables tof files upon receipt
-#ifdef USE_JSON  // Output reports/tables in JSON format (experimental)
-    int rx_json_rpt;
-    int rx_json_tbl;
-#endif
+    bool enabled;
+    bool rx_rpt;     // Log all reports to file upon receipt
     int  limit;      // Number of entries (reports+tables) per file
     int  agent_dirs; // If true, create discrete directories for each agent
     char dir[32];    // directory to save report logs to (or place sub-directories in)
 
-} agent_autologging_cfg_t;
-extern agent_autologging_cfg_t agent_log_cfg;
+} refdm_agent_autologging_cfg_t;
 
-int      agent_add(eid_t agent_eid);
-int      agent_cb_comp(void *i1, void *i2);
-void     agent_cb_del(void *item);
-agent_t *agent_create(eid_t *eid);
-agent_t *agent_get(eid_t *eid);
-void     agent_release(agent_t *agent, int destroy);
-
-// File Logging function utilities
-void agent_rotate_log(agent_t *agent, int force);
+/** Common log file management.
+ */
+void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_cfg_t *cfg, bool force);
 
 #ifdef __cplusplus
 }

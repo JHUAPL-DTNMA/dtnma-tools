@@ -21,18 +21,20 @@ set(CIVETWEB_FOUND ${civetweb_FOUND})
 configure_file("config.h.in" "config.h")
 set(HFILES
   ${CMAKE_CURRENT_BINARY_DIR}/config.h
-#  agents.h
-  metadata.h
-  nm_mgr_rx.h
-  nm_mgr_sql.h
-  nmmgr.h
+  instr.h
+  agents.h
+  ingress.h
+#  metadata.h
+#  nm_mgr_sql.h
+  mgr.h
 )
 set(CFILES
-#  agents.c
-  metadata.c
-  nm_mgr_rx.c
-  nm_mgr_sql.c
-  nmmgr.c
+  instr.c
+  agents.c
+  ingress.c
+#  metadata.c
+#  nm_mgr_sql.c
+  mgr.c
 )
 if(REFDM_UI_CLI)
   list(APPEND HFILES
@@ -63,11 +65,11 @@ target_link_libraries(refdm PUBLIC cace)
 
 if(MYSQLCLIENT_FOUND)
   message(STATUS "Manager using MySQL client")
-  target_compile_definitions(refdm PUBLIC HAVE_MYSQL)
+#FIXME  target_compile_definitions(refdm PUBLIC HAVE_MYSQL)
   target_link_libraries(refdm PUBLIC PkgConfig::MYSQLCLIENT)
 elseif(PostgreSQL_FOUND)
   message(STATUS "Manager using POSTGRES client")
-  target_compile_definitions(refdm PUBLIC HAVE_POSTGRESQL)
+#FIXME  target_compile_definitions(refdm PUBLIC HAVE_POSTGRESQL)
   target_link_libraries(refdm PUBLIC PostgreSQL::PostgreSQL)
 else()
   message(WARNING "Manager not using any database client")
@@ -84,3 +86,19 @@ if(civetweb_FOUND)
   target_compile_definitions(refdm PUBLIC USE_CIVETWEB NO_SSL)
   target_link_libraries(refdm PUBLIC civetweb)
 endif(civetweb_FOUND)
+
+
+include(GNUInstallDirs)
+install(TARGETS refdm)
+install(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    FILES_MATCHING PATTERN "*.h"
+)
+install(
+    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    FILES_MATCHING PATTERN "*.h"
+)

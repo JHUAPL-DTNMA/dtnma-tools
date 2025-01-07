@@ -19,6 +19,7 @@
 #ifndef REFDA_AGENT_H_
 #define REFDA_AGENT_H_
 
+#include "instr.h"
 #include "msgdata.h"
 #include "exec_seq.h"
 #include "rpt_agg.h"
@@ -45,13 +46,15 @@ extern "C" {
  */
 typedef struct refda_agent_s
 {
-    /// Agent endpoint ID
+    /// Agent endpoint ID as URI text
     string_t agent_eid;
 
     /// Running state
     daemon_run_t running;
     /// Messaging configuration
     cace_amm_msg_if_t mif;
+    /// Instrumentation counters
+    refda_instr_t instr;
     /// Threads associated with the agent
     threadset_t threads;
 
