@@ -396,8 +396,8 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
-    cJSON  *obj;
-    cJSON  *reports;
+    cJSON *obj;
+    cJSON *reports;
 
     obj = cJSON_CreateObject();
     cJSON_AddStringToObject(obj, "eid", string_get_cstr(agent->eid));
@@ -454,9 +454,9 @@ static int agentEidHandler(struct mg_connection *conn, void *cbdata _U_)
 
     // Replace path segment separators with null terminator
     size_t uri_len = strlen(suburi_begin);
-    char         buf[uri_len + 1];
+    char   buf[uri_len + 1];
     // end is past the trailing null
-    char *end = stpncpy(buf, suburi_begin, uri_len + 1);
+    char *end  = stpncpy(buf, suburi_begin, uri_len + 1);
     char *curs = buf;
 
     const char *seg_eid_begin = NULL;

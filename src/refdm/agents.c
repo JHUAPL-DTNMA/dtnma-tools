@@ -96,7 +96,8 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
         m_string_init(eid_path_seg);
         {
             cace_data_t eid_bytes;
-            cace_data_init_view(&eid_bytes, m_string_size(agent->eid) + 1, (cace_data_ptr_t)m_string_get_cstr(agent->eid));
+            cace_data_init_view(&eid_bytes, m_string_size(agent->eid) + 1,
+                                (cace_data_ptr_t)m_string_get_cstr(agent->eid));
             uri_percent_encode(eid_path_seg, &eid_bytes, NULL);
         }
 
