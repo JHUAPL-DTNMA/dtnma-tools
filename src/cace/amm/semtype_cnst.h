@@ -65,8 +65,10 @@ typedef struct amm_semtype_cnst_s
     {
         /// Used when #type is ::AMM_SEMTYPE_CNST_STRLEN
         cace_amm_range_size_t as_strlen;
+#if defined(PCRE_FOUND)
         /// Used when #type is ::AMM_SEMTYPE_CNST_TEXTPAT
         pcre2_code *as_textpat;
+#endif /* PCRE_FOUND */
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
         cace_amm_range_int64_t as_range_int64;
     };
@@ -85,8 +87,6 @@ void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj);
  */
 cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj);
 
-#if defined(PCRE_FOUND)
-
 /** Configure a constraint on text-string regular expression pattern.
  * This applies to ARI_TYPE_TEXTSTR as well as untyped
  * primitive text strings.
@@ -98,11 +98,9 @@ cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj);
  *
  * @param[in,out] obj The struct to set the state of.
  * @param[in] pat The regular expression to compile.
- * @return The specific parameters for this constraint type.
+ * @return Zero if successful.
  */
-pcre2_code *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat);
-
-#endif /* PCRE_FOUND */
+int amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat);
 
 /** Configure a constraint on integer values based on signed 64-bit ranges.
  * This applies to ARI_TYPE_BYTE, ARI_TYPE_INT, ARI_TYPE_UINT, ARI_TYPE_VAST,

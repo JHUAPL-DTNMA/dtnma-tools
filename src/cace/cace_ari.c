@@ -20,6 +20,7 @@
 #include <cace/ari/text.h>
 #include <cace/ari/cbor.h>
 #include <cace/ari/text_util.h>
+#include <cace/util/logging.h>
 #include <qcbor/qcbor_decode.h>
 #include <getopt.h>
 #include <errno.h>
@@ -92,6 +93,7 @@ static FILE *get_file(const char *name, const char *mode)
     return file;
 }
 
+#if defined(ARI_TEXT_PARSE)
 /** Read a single value and indicate whether to continue reading.
  *
  * @return Zero upon success.
@@ -123,6 +125,7 @@ static int read_text(ari_t *inval, FILE *source)
 
     return 0;
 }
+#endif /* ARI_TEXT_PARSE */
 
 #define CBOR_STORE_WANT 1024
 
@@ -229,6 +232,7 @@ static int read_cborhex(ari_t *inval, FILE *source)
     return 0;
 }
 
+#if defined(ARI_TEXT_PARSE)
 static int read_auto(ari_form_t *inform, ari_form_t *outform, ari_t *inval, FILE *source)
 {
     // check only the first line
@@ -269,6 +273,7 @@ static int read_auto(ari_form_t *inform, ari_form_t *outform, ari_t *inval, FILE
     }
     return res;
 }
+#endif /* ARI_TEXT_PARSE */
 
 static int write_text(const ari_t *val, FILE *dest, ari_text_enc_opts_t opts)
 {
@@ -350,20 +355,40 @@ static int write_cborhex(const ari_t *val, FILE *dest)
     return 0;
 }
 
+static void show_usage(const char *argv0)
+{
+    fprintf(stderr,
+            "Usage: %s {-l <log-level>} "
+            "[--source {filename or -}] "
+#if defined(ARI_TEXT_PARSE)
+            "[--inform {auto,text,cbor,cborhex}] "
+#else
+            "[--inform {cbor,cborhex}] "
+#endif /* ARI_TEXT_PARSE */
+            "[--dest {filename or -}] "
+            "[--outform {auto,text,cbor,cborhex}]\n",
+            argv0);
+}
+
 int main(int argc, char *argv[])
 {
+    int                 log_limit = LOG_WARNING;
     FILE               *source    = stdin;
     ari_form_t          inform    = ARI_FORM_AUTO;
     FILE               *dest      = stdout;
     ari_form_t          outform   = ARI_FORM_AUTO;
     ari_text_enc_opts_t text_opts = ARI_TEXT_ENC_OPTS_DEFAULT;
 
+    cace_openlog();
+
 #ifdef HAVE_GETOPT_LONG
     static const struct option longopts[] = {
-        { "source", required_argument, 0, 's' },
-        { "inform", required_argument, 0, 'i' },
-        { "dest", required_argument, 0, 'd' },
-        { "outform", required_argument, 0, 'o' },
+        { "help", no_argument, NULL, 'h' },
+        { "log-level", required_argument, NULL, 'l' },
+        { "source", required_argument, NULL, 's' },
+        { "inform", required_argument, NULL, 'i' },
+        { "dest", required_argument, NULL, 'd' },
+        { "outform", required_argument, NULL, 'o' },
         { NULL, 0, NULL, 0 },
     };
 #endif /* HAVE_GETOPT_LONG */
@@ -374,9 +399,9 @@ int main(int argc, char *argv[])
     {
 #ifdef HAVE_GETOPT_LONG
         int option_index = 0;
-        int res          = getopt_long(argc, argv, ":s:i:d:o:", longopts, &option_index);
+        int res          = getopt_long(argc, argv, ":hl:s:i:d:o:", longopts, &option_index);
 #else
-        int res = getopt(argc, argv, ":s:i:d:o:");
+        int res = getopt(argc, argv, ":hl:s:i:d:o:");
 #endif /* HAVE_GETOPT_LONG */
 
         if (res == -1)
@@ -385,6 +410,14 @@ int main(int argc, char *argv[])
         }
         switch (res)
         {
+            case 'l':
+                if (cace_log_get_severity(&log_limit, optarg))
+                {
+                    fprintf(stderr, "Invalid log severity: %s\n", optarg);
+                    retval = 1;
+                    cont   = false;
+                }
+                break;
             case 's':
                 source = get_file(optarg, "r");
                 if (!source)
@@ -403,6 +436,13 @@ int main(int argc, char *argv[])
                 break;
             case 'i':
                 inform = get_form(optarg);
+#if !defined(ARI_TEXT_PARSE)
+                if (inform == ARI_FORM_INVALID || inform == ARI_FORM_TEXT || inform == ARI_FORM_AUTO)
+                {
+                    retval = 1;
+                    cont   = false;
+                }
+#endif /* ARI_TEXT_PARSE */
                 if (inform == ARI_FORM_INVALID)
                 {
                     retval = 1;
@@ -417,12 +457,12 @@ int main(int argc, char *argv[])
                     cont   = false;
                 }
                 break;
+            case 'h':
+                show_usage(argv[0]);
+                cont = false;
+                // still exit code zero
+                break;
             default:
-                fprintf(
-                    stderr,
-                    "Usage: %s [--source {filename or -}] [--inform {auto,text,cbor,cborhex}] [--dest {filename or -}] "
-                    "[--outform {auto,text,cbor,cborhex}]\n",
-                    argv[0]);
                 retval = 1;
                 cont   = false;
                 break;
@@ -430,13 +470,12 @@ int main(int argc, char *argv[])
     }
     if (retval)
     {
-        fprintf(stderr, "Failed to handle program options\n");
+        fprintf(stderr, "Failed to handle program options\n\n");
+        show_usage(argv[0]);
         cont = false;
     }
-    else
-    {
-        cont = true;
-    }
+    cace_log_set_least_severity(log_limit);
+    CACE_LOG_DEBUG("Starting up with log limit %d", log_limit);
 
     // handle each input line/item in-turn
     int failures = 0;
@@ -448,10 +487,14 @@ int main(int argc, char *argv[])
         switch (inform)
         {
             case ARI_FORM_AUTO:
+#if defined(ARI_TEXT_PARSE)
                 res = read_auto(&inform, &outform, &inval, source);
+#endif /* ARI_TEXT_PARSE */
                 break;
             case ARI_FORM_TEXT:
+#if defined(ARI_TEXT_PARSE)
                 res = read_text(&inval, source);
+#endif /* ARI_TEXT_PARSE */
                 break;
             case ARI_FORM_CBOR:
                 res = read_cbor(&inval, source);
@@ -499,6 +542,7 @@ int main(int argc, char *argv[])
                 cont = false;
                 break;
         }
+        fflush(dest);
 
         ari_deinit(&inval);
     }

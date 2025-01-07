@@ -22,6 +22,6 @@ PREFIX=${PREFIX:-/usr}
 
 if [ -n "${DESTDIR}" -o -n "${PREFIX}" ]
 then
-    export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib
+    export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib:${DESTDIR}${PREFIX}/lib64
     export PATH=${PATH}:${DESTDIR}${PREFIX}/bin
 fi

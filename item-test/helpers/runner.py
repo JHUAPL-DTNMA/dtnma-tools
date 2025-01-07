@@ -106,22 +106,22 @@ class CmdRunner:
         return ret
 
     def _read_stdout(self, stream):
-        LOGGER.debug('Starting stdout thread')
+        LOGGER.info('Starting stdout thread')
         for line in iter(stream.readline, ''):
-            LOGGER.debug('Got line: %s', line.strip())
+            LOGGER.info('Got stdout: %s', line.strip())
             self._stdout_lines.put(line)
-        LOGGER.debug('Stopping stdout thread')
+        LOGGER.info('Stopping stdout thread')
 
     def _write_stdin(self, stream):
-        LOGGER.debug('Starting stdin thread')
+        LOGGER.info('Starting stdin thread')
         while True:
             text = self._stdin_lines.get()
             if text is None:
                 break
-            LOGGER.debug('Sending text: %s', text)
+            LOGGER.info('Sending stdin: %s', text.strip())
             stream.write(text)
             stream.flush()
-        LOGGER.debug('Stopping stdin thread')
+        LOGGER.info('Stopping stdin thread')
 
     def wait_for_line(self, timeout=5):
         try:

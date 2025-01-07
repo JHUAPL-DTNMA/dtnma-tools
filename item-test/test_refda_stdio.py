@@ -32,7 +32,8 @@ from helpers.runner import CmdRunner, Timeout
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
 
-HEXSTR = r'^[0-9a-fA-F]+'
+HEXPAT = r'^[0-9a-fA-F]+'
+''' Generic hexadecimal regex pattern. '''
 
 
 class TestStdioAgent(unittest.TestCase):
@@ -89,7 +90,7 @@ class TestStdioAgent(unittest.TestCase):
 
     def _wait_rptset(self) -> ARI:
         ''' Wait for a RPTSET and decode it. '''
-        line = self._agent.wait_for_text(HEXSTR).strip()
+        line = self._agent.wait_for_text(HEXPAT).strip()
         LOGGER.info('Received line %s', line)
         data = binascii.a2b_hex(line)
         ari = self._ari_obj_from_cbor(data)
@@ -103,7 +104,7 @@ class TestStdioAgent(unittest.TestCase):
 
     def test_start_terminate(self):
         self._start()
-#        self._agent.wait_for_text(HEXSTR)
+#        self._agent.wait_for_text(HEXPAT)
 
         LOGGER.info('Sending SIGINT')
         self._agent.proc.send_signal(signal.SIGINT)
