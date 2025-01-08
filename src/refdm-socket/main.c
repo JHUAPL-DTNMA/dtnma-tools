@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
         int res = bind(sock_fd, (struct sockaddr *)&laddr, sizeof(laddr));
         if (res)
         {
-            CACE_LOG_ERR("Failed to bind to socket %s with error %d", laddr.sun_path);
+            CACE_LOG_ERR("Failed to bind to socket %s with error %d", laddr.sun_path, errno);
             retval = 4;
         }
     }
