@@ -35,18 +35,21 @@ jobs:
           cmake ninja-build
           ruby build-essential autoconf libtool
           flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev
-          doxygen graphviz plantuml
+          doxygen graphviz plantuml texlive texlive-latex-extra
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS=ON
+        run: ./deps.sh && ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
       - name: Build
-        run: ./build.sh docs
+        run: |
+          ./build.sh --target docs-api-html docs-api-pdf
+          ./build.sh install --component docs-api
       - name: Compress
-        run: cd build/default/docs/doxygen && tar -cf html.tar html
+        working-directory: testroot/usr/share/doc/dtnma-tools
+        run: tar -cf api.tar html *.pdf
       - name: Archive
         uses: actions/upload-artifact@v4
         with:
-          name: doxygen
-          path: build/default/docs/doxygen/html.tar
+          name: dtnma-tools-api
+          path: testroot/usr/share/doc/dtnma-tools/api.tar
 
   deploy:
     environment:
@@ -58,17 +61,15 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: doxygen
-          path: build/default/docs/doxygen/
+          name: dtnma-tools-api
       - name: Decompress
-        run: cd build/default/docs/doxygen && tar -xf html.tar
+        run: tar -xf api.tar
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          # Just the HTML
-          path: build/default/docs/doxygen/html/
+          path: testroot/usr/share/doc/dtnma-tools/
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2

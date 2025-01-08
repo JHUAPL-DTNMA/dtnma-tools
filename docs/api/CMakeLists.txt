@@ -70,11 +70,11 @@ install(
     COMPONENT docs-api
 )
 if(DBLATEX_EXECUTABLE)
-install(
-    FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
-    TYPE DOC
-    RENAME "BSL-API.pdf"
-    COMPONENT docs-api
-)
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
+        TYPE DOC
+        RENAME "dtnma-ref-api.pdf"
+        COMPONENT docs-api
+    )
 endif(DBLATEX_EXECUTABLE)
