@@ -71,7 +71,10 @@ typedef enum mgr_ui_mode_enum
 #define MGR_UI_DEFAULT MGR_UI_STANDARD
 #endif
 
+/// @cond Doxygen_Suppress
+M_DEQUE_DEF(refdm_agent_list, refdm_agent_t *, M_PTR_OPLIST)
 M_DICT_DEF2(refdm_agent_dict, const char *, M_CSTR_OPLIST, refdm_agent_t *, M_PTR_OPLIST)
+/// @endcond
 
 typedef struct refdm_mgr_s
 {
@@ -93,11 +96,15 @@ typedef struct refdm_mgr_s
     threadset_t threads;
 
     /// Agent state storage
-    refdm_agent_dict_t agents;
-    /// Access control for #agents
-    pthread_mutex_t agents_mutex;
+    refdm_agent_list_t agent_list;
+    /// Lookup agents by EID
+    refdm_agent_dict_t agent_dict;
+    /// Access control for #agent_list and #agent_dict
+    pthread_mutex_t agent_mutex;
 
 #if defined(CIVETWEB_FOUND)
+    /// The port number to listen on
+    uint16_t rest_listen_port;
     /// HTTP server state, managed by a background thread
     struct mg_context *rest;
 #endif
@@ -108,17 +115,49 @@ typedef struct refdm_mgr_s
 
 } refdm_mgr_t;
 
+/** Initialize a new manager state with default config.
+ *
+ * @param[in,out] mgr The manager state.
+ */
 void refdm_mgr_init(refdm_mgr_t *mgr);
 
 void refdm_mgr_deinit(refdm_mgr_t *mgr);
 
+/** Begin the REFDM daemon operation.
+ *
+ * @pre The manager must have set values for:
+ *  * refdm_mgr_t::agent_log_cfg
+ *  * refdm_mgr_t::rest_listen_port
+ *
+ * @param[in] mgr The manager to start.
+ * @sa refdm_mgr_stop()
+ */
 int refdm_mgr_start(refdm_mgr_t *mgr);
 
+/** End daemon operation.
+ *
+ * @pre The manager must have been successfully started with
+ * refdm_mgr_start().
+ * @param[in] mgr The manager to stop.
+ */
 int refdm_mgr_stop(refdm_mgr_t *mgr);
 
+/** Add a new known agent by its EID URI.
+ *
+ * @param[in] mgr The manager to update.
+ * @param[in] agent_eid The unique agent EID.
+ * Adding will fail if the EID already exists in the agent list.
+ * @return The new manager, or NULL if adding failed.
+ */
 refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid);
 
-refdm_agent_t *refdm_mgr_agent_get(refdm_mgr_t *mgr, const char *agent_eid);
+refdm_agent_t *refdm_mgr_agent_get_eid(refdm_mgr_t *mgr, const char *agent_eid);
+
+refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index);
+
+/** Clear reports for a specific agent.
+ */
+void refdm_mgr_clear_reports(refdm_mgr_t *mgr, refdm_agent_t *agent);
 
 #ifdef __cplusplus
 }

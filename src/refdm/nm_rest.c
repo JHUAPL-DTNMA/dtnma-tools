@@ -22,27 +22,16 @@
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <unistd.h>
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
+#include <m-bstring.h>
 // CivetWeb includes
 #include <cjson/cJSON.h>
 #include <civetweb.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 
-// #include "nm_mgr_ui.h"
-// #include "nm_mgr_print.h"
-
-#define EID_BUF_SIZE    1024
-#define MAX_CMD_SIZE    32
-#define MAX_INPUT_BYTES 4096
+/// Chunking size for receiving request bodies
+#define REQUEST_BODY_CHUNK 4096
 
 #define BASE_API_URI   "/nm/api"
 #define VERSION_URI    BASE_API_URI "/version$"
@@ -53,8 +42,51 @@
 // REST API Handler Declarations
 static int versionHandler(struct mg_connection *conn, void *cbdata);
 static int agentsHandler(struct mg_connection *conn, void *cbdata);
-// FIXME static int agentIdxHandler(struct mg_connection *conn, void *cbdata);
+static int agentIdxHandler(struct mg_connection *conn, void *cbdata);
 static int agentEidHandler(struct mg_connection *conn, void *cbdata);
+
+static int requireContentType(struct mg_connection *conn, const char *match)
+{
+    const char *ctype = mg_get_header(conn, "content-type");
+    if (!ctype)
+    {
+        return 2;
+    }
+    size_t ctype_len = strlen(ctype);
+    size_t match_len = strlen(match);
+    if (0 != strncasecmp(ctype, match, match_len))
+    {
+        return 3;
+    }
+    if (ctype_len > match_len)
+    {
+        if (ctype[match_len] != ';')
+        {
+            return 3;
+        }
+    }
+    return 0;
+}
+
+static int readRequstBody(struct mg_connection *conn, m_bstring_t data)
+{
+    uint8_t chunk[REQUEST_BODY_CHUNK];
+
+    while (true)
+    {
+        int got = mg_read(conn, chunk, sizeof(chunk));
+        if (got == 0)
+        {
+            break;
+        }
+        else if (got < 0)
+        {
+            return HTTP_BAD_REQUEST;
+        }
+        m_bstring_push_back_bytes(data, got, chunk);
+    }
+    return 0;
+}
 
 /*** Start Common API Functions ***/
 static size_t SendJSON(struct mg_connection *conn, const cJSON *json_obj)
@@ -82,8 +114,14 @@ static int log_message(const struct mg_connection *conn _U_, const char *message
 
 int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
 {
+    CHKERR1(ctx);
+    CHKERR1(mgr);
+
+    char port_buf[6]; // holds uint16_t
+    snprintf(port_buf, sizeof(port_buf), "%u", mgr->rest_listen_port);
+
     const char *options[] = { "listening_ports",
-                              PORT,
+                              port_buf,
                               "request_timeout_ms",
                               "10000",
                               "error_log_file",
@@ -103,27 +141,30 @@ int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
                               0 };
 
     struct mg_callbacks callbacks;
+    unsigned features = 0;
     int                 err = 0;
 
 /* Check if libcivetweb has been built with all required features. */
 #ifndef NO_SSL
-    if (!mg_check_feature(2))
+    if (!mg_check_feature(MG_FEATURES_SSL))
     {
-        CACE_LOG_ERR("Error: Embedded example built with SSL support, "
-                     "but civetweb library build without.\n");
-        err = 1;
+        CACE_LOG_ERR("Embedded example built with SSL support, "
+                     "but civetweb library build without.");
+        err = 3;
+    }
+    features |= MG_FEATURES_SSL;
+#endif
+
+    unsigned got = mg_init_library(features);
+    if (got != features)
+    {
+        CACE_LOG_ERR("REST server failed to start with requested feature flags %u got %u", features, got);
+        err = 2;
     }
 
-    mg_init_library(MG_FEATURES_SSL);
-
-#else
-    mg_init_library(0);
-
-#endif
     if (err)
     {
-        CACE_LOG_ERR("Cannot start CivetWeb - inconsistent build.\n");
-        return EXIT_FAILURE;
+        return err;
     }
 
     /* Callback will print error messages to console */
@@ -137,16 +178,17 @@ int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
     if (*ctx == NULL)
     {
         CACE_LOG_ERR("Cannot start CivetWeb - mg_start failed.\n");
-        return EXIT_FAILURE;
+        return 4;
     }
 
     /* Add URL Handlers.   */
     mg_set_request_handler(*ctx, VERSION_URI, versionHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_URI, agentsHandler, 0);
-    // FIXME mg_set_request_handler(*ctx, AGENTS_IDX_URI, agentIdxHandler, 0);
+    mg_set_request_handler(*ctx, AGENTS_IDX_URI, agentIdxHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_EID_URI, agentEidHandler, 0);
-    CACE_LOG_INFO("REST API Server Started on port " PORT "\n");
-    return EXIT_SUCCESS;
+
+    CACE_LOG_INFO("REST API Server Started on port %s", port_buf);
+    return 0;
 }
 
 void nm_rest_stop(struct mg_context *ctx)
@@ -157,47 +199,46 @@ void nm_rest_stop(struct mg_context *ctx)
 
 /*** Start REST API Handlers ***/
 
-static int versionHandler(struct mg_connection *conn, void *cbdata)
+static int versionHandler(struct mg_connection *conn, void *cbdata _U_)
 {
-    cJSON                        *obj;
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    (void)cbdata; /* currently unused */
 
-    if (0 != strcmp(ri->request_method, "GET"))
+    if (0 == strcasecmp(ri->request_method, "GET"))
     {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported for this page");
-        return HTTP_METHOD_NOT_ALLOWED;
-    }
+        cJSON *obj = cJSON_CreateObject();
+        if (!obj)
+        {
+            /* insufficient memory? */
+            mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "Server error");
+            return HTTP_INTERNAL_ERROR;
+        }
 
-    obj = cJSON_CreateObject();
-
-    if (!obj)
-    {
-        /* insufficient memory? */
-        mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "Server error");
-        return HTTP_INTERNAL_ERROR;
-    }
-
-    cJSON_AddStringToObject(obj, "civetweb_version", CIVETWEB_VERSION);
+        cJSON_AddStringToObject(obj, "civetweb_version", CIVETWEB_VERSION);
 #if 0 // FIXME
-    cJSON_AddNumberToObject(obj, "amp_version", AMP_VERSION);
-    cJSON_AddStringToObject(obj, "amp_uri", AMP_PROTOCOL_URL);
-    cJSON_AddStringToObject(obj, "amp_version_str", AMP_VERSION_STR);
+        cJSON_AddNumberToObject(obj, "amp_version", AMP_VERSION);
+        cJSON_AddStringToObject(obj, "amp_uri", AMP_PROTOCOL_URL);
+        cJSON_AddStringToObject(obj, "amp_version_str", AMP_VERSION_STR);
 #endif
 
-    cJSON_AddStringToObject(obj, "build_date", __DATE__);
-    cJSON_AddStringToObject(obj, "build_time", __TIME__);
-    SendJSON(conn, obj);
-    cJSON_Delete(obj);
+        cJSON_AddStringToObject(obj, "build_date", __DATE__);
+        cJSON_AddStringToObject(obj, "build_time", __TIME__);
+        SendJSON(conn, obj);
+        cJSON_Delete(obj);
 
-    return HTTP_OK;
+        return HTTP_OK;
+    }
+    else
+    {
+        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported");
+        return HTTP_METHOD_NOT_ALLOWED;
+    }
 }
 
 static int agentsGETHandler(struct mg_connection *conn)
 {
     refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
-    cJSON       *obj = cJSON_CreateObject();
 
+    cJSON *obj = cJSON_CreateObject();
     if (!obj)
     {
         /* insufficient memory? */
@@ -213,18 +254,19 @@ static int agentsGETHandler(struct mg_connection *conn)
         return HTTP_INTERNAL_ERROR;
     }
 
-    pthread_mutex_lock(&mgr->agents_mutex);
-    refdm_agent_dict_it_t agent_it;
-    for (refdm_agent_dict_it(agent_it, mgr->agents); !refdm_agent_dict_end_p(agent_it); refdm_agent_dict_next(agent_it))
+    pthread_mutex_lock(&mgr->agent_mutex);
+    refdm_agent_list_it_t agent_it;
+    for (refdm_agent_list_it(agent_it, mgr->agent_list); !refdm_agent_list_end_p(agent_it);
+         refdm_agent_list_next(agent_it))
     {
-        const refdm_agent_t *agent = refdm_agent_dict_cref(agent_it)->value;
+        const refdm_agent_t *agent = *refdm_agent_list_ref(agent_it);
 
         cJSON *agentObj = cJSON_CreateObject();
         cJSON_AddStringToObject(agentObj, "name", string_get_cstr(agent->eid));
         cJSON_AddNumberToObject(agentObj, "rpts_count", ari_list_size(agent->rptsets));
         cJSON_AddItemToArray(agentList, agentObj);
     }
-    pthread_mutex_unlock(&mgr->agents_mutex);
+    pthread_mutex_unlock(&mgr->agent_mutex);
 
     SendJSON(conn, obj);
     cJSON_Delete(obj);
@@ -233,26 +275,28 @@ static int agentsGETHandler(struct mg_connection *conn)
 }
 
 // This may be called via POST /agents or PUT /agents/$name
-static int agentsCreateHandler(struct mg_connection *conn, const char *eid)
+static int agentsCreateHandler(struct mg_connection *conn, m_bstring_t eid)
 {
     // Sanity-check string length
-    if (eid == NULL)
+    if (m_bstring_size(eid) <= 1)
     {
-        mg_send_http_error(conn, HTTP_BAD_REQUEST, "Invalid EID length");
-        return HTTP_BAD_REQUEST;
+        mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "Invalid request body data (expect EID name)");
+        return HTTP_UNPROCESSABLE_CNT;
     }
 
     refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
 
-    refdm_agent_t *agent = refdm_mgr_agent_add(mgr, eid);
+    refdm_agent_t *agent = refdm_mgr_agent_add(mgr, (const char *)m_bstring_view(eid, 0, m_bstring_size(eid)));
     if (!agent)
     {
         mg_send_http_error(conn, HTTP_BAD_REQUEST, "Unable to register agent");
         return HTTP_BAD_REQUEST;
     }
 
-    mg_send_http_ok(conn, "text/plain", -1);
-    mg_printf(conn, "Successfully sent Raw ARI Control");
+    // FIXME should really be a 207
+    const char *body = "Successfully created agent";
+    mg_send_http_ok(conn, "text/plain", strlen(body));
+    mg_printf(conn, "%s", body);
     return HTTP_OK;
 }
 
@@ -260,33 +304,39 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
 
-    if (0 == strcmp(ri->request_method, "GET"))
+    if (0 == strcasecmp(ri->request_method, "GET"))
     {
         return agentsGETHandler(conn);
     }
-    else if (0 == strcmp(ri->request_method, "POST"))
+    else if (0 == strcasecmp(ri->request_method, "POST"))
     {
-        char buffer[EID_BUF_SIZE];
-        int  dlen = mg_read(conn, buffer, sizeof(buffer) - 1);
-        if (dlen < 1)
+        if (requireContentType(conn, "text/plain"))
         {
-            mg_send_http_error(conn, HTTP_BAD_REQUEST, "Invalid request body data (expect EID name) %d", dlen);
-            return HTTP_BAD_REQUEST;
+            mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/plain supported");
+            return HTTP_UNSUP_MEDIA_TYPE;
         }
-        else
+
+        // Request body contains direct EID text
+        m_bstring_t body;
+        m_bstring_init(body);
+        int res = readRequstBody(conn, body);
+        if (res)
         {
-            buffer[dlen] = '\0';
-            return agentsCreateHandler(conn, buffer);
+            m_bstring_clear(body);
+            return res;
         }
+        m_bstring_push_back(body, '\0');
+
+        return agentsCreateHandler(conn, body);
     }
     else
     {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET and PUT methods supported for this page");
+        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET and PUT methods supported");
         return HTTP_METHOD_NOT_ALLOWED;
     }
 }
 
-static int agentSendRaw(struct mg_connection *conn, refdm_agent_t *agent, char *hex_sep)
+static int agentSendRaw(struct mg_connection *conn, refdm_agent_t *agent, m_bstring_t hex_sep)
 {
     int retval = 0;
     int res;
@@ -300,16 +350,21 @@ static int agentSendRaw(struct mg_connection *conn, refdm_agent_t *agent, char *
         cace_data_t databuf;
         cace_data_init(&databuf);
 
-        char       *part;
-        const char *ctrlsep = " \f\n\r\t\v"; // Identical to isspace()
-        char       *saveptr = NULL;
+        static const char *ctrlsep = " \f\n\r\t\v"; // Identical to isspace()
 
-        part = strtok_r(hex_sep, ctrlsep, &saveptr);
-        while (!retval && (part != NULL))
+        const size_t hex_sep_len = m_bstring_size(hex_sep);
+        const char  *curs        = (const char *)m_bstring_view(hex_sep, 0, hex_sep_len);
+        const char  *end         = curs + hex_sep_len;
+        while (!retval && (curs < end))
         {
-            CACE_LOG_DEBUG("Handling message part %s", part);
+            size_t part_len = strcspn(curs, ctrlsep);
+            if (part_len == 0)
+            {
+                break;
+            }
 
-            string_set_str(hexbuf, part);
+            m_string_set_cstrn(hexbuf, curs, part_len);
+            CACE_LOG_DEBUG("Handling message part %s", m_string_get_cstr(hexbuf));
             // replace the databuf contents
             res = base16_decode(&databuf, hexbuf);
             if (res)
@@ -338,7 +393,9 @@ static int agentSendRaw(struct mg_connection *conn, refdm_agent_t *agent, char *
 
             // FIXME: what is this? ui_postprocess_ctrl(id);
 
-            part = strtok_r(NULL, ctrlsep, &saveptr);
+            curs += part_len;
+            size_t sep_len = strspn(curs, ctrlsep);
+            curs += sep_len;
         }
 
         string_clear(hexbuf);
@@ -359,8 +416,9 @@ static int agentSendRaw(struct mg_connection *conn, refdm_agent_t *agent, char *
     }
     ari_list_clear(tosend);
 
-    mg_send_http_ok(conn, "text/plain", -1);
-    mg_printf(conn, "Successfully sent Raw ARI Control");
+    const char *body = "Successfully sent Raw ARI Control";
+    mg_send_http_ok(conn, "text/plain", strlen(body));
+    mg_printf(conn, "%s", body);
     return HTTP_OK;
 }
 
@@ -368,8 +426,8 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
-    m_string_t uristr;
-    m_string_init(uristr);
+    m_string_t body;
+    m_string_init(body);
 
     /* Iterate through all RPTSET for this agent in one buffer */
     ari_list_it_t rpt_it;
@@ -377,18 +435,24 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     {
         const ari_t *val = ari_list_cref(rpt_it);
 
+        m_string_t uristr;
+        m_string_init(uristr);
         int enc_ret = ari_text_encode(uristr, val, ARI_TEXT_ENC_OPTS_DEFAULT);
-        m_string_cat_cstr(uristr, "\r\n"); // HTTP convention
-
         if (enc_ret)
         {
+            CACE_LOG_WARNING("Failed ari_text_encode()");
+            m_string_clear(body);
             return HTTP_INTERNAL_ERROR;
         }
+
+        m_string_cat(body, uristr);
+        m_string_clear(uristr);
+        m_string_cat_cstr(body, "\r\n"); // HTTP convention
     }
 
-    mg_send_http_ok(conn, "text/plain", m_string_size(uristr));
-    mg_write(conn, m_string_get_cstr(uristr), m_string_size(uristr));
-    m_string_clear(uristr);
+    mg_send_http_ok(conn, "text/uri-list", m_string_size(body));
+    mg_write(conn, m_string_get_cstr(body), m_string_size(body));
+    m_string_clear(body);
     return HTTP_OK;
 }
 
@@ -433,6 +497,124 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     return HTTP_OK;
 }
 
+/// Characters disallowed in URI segments (per RFC 3986) to know where they end
+static const char *uri_seg_sep = "/?#";
+
+/** Read and null-termiante a single URI path segment.
+ */
+static void extract_seg(char **curs, char *end, const char **seg_begin, size_t *seg_len)
+{
+    if (*curs)
+    {
+        *seg_begin = *curs;
+        *seg_len   = strcspn(*curs, uri_seg_sep);
+        *curs += *seg_len;
+        if (*curs >= end)
+        {
+            *curs = NULL;
+        }
+    }
+    if (*curs)
+    {
+        **curs = '\0';
+        *curs += 1;
+        if (*curs >= end)
+        {
+            *curs = NULL;
+        }
+    }
+    CACE_LOG_DEBUG("got segment \"%s\" len %z", *seg_begin, *seg_len);
+}
+
+static int do_agent_action(struct mg_connection *conn, refdm_agent_t *agent, const char *seg_cmd_begin,
+                           const char *seg_opt_begin)
+{
+    refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
+
+    const struct mg_request_info *ri = mg_get_request_info(conn);
+
+    if (0 == strcmp(seg_cmd_begin, "hex"))
+    {
+        if (0 == strcasecmp(ri->request_method, "POST"))
+        {
+            if (requireContentType(conn, "text/plain"))
+            {
+                mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/plain supported");
+                return HTTP_UNSUP_MEDIA_TYPE;
+            }
+
+            // Request body contains CBOR-encoded HEX strings as lines
+            m_bstring_t body;
+            m_bstring_init(body);
+            int res = readRequstBody(conn, body);
+            if (res)
+            {
+                m_bstring_clear(body);
+                return res;
+            }
+            m_bstring_push_back(body, '\0');
+
+            return agentSendRaw(conn, agent, body);
+        }
+        else
+        {
+            mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only POST method supported");
+            return HTTP_METHOD_NOT_ALLOWED;
+        }
+    }
+    else if (0 == strcmp(seg_cmd_begin, "clear_reports"))
+    {
+        if (0 == strcasecmp(ri->request_method, "POST"))
+        {
+            refdm_mgr_clear_reports(mgr, agent);
+            mg_send_http_ok(conn, "text/plain", -1);
+            mg_printf(conn, "Successfully cleared reports");
+            return HTTP_OK;
+        }
+        else
+        {
+            mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only POST method supported");
+            return HTTP_METHOD_NOT_ALLOWED;
+        }
+    }
+    else if (0 == strcmp(seg_cmd_begin, "reports"))
+    {
+        if (0 == strcmp(seg_opt_begin, "text"))
+        {
+            if (0 == strcasecmp(ri->request_method, "GET"))
+            {
+                return agentShowTextReports(conn, agent);
+            }
+            else
+            {
+                mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported");
+                return HTTP_METHOD_NOT_ALLOWED;
+            }
+        }
+        else if (0 == strcmp(seg_opt_begin, "hex"))
+        {
+            if (0 == strcasecmp(ri->request_method, "GET"))
+            {
+                return agentShowHexReports(conn, agent);
+            }
+            else
+            {
+                mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported");
+                return HTTP_METHOD_NOT_ALLOWED;
+            }
+        }
+        else
+        {
+            mg_send_http_error(conn, HTTP_NOT_FOUND, "Invalid reports option");
+            return HTTP_NOT_FOUND;
+        }
+    }
+
+    // Invalid request if we make it to this point
+    mg_send_http_error(conn, HTTP_NOT_FOUND, "Invalid resource");
+    return HTTP_NOT_FOUND;
+}
+
 /** Handler for /agents/eid*
  *    Supported requests:
  *    - PUT /agents/eid/$eid/hex - Send HEX-encoded CBOR Command (hex string as request body).
@@ -443,8 +625,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
  */
 static int agentEidHandler(struct mg_connection *conn, void *cbdata _U_)
 {
-    static const char *seg_sep = "/?#";
-    refdm_mgr_t       *mgr     = mg_get_user_data(mg_get_context(conn));
+    refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
 
     const struct mg_request_info *ri = mg_get_request_info(conn);
     CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
@@ -461,69 +642,17 @@ static int agentEidHandler(struct mg_connection *conn, void *cbdata _U_)
 
     const char *seg_eid_begin = NULL;
     size_t      seg_eid_len   = 0;
-    if (curs)
-    {
-        seg_eid_begin = curs;
-        seg_eid_len   = strcspn(curs, seg_sep);
-        curs += seg_eid_len;
-        if (curs >= end)
-        {
-            curs = NULL;
-        }
-    }
-    if (curs)
-    {
-        *curs = '\0';
-        curs += 1;
-        if (curs >= end)
-        {
-            curs = NULL;
-        }
-    }
+    extract_seg(&curs, end, &seg_eid_begin, &seg_eid_len);
 
     const char *seg_cmd_begin = NULL;
     size_t      seg_cmd_len   = 0;
-    if (curs)
-    {
-        seg_cmd_begin = curs;
-        seg_cmd_len   = strcspn(curs, seg_sep);
-        curs += seg_cmd_len;
-        if (curs >= end)
-        {
-            curs = NULL;
-        }
-    }
-    if (curs)
-    {
-        *curs = '\0';
-        curs += 1;
-        if (curs >= end)
-        {
-            curs = NULL;
-        }
-    }
+    extract_seg(&curs, end, &seg_cmd_begin, &seg_cmd_len);
 
     const char *seg_opt_begin = NULL;
     size_t      seg_opt_len   = 0;
-    if (curs)
-    {
-        seg_opt_begin = curs;
-        seg_opt_len   = strcspn(curs, seg_sep);
-        curs += seg_opt_len;
-        if (curs >= end)
-        {
-            curs = NULL;
-        }
-    }
-    if (curs)
-    {
-        *curs = '\0';
-        curs += 1;
-        if (curs >= end)
-        {
-            curs = NULL;
-        }
-    }
+    extract_seg(&curs, end, &seg_opt_begin, &seg_opt_len);
+
+    CACE_LOG_DEBUG("Got segments %s %s %s", seg_eid_begin, seg_cmd_begin, seg_opt_begin);
 
     if (!seg_eid_begin)
     {
@@ -541,79 +670,24 @@ static int agentEidHandler(struct mg_connection *conn, void *cbdata _U_)
         return HTTP_NOT_FOUND;
     }
 
-    // possible to be the same length, but no longer
-    char dec_eid[seg_eid_len];
+    // possible to be the same length, with trailing null, but no longer
+    char dec_eid[seg_eid_len + 1];
     int  got = mg_url_decode(seg_eid_begin, seg_eid_len, dec_eid, sizeof(dec_eid), 0);
     if (got <= 0)
     {
-        mg_send_http_error(conn, HTTP_BAD_REQUEST, "Invalid agent EID");
+        mg_send_http_error(conn, HTTP_BAD_REQUEST, "Invalid agent EID segment: %s", seg_eid_begin);
         return HTTP_BAD_REQUEST;
     }
 
-    refdm_agent_t *agent = refdm_mgr_agent_get(mgr, dec_eid);
+    refdm_agent_t *agent = refdm_mgr_agent_get_eid(mgr, dec_eid);
     if (agent == NULL)
     {
         mg_send_http_error(conn, HTTP_NOT_FOUND, "Unknown agent EID: %s", dec_eid);
         return HTTP_NOT_FOUND;
     }
 
-    if (0 == strcmp(seg_cmd_begin, "hex"))
-    {
-        if (0 != strcmp(ri->request_method, "PUT"))
-        {
-            mg_send_http_error(conn, HTTP_NOT_FOUND, "Invalid action on hex");
-            return HTTP_NOT_FOUND;
-        }
-
-        // Request body contains CBOR-encoded HEX strings as lines
-        char buffer[MAX_INPUT_BYTES];
-        int  dlen = mg_read(conn, buffer, sizeof(buffer) - 1);
-        if (dlen <= 0)
-        {
-            return HTTP_BAD_REQUEST;
-        }
-        buffer[dlen] = '\0';
-
-        return agentSendRaw(conn, agent, buffer);
-    }
-#if 0 // FIXME
-    else if (0 == strcmp(seg_cmd_begin, "clear_reports"))
-    {
-        if (0 != strcmp(ri->request_method, "PUT"))
-        {
-            mg_send_http_error(conn, HTTP_NOT_FOUND, "Invalid action on clear_reports");
-            return HTTP_NOT_FOUND;
-        }
-
-        ui_clear_reports(agent);
-        mg_send_http_ok(conn, "text/plain", -1);
-        mg_printf(conn, "Successfully cleared reports");
-        return HTTP_OK;
-    }
-#endif
-    else if (0 == strcmp(seg_cmd_begin, "reports"))
-    {
-        if (0 == strcmp(seg_opt_begin, "text"))
-        {
-            return agentShowTextReports(conn, agent);
-        }
-        else if (0 == strcmp(seg_opt_begin, "hex"))
-        {
-            return agentShowHexReports(conn, agent);
-        }
-        else
-        {
-            mg_send_http_error(conn, HTTP_NOT_FOUND, "Invalid reports option");
-            return HTTP_NOT_FOUND;
-        }
-    }
-
-    // Invalid request if we make it to this point
-    mg_send_http_error(conn, HTTP_NOT_FOUND, "Invalid request");
-    return HTTP_NOT_FOUND;
+    return do_agent_action(conn, agent, seg_cmd_begin, seg_opt_begin);
 }
-
-#if 0 // FIXME is this necessary?
 
 /** Handler for /agents/idx*
  *    Supported requests:
@@ -624,80 +698,67 @@ static int agentEidHandler(struct mg_connection *conn, void *cbdata _U_)
  *    - GET /agents/idx/$idx/reports/text - Retrieve array of reports in ASCII Text form (same as ui)
  *    - GET /agents/idx/$idx/reports* - Alias for hex reports. format will change in the future.
  */
-static int agentIdxHandler(struct mg_connection *conn, void *cbdata)
+static int agentIdxHandler(struct mg_connection *conn, void *cbdata _U_)
 {
+    refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
+
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    (void)cbdata; /* currently unused */
+    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
 
-    uint32_t idx      = 0;
-    char     cmd[32]  = "";
-    char     cmd2[32] = "";
+    // Ignore common prefix with trailing slash
+    const char *suburi_begin = ri->local_uri + strlen(AGENTS_EID_URI);
 
-    int cnt = sscanf(ri->local_uri, AGENTS_URI "/idx/%d/%[^/?]/%[^/?]", &idx, cmd, cmd2);
+    // Replace path segment separators with null terminator
+    size_t uri_len = strlen(suburi_begin);
+    char   buf[uri_len + 1];
+    // end is past the trailing null
+    char *end  = stpncpy(buf, suburi_begin, uri_len + 1);
+    char *curs = buf;
 
-    if (cnt == 2 && 0 == strcmp(ri->request_method, "PUT"))
+    const char *seg_idx_begin = NULL;
+    size_t      seg_idx_len   = 0;
+    extract_seg(&curs, end, &seg_idx_begin, &seg_idx_len);
+
+    const char *seg_cmd_begin = NULL;
+    size_t      seg_cmd_len   = 0;
+    extract_seg(&curs, end, &seg_cmd_begin, &seg_cmd_len);
+
+    const char *seg_opt_begin = NULL;
+    size_t      seg_opt_len   = 0;
+    extract_seg(&curs, end, &seg_opt_begin, &seg_opt_len);
+
+    CACE_LOG_DEBUG("Got segments %s %s %s", seg_idx_begin, seg_cmd_begin, seg_opt_begin);
+
+    if (!seg_idx_begin)
     {
-        refdm_agent_t *agent = (refdm_agent_t *)vec_at(&gMgrDB.agents, idx);
-
-        if (idx >= vec_num_entries_ptr(&gMgrDB.agents) || agent == NULL)
-        {
-            mg_send_http_error(conn, HTTP_NOT_FOUND, "Invalid agent idx");
-            return HTTP_NOT_FOUND;
-        }
-        else if (0 == strcmp(cmd, "hex"))
-        {
-            // URL idx field translates to agent name
-            // Optional query parameter "ts" will translate to timestamp (TODO: Always 0 for initial cut)
-            // Request body contains CBOR-encoded HEX string
-            char buffer[MAX_INPUT_BYTES];
-            int  dlen = mg_read(conn, buffer, sizeof(buffer) - 1);
-            if (dlen <= 0)
-            {
-                return HTTP_BAD_REQUEST;
-            }
-            buffer[dlen] = '\0';
-
-            return agentSendRaw(conn,
-                                0, // Timestamp TODO. This will be an optional query param
-                                agent, buffer);
-        }
-        else if (0 == strcmp(cmd, "clear_reports"))
-        {
-            ui_clear_reports(agent);
-            mg_send_http_ok(conn, "text/plain", -1);
-            mg_printf(conn, "Successfully cleared reports");
-            return HTTP_OK;
-        }
-        else if (0 == strcmp(cmd, "clear_tables"))
-        {
-            ui_clear_tables(agent);
-            mg_send_http_ok(conn, "text/plain", -1);
-            mg_printf(conn, "Successfully cleared tables");
-            return HTTP_OK;
-        }
+        mg_send_http_error(conn, HTTP_NOT_FOUND, "Missing EID segment");
+        return HTTP_NOT_FOUND;
     }
-    else if (cnt >= 2 && 0 == strcmp(ri->request_method, "GET"))
+    if (!seg_cmd_begin)
     {
-        if (0 == strcmp(cmd, "reports"))
-        {
-            if (cnt == 2 || 0 == strcmp(cmd2, "text"))
-            {
-                return agentShowTextReports(conn, (refdm_agent_t *)vec_at(&gMgrDB.agents, idx));
-            }
-            else if (cnt == 3 && 0 == strcmp(cmd2, "hex"))
-            {
-                return agentShowRawReports(conn, (refdm_agent_t *)vec_at(&gMgrDB.agents, idx));
-            }
-            else if (cnt == 3 && 0 == strcmp(cmd2, "json"))
-            {
-                return agentShowJSONReports(conn, (refdm_agent_t *)vec_at(&gMgrDB.agents, idx));
-            }
-        }
+        mg_send_http_error(conn, HTTP_NOT_FOUND, "Missing command segment");
+        return HTTP_NOT_FOUND;
+    }
+    if (curs && (curs != end))
+    {
+        mg_send_http_error(conn, HTTP_NOT_FOUND, "Extra path segments");
+        return HTTP_NOT_FOUND;
     }
 
-    // Invalid request if we make it to this point
-    mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Invalid request.");
-    return HTTP_METHOD_NOT_ALLOWED;
+    char  *seg_idx_end;
+    size_t idx = strtoull(seg_idx_begin, &seg_idx_end, 10);
+    if (seg_idx_end < seg_idx_begin + seg_idx_len)
+    {
+        mg_send_http_error(conn, HTTP_BAD_REQUEST, "Invalid agent index text: %s", seg_idx_begin);
+        return HTTP_BAD_REQUEST;
+    }
+
+    refdm_agent_t *agent = refdm_mgr_agent_get_index(mgr, idx);
+    if (agent == NULL)
+    {
+        mg_send_http_error(conn, HTTP_NOT_FOUND, "Unknown agent index: %z", idx);
+        return HTTP_NOT_FOUND;
+    }
+
+    return do_agent_action(conn, agent, seg_cmd_begin, seg_opt_begin);
 }
-
-#endif

@@ -165,21 +165,113 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
         LOGGER.info(resp.json())
 
+        # invalid methods
+        resp = self._req.post(self._base_url + 'version')
+        self.assertEqual(405, resp.status_code)
+        resp = self._req.put(self._base_url + 'version')
+        self.assertEqual(405, resp.status_code)
+
+        resp = self._req.get(self._base_url + 'versionplus')
+        self.assertEqual(404, resp.status_code)
+
+    def test_rest_agents(self):
+        self._start()
+
+        resp = self._req.get(self._base_url + 'agents')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
+        data = resp.json()
+        self.assertEqual([], data['agents'])
+
+        resp = self._req.put(self._base_url + 'agents')
+        self.assertEqual(405, resp.status_code)
+
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data='file:/tmp/invalid'
+        )
+        self.assertEqual(415, resp.status_code)
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data='file:/tmp/invalid',
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        resp = self._req.get(self._base_url + 'agents')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
+        data = resp.json()
+        self.assertEqual(set(['file:/tmp/invalid']), set([agt['name'] for agt in data['agents']]))
+
+    def test_agents_eid_reports_404(self):
+        self._start()
+        resp = self._req.get(self._base_url + f'agents/eid/missing')
+        self.assertEqual(404, resp.status_code)
+        self.assertIn('Unknown agent', resp.text)
+
+    def test_agents_eid_reports_404(self):
+        self._start()
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports')
+        self.assertEqual(404, resp.status_code)
+        self.assertIn('Unknown agent', resp.text)
+
+    def test_agents_eid_reports_text_404(self):
+        self._start()
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports/text')
+        self.assertEqual(404, resp.status_code)
+        self.assertIn('Unknown agent', resp.text)
+
+    def test_agents_eid_reports_text_404_longname(self):
+        self._start()
+        resp = self._req.get(self._base_url + f'agents/eid/missing-with-a-{"longer-" * 40}eid/reports/text')
+        self.assertEqual(404, resp.status_code)
+        self.assertIn('Unknown agent', resp.text)
+
+    def test_agents_eid_reports_hex_404(self):
+        self._start()
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports/hex')
+        self.assertEqual(404, resp.status_code)
+        self.assertIn('Unknown agent', resp.text)
+
+    def test_agents_idx_reports_text_404(self):
+        self._start()
+        resp = self._req.get(self._base_url + f'agents/eid/10/reports/text')
+        self.assertEqual(404, resp.status_code)
+
+    def test_agents_idx_reports_hex_404(self):
+        self._start()
+        resp = self._req.get(self._base_url + f'agents/eid/10/reports/hex')
+        self.assertEqual(404, resp.status_code)
+
+    def test_agents_idx_reports_text_400(self):
+        self._start()
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports/text')
+        self.assertEqual(404, resp.status_code)
+
+    def test_agents_idx_reports_hex_400(self):
+        self._start()
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports/hex')
+        self.assertEqual(404, resp.status_code)
+
     def test_recv_one_report(self):
         self._start()
 
         # initial state
         resp = self._req.get(self._base_url + 'agents')
         self.assertEqual(200, resp.status_code)
+        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
         data = resp.json()
-        LOGGER.info('agents: %s', data)
-        self.assertEqual(0, len(data['agents']))
+        self.assertEqual([], data['agents'])
 
         # first check behavior with one report
         sock_path = self._send_rptset(
             'ari:/RPTSET/n=null;r=20240102T030405Z;(t=PT;s=//ietf-dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
+        eid_seg = quote(agent_eid, safe="")
 
         LOGGER.info('Waiting for agent %s', agent_eid)
         with Timer(5) as timer:
@@ -191,8 +283,6 @@ class TestRefdmSocket(unittest.TestCase):
                     timer.finish()
                     break
                 timer.sleep(0.1)
-
-        eid_seg = quote(agent_eid, safe="")
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports/hex')
         self.assertEqual(200, resp.status_code)
@@ -209,13 +299,23 @@ class TestRefdmSocket(unittest.TestCase):
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports/text')
         self.assertEqual(200, resp.status_code)
-        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
-        for line in resp.text.splitlines():
+        self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
+        lines = resp.text.splitlines()
+        self.assertEqual(1, len(lines))
+        for line in lines:
             self.assertTrue(line.startswith('ari:/RPTSET/'))
+
+    def test_recv_two_reports(self):
+        self._start()
 
         self._send_rptset(
             'ari:/RPTSET/n=null;r=20240102T030406Z;(t=PT;s=//ietf-dtnma-agent/CTRL/inspect;(null))',
         )
+        sock_path = self._send_rptset(
+            'ari:/RPTSET/n=null;r=20240102T030405Z;(t=PT;s=//ietf-dtnma-agent/CTRL/inspect;(null))',
+        )
+        agent_eid = f'file:{sock_path}'
+        eid_seg = quote(agent_eid, safe="")
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports/hex')
         self.assertEqual(200, resp.status_code)
@@ -223,9 +323,24 @@ class TestRefdmSocket(unittest.TestCase):
         data = resp.json()
         self.assertEqual(2, len(data['reports']))
 
+        # index resource gets the same result
+        resp = self._req.get(self._base_url + f'agents/idx/0/reports/hex')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
+        other_data = resp.json()
+        self.assertEqual(data, other_data)
+
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports/text')
         self.assertEqual(200, resp.status_code)
-        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
-        for line in resp.text.splitlines():
+        self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
+        lines = resp.text.splitlines()
+        self.assertEqual(2, len(lines))
+        for line in lines:
             self.assertTrue(line.startswith('ari:/RPTSET/'))
 
+        # index resource gets the same result
+        resp = self._req.get(self._base_url + f'agents/idx/0/reports/text')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
+        other_lines = resp.text.splitlines()
+        self.assertEqual(lines, other_lines)

@@ -136,7 +136,7 @@ void *refdm_ingress_worker(void *arg)
         {
             CACE_LOG_INFO("Message has %d ARIs", ari_list_size(values));
             // might be unknown and NULL
-            refdm_agent_t *agent = refdm_mgr_agent_get(mgr, (const char *)meta.src.ptr);
+            refdm_agent_t *agent = refdm_mgr_agent_get_eid(mgr, (const char *)meta.src.ptr);
             // FIXME handle from unknown?
             if (!agent)
             {

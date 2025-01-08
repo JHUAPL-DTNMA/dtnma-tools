@@ -69,8 +69,17 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
 
     daemon_run_init(&(mgr->running));
     threadset_init(mgr->threads);
-    refdm_agent_dict_init(mgr->agents);
-    pthread_mutex_init(&(mgr->agents_mutex), NULL);
+    refdm_agent_list_init(mgr->agent_list);
+    refdm_agent_dict_init(mgr->agent_dict);
+    pthread_mutex_init(&(mgr->agent_mutex), NULL);
+
+#if defined(CIVETWEB_FOUND)
+    mgr->rest_listen_port = 8089;
+    mgr->rest             = NULL;
+#endif
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    mgr->sql_info = NULL;
+#endif
 }
 
 void refdm_mgr_deinit(refdm_mgr_t *mgr)
@@ -81,17 +90,18 @@ void refdm_mgr_deinit(refdm_mgr_t *mgr)
     db_mgt_close();
 #endif
 
-    pthread_mutex_destroy(&(mgr->agents_mutex));
+    pthread_mutex_destroy(&(mgr->agent_mutex));
+    refdm_agent_dict_clear(mgr->agent_dict);
     {
-        refdm_agent_dict_it_t it;
-        for (refdm_agent_dict_it(it, mgr->agents); !refdm_agent_dict_end_p(it); refdm_agent_dict_next(it))
+        refdm_agent_list_it_t it;
+        for (refdm_agent_list_it(it, mgr->agent_list); !refdm_agent_list_end_p(it); refdm_agent_list_next(it))
         {
-            refdm_agent_t *agent = refdm_agent_dict_ref(it)->value;
+            refdm_agent_t *agent = *refdm_agent_list_ref(it);
             refdm_agent_deinit(agent);
             ARI_FREE(agent);
         }
     }
-    refdm_agent_dict_clear(mgr->agents);
+    refdm_agent_list_clear(mgr->agent_list);
     threadset_clear(mgr->threads);
     daemon_run_cleanup(&(mgr->running));
 }
@@ -138,13 +148,13 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
     CHKNULL(mgr);
     CHKNULL(agent_eid);
 
-    if (pthread_mutex_lock(&(mgr->agents_mutex)))
+    if (pthread_mutex_lock(&(mgr->agent_mutex)))
     {
         CACE_LOG_ERR("failed to lock mutex");
         return NULL;
     }
 
-    if (refdm_agent_dict_get(mgr->agents, agent_eid))
+    if (refdm_agent_dict_get(mgr->agent_dict, agent_eid))
     {
         return NULL;
     }
@@ -155,9 +165,10 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
 
     // key is pointer to own member data
     CACE_LOG_INFO("adding agent for %s", string_get_cstr(agent->eid));
-    refdm_agent_dict_set_at(mgr->agents, string_get_cstr(agent->eid), agent);
+    refdm_agent_list_push_back(mgr->agent_list, agent);
+    refdm_agent_dict_set_at(mgr->agent_dict, string_get_cstr(agent->eid), agent);
 
-    if (pthread_mutex_unlock(&(mgr->agents_mutex)))
+    if (pthread_mutex_unlock(&(mgr->agent_mutex)))
     {
         CACE_LOG_ERR("failed to unlock mutex");
     }
@@ -167,22 +178,48 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
     return agent;
 }
 
-refdm_agent_t *refdm_mgr_agent_get(refdm_mgr_t *mgr, const char *eid)
+refdm_agent_t *refdm_mgr_agent_get_eid(refdm_mgr_t *mgr, const char *eid)
 {
+    CHKNULL(mgr);
     CHKNULL(eid);
 
-    if (pthread_mutex_lock(&(mgr->agents_mutex)))
+    if (pthread_mutex_lock(&(mgr->agent_mutex)))
     {
         CACE_LOG_ERR("failed to lock mutex");
         return NULL;
     }
 
-    refdm_agent_t **got = refdm_agent_dict_get(mgr->agents, eid);
+    refdm_agent_t **got = refdm_agent_dict_get(mgr->agent_dict, eid);
 
-    if (pthread_mutex_unlock(&(mgr->agents_mutex)))
+    if (pthread_mutex_unlock(&(mgr->agent_mutex)))
     {
         CACE_LOG_ERR("failed to unlock mutex");
     }
 
     return got ? *got : NULL;
+}
+
+refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
+{
+    CHKNULL(mgr);
+
+    if (pthread_mutex_lock(&(mgr->agent_mutex)))
+    {
+        CACE_LOG_ERR("failed to lock mutex");
+        return NULL;
+    }
+
+    refdm_agent_t **got = refdm_agent_list_get(mgr->agent_list, index);
+
+    if (pthread_mutex_unlock(&(mgr->agent_mutex)))
+    {
+        CACE_LOG_ERR("failed to unlock mutex");
+    }
+
+    return got ? *got : NULL;
+}
+
+void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
+{
+    ari_list_reset(agent->rptsets);
 }
