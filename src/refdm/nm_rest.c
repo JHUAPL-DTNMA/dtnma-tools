@@ -141,8 +141,8 @@ int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
                               0 };
 
     struct mg_callbacks callbacks;
-    unsigned features = 0;
-    int                 err = 0;
+    unsigned            features = 0;
+    int                 err      = 0;
 
 /* Check if libcivetweb has been built with all required features. */
 #ifndef NO_SSL

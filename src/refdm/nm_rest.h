@@ -30,7 +30,7 @@ extern "C" {
  * @return Zero if successful.
  * @sa nm_rest_stop()
  */
-int  nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr);
+int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr);
 
 /** Stop operation of the REST service.
  *
