@@ -35,7 +35,7 @@ jobs:
           cmake ninja-build
           ruby build-essential autoconf libtool
           flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev
-          doxygen graphviz plantuml texlive texlive-latex-extra
+          doxygen graphviz plantuml texlive texlive-latex-extra texlive-font-utils
       - name: Prep
         run: ./deps.sh && ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
       - name: Build

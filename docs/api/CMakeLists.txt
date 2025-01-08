@@ -15,10 +15,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ]]
+
+include(GNUInstallDirs)
+
 find_package(Doxygen REQUIRED)
-find_program(MAKE_EXECUTABLE make REQUIRED)
+
+find_program(MAKE_EXECUTABLE make)
 message(STATUS "Found make at ${MAKE_EXECUTABLE}")
 find_program(DBLATEX_EXECUTABLE dblatex)
+message(STATUS "Found dblatex at ${DBLATEX_EXECUTABLE}")
+find_file(
+  PLANTUML_JAR
+  NAMES plantuml.jar
+  PATH_SUFFIXES "share/java" "share/plantuml"
+)
+if(PLANTUML_JAR)
+    message(STATUS "Found plantuml at ${PLANTUML_JAR}")
+endif(PLANTUML_JAR)
 
 configure_file(Doxyfile.in Doxyfile @ONLY)
 
@@ -37,27 +50,10 @@ add_custom_command(
     COMMENT "Generating API documentation with Doxygen"
     USES_TERMINAL
 )
-
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
-    DEPENDS
-        ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
-        ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
-    COMMAND ${MAKE_EXECUTABLE}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/latex
-    COMMENT "Generating API documentation PDF"
-)
-
 add_custom_target(
     docs-api-html
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
 )
-add_custom_target(
-    docs-api-pdf
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
-)
-
-include(GNUInstallDirs)
 install(
     FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/index.html
@@ -69,12 +65,26 @@ install(
     TYPE DOC
     COMPONENT docs-api
 )
-if(DBLATEX_EXECUTABLE)
+
+if(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
+        DEPENDS
+            ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
+            ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
+        COMMAND ${MAKE_EXECUTABLE}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/latex
+        COMMENT "Generating API documentation PDF"
+    )
+    add_custom_target(
+        docs-api-pdf
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
+    )
     install(
         FILES
             ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
         TYPE DOC
-        RENAME "dtnma-ref-api.pdf"
+        RENAME "${PROJECT_NAME}-api.pdf"
         COMPONENT docs-api
     )
-endif(DBLATEX_EXECUTABLE)
+endif(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
