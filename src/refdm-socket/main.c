@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     cace_amp_socket_state_init(&sock);
     if (!retval)
     {
-        if (cace_amp_sock_state_bind(&sock, sock_path))
+        if (cace_amp_socket_state_bind(&sock, sock_path))
         {
             retval = 4;
         }
@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
         mgr.mif.recv = cace_amp_socket_recv;
         mgr.mif.ctx  = &sock;
     }
+    m_string_clear(sock_path);
 
     if (!retval)
     {

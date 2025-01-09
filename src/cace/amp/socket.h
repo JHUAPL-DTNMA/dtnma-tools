@@ -18,7 +18,7 @@
 
 /** @file
  * @ingroup amp
- * Provide a socket adapter for the CACE
+ * Provide a POSIX datagram socket (AF_UNIX) adapter for AMP messaging.
  */
 #ifndef CACE_AMP_SOCKET_H_
 #define CACE_AMP_SOCKET_H_
@@ -51,7 +51,7 @@ void cace_amp_socket_state_deinit(cace_amp_socket_state_t *state);
  * @param[in] state The state to bind.
  * @param[in] sock_path The file path to bind to.
  */
-int cace_amp_sock_state_bind(cace_amp_socket_state_t *state, const m_string_t sock_path);
+int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const m_string_t sock_path);
 
 /** Provider of ::cace_amm_msg_if_send_f interface for POSIX socket transport.
  * The user data for this function is a ::cace_amp_socket_state_t instance.

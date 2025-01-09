@@ -29,7 +29,7 @@ import unittest
 import cbor2
 import requests
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
-from helpers import CmdRunner, Timer
+from helpers import CmdRunner, Timer, compose_args
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
@@ -71,7 +71,11 @@ class TestRefdmSocket(unittest.TestCase):
             for index in range(3)
         ]
 
-        args = ['./run.sh', 'refdm-socket', '-l', 'debug', '-a', self._mgr_sock_path]
+        args = compose_args([
+            'refdm-socket',
+            '-l', 'debug',
+            '-a', self._mgr_sock_path
+        ])
         self._mgr = CmdRunner(args)
 
         # ADM handling
@@ -98,10 +102,23 @@ class TestRefdmSocket(unittest.TestCase):
         with Timer(10) as timer:
             while timer:
                 timer.sleep(0.1)
-                if os.path.exists(self._mgr_sock_path):
+
+                sock_ready = os.path.exists(self._mgr_sock_path)
+
+                try:
+                    resp = self._req.options(self._base_url)
+                    rest_ready = True
+                except requests.exceptions.ConnectionError:
+                    rest_ready = False
+
+                if sock_ready and rest_ready:
                     timer.finish()
                     return
-                LOGGER.info('waiting for manager socket at %s', self._mgr_sock_path)
+
+                if not sock_ready:
+                    LOGGER.info('waiting for manager socket at %s', self._mgr_sock_path)
+                if not rest_ready:
+                    LOGGER.info('waiting for manager response on %s', self._base_url)
 
         self.fail(f'Manager did not create socket at {self._mgr_sock_path}')
 
@@ -299,7 +316,8 @@ class TestRefdmSocket(unittest.TestCase):
                 resp = self._req.get(self._base_url + 'agents')
                 self.assertEqual(200, resp.status_code)
                 data = resp.json()
-                if data['agents'][0]['name'] == agent_eid:
+                available = set([agt['name'] for agt in data['agents']])
+                if agent_eid in available:
                     timer.finish()
                     break
                 timer.sleep(0.1)

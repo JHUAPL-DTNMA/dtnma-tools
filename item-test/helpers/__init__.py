@@ -16,5 +16,5 @@
 # limitations under the License.
 #
 
-from .runner import CmdRunner
+from .runner import CmdRunner, compose_args
 from .timer import Timer

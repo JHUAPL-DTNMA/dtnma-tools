@@ -35,7 +35,18 @@ int cace_amp_msg_encode(m_bstring_t msgbuf, const ari_list_t items)
     ari_list_it_t ait;
     for (ari_list_it(ait, items); !ari_list_end_p(ait); ari_list_next(ait))
     {
-        if (ari_cbor_encode(&outbin, ari_list_cref(ait)))
+        const ari_t *item = ari_list_cref(ait);
+
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            string_t buf;
+            string_init(buf);
+            ari_text_encode(buf, item, ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("encoding ARI item: %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+
+        if (ari_cbor_encode(&outbin, item))
         {
             CACE_LOG_ERR("Failed to binary encode ARI");
             retval = 2;

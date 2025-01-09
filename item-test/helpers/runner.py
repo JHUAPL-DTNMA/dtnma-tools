@@ -17,6 +17,7 @@
 #
 
 import logging
+import os
 import re
 import signal
 import subprocess
@@ -29,11 +30,31 @@ LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
 
 
+def compose_args(args: List[str]) -> List[str]:
+    ''' Combine executions arguments with any prefix scripts and/or tools
+    needed to run from the `testroot` environment.
+    '''
+    args = list(args)
+    if os.environ.get('TEST_MEMCHECK', ''):
+        valgrind = [
+            'valgrind',
+            '--tool=memcheck',
+            '--leak-check=full',
+            '--suppressions=memcheck.supp',
+            '--error-exitcode=2',
+        ]
+        args = valgrind + args
+    args.insert(0, './run.sh')
+    return args
+
+
 class CmdRunner:
     ''' Manage the lifetime of a child process executed from a command.
 
     :param args: The command arguments to execute including the command
     itself.
+    :param kwargs: Additional keyword arguments given to
+    :py:func:`subprocess.Popen`
     '''
 
     def __init__(self, args: List[str], **kwargs):

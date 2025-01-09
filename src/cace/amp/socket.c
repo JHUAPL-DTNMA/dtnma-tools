@@ -46,7 +46,7 @@ void cace_amp_socket_state_deinit(cace_amp_socket_state_t *state)
     m_string_clear(state->path);
 }
 
-int cace_amp_sock_state_bind(cace_amp_socket_state_t *state, const m_string_t sock_path)
+int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const m_string_t sock_path)
 {
     m_string_set(state->path, sock_path);
 
@@ -117,12 +117,12 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
         ssize_t got   = sendto(state->sock_fd, msg_begin, msg_size, flags, (struct sockaddr *)&daddr, sizeof(daddr));
         if (got < 0)
         {
-            CACE_LOG_WARNING("failed recvfrom() with errno %d", errno);
+            CACE_LOG_WARNING("failed sendto() with errno %d", errno);
             retval = 3;
         }
         else if (got < (ssize_t)msg_size)
         {
-            CACE_LOG_ERR("failed recvfrom(), sent only %z of %z", got, msg_size);
+            CACE_LOG_ERR("failed sendto(), sent only %z of %z", got, msg_size);
             retval = 4;
         }
     }
