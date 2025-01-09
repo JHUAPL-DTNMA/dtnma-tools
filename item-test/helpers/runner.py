@@ -24,7 +24,6 @@ import time
 import threading
 from typing import List
 import queue
-from .failure import Timeout
 
 LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
@@ -124,7 +123,7 @@ class CmdRunner:
         try:
             text = self._stdout_lines.get(timeout=timeout)
         except queue.Empty:
-            raise Timeout()
+            raise TimeoutError('no lines received before timeout')
         return text
 
     def wait_for_text(self, pattern, timeout=5):
@@ -140,7 +139,7 @@ class CmdRunner:
             try:
                 text = self._stdout_lines.get(timeout=remain_time)
             except queue.Empty:
-                raise Timeout()
+                raise TimeoutError('text not received before timeout')
 
             if expr.match(text) is not None:
                 return text

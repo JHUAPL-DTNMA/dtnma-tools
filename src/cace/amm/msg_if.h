@@ -61,8 +61,8 @@ typedef int (*cace_amm_msg_if_recv_f)(ari_list_t data, cace_amm_msg_if_metadata_
                                       void *ctx);
 
 /**
- * The MSG Interface structure captures state necessary to communicate with
- * the local Bundle Protocol Agent (BPA).
+ * This message interface structure captures state necessary to
+ * use an ARI transport.
  */
 typedef struct
 {

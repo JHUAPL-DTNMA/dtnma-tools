@@ -47,6 +47,8 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/obj_store.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/lookup.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/msg_if.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/msg.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/socket.h"
 )
 set(CFILES
     "cace_data.c"
@@ -74,6 +76,8 @@ set(CFILES
     "amm/obj_store.c"
     "amm/lookup.c"
     "amm/msg_if.c"
+    "amp/msg.c"
+    "amp/socket.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(

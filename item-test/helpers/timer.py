@@ -19,7 +19,6 @@
 import logging
 import datetime
 import time
-from .failure import Timeout
 
 LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
@@ -53,4 +52,4 @@ class Timer:
             return
         now = datetime.datetime.now(datetime.timezone.utc)
         if now > self._timeout:
-            raise Timeout()
+            raise TimeoutError('Timer did not finish before timeout')

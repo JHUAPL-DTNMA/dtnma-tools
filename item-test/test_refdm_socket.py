@@ -16,7 +16,6 @@
 # limitations under the License.
 #
 
-import binascii
 import io
 import logging
 import os
@@ -30,7 +29,7 @@ import unittest
 import cbor2
 import requests
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
-from helpers import CmdRunner, Timer, Timeout
+from helpers import CmdRunner, Timer
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
@@ -58,11 +57,12 @@ class TestRefdmSocket(unittest.TestCase):
         self._base_url = 'http://localhost:8089/nm/api/'
 
         self._tmp = tempfile.TemporaryDirectory()
-        self._mgr_sock_name = os.path.join(self._tmp.name, 'mgr.sock')
+        self._mgr_sock_path = os.path.join(self._tmp.name, 'mgr.sock')
 
         def bound_sock(name):
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
             path = os.path.join(self._tmp.name, name)
+            LOGGER.info('binding to socket at %s', path)
             sock.bind(path)
             return {'path': path, 'sock': sock}
 
@@ -71,7 +71,7 @@ class TestRefdmSocket(unittest.TestCase):
             for index in range(3)
         ]
 
-        args = ['./run.sh', 'refdm-socket', '-l', 'debug', '-a', self._mgr_sock_name]
+        args = ['./run.sh', 'refdm-socket', '-l', 'debug', '-a', self._mgr_sock_path]
         self._mgr = CmdRunner(args)
 
         # ADM handling
@@ -86,7 +86,7 @@ class TestRefdmSocket(unittest.TestCase):
         self._mgr = None
 
         self._agent_bind = None
-        self._mgr_sock_name = None
+        self._mgr_sock_path = None
         self._tmp = None
 
         self._req = None
@@ -98,12 +98,12 @@ class TestRefdmSocket(unittest.TestCase):
         with Timer(10) as timer:
             while timer:
                 timer.sleep(0.1)
-                if os.path.exists(self._mgr_sock_name):
+                if os.path.exists(self._mgr_sock_path):
                     timer.finish()
                     return
-                LOGGER.info('waiting for manager socket at %s', self._mgr_sock_name)
+                LOGGER.info('waiting for manager socket at %s', self._mgr_sock_path)
 
-        self.fail(f'Manager did not create socket at {self._mgr_sock_name}')
+        self.fail(f'Manager did not create socket at {self._mgr_sock_path}')
 
     def _ari_text_to_obj(self, text:str) -> ARI:
         nn_func = nickname.Converter(nickname.Mode.TO_NN, self._adms.db_session(), must_nickname=True)
@@ -112,6 +112,11 @@ class TestRefdmSocket(unittest.TestCase):
             ari = ari_text.Decoder().decode(buf)
         ari = nn_func(ari)
         return ari
+
+    def _ari_obj_to_text(self, ari:ARI) -> str:
+        buf = io.StringIO()
+        ari_text.Encoder().encode(ari, buf)
+        return buf.getvalue()
 
     def _ari_obj_to_cbor(self, ari:ARI) -> bytes:
         buf = io.BytesIO()
@@ -126,29 +131,45 @@ class TestRefdmSocket(unittest.TestCase):
     def _send_rptset(self, text:str, agent_ix=0) -> str:
         ''' Send an RPTSET with a number of target ARIs.
 
+        :param text: The ARI text form to send.
+        :param agent_ix: The agent index to send from.
         :return: The socket path from which it was sent.
         '''
         LOGGER.info('Sending value %s', text)
-        data = self._ari_obj_to_cbor(self._ari_text_to_obj(text))
-        hexstr = binascii.b2a_hex(data).decode('ascii')
-        LOGGER.info('Sending message %s', hexstr)
+        data = cbor2.dumps(1) + self._ari_obj_to_cbor(self._ari_text_to_obj(text))
+        addr = self._mgr_sock_path
+        LOGGER.info('Sending message %s to %s', data.hex(), addr)
         bind = self._agent_bind[agent_ix]
-        bind['sock'].sendto(data, self._mgr_sock_name)
+        bind['sock'].sendto(data, addr)
         return bind['path']
 
-    def _wait_execset(self) -> ARI:
-        ''' Wait for an EXECSET and decode it. '''
-        line = self._mgr.wait_for_text(HEXSTR).strip()
-        LOGGER.info('Received line %s', line)
-        data = binascii.a2b_hex(line)
-        ari = self._ari_obj_from_cbor(data)
+    def _wait_execset(self, agent_ix=0) -> List[ARI]:
+        ''' Wait for an EXECSET and decode it.
 
-        if LOGGER.isEnabledFor(logging.INFO):
-            textbuf = io.StringIO()
-            ari_text.Encoder().encode(ari, textbuf)
-            LOGGER.info('Received value: %s', textbuf.getvalue())
+        :param agent_ix: The agent index to receive on.
+        :return: The ARI decoded form.
+        '''
+        recv_sock = self._agent_bind[agent_ix]['sock']
+        recv_sock.settimeout(0.1)
 
-        return ari
+        (data, addr) = recv_sock.recvfrom(1024)
+        LOGGER.info('Received message %s from %s', data.hex(), addr)
+        self.assertEqual(self._mgr_sock_path, addr)
+
+        values = []
+        dec = ari_cbor.Decoder()
+        with io.BytesIO(data) as infile:
+            vers = cbor2.load(infile)
+            self.assertEqual(1, vers, msg='Invalid AMP version')
+            ari = dec.decode(infile)
+            values.append(ari)
+
+            if LOGGER.isEnabledFor(logging.INFO):
+                textbuf = io.StringIO()
+                ari_text.Encoder().encode(ari, textbuf)
+                LOGGER.info('Received value: %s', textbuf.getvalue())
+
+        return values
 
     def test_start_terminate(self):
         self._start()
@@ -188,12 +209,13 @@ class TestRefdmSocket(unittest.TestCase):
 
         resp = self._req.post(
             self._base_url + 'agents',
-            data='file:/tmp/invalid'
+            data='file:/tmp/invalid\r\n'
         )
         self.assertEqual(415, resp.status_code)
+
         resp = self._req.post(
             self._base_url + 'agents',
-            data='file:/tmp/invalid',
+            data='file:/tmp/invalid\r\n',
             headers={
                 'content-type': 'text/plain',
             }
@@ -210,13 +232,11 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
         resp = self._req.get(self._base_url + f'agents/eid/missing')
         self.assertEqual(404, resp.status_code)
-        self.assertIn('Unknown agent', resp.text)
 
     def test_agents_eid_reports_404(self):
         self._start()
         resp = self._req.get(self._base_url + f'agents/eid/missing/reports')
         self.assertEqual(404, resp.status_code)
-        self.assertIn('Unknown agent', resp.text)
 
     def test_agents_eid_reports_text_404(self):
         self._start()
@@ -344,3 +364,77 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         other_lines = resp.text.splitlines()
         self.assertEqual(lines, other_lines)
+
+    def test_agents_send_hex(self):
+        self._start()
+
+        agent_bind = self._agent_bind[0]
+        agent_eid = f'file:{agent_bind["path"]}'
+        eid_seg = quote(agent_eid, safe="")
+
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data=(agent_eid + '\r\n'),
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        textform = "ari:/EXECSET/n=h'6869';(//ietf-dtnma-agent/CTRL/inspect)"
+        send_ari = self._ari_text_to_obj(textform)
+        send_data = self._ari_obj_to_cbor(send_ari)
+
+        resp = self._req.post(
+            self._base_url + f'agents/eid/{eid_seg}/send/hex',
+            data=f'{send_data.hex()}\r\n',
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+
+        values = self._wait_execset(0)
+        self.assertEqual([send_ari], values)
+
+        # no other datagrams
+        with self.assertRaises(TimeoutError):
+            self._wait_execset(0)
+
+    def test_agents_send_text(self):
+        self._start()
+
+        agent_bind = self._agent_bind[0]
+        agent_eid = f'file:{agent_bind["path"]}'
+        eid_seg = quote(agent_eid, safe="")
+
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data=(agent_eid + '\r\n'),
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        textform = "ari:/EXECSET/n=h'6869';(//ietf-dtnma-agent/CTRL/inspect)"
+        send_ari = self._ari_text_to_obj(textform)
+        send_text = self._ari_obj_to_text(send_ari)
+
+        resp = self._req.post(
+            self._base_url + f'agents/eid/{eid_seg}/send/text',
+            data=f'{send_text}\r\n',
+            headers={
+                'content-type': 'text/uri-list',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+
+        values = self._wait_execset(0)
+        self.assertEqual([send_ari], values)
+
+        # no other datagrams
+        with self.assertRaises(TimeoutError):
+            self._wait_execset(0)

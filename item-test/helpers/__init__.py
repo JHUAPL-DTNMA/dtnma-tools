@@ -16,6 +16,5 @@
 # limitations under the License.
 #
 
-from .failure import Timeout
 from .runner import CmdRunner
 from .timer import Timer

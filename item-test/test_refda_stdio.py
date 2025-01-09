@@ -27,7 +27,7 @@ from typing import List
 import unittest
 import cbor2
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
-from helpers import CmdRunner, Timeout
+from helpers import CmdRunner
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
