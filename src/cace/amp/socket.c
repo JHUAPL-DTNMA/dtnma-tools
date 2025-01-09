@@ -22,6 +22,7 @@
 #include <m-bstring.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/un.h>
 #include <signal.h>
 #include <strings.h>
@@ -30,46 +31,78 @@
 
 #define URI_PREFIX "file:"
 
-static void cace_amp_sock_state_unbind(cace_amp_socket_state_t *state);
-
 void cace_amp_socket_state_init(cace_amp_socket_state_t *state)
 {
     CHKVOID(state);
     m_string_init(state->path);
-    state->sock_fd = 0;
+    state->sock_fd = -1;
 }
 
 void cace_amp_socket_state_deinit(cace_amp_socket_state_t *state)
 {
     CHKVOID(state);
-    cace_amp_sock_state_unbind(state);
+    cace_amp_socket_state_unbind(state);
     m_string_clear(state->path);
 }
 
 int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const m_string_t sock_path)
 {
+    CHKERR1(state);
+    CHKERR1(sock_path);
+
+    struct sockaddr_un laddr;
+    laddr.sun_family = AF_UNIX;
+    char *sun_end    = stpncpy(laddr.sun_path, m_string_get_cstr(sock_path), sizeof(laddr.sun_path));
+    if (sun_end - laddr.sun_path >= (ssize_t)sizeof(laddr.sun_path))
+    {
+        CACE_LOG_ERR("given path that is too long to fit in sockaddr_un");
+        return 1;
+    }
+    // now copy the path
     m_string_set(state->path, sock_path);
 
     // Set up listen socket
     state->sock_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
-
-    struct sockaddr_un laddr;
-    laddr.sun_family = AF_UNIX;
-    strncpy(laddr.sun_path, m_string_get_cstr(state->path), m_string_size(state->path) + 1);
-    CACE_LOG_DEBUG("Binding to socket %s", laddr.sun_path);
+    if (state->sock_fd < 0)
+    {
+        CACE_LOG_ERR("Failed to construct socket on family AF_UNIX with errno %d", errno);
+        return 2;
+    }
 
     // preemptive unlink
     unlink(m_string_get_cstr(state->path));
 
+    CACE_LOG_DEBUG("Binding to socket %s", laddr.sun_path);
     int res = bind(state->sock_fd, (struct sockaddr *)&laddr, sizeof(laddr));
     if (res)
     {
-        CACE_LOG_ERR("Failed to bind to socket %s with error %d", laddr.sun_path, errno);
-        cace_amp_sock_state_unbind(state);
-        return 1;
+        CACE_LOG_ERR("Failed to bind to socket %s with errno %d", laddr.sun_path, errno);
+        cace_amp_socket_state_unbind(state);
+        return 3;
     }
 
     return 0;
+}
+
+void cace_amp_socket_state_unbind(cace_amp_socket_state_t *state)
+{
+    const char *path = string_get_cstr(state->path);
+
+    if (state->sock_fd >= 0)
+    {
+        CACE_LOG_DEBUG("Unbinding from socket %s", path);
+        close(state->sock_fd);
+        state->sock_fd = -1;
+    }
+
+    struct stat info;
+    if (!stat(path, &info))
+    {
+        if (unlink(path))
+        {
+            CACE_LOG_WARNING("Failed to remove socket %s with errno %d", path, errno);
+        }
+    }
 }
 
 int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
@@ -78,7 +111,6 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
     CHKERR1(state);
 
     int retval = 0;
-    CACE_LOG_DEBUG("Sending message with %d ARIs", ari_list_size(data));
 
     const char *dst_ptr = (const char *)meta->dest.ptr;
     if (dst_ptr[meta->dest.len - 1] != '\0')
@@ -96,6 +128,16 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
     dst_ptr += strlen(URI_PREFIX);
     dst_len -= prefix_len;
 
+    struct sockaddr_un daddr;
+    daddr.sun_family = AF_UNIX;
+    char *sun_end    = stpncpy(daddr.sun_path, dst_ptr, sizeof(daddr.sun_path));
+    if (sun_end - daddr.sun_path >= (ssize_t)sizeof(daddr.sun_path))
+    {
+        CACE_LOG_ERR("given dest that is too long to fit in sockaddr_un");
+        return 1;
+    }
+
+    CACE_LOG_DEBUG("Sending message with %d ARIs", ari_list_size(data));
     m_bstring_t msgbuf;
     m_bstring_init(msgbuf);
     if (cace_amp_msg_encode(msgbuf, data))
@@ -105,10 +147,6 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
 
     if (!retval)
     {
-        struct sockaddr_un daddr;
-        daddr.sun_family = AF_UNIX;
-        strncpy(daddr.sun_path, dst_ptr, dst_len + 1);
-
         const size_t   msg_size  = m_bstring_size(msgbuf);
         const uint8_t *msg_begin = m_bstring_view(msgbuf, 0, msg_size);
 
@@ -130,20 +168,6 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
     m_bstring_clear(msgbuf);
 
     return retval;
-}
-
-static void cace_amp_sock_state_unbind(cace_amp_socket_state_t *state)
-{
-    if (state->sock_fd)
-    {
-        close(state->sock_fd);
-        state->sock_fd = 0;
-    }
-
-    if (unlink(string_get_cstr(state->path)))
-    {
-        CACE_LOG_WARNING("Failed to remove socket %s with errno %d", string_get_cstr(state->path), errno);
-    }
 }
 
 int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_run_t *running, void *ctx)

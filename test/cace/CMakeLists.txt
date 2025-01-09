@@ -48,6 +48,9 @@ target_link_libraries(test_amm_obj_ns PUBLIC cace)
 add_unity_test(SOURCE "test_amm_lookup.c")
 target_link_libraries(test_amm_lookup PUBLIC cace)
 
+add_unity_test(SOURCE "test_amp_socket.c")
+target_link_libraries(test_amp_socket PUBLIC cace)
+
 # Test just being able to compile and link a C++ user with the cace library
 add_executable(test_cace_cpp)
 target_sources(test_cace_cpp PRIVATE test_cace_cpp.cpp)

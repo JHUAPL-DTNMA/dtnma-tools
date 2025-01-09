@@ -48,10 +48,16 @@ void cace_amp_socket_state_deinit(cace_amp_socket_state_t *state);
 
 /** Bind a unix domain data gram socket to a specific filesystem path.
  *
- * @param[in] state The state to bind.
+ * @param[in,out] state The state to bind.
  * @param[in] sock_path The file path to bind to.
  */
 int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const m_string_t sock_path);
+
+/** Unbind any current socket and remove it if necessary.
+ *
+ * @param[in,out] state The state to bind.
+ */
+void cace_amp_socket_state_unbind(cace_amp_socket_state_t *state);
 
 /** Provider of ::cace_amm_msg_if_send_f interface for POSIX socket transport.
  * The user data for this function is a ::cace_amp_socket_state_t instance.
