@@ -55,11 +55,11 @@ int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const m_string_t 
 
     struct sockaddr_un laddr;
     laddr.sun_family = AF_UNIX;
-    strncpy(laddr.sun_path, string_get_cstr(state->path), string_size(state->path) + 1);
+    strncpy(laddr.sun_path, m_string_get_cstr(state->path), m_string_size(state->path) + 1);
     CACE_LOG_DEBUG("Binding to socket %s", laddr.sun_path);
 
     // preemptive unlink
-    unlink(string_get_cstr(state->path));
+    unlink(m_string_get_cstr(state->path));
 
     int res = bind(state->sock_fd, (struct sockaddr *)&laddr, sizeof(laddr));
     if (res)
@@ -107,14 +107,14 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
     {
         struct sockaddr_un daddr;
         daddr.sun_family = AF_UNIX;
-        strncpy(daddr.sun_path, dst_ptr, dst_len);
+        strncpy(daddr.sun_path, dst_ptr, dst_len + 1);
 
         const size_t   msg_size  = m_bstring_size(msgbuf);
         const uint8_t *msg_begin = m_bstring_view(msgbuf, 0, msg_size);
 
+        int flags = 0;
         CACE_LOG_DEBUG("sending datagram with %zd octets to %s", msg_size, daddr.sun_path);
-        int     flags = 0;
-        ssize_t got   = sendto(state->sock_fd, msg_begin, msg_size, flags, (struct sockaddr *)&daddr, sizeof(daddr));
+        ssize_t got = sendto(state->sock_fd, msg_begin, msg_size, flags, (struct sockaddr *)&daddr, sizeof(daddr));
         if (got < 0)
         {
             CACE_LOG_WARNING("failed sendto() with errno %d", errno);
