@@ -22,7 +22,6 @@
 #include <m-bstring.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/un.h>
 #include <signal.h>
 #include <strings.h>
@@ -86,7 +85,7 @@ int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const m_string_t 
 
 void cace_amp_socket_state_unbind(cace_amp_socket_state_t *state)
 {
-    const char *path = string_get_cstr(state->path);
+    const char *path = m_string_get_cstr(state->path);
 
     if (state->sock_fd >= 0)
     {
@@ -95,20 +94,21 @@ void cace_amp_socket_state_unbind(cace_amp_socket_state_t *state)
         state->sock_fd = -1;
     }
 
-    struct stat info;
-    if (!stat(path, &info))
+    if (path && unlink(path) && (errno != ENOENT))
     {
-        if (unlink(path))
-        {
-            CACE_LOG_WARNING("Failed to remove socket %s with errno %d", path, errno);
-        }
+        CACE_LOG_WARNING("Failed to remove socket %s with errno %d", path, errno);
     }
+
+    m_string_reset(state->path);
 }
 
 int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
 {
+    CHKERR1(data);
+    CHKERR1(meta);
     cace_amp_socket_state_t *state = ctx;
     CHKERR1(state);
+    CHKERR1(state->sock_fd >= 0);
 
     int retval = 0;
 
@@ -172,11 +172,12 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
 
 int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_run_t *running, void *ctx)
 {
-    cace_amp_socket_state_t *state = ctx;
-    CHKERR1(state);
     CHKERR1(data);
     CHKERR1(meta);
     CHKERR1(running);
+    cace_amp_socket_state_t *state = ctx;
+    CHKERR1(state);
+    CHKERR1(state->sock_fd >= 0);
 
     // Watch stdin (fd 0) for input, assuming whole-lines are given
     struct pollfd pfds[] = {
@@ -239,8 +240,8 @@ int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
                 m_string_t eid;
                 m_string_init(eid);
                 m_string_printf(eid, URI_PREFIX "%s", saddr.sun_path);
-                CACE_LOG_DEBUG("read datagram with %zd octets from %s", got, string_get_cstr(eid));
-                cace_data_copy_from_cstr(&meta->src, string_get_cstr(eid));
+                CACE_LOG_DEBUG("read datagram with %zd octets from %s", got, m_string_get_cstr(eid));
+                cace_data_copy_from_cstr(&meta->src, m_string_get_cstr(eid));
                 m_string_clear(eid);
             }
 
