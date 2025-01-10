@@ -154,26 +154,29 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
         return NULL;
     }
 
-    if (refdm_agent_dict_get(mgr->agent_dict, agent_eid))
+    refdm_agent_t *agent = NULL;
+    if (!refdm_agent_dict_get(mgr->agent_dict, agent_eid))
     {
-        return NULL;
+        // agent does not already exist
+        agent = ARI_MALLOC(sizeof(refdm_agent_t));
+        refdm_agent_init(agent);
+        string_set_str(agent->eid, agent_eid);
+
+        // key is pointer to own member data
+        CACE_LOG_INFO("adding agent for %s", string_get_cstr(agent->eid));
+        refdm_agent_list_push_back(mgr->agent_list, agent);
+        refdm_agent_dict_set_at(mgr->agent_dict, string_get_cstr(agent->eid), agent);
     }
-
-    refdm_agent_t *agent = ARI_MALLOC(sizeof(refdm_agent_t));
-    refdm_agent_init(agent);
-    string_set_str(agent->eid, agent_eid);
-
-    // key is pointer to own member data
-    CACE_LOG_INFO("adding agent for %s", string_get_cstr(agent->eid));
-    refdm_agent_list_push_back(mgr->agent_list, agent);
-    refdm_agent_dict_set_at(mgr->agent_dict, string_get_cstr(agent->eid), agent);
 
     if (pthread_mutex_unlock(&(mgr->agent_mutex)))
     {
         CACE_LOG_ERR("failed to unlock mutex");
     }
 
-    refdm_agent_rotate_log(agent, &mgr->agent_log_cfg, true);
+    if (agent)
+    {
+        refdm_agent_rotate_log(agent, &mgr->agent_log_cfg, true);
+    }
 
     return agent;
 }

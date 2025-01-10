@@ -43,7 +43,8 @@ CMD [ "/sbin/init" ]
 # Testing utilities
 RUN apt-get update && apt-get install -y \
     net-tools iproute2 iputils-ping \
-    lsof iftop gdb valgrind xxd socat jq
+    lsof iftop gdb valgrind xxd socat jq ruby && \
+    gem install cbor-diag
 
 
 FROM ubuntu:24.04 AS deps-local

@@ -66,7 +66,7 @@ then
         exit 2
     fi
 
-    CURLOPTS="-sv --variable '%REFDA_SOCKET'"
+    CURLOPTS="-svf --variable '%REFDA_SOCKET'"
     # All manager actions operate with this base
     URIBASE="http://localhost:8089/nm/api"
     #REFDA_SOCKET=$(${DEXEC} echo \$REFDA_SOCKET)
@@ -78,10 +78,11 @@ then
     CMD="curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/file:{{REFDA_SOCKET:trim:url}}/clear_reports"
     echo $CMD | ${DEXEC} bash
     echo
-    
+
+    # send an inspect execution with a nonce, expecting a report back
     CMD="echo 'ari:/EXECSET/n=12345;(//ietf-dtnma-agent/CTRL/inspect(//ietf-dtnma-agent/EDD/sw-version))' | \
         ace_ari --inform text --outform cborhex --must-nickname | \
-        curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/file:{{REFDA_SOCKET:trim:url}}/send/hex -H 'Content-Type: text/plain' --data-binary @-; echo"
+        curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/file:{{REFDA_SOCKET:trim:url}}/send?form=hex -H 'Content-Type: text/plain' --data-binary @-; echo"
     echo $CMD | ${DEXEC} bash
     echo
 
@@ -91,22 +92,25 @@ then
         echo "Waiting on report back..."
         sleep 1
 
-        CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/file:{{REFDA_SOCKET:trim:url}}/reports/json"
-        echo $CMD | ${DEXEC} bash
-
-        RPTOBJ=$(echo $CMD | ${DEXEC} bash)
-        if [ -n "$RPTOBJ" ]
+        CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/file:{{REFDA_SOCKET:trim:url}}/reports?form=text"
+        RPTLINES=$(echo $CMD | ${DEXEC} bash)
+        if [ -n "$RPTLINES" ]
         then
             break
         fi
     done
 
-    if [ -n "$RPTOBJ" ]
+    if [ -n "$RPTLINES" ]
     then
-      echo "Got Report:"
-      echo ${RPTOBJ} | jq
+      echo "Got Report lines:"
+      echo ${RPTLINES}
+      echo
     else
       exit 3
     fi
+
+    # view the hex-binary version also
+    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/file:{{REFDA_SOCKET:trim:url}}/reports?form=hex | xxd -r -p | cborseq2diag.rb"
+    echo $CMD | ${DEXEC} bash
 
 fi

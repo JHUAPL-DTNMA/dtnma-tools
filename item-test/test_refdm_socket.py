@@ -23,7 +23,7 @@ import signal
 import socket
 import subprocess
 import tempfile
-from typing import List
+from typing import List, Set
 from urllib.parse import quote
 import unittest
 import cbor2
@@ -61,9 +61,12 @@ class TestRefdmSocket(unittest.TestCase):
 
         def bound_sock(name):
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+            sock.settimeout(0.1)
+
             path = os.path.join(self._tmp.name, name)
             LOGGER.info('binding to socket at %s', path)
             sock.bind(path)
+
             return {'path': path, 'sock': sock}
 
         self._agent_bind = [
@@ -167,7 +170,6 @@ class TestRefdmSocket(unittest.TestCase):
         :return: The ARI decoded form.
         '''
         recv_sock = self._agent_bind[agent_ix]['sock']
-        recv_sock.settimeout(0.1)
 
         (data, addr) = recv_sock.recvfrom(1024)
         LOGGER.info('Received message %s from %s', data.hex(), addr)
@@ -212,23 +214,72 @@ class TestRefdmSocket(unittest.TestCase):
         resp = self._req.get(self._base_url + 'versionplus')
         self.assertEqual(404, resp.status_code)
 
-    def test_rest_agents(self):
-        self._start()
-
+    def _get_agent_names(self) -> Set[str]:
         resp = self._req.get(self._base_url + 'agents')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
         data = resp.json()
-        self.assertEqual([], data['agents'])
+        return set([agt['name'] for agt in data['agents']])
+
+    def test_rest_agents_add_valid(self):
+        self._start()
+        self.assertEqual(set(), self._get_agent_names())
+
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data='file:/tmp/invalid1\r\n',
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data='\r\nfile:/tmp/invalid2\r\n',
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        self.assertEqual(set(['file:/tmp/invalid1', 'file:/tmp/invalid2']), self._get_agent_names())
+
+    def test_rest_agents_add_invalid(self):
+        self._start()
 
         resp = self._req.put(self._base_url + 'agents')
         self.assertEqual(405, resp.status_code)
 
+        # missing content type
         resp = self._req.post(
             self._base_url + 'agents',
             data='file:/tmp/invalid\r\n'
         )
         self.assertEqual(415, resp.status_code)
+
+        # bad content type
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data='file:/tmp/invalid\r\n',
+            headers={
+                'content-type': 'text/csv',
+            }
+        )
+        self.assertEqual(415, resp.status_code)
+
+        # no name content
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data='\r\n',
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(422, resp.status_code)
+
+    def test_rest_agents_add_duplicate(self):
+        self._start()
 
         resp = self._req.post(
             self._base_url + 'agents',
@@ -239,11 +290,16 @@ class TestRefdmSocket(unittest.TestCase):
         )
         self.assertEqual(200, resp.status_code)
 
-        resp = self._req.get(self._base_url + 'agents')
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
-        data = resp.json()
-        self.assertEqual(set(['file:/tmp/invalid']), set([agt['name'] for agt in data['agents']]))
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data='file:/tmp/invalid\r\n',
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(400, resp.status_code)
+
+        self.assertEqual(set(['file:/tmp/invalid']), self._get_agent_names())
 
     def test_agents_eid_reports_404(self):
         self._start()
@@ -257,51 +313,47 @@ class TestRefdmSocket(unittest.TestCase):
 
     def test_agents_eid_reports_text_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports/text')
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=text')
         self.assertEqual(404, resp.status_code)
         self.assertIn('Unknown agent', resp.text)
 
     def test_agents_eid_reports_text_404_longname(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing-with-a-{"longer-" * 40}eid/reports/text')
+        resp = self._req.get(self._base_url + f'agents/eid/missing-with-a-{"longer-" * 40}eid/reports?form=text')
         self.assertEqual(404, resp.status_code)
         self.assertIn('Unknown agent', resp.text)
 
     def test_agents_eid_reports_hex_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports/hex')
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=hex')
         self.assertEqual(404, resp.status_code)
         self.assertIn('Unknown agent', resp.text)
 
     def test_agents_idx_reports_text_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/10/reports/text')
+        resp = self._req.get(self._base_url + f'agents/eid/10/reports?form=text')
         self.assertEqual(404, resp.status_code)
 
     def test_agents_idx_reports_hex_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/10/reports/hex')
+        resp = self._req.get(self._base_url + f'agents/eid/10/reports?form=hex')
         self.assertEqual(404, resp.status_code)
 
     def test_agents_idx_reports_text_400(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports/text')
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=text')
         self.assertEqual(404, resp.status_code)
 
     def test_agents_idx_reports_hex_400(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports/hex')
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=hex')
         self.assertEqual(404, resp.status_code)
 
     def test_recv_one_report(self):
         self._start()
 
         # initial state
-        resp = self._req.get(self._base_url + 'agents')
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
-        data = resp.json()
-        self.assertEqual([], data['agents'])
+        self.assertEqual(set(), self._get_agent_names())
 
         # first check behavior with one report
         sock_path = self._send_rptset(
@@ -313,29 +365,26 @@ class TestRefdmSocket(unittest.TestCase):
         LOGGER.info('Waiting for agent %s', agent_eid)
         with Timer(5) as timer:
             while timer:
-                resp = self._req.get(self._base_url + 'agents')
-                self.assertEqual(200, resp.status_code)
-                data = resp.json()
-                available = set([agt['name'] for agt in data['agents']])
+                available = self._get_agent_names()
                 if agent_eid in available:
                     timer.finish()
                     break
                 timer.sleep(0.1)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports/hex')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
         data = resp.json()
         self.assertEqual(1, len(data['reports']))
 
         # Verify path segment handling
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports/hex?test=ignored')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex&test=ignored')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
         other_data = resp.json()
         self.assertEqual(data, other_data)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports/text')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=text')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
@@ -355,20 +404,20 @@ class TestRefdmSocket(unittest.TestCase):
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports/hex')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
         data = resp.json()
         self.assertEqual(2, len(data['reports']))
 
         # index resource gets the same result
-        resp = self._req.get(self._base_url + f'agents/idx/0/reports/hex')
+        resp = self._req.get(self._base_url + f'agents/idx/0/reports?form=hex')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
         other_data = resp.json()
         self.assertEqual(data, other_data)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports/text')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=text')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
@@ -377,7 +426,7 @@ class TestRefdmSocket(unittest.TestCase):
             self.assertTrue(line.startswith('ari:/RPTSET/'))
 
         # index resource gets the same result
-        resp = self._req.get(self._base_url + f'agents/idx/0/reports/text')
+        resp = self._req.get(self._base_url + f'agents/idx/0/reports?form=text')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         other_lines = resp.text.splitlines()
@@ -404,7 +453,7 @@ class TestRefdmSocket(unittest.TestCase):
         send_data = self._ari_obj_to_cbor(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send/hex',
+            self._base_url + f'agents/eid/{eid_seg}/send?form=hex',
             data=f'{send_data.hex()}\r\n',
             headers={
                 'content-type': 'text/plain',
@@ -441,7 +490,7 @@ class TestRefdmSocket(unittest.TestCase):
         send_text = self._ari_obj_to_text(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send/text',
+            self._base_url + f'agents/eid/{eid_seg}/send?form=text',
             data=f'{send_text}\r\n',
             headers={
                 'content-type': 'text/uri-list',

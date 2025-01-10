@@ -143,7 +143,7 @@ static int versionHandler(struct mg_connection *conn, void *cbdata _U_)
     }
 }
 
-static int agentsGETHandler(struct mg_connection *conn)
+static int agentsGetHandler(struct mg_connection *conn)
 {
     refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
 
@@ -183,44 +183,64 @@ static int agentsGETHandler(struct mg_connection *conn)
     return HTTP_OK;
 }
 
-// This may be called via POST /agents or PUT /agents/$name
-static int agentsCreateHandler(struct mg_connection *conn, m_bstring_t body)
+// This may be called via POST /agents
+static int agentsPostHandler(struct mg_connection *conn)
 {
+    if (requireContentType(conn, "text/plain"))
+    {
+        mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/plain supported");
+        return HTTP_UNSUP_MEDIA_TYPE;
+    }
+
+    // Request body contains direct EID text
+    m_bstring_t body;
+    m_bstring_init(body);
+    int retval = readRequstBody(conn, body);
+
     m_string_t eid;
-    m_string_init_set_cstr(eid, (const char *)m_bstring_view(body, 0, m_bstring_size(body)));
-    m_string_strim(eid);
-
-    // Sanity-check string length
-    if (m_string_size(eid) <= 1)
+    m_string_init(eid);
+    if (!retval)
     {
-        mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "Invalid request body data (expect EID name)");
-        m_string_clear(eid);
-        m_bstring_clear(body);
-        return HTTP_UNPROCESSABLE_CNT;
+        m_bstring_push_back(body, '\0');
+
+        m_string_set_cstr(eid, (const char *)m_bstring_view(body, 0, m_bstring_size(body)));
+        m_string_strim(eid);
+
+        // Sanity-check string length
+        if (m_string_size(eid) <= 1)
+        {
+            mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "Invalid request body data (expect EID name)");
+            retval = HTTP_UNPROCESSABLE_CNT;
+        }
     }
 
-    refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
-
-    refdm_agent_t *agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(eid));
-    if (!agent)
+    if (!retval)
     {
-        mg_send_http_error(conn, HTTP_BAD_REQUEST, "Unable to register agent");
-        m_string_clear(eid);
-        m_bstring_clear(body);
-        return HTTP_BAD_REQUEST;
+        refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
+
+        refdm_agent_t *agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(eid));
+        if (!agent)
+        {
+            mg_send_http_error(conn, HTTP_BAD_REQUEST, "Unable to register agent");
+            retval = HTTP_BAD_REQUEST;
+        }
     }
 
-    m_string_t resp;
-    m_string_init_printf(resp, "Successfully created agent %s", m_string_get_cstr(eid));
+    if (!retval)
+    {
+        m_string_t resp;
+        m_string_init_printf(resp, "Successfully created agent %s", m_string_get_cstr(eid));
 
-    // FIXME should really be a 207
-    mg_send_http_ok(conn, "text/plain", m_string_size(resp));
-    mg_printf(conn, "%s", m_string_get_cstr(resp));
+        // FIXME should really be a 207
+        mg_send_http_ok(conn, "text/plain", m_string_size(resp));
+        mg_printf(conn, "%s", m_string_get_cstr(resp));
+        m_string_clear(resp);
+        retval = HTTP_OK;
+    }
 
-    m_string_clear(resp);
     m_string_clear(eid);
     m_bstring_clear(body);
-    return HTTP_OK;
+    return retval;
 }
 
 static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
@@ -229,28 +249,11 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
 
     if (0 == strcasecmp(ri->request_method, "GET"))
     {
-        return agentsGETHandler(conn);
+        return agentsGetHandler(conn);
     }
     else if (0 == strcasecmp(ri->request_method, "POST"))
     {
-        if (requireContentType(conn, "text/plain"))
-        {
-            mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/plain supported");
-            return HTTP_UNSUP_MEDIA_TYPE;
-        }
-
-        // Request body contains direct EID text
-        m_bstring_t body;
-        m_bstring_init(body);
-        int res = readRequstBody(conn, body);
-        if (res)
-        {
-            m_bstring_clear(body);
-            return res;
-        }
-        m_bstring_push_back(body, '\0');
-
-        return agentsCreateHandler(conn, body);
+        return agentsPostHandler(conn);
     }
     else
     {
@@ -305,7 +308,8 @@ static int agentParseHex(struct mg_connection *conn, ari_list_t tosend)
             res = base16_decode(&databuf, hexbuf);
             if (res)
             {
-                mg_send_http_error(conn, HTTP_BAD_REQUEST, "One input line does not contain base-16 encoded text: %s", m_string_get_cstr(hexbuf));
+                mg_send_http_error(conn, HTTP_BAD_REQUEST, "One input line does not contain base-16 encoded text: %s",
+                                   m_string_get_cstr(hexbuf));
                 retval = HTTP_BAD_REQUEST;
             }
 
@@ -453,6 +457,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, ari_
 static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
+    int retval = 0;
 
     m_string_t body;
     m_string_init(body);
@@ -466,34 +471,36 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
         m_string_t uristr;
         m_string_init(uristr);
         int enc_ret = ari_text_encode(uristr, val, ARI_TEXT_ENC_OPTS_DEFAULT);
-        if (enc_ret)
-        {
-            CACE_LOG_WARNING("Failed ari_text_encode()");
-            m_string_clear(body);
-            return HTTP_INTERNAL_ERROR;
-        }
 
         m_string_cat(body, uristr);
         m_string_clear(uristr);
         m_string_cat_cstr(body, "\r\n"); // HTTP convention
+
+        if (enc_ret)
+        {
+            mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "encoding failure");
+            retval = HTTP_INTERNAL_ERROR;
+            break;
+        }
     }
 
-    mg_send_http_ok(conn, "text/uri-list", m_string_size(body));
-    mg_write(conn, m_string_get_cstr(body), m_string_size(body));
+    if (!retval)
+    {
+        mg_send_http_ok(conn, "text/uri-list", m_string_size(body));
+        mg_write(conn, m_string_get_cstr(body), m_string_size(body));
+        retval = HTTP_OK;
+    }
     m_string_clear(body);
-    return HTTP_OK;
+    return retval;
 }
 
 static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
+    int retval = 0;
 
-    cJSON *obj;
-    cJSON *reports;
-
-    obj = cJSON_CreateObject();
-    cJSON_AddStringToObject(obj, "eid", string_get_cstr(agent->eid));
-    reports = cJSON_AddArrayToObject(obj, "reports");
+    m_string_t body;
+    m_string_init(body);
 
     /* Iterate through all RPTSET for this agent. */
     ari_list_it_t rpt_it;
@@ -510,19 +517,27 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
         int hex_ret = base16_encode(hexstr, &bytestr, false);
         cace_data_deinit(&bytestr);
 
-        cJSON_AddItemToArray(reports, cJSON_CreateString(m_string_get_cstr(hexstr)));
+        m_string_cat(body, hexstr);
         m_string_clear(hexstr);
+        m_string_cat_cstr(body, "\r\n"); // HTTP convention
 
         if (enc_ret || hex_ret)
         {
-            cJSON_Delete(obj);
-            return HTTP_INTERNAL_ERROR;
+            mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "encoding failure");
+            retval = HTTP_INTERNAL_ERROR;
+            break;
         }
     }
 
-    SendJSON(conn, obj);
-    cJSON_Delete(obj);
-    return HTTP_OK;
+    if (!retval)
+    {
+        mg_send_http_ok(conn, "text/plain", m_string_size(body));
+        mg_write(conn, m_string_get_cstr(body), m_string_size(body));
+        retval = HTTP_OK;
+    }
+
+    m_string_clear(body);
+    return retval;
 }
 
 /// Characters disallowed in URI segments (per RFC 3986) to know where they end
@@ -584,35 +599,71 @@ static int getAgentFromEid(struct mg_connection *conn, const char *prefix, refdm
     return 0;
 }
 
-/** Handler /agents/eid/$eid/hex - Send HEX-encoded CBOR Command (hex string as request body).
- */
-static int agentEidHexHandler(struct mg_connection *conn, void *cbdata _U_)
+static int getFormParam(struct mg_connection *conn, char *form, size_t form_len)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
-    refdm_agent_t *agent = NULL;
 
-    int res = getAgentFromEid(conn, AGENTS_EID_PREFIX, &agent);
-    if (res)
+    if (ri->query_string)
     {
-        return res;
+        int res = mg_get_var(ri->query_string, strlen(ri->query_string), "form", form, form_len);
+        if ((res == -2) || ((strcasecmp(form, "text") != 0) && (strcasecmp(form, "hex") != 0)))
+        {
+            mg_send_http_error(conn, HTTP_BAD_REQUEST, "Form parameter must be either text or hex");
+            return HTTP_BAD_REQUEST;
+        }
+    }
+    CACE_LOG_DEBUG("Parsed form=%s", form);
+
+    return 0;
+}
+
+/** The ./send resource of either agent form.
+ */
+static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
+{
+    const struct mg_request_info *ri = mg_get_request_info(conn);
+
+    char form[10] = "text"; // size enough to hold valid values
+
+    int retval = getFormParam(conn, form, sizeof(form));
+    if (retval)
+    {
+        return retval;
     }
 
     if (0 == strcasecmp(ri->request_method, "POST"))
     {
-        if (requireContentType(conn, "text/plain"))
-        {
-            mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/plain supported");
-            return HTTP_UNSUP_MEDIA_TYPE;
-        }
-
         ari_list_t tosend;
         ari_list_init(tosend);
-        res = agentParseHex(conn, tosend);
-        if (res)
+        if (strcasecmp(form, "text") == 0)
+        {
+            // either is acceptable
+            if (requireContentType(conn, "text/uri-list") && requireContentType(conn, "text/plain"))
+            {
+                mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/uri-list or text/plain supported");
+                retval = HTTP_UNSUP_MEDIA_TYPE;
+            }
+            if (!retval)
+            {
+                retval = agentParseText(conn, tosend);
+            }
+        }
+        else if (strcasecmp(form, "hex") == 0)
+        {
+            if (requireContentType(conn, "text/plain"))
+            {
+                mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/plain supported");
+                retval = HTTP_UNSUP_MEDIA_TYPE;
+            }
+            if (!retval)
+            {
+                retval = agentParseHex(conn, tosend);
+            }
+        }
+        if (retval)
         {
             ari_list_clear(tosend);
-            return res;
+            return retval;
         }
         return agentSendItems(conn, agent, tosend);
     }
@@ -623,44 +674,21 @@ static int agentEidHexHandler(struct mg_connection *conn, void *cbdata _U_)
     }
 }
 
-/** Handler /agents/eid/$eid/text - Send URI-encoded text Command (lines as request body).
+/** Handler /agents/eid/$eid/send - Send EXECSET encoded according to query key "form"
  */
-static int agentEidTextHandler(struct mg_connection *conn, void *cbdata _U_)
+static int agentEidSendHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
     CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
     refdm_agent_t *agent = NULL;
 
-    int res = getAgentFromEid(conn, AGENTS_EID_PREFIX, &agent);
-    if (res)
+    int retval = getAgentFromEid(conn, AGENTS_EID_PREFIX, &agent);
+    if (retval)
     {
-        return res;
+        return retval;
     }
 
-    if (0 == strcasecmp(ri->request_method, "POST"))
-    {
-        // either is acceptable
-        if (requireContentType(conn, "text/uri-list") && requireContentType(conn, "text/plain"))
-        {
-            mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/uri-list or text/plain supported");
-            return HTTP_UNSUP_MEDIA_TYPE;
-        }
-
-        ari_list_t tosend;
-        ari_list_init(tosend);
-        res = agentParseText(conn, tosend);
-        if (res)
-        {
-            ari_list_clear(tosend);
-            return res;
-        }
-        return agentSendItems(conn, agent, tosend);
-    }
-    else
-    {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only POST method supported");
-        return HTTP_METHOD_NOT_ALLOWED;
-    }
+    return agentAnySendHandler(conn, agent);
 }
 
 /** Handler /agents/eid/$eid/clear_reports - Clear all received reports for this agent.
@@ -694,34 +722,42 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
     }
 }
 
-/** Handler /agents/eid/$eid/reports/hex - Retrieve array of reports in CBOR-encoded HEX form
+/** The ./reports resource of either agent form.
  */
-static int agentEidReportsHexHandler(struct mg_connection *conn, void *cbdata _U_)
+static int agentAnyReportsHandler(struct mg_connection *conn, refdm_agent_t *agent)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
-    refdm_agent_t *agent = NULL;
 
-    int res = getAgentFromEid(conn, AGENTS_EID_PREFIX, &agent);
-    if (res)
+    char form[10] = "text"; // size enough to hold valid values
+
+    int retval = getFormParam(conn, form, sizeof(form));
+    if (retval)
     {
-        return res;
+        return retval;
     }
 
     if (0 == strcasecmp(ri->request_method, "GET"))
     {
-        return agentShowHexReports(conn, agent);
+        if (strcasecmp(form, "text") == 0)
+        {
+            retval = agentShowTextReports(conn, agent);
+        }
+        else if (strcasecmp(form, "hex") == 0)
+        {
+            retval = agentShowHexReports(conn, agent);
+        }
     }
     else
     {
         mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported");
-        return HTTP_METHOD_NOT_ALLOWED;
+        retval = HTTP_METHOD_NOT_ALLOWED;
     }
+    return retval;
 }
 
-/** Handler /agents/eid/$eid/reports/text - Retrieve array of reports in ARI Text form
+/** Handler /agents/eid/$eid/reports/hex - Retrieve array of reports in CBOR-encoded HEX form
  */
-static int agentEidReportsTextHandler(struct mg_connection *conn, void *cbdata _U_)
+static int agentEidReportsHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
     CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
@@ -733,15 +769,7 @@ static int agentEidReportsTextHandler(struct mg_connection *conn, void *cbdata _
         return res;
     }
 
-    if (0 == strcasecmp(ri->request_method, "GET"))
-    {
-        return agentShowTextReports(conn, agent);
-    }
-    else
-    {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported");
-        return HTTP_METHOD_NOT_ALLOWED;
-    }
+    return agentAnyReportsHandler(conn, agent);
 }
 
 static int getAgentFromIdx(struct mg_connection *conn, const char *prefix, refdm_agent_t **agent)
@@ -781,7 +809,7 @@ static int getAgentFromIdx(struct mg_connection *conn, const char *prefix, refdm
 
 /** Handler /agents/idx/$idx/hex - Send HEX-encoded CBOR Command (hex string as request body).
  */
-static int agentIdxHexHandler(struct mg_connection *conn, void *cbdata _U_)
+static int agentIdxSendHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
     CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
@@ -793,69 +821,7 @@ static int agentIdxHexHandler(struct mg_connection *conn, void *cbdata _U_)
         return res;
     }
 
-    if (0 == strcasecmp(ri->request_method, "POST"))
-    {
-        if (requireContentType(conn, "text/plain"))
-        {
-            mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/plain supported");
-            return HTTP_UNSUP_MEDIA_TYPE;
-        }
-
-        ari_list_t tosend;
-        ari_list_init(tosend);
-        res = agentParseHex(conn, tosend);
-        if (res)
-        {
-            ari_list_clear(tosend);
-            return res;
-        }
-        return agentSendItems(conn, agent, tosend);
-    }
-    else
-    {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only POST method supported");
-        return HTTP_METHOD_NOT_ALLOWED;
-    }
-}
-
-/** Handler /agents/idx/$idx/text - Send URI-encoded text Command (lines as request body).
- */
-static int agentIdxTextHandler(struct mg_connection *conn, void *cbdata _U_)
-{
-    const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
-    refdm_agent_t *agent = NULL;
-
-    int res = getAgentFromIdx(conn, AGENTS_IDX_PREFIX, &agent);
-    if (res)
-    {
-        return res;
-    }
-
-    if (0 == strcasecmp(ri->request_method, "POST"))
-    {
-        // either is acceptable
-        if (requireContentType(conn, "text/uri-list") && requireContentType(conn, "text/plain"))
-        {
-            mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only text/uri-list or text/plain supported");
-            return HTTP_UNSUP_MEDIA_TYPE;
-        }
-
-        ari_list_t tosend;
-        ari_list_init(tosend);
-        res = agentParseText(conn, tosend);
-        if (res)
-        {
-            ari_list_clear(tosend);
-            return res;
-        }
-        return agentSendItems(conn, agent, tosend);
-    }
-    else
-    {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only POST method supported");
-        return HTTP_METHOD_NOT_ALLOWED;
-    }
+    return agentAnySendHandler(conn, agent);
 }
 
 /** Handler /agents/idx/$idx/clear_reports - Clear all received reports for this agent.
@@ -891,7 +857,7 @@ static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata 
 
 /** Handler /agents/idx/$idx/reports/hex - Retrieve array of reports in CBOR-encoded HEX form
  */
-static int agentIdxReportsHexHandler(struct mg_connection *conn, void *cbdata _U_)
+static int agentIdxReportsHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
     CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
@@ -903,40 +869,7 @@ static int agentIdxReportsHexHandler(struct mg_connection *conn, void *cbdata _U
         return res;
     }
 
-    if (0 == strcasecmp(ri->request_method, "GET"))
-    {
-        return agentShowHexReports(conn, agent);
-    }
-    else
-    {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported");
-        return HTTP_METHOD_NOT_ALLOWED;
-    }
-}
-
-/** Handler /agents/idx/$idx/reports/text - Retrieve array of reports in ARI Text form
- */
-static int agentIdxReportsTextHandler(struct mg_connection *conn, void *cbdata _U_)
-{
-    const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
-    refdm_agent_t *agent = NULL;
-
-    int res = getAgentFromIdx(conn, AGENTS_IDX_PREFIX, &agent);
-    if (res)
-    {
-        return res;
-    }
-
-    if (0 == strcasecmp(ri->request_method, "GET"))
-    {
-        return agentShowTextReports(conn, agent);
-    }
-    else
-    {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported");
-        return HTTP_METHOD_NOT_ALLOWED;
-    }
+    return agentAnyReportsHandler(conn, agent);
 }
 
 int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
@@ -1012,17 +945,13 @@ int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
     mg_set_request_handler(*ctx, VERSION_URI, versionHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_URI, agentsHandler, 0);
 
-    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/clear_reports", agentEidClearReportsHandler, 0);
-    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/send/hex", agentEidHexHandler, 0);
-    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/send/text", agentEidTextHandler, 0);
-    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/reports/hex", agentEidReportsHexHandler, 0);
-    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/reports/text", agentEidReportsTextHandler, 0);
+    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/clear_reports$", agentEidClearReportsHandler, 0);
+    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/send$", agentEidSendHandler, 0);
+    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/reports$", agentEidReportsHandler, 0);
 
-    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/clear_reports", agentIdxClearReportsHandler, 0);
-    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/send/hex", agentIdxHexHandler, 0);
-    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/send/text", agentIdxTextHandler, 0);
-    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/reports/hex", agentIdxReportsHexHandler, 0);
-    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/reports/text", agentIdxReportsTextHandler, 0);
+    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/clear_reports$", agentIdxClearReportsHandler, 0);
+    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/send$", agentIdxSendHandler, 0);
+    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/reports$", agentIdxReportsHandler, 0);
 
     CACE_LOG_INFO("REST API Server Started on port %s", port_buf);
     return 0;

@@ -112,10 +112,10 @@ int main(int argc, char *argv[])
     m_string_clear(sock_path);
 
     if (!retval)
-{
-    // ADM initialization
-    refda_adm_ietf_amm_init(&agent);
-    refda_adm_ietf_dtnma_agent_init(&agent);
+    {
+        // ADM initialization
+        refda_adm_ietf_amm_init(&agent);
+        refda_adm_ietf_dtnma_agent_init(&agent);
 #if 0
   dtn_bp_agent_init();
   dtn_ion_ionadmin_init();
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 //  dtn_bpsec_init();
 #endif
 #endif
-}
+    }
 
     if (!retval)
     {
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 
     if (!retval)
     {
-#if 0 //FIXME add option
+#if 0 // FIXME add option
         if (refda_agent_send_hello(&agent, hello_dest))
         {
             CACE_LOG_ERR("Agent hello failed");
