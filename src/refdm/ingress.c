@@ -131,16 +131,16 @@ void *refdm_ingress_worker(void *arg)
         ari_list_reset(values);
         int recv_res = mgr->mif.recv(values, &meta, &mgr->running, mgr->mif.ctx);
         // process received items even if failed status
+        CACE_LOG_INFO("Message from %s has %zd ARIs", m_string_get_cstr(meta.src), ari_list_size(values));
 
         if (!ari_list_empty_p(values))
         {
-            CACE_LOG_INFO("Message has %d ARIs", ari_list_size(values));
             // might be unknown and NULL
-            refdm_agent_t *agent = refdm_mgr_agent_get_eid(mgr, (const char *)meta.src.ptr);
+            refdm_agent_t *agent = refdm_mgr_agent_get_eid(mgr, m_string_get_cstr(meta.src));
             // FIXME handle from unknown?
             if (!agent)
             {
-                agent = refdm_mgr_agent_add(mgr, (const char *)meta.src.ptr);
+                agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(meta.src));
             }
 
             ari_list_it_t val_it;

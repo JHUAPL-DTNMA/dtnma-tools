@@ -25,8 +25,8 @@ jobs:
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
-              ruby build-essential autoconf libtool \
-              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev' || ''}} \
+              ruby pkg-config build-essential autoconf libtool \
+              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev' || ''}} \
               valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -36,8 +36,8 @@ jobs:
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby gcc gcc-c++ ccache autoconf libtool \
-              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel' || ''}} \
+              ruby pkg-config gcc gcc-c++ ccache autoconf libtool \
+              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel' || ''}} \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
@@ -85,8 +85,8 @@ jobs:
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
-              ruby build-essential autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev \
+              ruby pkg-config build-essential autoconf libtool \
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev \
               valgrind gcovr xmlstarlet
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -119,8 +119,8 @@ jobs:
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby gcc gcc-c++ ccache autoconf libtool \
-              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
+              ruby pkg-config gcc gcc-c++ ccache autoconf libtool \
+              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository

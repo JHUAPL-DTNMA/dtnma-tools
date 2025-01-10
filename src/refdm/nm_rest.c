@@ -279,32 +279,39 @@ static int agentParseHex(struct mg_connection *conn, ari_list_t tosend)
         cace_data_init(&databuf);
         const char *errm = NULL;
 
-        static const char *ctrlsep = " \f\n\r\t\v"; // Identical to isspace()
+        static const char *arisep = " \f\n\r\t\v"; // Identical to isspace()
 
         const size_t body_len = m_bstring_size(body);
         const char  *curs     = (const char *)m_bstring_view(body, 0, body_len);
         const char  *end      = curs + body_len;
         while (!retval && (curs < end))
         {
-            size_t part_len = strcspn(curs, ctrlsep);
+            size_t part_len = strcspn(curs, arisep);
             if (part_len == 0)
             {
                 break;
             }
+            // skip over optional prefix
+            if (strncasecmp(curs, "0x", 2) == 0)
+            {
+                curs += 2;
+                part_len -= 2;
+            }
 
             m_string_set_cstrn(hexbuf, curs, part_len);
             CACE_LOG_DEBUG("Handling message part %s", m_string_get_cstr(hexbuf));
+
             // replace the databuf contents
             res = base16_decode(&databuf, hexbuf);
             if (res)
             {
-                mg_send_http_error(conn, HTTP_BAD_REQUEST, "One input line does not contain base-16 encoded text");
+                mg_send_http_error(conn, HTTP_BAD_REQUEST, "One input line does not contain base-16 encoded text: %s", m_string_get_cstr(hexbuf));
                 retval = HTTP_BAD_REQUEST;
             }
 
-            ari_t *eset = ari_list_push_back_new(tosend);
+            ari_t *item = ari_list_push_back_new(tosend);
 
-            res = ari_cbor_decode(eset, &databuf, NULL, &errm);
+            res = ari_cbor_decode(item, &databuf, NULL, &errm);
             if (res)
             {
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "Error decoding execution ARI: %s", errm);
@@ -313,7 +320,16 @@ static int agentParseHex(struct mg_connection *conn, ari_list_t tosend)
                 ARI_FREE((char *)errm);
                 errm = NULL;
             }
-            if (!ari_is_lit_typed(eset, ARI_TYPE_EXECSET))
+            if (cace_log_is_enabled_for(LOG_DEBUG))
+            {
+                string_t buf;
+                string_init(buf);
+                ari_text_encode(buf, item, ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_DEBUG("decoded ARI as %s", string_get_cstr(buf));
+                string_clear(buf);
+            }
+
+            if (!ari_is_lit_typed(item, ARI_TYPE_EXECSET))
             {
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "One value is not an EXECSET");
                 retval = HTTP_BAD_REQUEST;
@@ -322,7 +338,7 @@ static int agentParseHex(struct mg_connection *conn, ari_list_t tosend)
             // FIXME: what is this? ui_postprocess_ctrl(id);
 
             curs += part_len;
-            size_t sep_len = strspn(curs, ctrlsep);
+            size_t sep_len = strspn(curs, arisep);
             curs += sep_len;
         }
 
@@ -408,7 +424,8 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, ari_
 
         cace_amm_msg_if_metadata_t meta;
         cace_amm_msg_if_metadata_init(&meta);
-        cace_data_copy_from(&meta.dest, m_string_size(agent->eid) + 1, (cace_data_ptr_t)m_string_get_cstr(agent->eid));
+        m_string_set(meta.dest, agent->eid);
+
         int res = (mgr->mif.send)(tosend, &meta, mgr->mif.ctx);
         cace_amm_msg_if_metadata_deinit(&meta);
         if (res)
@@ -664,8 +681,10 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
-        mg_send_http_ok(conn, "text/plain", -1);
-        mg_printf(conn, "Successfully cleared reports");
+
+        const char *resp = "Successfully cleared reports";
+        mg_send_http_ok(conn, "text/plain", strlen(resp));
+        mg_printf(conn, "%s", resp);
         return HTTP_OK;
     }
     else
@@ -857,8 +876,10 @@ static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata 
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
-        mg_send_http_ok(conn, "text/plain", -1);
-        mg_printf(conn, "Successfully cleared reports");
+
+        const char *resp = "Successfully cleared reports";
+        mg_send_http_ok(conn, "text/plain", strlen(resp));
+        mg_printf(conn, "%s", resp);
         return HTTP_OK;
     }
     else

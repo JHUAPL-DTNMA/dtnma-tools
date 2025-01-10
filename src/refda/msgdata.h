@@ -31,8 +31,8 @@ extern "C" {
  */
 typedef struct refda_msgdata_s
 {
-    /// The peer identity as opaque encoded data
-    cace_data_t ident;
+    /// The peer identity as opaque text
+    m_string_t ident;
     /// The associated value
     ari_t value;
 } refda_msgdata_t;

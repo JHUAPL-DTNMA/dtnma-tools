@@ -42,5 +42,5 @@ then
         coverage-cace-html coverage-cace-xml \
         coverage-refda-html coverage-refda-xml
 else
-    cmake --build ${BUILDDIR}
+    cmake --build ${BUILDDIR} "$@"
 fi

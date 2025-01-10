@@ -232,7 +232,7 @@ int refda_agent_stop(refda_agent_t *agent)
     return 0;
 }
 
-int refda_agent_send_hello(refda_agent_t *agent)
+int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
 {
     ari_t ref = ARI_INIT_UNDEFINED;
     // ari:/ietf-dtnma-agent/CONST/hello
@@ -242,9 +242,7 @@ int refda_agent_send_hello(refda_agent_t *agent)
     // dummy message source
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
-    // FIXME how to indicate this destination..?
-    static const char *src = "any";
-    cace_data_copy_from(&(msg.ident), strlen(src) - 1, (cace_data_ptr_t)src);
+    m_string_set_cstr(msg.ident, dest);
 
     refda_runctx_t runctx;
     refda_runctx_init(&runctx);

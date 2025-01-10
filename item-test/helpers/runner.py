@@ -41,6 +41,7 @@ def compose_args(args: List[str]) -> List[str]:
             '--tool=memcheck',
             '--leak-check=full',
             '--suppressions=memcheck.supp',
+            '--gen-suppressions=all',
             '--error-exitcode=2',
         ]
         args = valgrind + args

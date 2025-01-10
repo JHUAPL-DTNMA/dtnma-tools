@@ -72,7 +72,7 @@ typedef struct
      * the execution.
      * When triggered by the agent itself this will be empty.
      */
-    cace_data_t mgr_ident;
+    m_string_t mgr_ident;
 
     /** During execution, a reference to a context nonce value.
      * Otherwise this will be the undefined value.

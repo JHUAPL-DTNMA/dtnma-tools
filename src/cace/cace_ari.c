@@ -541,5 +541,7 @@ int main(int argc, char *argv[])
     {
         fclose(dest);
     }
+
+    cace_closelog();
     return retval;
 }

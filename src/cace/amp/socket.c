@@ -112,10 +112,10 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
 
     int retval = 0;
 
-    const char *dst_ptr = (const char *)meta->dest.ptr;
-    if (dst_ptr[meta->dest.len - 1] != '\0')
+    const char *dst_ptr = m_string_get_cstr(meta->dest);
+    if (!dst_ptr || m_string_empty_p(meta->dest))
     {
-        CACE_LOG_ERR("given dest that is not text");
+        CACE_LOG_ERR("given null or empty dest");
         return 1;
     }
     const size_t prefix_len = strlen(URI_PREFIX);
@@ -236,14 +236,9 @@ int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
                 m_bstring_clear(msgbuf);
                 continue;
             }
-            {
-                m_string_t eid;
-                m_string_init(eid);
-                m_string_printf(eid, URI_PREFIX "%s", saddr.sun_path);
-                CACE_LOG_DEBUG("read datagram with %zd octets from %s", got, m_string_get_cstr(eid));
-                cace_data_copy_from_cstr(&meta->src, m_string_get_cstr(eid));
-                m_string_clear(eid);
-            }
+
+            m_string_printf(meta->src, URI_PREFIX "%s", saddr.sun_path);
+            CACE_LOG_DEBUG("read datagram with %zd octets from %s", got, m_string_get_cstr(meta->src));
 
             if (cace_amp_msg_decode(data, msgbuf))
             {

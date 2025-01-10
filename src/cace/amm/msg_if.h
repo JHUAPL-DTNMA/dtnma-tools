@@ -27,10 +27,10 @@ extern "C" {
 
 typedef struct
 {
-    /// Source endpoint ID (opaque bytestring)
-    cace_data_t src;
-    /// Destination endpoint ID (opaque bytestring)
-    cace_data_t dest;
+    /// Source endpoint ID (opaque text)
+    m_string_t src;
+    /// Destination endpoint ID (opaque text)
+    m_string_t dest;
 } cace_amm_msg_if_metadata_t;
 
 void cace_amm_msg_if_metadata_init(cace_amm_msg_if_metadata_t *meta);

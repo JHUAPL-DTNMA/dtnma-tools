@@ -43,9 +43,10 @@ void *refda_egress_worker(void *arg)
         {
             ari_list_t data;
             ari_list_init(data);
+
             cace_amm_msg_if_metadata_t meta;
             cace_amm_msg_if_metadata_init(&meta);
-
+            m_string_swap(meta.dest, item.ident);
             ari_list_push_back_move(data, &item.value);
 
             int send_res = (agent->mif.send)(data, &meta, agent->mif.ctx);

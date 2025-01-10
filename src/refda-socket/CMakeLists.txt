@@ -23,13 +23,13 @@ set(HFILES
 set(CFILES
     "main.c"
 )
-add_executable(refdm-socket)
-target_sources(refdm-socket PRIVATE ${HFILES} ${CFILES})
-target_link_libraries(refdm-socket PUBLIC refdm)
+add_executable(refda-socket)
+target_sources(refda-socket PRIVATE ${HFILES} ${CFILES})
+target_link_libraries(refda-socket PUBLIC refda)
 
 if(LIBSYSTEMD_FOUND)
-    target_compile_definitions(refdm-socket PRIVATE -DHAVE_LIBSYSTEMD)
-    target_link_libraries(refdm-socket PRIVATE PkgConfig::LIBSYSTEMD)
+    target_compile_definitions(refda-socket PRIVATE -DHAVE_LIBSYSTEMD)
+    target_link_libraries(refda-socket PRIVATE PkgConfig::LIBSYSTEMD)
 endif(LIBSYSTEMD_FOUND)
 
-install(TARGETS refdm-socket)
+install(TARGETS refda-socket)

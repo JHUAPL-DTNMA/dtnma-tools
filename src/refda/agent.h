@@ -148,7 +148,13 @@ int refda_agent_start(refda_agent_t *agent);
 
 int refda_agent_stop(refda_agent_t *agent);
 
-int refda_agent_send_hello(refda_agent_t *agent);
+/** Send an initial "hello" message RPTSET for a standard agent report.
+ *
+ * @param[in] agent The agent to send from.
+ * @param[in] dest The destination endpoint.
+ * @return Zero if successful.
+ */
+int refda_agent_send_hello(refda_agent_t *agent, const char *dest);
 
 #ifdef __cplusplus
 } // extern C
