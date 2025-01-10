@@ -373,16 +373,16 @@ class TestRefdmSocket(unittest.TestCase):
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
-        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
-        data = resp.json()
-        self.assertEqual(1, len(data['reports']))
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        lines = resp.text.splitlines()
+        self.assertEqual(1, len(lines))
 
         # Verify path segment handling
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex&test=ignored')
         self.assertEqual(200, resp.status_code)
-        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
-        other_data = resp.json()
-        self.assertEqual(data, other_data)
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        other_lines = resp.text.splitlines()
+        self.assertEqual(lines, other_lines)
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=text')
         self.assertEqual(200, resp.status_code)
@@ -406,16 +406,16 @@ class TestRefdmSocket(unittest.TestCase):
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
-        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
-        data = resp.json()
-        self.assertEqual(2, len(data['reports']))
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        lines = resp.text.splitlines()
+        self.assertEqual(2, len(lines))
 
         # index resource gets the same result
         resp = self._req.get(self._base_url + f'agents/idx/0/reports?form=hex')
         self.assertEqual(200, resp.status_code)
-        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
-        other_data = resp.json()
-        self.assertEqual(data, other_data)
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        other_lines = resp.text.splitlines()
+        self.assertEqual(lines, other_lines)
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=text')
         self.assertEqual(200, resp.status_code)
