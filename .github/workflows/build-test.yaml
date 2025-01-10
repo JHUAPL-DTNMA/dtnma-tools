@@ -13,10 +13,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-22.04', 'centos-9']
+        os: ['ubuntu-22.04', 'ubuntu-24.04', 'centos-9']
         deps: ['full', 'minimal']
     name: Unit Test (${{matrix.os}} deps=${{matrix.deps}})
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os == 'ubuntu' && matrix.os || 'ubuntu-latest' }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     steps:
       - name: Set up OS
@@ -72,8 +72,8 @@ jobs:
           echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
 
   item-test-ubuntu:
-    name: Built-Item Test (Ubuntu 22.04)
-    runs-on: ubuntu-22.04
+    name: Built-Item Test (ubuntu-24.04)
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -109,7 +109,7 @@ jobs:
 
   item-test-rhel:
     name: Built-Item Test (RHEL 9)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container: quay.io/centos/centos:stream9
     steps:
       - name: Set up OS
@@ -146,7 +146,7 @@ jobs:
         run: PYTHON=python3.11 ./item-test/run.sh
 
   integration-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
