@@ -21,8 +21,10 @@ This software package contains tools related to the Delay-Tolerant Networking Ma
 
 The current tools are based on the following specifications:
 
-* [draft-birrane-dtn-amp-08](https://datatracker.ietf.org/doc/html/draft-birrane-dtn-amp-08) for messaging
-* [draft-birrane-dtn-adm-03](https://datatracker.ietf.org/doc/html/draft-birrane-dtn-adm-03) for data models and ARI processing
+* [draft-ietf-dtn-amm-02](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-amm) for behavioral models
+* [draft-ietf-dtn-ari-03](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-ari) for value encoding and typing
+* [draft-ietf-dtn-adm-yang-02](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-adm-yang) for ADM definitions
+* [draft-ietf-dtn-amp-00](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-amp) for messaging
 
 :warning: These documents are not published standards and are subject to change over time as the standards are developed and finalized.
 
@@ -46,12 +48,8 @@ civetweb
 libcivetweb-dev
 libssl-dev
 libcjson-dev
+libsystemd-dev
 gcovr
-```
-
-To use the systemd wrapper utility around the executables, also install the PIP package
-```
-systemd-python
 ```
 
 In addition to the above, this project also has dependencies provided as git submodules. These may be retrieved and built using the following commands:
@@ -77,6 +75,7 @@ For further details, see the example in [testenv/Dockerfile](testenv/Dockerfile)
 
 
 ## Usage
+
 The example agent and manager both rely on ION for message transport, so a prerequisite for both is a running ION BPA instance.
 An example of all of this, including the use of `systemd` scripts, is under the [testenv](testenv) directory.
 
@@ -97,6 +96,7 @@ Finally, after test anything in the containers is finished they can be stopped a
 ```
 
 ## Stand-Alone Agent
+
 As both a demonstration and a useful test fixture for AMP and ADMs, a stand-alone Agent which uses [stdio](https://en.cppreference.com/w/c/io) (`stdin` for commands and `stdout` for reporting) with hex-encoded AMP messages is included as the [refda-stdio](src/refda_stdio/main.c).
 This provides a minimum implementation of an Agent executable without requriring a specific underlying transport for AMP messages.
 This is not a recommended way to use the Agent in a networked environemnt but makes it easier to do things like exercising the Agent in a simple test fixture like what is done with [test_stdio_agent.py](agent-test/test_stdio_agent.py).
@@ -112,7 +112,10 @@ A loopback text output can be converted with:
 echo -ne "ari:/EXECSET/n=1234;(//1/CTRL/5(//1/EDD/sw-version))" | ./run.sh cace_ari | ./run.sh refda-stdio -l debug | ./run.sh cace_ari
 ```
 
-## Socket-transport Manager
+## Socket-transport Manager and Agent
+
+These daemons use the AMP message encoding as networked daemons would, but use local UNIX datagram sockets (`AF_UNIX` family) for transport.
+This avoids the need for any more complex network configuration while allowing the daemons to use the full binary message encoding of AMP.
 
 The manager (and others) are built and installed to the local `testroot` with:
 ```
@@ -127,7 +130,7 @@ The manager can be run from the local installation using:
 
 A manual RPTSET can be sent to the manger via command:
 ```
-echo -n 821583f61a2d2639a58382250083012205f6 | xxd -r -p | socat STDIO UNIX-SENDTO:/tmp/mgr.sock,bind=/tmp/agent.sock
+echo -n 01821583f61a2d2639a58382250083012205f6 | xxd -r -p | socat STDIO UNIX-SENDTO:/tmp/mgr.sock,bind=/tmp/agent.sock
 ```
 
 Checking that the report was received with:
