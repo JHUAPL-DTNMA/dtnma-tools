@@ -25,7 +25,7 @@
 
 int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *result)
 {
-    if (cace_data_is_empty(&(runctx->mgr_ident)))
+    if (m_string_empty_p(runctx->mgr_ident))
     {
         // nothing to do
         return 0;
@@ -33,6 +33,7 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
 
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
+    m_string_set(msg.ident, runctx->mgr_ident);
 
     ari_rptset_t *rpts = ari_set_rptset(&msg.value);
     ari_set_copy(&(rpts->nonce), &(runctx->nonce));
@@ -258,19 +259,19 @@ int refda_reporting_target(refda_runctx_t *runctx, const ari_t *target)
 
     if (!retval)
     {
-        refda_reporting_gen(runctx->agent, &(runctx->mgr_ident), target, rptctx.items);
+        refda_reporting_gen(runctx->agent, runctx->mgr_ident, target, rptctx.items);
     }
 
     refda_reporting_ctx_deinit(&rptctx);
     return retval;
 }
 
-int refda_reporting_gen(refda_agent_t *agent, const cace_data_t *mgr_ident, const ari_t *src, ari_list_t items)
+int refda_reporting_gen(refda_agent_t *agent, const m_string_t mgr_ident, const ari_t *src, ari_list_t items)
 {
-    if (!mgr_ident)
+    if (!mgr_ident || m_string_empty_p(mgr_ident))
     {
         // nothing to do
-        CACE_LOG_WARNING("attempted to report to unknown manager");
+        CACE_LOG_WARNING("attempted to report to empty manager");
         return 0;
     }
 

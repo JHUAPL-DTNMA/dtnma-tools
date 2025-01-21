@@ -20,9 +20,10 @@ cmake_minimum_required(VERSION 3.10)
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_DOCS "Enable autodoc building" OFF)
 option(BUILD_AGENT "Build the Agent library and executable" ON)
-option(BUILD_MANAGER "Build the Manager library and executable" OFF) # FIXME default to ON
+option(BUILD_MANAGER "Build the Manager library and executable" ON)
 option(ARI_TEXT_PARSE "Build ARI text-form parsing capability" ON)
 option(ENABLE_LUT_CACHE "Enable runtime lookup caching" ON)
+option(REFDM_UI_CLI "Enable text UI CLI for refdm" OFF)
 option(BUILD_TESTING "Enable test fixtures and libraries" OFF)
 option(TEST_MEMCHECK "Enable test runtime memory checking" OFF)
 option(TEST_COVERAGE "Enable test runtime coverage logging" OFF)
@@ -56,6 +57,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 # Force specific POSIX compatibility version
 add_definitions(
+  -D_DEFAULT_SOURCE
   -D_XOPEN_SOURCE
   -D_POSIX_C_SOURCE=200809L
 )
@@ -158,6 +160,9 @@ find_package(MLIB REQUIRED)
 find_package(timespec REQUIRED)
 # Optional dependencies
 pkg_search_module(PCRE libpcre2-8 IMPORTED_TARGET)
+message(STATUS "Found PCRE version ${PCRE_VERSION}")
+pkg_search_module(LIBSYSTEMD libsystemd IMPORTED_TARGET)
+message(STATUS "Found libsystemd version ${LIBSYSTEMD_VERSION}")
 find_package(ION)
 
 if(ARI_TEXT_PARSE)

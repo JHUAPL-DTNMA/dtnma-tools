@@ -98,3 +98,11 @@
    fun:amm_type_lookup_set_at
    fun:amm_builtin_dict_init
 }
+{
+   readline
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:getdelim
+   fun:read_auto
+}

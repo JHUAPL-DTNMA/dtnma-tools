@@ -31,7 +31,7 @@ SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/apply_license.tmpl"
 LICENSEOPTS="${LICENSEOPTS} --years 2011-2024"
 # Excludes only apply to directory (--dir) mode and not file mode
-LICENSEOPTS="${LICENSEOPTS} --exclude *.yml *.yaml *.min.* "
+LICENSEOPTS="${LICENSEOPTS} --exclude *.yml *.yaml"
 
 
 # Specific paths
@@ -45,7 +45,7 @@ fi
 
 echo "Applying markings to source..."
 # Directory trees
-for DIRNAME in cmake src test item-test testenv doc .github
+for DIRNAME in cmake src test item-test integration-test-* testenv doc .github
 do
     licenseheaders ${LICENSEOPTS} --dir ${SELFDIR}/${DIRNAME}
 done

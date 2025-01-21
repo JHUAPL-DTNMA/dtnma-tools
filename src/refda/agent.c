@@ -34,6 +34,7 @@ void refda_agent_init(refda_agent_t *agent)
 {
     string_init(agent->agent_eid);
     daemon_run_init(&(agent->running));
+    refda_instr_init(&(agent->instr));
     threadset_init(agent->threads);
 
     cace_amm_obj_store_init(&(agent->objs));
@@ -67,6 +68,7 @@ void refda_agent_deinit(refda_agent_t *agent)
     pthread_mutex_destroy(&(agent->objs_mutex));
     cace_amm_obj_store_deinit(&(agent->objs));
 
+    refda_instr_deinit(&(agent->instr));
     threadset_clear(agent->threads);
     daemon_run_cleanup(&(agent->running));
     string_clear(agent->agent_eid);
@@ -230,7 +232,7 @@ int refda_agent_stop(refda_agent_t *agent)
     return 0;
 }
 
-int refda_agent_send_hello(refda_agent_t *agent)
+int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
 {
     ari_t ref = ARI_INIT_UNDEFINED;
     // ari:/ietf-dtnma-agent/CONST/hello
@@ -240,9 +242,7 @@ int refda_agent_send_hello(refda_agent_t *agent)
     // dummy message source
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
-    // FIXME how to indicate this destination..?
-    static const char *src = "any";
-    cace_data_copy_from(&(msg.ident), strlen(src) - 1, (cace_data_ptr_t)src);
+    m_string_set_cstr(msg.ident, dest);
 
     refda_runctx_t runctx;
     refda_runctx_init(&runctx);

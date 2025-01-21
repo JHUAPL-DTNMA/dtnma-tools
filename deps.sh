@@ -63,24 +63,6 @@ then
   popd
 fi
 
-# if [ ! -e ${SELFDIR}/testroot/usr/include/civetweb.h ]
-# then
-#   rsync --recursive ${SELFDIR}/deps/civetweb/ ${SELFDIR}/deps/build/civetweb/
-#   pushd ${SELFDIR}/deps/build/civetweb
-# 
-#   cmake -S . -B builddir \
-#     -DCMAKE_INSTALL_PREFIX=${SELFDIR}/testroot/usr \
-#     -DBUILD_SHARED_LIBS=YES \
-#     -DCIVETWEB_ENABLE_SERVER_EXECUTABLE=NO \
-#     -DCIVETWEB_BUILD_TESTING=NO \
-#     -DCMAKE_BUILD_TYPE=Release \
-#     -G Ninja
-#   cmake --build builddir
-#   cmake --install builddir
-#   cmake --build builddir --target clean
-#   popd
-# fi
-
 if [ ! -e ${DESTDIR}/usr/include/m-lib ]
 then
   echo "Building MLIB..."

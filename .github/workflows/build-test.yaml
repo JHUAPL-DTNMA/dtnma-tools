@@ -13,10 +13,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-22.04', 'centos-9']
+        os: ['ubuntu-22.04', 'ubuntu-24.04', 'centos-9']
         deps: ['full', 'minimal']
     name: Unit Test (${{matrix.os}} deps=${{matrix.deps}})
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os == 'ubuntu' && matrix.os || 'ubuntu-latest' }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     steps:
       - name: Set up OS
@@ -25,8 +25,8 @@ jobs:
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
-              ruby build-essential autoconf libtool \
-              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev' || ''}} \
+              ruby pkg-config build-essential autoconf libtool \
+              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev' || ''}} \
               valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -36,8 +36,8 @@ jobs:
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby gcc gcc-c++ ccache autoconf libtool \
-              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel' || ''}} \
+              ruby pkg-config gcc gcc-c++ ccache autoconf libtool \
+              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel' || ''}} \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
@@ -72,8 +72,8 @@ jobs:
           echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
 
   item-test-ubuntu:
-    name: Built-Item Test (Ubuntu 22.04)
-    runs-on: ubuntu-22.04
+    name: Built-Item Test (ubuntu-24.04)
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -85,8 +85,8 @@ jobs:
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
-              ruby build-essential autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev \
+              ruby pkg-config build-essential autoconf libtool \
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev \
               valgrind gcovr xmlstarlet
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -109,7 +109,7 @@ jobs:
 
   item-test-rhel:
     name: Built-Item Test (RHEL 9)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container: quay.io/centos/centos:stream9
     steps:
       - name: Set up OS
@@ -119,8 +119,8 @@ jobs:
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby gcc gcc-c++ ccache autoconf libtool \
-              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
+              ruby pkg-config gcc gcc-c++ ccache autoconf libtool \
+              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
@@ -146,8 +146,7 @@ jobs:
         run: PYTHON=python3.11 ./item-test/run.sh
 
   integration-test:
-    if: false # FIXME re-enable when agent is ready
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -156,14 +155,10 @@ jobs:
           submodules: recursive
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          jq
-      - name: Run
-        run: ./testenv/start.sh
+      - name: Start
+        run: ./integration-test-socket/run.sh start
       - name: Test
-        run: ./testenv/check.sh
+        run: ./integration-test-socket/run.sh check
       - name: Stop
         if: always()
-        run: ./testenv/stop.sh
+        run: ./integration-test-socket/run.sh stop

@@ -21,7 +21,7 @@
 void refda_msgdata_init(refda_msgdata_t *obj)
 {
     CHKVOID(obj);
-    cace_data_init(&(obj->ident));
+    m_string_init(obj->ident);
     ari_init(&(obj->value));
 }
 
@@ -29,8 +29,7 @@ void refda_msgdata_init_move(refda_msgdata_t *obj, refda_msgdata_t *src)
 {
     CHKVOID(obj);
     CHKVOID(src);
-    cace_data_init(&(obj->ident));
-    cace_data_move(&(obj->ident), &(src->ident));
+    m_string_init_move(obj->ident, src->ident);
     ari_init_move(&(obj->value), &(src->value));
 }
 
@@ -38,5 +37,13 @@ void refda_msgdata_deinit(refda_msgdata_t *obj)
 {
     CHKVOID(obj);
     ari_deinit(&(obj->value));
-    cace_data_deinit(&(obj->ident));
+    m_string_clear(obj->ident);
+}
+
+void refda_msgdata_set(refda_msgdata_t *obj, const refda_msgdata_t *src)
+{
+    CHKVOID(obj);
+    CHKVOID(src);
+    m_string_set(obj->ident, src->ident);
+    ari_set_copy(&(obj->value), &(src->value));
 }

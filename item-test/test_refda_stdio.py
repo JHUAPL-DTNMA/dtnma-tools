@@ -27,7 +27,7 @@ from typing import List
 import unittest
 import cbor2
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
-from helpers.runner import CmdRunner, Timeout
+from helpers import CmdRunner, compose_args
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ class TestStdioAgent(unittest.TestCase):
         os.chdir(path)
         LOGGER.info('Working in %s', path)
 
-        args = ['./run.sh', 'refda-stdio', '-l', 'debug']
+        args = compose_args(['refda-stdio', '-l', 'debug'])
         self._agent = CmdRunner(args)
 
         # ADM handling

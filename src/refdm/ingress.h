@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -38,17 +38,22 @@
  **  10/06/18   E. Birrane     Update to AMP v0.5 (JHU/APL)
  *****************************************************************************/
 
-#ifndef NM_MGR_RX_H_
-#define NM_MGR_RX_H_
+#ifndef REFDM_INGRESS_H_
+#define REFDM_INGRESS_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void*    mgr_rx_thread(void *arg);
+/** Work thread function for the Manager transport ingress.
+ *
+ * @param[in] arg The context ::refdm_mgr_t pointer.
+ * @return Always NULL pointer.
+ */
+void *refdm_ingress_worker(void *arg);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* NM_MGR_RX_H_ */
+#endif /* REFDM_INGRESS_H_ */
