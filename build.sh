@@ -22,7 +22,8 @@
 #
 set -e
 
-source setenv.sh
+SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+source ${SELFDIR}/setenv.sh
 
 BUILDDIR=${SELFDIR}/build/default
 
