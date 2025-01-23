@@ -30,7 +30,7 @@ BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"
 echo "Installing to ${DESTDIR}"
 
-if [ -z "false" -a ! -e ${DESTDIR}/usr/include/ion.h ]
+if [ ! -e ${DESTDIR}/usr/include/ion.h ]
 then
   mkdir -p ${BUILDDIR}
   rsync --recursive ${DEPSDIR}/ion/ ${BUILDDIR}/ion/
@@ -40,9 +40,10 @@ then
   patch -p1 <${SELFDIR}/deps/ion-4.1.2-local-deliver.patch
   patch -p1 <${SELFDIR}/deps/ion-4.1.2-private-headers.patch
   autoreconf -vif
+  export CFLAGS="-std=gnu99"
   ./configure --prefix=/usr
-  make -j$(nproc) clean
   make -j$(nproc)
+  export -n CFLAGS
   make install DESTDIR=${DESTDIR}
   make -j$(nproc) clean
   popd
@@ -85,6 +86,7 @@ then
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
   cmake --build ${BUILDDIR}/unity -v
+  export -n CFLAGS
   cmake --install ${BUILDDIR}/unity
   rm -rf ${BUILDDIR}/unity
   popd
