@@ -116,5 +116,6 @@ RUN cd /usr/src/nm && \
 # keep build artifacts for debuginfo
 
 # Systemd services
-COPY --chmod=644 systemd/refdm-socket.service systemd/refda-socket.service /usr/local/lib/systemd/system/
+COPY --chmod=644 systemd/refdm-socket.service systemd/refda-socket.service \
+    /usr/local/lib/systemd/system/
 RUN systemctl enable refdm-socket refda-socket

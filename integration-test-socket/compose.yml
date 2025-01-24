@@ -12,13 +12,9 @@ services:
       - NET_ADMIN
       - NET_RAW
       - SYS_NICE
-    volumes:
-      - /var/tmp/pcap/combined:/var/tmp/pcap
     environment:
       container: docker
       DTNMA_LOGLEVEL: debug
       REFDA_EID: file:/var/run/refda.sock
       REFDA_SOCKET: /var/run/refda.sock
       REFDM_SOCKET: /var/run/refdm.sock
-      DUMPCAP_OUTFILE: /var/tmp/pcap/log.pcap
-      DUMPCAP_OPTS: -i lo -i eth0
