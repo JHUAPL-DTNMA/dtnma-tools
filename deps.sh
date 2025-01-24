@@ -19,6 +19,8 @@
 
 #
 # From a fresh checkout install local-sourced dependencies.
+# The environment DEPS_BUILD_ION being set to "0" will disable
+# the ION source from being built and installed.
 #
 set -e
 
@@ -30,7 +32,7 @@ BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"
 echo "Installing to ${DESTDIR}"
 
-if [ ! -e ${DESTDIR}/usr/include/ion.h ]
+if [ "${DEPS_BUILD_ION:-1}" -ne 0 -a ! -e ${DESTDIR}/usr/include/ion.h ]
 then
   mkdir -p ${BUILDDIR}
   rsync --recursive ${DEPSDIR}/ion/ ${BUILDDIR}/ion/
