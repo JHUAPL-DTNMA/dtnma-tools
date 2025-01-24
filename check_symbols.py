@@ -23,6 +23,7 @@ import os
 import re
 import subprocess
 import sys
+from typing import List
 
 SELFDIR = os.path.realpath(os.path.dirname(__file__))
 
@@ -34,7 +35,8 @@ NMOPTS = [
     '--extern-only', '--dynamic',
 ]
 
-def check_lib(libname):
+
+def check_lib(libname: str, prefix_list: List[str]):
     file_name = f'lib{libname}.so'
     file_path = None
     for root, _, files in os.walk(os.path.join(SELFDIR, 'testroot')):
@@ -44,10 +46,17 @@ def check_lib(libname):
     if not file_path:
         raise ValueError(f'Missing library for {libname}')
 
+    prefix_list = list(prefix_list)
+    prefix_list.append(f'{libname}_')
+    prefix_list = set([prefix.casefold() for prefix in prefix_list])
+    LOGGER.info('Checking prefix list %s', prefix_list)
+
     src_path = os.path.join(SELFDIR, 'src')
 
     LOGGER.info('Checking %s', file_path)
-    stdout = subprocess.check_output(['nm'] + NMOPTS + [file_path], text=True)
+    args = ['nm'] + NMOPTS + [file_path]
+    LOGGER.debug('Checking with: %s', ' '.join(args))
+    stdout = subprocess.check_output(args, text=True)
     bad_syms = set()
     for line in stdout.splitlines():
         parts = re.split(r'\s+', line.rstrip())
@@ -62,11 +71,16 @@ def check_lib(libname):
         if not src_name.startswith(src_path):
             continue
 
-        if not sym.casefold().startswith(f'{libname}_'):
+        valid = [
+            sym.casefold().startswith(prefix)
+            for prefix in prefix_list
+        ]
+        if not any(valid):
             LOGGER.warning('Bad symbol %s', sym)
             bad_syms.add(sym)
 
     return bad_syms
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -75,15 +89,19 @@ def main():
     parser.add_argument('--log-level', choices=('debug', 'info', 'warning', 'error'),
                         default='info',
                         help='The minimum log severity.')
+    parser.add_argument('--prefix', nargs='+',
+                        default=[],
+                        help='A list of symbol name prefix to allow. The default prefix is the <libname> itself.')
     parser.add_argument('libname', nargs='+',
-                        help='The library name to check')
+                        help='A list of library names to check.')
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level.upper())
 
     bad_tot = set()
     for libname in args.libname:
-        bad_tot |= check_lib(libname)
+        bad_tot |= check_lib(libname, args.prefix)
     return len(bad_tot)
+
 
 if __name__ == '__main__':
     sys.exit(main())

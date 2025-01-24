@@ -93,6 +93,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config build-essential patch autoconf libtool \
               flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev \
+              binutils \
               valgrind gcovr xmlstarlet python3-venv
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -104,6 +105,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel \
+              binutils \
               valgrind xmlstarlet python3-pip \
               python3.11
           pip3 install gcovr
@@ -124,6 +126,8 @@ jobs:
         run: ./build.sh
       - name: Install
         run: ./build.sh install
+      - name: Check symbols
+        run: ./check_symbols.py cace refda refdm || true #FIXME enable failure
       - name: Test
         env:
           PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
