@@ -43,19 +43,23 @@ void *refda_egress_worker(void *arg)
         {
             ari_list_t data;
             ari_list_init(data);
+
             cace_amm_msg_if_metadata_t meta;
             cace_amm_msg_if_metadata_init(&meta);
-
+            m_string_swap(meta.dest, item.ident);
             ari_list_push_back_move(data, &item.value);
 
             int send_res = (agent->mif.send)(data, &meta, agent->mif.ctx);
             if (send_res)
             {
                 CACE_LOG_WARNING("Got mif.send result=%d", send_res);
+                atomic_fetch_add(&agent->instr.num_rptset_sent_failure, 1);
             }
 
             ari_list_clear(data);
             cace_amm_msg_if_metadata_deinit(&meta);
+
+            atomic_fetch_add(&agent->instr.num_rptset_sent, 1);
         }
         refda_msgdata_deinit(&item);
         if (at_end)

@@ -114,7 +114,10 @@ int uri_percent_encode(string_t out, const cace_data_t *in, const char *safe)
     string_t allsafe;
     string_init(allsafe);
     string_cat_str(allsafe, unreserved);
-    string_cat_str(allsafe, safe);
+    if (safe)
+    {
+        string_cat_str(allsafe, safe);
+    }
 
     // assume no more than half of the input chars are escaped,
     // which gives total output size of: 0.5 + 0.5 * 3 => 2

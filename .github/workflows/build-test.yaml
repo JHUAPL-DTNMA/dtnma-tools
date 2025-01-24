@@ -9,63 +9,35 @@ on:
   pull_request: {} # any target
 
 jobs:
-  unit-test-ubuntu:
-    name: Unit Test (Ubuntu 22.04)
-    runs-on: ubuntu-22.04
+  unit-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-22.04', 'ubuntu-24.04', 'centos-9']
+        deps: ['full', 'minimal']
+    name: Unit Test (${{matrix.os}} deps=${{matrix.deps}})
+    runs-on: ${{ matrix.os == 'ubuntu' && matrix.os || 'ubuntu-latest' }}
+    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
       - name: Set up OS
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
-              ruby build-essential autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev \
+              ruby pkg-config build-essential autoconf libtool \
+              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev' || ''}} \
               valgrind gcovr xmlstarlet
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          create-symlink: true
-      - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF
-      - name: Build
-        run: ./build.sh
-      - name: Test
-        run: ./build.sh check
-      - name: Collect coverage
-        run: ./build.sh coverage
-      - name: Archive coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{github.job}}-coverage
-          path: build/default/coverage*
-      - name: Report coverage
-        run: |
-          echo "## Ubuntu 22.04 Unit Test" >> $GITHUB_STEP_SUMMARY
-          echo >> $GITHUB_STEP_SUMMARY
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-cace-xml.xml)
-          echo "CACE coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-refda-xml.xml)
-          echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
-
-  unit-test-rhel:
-    name: Unit Test (RHEL 9)
-    runs-on: ubuntu-22.04
-    container: quay.io/centos/centos:stream9
-    steps:
       - name: Set up OS
+        if: startsWith(matrix.os, 'centos')
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby gcc g++ ccache autoconf libtool \
-              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel \
+              ruby pkg-config gcc gcc-c++ ccache autoconf libtool \
+              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel' || ''}} \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
@@ -77,8 +49,10 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
+      - name: Dependencies
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF
+        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=ON -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}}
       - name: Build
         run: ./build.sh
       - name: Test
@@ -88,20 +62,18 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
-          name: ${{github.job}}-coverage
+          name: ${{github.job}}-${{matrix.os}}-${{matrix.deps}}-coverage
           path: build/default/coverage*
       - name: Report coverage
         run: |
-          echo "## RHEL UBI-9 Unit Test" >> $GITHUB_STEP_SUMMARY
-          echo >> $GITHUB_STEP_SUMMARY
           SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-cace-xml.xml)
           echo "CACE coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
           SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-refda-xml.xml)
           echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
 
-  agent-test-ubuntu:
-    name: Agent Test (Ubuntu 22.04)
-    runs-on: ubuntu-22.04
+  item-test-ubuntu:
+    name: Built-Item Test (ubuntu-24.04)
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -113,15 +85,17 @@ jobs:
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
-              ruby build-essential autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev \
+              ruby pkg-config build-essential autoconf libtool \
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev \
               valgrind gcovr xmlstarlet
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
+      - name: Dependencies
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
+        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
       - name: Build
         run: ./build.sh
       - name: Install
@@ -131,11 +105,48 @@ jobs:
           sudo apt-get update && sudo apt-get install -y \
           python3 python3-venv
       - name: Test
-        run: ./agent-test/run.sh
+        run: ./item-test/run.sh
+
+  item-test-rhel:
+    name: Built-Item Test (RHEL 9)
+    runs-on: ubuntu-24.04
+    container: quay.io/centos/centos:stream9
+    steps:
+      - name: Set up OS
+        run: |
+          dnf config-manager --set-enabled crb
+          dnf install -y epel-release
+          dnf install -y \
+              git rsync \
+              cmake ninja-build \
+              ruby pkg-config gcc gcc-c++ ccache autoconf libtool \
+              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel \
+              valgrind xmlstarlet python3-pip
+          pip3 install gcovr
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+      - name: Dependencies
+        run: ./deps.sh
+      - name: Prep
+        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
+      - name: Build
+        run: ./build.sh
+      - name: Install
+        run: ./build.sh install
+      - name: Test Prep
+        run: dnf install -y python3.11
+      - name: Test
+        run: PYTHON=python3.11 ./item-test/run.sh
 
   integration-test:
-    if: false # FIXME re-enable when agent is ready
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -144,14 +155,10 @@ jobs:
           submodules: recursive
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          jq
-      - name: Run
-        run: ./testenv/start.sh
+      - name: Start
+        run: ./integration-test-socket/run.sh start
       - name: Test
-        run: ./testenv/check.sh
+        run: ./integration-test-socket/run.sh check
       - name: Stop
         if: always()
-        run: ./testenv/stop.sh
+        run: ./integration-test-socket/run.sh stop

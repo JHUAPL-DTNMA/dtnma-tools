@@ -16,9 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-include(GNUInstallDirs)
-
-# ARI handling library
+# AMM and ARI handling library
 configure_file("config.h.in" "config.h")
 set(HFILES
     "${CMAKE_CURRENT_BINARY_DIR}/config.h"
@@ -51,6 +49,8 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/obj_store.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/lookup.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/msg_if.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/msg.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/socket.h"
 )
 set(CFILES
     "cace_data.c"
@@ -80,6 +80,8 @@ set(CFILES
     "amm/obj_store.c"
     "amm/lookup.c"
     "amm/msg_if.c"
+    "amp/msg.c"
+    "amp/socket.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(
@@ -134,6 +136,7 @@ target_sources(cace_ari PRIVATE cace_ari.c)
 target_link_libraries(cace_ari PUBLIC cace)
 
 
+include(GNUInstallDirs)
 install(
     TARGETS cace cace_ari
 )
@@ -144,8 +147,7 @@ install(
     FILES_MATCHING PATTERN "*.h"
 )
 install(
-    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    FILES_MATCHING PATTERN "*.h"
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/cace"
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
 )

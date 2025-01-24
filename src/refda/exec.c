@@ -230,7 +230,8 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
         string_t buf;
         string_init(buf);
         ari_text_encode(buf, target, ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Expanding PID %" PRIu64 " target %s", seq->pid, string_get_cstr(buf));
+        CACE_LOG_DEBUG("Expanding PID %" PRIu64 " target %s from source %s", seq->pid, m_string_get_cstr(buf),
+                       m_string_get_cstr(runctx->mgr_ident));
         string_clear(buf);
     }
 
