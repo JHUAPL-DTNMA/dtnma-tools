@@ -120,9 +120,9 @@ jobs:
       - name: Install
         run: ./build.sh install
       - name: Test
+        env:
+          PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
         run: ./item-test/run.sh
-      - name: Test
-        run: ${{ matrix.os == 'centos-9' && 'PYTHON=python3.11' || '' }} ./item-test/run.sh
 
   integration-test:
     strategy:
