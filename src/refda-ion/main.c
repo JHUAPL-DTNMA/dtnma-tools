@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     refda_agent_init(&agent);
 
     /* Process Command Line Arguments. */
-    int        log_limit = LOG_WARNING;
+    int log_limit = LOG_WARNING;
 
     m_string_t own_eid;
     m_string_init(own_eid);
