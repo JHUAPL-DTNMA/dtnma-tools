@@ -108,6 +108,7 @@ COPY CMakeLists.txt /usr/src/nm/
 RUN ls -lt /usr/src/nm/
 RUN cd /usr/src/nm && \
     cmake -S . -B build/default \
+      -DTRANSPORT_ION_BP=OFF \
       -DCMAKE_BUILD_TYPE=Debug \
       -G Ninja && \
     cmake --build build/default && \
