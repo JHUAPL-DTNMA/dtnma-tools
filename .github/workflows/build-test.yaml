@@ -99,7 +99,8 @@ jobs:
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel \
-              valgrind xmlstarlet python3.11
+              valgrind xmlstarlet python3-pip \
+              python3.11
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
