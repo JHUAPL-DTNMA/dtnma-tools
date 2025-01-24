@@ -15,7 +15,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ##
-FROM ubuntu:22.04 AS systemd-base
+FROM ubuntu:24.04 AS systemd-base
 ENV DEBIAN_FRONTEND="noninteractive"
 
 # APL network configuration from
@@ -43,21 +43,25 @@ CMD [ "/sbin/init" ]
 # Testing utilities
 RUN apt-get update && apt-get install -y \
     net-tools iproute2 iputils-ping \
-    lsof iftop gdb valgrind socat
+    lsof iftop gdb valgrind xxd socat jq ruby && \
+    gem install cbor-diag
 
 
-FROM ubuntu:22.04 AS deps-local
+FROM ubuntu:24.04 AS deps-local
 
 RUN apt-get update && apt-get install -y \
     build-essential \
-    autoconf libtool
-COPY deps/ion /usr/src/nm/deps/ion
+    cmake autoconf libtool && \
+    echo "/usr/local/lib" >/etc/ld.so.conf.d/local.conf
+
+    COPY deps/ion /usr/src/nm/deps/ion
 COPY deps/ion*.patch /usr/src/nm/deps/
 RUN cd /usr/src/nm/deps/ion && \
     patch -p1 <../ion-4.1.2-remove-nm.patch && \
     patch -p1 <../ion-4.1.2-local-deliver.patch && \
     patch -p1 <../ion-4.1.2-private-headers.patch && \
     autoreconf -vif && \
+    export CFLAGS="-std=gnu99" && \
     ./configure && \
     make -j$(nproc) && \
     make install && \
@@ -65,39 +69,50 @@ RUN cd /usr/src/nm/deps/ion && \
 
 COPY deps/QCBOR /usr/src/nm/deps/QCBOR
 RUN cd /usr/src/nm/deps/QCBOR && \
-    make -j$(nproc) && \
-    make install && \
-    make -j$(nproc) clean
+    cmake -S . -B build \
+      -DCMAKE_BUILD_TYPE=Debug \
+      -DBUILD_SHARED_LIBS=YES && \
+    cmake --build build && \
+    cmake --install build && \
+    ldconfig && \
+    rm -rf build
 
 COPY deps/mlib /usr/src/nm/deps/mlib
 RUN cd /usr/src/nm/deps/mlib && \
     make -j$(nproc) && \
     make install && \
+    ldconfig && \
     make -j$(nproc) clean
 
+COPY deps/timespec /usr/src/nm/deps/timespec
+COPY deps/timespec-CMakeLists.txt /usr/src/nm/deps/timespec/CMakeLists.txt
+RUN cd /usr/src/nm/deps/timespec && \
+    cmake -S . -B build \
+      -DCMAKE_BUILD_TYPE=Debug && \
+    cmake --build build && \
+    cmake --install build && \
+    ldconfig && \
+    rm -rf build
 
-FROM systemd-base
+
+FROM systemd-base AS testenv
 COPY --from=deps-local /usr/local /usr/local
 
 # Helper utilities
 RUN apt-get update && apt-get install -y \
-    python3 python3-pip \
-    gcc python3-dev libsystemd-dev pkg-config && \
-    pip3 install --upgrade pip && \
-    pip3 install systemd-python
-COPY --chmod=755 testenv/ion_nm_wrap.py /usr/local/bin/ion_nm_wrap
-COPY --chmod=755 testenv/ion_ping_peers.sh /usr/local/bin/ion_ping_peers
-COPY --chmod=755 testenv/service_is_running.sh /usr/local/bin/service_is_running
+    python3 python3-pip
+COPY --chmod=755 systemd/service_is_running.sh /usr/local/bin/service_is_running
 
 # Test tools
 RUN apt-get update && apt-get install -y \
-    curl git tshark && \
-    pip3 install git+https://github.com/NASA-AMMOS/anms-ace.git
+    curl git tshark
+RUN pip3 install --break-system-packages git+https://github.com/JHUAPL-DTNMA/dtnma-ace.git@apl-fy24
+RUN git clone --branch apl-fy24 https://github.com/JHUAPL-DTNMA/dtnma-adms.git /usr/local/share/ace/adms
 
-# Agent to test
+# REFDA and REFDM to test
 RUN apt-get update && apt-get install -y \
-    cmake ninja-build ruby \
-    flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev
+    cmake ninja-build ruby pkg-config \
+    flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev
 COPY deps /usr/src/nm/deps
 COPY cmake /usr/src/nm/cmake
 COPY src /usr/src/nm/src
@@ -109,14 +124,32 @@ RUN cd /usr/src/nm && \
       -DCMAKE_BUILD_TYPE=Debug \
       -G Ninja && \
     cmake --build build/default && \
-    cmake --install build/default
+    cmake --install build/default && \
+    ldconfig
+# keep build artifacts for debuginfo
+
+
+FROM testenv AS manager
 
 # Systemd services
-COPY testenv/tmpfiles.conf /etc/tmpfiles.d/ion.conf
-COPY --chmod=644 systemd/ion.service systemd/ion-nm-*.service systemd/bpecho@.service /usr/local/lib/systemd/system/
-RUN systemctl enable ion bpecho@4 ion-nm-mgr ion-nm-agent && \
+COPY integration-test-ion/tmpfiles.conf /etc/tmpfiles.d/ion.conf
+COPY --chmod=644 systemd/ion.service systemd/ref*-ion.service systemd/bpecho@.service systemd/dumpcap.service \
+    /usr/local/lib/systemd/system/
+RUN systemctl enable ion bpecho@4 refdm-ion refda-ion dumpcap && \
     mkdir -p /var/run/ion
 
 # Runtime config for this container
-COPY testenv/node-1.rc /etc/ion/
-COPY adms /usr/local/share/ace/adms
+COPY integration-test-ion/node-*.rc /etc/ion/
+
+
+FROM testenv AS agent
+
+# Systemd services
+COPY integration-test-ion/tmpfiles.conf /etc/tmpfiles.d/ion.conf
+COPY --chmod=644 systemd/ion.service systemd/ref*-ion.service systemd/bpecho@.service systemd/dumpcap.service \
+    /usr/local/lib/systemd/system/
+RUN systemctl enable ion bpecho@4 refda-ion dumpcap && \
+    mkdir -p /var/run/ion
+
+# Runtime config for this container
+COPY integration-test-ion/node-*.rc /etc/ion/

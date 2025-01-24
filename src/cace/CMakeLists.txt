@@ -49,6 +49,7 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/msg_if.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amp/msg.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amp/socket.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/ion_bp.h"
 )
 set(CFILES
     "cace_data.c"
@@ -78,6 +79,7 @@ set(CFILES
     "amm/msg_if.c"
     "amp/msg.c"
     "amp/socket.c"
+    "amp/ion_bp.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(
@@ -123,7 +125,9 @@ target_link_libraries(cace PUBLIC m)
 if(PCRE_FOUND)
     target_link_libraries(cace PUBLIC PkgConfig::PCRE)
 endif(PCRE_FOUND)
-
+if(ION_FOUND)
+    target_link_libraries(cace PUBLIC ION::BP)
+endif(ION_FOUND)
 
 # Stand-alone ARI manipulation tool
 add_executable(cace_ari)

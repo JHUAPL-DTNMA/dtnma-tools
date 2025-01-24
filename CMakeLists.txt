@@ -164,6 +164,7 @@ message(STATUS "Found PCRE version ${PCRE_VERSION}")
 pkg_search_module(LIBSYSTEMD libsystemd IMPORTED_TARGET)
 message(STATUS "Found libsystemd version ${LIBSYSTEMD_VERSION}")
 find_package(ION)
+message(STATUS "Found ION ${ION_FOUND}")
 
 if(ARI_TEXT_PARSE)
   find_package(FLEX REQUIRED)

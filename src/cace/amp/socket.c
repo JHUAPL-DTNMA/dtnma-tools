@@ -15,6 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup amp
+ * Provide a POSIX datagram socket (AF_UNIX) adapter for AMP messaging.
+ */
 #include "socket.h"
 #include "msg.h"
 #include <cace/util/logging.h>
@@ -185,13 +189,18 @@ int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
     };
     struct pollfd *poll_sock = pfds + 0;
 
-    while (true)
+    int retval = 0;
+
+    m_bstring_t msgbuf;
+    m_bstring_init(msgbuf);
+    while (!retval)
     {
         // Wait up to 1 second
         int res = poll(pfds, sizeof(pfds) / sizeof(struct pollfd), 1000);
         if (res < 0)
         {
-            return CACE_AMM_MSG_IF_RECV_END;
+            retval = CACE_AMM_MSG_IF_RECV_END;
+            break;
         }
         else if (res == 0)
         {
@@ -199,7 +208,8 @@ int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
             if (!daemon_run_get(running))
             {
                 CACE_LOG_DEBUG("returning due to running state change");
-                return CACE_AMM_MSG_IF_RECV_END;
+                retval = CACE_AMM_MSG_IF_RECV_END;
+                break;
             }
             continue;
         }
@@ -215,8 +225,6 @@ int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
             }
             CACE_LOG_DEBUG("peeked datagram with %zd octets", got);
 
-            m_bstring_t msgbuf;
-            m_bstring_init(msgbuf);
             m_bstring_resize(msgbuf, got);
 
             struct sockaddr_un saddr;
@@ -233,34 +241,31 @@ int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
             if (got < 0)
             {
                 CACE_LOG_WARNING("ignoring failed recvfrom() with errno %d", errno);
-                m_bstring_clear(msgbuf);
                 continue;
             }
-
             m_string_printf(meta->src, URI_PREFIX "%s", saddr.sun_path);
             CACE_LOG_DEBUG("read datagram with %zd octets from %s", got, m_string_get_cstr(meta->src));
 
-            if (cace_amp_msg_decode(data, msgbuf))
-            {
-                m_bstring_clear(msgbuf);
-                continue;
-            }
-            m_bstring_clear(msgbuf);
-
-            CACE_LOG_DEBUG("decoded %d ARI items in the datagram", ari_list_size(data));
-            if (!ari_list_empty_p(data))
-            {
-                // stop when something received
-                break;
-            }
+            // stop when something received
+            break;
         }
         if (poll_sock->revents & (POLLERR | POLLHUP))
         {
             // input has closed
             CACE_LOG_DEBUG("returning due to hangup");
-            return CACE_AMM_MSG_IF_RECV_END;
+            retval = CACE_AMM_MSG_IF_RECV_END;
         }
     }
 
-    return 0;
+    if (!retval)
+    {
+        if (cace_amp_msg_decode(data, msgbuf))
+        {
+            retval = 5;
+        }
+        CACE_LOG_DEBUG("decoded %d ARI items in the datagram", ari_list_size(data));
+    }
+    m_bstring_clear(msgbuf);
+
+    return retval;
 }

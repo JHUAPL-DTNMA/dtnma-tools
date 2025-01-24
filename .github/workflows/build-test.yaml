@@ -16,7 +16,7 @@ jobs:
         os: ['ubuntu-22.04', 'ubuntu-24.04', 'centos-9']
         deps: ['full', 'minimal']
     name: Unit Test (${{matrix.os}} deps=${{matrix.deps}})
-    runs-on: ${{ matrix.os == 'ubuntu' && matrix.os || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-latest' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     steps:
       - name: Set up OS
@@ -71,57 +71,35 @@ jobs:
           SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-refda-xml.xml)
           echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
 
-  item-test-ubuntu:
-    name: Built-Item Test (ubuntu-24.04)
-    runs-on: ubuntu-24.04
+  item-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-22.04', 'ubuntu-24.04', 'centos-9']
+    name: Built-Item Test (${{matrix.os}})
+    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-latest' || matrix.os }}
+    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
       - name: Set up OS
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
-              ruby pkg-config build-essential autoconf libtool \
+              ruby pkg-config build-essential patch autoconf libtool \
               flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev \
-              valgrind gcovr xmlstarlet
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          create-symlink: true
-      - name: Dependencies
-        run: ./deps.sh
-      - name: Prep
-        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
-      - name: Build
-        run: ./build.sh
-      - name: Install
-        run: ./build.sh install
-      - name: Test Prep
-        run: |
-          sudo apt-get update && sudo apt-get install -y \
-          python3 python3-venv
-      - name: Test
-        run: ./item-test/run.sh
-
-  item-test-rhel:
-    name: Built-Item Test (RHEL 9)
-    runs-on: ubuntu-24.04
-    container: quay.io/centos/centos:stream9
-    steps:
+              valgrind gcovr xmlstarlet python3-venv
       - name: Set up OS
+        if: startsWith(matrix.os, 'centos')
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby pkg-config gcc gcc-c++ ccache autoconf libtool \
+              ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel \
-              valgrind xmlstarlet python3-pip
+              valgrind xmlstarlet python3.11
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -140,12 +118,17 @@ jobs:
         run: ./build.sh
       - name: Install
         run: ./build.sh install
-      - name: Test Prep
-        run: dnf install -y python3.11
       - name: Test
-        run: PYTHON=python3.11 ./item-test/run.sh
+        run: ./item-test/run.sh
+      - name: Test
+        run: ${{ matrix.os == 'centos-9' && 'PYTHON=python3.11' || '' }} ./item-test/run.sh
 
   integration-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        transport: ['socket', 'ion']
+    name: Integration Test (${{matrix.transport}})
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -156,9 +139,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Start
-        run: ./integration-test-socket/run.sh start
+        run: ./integration-test-${{matrix.transport}}/run.sh start
       - name: Test
-        run: ./integration-test-socket/run.sh check
+        run: ./integration-test-${{matrix.transport}}/run.sh check
       - name: Stop
         if: always()
-        run: ./integration-test-socket/run.sh stop
+        run: ./integration-test-${{matrix.transport}}/run.sh stop
+      - name: Archive logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{github.job}}-${{matrix.os}}-${{matrix.deps}}-logs
+          path: /var/log/pcap
