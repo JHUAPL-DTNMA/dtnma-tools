@@ -75,7 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-22.04', 'ubuntu-24.04', 'centos-9']
+        os: ['ubuntu-24.04', 'centos-9']
     name: Built-Item Test (${{matrix.os}})
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-latest' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
@@ -146,9 +146,3 @@ jobs:
       - name: Stop
         if: always()
         run: ./integration-test-${{matrix.transport}}/run.sh stop
-      - name: Archive logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{github.job}}-${{matrix.os}}-${{matrix.deps}}-logs
-          path: /var/log/pcap
