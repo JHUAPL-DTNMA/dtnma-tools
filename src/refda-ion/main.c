@@ -41,7 +41,7 @@ static void daemon_signal_handler(int signum)
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <listen-EID>\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <listen-EID> {-m <hello-EID>}\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -54,12 +54,15 @@ int main(int argc, char *argv[])
 
     /* Process Command Line Arguments. */
     int        log_limit = LOG_WARNING;
-    m_string_t eid;
-    m_string_init(eid);
+
+    m_string_t own_eid;
+    m_string_init(own_eid);
+    m_string_t hello_eid;
+    m_string_init(hello_eid);
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, ":hl:a:")) != -1)
+            while ((opt = getopt(argc, argv, ":hl:a:m:")) != -1)
             {
                 switch (opt)
                 {
@@ -71,7 +74,10 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(eid, optarg);
+                        string_set_str(own_eid, optarg);
+                        break;
+                    case 'm':
+                        string_set_str(hello_eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -86,7 +92,7 @@ int main(int argc, char *argv[])
     CACE_LOG_DEBUG("Agent starting up with log limit %d", log_limit);
 
     // check arguments
-    if (!retval && m_string_empty_p(eid))
+    if (!retval && m_string_empty_p(own_eid))
     {
         fprintf(stderr, "An EID URI must be supplied");
         retval = 1;
@@ -105,22 +111,22 @@ int main(int argc, char *argv[])
     cace_amp_ion_bp_state_init(&app);
     if (!retval)
     {
-        if (cace_amp_ion_bp_state_bind(&app, eid))
+        if (cace_amp_ion_bp_state_bind(&app, own_eid))
         {
-            CACE_LOG_ERR("Failed to bind to ION EID %s", m_string_get_cstr(eid));
+            CACE_LOG_ERR("Failed to bind to ION EID %s", m_string_get_cstr(own_eid));
             retval = 4;
         }
     }
 
     if (!retval)
     {
-        m_string_set(agent.agent_eid, eid);
+        m_string_set(agent.agent_eid, own_eid);
         CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(agent.agent_eid));
         agent.mif.send = cace_amp_ion_bp_send;
         agent.mif.recv = cace_amp_ion_bp_recv;
         agent.mif.ctx  = &app;
     }
-    m_string_clear(eid);
+    m_string_clear(own_eid);
 
     if (!retval)
     {
@@ -183,10 +189,9 @@ int main(int argc, char *argv[])
 #endif
     CACE_LOG_INFO("READY");
 
-    if (!retval)
+    if (!retval && !m_string_empty_p(hello_eid))
     {
-#if 0 // FIXME add option
-        if (refda_agent_send_hello(&agent, hello_dest))
+        if (refda_agent_send_hello(&agent, m_string_get_cstr(hello_eid)))
         {
             CACE_LOG_ERR("Agent hello failed");
             retval = 3;
@@ -195,8 +200,8 @@ int main(int argc, char *argv[])
         {
             CACE_LOG_INFO("Sent hello report");
         }
-#endif
     }
+    m_string_clear(hello_eid);
 
     if (!retval)
     {

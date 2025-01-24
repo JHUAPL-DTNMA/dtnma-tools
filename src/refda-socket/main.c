@@ -40,7 +40,7 @@ static void daemon_signal_handler(int signum)
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <listen-path>\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <listen-path> {-m <hello-path>}\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -53,12 +53,15 @@ int main(int argc, char *argv[])
 
     /* Process Command Line Arguments. */
     int        log_limit = LOG_WARNING;
+
     m_string_t sock_path;
     m_string_init(sock_path);
+    m_string_t hello_eid;
+    m_string_init(hello_eid);
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, ":hl:a:")) != -1)
+            while ((opt = getopt(argc, argv, ":hl:a:m:")) != -1)
             {
                 switch (opt)
                 {
@@ -71,6 +74,9 @@ int main(int argc, char *argv[])
                         break;
                     case 'a':
                         string_set_str(sock_path, optarg);
+                        break;
+                    case 'm':
+                        m_string_printf(hello_eid, "file:%s", optarg);
                         break;
                     case 'h':
                     default:
@@ -172,10 +178,9 @@ int main(int argc, char *argv[])
 #endif
     CACE_LOG_INFO("READY");
 
-    if (!retval)
+    if (!retval && !m_string_empty_p(hello_eid))
     {
-#if 0 // FIXME add option
-        if (refda_agent_send_hello(&agent, hello_dest))
+        if (refda_agent_send_hello(&agent, m_string_get_cstr(hello_eid)))
         {
             CACE_LOG_ERR("Agent hello failed");
             retval = 3;
@@ -184,8 +189,8 @@ int main(int argc, char *argv[])
         {
             CACE_LOG_INFO("Sent hello report");
         }
-#endif
     }
+    m_string_clear(hello_eid);
 
     if (!retval)
     {

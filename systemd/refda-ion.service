@@ -8,7 +8,7 @@ Requires=ion.service
 Type=notify
 PassEnvironment=DTNMA_LOGLEVEL ION_NODE_NUM MGR_NODE_NUM
 EnvironmentFile=-/etc/environment
-ExecStart=refda-ion -l ${DTNMA_LOGLEVEL} -a ipn:${ION_NODE_NUM}.6 #-m ipn:${MGR_NODE_NUM}.7
+ExecStart=refda-ion -l ${DTNMA_LOGLEVEL} -a ipn:${ION_NODE_NUM}.6 -m ipn:${MGR_NODE_NUM}.7
 
 [Install]
 WantedBy=multi-user.target
