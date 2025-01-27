@@ -17,6 +17,9 @@ limitations under the License.
 ]]
 cmake_minimum_required(VERSION 3.10)
 
+# PROJECT_VERSION may be specified as a parameter to allow an application
+# to define a project version independent of the git tags
+
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_DOCS "Enable autodoc building" OFF)
 option(BUILD_AGENT "Build the Agent library and executable" ON)
@@ -49,7 +52,7 @@ if(NOT PROJECT_VERSION)
   message(STATUS "Using git label ${GIT_TAG_REV} to version ${GIT_TAG_VERS}")
 
   set(PROJECT_VERSION ${GIT_TAG_VERS})
-endif()
+endif(NOT PROJECT_VERSION)
 
 project(nm
     VERSION ${PROJECT_VERSION}
