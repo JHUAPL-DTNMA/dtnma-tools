@@ -26,8 +26,7 @@ int test_util_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent)
     // no nonce for test
     refda_runctx_from(ctx, agent, NULL);
 
-    // CACE data does not include terminating null
-    cace_data_copy_from(&(ctx->mgr_ident), strlen(mgr_ident), (cace_data_ptr_t)mgr_ident);
+    m_string_set_cstr(ctx->mgr_ident, mgr_ident);
 
     return 0;
 }

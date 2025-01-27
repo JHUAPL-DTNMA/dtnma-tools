@@ -27,7 +27,7 @@ from typing import List, Tuple
 import unittest
 import cbor2
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
-from helpers.runner import CmdRunner, Timeout
+from helpers.runner import CmdRunner, compose_args
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class TestCaceAri(unittest.TestCase):
 
     def _start(self, *cmd_args: Tuple[str]) -> CmdRunner:
         ''' Spawn the process. '''
-        args = ('./run.sh', 'cace_ari', '-ldebug') + cmd_args
+        args = compose_args(('cace_ari', '-ldebug') + cmd_args)
         self._runner = CmdRunner(args)
         self._runner.start()
         return self._runner

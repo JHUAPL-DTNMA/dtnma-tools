@@ -94,7 +94,7 @@ int main(int argc _U_, char *argv[] _U_)
 
     if (!retval)
     {
-        if (refda_agent_send_hello(&agent))
+        if (refda_agent_send_hello(&agent, "any"))
         {
             CACE_LOG_ERR("Agent hello failed");
             retval = 3;

@@ -55,6 +55,13 @@ int cace_data_init_view(cace_data_t *data, size_t len, const cace_data_ptr_t src
     return 0;
 }
 
+int cace_data_init_view_cstr(cace_data_t *data, const char *src)
+{
+    CHKERR1(data);
+    CHKERR1(src);
+    return cace_data_init_view(data, strlen(src) + 1, (cace_data_ptr_t)src);
+}
+
 int cace_data_init_set(cace_data_t *data, const cace_data_t *src)
 {
     CHKERR1(data);
@@ -96,6 +103,13 @@ int cace_data_copy_from(cace_data_t *data, size_t len, cace_data_ptr_t src)
     }
 
     return 0;
+}
+
+int cace_data_copy_from_cstr(cace_data_t *data, const char *src)
+{
+    CHKERR1(data);
+    CHKERR1(src);
+    return cace_data_copy_from(data, strlen(src) + 1, (cace_data_ptr_t)src);
 }
 
 int cace_data_copy(cace_data_t *data, const cace_data_t *src)

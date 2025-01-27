@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -43,37 +43,33 @@
 #include "../shared/utils/nm_types.h"
 #include "../shared/adm/adm.h"
 #include "../shared/primitives/ari.h"
-#include "nmmgr.h"
-
+#include "mgr.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
 /*
  * +--------------------------------------------------------------------------+
- * |							  CONSTANTS  								  +
+ * |							  CONSTANTS +
  * +--------------------------------------------------------------------------+
  */
-#define META_NAME_MAX 64
+#define META_NAME_MAX  64
 #define META_DESCR_MAX 1024
 #define META_PARM_NAME 32
 
-
 /*
  * +--------------------------------------------------------------------------+
- * |							  	MACROS  								  +
+ * |							  	MACROS
+ * +
  * +--------------------------------------------------------------------------+
  */
 
-
 /*
  * +--------------------------------------------------------------------------+
- * |							  DATA TYPES  								  +
+ * |							  DATA TYPES +
  * +--------------------------------------------------------------------------+
  */
-
 
 /**
  * Formal Parameter specification.
@@ -82,10 +78,9 @@ extern "C" {
  */
 typedef struct
 {
-	amp_type_e type;			/** The parameter type */
-	char name[META_PARM_NAME];  /** The parameter name */
+    amp_type_e type;                 /** The parameter type */
+    char       name[META_PARM_NAME]; /** The parameter name */
 } meta_fp_t;
-
 
 /**
  * Collection of Metadata.
@@ -107,11 +102,10 @@ typedef struct
  */
 typedef struct
 {
-	vector_t results;  /** Contents of type metadata_t        */
-	uint32_t adm_id;   /** Shared ADM ID of items in results. */
-	amp_type_e type;   /** Shared type of items in results.   */
+    vector_t   results; /** Contents of type metadata_t        */
+    uint32_t   adm_id;  /** Shared ADM ID of items in results. */
+    amp_type_e type;    /** Shared type of items in results.   */
 } meta_col_t;
-
 
 /**
  * Metadata information
@@ -132,59 +126,53 @@ typedef struct
  */
 typedef struct
 {
-	ari_t *id;                  /**> Parameterless ID of the object.       */
-	uint32_t adm_id;            /**> The ADM that defines this AMM object. */
+    ari_t   *id;     /**> Parameterless ID of the object.       */
+    uint32_t adm_id; /**> The ADM that defines this AMM object. */
 
-	amp_type_e type;            /**> Base type of this AMM Object.         */
+    amp_type_e type; /**> Base type of this AMM Object.         */
 
     char name[META_NAME_MAX];   /**> The string name of the item.          */
     char descr[META_DESCR_MAX]; /**> The string description of the item.   */
 
-    vector_t parmspec;          /**> Contains items of type (meta_fp_t*)   */
+    vector_t parmspec; /**> Contains items of type (meta_fp_t*)   */
 
 } metadata_t;
 
-
-
 /*
  * +--------------------------------------------------------------------------+
- * |						  FUNCTION PROTOTYPES  							  +
+ * |						  FUNCTION PROTOTYPES +
  * +--------------------------------------------------------------------------+
  */
 
+metadata_t *meta_add_edd(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr);
 
-metadata_t* meta_add_edd(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr);
+metadata_t *meta_add_cnst(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr);
 
-metadata_t* meta_add_cnst(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr);
+metadata_t *meta_add_op(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr);
 
-metadata_t* meta_add_op(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr);
+metadata_t *meta_add_var(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr);
 
-metadata_t* meta_add_var(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr);
+metadata_t *meta_add_ctrl(ari_t *id, uint8_t adm_id, char *name, char *descr);
 
-metadata_t* meta_add_ctrl(ari_t *id, uint8_t adm_id, char *name, char *descr);
+metadata_t *meta_add_macro(ari_t *id, uint8_t adm_id, char *name, char *descr);
 
-metadata_t* meta_add_macro(ari_t *id, uint8_t adm_id, char *name, char *descr);
+metadata_t *meta_add_rpttpl(ari_t *id, uint8_t adm_id, char *name, char *descr);
 
-metadata_t* meta_add_rpttpl(ari_t *id, uint8_t adm_id, char *name, char *descr);
-
-metadata_t* meta_add_tblt(ari_t *id, uint8_t adm_id, char *name, char *descr);
-
-
+metadata_t *meta_add_tblt(ari_t *id, uint8_t adm_id, char *name, char *descr);
 
 int         meta_add_parm(metadata_t *meta, char *name, amp_type_e type);
 void        meta_cb_del(rh_elt_t *elt);
 void        meta_cb_filter(rh_elt_t *elt, void *tag);
-metadata_t* meta_create(amp_type_e type, ari_t *id, uint32_t adm_id, char *name, char *desc);
-meta_col_t* meta_filter(uint32_t adm_id, amp_type_e type);
-meta_fp_t*  meta_get_parm(metadata_t *meta, uint8_t idx);
+metadata_t *meta_create(amp_type_e type, ari_t *id, uint32_t adm_id, char *name, char *desc);
+meta_col_t *meta_filter(uint32_t adm_id, amp_type_e type);
+meta_fp_t  *meta_get_parm(metadata_t *meta, uint8_t idx);
 void        meta_release(metadata_t *meta, int destroy);
 
-meta_col_t* metacol_create();
-void        metacol_release(meta_col_t*col, int destroy);
-
+meta_col_t *metacol_create();
+void        metacol_release(meta_col_t *col, int destroy);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* _METADATA_H_ */
+#endif /* _METADATA_H_ */

@@ -17,7 +17,8 @@
  */
 #include "ingress.h"
 #include "agent.h"
-#include "cace/util/logging.h"
+#include <cace/util/daemon_run.h>
+#include <cace/util/logging.h>
 
 void *refda_ingress_worker(void *arg)
 {
@@ -37,8 +38,8 @@ void *refda_ingress_worker(void *arg)
     {
         ari_list_reset(values);
         int recv_res = agent->mif.recv(values, &meta, &agent->running, agent->mif.ctx);
-        // process received items even if failed status
 
+        // process received items even if failed status
         if (!ari_list_empty_p(values))
         {
             CACE_LOG_INFO("Message has %d ARIs", ari_list_size(values));
@@ -57,11 +58,13 @@ void *refda_ingress_worker(void *arg)
 
                 refda_msgdata_t exec_item;
                 refda_msgdata_init(&exec_item);
-                cace_data_move(&exec_item.ident, &meta.src);
+                m_string_swap(exec_item.ident, meta.src);
                 ari_set_move(&exec_item.value, val);
 
                 refda_msgdata_queue_push_move(agent->execs, &exec_item);
                 sem_post(&(agent->execs_sem));
+
+                atomic_fetch_add(&agent->instr.num_execset_recv, 1);
             }
         }
 

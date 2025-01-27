@@ -75,6 +75,8 @@ int cace_data_init(cace_data_t *data);
  * @return Zero upon success.
  */
 int cace_data_init_view(cace_data_t *data, size_t len, cace_data_ptr_t src);
+/// @overload
+int cace_data_init_view_cstr(cace_data_t *data, const char *src);
 
 int cace_data_init_set(cace_data_t *data, const cace_data_t *src);
 
@@ -131,6 +133,9 @@ int cace_data_extend_front(cace_data_t *data, ssize_t extra);
  * @return Zero upon success.
  */
 int cace_data_copy_from(cace_data_t *data, size_t len, cace_data_ptr_t src);
+
+/// @overload
+int cace_data_copy_from_cstr(cace_data_t *data, const char *src);
 
 /** Append an initialized data struct with a given size.
  *

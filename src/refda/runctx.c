@@ -47,7 +47,7 @@ void refda_runctx_init(refda_runctx_t *ctx)
 {
     CHKVOID(ctx);
     ctx->agent = NULL;
-    cace_data_init(&(ctx->mgr_ident));
+    m_string_init(ctx->mgr_ident);
     ari_init(&(ctx->nonce));
 }
 
@@ -55,7 +55,7 @@ void refda_runctx_deinit(refda_runctx_t *ctx)
 {
     CHKVOID(ctx);
     ari_deinit(&(ctx->nonce));
-    cace_data_deinit(&(ctx->mgr_ident));
+    m_string_clear(ctx->mgr_ident);
     ctx->agent = NULL;
 }
 
@@ -67,14 +67,7 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
 
     if (msg)
     {
-        if (msg->ident.ptr)
-        {
-            cace_data_copy(&(ctx->mgr_ident), &(msg->ident));
-        }
-        else
-        {
-            cace_data_clear(&(ctx->mgr_ident));
-        }
+        m_string_set(ctx->mgr_ident, msg->ident);
 
         const ari_execset_t *eset = ari_cget_execset(&(msg->value));
         // should not be null, but guard anyway
@@ -89,7 +82,7 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
     }
     else
     {
-        cace_data_clear(&(ctx->mgr_ident));
+        m_string_reset(ctx->mgr_ident);
         ari_reset(&(ctx->nonce));
     }
 

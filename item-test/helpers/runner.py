@@ -17,6 +17,7 @@
 #
 
 import logging
+import os
 import re
 import signal
 import subprocess
@@ -29,8 +30,23 @@ LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
 
 
-class Timeout(RuntimeError):
-    ''' Represent a timeout for the CmdRunner class '''
+def compose_args(args: List[str]) -> List[str]:
+    ''' Combine executions arguments with any prefix scripts and/or tools
+    needed to run from the `testroot` environment.
+    '''
+    args = list(args)
+    if os.environ.get('TEST_MEMCHECK', ''):
+        valgrind = [
+            'valgrind',
+            '--tool=memcheck',
+            '--leak-check=full',
+            '--suppressions=memcheck.supp',
+            '--gen-suppressions=all',
+            '--error-exitcode=2',
+        ]
+        args = valgrind + args
+    args.insert(0, './run.sh')
+    return args
 
 
 class CmdRunner:
@@ -38,6 +54,8 @@ class CmdRunner:
 
     :param args: The command arguments to execute including the command
     itself.
+    :param kwargs: Additional keyword arguments given to
+    :py:func:`subprocess.Popen`
     '''
 
     def __init__(self, args: List[str], **kwargs):
@@ -127,7 +145,7 @@ class CmdRunner:
         try:
             text = self._stdout_lines.get(timeout=timeout)
         except queue.Empty:
-            raise Timeout()
+            raise TimeoutError('no lines received before timeout')
         return text
 
     def wait_for_text(self, pattern, timeout=5):
@@ -143,7 +161,7 @@ class CmdRunner:
             try:
                 text = self._stdout_lines.get(timeout=remain_time)
             except queue.Empty:
-                raise Timeout()
+                raise TimeoutError('text not received before timeout')
 
             if expr.match(text) is not None:
                 return text
