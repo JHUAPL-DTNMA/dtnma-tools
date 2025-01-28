@@ -195,4 +195,6 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif(BUILD_TESTING)
 
-add_subdirectory(docs)
+if(BUILD_DOCS_API OR BUILD_DOCS_MAN)
+  add_subdirectory(docs)
+endif(BUILD_DOCS_API OR BUILD_DOCS_MAN)

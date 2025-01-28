@@ -103,12 +103,13 @@ RUN apt-get update && apt-get install -y \
 COPY deps /usr/src/nm/deps
 COPY cmake /usr/src/nm/cmake
 COPY src /usr/src/nm/src
-COPY test /usr/src/nm/test
 COPY CMakeLists.txt /usr/src/nm/
 RUN ls -lt /usr/src/nm/
 RUN cd /usr/src/nm && \
     cmake -S . -B build/default \
       -DCMAKE_BUILD_TYPE=Debug \
+      -DBUILD_TESTING=OFF \
+      -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF \
       -G Ninja && \
     cmake --build build/default && \
     cmake --install build/default && \
