@@ -39,7 +39,7 @@ if(NOT PROJECT_VERSION)
   # Ingest the git tag as project version name
   find_package(Git)
   execute_process(
-      COMMAND ${GIT_EXECUTABLE} describe --always --tags --dirty
+    COMMAND ${GIT_EXECUTABLE} describe --tags --long --dirty
       RESULT_VARIABLE GIT_TAG_EXIT
       OUTPUT_VARIABLE GIT_TAG_REV
       OUTPUT_STRIP_TRAILING_WHITESPACE
