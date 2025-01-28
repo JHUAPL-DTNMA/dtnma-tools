@@ -21,6 +21,7 @@
 # From a fresh checkout perform a full build
 #
 set -e
+set -o pipefail
 
 source setenv.sh
 
@@ -28,7 +29,7 @@ BUILDDIR=${SELFDIR}/build/default
 
 if [ "$1" = "docs" ]
 then
-    cmake --build ${BUILDDIR} --target docs
+    cmake --build ${BUILDDIR} --target docs-api-html
 elif [ "$1" = "install" ]
 then
     shift

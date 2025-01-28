@@ -55,7 +55,7 @@ jobs:
         run: ./deps.sh
       - name: Prep
         run: |
-          ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=ON \
+          ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON \
               -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
               -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
       - name: Build
@@ -121,7 +121,7 @@ jobs:
       - name: Dependencies
         run: ./deps.sh
       - name: Prep
-        run: ./prep.sh -DBUILD_DOCS=OFF -DBUILD_TESTING=OFF
+        run: ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=OFF
       - name: Build
         run: ./build.sh
       - name: Install
