@@ -17,6 +17,9 @@ limitations under the License.
 ]]
 cmake_minimum_required(VERSION 3.10)
 
+# PROJECT_VERSION may be specified as a parameter to allow an application
+# to define a project version independent of the git tags
+
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_DOCS_API "Enable API documentation building" OFF)
 option(BUILD_DOCS_MAN "Enable manpage building" OFF)
@@ -32,32 +35,36 @@ option(TEST_COVERAGE "Enable test runtime coverage logging" OFF)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-# Ingest the git tag as project version name
-find_package(Git)
-execute_process(
+if(NOT PROJECT_VERSION)
+  # Ingest the git tag as project version name
+  find_package(Git)
+  execute_process(
     COMMAND ${GIT_EXECUTABLE} describe --tags --long --dirty
-    RESULT_VARIABLE GIT_TAG_EXIT
-    OUTPUT_VARIABLE GIT_TAG_REV
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
-)
-if(NOT GIT_TAG_EXIT EQUAL 0)
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --always --dirty
-        OUTPUT_VARIABLE GIT_COMMIT
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    set(GIT_TAG_REV "v0.0.0-0-g${GIT_COMMIT}")
-    message(WARNING "No git tag found, marking as ${GIT_TAG_REV}")
-endif()
-# Make version compatible with CMake and RPM needs
-STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS ${GIT_TAG_REV})
-STRING(REGEX REPLACE [[^v[0-9\.]*-(.+)]] [[\1]] GIT_TAG_MOD ${GIT_TAG_REV})
-STRING(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
-message(STATUS "Using version marking ${GIT_TAG_VERS} - ${GIT_TAG_MOD}")
+      RESULT_VARIABLE GIT_TAG_EXIT
+      OUTPUT_VARIABLE GIT_TAG_REV
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET
+  )
+  if(NOT GIT_TAG_EXIT EQUAL 0)
+      execute_process(
+          COMMAND ${GIT_EXECUTABLE} describe --always --dirty
+          OUTPUT_VARIABLE GIT_COMMIT
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      set(GIT_TAG_REV "v0.0.0-0-g${GIT_COMMIT}")
+      message(WARNING "No git tag found, marking as ${GIT_TAG_REV}")
+  endif()
+  # Make version compatible with CMake needs
+  STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS ${GIT_TAG_REV})
+  STRING(REGEX REPLACE [[^v[0-9\.]*-(.+)]] [[\1]] GIT_TAG_MOD ${GIT_TAG_REV})
+  STRING(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
+  message(STATUS "Using version marking ${GIT_TAG_VERS} - ${GIT_TAG_MOD}")
+
+  set(PROJECT_VERSION ${GIT_TAG_VERS})
+endif(NOT PROJECT_VERSION)
 
 project(dtnma-tools
-    VERSION ${GIT_TAG_VERS}
+    VERSION ${PROJECT_VERSION}
 )
 
 # Language options
