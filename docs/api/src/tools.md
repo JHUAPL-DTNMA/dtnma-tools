@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2023 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -15,14 +15,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-NM Agent                              {#nmagent}
+NM Tools   {#tools}
 =======
 
-Network Management Agent implementing the Asynchronous Management
-Protocol (AMP).  It listens for commands and sends reports to the
-configured manager endpoint.
+NM is currently packaged with the following tools:
+- CAmpPython
 
-## Usage
+# CAmpPython
+This tool is used to automatically generate C source and header files for ADMs using the input JSON files. 
 
-> nm_agent agent_eid manager_eid
-
+This tool can be found under nm/contrib/CAmpPython.  See the included README file for details.
