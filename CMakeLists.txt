@@ -21,7 +21,8 @@ cmake_minimum_required(VERSION 3.10)
 # to define a project version independent of the git tags
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
-option(BUILD_DOCS "Enable autodoc building" OFF)
+option(BUILD_DOCS_API "Enable API documentation building" OFF)
+option(BUILD_DOCS_MAN "Enable manpage building" OFF)
 option(BUILD_AGENT "Build the Agent library and executable" ON)
 option(BUILD_MANAGER "Build the Manager library and executable" ON)
 option(ARI_TEXT_PARSE "Build ARI text-form parsing capability" ON)
@@ -42,19 +43,27 @@ if(NOT PROJECT_VERSION)
       RESULT_VARIABLE GIT_TAG_EXIT
       OUTPUT_VARIABLE GIT_TAG_REV
       OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET
   )
   if(NOT GIT_TAG_EXIT EQUAL 0)
-      set(GIT_TAG_REV "v0.0.0")
+      execute_process(
+          COMMAND ${GIT_EXECUTABLE} describe --always --dirty
+          OUTPUT_VARIABLE GIT_COMMIT
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      set(GIT_TAG_REV "v0.0.0-0-g${GIT_COMMIT}")
       message(WARNING "No git tag found, marking as ${GIT_TAG_REV}")
   endif()
   # Make version compatible with CMake needs
-  STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS "${GIT_TAG_REV}")
-  message(STATUS "Using git label ${GIT_TAG_REV} to version ${GIT_TAG_VERS}")
+  STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS ${GIT_TAG_REV})
+  STRING(REGEX REPLACE [[^v[0-9\.]*-(.+)]] [[\1]] GIT_TAG_MOD ${GIT_TAG_REV})
+  STRING(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
+  message(STATUS "Using version marking ${GIT_TAG_VERS} - ${GIT_TAG_MOD}")
 
   set(PROJECT_VERSION ${GIT_TAG_VERS})
 endif(NOT PROJECT_VERSION)
 
-project(nm
+project(dtnma-tools
     VERSION ${PROJECT_VERSION}
 )
 
@@ -90,10 +99,12 @@ add_compile_options(
     $<$<COMPILE_LANGUAGE:CXX>:-fno-enforce-eh-specs>
     $<$<COMPILE_LANGUAGE:CXX>:-fnothrow-opt>
 )
-IF(CMAKE_COMPILER_IS_GNUCC)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
+elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gdwarf-4")
+endif()
 
 # Library dependencies
 include(CheckSymbolExists)
@@ -191,6 +202,6 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif(BUILD_TESTING)
 
-if(BUILD_DOCS)
+if(BUILD_DOCS_API OR BUILD_DOCS_MAN)
   add_subdirectory(docs)
-endif(BUILD_DOCS)
+endif(BUILD_DOCS_API OR BUILD_DOCS_MAN)
