@@ -267,6 +267,14 @@ TEST_CASE("821181841A000100002302810A", "82060A")
 TEST_CASE("821183820603820605841A000100002501810A", "820612")
 // ari:/AC/(//65536/EDD/2(10),//65536/VAR/1,//65536/OPER/1(10)) -> /VAST/123476
 TEST_CASE("821183841A000100002302810A831A000100002A01841A000100002501810A", "82061A0001E254")
+// ari:/AC/(/BOOL/true,/BOOL/false,//ietf-dtnma-agent/OPER/bool-not) -> /BOOL/true
+TEST_CASE("8211838201F58201F48370696574662D64746E6D612D6167656E742568626F6F6C2D6E6F74", "8201F5")
+// ari:/AC/(/BOOL/false,/BOOL/false,//1/OPER/bool-not) -> /BOOL/false
+TEST_CASE("8211838201F48201F483012568626F6F6C2D6E6F74", "8201F4")
+
+// TODO: bool and
+// TODO: bool or
+// TODO: bool xor
 void test_refda_eval_target_valid(const char *targethex, const char *expectloghex)
 {
     ari_t target = ARI_INIT_UNDEFINED;
@@ -295,6 +303,10 @@ void test_refda_eval_target_valid(const char *targethex, const char *expectloghe
 
 TEST_CASE("821180", 6)             // Empty stack ari:/AC/()
 TEST_CASE("821182820601820602", 6) // Extra stack ari:/AC/(/VAST/1,/VAST/2)
+
+// TODO:
+// ari:/AC/(/BOOL/false,/VAST/18,//1/OPER/bool-not) -> /BOOL/false
+// TEST_CASE("8211838201F48201F483012568626F6F6C2D6E6F74", 1)
 void test_refda_eval_target_failure(const char *targethex, int expect_res)
 {
 
