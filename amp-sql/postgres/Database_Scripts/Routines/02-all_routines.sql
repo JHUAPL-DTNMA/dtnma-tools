@@ -28,26 +28,41 @@
 -- ==================================================================
 
 
+
+
+create or replace procedure SP__insert_data_model(in p_namespace_type varchar, p_name varchar, p_enumeration varchar, p_version_name varchar, p_use_desc varchar, out r_data_model_id integer)
+LANGUAGE plpgsql
+AS $$ BEGIN
+	INSERT INTO data_model
+	(namespace_type, "name", enumeration, version_name, use_desc)
+	VALUES(p_namespace_type, p_name, p_enumeration, p_version_name, p_use_desc) RETURNING data_model_id into r_data_model_id;
+end$$;
+
+
+
 -- ==================================================================
 -- Parameters:
 -- in 
 -- 		p_obj_type varchar - object of the type
 --      p_obj_name varchar -  human readable name of the new object
---      p_namespace_id integer - namespace this object belongs to
+--      p_date_model_id integer - date_model this object belongs to
+--      p_object_enumeration - object enumeration in data model
+-- 		p_status
+-- 		p_reference
+--      p_description
 -- out 
 -- 		r_obj_id integer - id of the new object in the database
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_obj_metadata(IN p_obj_type_id integer, p_obj_name varchar, p_namespace_id integer, INOUT r_obj_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_obj_metadata(IN p_obj_type_id integer, p_obj_name varchar, p_date_model_id integer,  p_object_enumeration integer, p_status varchar, p_reference varchar,  p_description varchar,INOUT r_obj_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
 
    SELECT obj_metadata_id INTO r_obj_id
               FROM obj_metadata
-              WHERE data_type_id=p_obj_type_id AND obj_name=p_obj_name AND namespace_id=p_namespace_id;
+              WHERE data_type_id=p_obj_type_id AND name=p_obj_name AND data_model_id=p_date_model_id and object_enumeration = p_object_enumeration;
 
     IF (r_obj_id IS NULL) THEN
-    	INSERT INTO obj_metadata(data_type_id, obj_name, namespace_id) VALUES(p_obj_type_id, p_obj_name, p_namespace_id) RETURNING obj_metadata_id into r_obj_id;
-      
+    	INSERT INTO obj_metadata(data_type_id, obj_name, date_model_id, object_enumeration, status, reference, description) VALUES(p_obj_type_id, p_obj_name, p_date_model_id, p_object_enumeration, p_status, p_reference, p_description) RETURNING obj_metadata_id into r_obj_id;      
     END IF;
 
 end$$;
@@ -83,18 +98,20 @@ CREATE OR REPLACE PROCEDURE SP__insert_obj_formal_definition(IN p_obj_metadata_i
 LANGUAGE plpgsql
 
 AS $$ 
+/*
 DECLARE
  data_type integer;
- adm_enum_this INTEGER;
+ enumeration_this INTEGER;
  obj_enum integer;
 
 BEGIN
 
     -- Get the next available ID for automatic enumeration of new formal definitions
-    SELECT data_type_id, vw_obj_metadata.adm_enum INTO data_type, adm_enum_this FROM vw_obj_metadata WHERE obj_metadata_id=p_obj_metadata_id;
-    SELECT COALESCE(MAX(vof.obj_enum)+1,0) INTO obj_enum FROM vw_obj_formal_def vof WHERE vof.data_type_id=data_type AND vof.adm_enum=adm_enum_this;      
-
-	INSERT INTO obj_formal_definition(obj_metadata_id, use_desc, obj_enum) VALUES(p_obj_metadata_id, p_use_desc, obj_enum) RETURNING obj_formal_definition_id INTO r_formal_id;
+    SELECT data_type_id, vw_obj_metadata.enumeration INTO data_type,enumeration_this FROM vw_obj_metadata WHERE obj_metadata_id=p_obj_metadata_id;
+    SELECT COALESCE(MAX(vof.obj_enum)+1,0) INTO obj_enum FROM vw_obj_formal_def vof WHERE vof.data_type_id=data_type AND vof.enumeration=enumeration_this;      
+*/
+BEGIN
+	INSERT INTO obj_formal_definition(obj_metadata_id, use_desc) VALUES(p_obj_metadata_id, p_use_desc) RETURNING obj_formal_definition_id INTO r_formal_id;
 end$$;
 
 
@@ -142,7 +159,7 @@ END$$;
 -- in 
 -- 		p_act_id integer
 --  	p_obj_name varchar
--- 		p_namespace_id integer 
+-- 		p_date_model_id integer 
 --
 -- ==================================================================
 -- for just removing the obj instance 
@@ -161,354 +178,12 @@ BEGIN
 		DELETE FROM obj_actual_definition WHERE actual_definition_id = p_act_id;
     -- if its removing all instances with this defeintion
 	ELSE -- removing all instances with this name 
-		IF( p_obj_name is null or p_namespace_id) then -- nothing to do 
+		IF( p_obj_name is null or p_date_model_id) then -- nothing to do 
 			exit obj_inst_del;
 		END IF;
 		DELETE FROM obj_actual_definition where obj_metadata_id =(select obj_metadata_id from obj_metadat where obj_name =  p_obj_name ); 
 	END IF;
 END$$;
-
-
--- ==================================================================
--- SP__insert_tnvc
--- inserts a new tnv collection definition into the db
--- IN
--- 		p_num_entries integer - number of entries in the collection
--- 		p_use_desc varchar -  human readble description for the collection
--- OUT 
--- 		r_tnvc_id integer - id of the collection
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_collection(IN p_use_desc varchar, INOUT r_tnvc_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-	INSERT INTO type_name_value_collection(use_desc) VALUES(p_use_desc) RETURNING tnvc_id INTO r_tnvc_id;
-end$$;
-
-
--- ==================================================================
--- sp for inserting a single entry into a tnvc 
--- SP__insert_tnvc_entry
--- IN 
--- 		p_tnvc_id integer - id of tnvc this entry belongs to 
--- 		p_order_num integer - order number of this entry 
--- 		p_data_type_name varchar -  data type name 
--- 		p_data_name varchar - name of the tnvc 
--- 		p_definition_id integer - definition of the object could be literal
--- OUT 
--- 		r_tnvc_entry_id integer - id of this entrty
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_entry(IN p_tnvc_id integer, p_order_num integer, p_data_type_name varchar, p_data_name varchar, INOUT r_tnvc_entry_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-
-    IF p_order_num IS NULL THEN
-       SELECT order_num+1 INTO p_order_num FROM type_name_value_entry WHERE tnvc_id=p_tnvc_id ORDER BY order_num DESC LIMIT 1;
-    END IF;
-    IF p_order_num IS NULL THEN
-       p_order_num = 0;
-    END IF; 
-
-
-	INSERT INTO type_name_value_entry
-(tnvc_id,
-order_num,
-data_type_id,
-data_name)
-VALUES
-(p_tnvc_id,
-p_order_num,
-(SELECT data_type_id FROM data_type WHERE type_name = UPPER(p_data_type_name)),
-p_data_name) RETURNING tnv_id INTO r_tnvc_entry_id;
-
-end$$;
-
-
-
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_entry_id(IN p_tnvc_id integer, p_order_num integer, p_data_type_id integer, p_data_name varchar, INOUT r_tnvc_entry_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-
-    IF p_order_num IS NULL THEN
-       SELECT order_num+1 INTO p_order_num FROM type_name_value_entry WHERE tnvc_id=p_tnvc_id ORDER BY order_num DESC LIMIT 1;
-    END IF;
-    IF p_order_num IS NULL THEN
-       p_order_num = 0;
-    END IF; 
-
-
-INSERT INTO type_name_value_entry
-(tnvc_id,
-order_num,
-data_type_id,
-data_name)
-VALUES
-(p_tnvc_id,
-p_order_num,
-p_data_type_id,
-p_data_name) RETURNING tnv_id INTO r_tnvc_entry_id;
-
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_obj_entry
---  insert a new tnvc entry that is an ADM object
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   integer - id for this actual object
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_obj_entry(IN p_tnvc_id integer,
-                                                  p_order_num integer,
-                                                  p_data_type varchar,
-                                                  p_entry_value integer,
-                                                  INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry(p_tnvc_id, p_order_num, p_data_type, NULL, r_tnvc_entry_id);
-    INSERT INTO type_name_value_obj_entry (tnv_id, obj_actual_definition_id) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
-
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_ac_entry(IN p_tnvc_id integer,
-                                                  p_order_num integer,
-                                                  p_data_name varchar,
-                                                  p_entry_value integer,
-                                                  INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 37, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_ac_entry (tnv_id, ac_id) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_tnvc_entry(IN p_tnvc_id integer,
-                                                  p_order_num integer,
-                                                  p_data_name varchar, 
-                                                  p_entry_value integer,
-                                                  INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 35, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_tnvc_entry (tnv_id, tnvc_id) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
-
--- ==================================================================
---  SP__insert_tnvc_ari_entry
---  insert a new tnvc entry that is an ADM object
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   integer - id for this actual object
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_ari_entry(IN p_tnvc_id integer,
-                                                  p_order_num integer,
-                                                  p_data_name varchar,
-                                                  p_entry_value integer,
-                                                  INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry(p_tnvc_id, p_order_num, 'ari', p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_obj_entry (tnv_id, obj_actual_definition_id) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_unk_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_unk_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry(p_tnvc_id, p_order_num, 'unk', p_data_name, r_tnvc_entry_id);
-end$$;
-
-
-
--- ==================================================================
---  SP__insert_tnvc_int_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   int- value for this int_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_int_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value int, INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 19, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_int_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_uint_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   integer - value for this uint_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_uint_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value integer , INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 20, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_uint_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_vast_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   bigint - value for this vast_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_vast_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value bigint , INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 21, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_vast_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_uvast_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   bigint - value for this uvast_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_uvast_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value bigint , INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 22, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_uvast_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_tv_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   bigint - value for this uvast_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_tv_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value bigint , INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 32, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_uvast_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_uvast_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   bigint - value for this uvast_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_ts_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value bigint , INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 33, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_uvast_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_real32_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   float- value for this real32_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_real32_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value float, INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 23, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_real32_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_real64_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   double- value for this real64_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_real64_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value double precision, INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 24, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_real64_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_str_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   varchar- value for this string_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_str_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value varchar, INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 18, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_string_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_bool_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   bool- value for this bool_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_bool_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value bool, INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 16, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_bool_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
-
-
--- ==================================================================
---  SP__insert_tnvc_byte_entry
---  insert a new tnvc entry for the specific primitive data type
---  in
---      p_tnv_entry_id integer - the id for this tnv entry
---      p_entry_value   smallint- value for this byte_entry
--- ================================================================== 
-
-CREATE OR REPLACE PROCEDURE SP__insert_tnvc_byte_entry(IN p_tnvc_id integer, p_order_num integer,  p_data_name varchar,  p_entry_value smallint, INOUT r_tnvc_entry_id integer )
-LANGUAGE plpgsql
-AS $$ BEGIN
-    CALL SP__insert_tnvc_entry_id(p_tnvc_id, p_order_num, 17, p_data_name, r_tnvc_entry_id);
-    INSERT INTO type_name_value_byte_entry (tnv_id, entry_value) VALUES (r_tnvc_entry_id, p_entry_value);
-end$$;
 
 
 
@@ -524,187 +199,18 @@ end$$;
 -- OUT 
 -- 		r_ac_id integer- id of the ac
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_ac_id(IN p_num_entries integer, p_use_desc varchar,  INOUT r_ac_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_ac_id(IN p_num_entries integer, p_entries bytea, p_use_desc varchar,  INOUT r_ac_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
-	INSERT INTO ari_collection(num_entries, use_desc) VALUES(p_num_entries, p_use_desc) RETURNING  ac_id INTO r_ac_id;
+	INSERT INTO ari_collection(num_entries, entries, use_desc) VALUES(p_num_entries, p_entries,p_use_desc) RETURNING  ac_id INTO r_ac_id;
 end$$;
 
 
-
--- ==================================================================
--- SP__insert_ac_formal_entry 
--- adds a formal ari entry into the database. 
--- stops if the order_num is > the number of entries for the target ac
--- Parameters:
--- in 
--- 		p_ac_id integer - id of the ari collection this entry belongs to
--- 		p_definition_id integer - id of the definition   
--- 		p_order_num integer - order number
--- OUT 
--- 		r_ac_entry_id integer - entry id 
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_ac_formal_entry(IN p_ac_id integer, p_definition_id integer,  p_order_num integer, INOUT r_ac_entry_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN 
-	/*IF p_order_num < (select num_entries from ari_collection where ari_collection.ac_id = p_definition_id) THEN 
-    LANGUAGE plpgsql*/
-		INSERT INTO ari_collection_entry(ac_id, order_num) VALUES(p_ac_id, p_order_num) RETURNING  ac_entry_id INTO r_ac_entry_id;
-		INSERT INTO ari_collection_formal_entry(ac_entry_id, obj_formal_definition_id) VALUES(r_ac_entry_id, p_definition_id); 
-	/*END;
-    END IF;*/
-end$$;
-
-
-
--- ==================================================================
--- SP__insert_ac_actual_entry 
--- adds a actual ari entry into the database. 
--- stops if the order_num is > the number of entries for the target ac
--- Parameters:
--- in 
--- 		p_ac_id integer - id of the ari collection this entry belongs to
--- 		p_definition_id integer - id of the definition   
--- 		p_order_num integer - order number
--- OUT 
--- 		r_ac_entry_id integer - entry id 
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_ac_actual_entry(IN p_ac_id integer, p_definition_id integer, p_order_num integer, 
-INOUT r_ac_entry_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN 
-	-- IF p_order_num < (select num_entries from ari_collection where ari_collection.ac_id = p_definition_id) THEN 
-    
-		INSERT INTO ari_collection_entry(ac_id, order_num) VALUES(p_ac_id, p_order_num) RETURNING ac_entry_id INTO r_ac_entry_id;
-		INSERT INTO ari_collection_actual_entry(ac_entry_id, obj_actual_definition_id) VALUES(r_ac_entry_id, p_definition_id); 
--- END;
-   -- END IF;
-end$$;
-
-
---
--- 
--- CREATE OR REPLACE PROCEDURE SP__insert_ari_collection(IN p_num_entries integer, p_definition_ids_list varchar(10000), p_instance_ids_list varchar(10000), p_use_desc varchar, INOUT r_ac_id integer) 
- 
--- 	CALL SP__insert_ac_id(p_num_entries, p_use_desc, r_ac_id); 
---     -- TODO -- verify that lists are same size or NULL prior to processing, backout transaction on failure  and return NULL
---     @ac_id  :-- = r_ac_id; 
---     @s := 'INSERT INTO ari_collection_entry(ac_id, definition_id, instance_id, order_num) VALUES'; 
--- 	
--- 	@loops := 1; 
--- --     -- @def_id := NULL; 
--- --     -- @inst_id := NULL; 
---     WHILE @loops < p_num_entries DO
-
--- 			-- @def_id
---             IF p_definition_ids_list IS NOT NULL THEN
--- 				LANGUAGE plpgsql
---AS $$
--- 				@def_id := TRIM(SUBSTRING_INDEX(p_definition_ids_list, ',', 1)); 
--- = REPLACE(p_definition_ids_list, CONCAT(@def_id, ','), '') into p_definition_ids_list;
--- 				-- IF strcmp(@def_id, 'NULL') THEN
--- 					-- @def_id := NULL; 
--- 				-- ELSE
--- 					@def_id := CAST(@def_id AS UNSIGNED); 
--- 				-- END IF;
---                 END; 
--- 			ELSE 
--- 					LANGUAGE plpgsql
--- AS $$
--- 				 @def_id := 'NULL';
--- 				END; 
---             END IF; 
---             
---             -- @inst_id
---             IF p_instance_ids_list IS NOT NULL THEN 
--- 					LANGUAGE plpgsql
--- AS $$
--- 				@inst_id := TRIM(SUBSTRING_INDEX(p_instance_ids_list, ',', 1)); 
--- = REPLACE(p_instance_ids_list, CONCAT(@inst_id, ','), '') into p_instance_ids_list;
--- 				-- IF strcmp(@inst_id, 'NULL') THEN 
--- 					-- @inst_id := NULL; 
--- 				-- ELSE
--- 					@inst_id := CAST(@inst_id AS UNSIGNED); 
--- 				-- END IF;
---                 END;
--- 			ELSE 
--- 					LANGUAGE plpgsql
--- AS $$
--- 				@inst_id := 'NULL'; 
---                 END; 
--- 			END IF; 
--- 			
---             @s := CONCAT(@s, '(', @ac_id, ',', @def_id , ',', @inst_id, ',', @loops, '),');
---            -- SELECT @s; 
---  			@loops := loops + 1; 
---          END; 
---     END WHILE; 
---     
---     -- @def_id
---             IF p_definition_ids_list IS NOT NULL THEN
--- 					LANGUAGE plpgsql
--- AS $$
--- 				@def_id := TRIM(SUBSTRING_INDEX(p_definition_ids_list, ',', 1)); 
--- = REPLACE(p_definition_ids_list, CONCAT(@def_id, ','), '') into p_definition_ids_list;
--- 			-- 	IF strcmp(@def_id, 'NULL') THEN
--- 				-- 	@def_id := NULL; 
--- 			--	ELSE
--- 					@def_id := CAST(@def_id AS UNSIGNED); 
--- 				-- END IF;
---                 END; 
--- 			ELSE 
--- 					LANGUAGE plpgsql
--- AS $$
--- 				 @def_id := 'NULL'; 
--- 				END; 
---             END IF; 
---             
---             -- @inst_id
---             IF p_instance_ids_list IS NOT NULL THEN 
--- 					LANGUAGE plpgsql
--- AS $$
--- 				@inst_id := TRIM(SUBSTRING_INDEX(p_instance_ids_list, ',', 1)); 
--- = REPLACE(p_instance_ids_list, CONCAT(@inst_id, ','), '') into p_instance_ids_list;
--- 				-- IF strcmp(@inst_id, 'NULL') THEN 
--- 				--	@inst_id := NULL; 
--- 				-- ELSE
--- 					@inst_id := CAST(@inst_id AS UNSIGNED); 
--- 				-- END IF;
---                 END; 
--- 			 ELSE 
--- 					LANGUAGE plpgsql
--- AS $$
--- 			 	@inst_id := 'NULL'; 
---                 END;
--- 			END IF; 
--- 			
---             @s := CONCAT(@s, '(', @ac_id, ',', @def_id, ',', @inst_id, ',', @loops, ')');
---           -- SELECT @s; 
--- 	PREPARE stmt FROM @s; 
--- 	EXECUTE stmt; 
--- end$$;
 
 
 
 
 -- STORED PROCEDURE(S) for the actaul parameters specefications and actual parameter sets. has real data 
-
-
--- ==================================================================
--- SP__insert_actual_parmspec
---  inserting an actual parmspec into db
--- IN 
--- 		p_fp_spec_id integer - the id of the formal parm spec for this actual parmspec
--- 		p_tnvc_id integer - TNVC corresponding to actual parameter definition
--- 		p_use_desc varchar - human readable describtion
--- OUT 
--- 		r_ap_spec_id integer - id of the parmspec in the db 
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_actual_parmspec_tnvc(IN p_fp_spec_id integer, p_tnvc_id integer, p_use_desc varchar, INOUT r_ap_spec_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-	INSERT INTO actual_parmspec(fp_spec_id, tnvc_id, use_desc) VALUES(p_fp_spec_id, p_tnvc_id, p_use_desc) RETURNING  ap_spec_id INTO r_ap_spec_id;
-end$$;
 
 
 -- ==================================================================
@@ -719,159 +225,19 @@ end$$;
 -- ==================================================================
 -- TODO: p_num_parms argument is deprecated and will be removed
 
-CREATE OR REPLACE PROCEDURE SP__insert_actual_parmspec(IN p_fp_spec_id integer, p_num_parms integer, p_use_desc varchar, INOUT r_ap_spec_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_actual_parmspec(IN p_fp_spec_id  integer, p_value_set bytea, p_use_desc varchar, INOUT r_ap_spec_id integer)
 LANGUAGE plpgsql
 AS $$
-DECLARE tnvc_id INT;
  BEGIN
-    
-    CALL SP__insert_tnvc_collection(p_use_desc, tnvc_id);
-    CALL SP__insert_actual_parmspec_tnvc(p_fp_spec_id, tnvc_id, p_use_desc, r_ap_spec_id);
-end$$;
-
-
--- ==================================================================
--- SP__insert_actual_parms_object
---  inserting an actual parm object into spec
--- IN 
--- 		p_ap_spec_id integer -  id of the spec this object is being added 
--- 		p_order_num integer -  order number
--- 		p_data_type_id integer - the id of the datatype in the data type table
--- 		p_obj_actual_definition integer - id of the object for the parm
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_actual_parms_object(IN p_ap_spec_id integer, p_order_num integer, p_data_type_id varchar , p_obj_actual_definition integer)
-LANGUAGE plpgsql
-AS $$
-DECLARE 
-ap_tnvc_id int;
-r_tnvc_entry_id INT;
- BEGIN
-    
-    SELECT tnvc_id INTO ap_tnvc_id FROM actual_parmspec WHERE ap_spec_id = p_ap_spec_id;
-
-
-    CALL SP__insert_tnvc_obj_entry(ap_tnvc_id, p_order_num, p_data_type_id, p_obj_actual_definition, r_tnvc_entry_id);
-
-
-
-end$$;
-
-
--- ==================================================================
--- SP__insert_actual_parms_names
---  inserting an actual parm reference by name into spec. This parm gets it value from the object that defines this parm spec 
--- IN 
--- 		p_ap_spec_id integer -  id of the spec this object is being added 
--- 		p_order_num integer -  order number
--- 		p_data_type_id integer - the id of the datatype in the data type table
--- 		p_fp_id integer - id of the formal parm this parm reference
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_actual_parms_names(IN p_ap_spec_id integer, p_order_num integer, p_data_type_id varchar, p_fp_id integer)
-LANGUAGE plpgsql
-AS $$ DECLARE ap_tnvc_id INT;
-    DECLARE dt_id INT;
-    
-    BEGIN 
-    
-    
-    SELECT tnvc_id INTO ap_tnvc_id FROM actual_parmspec WHERE ap_spec_id = p_ap_spec_id;
-
-    SELECT data_type_id INTO dt_id FROM data_type WHERE type_name = p_data_type_id;
-
-    INSERT INTO type_name_value_entry(tnvc_id, order_num, data_type_id, data_name, fp_id) VALUES(ap_tnvc_id, p_order_num, dt_id, p_data_Type_id, p_fp_id);
-    
-
-
-end$$;
-
-
--- ==================================================================
--- SP__insert_actual_parms_tnvc
---  inserting an actual parm tnvc into spec.
--- IN 
--- 		p_ap_spec_id integer -  id of the spec this object is being added 
--- 		p_order_num integer -  order number
--- 		p_data_type_id integer - the id of the datatype in the data type table
--- 		p_tnvc_id integer - id of the type name value collection
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_actual_parms_tnvc(IN p_ap_spec_id integer, p_order_num integer, p_tnvc_id integer)
-LANGUAGE plpgsql
-AS $$
-DECLARE 
-ap_tnvc_id int;
-r_entry_id INT;
- BEGIN
-    
-    SELECT tnvc_id INTO ap_tnvc_id FROM actual_parmspec WHERE ap_spec_id = p_ap_spec_id;
-
-    CALL SP__insert_tnvc_tnvc_entry(ap_tnvc_id, p_order_num, p_tnvc_id, r_entry_id);
-end$$;
-
-
--- ==================================================================
--- SP__insert_actual_parms_ac
---  inserting an actual parm ac into spec.
--- IN 
--- 		p_ap_spec_id integer -  id of the spec this object is being added 
--- 		p_order_num integer -  order number
--- 		p_data_type_id integer - the id of the datatype in the data type table
--- 		p_ac_id integer - id of the ari collection
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_actual_parms_ac(IN p_ap_spec_id integer, p_order_num integer, p_ac_id integer)
-LANGUAGE plpgsql
-AS $$ 
-DECLARE 
-ap_tnvc_id int;
- r_entry_id INT;
-BEGIN 
-    
-    SELECT ap_tnvc_id=tnvc_id FROM actual_parmspec WHERE ap_spec_id = p_ap_spec_id;
-
-    CALL SP__insert_tnvc_ac_entry(ap_tnvc_id, p_order_num, p_ac_id, r_entry_id);
-
+    INSERT INTO actual_parmspec
+(ap_spec_id, fp_spec_id, value_set, use_desc)
+VALUES(nextval('actual_parmspec_ap_spec_id_seq'::regclass), p_fp_spec_id, p_value_set, p_use_desc) RETURNING ap_spec_id into r_ap_spec_id;
 end$$;
 
 
 
 
--- was used before one there wasnt two types of actual_parms so it was easy to parse a 
--- a list of parms 
---
--- 
--- 
--- CREATE OR REPLACE PROCEDURE SP__insert_actual_parms_set(IN p_num_parms integer, p_fp_spec_id integer, p_data_types_list varchar(10000), p_data_values_list varchar(10000), INOUT r_ap_spec_id integer)
- 
--- 	CALL SP__insert_actual_parmspec(p_fp_spec_id, r_ap_spec_id); 
---     @ap_spec_id :-- = r_ap_spec_id; 
---     @s := 'INSERT INTO actual_parm(order_num, ap_type, data_value, ap_spec_id) VALUES'; 
---     @loops := 1; 
---     WHILE @loops < p_num_parms DO 
 
--- 			-- @data_type
--- 				@data_type := TRIM(SUBSTRING_INDEX(p_data_types_list, ',', 1));
--- = REPLACE(p_data_types_list, CONCAT(@data_type, ','), '') into p_data_types_list 
---     
---             -- @data_value
--- 				@data_value := TRIM(SUBSTRING_INDEX(p_data_values_list, ',', 1));
--- = REPLACE(p_data_values_list, CONCAT(@data_value, ','), '') into p_data_values_list;
---             
--- 				@s = CONCAT(@s, '(', @loops, ',', (SELECT data_type_id FROM data_type where type_name = data_type), ',', '"', @data_value, '"', ',', @ap_spec_id, '),');
---                 @loops := loops + 1; 
---         END; 
---     END WHILE; 
---  
---     -- @data_type
--- 	@data_type := TRIM((SUBSTRING_INDEX(p_data_types_list, ',', 1)));
---     
--- 	
--- 	-- @data_value
--- 	@data_value := TRIM(SUBSTRING_INDEX(p_data_values_list, ',', 1));
-
--- 	@s = CONCAT(@s, '(', @loops, ',', (SELECT data_type_id FROM data_type where type_name = data_type), ',', '"', @data_value, '"', ',', @ap_spec_id, ')');
--- 	PREPARE stmt FROM @s; 
---     EXECUTE stmt; 
-
--- end$$;
 -- 
 
 
@@ -992,11 +358,11 @@ END$$;
 -- out
 -- 		r_actual_definition_id integer id of the actual defintion entry 
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_control_formal_definition(IN p_obj_id integer, p_use_desc varchar, p_fp_spec_id integer, INOUT r_definition_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_control_formal_definition(IN p_obj_id integer, p_use_desc varchar, p_fp_spec_id integer, p_result varchar, INOUT r_definition_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
 	CALL SP__insert_obj_formal_definition(p_obj_id, p_use_desc, r_definition_id); 
-    INSERT INTO control_formal_definition(obj_formal_definition_id, fp_spec_id) VALUES(r_definition_id, p_fp_spec_id);
+    INSERT INTO control_formal_definition(obj_formal_definition_id, fp_spec_id, result) VALUES(r_definition_id, p_fp_spec_id, p_result);
 end$$;
 
 
@@ -1093,6 +459,27 @@ END$$;
 
 
 
+ 
+
+-- =================
+-- for adding typdef into the database 
+-- SP__insert_typdef_actual_definition 
+-- IN 
+-- 		p_obj_id integer - metadata id of this SBR
+-- 		p_use_desc varchar - human readable description
+-- 		p_data_type_id - data type for the typdef 
+-- OUT 
+-- 		r_definition_id integer - id of the start 
+-- ====================================
+
+
+CREATE OR REPLACE PROCEDURE SP__insert_typdef_actual_definition(IN p_obj_id integer, p_use_desc varchar,  p_data_type_id integer, INOUT r_definition_id integer)
+LANGUAGE plpgsql
+AS $$ BEGIN
+	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id); 
+    INSERT INTO ident_actual_definition(obj_actual_definition_id, data_type_id) VALUES(r_definition_id, p_data_type_id);
+end$$;
+
 -- STORED PROCEDURE(S)
 
 -- 
@@ -1126,7 +513,7 @@ CREATE OR REPLACE PROCEDURE SP__insert_edd_formal_definition(IN p_obj_id integer
 LANGUAGE plpgsql
 AS $$ BEGIN
 	CALL SP__insert_obj_formal_definition(p_obj_id, p_use_desc, r_formal_definition_id); 
-    INSERT INTO edd_formal_definition(obj_formal_definition_id, fp_spec_id, data_type_id) VALUES(r_formal_definition_id, p_fp_spec_id, (SELECT data_type_id FROM data_type WHERE type_name  = p_external_data_type)); 
+    INSERT INTO edd_formal_definition(obj_formal_definition_id, fp_spec_id, data_type) VALUES(r_formal_definition_id, p_fp_spec_id, p_external_data_type); 
 end$$;
 
 
@@ -1320,13 +707,14 @@ end$$;
 -- IN 
 -- 		p_num_parms integer - number if parms in the spec
 -- 		p_use_desc varchar - human readable describtion
+--      p_parameters bytea - blob containg the parameters 
 -- OUT 
 -- 		r_fp_spec_id integer -  the id of the spec 
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_formal_parmspec(IN p_num_parms integer, p_use_desc varchar,  INOUT r_fp_spec_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_formal_parmspec(IN p_num_parms integer, p_use_desc varchar, p_parameters bytea, INOUT r_fp_spec_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
-	INSERT INTO formal_parmspec(num_parms, use_desc) VALUES(p_num_parms, p_use_desc) RETURNING  fp_spec_id INTO r_fp_spec_id;
+	INSERT INTO formal_parmspec(num_parms, use_desc ,p_parameters) VALUES(p_num_parms, p_use_desc, p_parameters) RETURNING  fp_spec_id INTO r_fp_spec_id;
 end$$;
 
 
@@ -1436,7 +824,7 @@ end$$;
 
 -- STORED PROCEDURE(S) for creating literals 
 -- need to update to allow ot be ari
-
+/*
 
 -- ==================================================================
 -- SP__insert_literal_actual_definition 
@@ -1466,7 +854,7 @@ CREATE OR REPLACE PROCEDURE SP__delete_literal_actual_definition(IN p_obj_id int
 LANGUAGE plpgsql
 AS $$ BEGIN
 	CALL SP__delete_obj_definition(p_obj_id); 
-end$$;
+end$$;*/
 
 -- STORED PROCEDURE(S) for creating updating and deleting macro definitions and actuals
 
@@ -1802,14 +1190,14 @@ end$$;
 
 
 
--- STORED PROCEDURE(S) For creating namespaces and adms
+-- STORED PROCEDURE(S) For creating date_models and adms
 
 -- ==================================================================
--- SP__insert_namespace
---    insert a new namespace into the db
+-- SP__insert_date_model
+--    insert a new date_model into the db
 -- Parameters:
 -- in 
---      p_namespace_type varchar - type of the namespace
+--      p_date_model_type varchar - type of the date_model
 -- 		p_issuing_org varchar - name of the issuing organization for this ADM.
 -- 		p_name_string varchar- his is the human-readable name of the ADM that should appear
 --           in message logs, user-interfaces, and other human-facing
@@ -1818,18 +1206,18 @@ end$$;
 --           ADM version representations are formated at the discretion of
 --           the publishing organization.
 -- out 
--- 		r_namespace_id integer - id of the namespace in the database 
+-- 		r_date_model_id integer - id of the date_model in the database 
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_namespace(IN p_namespace_type varchar, p_issuing_org varchar, p_name_string 
-varchar, p_version varchar, INOUT r_namespace_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_date_model(IN p_date_model_type varchar, p_issuing_org varchar, p_name_string 
+varchar, p_version varchar, INOUT r_date_model_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
 
-    SELECT namespace_id INTO r_namespace_id
-           FROM namespace
-           WHERE namespace_type=p_namespace_type AND issuing_org=p_issuing_org AND name_string=p_name_string AND version_name=p_version;
-    IF (r_namespace_id IS NULL) THEN
-    	INSERT INTO namespace(namespace_type, issuing_org, name_string, version_name) VALUES(p_namespace_type, p_issuing_org, p_name_string, p_version) RETURNING namespace_id INTo r_namespace_id; 
+    SELECT date_model_id INTO r_date_model_id
+           FROM date_model
+           WHERE date_model_type=p_date_model_type AND issuing_org=p_issuing_org AND name_string=p_name_string AND version_name=p_version;
+    IF (r_date_model_id IS NULL) THEN
+    	INSERT INTO date_model(date_model_type, issuing_org, name_string, version_name) VALUES(p_date_model_type, p_issuing_org, p_name_string, p_version) RETURNING date_model_id INTo r_date_model_id; 
     END IF;
     
 end$$;
@@ -1837,7 +1225,7 @@ end$$;
 
 
 -- ==================================================================
--- SP__insert_network_defined_namespace
+-- SP__insert_network_defined_date_model
 --    insert a new network defined adm into the db
 -- Parameters:
 -- in 
@@ -1852,20 +1240,20 @@ end$$;
 -- 			  defining an AMM object
 -- 	    p_tag varchar - any string used to disambiguate AMM Objects for an Issuer
 -- out 
--- 		r_namespace_id integer - id of the namespace in the database 
+-- 		r_date_model_id integer - id of the date_model in the database 
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_network_defined_namespace(IN p_issuing_org varchar, p_name_string varchar, 
-p_version varchar, p_issuer_binary_string varchar, p_tag varchar, INOUT r_namespace_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_network_defined_date_model(IN p_issuing_org varchar, p_name_string varchar, 
+p_version varchar, p_issuer_binary_string varchar, p_tag varchar, INOUT r_date_model_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
-	CALL SP__insert_namespace('NETWORK_CONFIG', p_issuing_org, p_name_string, p_version, r_namespace_id); 
-    INSERT INTO network_config(namespace_id, issuer_binary_string, tag) VALUES(r_namespace_id, p_issuer_binary_string, p_tag); 
+	CALL SP__insert_date_model('NETWORK_CONFIG', p_issuing_org, p_name_string, p_version, r_date_model_id); 
+    INSERT INTO network_config(date_model_id, issuer_binary_string, tag) VALUES(r_date_model_id, p_issuer_binary_string, p_tag); 
 end$$;
 
 
 
 -- ==================================================================
--- SP__insert_network_defined_namespace
+-- SP__insert_network_defined_date_model
 --    insert a new moderated adm into the db
 -- Parameters:
 -- in 
@@ -1879,23 +1267,23 @@ end$$;
 -- 		p_adm_name_string varchar -  this is the human-readable name of the ADM that should appear
 --           in message logs, user-interfaces, and other human-facing
 --           applications
--- 		p_adm_enum integer - an unsigned integer in the range of 0 to
+-- 		p_enumeration integer - an unsigned integer in the range of 0 to
 -- 			 (2^64)/20
--- 		p_adm_enum_label varchar - labeled based on the number of bytes
+-- 		p_enumeration_label varchar - labeled based on the number of bytes
 -- 			of the Nickname as a function of the size of the ADM enumeration
 -- 		p_use_desc varchar - human readable use description
 -- out
--- 		r_namespace_id integer - id of the namespace in the database 
+-- 		r_date_model_id integer - id of the date_model in the database 
 -- ==================================================================
 
-CREATE OR REPLACE PROCEDURE SP__insert_adm_defined_namespace(IN p_issuing_org varchar, p_namespace_string varchar, 
-p_version varchar, p_adm_name_string varchar, p_adm_enum integer, p_adm_enum_label varchar, 
-p_use_desc varchar, INOUT r_namespace_id integer) 
+CREATE OR REPLACE PROCEDURE SP__insert_adm_defined_date_model(IN p_issuing_org varchar, p_date_model_string varchar, 
+p_version varchar, p_adm_name_string varchar, p_enumeration integer, p_enumeration_label varchar, 
+p_use_desc varchar, INOUT r_date_model_id integer) 
 LANGUAGE plpgsql
 AS $$ BEGIN
-	CALL SP__insert_namespace('MODERATED', p_issuing_org, p_namespace_string, p_version, r_namespace_id);
-    INSERT INTO adm(namespace_id, adm_name, adm_enum, adm_enum_label, use_desc) VALUES(r_namespace_id, 
-    p_adm_name_string, p_adm_enum, p_adm_enum_label, p_use_desc); 
+	CALL SP__insert_date_model('MODERATED', p_issuing_org, p_date_model_string, p_version, r_date_model_id);
+    INSERT INTO adm(date_model_id, adm_name, enumeration, enumeration_label, use_desc) VALUES(r_date_model_id, 
+    p_adm_name_string, p_enumeration, p_enumeration_label, p_use_desc); 
 end$$; 
 
 
@@ -2065,11 +1453,11 @@ end$$;
 -- ====================================
 
 
-CREATE OR REPLACE PROCEDURE SP__insert_sbr_actual_definition(IN p_obj_id integer, p_use_desc varchar,  p_expr_id integer, p_ac_id integer, p_start_time time , INOUT r_definition_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_sbr_actual_definition(IN p_obj_id integer, p_use_desc varchar,  p_condition bytea, p_action bytea, p_min_interval integer, p_max_count integer, INOUT r_definition_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
 	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id); 
-    INSERT INTO sbr_actual_definition(obj_actual_definition_id, expression_id, run_count, start_time, ac_id) VALUES(r_definition_id, p_expr_id, p_run_count, p_start_time, p_ac_id);
+    INSERT INTO sbr_actual_definition(obj_actual_definition_id, condition, action, min_interval, max_count) VALUES(r_definition_id, p_condition, p_action, p_min_interval, p_max_count);
 end$$;
 
 
@@ -2100,11 +1488,6 @@ BEGIN
 		select obj_name from vw_sbr_formal where obj_id = p_obj_id into p_obj_name;
     END IF ;
     
-	exp_id = (SELECT expression_id FROM vw_sbr_actual where obj_actual_definition = p_obj_id); 
-	ac_id = (SELECT ac_id FROM vw_sbr_actual where obj_actual_definition = p_obj_id); 
-	
-    DELETE FROM ari_collection WHERE ac_id = ac_id;
-    DELETE FROM expression WHERE expression_id = exp_id;
 	
     CALL SP__delete_obj_atual_defintion(p_obj_id, p_obj_name);
 end$$;
@@ -2202,17 +1585,7 @@ AS $$
 DECLARE
 tnvc_id integer; 
 BEGIN
-	IF p_obj_id != NULL then BEGIN
-		tnvc_id = (select tnvc_id from table_template_actual_definition where obj_actual_definition_id = p_obj_id);
-	END;
-	ELSE BEGIN
-		 tnvc_id :=
-			(select tnvc_id from table_template_actual_definition where obj_atual_definition_id = 
-				(select obj_actual_definition_id  from obj_actual_definition where obj_metadata_id = 
-					(select obj_metadata_id from obj_metadata where obj_name = p_obj_name)));
-	END;
-   END IF;
-   CALL SP__delete_tnvc(tnvc_id);
+
    CALL SP__delete_obj_actual_definition(p_obj_id, null);
    
 end$$;
@@ -2253,11 +1626,11 @@ end$$;
 
 
 CREATE OR REPLACE PROCEDURE SP__insert_tbr_actual_definition(IN p_obj_id integer, p_use_desc varchar, 
-p_wait_per time, p_run_count bigint, p_start_time time, p_ac_id integer, INOUT r_definition_id integer)
+p_wait_per time, p_run_count bigint, p_start_time time, p_action bytea, INOUT r_definition_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
 	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id); 
-    INSERT INTO tbr_actual_definition(obj_actual_definition_id, wait_period, run_count, start_time, ac_id) VALUES(r_definition_id, p_wait_per, p_run_count, p_start_time, p_ac_id);
+    INSERT INTO tbr_actual_definition(obj_actual_definition_id, wait_period, run_count, start_time, action) VALUES(r_definition_id, p_wait_per, p_run_count, p_start_time, p_action);
 end$$;
 
 
@@ -2287,133 +1660,43 @@ BEGIN
 		select obj_name from vw_tbr_formal where obj_id = p_obj_id into p_obj_name;
     END IF ;
     
-
-	ac_id = (SELECT ac_id FROM vw_tbr_actual where obj_actual_definition = p_obj_id); 
-	
-    DELETE FROM ari_collection WHERE ac_id = ac_id;
 	
     CALL SP__delete_obj_atual_defintion(p_obj_id, p_obj_name);
 end$$;
 
--- STORED PROCEDURE(S) for inserting type name value collections into db
 
 
 
 
 
-
-
-
-
-
--- ==================================================================
--- SP__insert_tnv_collection
--- inserts entries into the collection using ',' lists
--- IN
--- 		p_num_entries integer - number of entries in the collection
--- 		p_data_types_list varchar(10000) - list of the data types  
--- 		p_data_names_list varchar(10000) - list of the names
--- 		p_data_values_list varchar(10000) - list of the values
--- OUT 
--- 		r_tnvc_id integer - id of the collection
--- ==================================================================
--- 
--- 
--- CREATE OR REPLACE PROCEDURE SP__insert_tnv_collection(IN p_num_entries integer, p_data_types_list varchar(10000), p_data_names_list varchar(10000), p_data_values_list varchar(10000), INOUT r_tnvc_id integer)
- 
--- 	CALL SP__insert_tnvc(p_num_entries, r_tnvc_id); 
---     @tnvc_id :-- = r_tnvc_id; 
---     @s := 'INSERT INTO type_name_value(tnvc_id, order_num, data_type_id, data_name, obj_actual_definition_id) VALUES'; 
---     @loops := 1; 
---     WHILE @loops < p_num_entries DO 
-
--- 			-- @data_type
--- 				IF p_data_types_list IS NOT NULL THEN 
--- 					LANGUAGE plpgsql
--- AS $$ 
--- 						@data_type := TRIM(SUBSTRING_INDEX(p_data_types_list, ',', 1));
--- = REPLACE(p_data_types_list, CONCAT(@data_type, ','), '') into p_data_types_list;
--- 				    END; 
--- 				ELSE 
--- 					LANGUAGE plpgsql
--- AS $$
--- 						@data_type := 'NULL'; 
---                     END; 
--- 				END IF;
---                 
---  			-- @data_name
--- 				IF p_data_names_list IS NOT NULL THEN 
--- 					LANGUAGE plpgsql
--- AS $$ 
--- 						@data_name := TRIM(SUBSTRING_INDEX(p_data_names_list, ',', 1)); 
--- = REPLACE(p_data_names_list, CONCAT(@data_name, ','), '') into p_data_names_list;
---                     END;
--- 				ELSE 
--- 					LANGUAGE plpgsql
--- AS $$
--- 						@data_name := 'NULL'; 
---                     END; 
---                 END IF;
---                 
---             -- @data_value
--- 				IF p_data_values_list IS NOT NULL THEN 
--- 					LANGUAGE plpgsql
--- AS $$ 
--- 						@data_value := TRIM(SUBSTRING_INDEX(p_data_values_list, ',', 1));
--- = REPLACE(p_data_values_list, CONCAT(@data_value, ','), '') into p_data_values_list;
---                     END;
--- 				ELSE 
--- 					LANGUAGE plpgsql
--- AS $$
--- 						@data_value := 'NULL'; 
---                     END; 
--- 				END IF; 
--- 				@s = CONCAT(@s, '(', @tnvc_id, ',', @loops, ',', (SELECT data_type_id FROM data_type where type_name = data_type), ',', '"', @data_name, '"', ',', '"', @data_value, '"', '),');
---                 @loops := loops + 1; 
---         END; 
---     END WHILE; 
---  
---     -- @data_type
---     IF p_data_types_list IS NOT NULL THEN
- 
--- 			@data_type := TRIM((SUBSTRING_INDEX(p_data_types_list, ',', 1)));
--- 		END; 
---     ELSE
-
--- 			@data_type := 'NULL'; 
---         END; 
---     END IF; 
---     
--- 	-- @data_name
---     IF p_data_names_list IS NOT NULL THEN
- 
--- 			@data_name := TRIM(SUBSTRING_INDEX(p_data_names_list, ',', 1));
--- 		END;
--- 	ELSE 
-
--- 			@data_name := 'NUL
---         END; 
--- 	END IF; 
---     
--- 	-- @data_value
---     IF p_data_values_list IS NOT NULL THEN
- 
--- 			@data_value := TRIM(SUBSTRING_INDEX(p_data_values_list, ',', 1));
--- 		END; 
--- 	ELSE
-
--- 			@data_value := 'NULL'; 
---         END; 
---     END IF; 
--- 	@s = CONCAT(@s, '(', @tnvc_id, ',', @loops, ',', (SELECT data_type_id FROM data_type where type_name = data_type), ',', '"', @data_name, '"', ',', '"', @data_value, '"', ')');
--- 	PREPARE stmt FROM @s; 
---     EXECUTE stmt; 
-
--- end$$;
 -- 
 
 
 -- STORED PROCEDURE(S) for adding updating and removing variables 
+-- ==================================================================
+-- SP__insert_variable_definition 
+-- inserting a new variable 
+-- IN 
+-- 		p_obj_id integer - metadata id of the variable
+-- 		p_use_desc varchar - human readable description 
+-- 		p_out_type integer - out type of the variable
+-- 		p_num_operators integer - number of operators 
+-- 		p_operator_ids_list varchar - 
+-- OUT 
+-- 		r_definition_id integer - definition id of the variable
+--
+-- ==================================================================
+CREATE OR REPLACE PROCEDURE SP__insert_formal_variable_definition(IN p_obj_id integer, p_use_desc varchar, p_fp_spec_id integer,
+p_out_type integer,  p_expression bytea, p_init_value bytea, INOUT r_definition_id integer)
+LANGUAGE plpgsql
+AS $$ 
+DECLARE 
+r_expr_id int;
+BEGIN 
+	CALL SP__insert_obj_formal_definition(p_obj_id, p_use_desc, r_definition_id);
+	INSERT INTO variable_formal_definition(obj_formal_definition_id, fp_spec_id, data_type_id, expression, init_value) VALUES(r_definition_id, p_fpe_spec_id,p_out_type, p_expression, p_init_value); 
+end$$;
+
 
 -- ==================================================================
 -- SP__insert_variable_definition 
@@ -2428,17 +1711,15 @@ end$$;
 -- 		r_definition_id integer - definition id of the variable
 --
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_variable_definition(IN p_obj_id integer, p_use_desc varchar, 
-p_out_type integer,  p_expression_id integer, INOUT r_definition_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_acutal_variable_definition(IN p_obj_id integer, p_use_desc varchar, p_ap_spec_id integer,
+INOUT r_definition_id integer)
 LANGUAGE plpgsql
 AS $$ 
 DECLARE 
 r_expr_id int;
 BEGIN 
 	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id);
-	-- call expresion builder for var Initializer
-    CALL SP__insert_expression(p_out_type, p_expression_id, r_expr_id);
-	INSERT INTO variable_actual_definition(obj_actual_definition_id, data_type_id, expression_id) VALUES(r_definition_id, p_out_type, r_expr_id); 
+	INSERT INTO variable_actual_definition(obj_actual_definition_id,ap_spec_id) VALUES(r_definition_id, p_ap_spec_id); 
 
 end$$;
 
