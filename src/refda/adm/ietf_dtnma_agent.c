@@ -1320,11 +1320,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
     const ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     ari_bool     l_val, r_val;
 
-    if (ari_get_bool(left, &l_val) || ari_get_bool(right, &r_val))
-    {
-        CACE_LOG_WARNING("Unable to retrieve boolean values");
-    }
-    else
+    if (!ari_get_bool(left, &l_val) && !ari_get_bool(right, &r_val))
     {
         ari_t result = ARI_INIT_UNDEFINED;
         ari_set_bool(&result, l_val != r_val);
@@ -1356,11 +1352,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
     const ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     ari_bool     l_val, r_val;
 
-    if (ari_get_bool(left, &l_val) || ari_get_bool(right, &r_val))
-    {
-        CACE_LOG_WARNING("Unable to retrieve boolean values");
-    }
-    else
+    if (!ari_get_bool(left, &l_val) && !ari_get_bool(right, &r_val))
     {
         ari_t result = ARI_INIT_UNDEFINED;
         ari_set_bool(&result, l_val && r_val);
@@ -1392,11 +1384,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
     const ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     ari_bool     l_val, r_val;
 
-    if (ari_get_bool(left, &l_val) || ari_get_bool(right, &r_val))
-    {
-        CACE_LOG_WARNING("Unable to retrieve boolean values");
-    }
-    else
+    if (!ari_get_bool(left, &l_val) && !ari_get_bool(right, &r_val))
     {
         ari_t result = ARI_INIT_UNDEFINED;
         ari_set_bool(&result, l_val || r_val);
@@ -1428,11 +1416,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
     const ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     ari_bool     l_val, r_val;
 
-    if (ari_get_bool(left, &l_val) || ari_get_bool(right, &r_val))
-    {
-        CACE_LOG_WARNING("Unable to retrieve boolean values");
-    }
-    else
+    if (!ari_get_bool(left, &l_val) && !ari_get_bool(right, &r_val))
     {
         ari_t result = ARI_INIT_UNDEFINED;
         ari_set_bool(&result, l_val != r_val);
