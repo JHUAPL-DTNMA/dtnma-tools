@@ -1316,7 +1316,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_not BODY
      * +-------------------------------------------------------------------------+
      */
-    const ari_t *val  = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const ari_t *val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     ari_bool     raw_val;
 
     if (!ari_get_bool(val, &raw_val))
