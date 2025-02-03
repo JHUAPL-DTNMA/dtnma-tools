@@ -94,30 +94,10 @@ int amm_type_set_use_ref_move(amm_type_t *type, ari_t *name)
     amm_semtype_use_init(semtype);
     ari_set_move(&(semtype->name), name);
 
-    int failcnt = 0;
-    if (semtype->name.is_ref)
-    {
-        CACE_LOG_WARNING("Binding failed because objref is not supported here");
-        failcnt = 1;
-    }
-    else
-    {
-        const int64_t *aritype = ari_get_aritype(&(semtype->name));
-        if (aritype)
-        {
-            semtype->base = amm_type_get_builtin((ari_type_t)*aritype);
-        }
-        else
-        {
-            CACE_LOG_WARNING("Binding failed because literal is not an ARITYPE");
-            failcnt = 1;
-        }
-    }
-
     type->as_semtype        = semtype;
     type->as_semtype_deinit = (amm_semtype_deinit_f)amm_semtype_use_deinit;
 
-    return failcnt;
+    return 0;
 }
 
 int amm_type_set_use_direct(amm_type_t *type, const amm_type_t *base)
