@@ -18,7 +18,7 @@
 #ifndef REFDA_AMM_CTRL_H_
 #define REFDA_AMM_CTRL_H_
 
-#include "refda/exec.h"
+#include "cace/amm/typing.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,6 +35,7 @@ typedef struct refda_ctrl_exec_ctx_s refda_ctrl_exec_ctx_t;
 typedef struct
 {
     /** An optional type for the result value.
+     * This type will not change during the lifetime of the CTRL.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */

@@ -91,8 +91,15 @@ int ari_get_vast(const ari_t *ari, ari_vast *out);
 /// @overload
 int ari_get_uvast(const ari_t *ari, ari_uvast *out);
 
-/// @overload
+/** @overload
+ * The output in this case is in the DTN time epoch.
+ */
 int ari_get_tp(const ari_t *ari, struct timespec *out);
+
+/** @overload
+ * The output in this case is in the POSIX time epoch.
+ */
+int ari_get_tp_posix(const ari_t *ari, struct timespec *out);
 
 /// @overload
 int ari_get_td(const ari_t *ari, struct timespec *out);
@@ -164,14 +171,22 @@ void ari_set_tstr(ari_t *ari, const char *buf, bool copy);
 /// @overload
 void ari_set_bstr(ari_t *ari, cace_data_t *src, bool copy);
 
-/// @overload
+/** @overload
+ * The input in this case is in the DTN time epoch.
+ */
 void ari_set_tp(ari_t *ari, struct timespec dtntime);
+/** @overload
+ * The input in this case is in the POSIX time epoch.
+ */
+void ari_set_tp_posix(ari_t *ari, struct timespec ptime);
 
 /// @overload
 void ari_set_td(ari_t *ari, struct timespec delta);
 
 /// @overload
 void ari_set_aritype(ari_t *ari, ari_type_t type);
+/// @overload
+void ari_set_aritype_text(ari_t *ari, ari_type_t type);
 
 /** Set the ARI as an AC, optionally moving values from an external source.
  *
@@ -272,16 +287,6 @@ static inline void ari_set_objref_path_textid(ari_t *ari, const char *ns_id, ari
 {
     ari_objpath_set_textid(&(ari_set_objref(ari)->objpath), ns_id, type_id, obj_id);
 }
-
-/** Set just the parameters of an object reference ARI.
- *
- * @param[in,out] ari The ARI value to modify, which must already be
- * initialized as an object reference.
- * @param[in,out] src An optional existing value struct to move from.
- */
-void ari_set_objref_params_ac(ari_t *ari, struct ari_ac_s *src);
-/// @overload
-void ari_set_objref_params_am(ari_t *ari, struct ari_am_s *src);
 
 #ifdef __cplusplus
 }

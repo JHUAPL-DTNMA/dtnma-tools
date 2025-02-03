@@ -29,6 +29,7 @@ extern "C" {
 typedef struct
 {
     /** The type being named by this TYPEDEF.
+     * This type will not change during the lifetime of the TYPEDEF.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */

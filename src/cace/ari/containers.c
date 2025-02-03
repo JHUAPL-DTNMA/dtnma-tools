@@ -367,6 +367,7 @@ bool ari_rptset_equal(const ari_rptset_t *left, const ari_rptset_t *right)
 
 void ari_lit_init_container(ari_lit_t *lit, ari_type_t ctype)
 {
+    CHKVOID(lit);
     lit->has_ari_type = true;
     lit->ari_type     = ctype;
     lit->prim_type    = ARI_PRIM_OTHER;

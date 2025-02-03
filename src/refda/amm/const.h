@@ -31,6 +31,13 @@ extern "C" {
  */
 typedef struct
 {
+    /** The required type for the stored value and result value.
+     * This type will not change during the lifetime of the CONST.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this descriptor.
+     */
+    amm_type_t val_type;
+
     /** Storage for the constant value.
      * This is type-converted at initialization time so the parent
      * struct has no explicit ::amm_type_t because it is assumed that the

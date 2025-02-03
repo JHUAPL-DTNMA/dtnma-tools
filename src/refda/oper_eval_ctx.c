@@ -81,22 +81,22 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
     return failcnt ? 3 : 0;
 }
 
-const ari_t *refda_oper_eval_ctx_get_aparam_index(refda_oper_eval_ctx_t *ctx, size_t index)
+const ari_t *refda_oper_eval_ctx_get_aparam_index(const refda_oper_eval_ctx_t *ctx, size_t index)
 {
     return ari_array_cget(ctx->deref->aparams.ordered, index);
 }
 
-const ari_t *refda_oper_eval_ctx_get_aparam_name(refda_oper_eval_ctx_t *ctx, const char *name)
+const ari_t *refda_oper_eval_ctx_get_aparam_name(const refda_oper_eval_ctx_t *ctx, const char *name)
 {
     return *named_ari_ptr_dict_cget(ctx->deref->aparams.named, name);
 }
 
-const ari_t *refda_oper_eval_ctx_get_operand_index(refda_oper_eval_ctx_t *ctx, size_t index)
+const ari_t *refda_oper_eval_ctx_get_operand_index(const refda_oper_eval_ctx_t *ctx, size_t index)
 {
     return ari_array_cget(ctx->operands.ordered, index);
 }
 
-const ari_t *refda_oper_eval_ctx_get_operand_name(refda_oper_eval_ctx_t *ctx, const char *name)
+const ari_t *refda_oper_eval_ctx_get_operand_name(const refda_oper_eval_ctx_t *ctx, const char *name)
 {
     return *named_ari_ptr_dict_cget(ctx->operands.named, name);
 }

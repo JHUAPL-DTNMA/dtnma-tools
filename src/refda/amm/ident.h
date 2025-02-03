@@ -58,6 +58,7 @@ M_DEQUE_DEF(refda_amm_ident_base_list, refda_amm_ident_base_t)
 typedef struct refda_amm_ident_desc_s
 {
     /** All base IDENT objects for this object.
+     * This list will not change during the lifetime of the IDENT.
      */
     refda_amm_ident_base_list_t bases;
 

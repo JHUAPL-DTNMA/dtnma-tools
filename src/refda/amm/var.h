@@ -32,6 +32,7 @@ extern "C" {
 typedef struct
 {
     /** The required type for the stored value and result value.
+     * This type will not change during the lifetime of the VAR.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
@@ -43,6 +44,11 @@ typedef struct
      */
     ari_t value;
 
+    /** Optional initializer value.
+     * This initializer will not change during the lifetime of the VAR.
+     * This is set to the undefined value if not used.
+     */
+    ari_t init_val;
 } refda_amm_var_desc_t;
 
 void refda_amm_var_desc_init(refda_amm_var_desc_t *obj);

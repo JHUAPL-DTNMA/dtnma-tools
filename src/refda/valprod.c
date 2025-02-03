@@ -53,6 +53,7 @@ static int refda_valprod_var_run(const refda_amm_var_desc_t *obj, refda_valprod_
     ari_set_copy(&(ctx->value), &(obj->value));
     // FIXME use ctx parameters to substitute
 
+    if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         string_t buf;
         string_init(buf);
@@ -75,29 +76,14 @@ static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_
     refda_edd_prod_ctx_init(&eddctx, obj, prodctx);
 
     (obj->produce)(&eddctx);
+
+    if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         string_t buf;
         string_init(buf);
         ari_text_encode(buf, &(prodctx->value), ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
         string_clear(buf);
-    }
-
-    if (ari_is_undefined(&(prodctx->value)))
-    {
-        CACE_LOG_WARNING("production finished with value undefined");
-        return 2;
-    }
-
-    // force output type
-    ari_t tmp;
-    ari_init(&tmp);
-    int res = amm_type_convert(&(obj->prod_type), &tmp, &(prodctx->value));
-    ari_set_move(&(prodctx->value), &tmp);
-    if (res)
-    {
-        CACE_LOG_WARNING("production finished with non-convertable value");
-        return 3;
     }
 
     return 0;

@@ -188,7 +188,7 @@ int base64_decode(cace_data_t *out, const string_t in);
 
 /** Encode to a UTC time in text form.
  * This is defined in Appendix A of RFC 3339 @cite rfc3339.
- * @note The DTN epoch is 2000-01-01T00:00:00Z.
+ * @note The DTN epoch is 2000-01-01T00:00:00Z from @cite rfc9171.
  *
  * @param[out] out The output buffer, which will be sized to its text and
  * null terminated.
