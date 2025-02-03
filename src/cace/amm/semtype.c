@@ -88,13 +88,13 @@ static cace_amm_type_match_res_t cace_amm_semtype_use_match(const cace_amm_type_
         return got;
     }
 
-    return cace_amm_semtype_use_constraints(semtype, ari);
+    return cace_amm_type_match_pos_neg(cace_amm_semtype_use_constraints(semtype, ari));
 }
 
 static int cace_amm_semtype_use_convert(const cace_amm_type_t *self, cace_ari_t *out, const cace_ari_t *in)
 {
     const cace_amm_semtype_use_t *semtype = self->as_semtype;
-    CHKFALSE(semtype);
+    CHKERR1(semtype);
     const cace_amm_type_t *base = semtype->base;
     CHKERR1(base);
 
@@ -180,7 +180,13 @@ static void cace_amm_semtype_ulist_name(const cace_amm_type_t *self, cace_ari_t 
 
 static cace_amm_type_match_res_t cace_amm_semtype_ulist_match(const cace_amm_type_t *self, const cace_ari_t *ari)
 {
+    if (cace_ari_is_undefined(ari))
+    {
+        return CACE_AMM_TYPE_MATCH_UNDEFINED;
+    }
+
     const cace_amm_semtype_ulist_t *semtype = self->as_semtype;
+    CHKRET(semtype, CACE_AMM_TYPE_MATCH_NEGATIVE);
 
     const struct cace_ari_ac_s *val = cace_ari_cget_ac(ari);
     if (!val)
@@ -224,6 +230,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_ulist_match(const cace_amm_typ
 static int cace_amm_semtype_ulist_convert(const cace_amm_type_t *self, cace_ari_t *out, const cace_ari_t *in)
 {
     const cace_amm_semtype_ulist_t *semtype = self->as_semtype;
+    CHKERR1(semtype);
 
     const struct cace_ari_ac_s *inval = cace_ari_cget_ac(in);
     if (!inval)
@@ -430,7 +437,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_dlist_match(const cace_amm_typ
 static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_t *out, const cace_ari_t *in)
 {
     const cace_amm_semtype_dlist_t *semtype = self->as_semtype;
-    M_ASSERT(semtype);
+    CHKERR1(semtype);
 
     const struct cace_ari_ac_s *inval = cace_ari_cget_ac(in);
     if (!inval)
@@ -556,6 +563,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_umap_match(const cace_amm_type
 static int cace_amm_semtype_umap_convert(const cace_amm_type_t *self, cace_ari_t *out, const cace_ari_t *in)
 {
     const cace_amm_semtype_umap_t *semtype = self->as_semtype;
+    CHKERR1(semtype);
 
     const struct cace_ari_am_s *inval = cace_ari_cget_am(in);
     if (!inval)
@@ -686,6 +694,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_tblt_match(const cace_amm_type
 static int cace_amm_semtype_tblt_convert(const cace_amm_type_t *self, cace_ari_t *out, const cace_ari_t *in)
 {
     const cace_amm_semtype_tblt_t *semtype = self->as_semtype;
+    CHKERR1(semtype);
 
     const struct cace_ari_tbl_s *inval = cace_ari_cget_tbl(in);
     if (!inval)
@@ -795,6 +804,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_union_match(const cace_amm_typ
     }
 
     const cace_amm_semtype_union_t *semtype = self->as_semtype;
+    CHKRET(semtype, CACE_AMM_TYPE_MATCH_NEGATIVE);
 
     cace_amm_type_array_it_t it;
     for (cace_amm_type_array_it(it, semtype->choices); !cace_amm_type_array_end_p(it); cace_amm_type_array_next(it))
@@ -814,6 +824,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_union_match(const cace_amm_typ
 static int cace_amm_semtype_union_convert(const cace_amm_type_t *self, cace_ari_t *out, const cace_ari_t *in)
 {
     const cace_amm_semtype_union_t *semtype = self->as_semtype;
+    CHKERR1(semtype);
     CACE_LOG_DEBUG("type union with %d choices", cace_amm_type_array_size(semtype->choices));
 
     const cace_amm_type_t *found = NULL;
