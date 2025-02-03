@@ -1968,10 +1968,10 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
 
                     /** Build an ARI Object from given ID
                      */
-                    ari_t *db_query_ari(size_t dbidx, int ari_id)
+                    cace_ari_t *db_query_ari(size_t dbidx, int ari_id)
                     {
-                        ari_t    *ari;
-                        amp_uvast temp;
+                        cace_ari_t *ari;
+                        amp_uvast   temp;
 
                         // Query ARI
                         enum cols
@@ -2245,7 +2245,7 @@ uint32_t db_mgt_init_con(size_t idx, sql_db_t parms)
                                 // Query details
                                 for (int i = 0; i < nrows; i++)
                                 {
-                                    ari_t *ari = db_query_ari(dbidx, ari_ids[i]);
+                                    cace_ari_t *ari = db_query_ari(dbidx, ari_ids[i]);
                                     if (ari == NULL)
                                     {
 #ifdef HAVE_MYSQL
@@ -4948,7 +4948,7 @@ int32_t db_fetch_protomid_idx(mid_t *mid)
 #endif // HAVE_POSTGRESQL
                                         }
 
-                                        uint32_t db_insert_ari_lit(db_con_t dbidx, ari_t * ari, int *status)
+                                        uint32_t db_insert_ari_lit(db_con_t dbidx, cace_ari_t * ari, int *status)
                                         {
                                             // TODO
                                             DB_LOG_ERR(dbidx, "db_insert ARI LIT TODO");
@@ -4956,8 +4956,8 @@ int32_t db_fetch_protomid_idx(mid_t *mid)
                                             return 0;
                                         }
 
-                                        int db_query_ari_metadata(db_con_t dbidx, ari_t * ari, uint32_t * metadata_id,
-                                                                  uint32_t * fp_spec_id)
+                                        int db_query_ari_metadata(db_con_t dbidx, cace_ari_t * ari,
+                                                                  uint32_t * metadata_id, uint32_t * fp_spec_id)
                                         {
                                             CHKZERO(ari);
 
@@ -5029,7 +5029,7 @@ int32_t db_fetch_protomid_idx(mid_t *mid)
                                                 return AMP_OK;
                                             }
                                             /** @returns 0 on error, obj_actual_definition/ari id on success */
-                                            uint32_t db_insert_ari_reg(db_con_t dbidx, ari_t * ari, int *status)
+                                            uint32_t db_insert_ari_reg(db_con_t dbidx, cace_ari_t * ari, int *status)
                                             {
                                                 uint32_t metadata_id = 0;
                                                 uint32_t fp_spec_id  = 0;
@@ -5113,7 +5113,7 @@ int32_t db_fetch_protomid_idx(mid_t *mid)
                                                     return rtv;
                                                 }
 
-                                                uint32_t db_insert_ari(db_con_t dbidx, ari_t * ari, int *status)
+                                                uint32_t db_insert_ari(db_con_t dbidx, cace_ari_t * ari, int *status)
                                                 {
                                                     switch (ari->type)
                                                     {
@@ -5232,7 +5232,8 @@ int32_t db_fetch_protomid_idx(mid_t *mid)
                                                             /* Add entries */
                                                             for (int i = 0; i < num; i++)
                                                             {
-                                                                ari_t   *ari    = (ari_t *)vec_at(&(ac->values), i);
+                                                                cace_ari_t *ari =
+                                                                    (cace_ari_t *)vec_at(&(ac->values), i);
                                                                 uint32_t ari_id = db_insert_ari(dbidx, ari, status);
                                                                 if (ari_id == 0)
                                                                 {
@@ -5390,7 +5391,7 @@ int32_t db_fetch_protomid_idx(mid_t *mid)
                                                                 case AMP_TYPE_ARI:
                                                                 case AMP_TYPE_LIT:
                                                                     id = db_insert_ari(
-                                                                        dbidx, (ari_t *)tnv->value.as_ptr, status);
+                                                                        dbidx, (cace_ari_t *)tnv->value.as_ptr, status);
 #ifdef HAVE_MYSQL
                                                                     stmt = queries[dbidx][TNVC_INSERT_ARI];
 #endif // HAVE_MYSQL

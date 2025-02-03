@@ -41,7 +41,7 @@ extern "C" {
  * @param[in,out] result The result value to move into the report.
  * @return Zero if successful.
  */
-int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *result);
+int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_ari_t *result);
 
 /** Implement the reporting procedure from Section TBD of @cite ietf-dtn-amm-01.
  *
@@ -49,7 +49,7 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const ari_t *target, ari_t *res
  * @param[in] target The ARI to generate a report for.
  * @return Zero if successful.
  */
-int refda_reporting_target(refda_runctx_t *runctx, const ari_t *target);
+int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target);
 
 /** Generate and queue a one-report RPTSET value.
  *
@@ -57,7 +57,7 @@ int refda_reporting_target(refda_runctx_t *runctx, const ari_t *target);
  * @param[in] mgr_ident The identity of the manager to send to.
  * @param[in,out] items The item list for the new report, which is moved out of.
  */
-int refda_reporting_gen(refda_agent_t *agent, const m_string_t mgr_ident, const ari_t *src, ari_list_t items);
+int refda_reporting_gen(refda_agent_t *agent, const m_string_t mgr_ident, const cace_ari_t *src, cace_ari_list_t items);
 
 #ifdef __cplusplus
 } // extern C

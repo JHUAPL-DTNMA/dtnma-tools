@@ -64,7 +64,7 @@ void cace_amm_obj_ns_ctr_deinit(cace_amm_obj_ns_ctr_t *obj);
  * object containers.
  */
 /// @cond Doxygen_Suppress
-M_DICT_DEF2(cace_amm_obj_ns_ctr_dict, ari_type_t, M_OPL_ari_type_t(), cace_amm_obj_ns_ctr_t,
+M_DICT_DEF2(cace_amm_obj_ns_ctr_dict, cace_ari_type_t, M_OPL_cace_ari_type_t(), cace_amm_obj_ns_ctr_t,
             M_OPL_cace_amm_obj_ns_ctr_t())
 /// @endcond
 
@@ -110,12 +110,14 @@ cace_amm_obj_id_t cace_amm_obj_id_withenum(const char *name, int64_t intenum);
 /// @overload
 cace_amm_obj_id_t cace_amm_obj_id_noenum(const char *name);
 
-cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type,
+cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
                                              const cace_amm_obj_id_t obj_id);
 
-cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_name(const cace_amm_obj_ns_t *ns, ari_type_t obj_type, const char *name);
+cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_name(const cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
+                                                   const char *name);
 
-cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, ari_type_t obj_type, int64_t intenum);
+cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
+                                                   int64_t intenum);
 
 #ifdef __cplusplus
 } // extern C

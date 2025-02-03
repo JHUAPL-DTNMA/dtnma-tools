@@ -86,14 +86,14 @@ amp_vast  ui_input_vast(const char *prompt);
 
 ac_t *ui_input_ac(const char *prompt);
 
-ari_t *ui_input_ari(const char *prompt, uint8_t adm_id, amp_uvast mask);
-ari_t *ui_input_ari_build(amp_uvast mask);
-int    ui_input_ari_flags(uint8_t *flag);
-ari_t *ui_input_ari_list(uint8_t adm_id, amp_uvast mask);
-ari_t *ui_input_ari_lit(const char *prompt);
-ari_t *ui_input_ari_raw(uint8_t no_file);
-int    ui_input_ari_type(amp_uvast mask);
-int    ui_input_parms(ari_t *id);
+cace_ari_t *ui_input_ari(const char *prompt, uint8_t adm_id, amp_uvast mask);
+cace_ari_t *ui_input_ari_build(amp_uvast mask);
+int         ui_input_ari_flags(uint8_t *flag);
+cace_ari_t *ui_input_ari_list(uint8_t adm_id, amp_uvast mask);
+cace_ari_t *ui_input_ari_lit(const char *prompt);
+cace_ari_t *ui_input_ari_raw(uint8_t no_file);
+int         ui_input_ari_type(amp_uvast mask);
+int         ui_input_parms(cace_ari_t *id);
 
 tnv_t  *ui_input_tnv(int type, char *prompt);
 tnvc_t *ui_input_tnvc(const char *prompt);

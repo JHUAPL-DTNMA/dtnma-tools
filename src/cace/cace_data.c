@@ -35,7 +35,7 @@ static void cace_data_int_free(cace_data_t *data)
 {
     if (data->owned && data->ptr)
     {
-        ARI_FREE(data->ptr);
+        CACE_FREE(data->ptr);
     }
 }
 
@@ -223,7 +223,7 @@ int cace_data_resize(cace_data_t *data, size_t len)
     {
         data->ptr = NULL;
     }
-    cace_data_ptr_t got = ARI_REALLOC(data->ptr, len);
+    cace_data_ptr_t got = CACE_REALLOC(data->ptr, len);
     if (UNLIKELY(!got))
     {
         cace_data_int_reset(data);
@@ -289,7 +289,7 @@ int cace_data_append_byte(cace_data_t *data, uint8_t val)
 
 int cace_data_from_m_string(cace_data_t *data, const struct m_string_s *src)
 {
-    const size_t len = string_size(src) + 1;
-    cace_data_copy_from(data, len, (cace_data_ptr_t)string_get_cstr(src));
+    const size_t len = m_string_size(src) + 1;
+    cace_data_copy_from(data, len, (cace_data_ptr_t)m_string_get_cstr(src));
     return 0;
 }

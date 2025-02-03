@@ -12,7 +12,7 @@
 #include "cace/util/defs.h"
 #include <stdio.h>
 
-static int ari_valseg_decode(string_t out, const char *in, size_t inlen);
+static int cace_ari_valseg_decode(string_t out, const char *in, size_t inlen);
 %}
 
 /* This is the same as RFC 3986 'segment-nz' production with some excluded
@@ -46,19 +46,19 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 
     {
         string_t decoded;
-        if (ari_valseg_decode(decoded, curs, yyleng - 2))
+        if (cace_ari_valseg_decode(decoded, curs, yyleng - 2))
         {
             cace_ari_text_str_error(yyscanner, yyextra, "NS-ID segment failed to percent-decode");
             return YYerror;
         }
-        ari_idseg_init_from_text(&(yylval->idseg), decoded);
+        cace_ari_idseg_init_from_text(&(yylval->idseg), decoded);
     }
     BEGIN(ARI_OBJREF);
     return T_IDSEG;
 }
 <INITIAL>"." {
     // A null namespace segment
-    ari_idseg_init(&(yylval->idseg));
+    cace_ari_idseg_init(&(yylval->idseg));
     BEGIN(ARI_OBJREF);
     return T_IDSEG;
 }
@@ -73,12 +73,12 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 
     {
         string_t decoded;
-        if (ari_valseg_decode(decoded, curs, yyleng - 1))
+        if (cace_ari_valseg_decode(decoded, curs, yyleng - 1))
         {
             cace_ari_text_str_error(yyscanner, yyextra, "ID segment failed to percent-decode");
             return YYerror;
         }
-        ari_idseg_init_from_text(&(yylval->objpath.ns_id), decoded);
+        cace_ari_idseg_init_from_text(&(yylval->objpath.ns_id), decoded);
     }
 
     return T_IDSEG;
@@ -86,52 +86,52 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 
 <INITIAL>\/{VALSEG}\//. {
     // Literal type ID, match leading and trailing slash also
-    ari_idseg_t typeid;
+    cace_ari_idseg_t typeid;
     {
         string_t decoded;
-        if (ari_valseg_decode(decoded, yytext + 1, yyleng - 3))
+        if (cace_ari_valseg_decode(decoded, yytext + 1, yyleng - 3))
         {
             cace_ari_text_str_error(yyscanner, yyextra, "TYPE-ID segment failed to percent-decode");
             return YYerror;
         }
         cace_string_toupper(decoded);
-        ari_idseg_init_from_text(&typeid, decoded);
+        cace_ari_idseg_init_from_text(&typeid, decoded);
     }
 
     // decode type ID to get into proper type-specific state
     switch (typeid.form)
     {
-    case ARI_IDSEG_NULL:
+    case CACE_ARI_IDSEG_NULL:
         break;
-    case ARI_IDSEG_TEXT:
+    case CACE_ARI_IDSEG_TEXT:
     {
-        int res = ari_type_from_name(&(yylval->ari_type), string_get_cstr(typeid.as_text));
+        int res = cace_ari_type_from_name(&(yylval->ari_type), string_get_cstr(typeid.as_text));
         if (res)
         {
-            ari_idseg_deinit(&typeid);
+            cace_ari_idseg_deinit(&typeid);
             cace_ari_text_str_error(yyscanner, yyextra, "TYPE-ID has invalid name");
             return YYerror;
         }
         break;
     }
-    case ARI_IDSEG_INT:
+    case CACE_ARI_IDSEG_INT:
         yylval->ari_type = typeid.as_int;
         break;
     }
-    ari_idseg_deinit(&typeid);
+    cace_ari_idseg_deinit(&typeid);
 
     // containers get different tokens
     switch (yylval->ari_type)
     {
-        case ARI_TYPE_AC:
+        case CACE_ARI_TYPE_AC:
             return T_LITTYPE_AC;
-        case ARI_TYPE_AM:
+        case CACE_ARI_TYPE_AM:
             return T_LITTYPE_AM;
-        case ARI_TYPE_TBL:
+        case CACE_ARI_TYPE_TBL:
             return T_LITTYPE_TBL;
-        case ARI_TYPE_EXECSET:
+        case CACE_ARI_TYPE_EXECSET:
             return T_LITTYPE_EXECSET;
-        case ARI_TYPE_RPTSET:
+        case CACE_ARI_TYPE_RPTSET:
             return T_LITTYPE_RPTSET;
         default:
             // next is the literal value
@@ -152,7 +152,7 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
         cace_data_t text_view;
         cace_data_init_view(&text_view, text_len + 1, (cace_data_ptr_t)text_begin);
 
-        uri_percent_decode(*value, &text_view);
+        cace_uri_percent_decode(*value, &text_view);
     }
 
     // done with this typed value
@@ -172,26 +172,26 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 
 void *cace_ari_text_str_alloc(yy_size_t size, yyscan_t yyscanner _U_)
 {
-    return ARI_MALLOC(size);
+    return CACE_MALLOC(size);
 }
 
 void *cace_ari_text_str_realloc(void *ptr, yy_size_t size, yyscan_t yyscanner _U_)
 {
-    return ARI_REALLOC(ptr, size);
+    return CACE_REALLOC(ptr, size);
 }
 
 void cace_ari_text_str_free(void *ptr, yyscan_t yyscanner _U_)
 {
-    ARI_FREE(ptr);
+    CACE_FREE(ptr);
 }
 
-static int ari_valseg_decode(string_t out, const char *in, size_t inlen)
+static int cace_ari_valseg_decode(string_t out, const char *in, size_t inlen)
 {
     cace_data_t text_view;
     cace_data_init_view(&text_view, inlen + 1, (cace_data_ptr_t)in);
 
     string_init(out);
-    if (uri_percent_decode(out, &text_view))
+    if (cace_uri_percent_decode(out, &text_view))
     {
         string_clear(out);
         return 2;

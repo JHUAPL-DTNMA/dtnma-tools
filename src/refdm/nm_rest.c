@@ -172,7 +172,7 @@ static int agentsGetHandler(struct mg_connection *conn)
 
         cJSON *agentObj = cJSON_CreateObject();
         cJSON_AddStringToObject(agentObj, "name", string_get_cstr(agent->eid));
-        cJSON_AddNumberToObject(agentObj, "rpts_count", ari_list_size(agent->rptsets));
+        cJSON_AddNumberToObject(agentObj, "rpts_count", cace_ari_list_size(agent->rptsets));
         cJSON_AddItemToArray(agentList, agentObj);
     }
     pthread_mutex_unlock(&mgr->agent_mutex);
@@ -262,7 +262,7 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
     }
 }
 
-static int agentParseHex(struct mg_connection *conn, ari_list_t tosend)
+static int agentParseHex(struct mg_connection *conn, cace_ari_list_t tosend)
 {
     int retval = 0;
     int res;
@@ -305,7 +305,7 @@ static int agentParseHex(struct mg_connection *conn, ari_list_t tosend)
             CACE_LOG_DEBUG("Handling message part %s", m_string_get_cstr(hexbuf));
 
             // replace the databuf contents
-            res = base16_decode(&databuf, hexbuf);
+            res = cace_base16_decode(&databuf, hexbuf);
             if (res)
             {
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "One input line does not contain base-16 encoded text: %s",
@@ -313,27 +313,27 @@ static int agentParseHex(struct mg_connection *conn, ari_list_t tosend)
                 retval = HTTP_BAD_REQUEST;
             }
 
-            ari_t *item = ari_list_push_back_new(tosend);
+            cace_ari_t *item = cace_ari_list_push_back_new(tosend);
 
-            res = ari_cbor_decode(item, &databuf, NULL, &errm);
+            res = cace_ari_cbor_decode(item, &databuf, NULL, &errm);
             if (res)
             {
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "Error decoding execution ARI: %s", errm);
                 retval = HTTP_BAD_REQUEST;
 
-                ARI_FREE((char *)errm);
+                CACE_FREE((char *)errm);
                 errm = NULL;
             }
             if (cace_log_is_enabled_for(LOG_DEBUG))
             {
                 string_t buf;
                 string_init(buf);
-                ari_text_encode(buf, item, ARI_TEXT_ENC_OPTS_DEFAULT);
+                cace_ari_text_encode(buf, item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                 CACE_LOG_DEBUG("decoded ARI as %s", string_get_cstr(buf));
                 string_clear(buf);
             }
 
-            if (!ari_is_lit_typed(item, ARI_TYPE_EXECSET))
+            if (!cace_ari_is_lit_typed(item, CACE_ARI_TYPE_EXECSET))
             {
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "One value is not an EXECSET");
                 retval = HTTP_BAD_REQUEST;
@@ -354,7 +354,7 @@ static int agentParseHex(struct mg_connection *conn, ari_list_t tosend)
     return retval;
 }
 
-static int agentParseText(struct mg_connection *conn, ari_list_t tosend)
+static int agentParseText(struct mg_connection *conn, cace_ari_list_t tosend)
 {
     int retval = 0;
     int res;
@@ -388,18 +388,18 @@ static int agentParseText(struct mg_connection *conn, ari_list_t tosend)
             m_string_set_cstrn(linebuf, curs, part_len);
             CACE_LOG_DEBUG("Handling message line %s", m_string_get_cstr(linebuf));
 
-            ari_t *eset = ari_list_push_back_new(tosend);
+            cace_ari_t *eset = cace_ari_list_push_back_new(tosend);
 
-            res = ari_text_decode(eset, linebuf, &errm);
+            res = cace_ari_text_decode(eset, linebuf, &errm);
             if (res)
             {
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "Error decoding execution ARI: %s", errm);
                 retval = HTTP_BAD_REQUEST;
 
-                ARI_FREE((char *)errm);
+                CACE_FREE((char *)errm);
                 errm = NULL;
             }
-            if (!ari_is_lit_typed(eset, ARI_TYPE_EXECSET))
+            if (!cace_ari_is_lit_typed(eset, CACE_ARI_TYPE_EXECSET))
             {
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "One value is not an EXECSET");
                 retval = HTTP_BAD_REQUEST;
@@ -419,10 +419,10 @@ static int agentParseText(struct mg_connection *conn, ari_list_t tosend)
     return retval;
 }
 
-static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, ari_list_t tosend)
+static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace_ari_list_t tosend)
 {
     int retval = 0;
-    CACE_LOG_INFO("Sending message with %d EXECSETs", ari_list_size(tosend));
+    CACE_LOG_INFO("Sending message with %d EXECSETs", cace_ari_list_size(tosend));
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
 
@@ -445,7 +445,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, ari_
     if (!retval)
     {
         const char *resp = "Successfully sent EXECSETs";
-        ari_list_clear(tosend);
+        cace_ari_list_clear(tosend);
 
         mg_send_http_ok(conn, "text/plain", strlen(resp));
         mg_printf(conn, "%s", resp);
@@ -463,14 +463,14 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     m_string_init(body);
 
     /* Iterate through all RPTSET for this agent in one buffer */
-    ari_list_it_t rpt_it;
-    for (ari_list_it(rpt_it, agent->rptsets); !ari_list_end_p(rpt_it); ari_list_next(rpt_it))
+    cace_ari_list_it_t rpt_it;
+    for (cace_ari_list_it(rpt_it, agent->rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
     {
-        const ari_t *val = ari_list_cref(rpt_it);
+        const cace_ari_t *val = cace_ari_list_cref(rpt_it);
 
         m_string_t uristr;
         m_string_init(uristr);
-        int enc_ret = ari_text_encode(uristr, val, ARI_TEXT_ENC_OPTS_DEFAULT);
+        int enc_ret = cace_ari_text_encode(uristr, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
         m_string_cat(body, uristr);
         m_string_clear(uristr);
@@ -503,18 +503,18 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     m_string_init(body);
 
     /* Iterate through all RPTSET for this agent. */
-    ari_list_it_t rpt_it;
-    for (ari_list_it(rpt_it, agent->rptsets); !ari_list_end_p(rpt_it); ari_list_next(rpt_it))
+    cace_ari_list_it_t rpt_it;
+    for (cace_ari_list_it(rpt_it, agent->rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
     {
-        const ari_t *val = ari_list_cref(rpt_it);
+        const cace_ari_t *val = cace_ari_list_cref(rpt_it);
 
         cace_data_t bytestr;
         cace_data_init(&bytestr);
-        int enc_ret = ari_cbor_encode(&bytestr, val);
+        int enc_ret = cace_ari_cbor_encode(&bytestr, val);
 
         m_string_t hexstr;
         m_string_init(hexstr);
-        int hex_ret = base16_encode(hexstr, &bytestr, false);
+        int hex_ret = cace_base16_encode(hexstr, &bytestr, false);
         cace_data_deinit(&bytestr);
 
         m_string_cat(body, hexstr);
@@ -633,8 +633,8 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
 
     if (0 == strcasecmp(ri->request_method, "POST"))
     {
-        ari_list_t tosend;
-        ari_list_init(tosend);
+        cace_ari_list_t tosend;
+        cace_ari_list_init(tosend);
         if (strcasecmp(form, "text") == 0)
         {
             // either is acceptable
@@ -662,7 +662,7 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
         }
         if (retval)
         {
-            ari_list_clear(tosend);
+            cace_ari_list_clear(tosend);
             return retval;
         }
         return agentSendItems(conn, agent, tosend);
@@ -872,7 +872,7 @@ static int agentIdxReportsHandler(struct mg_connection *conn, void *cbdata _U_)
     return agentAnyReportsHandler(conn, agent);
 }
 
-int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
+int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
 {
     CHKERR1(ctx);
     CHKERR1(mgr);
@@ -957,7 +957,7 @@ int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
     return 0;
 }
 
-void nm_rest_stop(struct mg_context *ctx)
+void refdm_nm_rest_stop(struct mg_context *ctx)
 {
     CHKVOID(ctx);
     mg_stop(ctx);

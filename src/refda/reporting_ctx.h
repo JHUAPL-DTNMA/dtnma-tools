@@ -37,7 +37,7 @@ typedef struct
     /** Storage for the items of a report layer.
      * This is initialized as empty and is pushed back as items are added.
      */
-    ari_list_t items;
+    cace_ari_list_t items;
 } refda_reporting_ctx_t;
 
 /** Initialize a context based on an object reference ARI and

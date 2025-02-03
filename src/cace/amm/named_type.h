@@ -36,21 +36,21 @@ typedef struct
      * All type references are fully recursively resolved.
      * The type object is owned by this column.
      */
-    amm_type_t typeobj;
-} amm_named_type_t;
+    cace_amm_type_t typeobj;
+} cace_amm_named_type_t;
 
-void amm_named_type_init(amm_named_type_t *obj);
+void cace_amm_named_type_init(cace_amm_named_type_t *obj);
 
-void amm_named_type_deinit(amm_named_type_t *obj);
+void cace_amm_named_type_deinit(cace_amm_named_type_t *obj);
 
-/// OPLIST for the amm_named_type_s
-#define M_OPL_amm_named_type_t() (INIT(API_2(amm_named_type_init)), CLEAR(API_2(amm_named_type_deinit)))
+/// OPLIST for the cace_amm_named_type_s
+#define M_OPL_cace_amm_named_type_t() (INIT(API_2(cace_amm_named_type_init)), CLEAR(API_2(cace_amm_named_type_deinit)))
 
-/** @struct amm_named_type_array_t
- * An array of amm_named_type_t instances.
+/** @struct cace_amm_named_type_array_t
+ * An array of cace_amm_named_type_t instances.
  */
 /// @cond Doxygen_Suppress
-ARRAY_DEF(amm_named_type_array, amm_named_type_t)
+ARRAY_DEF(cace_amm_named_type_array, cace_amm_named_type_t)
 /// @endcond
 
 #ifdef __cplusplus

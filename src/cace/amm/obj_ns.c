@@ -66,20 +66,22 @@ cace_amm_obj_id_t cace_amm_obj_id_noenum(const char *name)
     };
 }
 
-cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t obj_type, const cace_amm_obj_id_t obj_id)
+cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
+                                             const cace_amm_obj_id_t obj_id)
 {
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        ari_t ref = ARI_INIT_UNDEFINED;
-        ari_objpath_set_textid(&(ari_set_objref(&ref)->objpath), string_get_cstr(ns->name), obj_type, obj_id.name);
+        cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_objpath_set_textid(&(cace_ari_set_objref(&ref)->objpath), string_get_cstr(ns->name), obj_type,
+                                    obj_id.name);
 
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, &ref, ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, &ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("registering object at %s", string_get_cstr(buf));
         string_clear(buf);
 
-        ari_deinit(&ref);
+        cace_ari_deinit(&ref);
     }
     cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_dict_safe_get(ns->object_types, obj_type);
 
@@ -114,7 +116,8 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, ari_type_t o
     return obj;
 }
 
-cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_name(const cace_amm_obj_ns_t *ns, ari_type_t obj_type, const char *name)
+cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_name(const cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
+                                                   const char *name)
 {
     const cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
     if (!ctr)
@@ -129,7 +132,8 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_name(const cace_amm_obj_ns_t *ns, 
     return *found;
 }
 
-cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, ari_type_t obj_type, int64_t intenum)
+cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
+                                                   int64_t intenum)
 {
     const cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
     if (!ctr)

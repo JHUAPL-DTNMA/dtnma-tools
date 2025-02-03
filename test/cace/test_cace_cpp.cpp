@@ -27,9 +27,9 @@
 
 int main(int argc _U_, char *argv[] _U_)
 {
-    ari_t value;
-    ari_init(&value);
+    cace_ari_t value;
+    cace_ari_init(&value);
 
-    ari_deinit(&value);
+    cace_ari_deinit(&value);
     return 0;
 }

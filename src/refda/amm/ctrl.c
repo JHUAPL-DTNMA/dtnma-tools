@@ -19,13 +19,14 @@
 
 void refda_amm_ctrl_desc_init(refda_amm_ctrl_desc_t *obj)
 {
-    amm_type_init(&(obj->res_type));
+    cace_amm_type_init(&(obj->res_type));
     obj->execute = NULL;
 }
 
 void refda_amm_ctrl_desc_deinit(refda_amm_ctrl_desc_t *obj)
 {
-    amm_type_deinit(&(obj->res_type));
+    obj->execute = NULL;
+    cace_amm_type_deinit(&(obj->res_type));
     // not necessary but helpful
     memset(obj, 0, sizeof(*obj));
 }

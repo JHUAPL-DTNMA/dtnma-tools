@@ -22,12 +22,12 @@
 
 void refda_amm_typedef_desc_init(refda_amm_typedef_desc_t *obj)
 {
-    amm_type_init(&(obj->typeobj));
+    cace_amm_type_init(&(obj->typeobj));
 }
 
 void refda_amm_typedef_desc_deinit(refda_amm_typedef_desc_t *obj)
 {
-    amm_type_deinit(&(obj->typeobj));
+    cace_amm_type_deinit(&(obj->typeobj));
     // not necessary but helpful
     memset(obj, 0, sizeof(*obj));
 }

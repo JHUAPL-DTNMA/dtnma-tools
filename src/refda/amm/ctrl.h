@@ -39,7 +39,7 @@ typedef struct
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t res_type;
+    cace_amm_type_t res_type;
 
     /** Execution callback for this object.
      *

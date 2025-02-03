@@ -39,14 +39,14 @@ typedef struct
     /** Types for each of the operands in original order.
      * This list will not change during the lifetime of the OPER.
      */
-    amm_named_type_array_t operand_types;
+    cace_amm_named_type_array_t operand_types;
 
     /** Required type for the result value.
      * This type will not change during the lifetime of the OPER.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t res_type;
+    cace_amm_type_t res_type;
 
     /** Evaluation callback for this object.
      *

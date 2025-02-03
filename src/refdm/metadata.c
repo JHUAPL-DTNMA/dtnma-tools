@@ -46,7 +46,7 @@
 /*
  * Will release id on failure.
  */
-metadata_t *meta_add_edd(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr)
+metadata_t *meta_add_edd(amp_type_e base, cace_ari_t *id, uint8_t adm_id, char *name, char *descr)
 {
     metadata_t *meta = meta_create(base, id, adm_id, name, descr);
     CHKNULL(meta);
@@ -54,7 +54,7 @@ metadata_t *meta_add_edd(amp_type_e base, ari_t *id, uint8_t adm_id, char *name,
     return meta;
 }
 
-metadata_t *meta_add_cnst(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr)
+metadata_t *meta_add_cnst(amp_type_e base, cace_ari_t *id, uint8_t adm_id, char *name, char *descr)
 {
     metadata_t *meta = meta_create(base, id, adm_id, name, descr);
     CHKNULL(meta);
@@ -62,7 +62,7 @@ metadata_t *meta_add_cnst(amp_type_e base, ari_t *id, uint8_t adm_id, char *name
     return meta;
 }
 
-metadata_t *meta_add_op(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr)
+metadata_t *meta_add_op(amp_type_e base, cace_ari_t *id, uint8_t adm_id, char *name, char *descr)
 {
     metadata_t *meta = meta_create(base, id, adm_id, name, descr);
     CHKNULL(meta);
@@ -70,7 +70,7 @@ metadata_t *meta_add_op(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, 
     return meta;
 }
 
-metadata_t *meta_add_var(amp_type_e base, ari_t *id, uint8_t adm_id, char *name, char *descr)
+metadata_t *meta_add_var(amp_type_e base, cace_ari_t *id, uint8_t adm_id, char *name, char *descr)
 {
     metadata_t *meta = meta_create(base, id, adm_id, name, descr);
     CHKNULL(meta);
@@ -78,7 +78,7 @@ metadata_t *meta_add_var(amp_type_e base, ari_t *id, uint8_t adm_id, char *name,
     return meta;
 }
 
-metadata_t *meta_add_ctrl(ari_t *id, uint8_t adm_id, char *name, char *descr)
+metadata_t *meta_add_ctrl(cace_ari_t *id, uint8_t adm_id, char *name, char *descr)
 {
     metadata_t *meta = meta_create(AMP_TYPE_UNK, id, adm_id, name, descr);
     CHKNULL(meta);
@@ -86,7 +86,7 @@ metadata_t *meta_add_ctrl(ari_t *id, uint8_t adm_id, char *name, char *descr)
     return meta;
 }
 
-metadata_t *meta_add_macro(ari_t *id, uint8_t adm_id, char *name, char *descr)
+metadata_t *meta_add_macro(cace_ari_t *id, uint8_t adm_id, char *name, char *descr)
 {
     metadata_t *meta = meta_create(AMP_TYPE_UNK, id, adm_id, name, descr);
     CHKNULL(meta);
@@ -94,7 +94,7 @@ metadata_t *meta_add_macro(ari_t *id, uint8_t adm_id, char *name, char *descr)
     return meta;
 }
 
-metadata_t *meta_add_rpttpl(ari_t *id, uint8_t adm_id, char *name, char *descr)
+metadata_t *meta_add_rpttpl(cace_ari_t *id, uint8_t adm_id, char *name, char *descr)
 {
     metadata_t *meta = meta_create(AMP_TYPE_UNK, id, adm_id, name, descr);
     CHKNULL(meta);
@@ -102,7 +102,7 @@ metadata_t *meta_add_rpttpl(ari_t *id, uint8_t adm_id, char *name, char *descr)
     return meta;
 }
 
-metadata_t *meta_add_tblt(ari_t *id, uint8_t adm_id, char *name, char *descr)
+metadata_t *meta_add_tblt(cace_ari_t *id, uint8_t adm_id, char *name, char *descr)
 {
     metadata_t *meta = meta_create(AMP_TYPE_UNK, id, adm_id, name, descr);
     CHKNULL(meta);
@@ -161,7 +161,7 @@ void meta_cb_filter(rh_elt_t *elt, void *tag)
 }
 
 // Shallow copy of ARI.
-metadata_t *meta_create(amp_type_e type, ari_t *id, uint32_t adm_id, char *name, char *desc)
+metadata_t *meta_create(amp_type_e type, cace_ari_t *id, uint32_t adm_id, char *name, char *desc)
 {
     metadata_t *result = NULL;
     int         success;

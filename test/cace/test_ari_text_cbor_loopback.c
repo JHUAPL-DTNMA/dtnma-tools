@@ -96,52 +96,52 @@ TEST_CASE("ari://test/CTRL/that(34)")
 TEST_CASE("ari://2/IDENT/4(hi)")
 void test_ari_text_loopback(const char *intext)
 {
-    ari_text_enc_opts_t opts = ARI_TEXT_ENC_OPTS_DEFAULT;
+    cace_ari_text_enc_opts_t opts = CACE_ARI_TEXT_ENC_OPTS_DEFAULT;
 
-    ari_t ari_dn;
-    ari_init(&ari_dn);
+    cace_ari_t ari_dn;
+    cace_ari_init(&ari_dn);
     {
         string_t inbuf;
         string_init_set_str(inbuf, intext);
-        int res = ari_text_decode(&ari_dn, inbuf, &errm);
+        int res = cace_ari_text_decode(&ari_dn, inbuf, &errm);
         string_clear(inbuf);
         if (res && errm)
         {
             TEST_FAIL_MESSAGE(errm);
         }
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_text_decode() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_decode() failed");
     }
-    ari_t ari_up;
-    ari_init(&ari_up);
+    cace_ari_t ari_up;
+    cace_ari_init(&ari_up);
     {
         cace_data_t buf;
         cace_data_init(&buf);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, ari_cbor_encode(&buf, &ari_dn), "ari_cbor_encode() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_ari_cbor_encode(&buf, &ari_dn), "cace_ari_cbor_encode() failed");
 
         TEST_ASSERT_GREATER_THAN(0, buf.len);
         if (true)
         {
             string_t msg;
             string_init_printf(msg, "Encoded hex: ");
-            base16_encode(msg, &buf, true);
+            cace_base16_encode(msg, &buf, true);
             TEST_MESSAGE(string_get_cstr(msg));
             string_clear(msg);
         }
 
-        int res = ari_cbor_decode(&ari_up, &buf, NULL, &errm);
+        int res = cace_ari_cbor_decode(&ari_up, &buf, NULL, &errm);
         cace_data_deinit(&buf);
         if (res && errm)
         {
             TEST_FAIL_MESSAGE(errm);
         }
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
     }
 
     {
         string_t outtext;
         string_init(outtext);
-        int res = ari_text_encode(outtext, &ari_dn, opts);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_text_encode() failed");
+        int res = cace_ari_text_encode(outtext, &ari_dn, opts);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_encode() failed");
 
         TEST_ASSERT_EQUAL_STRING(intext, string_get_cstr(outtext));
         string_clear(outtext);
@@ -150,12 +150,12 @@ void test_ari_text_loopback(const char *intext)
     if (true)
     {
         // optional checks
-        TEST_ASSERT_EQUAL_INT_MESSAGE(ari_hash(&ari_dn), ari_hash(&ari_up), "ari_hash() mismatch");
-        TEST_ASSERT_TRUE_MESSAGE(ari_equal(&ari_dn, &ari_up), "ari_equal() mismatch");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "ari_hash() mismatch");
+        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "ari_equal() mismatch");
     }
 
-    ari_deinit(&ari_up);
-    ari_deinit(&ari_dn);
+    cace_ari_deinit(&ari_up);
+    cace_ari_deinit(&ari_dn);
 }
 
 #endif /* ARI_TEXT_PARSE */

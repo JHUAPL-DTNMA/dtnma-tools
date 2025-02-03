@@ -32,7 +32,7 @@ extern "C" {
  * @param[in] right The other input value.
  * @return Zero if successful.
  */
-int cace_amm_numeric_promote_type(ari_type_t *result, const ari_t *left, const ari_t *right);
+int cace_amm_numeric_promote_type(cace_ari_type_t *result, const cace_ari_t *left, const cace_ari_t *right);
 
 #ifdef __cplusplus
 } // extern C

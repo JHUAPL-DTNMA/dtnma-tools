@@ -61,7 +61,7 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
  * @return Zero if successful.
  * Otherwise, the number of individual bindings which have failed.
  */
-int refda_binding_obj(ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_obj(cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
 
 #ifdef __cplusplus
 } // extern C

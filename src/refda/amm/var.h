@@ -36,19 +36,19 @@ typedef struct
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t val_type;
+    cace_amm_type_t val_type;
 
     /** Storage for the value.
      * This is initialized as undefined and must be set to any other value
      * to indicate successful production.
      */
-    ari_t value;
+    cace_ari_t value;
 
     /** Optional initializer value.
      * This initializer will not change during the lifetime of the VAR.
      * This is set to the undefined value if not used.
      */
-    ari_t init_val;
+    cace_ari_t init_val;
 } refda_amm_var_desc_t;
 
 void refda_amm_var_desc_init(refda_amm_var_desc_t *obj);

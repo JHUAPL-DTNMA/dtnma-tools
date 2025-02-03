@@ -27,12 +27,12 @@ const time_t cace_ari_dtn_epoch = CACE_ARI_DTN_EPOCH;
 
 const struct timespec cace_ari_dtn_epoch_timespec = { .tv_sec = CACE_ARI_DTN_EPOCH, .tv_nsec = 0 };
 
-int ari_lit_deinit(ari_lit_t *obj)
+int cace_ari_lit_deinit(cace_ari_lit_t *obj)
 {
     switch (obj->prim_type)
     {
-        case ARI_PRIM_TSTR:
-        case ARI_PRIM_BSTR:
+        case CACE_ARI_PRIM_TSTR:
+        case CACE_ARI_PRIM_BSTR:
             if (cace_data_deinit(&(obj->value.as_data)))
             {
                 return 2;
@@ -47,29 +47,29 @@ int ari_lit_deinit(ari_lit_t *obj)
     {
         switch (obj->ari_type)
         {
-            case ARI_TYPE_AC:
+            case CACE_ARI_TYPE_AC:
                 CHKERR1(obj->value.as_ac);
-                ari_ac_deinit(obj->value.as_ac);
+                cace_ari_ac_deinit(obj->value.as_ac);
                 M_MEMORY_DEL(obj->value.as_ac);
                 break;
-            case ARI_TYPE_AM:
+            case CACE_ARI_TYPE_AM:
                 CHKERR1(obj->value.as_am);
-                ari_am_deinit(obj->value.as_am);
+                cace_ari_am_deinit(obj->value.as_am);
                 M_MEMORY_DEL(obj->value.as_am);
                 break;
-            case ARI_TYPE_TBL:
+            case CACE_ARI_TYPE_TBL:
                 CHKERR1(obj->value.as_tbl);
-                ari_tbl_deinit(obj->value.as_tbl);
+                cace_ari_tbl_deinit(obj->value.as_tbl);
                 M_MEMORY_DEL(obj->value.as_tbl);
                 break;
-            case ARI_TYPE_EXECSET:
+            case CACE_ARI_TYPE_EXECSET:
                 CHKERR1(obj->value.as_execset);
-                ari_execset_deinit(obj->value.as_execset);
+                cace_ari_execset_deinit(obj->value.as_execset);
                 M_MEMORY_DEL(obj->value.as_execset);
                 break;
-            case ARI_TYPE_RPTSET:
+            case CACE_ARI_TYPE_RPTSET:
                 CHKERR1(obj->value.as_rptset);
-                ari_rptset_deinit(obj->value.as_rptset);
+                cace_ari_rptset_deinit(obj->value.as_rptset);
                 M_MEMORY_DEL(obj->value.as_rptset);
                 break;
             default:
@@ -80,7 +80,7 @@ int ari_lit_deinit(ari_lit_t *obj)
     return 0;
 }
 
-int ari_lit_copy(ari_lit_t *lit, const ari_lit_t *src)
+int cace_ari_lit_copy(cace_ari_lit_t *lit, const cace_ari_lit_t *src)
 {
     lit->has_ari_type = src->has_ari_type;
     lit->ari_type     = src->ari_type;
@@ -88,14 +88,14 @@ int ari_lit_copy(ari_lit_t *lit, const ari_lit_t *src)
 
     switch (src->prim_type)
     {
-        case ARI_PRIM_TSTR:
-        case ARI_PRIM_BSTR:
+        case CACE_ARI_PRIM_TSTR:
+        case CACE_ARI_PRIM_BSTR:
             if (cace_data_init_set(&(lit->value.as_data), &(src->value.as_data)))
             {
                 return 2;
             }
             break;
-        case ARI_PRIM_OTHER:
+        case CACE_ARI_PRIM_OTHER:
             // copied below based on ari_type
             break;
         default:
@@ -108,50 +108,50 @@ int ari_lit_copy(ari_lit_t *lit, const ari_lit_t *src)
     {
         switch (src->ari_type)
         {
-            case ARI_TYPE_TP:
-            case ARI_TYPE_TD:
+            case CACE_ARI_TYPE_TP:
+            case CACE_ARI_TYPE_TD:
                 lit->value = src->value;
                 break;
-            case ARI_TYPE_AC:
+            case CACE_ARI_TYPE_AC:
             {
-                ari_ac_t *ctr = M_MEMORY_ALLOC(ari_ac_t);
-                ari_ac_init(ctr);
-                ari_list_set(ctr->items, src->value.as_ac->items);
+                cace_ari_ac_t *ctr = CACE_MALLOC(sizeof(cace_ari_ac_t));
+                cace_ari_ac_init(ctr);
+                cace_ari_list_set(ctr->items, src->value.as_ac->items);
                 lit->value.as_ac = ctr;
                 break;
             }
-            case ARI_TYPE_AM:
+            case CACE_ARI_TYPE_AM:
             {
-                ari_am_t *ctr = M_MEMORY_ALLOC(ari_am_t);
-                ari_am_init(ctr);
-                ari_tree_set(ctr->items, src->value.as_am->items);
+                cace_ari_am_t *ctr = CACE_MALLOC(sizeof(cace_ari_am_t));
+                cace_ari_am_init(ctr);
+                cace_ari_tree_set(ctr->items, src->value.as_am->items);
                 lit->value.as_am = ctr;
                 break;
             }
-            case ARI_TYPE_TBL:
+            case CACE_ARI_TYPE_TBL:
             {
-                ari_tbl_t *ctr = M_MEMORY_ALLOC(ari_tbl_t);
-                ari_tbl_init(ctr, src->value.as_tbl->ncols, 0);
-                ari_array_set(ctr->items, src->value.as_tbl->items);
+                cace_ari_tbl_t *ctr = CACE_MALLOC(sizeof(cace_ari_tbl_t));
+                cace_ari_tbl_init(ctr, src->value.as_tbl->ncols, 0);
+                cace_ari_array_set(ctr->items, src->value.as_tbl->items);
                 lit->value.as_tbl = ctr;
                 break;
             }
-            case ARI_TYPE_EXECSET:
+            case CACE_ARI_TYPE_EXECSET:
             {
-                ari_execset_t *ctr = M_MEMORY_ALLOC(ari_execset_t);
-                ari_execset_init(ctr);
-                ari_set_copy(&(ctr->nonce), &(src->value.as_execset->nonce));
-                ari_list_set(ctr->targets, src->value.as_execset->targets);
+                cace_ari_execset_t *ctr = CACE_MALLOC(sizeof(cace_ari_execset_t));
+                cace_ari_execset_init(ctr);
+                cace_ari_set_copy(&(ctr->nonce), &(src->value.as_execset->nonce));
+                cace_ari_list_set(ctr->targets, src->value.as_execset->targets);
                 lit->value.as_execset = ctr;
                 break;
             }
-            case ARI_TYPE_RPTSET:
+            case CACE_ARI_TYPE_RPTSET:
             {
-                ari_rptset_t *ctr = M_MEMORY_ALLOC(ari_rptset_t);
-                ari_rptset_init(ctr);
-                ari_set_copy(&(ctr->nonce), &(src->value.as_rptset->nonce));
-                ari_set_copy(&(ctr->reftime), &(src->value.as_rptset->reftime));
-                ari_report_list_set(ctr->reports, src->value.as_rptset->reports);
+                cace_ari_rptset_t *ctr = CACE_MALLOC(sizeof(cace_ari_rptset_t));
+                cace_ari_rptset_init(ctr);
+                cace_ari_set_copy(&(ctr->nonce), &(src->value.as_rptset->nonce));
+                cace_ari_set_copy(&(ctr->reftime), &(src->value.as_rptset->reftime));
+                cace_ari_report_list_set(ctr->reports, src->value.as_rptset->reports);
                 lit->value.as_rptset = ctr;
                 break;
             }

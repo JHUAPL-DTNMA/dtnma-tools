@@ -19,15 +19,15 @@
 
 void refda_amm_var_desc_init(refda_amm_var_desc_t *obj)
 {
-    amm_type_init(&(obj->val_type));
-    obj->value    = ARI_INIT_UNDEFINED;
-    obj->init_val = ARI_INIT_UNDEFINED;
+    cace_amm_type_init(&(obj->val_type));
+    obj->value    = CACE_ARI_INIT_UNDEFINED;
+    obj->init_val = CACE_ARI_INIT_UNDEFINED;
 }
 
 void refda_amm_var_desc_deinit(refda_amm_var_desc_t *obj)
 {
-    ari_deinit(&(obj->init_val));
-    ari_deinit(&(obj->value));
-    amm_type_deinit(&(obj->val_type));
+    cace_ari_deinit(&(obj->init_val));
+    cace_ari_deinit(&(obj->value));
+    cace_amm_type_deinit(&(obj->val_type));
     memset(obj, 0, sizeof(*obj));
 }

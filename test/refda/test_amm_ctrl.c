@@ -40,14 +40,14 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-static ari_t mock_result_store;
+static cace_ari_t mock_result_store;
 
 static void mock_ctrl_exec_none(refda_ctrl_exec_ctx_t *ctx)
 {
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, &mock_result_store, ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, &mock_result_store, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("execution with mock result %s", string_get_cstr(buf));
         string_clear(buf);
     }
@@ -56,20 +56,20 @@ static void mock_ctrl_exec_none(refda_ctrl_exec_ctx_t *ctx)
 
 static void mock_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
 {
-    const ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     CHKVOID(val)
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, val, ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("execution with parameter %s", string_get_cstr(buf));
         string_clear(buf);
     }
     refda_ctrl_exec_ctx_set_result_copy(ctx, val);
 }
 
-static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *ctrl, const cace_amm_formal_param_list_t fparams,
-                          const char *refhex, const char *outhex)
+static void check_execute(cace_ari_t *result, const refda_amm_ctrl_desc_t *ctrl,
+                          const cace_amm_formal_param_list_t fparams, const char *refhex, const char *outhex)
 {
     cace_amm_obj_desc_t obj;
     cace_amm_obj_desc_init(&obj);
@@ -89,15 +89,15 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *ctrl, cons
     eitem.seq = &eseq;
 
     // fudge these contents
-    ari_t inref = ARI_INIT_UNDEFINED;
+    cace_ari_t inref = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&inref, refhex));
     TEST_ASSERT_TRUE_MESSAGE(inref.is_ref, "invalid reference");
 
-    ari_t outval = ARI_INIT_UNDEFINED;
+    cace_ari_t outval = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));
-    TEST_ASSERT_EQUAL_INT(0, ari_set_copy(&mock_result_store, &outval));
+    TEST_ASSERT_EQUAL_INT(0, cace_ari_set_copy(&mock_result_store, &outval));
 
-    eitem.deref.obj_type = ARI_TYPE_CTRL;
+    eitem.deref.obj_type = CACE_ARI_TYPE_CTRL;
     eitem.deref.obj      = &obj;
     int res              = cace_amm_actual_param_set_populate(&(eitem.deref.aparams), fparams, &(inref.as_ref.params));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
@@ -107,12 +107,12 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *ctrl, cons
     (ctrl->execute)(&ctx);
     refda_ctrl_exec_ctx_deinit(&ctx);
 
-    TEST_ASSERT_TRUE_MESSAGE(ari_equal(&outval, &(eitem.result)), "result value mismatch");
+    TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&outval, &(eitem.result)), "result value mismatch");
 
     if (result)
     {
         // move out result value
-        TEST_ASSERT_EQUAL_INT(0, ari_set_move(result, &(eitem.result)));
+        TEST_ASSERT_EQUAL_INT(0, cace_ari_set_move(result, &(eitem.result)));
     }
 
     refda_exec_item_deinit(&eitem);
@@ -120,38 +120,38 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *ctrl, cons
     refda_runctx_ptr_clear(ctxptr);
     cace_amm_obj_desc_deinit(&obj);
 
-    ari_deinit(&outval);
-    ari_deinit(&inref);
+    cace_ari_deinit(&outval);
+    cace_ari_deinit(&inref);
 }
 
 void setUp(void)
 {
-    ari_init(&mock_result_store);
+    cace_ari_init(&mock_result_store);
 }
 
 void tearDown(void)
 {
-    ari_deinit(&mock_result_store);
+    cace_ari_deinit(&mock_result_store);
 }
 
 // References are based on ari://2/CONST/4
-TEST_CASE(ARI_TYPE_NULL, "83022104", "8200F6")
-TEST_CASE(ARI_TYPE_INT, "83022104", "82040A")
-void test_ctrl_execute_param_none(ari_type_t restype, const char *refhex, const char *outhex)
+TEST_CASE(CACE_ARI_TYPE_NULL, "83022104", "8200F6")
+TEST_CASE(CACE_ARI_TYPE_INT, "83022104", "82040A")
+void test_ctrl_execute_param_none(cace_ari_type_t restype, const char *refhex, const char *outhex)
 {
     refda_amm_ctrl_desc_t obj;
     refda_amm_ctrl_desc_init(&obj);
     // leave formal parameter list empty
-    amm_type_set_use_direct(&obj.res_type, amm_type_get_builtin(restype));
+    cace_amm_type_set_use_direct(&obj.res_type, cace_amm_type_get_builtin(restype));
     obj.execute = mock_ctrl_exec_none;
 
     cace_amm_formal_param_list_t fparams;
     cace_amm_formal_param_list_init(fparams);
 
-    ari_t result = ARI_INIT_UNDEFINED;
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     check_execute(&result, &obj, fparams, refhex, outhex);
 
-    ari_deinit(&result);
+    cace_ari_deinit(&result);
     cace_amm_formal_param_list_clear(fparams);
     refda_amm_ctrl_desc_deinit(&obj);
 }
@@ -167,7 +167,7 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex)
     refda_amm_ctrl_desc_t obj;
     refda_amm_ctrl_desc_init(&obj);
     // result is same type as parameter
-    amm_type_set_use_direct(&obj.res_type, amm_type_get_builtin(ARI_TYPE_INT));
+    cace_amm_type_set_use_direct(&obj.res_type, cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
     obj.execute = mock_ctrl_exec_one_int;
 
     cace_amm_formal_param_list_t fparams;
@@ -178,14 +178,14 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex)
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
 
-        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
-        ari_set_int(&(fparam->defval), 3); // arbitrary default
+        cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+        cace_ari_set_int(&(fparam->defval), 3); // arbitrary default
     }
 
-    ari_t result = ARI_INIT_UNDEFINED;
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     check_execute(&result, &obj, fparams, refhex, outhex);
 
-    ari_deinit(&result);
+    cace_ari_deinit(&result);
     cace_amm_formal_param_list_clear(fparams);
     refda_amm_ctrl_desc_deinit(&obj);
 }

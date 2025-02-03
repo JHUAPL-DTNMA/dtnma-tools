@@ -22,12 +22,12 @@ void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *parent
 {
     CHKVOID(obj);
     obj->parent = parent;
-    ari_list_init(obj->items);
+    cace_ari_list_init(obj->items);
 }
 
 void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj)
 {
     CHKVOID(obj);
-    ari_list_clear(obj->items);
+    cace_ari_list_clear(obj->items);
     obj->parent = NULL;
 }

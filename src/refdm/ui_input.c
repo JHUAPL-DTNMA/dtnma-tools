@@ -66,7 +66,7 @@ extern nmmgr_t *global_mgr;
 
 int ui_input_get_line(const char *prompt, char *line, int max_len)
 {
-    while (daemon_run_get(&global_mgr->running))
+    while (cace_daemon_run_get(&global_mgr->running))
     {
         printf("%s\n", prompt);
 
@@ -375,7 +375,7 @@ ac_t *ui_input_ac(const char *prompt)
     {
         char ari_prompt[24];
         snprintf(ari_prompt, 24, "Build ARI %d", i);
-        ari_t *cur = ui_input_ari(ari_prompt, ADM_ENUM_ALL, TYPE_MASK_ALL);
+        cace_ari_t *cur = ui_input_ari(ari_prompt, ADM_ENUM_ALL, TYPE_MASK_ALL);
         if (cur == NULL || vec_push(&(result->values), cur) != VEC_OK)
         {
             AMP_DEBUG_ERR("ui_input_ac", "Could not input ARI %d.", i);
@@ -411,9 +411,9 @@ ac_t *ui_input_ac(const char *prompt)
  *  07/05/16  E. Birrane     Check for NULL result. Add File input.
  *****************************************************************************/
 
-ari_t *ui_input_ari(const char *prompt, uint8_t adm_id, amp_uvast mask)
+cace_ari_t *ui_input_ari(const char *prompt, uint8_t adm_id, amp_uvast mask)
 {
-    ari_t      *result = NULL;
+    cace_ari_t *result = NULL;
     metadata_t *meta   = NULL;
 
     /* Step 1: Print the prompt. */
@@ -462,11 +462,11 @@ ari_t *ui_input_ari(const char *prompt, uint8_t adm_id, amp_uvast mask)
     return result;
 }
 
-ari_t *ui_input_ari_build(amp_uvast mask)
+cace_ari_t *ui_input_ari_build(amp_uvast mask)
 {
-    ari_t  *result = NULL;
-    uint8_t flags;
-    int     success;
+    cace_ari_t *result = NULL;
+    uint8_t     flags;
+    int         success;
 
     ui_input_ari_flags(&flags);
 
@@ -720,9 +720,9 @@ int ui_input_ari_flags(uint8_t *flag)
     return AMP_OK;
 }
 
-ari_t *ui_input_ari_list(uint8_t adm_id, amp_uvast mask)
+cace_ari_t *ui_input_ari_list(uint8_t adm_id, amp_uvast mask)
 {
-    ari_t      *result = NULL;
+    cace_ari_t *result = NULL;
     int         idx    = 0;
     meta_col_t *col    = NULL;
     metadata_t *meta   = NULL;
@@ -732,11 +732,11 @@ ari_t *ui_input_ari_list(uint8_t adm_id, amp_uvast mask)
     return result;
 }
 
-ari_t *ui_input_ari_lit(const char *prompt)
+cace_ari_t *ui_input_ari_lit(const char *prompt)
 {
-    ari_t     *result = NULL;
-    amp_uvast  mask   = 0;
-    amp_type_e type;
+    cace_ari_t *result = NULL;
+    amp_uvast   mask   = 0;
+    amp_type_e  type;
 
     if (prompt != NULL)
     {
@@ -801,10 +801,10 @@ ari_t *ui_input_ari_lit(const char *prompt)
     return result;
 }
 
-ari_t *ui_input_ari_raw(uint8_t no_file)
+cace_ari_t *ui_input_ari_raw(uint8_t no_file)
 {
-    ari_t *result = NULL;
-    int    success;
+    cace_ari_t *result = NULL;
+    int         success;
 
     blob_t *data = ui_input_blob("0x", no_file);
 
@@ -863,7 +863,7 @@ int ui_input_ari_type(amp_uvast mask)
 #endif
 }
 
-int ui_input_parms(ari_t *id)
+int ui_input_parms(cace_ari_t *id)
 {
     metadata_t *meta = NULL;
     int         num;
@@ -1032,10 +1032,10 @@ ctrl_t *ui_input_ctrl(const char *prompt)
 
 expr_t *ui_input_expr(const char *prompt)
 {
-    expr_t    *expr = NULL;
-    ari_t     *val  = NULL;
-    amp_type_e type = AMP_TYPE_UNK;
-    amp_uvast  mask;
+    expr_t     *expr = NULL;
+    cace_ari_t *val  = NULL;
+    amp_type_e  type = AMP_TYPE_UNK;
+    amp_uvast   mask;
 
     ui_printf("\n\n");
     ui_printf("Expression Builder\n");
