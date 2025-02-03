@@ -17,6 +17,7 @@
  */
 #include "access.h"
 #include "cace/util/defs.h"
+#include <timespec.h>
 
 bool ari_is_undefined(const ari_t *ari)
 {
@@ -390,6 +391,18 @@ int ari_get_tp(const ari_t *ari, struct timespec *out)
     return 0;
 }
 
+int ari_get_tp_posix(const ari_t *ari, struct timespec *out)
+{
+    CHKERR1(ari);
+    CHKERR1(out);
+    if (!ari_is_lit_typed(ari, ARI_TYPE_TP))
+    {
+        return 2;
+    }
+    *out = timespec_add(ari->as_lit.value.as_timespec, cace_ari_dtn_epoch_timespec);
+    return 0;
+}
+
 void ari_set_tp(ari_t *ari, struct timespec dtntime)
 {
     CHKVOID(ari);
@@ -398,6 +411,12 @@ void ari_set_tp(ari_t *ari, struct timespec dtntime)
                                        .ari_type     = ARI_TYPE_TP,
                                        .prim_type    = ARI_PRIM_TIMESPEC,
                                        .value        = { .as_timespec = dtntime } };
+}
+
+void ari_set_tp_posix(ari_t *ari, struct timespec ptime)
+{
+    struct timespec dtntime = timespec_sub(ptime, cace_ari_dtn_epoch_timespec);
+    ari_set_tp(ari, dtntime);
 }
 
 int ari_get_td(const ari_t *ari, struct timespec *out)
@@ -427,6 +446,22 @@ void ari_set_aritype(ari_t *ari, ari_type_t type)
     ari_deinit(ari);
     *ari_init_lit(ari) = (ari_lit_t) {
         .has_ari_type = true, .ari_type = ARI_TYPE_ARITYPE, .prim_type = ARI_PRIM_INT64, .value = { .as_int64 = type }
+    };
+}
+
+void ari_set_aritype_text(ari_t *ari, ari_type_t type)
+{
+    CHKVOID(ari);
+    ari_deinit(ari);
+
+    const char *buf = ari_type_to_name(type);
+
+    cace_data_t  data;
+    const size_t len = strlen(buf) + 1;
+    cace_data_init_view(&data, len, (cace_data_ptr_t)buf);
+
+    *ari_init_lit(ari) = (ari_lit_t) {
+        .has_ari_type = true, .ari_type = ARI_TYPE_ARITYPE, .prim_type = ARI_PRIM_TSTR, .value = { .as_data = data }
     };
 }
 
@@ -633,24 +668,4 @@ struct ari_rptset_s *ari_set_rptset(ari_t *ari)
                                        } };
 
     return ctr;
-}
-
-void ari_set_objref_params_ac(ari_t *ari, struct ari_ac_s *src)
-{
-    CHKVOID(ari);
-    CHKVOID(ari->is_ref);
-
-    ari_params_deinit(&(ari->as_ref.params));
-    ari->as_ref.params.state = ARI_PARAMS_AC;
-    ari->as_ref.params.as_ac = src;
-}
-
-void ari_set_objref_params_am(ari_t *ari, struct ari_am_s *src)
-{
-    CHKVOID(ari);
-    CHKVOID(ari->is_ref);
-
-    ari_params_deinit(&(ari->as_ref.params));
-    ari->as_ref.params.state = ARI_PARAMS_AM;
-    ari->as_ref.params.as_am = src;
 }

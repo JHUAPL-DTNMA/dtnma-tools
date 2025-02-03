@@ -79,13 +79,13 @@ void refda_oper_eval_ctx_deinit(refda_oper_eval_ctx_t *obj);
 int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_lookup_t *deref,
                                  const refda_amm_oper_desc_t *oper, refda_eval_ctx_t *eval);
 
-const ari_t *refda_oper_eval_ctx_get_aparam_index(refda_oper_eval_ctx_t *ctx, size_t index);
+const ari_t *refda_oper_eval_ctx_get_aparam_index(const refda_oper_eval_ctx_t *ctx, size_t index);
 
-const ari_t *refda_oper_eval_ctx_get_aparam_name(refda_oper_eval_ctx_t *ctx, const char *name);
+const ari_t *refda_oper_eval_ctx_get_aparam_name(const refda_oper_eval_ctx_t *ctx, const char *name);
 
-const ari_t *refda_oper_eval_ctx_get_operand_index(refda_oper_eval_ctx_t *ctx, size_t index);
+const ari_t *refda_oper_eval_ctx_get_operand_index(const refda_oper_eval_ctx_t *ctx, size_t index);
 
-const ari_t *refda_oper_eval_ctx_get_operand_name(refda_oper_eval_ctx_t *ctx, const char *name);
+const ari_t *refda_oper_eval_ctx_get_operand_name(const refda_oper_eval_ctx_t *ctx, const char *name);
 
 void refda_oper_eval_ctx_set_result_copy(refda_oper_eval_ctx_t *ctx, const ari_t *value);
 

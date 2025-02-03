@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "text_util.h"
+#include "lit.h"
 #include "cace/util/defs.h"
 #include <string.h>
 #include <strings.h>
@@ -989,9 +990,6 @@ int base64_decode(cace_data_t *out, const string_t in)
     return (in_len > 0) ? 4 : 0;
 }
 
-/// POSIX time at 2000-01-01T00:00:00Z
-static const time_t dtn_epoch = 946684800L;
-
 int utctime_encode(string_t out, const struct timespec *in, bool usesep)
 {
     CHKERR1(out);
@@ -999,7 +997,7 @@ int utctime_encode(string_t out, const struct timespec *in, bool usesep)
 
     struct tm parts = { 0 };
     {
-        const time_t fullsecs = dtn_epoch + in->tv_sec;
+        const time_t fullsecs = cace_ari_dtn_epoch + in->tv_sec;
         // do not apply local zone offset
         struct tm *got = gmtime_r(&fullsecs, &parts);
         if (!got)
@@ -1078,7 +1076,7 @@ int utctime_decode(struct timespec *out, const cace_data_t *in)
             retval = 2;
             goto utctime_decode_cleanup;
         }
-        fullsec -= dtn_epoch;
+        fullsec -= cace_ari_dtn_epoch;
     }
 
     // extract subseconds as nanoseconds

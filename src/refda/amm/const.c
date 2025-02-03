@@ -19,11 +19,13 @@
 
 void refda_amm_const_desc_init(refda_amm_const_desc_t *obj)
 {
-    obj->value = ARI_INIT_UNDEFINED;
+    obj->val_type = AMM_TYPE_INIT_INVALID;
+    obj->value    = ARI_INIT_UNDEFINED;
 }
 
 void refda_amm_const_desc_deinit(refda_amm_const_desc_t *obj)
 {
     ari_deinit(&(obj->value));
+    amm_type_deinit(&(obj->val_type));
     memset(obj, 0, sizeof(*obj));
 }

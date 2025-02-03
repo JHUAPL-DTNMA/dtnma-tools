@@ -29,21 +29,85 @@
 #include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"
 #include "refda/oper_eval_ctx.h"
+#include "refda/reporting.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
+#include "refda/eval.h"
 #include <timespec.h>
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
 
-static bool refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_exec_item_t *item)
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_ctrl_exec_ctx_t *ctx)
 {
-    atomic_store(&(item->waiting), false);
-    return true;
+    refda_ctrl_exec_ctx_set_result_null(ctx);
+}
+
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_t *ctx)
+{
+    const ari_t *cond = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    if (!cond)
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    int   res    = refda_eval_target(ctx->runctx, &result, cond);
+    if (res)
+    {
+        CACE_LOG_ERR("failed to evaluate condition, error %d", res);
+        ari_set_bool(&result, false);
+    }
+
+    ari_t             as_bool = ARI_INIT_UNDEFINED;
+    const amm_type_t *typeobj = amm_type_get_builtin(ARI_TYPE_BOOL);
+    res                       = amm_type_convert(typeobj, &as_bool, &result);
+    if (res)
+    {
+        CACE_LOG_ERR("failed to get bool state, error %d", res);
+        ari_set_bool(&as_bool, false);
+    }
+
+    bool truthy;
+    if (ari_get_bool(&as_bool, &truthy))
+    {
+        CACE_LOG_ERR("failed to get bool value");
+        truthy = false;
+    }
+
+    if (truthy)
+    {
+        refda_ctrl_exec_ctx_set_result_copy(ctx, &result);
+    }
+    else
+    {
+        struct timespec nowtime;
+
+        int res = clock_gettime(CLOCK_REALTIME, &nowtime);
+        if (res)
+        {
+            // handled as failure
+            CACE_LOG_ERR("Failed clock_gettime()");
+        }
+        else
+        {
+            // check again in 1s
+            refda_timeline_event_t event = {
+                .ts       = timespec_add(nowtime, timespec_from_ms(1000)),
+                .item     = ctx->item,
+                .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
+            };
+            refda_ctrl_exec_ctx_set_waiting(ctx, &event);
+        }
+    }
+
+    ari_deinit(&as_bool);
+    ari_deinit(&result);
 }
 
 static void refda_adm_ietf_dtnma_agent_set_objpath(ari_objpath_t *path, const cace_amm_obj_ns_t *ns,
@@ -503,7 +567,7 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
  * Parameters list:
  *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/CONST, use of ari://ietf-amm/TYPEDEF/TYPE-REF)
+ * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/CONST, use of ari://ietf-amm/TYPEDEF/semtype)
  */
 static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -557,7 +621,12 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
                 ari_ref_t *ref = ari_set_objref(ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-            ari_array_get(row, 1); // FIXME populate this column
+
+            const refda_amm_const_desc_t *cnst = obj->app_data.ptr;
+            if (cnst)
+            {
+                amm_type_get_name(&(cnst->val_type), ari_array_get(row, 1));
+            }
 
             // append the row
             ari_tbl_move_row_array(&table, row);
@@ -584,7 +653,7 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
  * Parameters list:
  *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/VAR, use of ari://ietf-amm/TYPEDEF/TYPE-REF)
+ * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/VAR, use of ari://ietf-amm/TYPEDEF/semtype)
  */
 static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -638,7 +707,12 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
                 ari_ref_t *ref = ari_set_objref(ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-            ari_array_get(row, 1); // FIXME populate this column
+
+            const refda_amm_var_desc_t *var = obj->app_data.ptr;
+            if (var)
+            {
+                amm_type_get_name(&(var->val_type), ari_array_get(row, 1));
+            }
 
             // append the row
             ari_tbl_move_row_array(&table, row);
@@ -774,25 +848,29 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
      * +-------------------------------------------------------------------------+
      */
-    const ari_t *duration = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const ari_t *p_duration = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
-    struct timespec nowtime;
+    struct timespec nowtime, duration;
+    if (ari_get_td(p_duration, &duration))
+    {
+        CACE_LOG_ERR("No time duration given");
+        return;
+    }
 
     int res = clock_gettime(CLOCK_REALTIME, &nowtime);
     if (res)
     {
         // handled as failure
+        CACE_LOG_ERR("Failed clock_gettime()");
         return;
     }
 
     refda_timeline_event_t event = {
-        .ts       = timespec_add(nowtime, duration->as_lit.value.as_timespec),
+        .ts       = timespec_add(nowtime, duration),
         .item     = ctx->item,
         .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
-    refda_timeline_push(ctx->runctx->agent->exec_timeline, event);
-
-    refda_ctrl_exec_ctx_set_waiting(ctx);
+    refda_ctrl_exec_ctx_set_waiting(ctx, &event);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_for BODY
@@ -819,6 +897,21 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_until BODY
      * +-------------------------------------------------------------------------+
      */
+    const ari_t *p_abstime = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    struct timespec abstime;
+    if (ari_get_tp_posix(p_abstime, &abstime))
+    {
+        CACE_LOG_ERR("No time point given");
+        return;
+    }
+
+    refda_timeline_event_t event = {
+        .ts       = abstime,
+        .item     = ctx->item,
+        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
+    };
+    refda_ctrl_exec_ctx_set_waiting(ctx, &event);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_until BODY
@@ -845,6 +938,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
      * +-------------------------------------------------------------------------+
      */
+    // initial check and kickoff timers
+    refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
@@ -869,14 +964,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_inspect BODY
      * +-------------------------------------------------------------------------+
      */
-    CACE_LOG_WARNING("executed!");
-
     const ari_t *ref = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
-    // FIXME mutex-serialize object store access
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
     int res = cace_amm_lookup_deref(&deref, &(ctx->runctx->agent->objs), ref);
+
+    REFDA_AGENT_UNLOCK(agent, );
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
@@ -888,7 +986,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
     }
     if (res)
     {
-        CACE_LOG_WARNING("inspect lookup failed with status %d", res);
+        CACE_LOG_WARNING("lookup failed with status %d", res);
     }
     else
     {
@@ -899,7 +997,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
         if (res)
         {
             // not setting a result will be treated as failure
-            CACE_LOG_WARNING("inspect production failed with status %d", res);
+            CACE_LOG_WARNING("production failed with status %d", res);
         }
         else
         {
@@ -938,6 +1036,20 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
      * +-------------------------------------------------------------------------+
      */
+    const ari_t *tgt = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    if (!tgt)
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    // ignore return code because failure cannot be handled here
+    refda_reporting_target(ctx->runctx, tgt);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
@@ -961,6 +1073,41 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
      * +-------------------------------------------------------------------------+
      */
+    const ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else
+    {
+        refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (var && !ari_is_undefined(&(var->init_val)))
+        {
+            if (cace_log_is_enabled_for(LOG_DEBUG))
+            {
+                string_t buf;
+                string_init(buf);
+                ari_text_encode_objpath(buf, &(target->as_ref.objpath), ARI_TEXT_ARITYPE_TEXT);
+                CACE_LOG_DEBUG("resetting state of %s", string_get_cstr(buf));
+                string_clear(buf);
+            }
+            ari_set_copy(&(var->value), &(var->init_val));
+        }
+    }
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
@@ -985,6 +1132,42 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
      * +-------------------------------------------------------------------------+
      */
+    const ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const ari_t *value  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else
+    {
+        refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (var)
+        {
+            if (cace_log_is_enabled_for(LOG_DEBUG))
+            {
+                string_t buf;
+                string_init(buf);
+                ari_text_encode_objpath(buf, &(target->as_ref.objpath), ARI_TEXT_ARITYPE_TEXT);
+                CACE_LOG_DEBUG("setting state of %s", string_get_cstr(buf));
+                string_clear(buf);
+            }
+            ari_set_copy(&(var->value), value);
+        }
+    }
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
@@ -998,7 +1181,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
  *
  * Parameters list:
  *  * Index 0, name "obj", type: use of ari:/ARITYPE/CONST
- *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/TYPE-REF
+ *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/semtype
  *  * Index 2, name "init", type: use of ari://ietf-amm/TYPEDEF/EXPR
  *
  * Result: none
@@ -1046,7 +1229,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_discard_const(refda_ctrl_exec_ctx_t 
  *
  * Parameters list:
  *  * Index 0, name "obj", type: use of ari:/ARITYPE/VAR
- *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/TYPE-REF
+ *  * Index 1, name "type", type: use of ari://ietf-amm/TYPEDEF/semtype
  *  * Index 2, name "init", type: union of 2 types (use of ari:/ARITYPE/NULL, use of ari://ietf-amm/TYPEDEF/EXPR)
  *
  * Result: none
@@ -1964,8 +2147,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "type");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
-                        // ari://ietf-amm/TYPEDEF/TYPE-REF
-                        ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                        // ari://ietf-amm/TYPEDEF/semtype
+                        ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 25);
                         amm_type_set_use_ref_move(&(col->typeobj), &name);
                     }
                 }
@@ -2008,8 +2191,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "type");
                     {
                         ari_t name = ARI_INIT_UNDEFINED;
-                        // ari://ietf-amm/TYPEDEF/TYPE-REF
-                        ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                        // ari://ietf-amm/TYPEDEF/semtype
+                        ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 25);
                         amm_type_set_use_ref_move(&(col->typeobj), &name);
                     }
                 }
@@ -2474,8 +2657,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "type");
                 {
                     ari_t name = ARI_INIT_UNDEFINED;
-                    // ari://ietf-amm/TYPEDEF/TYPE-REF
-                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                    // ari://ietf-amm/TYPEDEF/semtype
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 25);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
@@ -2533,8 +2716,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "type");
                 {
                     ari_t name = ARI_INIT_UNDEFINED;
-                    // ari://ietf-amm/TYPEDEF/TYPE-REF
-                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 0);
+                    // ari://ietf-amm/TYPEDEF/semtype
+                    ari_set_objref_path_intid(&name, 0, ARI_TYPE_TYPEDEF, 25);
                     amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
