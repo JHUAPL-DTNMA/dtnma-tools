@@ -329,6 +329,34 @@ void test_refda_eval_target_valid(const char *targethex, const char *expectloghe
     ari_deinit(&target);
 }
 
+// ari:/AC/(/BOOL/false,undefined,//1/OPER/bool-and) -> undefined
+TEST_CASE("8211838201F4F783012568626F6F6C2D616E64", "F7")
+void test_refda_eval_target_undefined(const char *targethex, const char *expectloghex)
+{
+    ari_t target = ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
+
+    ari_t expect_result = ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_result, expectloghex));
+    TEST_ASSERT_TRUE(ari_is_undefined(&expect_result));
+
+    refda_runctx_t runctx;
+    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
+
+    ari_t result = ARI_INIT_UNDEFINED;
+    int   res    = refda_eval_target(&runctx, &result, &target);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_eval_target() disagrees");
+
+    // verify result value
+    const bool equal = ari_equal(&expect_result, &result);
+    TEST_ASSERT_TRUE_MESSAGE(equal, "result ARI is different");
+
+    ari_deinit(&result);
+    refda_runctx_deinit(&runctx);
+    ari_deinit(&expect_result);
+    ari_deinit(&target);
+}
+
 TEST_CASE("821180", 6)             // Empty stack ari:/AC/()
 TEST_CASE("821182820601820602", 6) // Extra stack ari:/AC/(/VAST/1,/VAST/2)
 void test_refda_eval_target_failure(const char *targethex, int expect_res)
