@@ -343,11 +343,11 @@ ON CONFLICT DO NOTHING;
 
 
 create table if not exists data_model (
-    data_model_id integer not null,
+    data_model_id serial ,
     namespace_type varchar not null,
     name varchar not null,
     enumeration int not null, 
-    version_name varchar not null default '0.0.0',
+    version_name varchar default '0.0.0',
     use_desc varchar,
     primary key (data_model_id)
 -- Below UNIQUE key not valid. Explicit check in SP instead instead.  TODO: Add appropriate indexes
@@ -833,7 +833,7 @@ create table if not exists operator_formal_definition (
     obj_formal_definition_id INT not null,
     fp_spec_id INT ,
     num_operands INT not null,
-    operands bytea,
+    operands VARCHAR,
     result_name VARCHAR not null,
     result_type VARCHAR not null,
     primary key (obj_formal_definition_id),
@@ -919,8 +919,8 @@ create table if not exists variable_formal_definition (
     obj_formal_definition_id INT not null,
     fp_spec_id INT ,
     data_type_id INT not null,
-    expression bytea ,
-    init_value bytea ,
+    expression decode ,
+    init_value decode ,
     primary key (obj_formal_definition_id),
     foreign key (obj_formal_definition_id)
         references obj_formal_definition (obj_formal_definition_id)

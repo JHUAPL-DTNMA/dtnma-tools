@@ -30,7 +30,7 @@
 
 
 
-create or replace procedure SP__insert_data_model(in p_namespace_type varchar, p_name varchar, p_enumeration varchar, p_version_name varchar, p_use_desc varchar, out r_data_model_id integer)
+create or replace procedure SP__insert_data_model(in p_namespace_type varchar, p_name varchar, p_enumeration integer, p_version_name varchar, p_use_desc varchar, out r_data_model_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
 	INSERT INTO data_model
@@ -53,16 +53,16 @@ end$$;
 -- out 
 -- 		r_obj_id integer - id of the new object in the database
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_obj_metadata(IN p_obj_type_id integer, p_obj_name varchar, p_date_model_id integer,  p_object_enumeration integer, p_status varchar, p_reference varchar,  p_description varchar,INOUT r_obj_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_obj_metadata(IN p_obj_type_id integer, p_obj_name varchar, p_data_model_id integer,  p_object_enumeration integer, p_status varchar, p_reference varchar,  p_description varchar,INOUT r_obj_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
 
    SELECT obj_metadata_id INTO r_obj_id
               FROM obj_metadata
-              WHERE data_type_id=p_obj_type_id AND name=p_obj_name AND data_model_id=p_date_model_id and object_enumeration = p_object_enumeration;
+              WHERE data_type_id=p_obj_type_id AND name=p_obj_name AND data_model_id=p_data_model_id and object_enumeration = p_object_enumeration;
 
     IF (r_obj_id IS NULL) THEN
-    	INSERT INTO obj_metadata(data_type_id, obj_name, date_model_id, object_enumeration, status, reference, description) VALUES(p_obj_type_id, p_obj_name, p_date_model_id, p_object_enumeration, p_status, p_reference, p_description) RETURNING obj_metadata_id into r_obj_id;      
+    	INSERT INTO obj_metadata(data_type_id, name, data_model_id, object_enumeration, status, reference, description) VALUES(p_obj_type_id, p_obj_name, p_data_model_id, p_object_enumeration, p_status, p_reference, p_description) RETURNING obj_metadata_id into r_obj_id;      
     END IF;
 
 end$$;
@@ -304,8 +304,7 @@ AS $$
 DECLARE data_id integer;
  BEGIN
 	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_actual_definition_id); 
-    SELECT data_type_id FROM data_type WHERE type_name  = p_data_type into data_id;
-    INSERT INTO const_actual_definition(obj_actual_definition_id, data_type_id, data_value) VALUES(r_actual_definition_id, data_id, p_data_value_string); 
+    INSERT INTO const_actual_definition(obj_actual_definition_id, data_type, data_value) VALUES(r_actual_definition_id, p_data_type, p_data_value_string); 
 end$$;
 
 
@@ -591,55 +590,42 @@ end$$;
 -- ==================================================================
 -- for instance can supply the definiton name to remove all the instances of that definition or can remove 
 
-CREATE OR REPLACE PROCEDURE SP__delete_edd_actual_definition(IN p_actual_definition_id integer, p_obj_name varchar)
-LANGUAGE plpgsql
-AS $$ 
-<<edd_actual_definition_del>>
-DECLARE
- done INT DEFAULT FALSE;
-     actual_definition_id_hold integer;
-      ap_spec_id_hold integer;
-     actual_definition_cursor CURSOR
-			FOR SELECT actual_definition_id, ap_spec_id FROM vw_edd_actual WHERE obj_name = p_obj_name;
-    ap_id integer; 
-     
-BEGIN
-	
-	
-	-- DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;	
-    
-    -- only one thing to remove 
-	If( p_inst_id is not null) then 
-		ap_id = (SELECT ap_spec_id from edd_actual_definition where actual_definition_id = p_inst_id );
-		IF( ap_id is not null) THEN
-			DELETE FROM actual_parmspec WHERE ap_spec_id = ap_id;
-		END IF;
-		DELETE FROM edd_actual_definition 
-WHERE
-    intance_id = p_actual_definition_id;
-		CALL SP__delete_obj_actual_definition(p_actual_definition_id, p_obj_name);
-	ELSE -- removing all instances with this name 
-		IF( p_obj_name is null) then -- nothing to do 
-			exit edd_actual_definition_del;
-		END IF;
-		OPEN actual_definition_cursor;
-        <<read_loop>> LOOP
-			FETCH NEXT FROM actual_definition_cursor INTO 
-				actual_definition_id_hold, ap_spec_id_hold;
-			IF done THEN
-				exit read_loop;
-			END IF;
+create or replace
+procedure SP__delete_edd_actual_definition(in p_actual_definition_id integer, p_obj_name varchar)
+language plpgsql
+as $$ 
+declare
+    ap_id integer;
 
-			DELETE FROM actual_parmspec WHERE ap_spec_id = ap_spec_id_hold;
+begin 
+	if( p_actual_definition_id is not null) then 
+		ap_id = (
+select
+	ap_spec_id
+from
+	edd_actual_definition
+where
+	actual_definition_id = p_actual_definition_id );
+end if;
 
-			DELETE FROM edd_actual_definition
-WHERE
-    edd_actual_definition.actual_definition_id = actual_definition_id_hold;			
-		END LOOP;
-        CALL SP__delete_obj_actual_definition(null, p_obj_name);
-    end if;
-    CLOSE actual_definition_cursor;
-end$$; 
+if( ap_id is not null) then
+			delete
+from
+	actual_parmspec
+where
+	ap_spec_id = ap_id;
+end if;
+
+delete
+from
+	edd_actual_definition
+where
+	p_actual_definition_id = p_actual_definition_id;
+
+call SP__delete_obj_actual_definition(p_actual_definition_id,
+p_obj_name);
+
+end$$;
 
 
 -- STORED PROCEDURE(S) for creating expresions that are used in rules and variables 
@@ -714,149 +700,12 @@ end$$;
 CREATE OR REPLACE PROCEDURE SP__insert_formal_parmspec(IN p_num_parms integer, p_use_desc varchar, p_parameters bytea, INOUT r_fp_spec_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
-	INSERT INTO formal_parmspec(num_parms, use_desc ,p_parameters) VALUES(p_num_parms, p_use_desc, p_parameters) RETURNING  fp_spec_id INTO r_fp_spec_id;
+	INSERT INTO formal_parmspec(num_parms, use_desc ,parameters) VALUES(p_num_parms, p_use_desc, p_parameters) RETURNING  fp_spec_id INTO r_fp_spec_id;
 end$$;
 
 
 
 
--- ==================================================================
--- SP__insert_formal_parmspec_entry
--- insert a single entry into a formal parm
--- IN 
---      p_fp_spec_id integer - id of the formal parmspec for this entry    
---      p_order_num integer - order of the entry in the parmspec
---      p_parm_name varchar - name of the parm used for parm by name 
---      p_data_type varchar - data type of the parm
---      p_obj_definition_id integer -  optional default value of this parm
--- OUT 
---      r_fp_id integer
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_formal_parmspec_entry(IN p_fp_spec_id integer,  p_order_num integer, p_parm_name varchar, p_data_type varchar, p_obj_definition_id integer, INOUT r_fp_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-	INSERT INTO formal_parm
-(
-fp_spec_id,
-order_num,
-parm_name,
-data_type_id,
-obj_actual_definition_id)
-VALUES
-(p_fp_spec_id,
-p_order_num,
-p_parm_name,
-(select data_type_id from data_type where type_name = p_data_type),
-p_obj_definition_id) RETURNING fp_id INTO r_fp_id;
-end$$;
-
-
-
-
--- ==================================================================
--- SP__insert_formal_parmspec
--- inserts a list of formal parms into a spec, uses three ',' delimenated lists to 
--- store type name and default value info for the formal parms
--- IN 
--- 		p_num_parms integer - number of parms in the parmspec
--- 		p_use_desc varchar - human readable description
--- 		p_data_types_list varchar(10000 ) - list of types for the parms 
--- 		p_parm_names_list varchar(10000) - list of the names for the parms
--- 		p_default_values_list varchar(10000) - list of the default values
--- OUT 
--- 		r_fp_spec_id integer - formal parmspec id
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_formal_parms_set(IN p_num_parms integer, p_use_desc varchar, p_data_types_list varchar(10000), p_parm_names_list varchar(10000),
- p_default_values_list varchar(10000), INOUT r_fp_spec_id integer)
-LANGUAGE plpgsql
-AS $$ 
-DECLARE
-fp_spec_id int;
-s varchar;
-loops int;
-data_type varchar;
-parm_name varchar;
-default_value varchar;
-BEGIN 
-	CALL SP__insert_formal_parmspec(p_num_parms, p_use_desc, r_fp_spec_id); 
-    fp_spec_id := r_fp_spec_id; 
-    s := 'INSERT INTO formal_parm(fp_spec_id, order_num, parm_name, data_type_id, obj_actual_definition_id) VALUES'; 
-    loops := 1; 
-    WHILE loops < p_num_parms DO  LOOP 
-			-- @data_type
-				data_type := TRIM(SUBSTRING_INDEX(p_data_types_list, ',', 1));
-			    SELECT REPLACE(p_data_types_list, CONCAT(data_type, ','), '') into p_data_types_list ;
-    
- 			-- parm_name
-				parm_name := TRIM(SUBSTRING_INDEX(p_parm_names_list, ',', 1)); 
-				SELECT REPLACE(p_parm_names_list, CONCAT(parm_name, ','), '') into p_parm_names_list;
-                
-            -- @default_value
-				default_value := TRIM(SUBSTRING_INDEX(p_default_values_list, ',', 1));
-                IF default_value = 'NULL' THEN default_value := null;
-                ELSEIF default_value = 'null' THEN default_value := null;
-				END IF;
-                SELECT REPLACE(p_default_values_list, CONCAT(default_value, ','), '') into p_default_values_list;
-            
-				s = CONCAT(s, '(', fp_spec_id, ',', loops, ',', '"', parm_name, '"', ',', (SELECT data_type_id FROM data_type where type_name = data_type), ',', '"', default_value, '"', '),');
-                loops := loops + 1; 
-        END loop; 
- 
-    -- @data_type
-	data_type := TRIM((SUBSTRING_INDEX(p_data_types_list, ',', 1)));
-    
-	-- parm_name
-	parm_name := TRIM(SUBSTRING_INDEX(p_parm_names_list, ',', 1)); 
-                
-	-- default_value
-	IF default_value = 'NULL' THEN default_value := null;
-                ELSEIF default_value = 'null' THEN default_value := null;
-				END IF;
-                SELECT REPLACE(p_default_values_list, CONCAT(default_value, ','), '') into p_default_values_list;
-
-	s = CONCAT(s, '(', fp_spec_id, ',', loops, ',', (SELECT data_type_id FROM data_type where type_name = data_type), ',', '"', parm_name, '"', ',', '"', default_value, '"', ')');
-	-- PREPARE stmt as s; 
-    EXECUTE s; 
-
-end$$;
-
-
-
--- STORED PROCEDURE(S) for creating literals 
--- need to update to allow ot be ari
-/*
-
--- ==================================================================
--- SP__insert_literal_actual_definition 
--- IN 
--- 		p_obj_id integer - id of the metadata info 
--- 		p_use_desc varchar - human readable describtion
--- 		p_data_type varchar - primitive data type of the literal
--- 		p_data_value_string varchar - calue of the literal encoded as a string 
--- OUT 
--- 		r_definition_id integer - id of teh literal
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_literal_actual_definition(IN p_obj_id integer, p_use_desc varchar, p_data_type varchar, p_data_value_string varchar, INOUT r_definition_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id); 
-    INSERT INTO literal_actual_definition(obj_actual_definition_id, data_type_id, data_value) VALUES(r_definition_id, (SELECT data_type_id FROM data_type WHERE type_name  = p_data_type), p_data_value_string); 
-end$$;
-
-
-
--- ==================================================================
--- SP__delete_literal_actual_definition 
--- IN 
--- p_obj_id integer - id of the lit to be deleted
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__delete_literal_actual_definition(IN p_obj_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-	CALL SP__delete_obj_definition(p_obj_id); 
-end$$;*/
-
--- STORED PROCEDURE(S) for creating updating and deleting macro definitions and actuals
 
 -- ==================================================================
 -- SP__insert_macro_formal_definition
@@ -884,7 +733,7 @@ end$$;
 --      p_obj_id integer - id of the macro to be deleted
 -- 	 	p_obj_name varchar - name of the macro to delete
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__delete_mac_formal_defintion(IN p_obj_id integer, p_obj_name varchar)
+CREATE OR REPLACE PROCEDURE SP__delete_macro_formal_defintion(IN p_obj_id integer, p_obj_name varchar)
 LANGUAGE plpgsql
 AS $$ 
 
@@ -1296,57 +1145,67 @@ end$$;
 
 
 -- ==================================================================
--- SP__insert_operator_actual_definition
+-- SP__insert_operator_formal_definition
 -- IN 
 -- 		p_obj_id integer - metadata id for this report
 -- 		p_use_desc varchar - human readable use description
--- 		p_use_desc varchar - human readable use description
--- 		p_result_type varchar - data type of the result 
--- 		p_num_inputs integer - number of inputs for the operator 
--- 		p_tnvc_id integer -  
+--      fp_spec_id integer, 
+--      p_num_operands integer, 
+-- 		p_operands varchar, 
+--		p_result_name varchar, 
+--		p_result_type varchar,    
 -- OUT 
 -- 		r_definition_id integer - actual id of this operator
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_operator_actual_definition(IN p_obj_id integer, p_use_desc varchar, 
-p_result_type varchar, p_num_inputs integer, p_tnvc_id integer,  INOUT r_definition_id integer)
+--add_oid, 'Add two uvast values.The operands are cast to the least compatible numeric typebefore the arithmetic.', null, 2, null, '.left, .right', 'result', null, add_fid);
+CREATE OR REPLACE PROCEDURE SP__insert_operator_formal_definition(IN p_obj_id integer, p_use_desc varchar, 
+fp_spec_id integer, p_num_operands integer, p_operands varchar, p_result_name varchar, p_result_type varchar,  INOUT r_definition_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
-	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id);
-    INSERT INTO operator_actual_definition(obj_actual_definition_id, data_type_id, num_operands, tnvc_id)
-    VALUES(r_definition_id, (SELECT data_type_id FROM data_type WHERE type_name = p_result_type), p_num_inputs, p_tnvc_id); 
+	CALL SP__insert_obj_formal_definition(p_obj_id, p_use_desc, r_definition_id); 
+    INSERT INTO operator_formal_definition(obj_formal_definition_id, fp_spec_id, num_operands, operands, result_name, result_type)
+    VALUES(r_definition_id, fp_spec_id, p_num_operands, p_operands, p_result_name, p_result_type); 
 end$$;
 
 
 -- ==================================================================
--- SP__delete_oper_actual_defintion
+-- SP__insert_operator_actual_definition
+-- IN 
+-- 		p_obj_id integer - metadata id for this report
+-- 		p_use_desc varchar - human readable use description
+--      ap_spec_id integer,     
+-- OUT 
+-- 		r_definition_id integer - actual id of this operator
+-- ==================================================================
+CREATE OR REPLACE PROCEDURE SP__insert_operator_actual_definition(IN p_obj_definition_id integer, p_use_desc varchar, p_ap_spec_id integer,  INOUT r_actual_definition_id integer)
+LANGUAGE plpgsql
+AS $$ BEGIN
+	CALL SP__insert_obj_actual_definition(p_obj_definition_id, p_use_desc, r_actual_definition_id); 
+    INSERT INTO operator_actual_definition(obj_actual_definition_id, ap_spec_id) VALUES(r_actual_definition_id, p_ap_spec_id);  
+end$$; 
+
+-- ==================================================================
+-- SP__delete_operator_formal_defintion
 -- IN 
 -- 		p_obj_id integer - id of this op to delete,  
 -- 		p_obj_name varchar - name of this op to delete 
 -- ==================================================================
  
-CREATE OR REPLACE PROCEDURE SP__delete_oper_actual_defintion(IN p_obj_id integer, p_obj_name varchar)
+CREATE OR REPLACE PROCEDURE SP__delete_operator_formal_defintion(IN p_obj_id integer, p_obj_name varchar)
 LANGUAGE plpgsql
 AS $$ 
 <<oper_def_del>>
 DECLARE 
 def_id int; 
 fp_id int;
-ac_id int;
 BEGIN
-	IF( p_obj_id is Null AND p_obj_name is not NULL) THEN
-		select obj_id FROM obj_metadata WHERE obj_name = p_obj_name into p_obj_id;
-    ELSE 
-		EXIT oper_def_del;
-    END IF;
-    
-    def_id = (select definition_id from obj_actual_definition where obj_actual_definition_id = p_obj_id);
-	fp_id = (SELECT fp_spec_id from macro_actual_definition where obj_actual_definition_id = def_id );
-    ac_id = (SELECT ac_id FROM macro_actual_definition where obj_actual_definition_id = def_id );
-    
+    def_id = (SELECT obj_formal_definition_id from obj_formal_definition where obj_metadata_id = p_obj_id );
+	fp_id = (SELECT fp_spec_id from operator_formal_definition where obj_formal_definition_id = def_id );
+ 
 	DELETE FROM formal_parmspec WHERE fp_spec_id = fp_id;
-	DELETE FROM ari_collection WHERE ac_id = ac_id;
 
-	CALL SP__delete_obj_actual_defintion(p_obj_id, p_obj_name);
+	CALL SP__delete_obj_formal_defintion(p_obj_id, p_obj_name);
+	CALL SP__delete_obj_metadata(p_obj_id, p_obj_name);
 end$$; 
 
 
@@ -1686,15 +1545,17 @@ end$$;
 -- 		r_definition_id integer - definition id of the variable
 --
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_formal_variable_definition(IN p_obj_id integer, p_use_desc varchar, p_fp_spec_id integer,
-p_out_type integer,  p_expression bytea, p_init_value bytea, INOUT r_definition_id integer)
+
+CREATE OR REPLACE PROCEDURE SP__insert_variable_formal_definition(IN p_obj_id integer, p_use_desc varchar, p_fp_spec_id integer,
+p_out_type varchar,  p_expression varchar, p_init_value varchar, INOUT r_definition_id integer)
 LANGUAGE plpgsql
 AS $$ 
 DECLARE 
-r_expr_id int;
+r_type_id int;
 BEGIN 
 	CALL SP__insert_obj_formal_definition(p_obj_id, p_use_desc, r_definition_id);
-	INSERT INTO variable_formal_definition(obj_formal_definition_id, fp_spec_id, data_type_id, expression, init_value) VALUES(r_definition_id, p_fpe_spec_id,p_out_type, p_expression, p_init_value); 
+	r_type_id = (SELECT data_type_id from data_type where type_name = UPPER(p_out_type));
+	INSERT INTO variable_formal_definition(obj_formal_definition_id, fp_spec_id, data_type_id, expression, init_value) VALUES(r_definition_id, p_fp_spec_id, r_type_id, p_expression, p_init_value); 
 end$$;
 
 
@@ -1711,7 +1572,7 @@ end$$;
 -- 		r_definition_id integer - definition id of the variable
 --
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_acutal_variable_definition(IN p_obj_id integer, p_use_desc varchar, p_ap_spec_id integer,
+CREATE OR REPLACE PROCEDURE SP__insert_variable_actual_definition(IN p_obj_id integer, p_use_desc varchar, p_ap_spec_id integer,
 INOUT r_definition_id integer)
 LANGUAGE plpgsql
 AS $$ 
