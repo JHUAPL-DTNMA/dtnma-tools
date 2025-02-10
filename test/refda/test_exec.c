@@ -46,7 +46,8 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-#define EXAMPLE_ADM_ENUM 65536
+#define EXAMPLE_ORG_ENUM 65535
+#define EXAMPLE_ADM_ENUM 10
 
 /// Agent context for testing
 static refda_agent_t agent;
@@ -83,7 +84,9 @@ void setUp(void)
 
     {
         // ADM for this test fixture
-        cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", "", true, EXAMPLE_ADM_ENUM);
+        cace_amm_obj_ns_t *adm =
+            cace_amm_obj_store_add_ns(&(agent.objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
+                                      cace_amm_idseg_ref_withenum("adm", EXAMPLE_ADM_ENUM), "2025-02-10");
         cace_amm_obj_desc_t *obj;
 
         /**
@@ -97,19 +100,19 @@ void setUp(void)
                 cace_ari_ac_init(&acinit);
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
-                    cace_ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL,
-                                                   1); // ari://example-adm/CTRL/ctrl1
+                    // ari://example/adm/CTRL/ctrl1
+                    cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 1);
                 }
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
-                    cace_ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL,
-                                                   2); // ari://example-adm/CTRL/ctrl2
+                    // ari://example/adm/CTRL/ctrl2
+                    cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 2);
                 }
 
                 cace_ari_set_ac(&(objdata->value), &acinit);
             }
 
-            obj = refda_register_const(adm, cace_amm_obj_id_withenum("mac1", 1), objdata);
+            obj = refda_register_const(adm, cace_amm_idseg_ref_withenum("mac1", 1), objdata);
             // no parameters
         }
 
@@ -122,7 +125,7 @@ void setUp(void)
             cace_amm_type_set_use_direct(&(objdata->res_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
             objdata->execute = test_exec_ctrl_exec_one_int;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("ctrl1", 1), objdata);
+            obj = refda_register_ctrl(adm, cace_amm_idseg_ref_withenum("ctrl1", 1), objdata);
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "one");
 
@@ -135,7 +138,7 @@ void setUp(void)
             cace_amm_type_set_use_direct(&(objdata->res_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
             objdata->execute = test_exec_ctrl_exec_one_int;
 
-            obj = refda_register_ctrl(adm, cace_amm_obj_id_withenum("ctrl2", 2), objdata);
+            obj = refda_register_ctrl(adm, cace_amm_idseg_ref_withenum("ctrl2", 2), objdata);
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "one");
 
@@ -319,7 +322,8 @@ void test_refda_exec_wait_for(int delay_ms)
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     {
         cace_ari_ref_t *ref = cace_ari_set_objref(&target);
-        cace_ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
+        // ari://ietf/dtnma-agent/CTRL/wait-for
+        cace_ari_objpath_set_intid(&(ref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
                                    REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_FOR);
 
         cace_ari_list_t params;
@@ -349,7 +353,8 @@ void test_refda_exec_wait_until(int delay_ms)
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     {
         cace_ari_ref_t *ref = cace_ari_set_objref(&target);
-        cace_ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
+        // ari://ietf/dtnma-agent/CTRL/wait-until
+        cace_ari_objpath_set_intid(&(ref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
                                    REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_UNTIL);
 
         cace_ari_list_t params;
@@ -374,7 +379,7 @@ void test_refda_exec_wait_cond(int delay_ms)
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     {
         cace_ari_ref_t *ref = cace_ari_set_objref(&target);
-        cace_ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
+        cace_ari_objpath_set_intid(&(ref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
                                    REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_COND);
 
         cace_ari_list_t params;
@@ -388,7 +393,7 @@ void test_refda_exec_wait_cond(int delay_ms)
                 cace_ari_t     *expr_item = cace_ari_list_push_back_new(expr.items);
                 cace_ari_ref_t *pref      = cace_ari_set_objref(expr_item);
                 // will always evaluate truthy
-                cace_ari_objpath_set_intid(&(pref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_EDD,
+                cace_ari_objpath_set_intid(&(pref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_EDD,
                                            REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION);
             }
             cace_ari_set_ac(param, &expr);

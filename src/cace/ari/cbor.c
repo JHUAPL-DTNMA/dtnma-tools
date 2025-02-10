@@ -24,6 +24,7 @@
  */
 #include "cbor.h"
 #include "access.h"
+#include "text_util.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
 #include <qcbor/qcbor_spiffy_decode.h>
@@ -113,6 +114,47 @@ static int cace_ari_cbor_decode_idseg(QCBORDecodeContext *dec, cace_ari_idseg_t 
 
         default:
             return 3;
+    }
+    return 0;
+}
+
+static int cace_ari_cbor_encode_optdate(QCBOREncodeContext *enc, const cace_ari_date_t *obj)
+{
+    if (obj->valid)
+    {
+        QCBOREncode_AddTDaysEpoch(enc, QCBOR_ENCODE_AS_TAG, 100); // FIXME TBD
+    }
+    return 0;
+}
+
+static int cace_ari_cbor_decode_optdate(QCBORDecodeContext *dec, cace_ari_date_t *obj)
+{
+    QCBORItem decitem;
+    QCBORDecode_VPeekNext(dec, &decitem);
+    if (QCBORDecode_GetError(dec))
+    {
+        return 2;
+    }
+
+    switch (decitem.uDataType)
+    {
+        case QCBOR_TYPE_DAYS_EPOCH:
+            obj->valid = true;
+            // FIXME decode
+            break;
+        case QCBOR_TYPE_DAYS_STRING:
+        {
+            obj->valid = true;
+
+            cace_data_t text;
+            cace_data_init_view(&text, decitem.val.dateString.len, (cace_data_ptr_t)decitem.val.dateString.ptr);
+            cace_date_decode(&(obj->parts), &text);
+            cace_data_deinit(&text);
+            break;
+        }
+        default:
+            // optional tagged value not present
+            break;
     }
     return 0;
 }
@@ -811,7 +853,9 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *enc, const cace_ari_t *ari)
         const cace_ari_ref_t *obj = &(ari->as_ref);
 
         QCBOREncode_OpenArray(enc);
-        cace_ari_cbor_encode_idseg(enc, &(obj->objpath.ns_id));
+        cace_ari_cbor_encode_idseg(enc, &(obj->objpath.org_id));
+        cace_ari_cbor_encode_idseg(enc, &(obj->objpath.model_id));
+        cace_ari_cbor_encode_optdate(enc, &(obj->objpath.model_rev));
         if (obj->objpath.has_ari_type)
         {
             QCBOREncode_AddInt64(enc, obj->objpath.ari_type);
@@ -821,6 +865,7 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *enc, const cace_ari_t *ari)
             cace_ari_cbor_encode_idseg(enc, &(obj->objpath.type_id));
         }
         cace_ari_cbor_encode_idseg(enc, &(obj->objpath.obj_id));
+
         switch (obj->params.state)
         {
             case CACE_ARI_PARAMS_NONE:
@@ -1150,7 +1195,9 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
         {
             cace_ari_ref_t *obj = cace_ari_init_objref(ari);
 
-            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.ns_id));
+            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.org_id));
+            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.model_id));
+            cace_ari_cbor_decode_optdate(dec, &(obj->objpath.model_rev));
             cace_ari_cbor_decode_idseg(dec, &(obj->objpath.type_id));
             cace_ari_cbor_decode_idseg(dec, &(obj->objpath.obj_id));
             int err = cace_ari_objpath_derive_type(&(obj->objpath));

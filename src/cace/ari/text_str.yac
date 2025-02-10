@@ -490,11 +490,13 @@ ssp-objref:
 ;
 
 objpath:
-    T_IDSEG T_IDSEG T_IDSEG {
+    // all path components
+    T_IDSEG T_IDSEG T_IDSEG T_IDSEG {
         cace_ari_objpath_init(&$$);
-        $$.ns_id = $1;
-        $$.type_id = $2;
-        $$.obj_id = $3;
+        $$.org_id = $1;
+        $$.model_id = $2; //FIXME need to split
+        $$.type_id = $3;
+        $$.obj_id = $4;
         int err = cace_ari_objpath_derive_type(&$$);
 
         if (err)
@@ -505,7 +507,7 @@ objpath:
     }
     | T_IDSEG {
         cace_ari_objpath_init(&$$);
-        $$.ns_id = $1;
+        $$.org_id = $1;
     }
 ;
 

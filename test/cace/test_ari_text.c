@@ -281,59 +281,69 @@ void test_ari_text_encode_lit_typed_execset_2tgt(void)
         }
         {
             cace_ari_t *item = cace_ari_list_push_back_new(ctr->targets);
-            cace_ari_set_objref_path_textid(item, "adm", CACE_ARI_TYPE_CTRL, "one");
+            cace_ari_set_objref_path_textid(item, "example", "adm", CACE_ARI_TYPE_CTRL, "one");
         }
         {
             cace_ari_t *item = cace_ari_list_push_back_new(ctr->targets);
-            cace_ari_set_objref_path_textid(item, "adm", CACE_ARI_TYPE_CTRL, "two");
+            cace_ari_set_objref_path_textid(item, "example", "adm", CACE_ARI_TYPE_CTRL, "two");
         }
 
         {
-            const char *expect = "ari:/EXECSET/n=12345678;(//adm/CTRL/one,//adm/CTRL/two)";
+            const char *expect = "ari:/EXECSET/n=12345678;(//example/adm/CTRL/one,//example/adm/CTRL/two)";
             check_encode(&ari, expect, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         }
         cace_ari_deinit(&ari);
     }
 }
 
-TEST_CASE("adm", CACE_ARI_TYPE_CONST, "hi", "ari://adm/CONST/hi")
-TEST_CASE("18", CACE_ARI_TYPE_IDENT, "34", "ari://18/IDENT/34")
-void test_ari_text_encode_objref_text(const char *ns_id, cace_ari_type_t type_id, const char *obj_id,
-                                      const char *expect)
+TEST_CASE("example", "adm", CACE_ARI_TYPE_CONST, "hi", "ari://example/adm/CONST/hi")
+TEST_CASE("65535", "18", CACE_ARI_TYPE_IDENT, "34", "ari://65535/18/IDENT/34")
+void test_ari_text_encode_objref_text(const char *org_id, const char *model_id, cace_ari_type_t type_id,
+                                      const char *obj_id, const char *expect)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_objref_path_textid(&ari, ns_id, type_id, obj_id);
+    cace_ari_set_objref_path_textid(&ari, org_id, model_id, type_id, obj_id);
 
     cace_ari_text_enc_opts_t opts = CACE_ARI_TEXT_ENC_OPTS_DEFAULT;
     check_encode(&ari, expect, opts);
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE(18, CACE_ARI_TYPE_IDENT, 34, "ari://18/IDENT/34")
-void test_ari_text_encode_objref_int(int64_t ns_id, cace_ari_type_t type_id, int64_t obj_id, const char *expect)
+TEST_CASE(65535, 18, CACE_ARI_TYPE_IDENT, 34, "ari://65535/18/IDENT/34")
+void test_ari_text_encode_objref_int(cace_ari_int_id_t org_id, cace_ari_int_id_t model_id, cace_ari_type_t type_id,
+                                     cace_ari_int_id_t obj_id, const char *expect)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_objpath_set_intid(&(cace_ari_set_objref(&ari)->objpath), ns_id, type_id, obj_id);
+    cace_ari_objpath_set_intid(&(cace_ari_set_objref(&ari)->objpath), org_id, model_id, type_id, obj_id);
 
     cace_ari_text_enc_opts_t opts = CACE_ARI_TEXT_ENC_OPTS_DEFAULT;
     check_encode(&ari, expect, opts);
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE("adm", "ari://adm/")
-TEST_CASE("example-adm-a@2024-06-25", "ari://example-adm-a@2024-06-25/")
-TEST_CASE("example-adm-a", "ari://example-adm-a/")
-TEST_CASE("!example-odm-b", "ari://!example-odm-b/")
-TEST_CASE("65536", "ari://65536/")
-TEST_CASE("-20", "ari://-20/")
-void test_ari_text_encode_nsref_text(const char *ns_id, const char *expect)
+TEST_CASE("example", "adm", NULL, "ari://example/adm/")
+TEST_CASE("example", "adm-a", "2024-06-25", "ari://example/adm-a@2024-06-25/")
+TEST_CASE("example", "adm-a", NULL, "ari://example/adm-a/")
+TEST_CASE("example", "!odm-b", NULL, "ari://example/!odm-b/")
+TEST_CASE("65535", "2", NULL, "ari://65535/2/")
+TEST_CASE("65535", "-20", NULL, "ari://65535/-20/")
+void test_ari_text_encode_nsref_text(const char *org_id, const char *model_id, const char *model_rev,
+                                     const char *expect)
 {
     cace_ari_t      ari = CACE_ARI_INIT_UNDEFINED;
     cace_ari_ref_t *ref = cace_ari_init_objref(&ari);
     {
-        ref->objpath.ns_id.form = CACE_ARI_IDSEG_TEXT;
-        string_t *value         = &(ref->objpath.ns_id.as_text);
-        string_init_set_str(*value, ns_id);
+        ref->objpath.org_id.form = CACE_ARI_IDSEG_TEXT;
+        m_string_init_set_cstr(ref->objpath.org_id.as_text, org_id);
+    }
+    {
+        ref->objpath.model_id.form = CACE_ARI_IDSEG_TEXT;
+        m_string_init_set_cstr(ref->objpath.model_id.as_text, model_id);
+    }
+    if (model_rev)
+    {
+        ref->objpath.model_rev.valid = true;
+        m_string_init_set_cstr(ref->objpath.model_id.as_text, model_id);
     }
 
     cace_ari_text_enc_opts_t opts = CACE_ARI_TEXT_ENC_OPTS_DEFAULT;
@@ -341,16 +351,19 @@ void test_ari_text_encode_nsref_text(const char *ns_id, const char *expect)
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE(18, "ari://18/")
-TEST_CASE(65536, "ari://65536/")
-TEST_CASE(-20, "ari://-20/")
-void test_ari_text_encode_nsref_int(int64_t ns_id, const char *expect)
+TEST_CASE(65535, 18, "ari://65535/18/")
+TEST_CASE(65535, -20, "ari://65535/-20/")
+void test_ari_text_encode_nsref_int(cace_ari_int_id_t org_id, cace_ari_int_id_t model_id, const char *expect)
 {
     cace_ari_t      ari = CACE_ARI_INIT_UNDEFINED;
     cace_ari_ref_t *ref = cace_ari_init_objref(&ari);
     {
-        ref->objpath.ns_id.form   = CACE_ARI_IDSEG_INT;
-        ref->objpath.ns_id.as_int = ns_id;
+        ref->objpath.org_id.form   = CACE_ARI_IDSEG_INT;
+        ref->objpath.org_id.as_int = org_id;
+    }
+    {
+        ref->objpath.model_id.form   = CACE_ARI_IDSEG_INT;
+        ref->objpath.model_id.as_int = model_id;
     }
 
     cace_ari_text_enc_opts_t opts = CACE_ARI_TEXT_ENC_OPTS_DEFAULT;
@@ -365,7 +378,8 @@ void test_ari_text_encode_ariref(cace_ari_type_t type_id, const char *obj_id, co
     cace_ari_t      ari = CACE_ARI_INIT_UNDEFINED;
     cace_ari_ref_t *ref = cace_ari_init_objref(&ari);
     {
-        ref->objpath.ns_id.form = CACE_ARI_IDSEG_NULL;
+        ref->objpath.org_id.form   = CACE_ARI_IDSEG_NULL;
+        ref->objpath.model_id.form = CACE_ARI_IDSEG_NULL;
     }
     {
         const char *type_name     = cace_ari_type_to_name(type_id);
@@ -1045,7 +1059,8 @@ void test_ari_text_decode_objref(const char *text, cace_ari_type_t expect_type)
     TEST_ASSERT_TRUE(ari.as_ref.objpath.has_ari_type);
     TEST_ASSERT_EQUAL_INT(expect_type, ari.as_ref.objpath.ari_type);
 
-    TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.ns_id.form);
+    TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.org_id.form);
+    TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.model_id.form);
     TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.type_id.form);
     TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.obj_id.form);
 
@@ -1112,22 +1127,23 @@ void test_ari_text_decode_objref_invalid(const char *intext)
     TEST_MESSAGE(errm);
 }
 
-TEST_CASE("ari://adm")
-TEST_CASE("ari://adm/")
-TEST_CASE("ari://18")
-TEST_CASE("ari://18/")
-TEST_CASE("ari://65536/")
-TEST_CASE("ari://-20/")
-TEST_CASE("ari://example-adm-a@2024-06-25/")
-TEST_CASE("ari://example-adm-a/")
-TEST_CASE("ari://!example-odm-b/")
+TEST_CASE("ari://65535/adm")
+TEST_CASE("ari://65535/adm/")
+TEST_CASE("ari://65535/18")
+TEST_CASE("ari://65535/18/")
+TEST_CASE("ari://65535/65536/")
+TEST_CASE("ari://65535/-20/")
+TEST_CASE("ari://example/adm-a@2024-06-25/")
+TEST_CASE("ari://example/adm-a/")
+TEST_CASE("ari://example/!odm-b/")
 void test_ari_text_decode_nsref(const char *text)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
     check_decode(&ari, text);
     TEST_ASSERT_TRUE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_ref.objpath.has_ari_type);
-    TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.ns_id.form);
+    TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.org_id.form);
+    TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.model_id.form);
     TEST_ASSERT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.type_id.form);
     TEST_ASSERT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.obj_id.form);
 
@@ -1146,7 +1162,8 @@ void test_ari_text_decode_ariref(const char *text, cace_ari_type_t expect_type)
     check_decode(&ari, text);
     TEST_ASSERT_TRUE(ari.is_ref);
     TEST_ASSERT_EQUAL_INT(expect_type, ari.as_ref.objpath.ari_type);
-    TEST_ASSERT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.ns_id.form);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.org_id.form);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.model_id.form);
     TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.type_id.form);
     TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.obj_id.form);
 

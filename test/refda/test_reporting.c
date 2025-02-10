@@ -46,7 +46,8 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-#define EXAMPLE_ADM_ENUM 65536
+#define EXAMPLE_ORG_ENUM 65535
+#define EXAMPLE_ADM_ENUM 10
 
 /// Agent context for testing
 static refda_agent_t agent;
@@ -87,7 +88,9 @@ void setUp(void)
 
     {
         // ADM for this test fixture
-        cace_amm_obj_ns_t   *adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", "", true, EXAMPLE_ADM_ENUM);
+        cace_amm_obj_ns_t *adm =
+            cace_amm_obj_store_add_ns(&(agent.objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
+                                      cace_amm_idseg_ref_withenum("adm", EXAMPLE_ADM_ENUM), "2025-02-10");
         cace_amm_obj_desc_t *obj;
 
         /**
@@ -101,19 +104,19 @@ void setUp(void)
                 cace_ari_ac_init(&acinit);
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
-                    cace_ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_EDD,
-                                                   1); // ari://example-adm/EDD/edd1
+                    // ari://example/adm/EDD/edd1
+                    cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_EDD, 1);
                 }
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
-                    cace_ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
-                                                   1); // ari://example-adm/VAR/var2
+                    // ari://example/adm/VAR/var2
+                    cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR, 1);
                 }
 
                 cace_ari_set_ac(&(objdata->value), &acinit);
             }
 
-            obj = refda_register_const(adm, cace_amm_obj_id_withenum("rptt1", 1), objdata);
+            obj = refda_register_const(adm, cace_amm_idseg_ref_withenum("rptt1", 1), objdata);
             // no parameters
         }
 
@@ -126,7 +129,7 @@ void setUp(void)
             cace_amm_type_set_use_direct(&(objdata->val_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
             cace_ari_set_vast(&(objdata->value), 123456);
 
-            obj = refda_register_var(adm, cace_amm_obj_id_withenum("var1", 1), objdata);
+            obj = refda_register_var(adm, cace_amm_idseg_ref_withenum("var1", 1), objdata);
             // no parameters
         }
 
@@ -139,7 +142,7 @@ void setUp(void)
             cace_amm_type_set_use_direct(&(objdata->prod_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_int;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd1", 1), objdata);
+            obj = refda_register_edd(adm, cace_amm_idseg_ref_withenum("edd1", 1), objdata);
             // no parameters
         }
         {
@@ -148,7 +151,7 @@ void setUp(void)
             cace_amm_type_set_use_direct(&(objdata->prod_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_one_int;
 
-            obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd2", 2), objdata);
+            obj = refda_register_edd(adm, cace_amm_idseg_ref_withenum("edd2", 2), objdata);
             // no parameters
         }
     }

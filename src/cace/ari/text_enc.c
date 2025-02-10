@@ -346,7 +346,7 @@ static void cace_ari_text_encode_prefix(cace_ari_text_enc_state_t *state)
     string_cat_str(state->out, "ari:");
 }
 
-static void cace_ari_text_encode_idseg(string_t text, const cace_ari_idseg_t *obj);
+static bool cace_ari_text_encode_idseg(string_t text, const cace_ari_idseg_t *obj);
 
 static void cace_ari_text_encode_aritype(string_t text, enum cace_ari_text_aritype_e show, const cace_ari_type_t val,
                                          const cace_ari_idseg_t *idseg)
@@ -565,7 +565,7 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
     return 0;
 }
 
-static void cace_ari_text_encode_idseg(string_t text, const cace_ari_idseg_t *obj)
+static bool cace_ari_text_encode_idseg(string_t text, const cace_ari_idseg_t *obj)
 {
     switch (obj->form)
     {
@@ -573,11 +573,12 @@ static void cace_ari_text_encode_idseg(string_t text, const cace_ari_idseg_t *ob
             break;
         case CACE_ARI_IDSEG_TEXT:
             string_cat(text, obj->as_text);
-            break;
+            return true;
         case CACE_ARI_IDSEG_INT:
             string_cat_printf(text, "%" PRId64, obj->as_int);
-            break;
+            return true;
     }
+    return false;
 }
 
 int cace_ari_text_encode_objpath(string_t text, const cace_ari_objpath_t *path, enum cace_ari_text_aritype_e show)
@@ -585,33 +586,46 @@ int cace_ari_text_encode_objpath(string_t text, const cace_ari_objpath_t *path, 
     CHKERR1(text);
     CHKERR1(path);
 
-    if (path->ns_id.form != CACE_ARI_IDSEG_NULL)
+    if (path->org_id.form != CACE_ARI_IDSEG_NULL)
     {
         string_cat_str(text, "//");
-        cace_ari_text_encode_idseg(text, &(path->ns_id));
+        cace_ari_text_encode_idseg(text, &(path->org_id));
     }
     else
     {
-        string_cat_str(text, ".");
+        if (path->org_id.form != CACE_ARI_IDSEG_NULL)
+        {
+            string_cat_str(text, "..");
+        }
+        else
+        {
+            string_cat_str(text, ".");
+        }
     }
-
     string_push_back(text, '/');
-    if (path->type_id.form == CACE_ARI_IDSEG_NULL)
+
+    if (cace_ari_text_encode_idseg(text, &(path->org_id)))
     {
-        // case for a namespace reference only
-        return 0;
+        if (path->model_rev.valid)
+        {
+            string_cat_str(text, "@");
+            cace_date_encode(text, &(path->model_rev.parts), true);
+        }
+
+        string_cat_str(text, "/");
     }
 
     if (path->has_ari_type)
     {
         cace_ari_text_encode_aritype(text, show, path->ari_type, &(path->type_id));
+        string_push_back(text, '/');
     }
-    else
+    else if (cace_ari_text_encode_idseg(text, &(path->type_id)))
     {
-        cace_ari_text_encode_idseg(text, &(path->type_id));
+        string_push_back(text, '/');
     }
 
-    string_push_back(text, '/');
+    // may encode nothing
     cace_ari_text_encode_idseg(text, &(path->obj_id));
 
     return 0;
@@ -620,7 +634,7 @@ int cace_ari_text_encode_objpath(string_t text, const cace_ari_objpath_t *path, 
 static int cace_ari_text_encode_objref(cace_ari_text_enc_state_t *state, const cace_ari_ref_t *obj)
 {
     // no scheme for path-only URI Reference form
-    if (obj->objpath.ns_id.form != CACE_ARI_IDSEG_NULL)
+    if (obj->objpath.org_id.form != CACE_ARI_IDSEG_NULL)
     {
         cace_ari_text_encode_prefix(state);
     }

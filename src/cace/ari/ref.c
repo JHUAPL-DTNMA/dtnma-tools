@@ -20,6 +20,7 @@
  */
 #include "ref.h"
 #include "containers.h"
+#include "text_util.h"
 #include "cace/util/defs.h"
 #include <inttypes.h>
 
@@ -140,21 +141,80 @@ bool cace_ari_idseg_equal(const cace_ari_idseg_t *left, const cace_ari_idseg_t *
     }
 }
 
+void cace_ari_date_init(cace_ari_date_t *obj)
+{
+    obj->valid = false;
+    memset(&obj->parts, 0, sizeof(struct tm));
+}
+
+void cace_ari_date_deinit(cace_ari_date_t *obj)
+{
+    obj->valid = false;
+}
+
+int cace_ari_date_cmp(const cace_ari_date_t *left, const cace_ari_date_t *right)
+{
+    if (!(left->valid) && !(right->valid))
+    {
+        return 0;
+    }
+    if (left->valid != right->valid)
+    {
+        return (left->valid) ? 1 : -1;
+    }
+
+    int part_cmp = M_CMP_DEFAULT(left->parts.tm_year, right->parts.tm_year);
+    if (part_cmp)
+    {
+        return part_cmp;
+    }
+    part_cmp = M_CMP_DEFAULT(left->parts.tm_mon, right->parts.tm_mon);
+    if (part_cmp)
+    {
+        return part_cmp;
+    }
+    part_cmp = M_CMP_DEFAULT(left->parts.tm_mday, right->parts.tm_mday);
+    return part_cmp;
+}
+
+int cace_ari_date_decode_text(cace_ari_date_t *obj, const char *text)
+{
+    CHKERR1(obj);
+    CHKERR1(text);
+
+    cace_data_t rev_view;
+    cace_data_init_view_cstr(&rev_view, text);
+    int res    = cace_date_decode(&obj->parts, &rev_view);
+    obj->valid = (res == 0);
+    cace_data_deinit(&rev_view);
+    return res;
+}
+
 void cace_ari_objpath_init(cace_ari_objpath_t *obj)
 {
-    memset(obj, 0, sizeof(cace_ari_objpath_t));
+    cace_ari_idseg_init(&(obj->org_id));
+    cace_ari_idseg_init(&(obj->model_id));
+    cace_ari_date_init(&(obj->model_rev));
+    cace_ari_idseg_init(&(obj->type_id));
+    cace_ari_idseg_init(&(obj->obj_id));
+    obj->has_ari_type = false;
+    obj->ari_type     = CACE_ARI_TYPE_NULL;
 }
 
 void cace_ari_objpath_deinit(cace_ari_objpath_t *obj)
 {
-    cace_ari_idseg_deinit(&(obj->ns_id));
+    cace_ari_idseg_deinit(&(obj->org_id));
+    cace_ari_idseg_deinit(&(obj->model_id));
+    cace_ari_date_deinit(&(obj->model_rev));
     cace_ari_idseg_deinit(&(obj->type_id));
     cace_ari_idseg_deinit(&(obj->obj_id));
+    obj->has_ari_type = false;
 }
 
 void cace_ari_objpath_copy(cace_ari_objpath_t *obj, const cace_ari_objpath_t *src)
 {
-    cace_ari_idseg_copy(&(obj->ns_id), &(src->ns_id));
+    cace_ari_idseg_copy(&(obj->org_id), &(src->org_id));
+    cace_ari_idseg_copy(&(obj->model_id), &(src->model_id));
     cace_ari_idseg_copy(&(obj->type_id), &(src->type_id));
     cace_ari_idseg_copy(&(obj->obj_id), &(src->obj_id));
 
@@ -211,23 +271,29 @@ int cace_ari_objpath_derive_type(cace_ari_objpath_t *path)
     return path->has_ari_type ? 0 : 2;
 }
 
-void cace_ari_objpath_set_textid(cace_ari_objpath_t *path, const char *ns_id, cace_ari_type_t type_id,
-                                 const char *obj_id)
+void cace_ari_objpath_set_textid(cace_ari_objpath_t *path, const char *org_id, const char *model_id,
+                                 cace_ari_type_t type_id, const char *obj_id)
 {
-    cace_ari_objpath_set_textid_opt(path, ns_id, &type_id, obj_id);
+    cace_ari_objpath_set_textid_opt(path, org_id, model_id, &type_id, obj_id);
 }
 
-void cace_ari_objpath_set_textid_opt(cace_ari_objpath_t *path, const char *ns_id, const cace_ari_type_t *type_id,
-                                     const char *obj_id)
+void cace_ari_objpath_set_textid_opt(cace_ari_objpath_t *path, const char *org_id, const char *model_id,
+                                     const cace_ari_type_t *type_id, const char *obj_id)
 {
     CHKVOID(path);
     cace_ari_objpath_deinit(path);
 
-    if (ns_id)
+    if (org_id)
     {
-        path->ns_id.form = CACE_ARI_IDSEG_TEXT;
-        string_t *value  = &(path->ns_id.as_text);
-        string_init_set_str(*value, ns_id);
+        path->org_id.form = CACE_ARI_IDSEG_TEXT;
+        string_t *value   = &(path->org_id.as_text);
+        string_init_set_str(*value, org_id);
+    }
+    if (model_id)
+    {
+        path->model_id.form = CACE_ARI_IDSEG_TEXT;
+        string_t *value     = &(path->model_id.as_text);
+        string_init_set_str(*value, model_id);
     }
     if (type_id)
     {
@@ -248,21 +314,28 @@ void cace_ari_objpath_set_textid_opt(cace_ari_objpath_t *path, const char *ns_id
     }
 }
 
-void cace_ari_objpath_set_intid(cace_ari_objpath_t *path, int64_t ns_id, cace_ari_type_t type_id, int64_t obj_id)
+void cace_ari_objpath_set_intid(cace_ari_objpath_t *path, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
+                                cace_ari_type_t type_id, cace_ari_int_id_t obj_id)
 {
-    cace_ari_objpath_set_intid_opt(path, &ns_id, &type_id, &obj_id);
+    cace_ari_objpath_set_intid_opt(path, &org_id, &model_id, &type_id, &obj_id);
 }
 
-void cace_ari_objpath_set_intid_opt(cace_ari_objpath_t *path, const int64_t *ns_id, const cace_ari_type_t *type_id,
-                                    const int64_t *obj_id)
+void cace_ari_objpath_set_intid_opt(cace_ari_objpath_t *path, const cace_ari_int_id_t *org_id,
+                                    const cace_ari_int_id_t *model_id, const cace_ari_type_t *type_id,
+                                    const cace_ari_int_id_t *obj_id)
 {
     CHKVOID(path);
     cace_ari_objpath_deinit(path);
 
-    if (ns_id)
+    if (org_id)
     {
-        path->ns_id.form   = CACE_ARI_IDSEG_INT;
-        path->ns_id.as_int = *ns_id;
+        path->org_id.form   = CACE_ARI_IDSEG_INT;
+        path->org_id.as_int = *org_id;
+    }
+    if (model_id)
+    {
+        path->model_id.form   = CACE_ARI_IDSEG_INT;
+        path->model_id.as_int = *model_id;
     }
     if (type_id)
     {

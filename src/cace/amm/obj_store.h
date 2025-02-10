@@ -18,35 +18,46 @@
 #ifndef CACE_AMM_OBJ_STORE_H_
 #define CACE_AMM_OBJ_STORE_H_
 
-#include "obj_ns.h"
+#include "obj_org.h"
+#include "idseg_ref.h"
 #include "cace/util/nocase.h"
+#include <m-shared-ptr.h>
 #include <m-rbtree.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** @struct string_tree_set_t
- * Unique set of feature names in a single namespace.
+/** @struct cace_amm_obj_org_list_t
+ * Storage of all registered organizations
  */
-/** @struct cace_amm_obj_desc_list_t
- * Linked list of object descriptors of a single type within a namespace.
- * The list owns the object lifetimes and is indexed by pointers to
- * list members.
+/** @struct cace_amm_obj_org_by_enum_t
+ * Index of orgs by their enumeration.
+ */
+/** @struct cace_amm_obj_org_by_name_t
+ * Index of orgs by their name.
  */
 /// @cond Doxygen_Suppress
-DEQUE_DEF(cace_amm_obj_ns_list, cace_amm_obj_ns_t)
-M_BPTREE_DEF2(cace_amm_obj_ns_by_enum, 4, int64_t, M_BASIC_OPLIST, cace_amm_obj_ns_t *, M_PTR_OPLIST)
-M_BPTREE_DEF2(cace_amm_obj_ns_by_name, 4, const char *, M_CSTR_NOCASE_OPLIST, cace_amm_obj_ns_t *, M_PTR_OPLIST)
+M_SHARED_PTR_DEF(cace_amm_obj_org_ptr, cace_amm_obj_org_t, M_OPL_cace_amm_obj_org_t())
+M_DEQUE_DEF(cace_amm_obj_org_list, cace_amm_obj_org_ptr_t *,
+            M_SHARED_PTR_OPLIST(cace_amm_obj_org_ptr, M_OPL_cace_amm_obj_org_t()))
+M_BPTREE_DEF2(cace_amm_obj_org_by_enum, 4, cace_ari_int_id_t, M_BASIC_OPLIST, cace_amm_obj_org_t *, M_PTR_OPLIST)
+M_BPTREE_DEF2(cace_amm_obj_org_by_name, 4, const char *, M_CSTR_NOCASE_OPLIST, cace_amm_obj_org_t *, M_PTR_OPLIST)
 /// @endcond
 
 /** A container for AMM object descriptors within separate namespaces.
  */
 typedef struct
 {
-    cace_amm_obj_ns_list_t    ns_list;
-    cace_amm_obj_ns_by_enum_t ns_by_enum;
-    cace_amm_obj_ns_by_name_t ns_by_name;
+    /// Actual storage for all registered NS
+    cace_amm_obj_ns_list_t ns_list;
+
+    /// Storage for organization index instances
+    cace_amm_obj_org_list_t org_list;
+    /// Index by enumeration
+    cace_amm_obj_org_by_enum_t org_by_enum;
+    /// Index by name
+    cace_amm_obj_org_by_name_t org_by_name;
 } cace_amm_obj_store_t;
 
 void cace_amm_obj_store_init(cace_amm_obj_store_t *store);
@@ -56,17 +67,18 @@ void cace_amm_obj_store_deinit(cace_amm_obj_store_t *store);
 /** Attempt to add a new namespace to the object store.
  *
  * @param[in,out] store The store to add to.
- * @param[in] name The unique namespace ID.
+ * @param[in] org_id The organization ID.
+ * @param[in] model_id The model ID within the organization.
  * @param[in] revision Optional specific revision of an ADM.
  * @param has_enum True if this NS has an enumeration.
  * @param intenum The optional enumeration.
  */
-cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const char *name, const char *revision,
-                                             bool has_enum, int64_t intenum);
+cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const cace_amm_idseg_ref_t org_id,
+                                             const cace_amm_idseg_ref_t model_id, const char *revision);
 
-cace_amm_obj_ns_t *cace_amm_obj_store_find_ns_name(const cace_amm_obj_store_t *store, const char *name);
+cace_amm_obj_org_t *cace_amm_obj_store_find_org_name(const cace_amm_obj_store_t *store, const char *name);
 
-cace_amm_obj_ns_t *cace_amm_obj_store_find_ns_enum(const cace_amm_obj_store_t *store, int64_t intenum);
+cace_amm_obj_org_t *cace_amm_obj_store_find_org_enum(const cace_amm_obj_store_t *store, cace_ari_int_id_t intenum);
 
 #ifdef __cplusplus
 } // extern C

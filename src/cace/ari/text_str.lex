@@ -56,8 +56,14 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
     BEGIN(ARI_OBJREF);
     return T_IDSEG;
 }
+<INITIAL>".." {
+    // A null org-id segment
+    cace_ari_idseg_init(&(yylval->idseg));
+    BEGIN(ARI_OBJREF);
+    return T_IDSEG;
+}
 <INITIAL>"." {
-    // A null namespace segment
+    // A null org-id and model-id segment
     cace_ari_idseg_init(&(yylval->idseg));
     BEGIN(ARI_OBJREF);
     return T_IDSEG;
@@ -78,7 +84,8 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
             cace_ari_text_str_error(yyscanner, yyextra, "ID segment failed to percent-decode");
             return YYerror;
         }
-        cace_ari_idseg_init_from_text(&(yylval->objpath.ns_id), decoded);
+        //FIXME
+//         cace_ari_idseg_init_from_text(&(yylval->objpath.ns_id), decoded);
     }
 
     return T_IDSEG;

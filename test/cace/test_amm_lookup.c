@@ -36,14 +36,15 @@ void suiteSetUp(void)
     cace_amm_obj_store_init(&store);
 
     // initial population
-    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&store, "example-adm", "", true, 25);
+    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&store, cace_amm_idseg_ref_withenum("example", 65535),
+                                                       cace_amm_idseg_ref_withenum("adm", 25), "2025-02-10");
     TEST_ASSERT_NOT_NULL(adm);
     cace_amm_obj_desc_t *obj;
 
-    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_withenum("noparam", 0));
+    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_withenum("noparam", 0));
     TEST_ASSERT_NOT_NULL(obj);
 
-    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_withenum("withparam", 1));
+    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_withenum("withparam", 1));
     TEST_ASSERT_NOT_NULL(obj);
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj->fparams);
@@ -54,7 +55,7 @@ void suiteSetUp(void)
         cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
     }
 
-    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_TYPEDEF, cace_amm_obj_id_withenum("semtype", 0));
+    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_TYPEDEF, cace_amm_idseg_ref_withenum("semtype", 0));
     TEST_ASSERT_NOT_NULL(obj);
 }
 

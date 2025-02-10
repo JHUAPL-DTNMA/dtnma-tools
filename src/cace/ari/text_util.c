@@ -990,6 +990,54 @@ int cace_base64_decode(cace_data_t *out, const m_string_t in)
     return (in_len > 0) ? 4 : 0;
 }
 
+int cace_date_encode(m_string_t out, const struct tm *in, bool usesep)
+{
+    CHKERR1(out);
+    CHKERR1(in);
+
+    const char *fmt;
+    if (usesep)
+    {
+        fmt = "%Y-%m-%d";
+    }
+    else
+    {
+        fmt = "%Y%m%d";
+    }
+    char fullsec[11]; // maximum with-separator size and trailing null
+    strftime(fullsec, sizeof(fullsec), fmt, in);
+    m_string_cat_cstr(out, fullsec);
+
+    return 0;
+}
+
+int cace_date_decode(struct tm *out, const cace_data_t *in)
+{
+    CHKERR1(out);
+    CHKERR1(in);
+    int retval = 0;
+
+    const size_t in_len = text_real_len(in);
+    const char  *curs   = (const char *)(in->ptr);
+    const char  *end    = curs + in_len;
+
+    // remove optional separators
+    m_string_t unsep;
+    m_string_init(unsep);
+    strip_chars(unsep, curs, in_len, "-");
+    curs = m_string_get_cstr(unsep);
+    end  = curs + m_string_size(unsep);
+
+    // extract parts
+    const char *subend = strptime(curs, "%Y%m%d", out);
+    if ((subend == NULL) || (subend != end))
+    {
+        retval = 2;
+    }
+
+    return retval;
+}
+
 int cace_utctime_encode(string_t out, const struct timespec *in, bool usesep)
 {
     CHKERR1(out);
@@ -1047,8 +1095,7 @@ int cace_utctime_decode(struct timespec *out, const cace_data_t *in)
     time_t fullsec;
     int    retval = 0;
     {
-        struct tm parts = { 0 };
-        // FIXME doesn't handle compressed forms
+        struct tm   parts  = { 0 };
         const char *subend = strptime(curs, "%Y%m%dT%H%M%S", &parts);
         if (subend == NULL)
         {
