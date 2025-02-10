@@ -179,8 +179,8 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_reset(void)
     TEST_ASSERT_EQUAL_INT(0, res);
 
     cace_ari_t var_ref;
-    cace_ari_objpath_set_intid(&(cace_ari_init_objref(&var_ref)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
-                               test_var_enum);
+    cace_ari_objpath_set_intid(&(cace_ari_init_objref(&var_ref)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM,
+                               CACE_ARI_TYPE_VAR, test_var_enum);
 
     refda_runctx_t runctx;
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
@@ -212,8 +212,8 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_reset(void)
             cace_ari_list_init(params);
             {
                 cace_ari_t *param = cace_ari_list_push_back_new(params);
-                cace_ari_objpath_set_intid(&(cace_ari_init_objref(param)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
-                                           test_var_enum);
+                cace_ari_objpath_set_intid(&(cace_ari_init_objref(param)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM,
+                                           CACE_ARI_TYPE_VAR, test_var_enum);
             }
             cace_ari_params_set_ac(&(ref->params), params);
         }
@@ -262,8 +262,8 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_store(void)
     TEST_ASSERT_EQUAL_INT(0, res);
 
     cace_ari_t var_ref;
-    cace_ari_objpath_set_intid(&(cace_ari_init_objref(&var_ref)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
-                               test_var_enum);
+    cace_ari_objpath_set_intid(&(cace_ari_init_objref(&var_ref)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM,
+                               CACE_ARI_TYPE_VAR, test_var_enum);
 
     refda_runctx_t runctx;
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
@@ -295,8 +295,8 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_store(void)
             cace_ari_list_init(params);
             {
                 cace_ari_t *param = cace_ari_list_push_back_new(params);
-                cace_ari_objpath_set_intid(&(cace_ari_init_objref(param)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
-                                           test_var_enum);
+                cace_ari_objpath_set_intid(&(cace_ari_init_objref(param)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM,
+                                           CACE_ARI_TYPE_VAR, test_var_enum);
             }
             {
                 cace_ari_t *param = cace_ari_list_push_back_new(params);

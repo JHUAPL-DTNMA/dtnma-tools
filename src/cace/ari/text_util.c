@@ -1004,9 +1004,9 @@ int cace_date_encode(m_string_t out, const struct tm *in, bool usesep)
     {
         fmt = "%Y%m%d";
     }
-    char fullsec[11]; // maximum with-separator size and trailing null
-    strftime(fullsec, sizeof(fullsec), fmt, in);
-    m_string_cat_cstr(out, fullsec);
+    char fulldate[12]; // maximum with-separator size and trailing null
+    strftime(fulldate, sizeof(fulldate), fmt, in);
+    m_string_cat_cstr(out, fulldate);
 
     return 0;
 }

@@ -604,7 +604,7 @@ int cace_ari_text_encode_objpath(string_t text, const cace_ari_objpath_t *path, 
     }
     string_push_back(text, '/');
 
-    if (cace_ari_text_encode_idseg(text, &(path->org_id)))
+    if (cace_ari_text_encode_idseg(text, &(path->model_id)))
     {
         if (path->model_rev.valid)
         {

@@ -93,7 +93,7 @@ cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const 
 
     cace_amm_idseg_val_set_fromref(&ns->org_id, &org_id);
     cace_amm_idseg_val_set_fromref(&ns->model_id, &model_id);
-    cace_ari_date_decode_text(&ns->model_rev, revision);
+    cace_ari_date_from_text(&ns->model_rev, revision);
     if (!(ns->model_rev.valid))
     {
         CACE_LOG_ERR("Failed to decode date text: %s", revision);

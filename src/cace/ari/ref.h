@@ -58,23 +58,15 @@ typedef struct
         /// Integer enumeration. Must fit within 64-bit signed int.
         cace_ari_int_id_t as_int;
         /// Text string data
-        string_t as_text;
+        m_string_t as_text;
     };
 } cace_ari_idseg_t;
 
 /** Initialize a null ID segment.
  *
- * @param[out] idseg The segment to initialize.
+ * @param[out] obj The segment to initialize.
  */
-void cace_ari_idseg_init(cace_ari_idseg_t *idseg);
-
-/** Initialize an ID segment from any text.
- *
- * @param[out] idseg The segment to initialize.
- * @param[in,out] text The text to take from and clear.
- * @return Zero upon success.
- */
-int cace_ari_idseg_init_from_text(cace_ari_idseg_t *idseg, string_t text);
+void cace_ari_idseg_init(cace_ari_idseg_t *obj);
 
 void cace_ari_idseg_deinit(cace_ari_idseg_t *obj);
 
@@ -85,6 +77,18 @@ size_t cace_ari_idseg_hash(const cace_ari_idseg_t *obj);
 int cace_ari_idseg_cmp(const cace_ari_idseg_t *left, const cace_ari_idseg_t *right);
 
 bool cace_ari_idseg_equal(const cace_ari_idseg_t *left, const cace_ari_idseg_t *right);
+
+/** Initialize an ID segment from any text.
+ *
+ * @param[out] obj The segment to initialize.
+ * @param[in,out] text The text to take from and clear.
+ */
+void cace_ari_idseg_init_text(cace_ari_idseg_t *obj, string_t text);
+
+/** Derive an integer value if the segment contains text that matches an integer pattern.
+ * @param[in,out] idset The object to update.
+ */
+void cace_ari_idseg_derive_form(cace_ari_idseg_t *idset);
 
 /** Represent a decoded date value.
  */
@@ -98,6 +102,7 @@ typedef struct
 
 void cace_ari_date_init(cace_ari_date_t *obj);
 void cace_ari_date_deinit(cace_ari_date_t *obj);
+void cace_ari_date_copy(cace_ari_date_t *obj, const cace_ari_date_t *src);
 int  cace_ari_date_cmp(const cace_ari_date_t *left, const cace_ari_date_t *right);
 
 /** A helper function to decode date text.
@@ -105,7 +110,7 @@ int  cace_ari_date_cmp(const cace_ari_date_t *left, const cace_ari_date_t *right
  * @param[out] obj The object to decode into, setting its cace_ari_date_t#valid state depending on decoding success.
  * @param[in] text The text to decode.
  */
-int cace_ari_date_decode_text(cace_ari_date_t *obj, const char *text);
+int cace_ari_date_from_text(cace_ari_date_t *obj, const char *text);
 
 /** The entire object path as part of a full obj_ref_t.
  * Keeping this separate allows using just the identity portion for searching.

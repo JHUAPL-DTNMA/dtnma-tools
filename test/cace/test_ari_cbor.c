@@ -192,7 +192,7 @@ void test_cace_ari_cbor_encode_objref_path_text(const char *org_id, const char *
     {
         cace_ari_objpath_t *path = &(cace_ari_set_objref(&ari)->objpath);
         cace_ari_objpath_set_textid_opt(path, org_id, model_id, has_type ? &type_id : NULL, obj_id);
-        cace_ari_date_decode_text(&path->model_rev, model_rev);
+        cace_ari_date_from_text(&path->model_rev, model_rev);
     }
 
     check_encoding(&ari, expect_hex);
@@ -269,7 +269,7 @@ void test_cace_ari_cbor_decode_objref_path_text(const char *hexval, const char *
         cace_ari_date_init(&expect_rev);
         if (model_rev)
         {
-            TEST_ASSERT_EQUAL_INT(0, cace_ari_date_decode_text(&expect_rev, model_rev));
+            TEST_ASSERT_EQUAL_INT(0, cace_ari_date_from_text(&expect_rev, model_rev));
         }
         TEST_ASSERT_EQUAL_INT(0, cace_ari_date_cmp(&expect_rev, &ari.as_ref.objpath.model_rev));
         cace_ari_date_init(&expect_rev);

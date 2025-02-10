@@ -40,33 +40,20 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
     return T_ARI_PREFIX;
 }
 
-<INITIAL>\/\/{VALSEG} {
-    // Just a namespace reference and nothing after it
-    char *curs = yytext + 2;
-
-    {
-        string_t decoded;
-        if (cace_ari_valseg_decode(decoded, curs, yyleng - 2))
-        {
-            cace_ari_text_str_error(yyscanner, yyextra, "NS-ID segment failed to percent-decode");
-            return YYerror;
-        }
-        cace_ari_idseg_init_from_text(&(yylval->idseg), decoded);
-    }
+<INITIAL>\//\/ {
+    // Match both slashes but capture only the first one
     BEGIN(ARI_OBJREF);
-    return T_IDSEG;
-}
-<INITIAL>".." {
-    // A null org-id segment
-    cace_ari_idseg_init(&(yylval->idseg));
-    BEGIN(ARI_OBJREF);
-    return T_IDSEG;
+    return T_REF_ABS;
 }
 <INITIAL>"." {
-    // A null org-id and model-id segment
-    cace_ari_idseg_init(&(yylval->idseg));
+    // A relative path segment
     BEGIN(ARI_OBJREF);
-    return T_IDSEG;
+    return T_REF_REL_DOT;
+}
+<INITIAL>".." {
+    // A relative path segment
+    BEGIN(ARI_OBJREF);
+    return T_REF_REL_DOTDOT;
 }
 
 <ARI_OBJREF>"/" {
@@ -74,6 +61,7 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 }
 
 <ARI_OBJREF>\/{VALSEG} {
+//     fprintf(stderr, "VALSEG from: %s\n", yytext);
     // Match one path segment including leading slash
     char *curs = yytext + 1;
 
@@ -84,8 +72,7 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
             cace_ari_text_str_error(yyscanner, yyextra, "ID segment failed to percent-decode");
             return YYerror;
         }
-        //FIXME
-//         cace_ari_idseg_init_from_text(&(yylval->objpath.ns_id), decoded);
+        cace_ari_idseg_init_text(&(yylval->idseg), decoded);
     }
 
     return T_IDSEG;
@@ -102,10 +89,11 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
             return YYerror;
         }
         cace_string_toupper(decoded);
-        cace_ari_idseg_init_from_text(&typeid, decoded);
+        cace_ari_idseg_init_text(&typeid, decoded);
     }
 
     // decode type ID to get into proper type-specific state
+    cace_ari_idseg_derive_form(&typeid);
     switch (typeid.form)
     {
     case CACE_ARI_IDSEG_NULL:

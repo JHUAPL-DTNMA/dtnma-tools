@@ -30,27 +30,6 @@ void cace_ari_idseg_init(cace_ari_idseg_t *idseg)
     idseg->form = CACE_ARI_IDSEG_NULL;
 }
 
-int cace_ari_idseg_init_from_text(cace_ari_idseg_t *idseg, string_t text)
-{
-    const char *instr = string_get_cstr(text);
-
-    // text IDs are disjoint from numeric IDs
-    if ((instr[0] == '-') || isdigit(instr[0]))
-    {
-        idseg->form   = CACE_ARI_IDSEG_INT;
-        idseg->as_int = strtoll(instr, NULL, 0);
-        string_clear(text);
-    }
-    else
-    {
-        idseg->form     = CACE_ARI_IDSEG_TEXT;
-        string_t *value = &(idseg->as_text);
-        string_init_move(*value, text);
-    }
-
-    return 0;
-}
-
 void cace_ari_idseg_deinit(cace_ari_idseg_t *obj)
 {
     CHKVOID(obj);
@@ -141,6 +120,37 @@ bool cace_ari_idseg_equal(const cace_ari_idseg_t *left, const cace_ari_idseg_t *
     }
 }
 
+void cace_ari_idseg_init_text(cace_ari_idseg_t *idseg, string_t text)
+{
+    idseg->form     = CACE_ARI_IDSEG_TEXT;
+    string_t *value = &(idseg->as_text);
+    string_init_move(*value, text);
+}
+
+
+void cace_ari_idseg_derive_form(cace_ari_idseg_t *idseg)
+{
+    CHKVOID(idseg);
+    if (idseg->form != CACE_ARI_IDSEG_TEXT)
+    {
+        // nothing to do
+        return;
+    }
+
+    const char *instr = string_get_cstr(idseg->as_text);
+    // text IDs are disjoint from numeric IDs
+    if ((instr[0] == '-') || isdigit(instr[0]))
+    {
+        char *end;
+        cace_ari_int_id_t tmp = strtoll(instr, &end, 0);
+
+        m_string_clear(idseg->as_text);
+
+        idseg->form   = CACE_ARI_IDSEG_INT;
+        idseg->as_int = tmp;
+    }
+}
+
 void cace_ari_date_init(cace_ari_date_t *obj)
 {
     obj->valid = false;
@@ -150,6 +160,13 @@ void cace_ari_date_init(cace_ari_date_t *obj)
 void cace_ari_date_deinit(cace_ari_date_t *obj)
 {
     obj->valid = false;
+}
+
+void cace_ari_date_copy(cace_ari_date_t *obj, const cace_ari_date_t *src)
+{
+    // plain old data
+    obj->valid = src->valid;
+    obj->parts = src->parts;
 }
 
 int cace_ari_date_cmp(const cace_ari_date_t *left, const cace_ari_date_t *right)
@@ -177,7 +194,7 @@ int cace_ari_date_cmp(const cace_ari_date_t *left, const cace_ari_date_t *right)
     return part_cmp;
 }
 
-int cace_ari_date_decode_text(cace_ari_date_t *obj, const char *text)
+int cace_ari_date_from_text(cace_ari_date_t *obj, const char *text)
 {
     CHKERR1(obj);
     CHKERR1(text);
@@ -192,6 +209,7 @@ int cace_ari_date_decode_text(cace_ari_date_t *obj, const char *text)
 
 void cace_ari_objpath_init(cace_ari_objpath_t *obj)
 {
+    CHKVOID(obj);
     cace_ari_idseg_init(&(obj->org_id));
     cace_ari_idseg_init(&(obj->model_id));
     cace_ari_date_init(&(obj->model_rev));
@@ -203,6 +221,7 @@ void cace_ari_objpath_init(cace_ari_objpath_t *obj)
 
 void cace_ari_objpath_deinit(cace_ari_objpath_t *obj)
 {
+    CHKVOID(obj);
     cace_ari_idseg_deinit(&(obj->org_id));
     cace_ari_idseg_deinit(&(obj->model_id));
     cace_ari_date_deinit(&(obj->model_rev));
@@ -213,8 +232,12 @@ void cace_ari_objpath_deinit(cace_ari_objpath_t *obj)
 
 void cace_ari_objpath_copy(cace_ari_objpath_t *obj, const cace_ari_objpath_t *src)
 {
+    CHKVOID(obj);
+    CHKVOID(src);
+
     cace_ari_idseg_copy(&(obj->org_id), &(src->org_id));
     cace_ari_idseg_copy(&(obj->model_id), &(src->model_id));
+    cace_ari_date_copy(&(obj->model_rev), &(src->model_rev));
     cace_ari_idseg_copy(&(obj->type_id), &(src->type_id));
     cace_ari_idseg_copy(&(obj->obj_id), &(src->obj_id));
 
