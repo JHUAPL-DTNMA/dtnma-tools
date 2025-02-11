@@ -349,8 +349,15 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
     refda_amm_oper_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
-    int failcnt = 0;
-    // FIXME operand types
+    int                       failcnt = 0;
+    amm_named_type_array_it_t ait;
+    for (amm_named_type_array_it(ait, desc->operand_types); !amm_named_type_array_end_p(ait);
+         amm_named_type_array_next(ait))
+    {
+        amm_named_type_t *operand = amm_named_type_array_ref(ait);
+        CACE_LOG_DEBUG("Binding operand \"%s\"", string_get_cstr(operand->name));
+        failcnt += refda_binding_typeobj(&(operand->typeobj), store);
+    }
     failcnt += refda_binding_typeobj(&(desc->res_type), store);
     failcnt += refda_binding_fparams(obj->fparams, store);
     return failcnt;
