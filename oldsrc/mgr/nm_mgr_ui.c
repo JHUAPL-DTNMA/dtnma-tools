@@ -194,7 +194,7 @@ void ui_log_transmit_msg(agent_t *agent, msg_ctrl_t *msg)
 
 int ui_build_control(agent_t *agent)
 {
-    ari_t      *id = NULL;
+    cace_ari_t *id = NULL;
     amp_uvast   ts;
     msg_ctrl_t *msg;
     int         rtv;
@@ -323,14 +323,14 @@ rpttpl_t *ui_create_rpttpl_from_parms(tnvc_t parms)
 {
     rpttpl_t *result = NULL;
 
-    ari_t *ari = (ari_t *)adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
-    ac_t  *ac  = (ac_t *)adm_get_parm_obj(&parms, 1, AMP_TYPE_AC);
+    cace_ari_t *ari = (cace_ari_t *)adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
+    ac_t       *ac  = (ac_t *)adm_get_parm_obj(&parms, 1, AMP_TYPE_AC);
 
     CHKNULL(ari);
     CHKNULL(ac);
 
-    ari_t *a1  = ari_copy_ptr(ari);
-    ac_t   ac2 = ac_copy(ac);
+    cace_ari_t *a1  = ari_copy_ptr(ari);
+    ac_t        ac2 = ac_copy(ac);
 
     if ((result = rpttpl_create(a1, ac2)) == NULL)
     {
@@ -347,8 +347,8 @@ var_t *ui_create_var_from_parms(tnvc_t parms)
     int   success;
     tnv_t tmp;
 
-    ari_t     *id   = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
-    amp_type_e type = adm_get_parm_uint(&parms, 2, &success);
+    cace_ari_t *id   = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
+    amp_type_e  type = adm_get_parm_uint(&parms, 2, &success);
 
     tnv_init(&tmp, type);
     /* We don't need the actual value, just the ID and type. */
@@ -357,11 +357,11 @@ var_t *ui_create_var_from_parms(tnvc_t parms)
 
 macdef_t *ui_create_macdef_from_parms(tnvc_t parms)
 {
-    int       success;
-    int       i, num;
-    ari_t    *id     = adm_get_parm_obj(&parms, 1, AMP_TYPE_ARI);
-    ac_t     *def    = adm_get_parm_obj(&parms, 2, AMP_TYPE_AC);
-    macdef_t *result = NULL;
+    int         success;
+    int         i, num;
+    cace_ari_t *id     = adm_get_parm_obj(&parms, 1, AMP_TYPE_ARI);
+    ac_t       *def    = adm_get_parm_obj(&parms, 2, AMP_TYPE_AC);
+    macdef_t   *result = NULL;
 
     if ((id == NULL) || (def == NULL))
     {
@@ -387,11 +387,11 @@ rule_t *ui_create_tbr_from_parms(tnvc_t parms)
     rule_t   *tbr = NULL;
     int       success;
 
-    ari_t    *id    = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
-    OS_time_t start = adm_get_parm_tv(&parms, 1, &success).secs;
-    def.period      = adm_get_parm_tv(&parms, 2, &success).secs;
-    def.max_fire    = adm_get_parm_uvast(&parms, 3, &success);
-    ac_t action     = ac_copy(adm_get_parm_obj(&parms, 4, AMP_TYPE_AC));
+    cace_ari_t *id    = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
+    OS_time_t   start = adm_get_parm_tv(&parms, 1, &success).secs;
+    def.period        = adm_get_parm_tv(&parms, 2, &success).secs;
+    def.max_fire      = adm_get_parm_uvast(&parms, 3, &success);
+    ac_t action       = ac_copy(adm_get_parm_obj(&parms, 4, AMP_TYPE_AC));
 
     if ((tbr = rule_create_tbr(*id, start, def, action)) == NULL)
     {
@@ -408,10 +408,10 @@ rule_t *ui_create_sbr_from_parms(tnvc_t parms)
     rule_t   *sbr = NULL;
     int       success;
 
-    ari_t    *id    = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
-    OS_time_t start = adm_get_parm_tv(&parms, 2, &success).secs;
-    expr_t   *state = adm_get_parm_obj(&parms, 2, AMP_TYPE_EXPR);
-    def.expr        = *state;
+    cace_ari_t *id    = adm_get_parm_obj(&parms, 0, AMP_TYPE_ARI);
+    OS_time_t   start = adm_get_parm_tv(&parms, 2, &success).secs;
+    expr_t     *state = adm_get_parm_obj(&parms, 2, AMP_TYPE_EXPR);
+    def.expr          = *state;
     SRELEASE(state);
     def.max_eval = adm_get_parm_uvast(&parms, 3, &success);
     def.max_fire = adm_get_parm_uvast(&parms, 4, &success);
@@ -600,7 +600,7 @@ int ui_automator_parse_input(char *str)
             else if (strncmp(token, "EXIT_SHUTDOWN", 16) == 0)
             {
                 printf("Signaling Manager Shutdown . . . \n");
-                daemon_run_stop(&global_mgr->running);
+                cace_daemon_run_stop(&global_mgr->running);
                 return 1;
             }
             break;
@@ -624,8 +624,8 @@ int ui_automator_parse_input(char *str)
             }
 
             // Get Input string
-            blob_t *data = utils_string_to_hex(token2);
-            ari_t  *id   = ari_deserialize_raw(data, &success);
+            blob_t     *data = utils_string_to_hex(token2);
+            cace_ari_t *id   = ari_deserialize_raw(data, &success);
             blob_release(data, 1);
             CHKZERO(id);
 
@@ -694,7 +694,7 @@ static void ui_automator_run(nmmgr_t *mgr)
     char   line[MAX_INPUT_BYTES];
     size_t len;
 
-    while ((mgr->mgr_ui_mode == MGR_UI_AUTOMATOR) && daemon_run_get(&mgr->running))
+    while ((mgr->mgr_ui_mode == MGR_UI_AUTOMATOR) && cace_daemon_run_get(&mgr->running))
     {
         // Print prompt
         printf("\n#-NM->");
@@ -741,7 +741,7 @@ void ui_eventLoop(nmmgr_t *mgr)
 
     ui_init();
 
-    while (daemon_run_get(&mgr->running))
+    while (cace_daemon_run_get(&mgr->running))
     {
         if (mgr->mgr_ui_mode == MGR_UI_AUTOMATOR)
         {
@@ -754,7 +754,7 @@ void ui_eventLoop(nmmgr_t *mgr)
 
             if (choice == MAIN_MENU_EXIT)
             {
-                daemon_run_stop(&mgr->running);
+                cace_daemon_run_stop(&mgr->running);
                 break;
             }
             else
@@ -812,7 +812,7 @@ void ui_eventLoop(nmmgr_t *mgr)
 }
 
 // this is a mess. clean it up.
-void ui_list_objs(uint8_t adm_id, amp_uvast mask, ari_t **result)
+void ui_list_objs(uint8_t adm_id, amp_uvast mask, cace_ari_t **result)
 {
     char            title[100];
     ui_menu_list_t *list;
@@ -891,7 +891,7 @@ void ui_list_objs(uint8_t adm_id, amp_uvast mask, ari_t **result)
                           UI_OPT_AUTO_LABEL | UI_OPT_ENTER_SEL | UI_OPT_SPLIT_DESCRIPTION);
     if (result != NULL && rtv >= 0)
     {
-        *result = ari_copy_ptr(((ari_t *)list[rtv].data));
+        *result = ari_copy_ptr(((cace_ari_t *)list[rtv].data));
     }
 
     for (i = 0; i < num_objs; i++)
@@ -923,7 +923,7 @@ void ui_list_objs(uint8_t adm_id, amp_uvast mask, ari_t **result)
  *  07/18/15  E. Birrane      Initial implementation,
  *****************************************************************************/
 
-void ui_postprocess_ctrl(ari_t *id)
+void ui_postprocess_ctrl(cace_ari_t *id)
 {
     metadata_t *meta;
 
@@ -958,8 +958,8 @@ void ui_postprocess_ctrl(ari_t *id)
 
         for (it = vecit_first(&(ac->values)); vecit_valid(it); it = vecit_next(it))
         {
-            ari_t *var_id = vecit_data(it);
-            var_t *var    = VDB_FINDKEY_VAR(var_id);
+            cace_ari_t *var_id = vecit_data(it);
+            var_t      *var    = VDB_FINDKEY_VAR(var_id);
 
             if (var != NULL)
             {
@@ -994,8 +994,8 @@ void ui_postprocess_ctrl(ari_t *id)
 
         for (it = vecit_first(&(ac->values)); vecit_valid(it); it = vecit_next(it))
         {
-            ari_t    *rppt_id = vecit_data(it);
-            rpttpl_t *def     = VDB_FINDKEY_RPTT(rppt_id);
+            cace_ari_t *rppt_id = vecit_data(it);
+            rpttpl_t   *def     = VDB_FINDKEY_RPTT(rppt_id);
 
             if (def != NULL)
             {
@@ -1029,8 +1029,8 @@ void ui_postprocess_ctrl(ari_t *id)
 
         for (it = vecit_first(&(ac->values)); vecit_valid(it); it = vecit_next(it))
         {
-            ari_t    *mac_id = vecit_data(it);
-            macdef_t *def    = VDB_FINDKEY_MACDEF(mac_id);
+            cace_ari_t *mac_id = vecit_data(it);
+            macdef_t   *def    = VDB_FINDKEY_MACDEF(mac_id);
 
             if (def != NULL)
             {
@@ -1082,8 +1082,8 @@ void ui_postprocess_ctrl(ari_t *id)
 
         for (it = vecit_first(&(ac->values)); vecit_valid(it); it = vecit_next(it))
         {
-            ari_t  *rule_id = vecit_data(it);
-            rule_t *def     = VDB_FINDKEY_RULE(rule_id);
+            cace_ari_t *rule_id = vecit_data(it);
+            rule_t     *def     = VDB_FINDKEY_RULE(rule_id);
 
             if (def != NULL)
             {
@@ -1210,15 +1210,15 @@ agent_t *ui_select_agent()
 
 void ui_send_file(agent_t *agent, uint8_t enter_ts)
 {
-    ari_t   *cur_id   = NULL;
-    uint32_t offset   = 0;
-    time_t   ts       = 0;
-    blob_t  *contents = NULL;
-    char    *cursor   = NULL;
-    char    *saveptr  = NULL;
-    uint32_t bytes    = 0;
-    blob_t  *value    = NULL;
-    int      success;
+    cace_ari_t *cur_id   = NULL;
+    uint32_t    offset   = 0;
+    time_t      ts       = 0;
+    blob_t     *contents = NULL;
+    char       *cursor   = NULL;
+    char       *saveptr  = NULL;
+    uint32_t    bytes    = 0;
+    blob_t     *value    = NULL;
+    int         success;
 
     CHKVOID(agent);
 #ifdef mingw
@@ -1332,7 +1332,7 @@ void ui_send_file(agent_t *agent, uint8_t enter_ts)
 
 void ui_send_raw(agent_t *agent, uint8_t enter_ts)
 {
-    ari_t      *id  = NULL;
+    cace_ari_t *id  = NULL;
     time_t      ts  = 0;
     msg_ctrl_t *msg = NULL;
 
@@ -1395,7 +1395,7 @@ void ui_db_menu(nmmgr_t *mgr)
     int  new_msg  = 0;
     char msg[128] = "";
 
-    while (daemon_run_get(&mgr->running))
+    while (cace_daemon_run_get(&mgr->running))
     {
         choice  = ui_menu("Database Menu", db_menu_choices, NULL, n_choices, ((new_msg == 0) ? NULL : msg));
         new_msg = 0;
@@ -1633,7 +1633,7 @@ void ui_ctrl_list_menu(nmmgr_t *mgr)
     sprintf(ctrl_menu_list_descriptions[8], "(%d known)", gVDB.adm_tblts.num_elts);
     sprintf(ctrl_menu_list_descriptions[9], "(%d known)", gVDB.vars.num_elts);
 
-    while (daemon_run_get(&mgr->running))
+    while (cace_daemon_run_get(&mgr->running))
     {
         choice = ui_menu("ADM Object Information Lists", ctrl_menu_list_choices, ctrl_menu_list_descriptions, n_choices,
                          ((new_msg == 0) ? NULL : msg));
@@ -2467,7 +2467,7 @@ int ui_menu(char *title, char **choices, char **descriptions, int n_choices, cha
     post_menu(my_menu);
     wrefresh(my_menu_win);
 
-    while (daemon_run_get(&global_mgr->running) && running && (c = wgetch(my_menu_win)) != KEY_F(1))
+    while (cace_daemon_run_get(&global_mgr->running) && running && (c = wgetch(my_menu_win)) != KEY_F(1))
     {
         show_panel(my_pan);
         update_panels();
@@ -2614,7 +2614,7 @@ int ui_menu_listing(char *title, ui_menu_list_t *list, int n_choices, char *stat
         set_current_item(my_menu, my_items[i]);
     }
 
-    while (running && daemon_run_get(&global_mgr->running))
+    while (running && cace_daemon_run_get(&global_mgr->running))
     {
         i = item_index(current_item(my_menu));
 
@@ -2876,7 +2876,7 @@ int ui_menu(char *title, char **choices, char **descriptions, int n_choices, cha
     int i;
     ui_display_init(title);
 
-    while (daemon_run_get(&global_mgr->running))
+    while (cace_daemon_run_get(&global_mgr->running))
     {
 
         for (i = 0; i < n_choices; i++)
@@ -2918,7 +2918,7 @@ int ui_menu_listing(char *title, ui_menu_list_t *list, int n_choices, char *stat
     int  running = 1;
     char line[20];
 
-    while (running && daemon_run_get(&global_mgr->running))
+    while (running && cace_daemon_run_get(&global_mgr->running))
     {
         ui_display_init(title);
 

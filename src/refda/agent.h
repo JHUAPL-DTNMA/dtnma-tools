@@ -50,13 +50,13 @@ typedef struct refda_agent_s
     string_t agent_eid;
 
     /// Running state
-    daemon_run_t running;
+    cace_daemon_run_t running;
     /// Messaging configuration
     cace_amm_msg_if_t mif;
     /// Instrumentation counters
     refda_instr_t instr;
     /// Threads associated with the agent
-    threadset_t threads;
+    cace_threadset_t threads;
 
     /// Runtime AMM object store
     cace_amm_obj_store_t objs;
@@ -64,11 +64,11 @@ typedef struct refda_agent_s
     pthread_mutex_t objs_mutex;
 
     /// Cached type from //ietf-amm/TYPEDEF/MAC
-    const amm_type_t *mac_type;
+    const cace_amm_type_t *mac_type;
     /// Cached type from //ietf-amm/TYPEDEF/EXPR
-    const amm_type_t *expr_type;
+    const cace_amm_type_t *expr_type;
     /// Cached type from //ietf-amm/TYPEDEF/RPTT
-    const amm_type_t *rptt_type;
+    const cace_amm_type_t *rptt_type;
 
     /// Ingress EXECSET queue
     refda_msgdata_queue_t execs;
@@ -125,7 +125,7 @@ void refda_agent_deinit(refda_agent_t *agent);
  * This ARI must already be initialized.
  * @return Zero if successful, or 2 if the clock is not available.
  */
-int refda_agent_nowtime(refda_agent_t *agent, ari_t *val);
+int refda_agent_nowtime(refda_agent_t *agent, cace_ari_t *val);
 
 /** Lookup a specific known TYPEDEF by reference.
  *
@@ -135,7 +135,7 @@ int refda_agent_nowtime(refda_agent_t *agent, ari_t *val);
  * @param ns_id The namespace enumeration.
  * @param obj_id The object enumeration.
  */
-amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, int64_t ns_id, int64_t obj_id);
+cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, int64_t ns_id, int64_t obj_id);
 
 /** After all ADMs are registered, bind cross-references between them.
  *

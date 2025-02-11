@@ -38,14 +38,14 @@ void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj)
     CHKVOID(obj);
 }
 
-const ari_t *refda_ctrl_exec_ctx_get_aparam_index(const refda_ctrl_exec_ctx_t *ctx, size_t index)
+const cace_ari_t *refda_ctrl_exec_ctx_get_aparam_index(const refda_ctrl_exec_ctx_t *ctx, size_t index)
 {
-    return ari_array_cget(ctx->item->deref.aparams.ordered, index);
+    return cace_ari_array_cget(ctx->item->deref.aparams.ordered, index);
 }
 
-const ari_t *refda_ctrl_exec_ctx_get_aparam_name(const refda_ctrl_exec_ctx_t *ctx, const char *name)
+const cace_ari_t *refda_ctrl_exec_ctx_get_aparam_name(const refda_ctrl_exec_ctx_t *ctx, const char *name)
 {
-    return *named_ari_ptr_dict_cget(ctx->item->deref.aparams.named, name);
+    return *cace_named_ari_ptr_dict_cget(ctx->item->deref.aparams.named, name);
 }
 
 void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_timeline_event_t *event)
@@ -65,31 +65,31 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, &(ctx->item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, &(ctx->item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("CTRL result value %s", string_get_cstr(buf));
         string_clear(buf);
     }
 
     bool valid = false;
-    if (amm_type_is_valid(&(ctx->ctrl->res_type)))
+    if (cace_amm_type_is_valid(&(ctx->ctrl->res_type)))
     {
-        valid = amm_type_match(&(ctx->ctrl->res_type), &(ctx->item->result));
+        valid = cace_amm_type_match(&(ctx->ctrl->res_type), &(ctx->item->result));
         if (!valid)
         {
             CACE_LOG_ERR("CTRL result type failed to match a result value");
-            ari_set_undefined(&(ctx->item->result));
+            cace_ari_set_undefined(&(ctx->item->result));
         }
     }
     else
     {
         // success is treated as a null value
-        if (ari_is_undefined(&(ctx->item->result)))
+        if (cace_ari_is_undefined(&(ctx->item->result)))
         {
             CACE_LOG_WARNING("CTRL result not set, defaulting to null value");
-            ari_set_null(&(ctx->item->result));
+            cace_ari_set_null(&(ctx->item->result));
             valid = true;
         }
-        else if (ari_is_null(&(ctx->item->result)))
+        else if (cace_ari_is_null(&(ctx->item->result)))
         {
             valid = true;
         }
@@ -97,7 +97,7 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
         {
             CACE_LOG_ERR("CTRL result value without result type");
             // should not have a result
-            ari_set_undefined(&(ctx->item->result));
+            cace_ari_set_undefined(&(ctx->item->result));
         }
     }
 
@@ -108,28 +108,28 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
     }
     else
     {
-        ari_deinit(&(ctx->item->result));
+        cace_ari_deinit(&(ctx->item->result));
         return REFDA_CTRL_EXEC_RESULT_TYPE_NOMATCH;
     }
 }
 
-int refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value)
+int refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const cace_ari_t *value)
 {
     CHKERR1(ctx);
-    ari_set_copy(&(ctx->item->result), value);
+    cace_ari_set_copy(&(ctx->item->result), value);
     return refda_ctrl_exec_ctx_check_result(ctx);
 }
 
-int refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value)
+int refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, cace_ari_t *value)
 {
     CHKERR1(ctx);
-    ari_set_move(&(ctx->item->result), value);
+    cace_ari_set_move(&(ctx->item->result), value);
     return refda_ctrl_exec_ctx_check_result(ctx);
 }
 
 int refda_ctrl_exec_ctx_set_result_null(refda_ctrl_exec_ctx_t *ctx)
 {
     CHKERR1(ctx);
-    ari_set_null(&(ctx->item->result));
+    cace_ari_set_null(&(ctx->item->result));
     return refda_ctrl_exec_ctx_check_result(ctx);
 }

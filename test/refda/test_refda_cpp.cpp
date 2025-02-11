@@ -30,15 +30,15 @@
 /// Per-process state
 static refda_agent_t agent;
 
-static int dummy_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx _U_)
+static int dummy_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx _U_)
 {
     CHKERR1(data);
     CHKERR1(meta);
-    CACE_LOG_DEBUG("Sending message with %d ARIs", ari_list_size(data));
+    CACE_LOG_DEBUG("Sending message with %d ARIs", cace_ari_list_size(data));
     return 0;
 }
 
-static int dummy_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_run_t *running, void *ctx _U_)
+static int dummy_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, cace_daemon_run_t *running, void *ctx _U_)
 {
     CHKERR1(data);
     CHKERR1(meta);
@@ -108,7 +108,7 @@ int main(int argc _U_, char *argv[] _U_)
     if (!retval)
     {
         // Block until stopped
-        daemon_run_wait(&agent.running);
+        cace_daemon_run_wait(&agent.running);
         CACE_LOG_INFO("Agent is shutting down");
     }
 

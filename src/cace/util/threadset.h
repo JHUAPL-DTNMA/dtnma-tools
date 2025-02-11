@@ -24,17 +24,17 @@
 #include <m-list.h>
 
 /// @cond Doxygen_Suppress
-LIST_DEF(threadset, pthread_t)
+M_LIST_DEF(cace_threadset, pthread_t)
 /// @endcond
 
 typedef struct
 {
     void *(*func)(void *);
     const char *name;
-} threadinfo_t;
+} cace_threadinfo_t;
 
-int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, void *arg);
+int cace_threadset_start(cace_threadset_t tset, const cace_threadinfo_t *info, size_t count, void *arg);
 
-int threadset_join(threadset_t tset);
+int cace_threadset_join(cace_threadset_t tset);
 
 #endif /* CACE_UTIL_THREADSET_H_ */

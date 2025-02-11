@@ -22,7 +22,7 @@
 #include <cace/util/defs.h>
 #include <qcbor/qcbor_spiffy_decode.h>
 
-int cace_amp_msg_encode(m_bstring_t msgbuf, const ari_list_t items)
+int cace_amp_msg_encode(m_bstring_t msgbuf, const cace_ari_list_t items)
 {
     int retval = 0;
 
@@ -32,21 +32,21 @@ int cace_amp_msg_encode(m_bstring_t msgbuf, const ari_list_t items)
     cace_data_t outbin;
     cace_data_init(&outbin);
 
-    ari_list_it_t ait;
-    for (ari_list_it(ait, items); !ari_list_end_p(ait); ari_list_next(ait))
+    cace_ari_list_it_t ait;
+    for (cace_ari_list_it(ait, items); !cace_ari_list_end_p(ait); cace_ari_list_next(ait))
     {
-        const ari_t *item = ari_list_cref(ait);
+        const cace_ari_t *item = cace_ari_list_cref(ait);
 
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
             string_t buf;
             string_init(buf);
-            ari_text_encode(buf, item, ARI_TEXT_ENC_OPTS_DEFAULT);
+            cace_ari_text_encode(buf, item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
             CACE_LOG_DEBUG("encoding ARI item: %s", string_get_cstr(buf));
             string_clear(buf);
         }
 
-        if (ari_cbor_encode(&outbin, item))
+        if (cace_ari_cbor_encode(&outbin, item))
         {
             CACE_LOG_ERR("Failed to binary encode ARI");
             retval = 2;
@@ -60,7 +60,7 @@ int cace_amp_msg_encode(m_bstring_t msgbuf, const ari_list_t items)
     return retval;
 }
 
-int cace_amp_msg_decode(ari_list_t items, const m_bstring_t msgbuf)
+int cace_amp_msg_decode(cace_ari_list_t items, const m_bstring_t msgbuf)
 {
     int retval = 0;
 
@@ -106,14 +106,14 @@ int cace_amp_msg_decode(ari_list_t items, const m_bstring_t msgbuf)
         // not really mutable, but needed for the view interface
         cace_data_init_view(&view, remain, (uint8_t *)m_bstring_view(msgbuf, offset, remain));
 
-        ari_t item;
-        ari_init(&item);
+        cace_ari_t item;
+        cace_ari_init(&item);
 
         int         res;
         size_t      used;
         const char *errm = NULL;
 
-        res = ari_cbor_decode(&item, &view, &used, &errm);
+        res = cace_ari_cbor_decode(&item, &view, &used, &errm);
         cace_data_deinit(&view);
         if (used)
         {
@@ -127,11 +127,11 @@ int cace_amp_msg_decode(ari_list_t items, const m_bstring_t msgbuf)
         }
         if (errm)
         {
-            ARI_FREE((char *)errm);
+            CACE_FREE((char *)errm);
         }
         if (res)
         {
-            ari_deinit(&item);
+            cace_ari_deinit(&item);
             retval = 3;
             break;
         }
@@ -140,12 +140,12 @@ int cace_amp_msg_decode(ari_list_t items, const m_bstring_t msgbuf)
         {
             string_t buf;
             string_init(buf);
-            ari_text_encode(buf, &item, ARI_TEXT_ENC_OPTS_DEFAULT);
+            cace_ari_text_encode(buf, &item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
             CACE_LOG_DEBUG("decoded ARI item: %s", string_get_cstr(buf));
             string_clear(buf);
         }
 
-        ari_list_push_back_move(items, &item);
+        cace_ari_list_push_back_move(items, &item);
     }
 
     return retval;

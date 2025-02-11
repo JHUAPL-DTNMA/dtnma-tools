@@ -34,7 +34,6 @@
 #include <m-list.h>
 #include <m-dict.h>
 #include <time.h>
-#include "ref.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -47,7 +46,7 @@ extern "C" {
  *
  * The ARI being captured here can be either a "regular" ARI,
  * in which case the structure should be interpreted as a
- * ari_reg_t structure or a "literal" ARI, in which case the
+ * cace_ari_reg_t structure or a "literal" ARI, in which case the
  * structure can be interpreted as a type/name/value.
  *
  * The use of a separate type field is redundant in that type
@@ -58,36 +57,36 @@ extern "C" {
  * likely use up at least a byte of space anyway.
  */
 
-typedef struct ari_s
+typedef struct cace_ari_s
 {
     bool is_ref;
     union
     {
-        ari_lit_t as_lit;
-        ari_ref_t as_ref;
+        cace_ari_lit_t as_lit;
+        cace_ari_ref_t as_ref;
     };
-} ari_t;
+} cace_ari_t;
 
 /** A static value to initialize an ARI to the undefined value.
- * This can be used as an alternative to ari_init() for static initialization.
+ * This can be used as an alternative to cace_ari_init() for static initialization.
  */
-#define ARI_INIT_UNDEFINED                                            \
-    (ari_t)                                                           \
-    {                                                                 \
-        .is_ref = false, .as_lit = {.prim_type = ARI_PRIM_UNDEFINED } \
+#define CACE_ARI_INIT_UNDEFINED                                            \
+    (cace_ari_t)                                                           \
+    {                                                                      \
+        .is_ref = false, .as_lit = {.prim_type = CACE_ARI_PRIM_UNDEFINED } \
     }
 
-#define ARI_INIT_NULL                                            \
-    (ari_t)                                                      \
-    {                                                            \
-        .is_ref = false, .as_lit = {.prim_type = ARI_PRIM_NULL } \
+#define CACE_ARI_INIT_NULL                                            \
+    (cace_ari_t)                                                      \
+    {                                                                 \
+        .is_ref = false, .as_lit = {.prim_type = CACE_ARI_PRIM_NULL } \
     }
 
 /** Initialize an ARI to the undefined value.
  *
  * @param[out] ari The value to modify.
  */
-void ari_init(ari_t *ari);
+void cace_ari_init(cace_ari_t *ari);
 
 /** Initialize an ARI to be a literal value which requires further state
  * initialization.
@@ -95,7 +94,7 @@ void ari_init(ari_t *ari);
  * @param[out] ari The value to modify.
  * @return A pointer to the literal struct to set state in.
  */
-ari_lit_t *ari_init_lit(ari_t *ari);
+cace_ari_lit_t *cace_ari_init_lit(cace_ari_t *ari);
 
 /** Initialize an ARI to be an object reference value which requires further state
  * initialization.
@@ -103,21 +102,21 @@ ari_lit_t *ari_init_lit(ari_t *ari);
  * @param[out] ari The value to modify.
  * @return A pointer to the object reference struct to set state in.
  */
-ari_ref_t *ari_init_objref(ari_t *ari);
+cace_ari_ref_t *cace_ari_init_objref(cace_ari_t *ari);
 
 /** Initialize an ARI with copy semantics.
  *
  * @param[in,out] ari The value to modify.
  * @param src The source to deep copy from.
  */
-int ari_init_copy(ari_t *ari, const ari_t *src);
+int cace_ari_init_copy(cace_ari_t *ari, const cace_ari_t *src);
 
 /** Initialize an ARI with move semantics.
  *
  * @param[in,out] ari The value to modify.
  * @param[in,out] src The source to move from and reset.
  */
-int ari_init_move(ari_t *ari, ari_t *src);
+int cace_ari_init_move(cace_ari_t *ari, cace_ari_t *src);
 
 /** De-initialize an ARI.
  * This recurses into data and containers as necessary.
@@ -125,15 +124,15 @@ int ari_init_move(ari_t *ari, ari_t *src);
  * @param[in,out] ari The value to de-initialize.
  * @post The ARI is left as the undefined value.
  */
-int ari_deinit(ari_t *ari);
+int cace_ari_deinit(cace_ari_t *ari);
 
 /** Reset an initialized ARI to the undefined value.
- * This is equivalent to calling ari_deinit() and ari_init() in sequence.
+ * This is equivalent to calling cace_ari_deinit() and cace_ari_init() in sequence.
  *
  * @param[in,out] ari The value to reset.
  * @post The ARI is left as the undefined value.
  */
-void ari_reset(ari_t *ari);
+void cace_ari_reset(cace_ari_t *ari);
 
 /** Set an ARI to be an object reference value which requires further state
  * setting.
@@ -141,14 +140,14 @@ void ari_reset(ari_t *ari);
  * @param[in,out] ari The value to modify.
  * @return A pointer to the object reference struct to set state in.
  */
-ari_ref_t *ari_set_objref(ari_t *ari);
+cace_ari_ref_t *cace_ari_set_objref(cace_ari_t *ari);
 
 /** Copy an ARI value into another ARI.
  *
  * @param[in,out] ari The ARI to modify. The previous value is de-initialized prior to copy.
  * @param src The source to deep copy from.
  */
-int ari_set_copy(ari_t *ari, const ari_t *src);
+int cace_ari_set_copy(cace_ari_t *ari, const cace_ari_t *src);
 
 /** Move an ARI value into another ARI.
  *
@@ -156,7 +155,7 @@ int ari_set_copy(ari_t *ari, const ari_t *src);
  * @param[in,out] src The source to move from and reset.
  * @post Source ARI is left as the undefined value.
  */
-int ari_set_move(ari_t *ari, ari_t *src);
+int cace_ari_set_move(cace_ari_t *ari, cace_ari_t *src);
 
 #ifdef __cplusplus
 }

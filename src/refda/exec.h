@@ -41,7 +41,7 @@ extern "C" {
  * @param[in] ari The ARI to dereference, if necessary, and execute.
  * @return Zero if successful.
  */
-int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const ari_t *ari);
+int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const cace_ari_t *ari);
 
 /** Implement the running procedure from Section TBD of @cite ietf-dtn-amm-01.
  * This executes items in a sequence until the first deferred completion.

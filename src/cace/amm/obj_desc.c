@@ -34,7 +34,7 @@ void cace_amm_user_data_deinit(cace_amm_user_data_t *obj)
         }
         if (obj->owned)
         {
-            ARI_FREE(obj->ptr);
+            CACE_FREE(obj->ptr);
         }
     }
 

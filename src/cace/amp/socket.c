@@ -102,7 +102,7 @@ void cace_amp_socket_state_unbind(cace_amp_socket_state_t *state)
     m_string_reset(state->path);
 }
 
-int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
+int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
 {
     CHKERR1(data);
     CHKERR1(meta);
@@ -137,7 +137,7 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
         return 1;
     }
 
-    CACE_LOG_DEBUG("Sending message with %d ARIs", ari_list_size(data));
+    CACE_LOG_DEBUG("Sending message with %d ARIs", cace_ari_list_size(data));
     m_bstring_t msgbuf;
     m_bstring_init(msgbuf);
     if (cace_amp_msg_encode(msgbuf, data))
@@ -170,7 +170,7 @@ int cace_amp_socket_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
     return retval;
 }
 
-int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_run_t *running, void *ctx)
+int cace_amp_socket_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, cace_daemon_run_t *running, void *ctx)
 {
     CHKERR1(data);
     CHKERR1(meta);
@@ -196,7 +196,7 @@ int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
         else if (res == 0)
         {
             // nothing ready, but maybe daemon is shutting down
-            if (!daemon_run_get(running))
+            if (!cace_daemon_run_get(running))
             {
                 CACE_LOG_DEBUG("returning due to running state change");
                 return CACE_AMM_MSG_IF_RECV_END;
@@ -247,8 +247,8 @@ int cace_amp_socket_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
             }
             m_bstring_clear(msgbuf);
 
-            CACE_LOG_DEBUG("decoded %d ARI items in the datagram", ari_list_size(data));
-            if (!ari_list_empty_p(data))
+            CACE_LOG_DEBUG("decoded %d ARI items in the datagram", cace_ari_list_size(data));
+            if (!cace_ari_list_empty_p(data))
             {
                 // stop when something received
                 break;

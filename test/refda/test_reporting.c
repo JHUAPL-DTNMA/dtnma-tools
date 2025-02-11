@@ -57,19 +57,19 @@ static void test_reporting_edd_int(refda_edd_prod_ctx_t *ctx)
 {
     int oldval = atomic_fetch_add(&edd_one_state, 1);
     TEST_PRINTF("EDD production to counter %d", oldval);
-    ari_t result = ARI_INIT_UNDEFINED;
-    ari_set_int(&result, oldval);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_int(&result, oldval);
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 }
 
 static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
 {
-    const ari_t *param = refda_edd_prod_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *param = refda_edd_prod_ctx_get_aparam_index(ctx, 0);
     CHKVOID(param)
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, param, ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, param, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         TEST_PRINTF("EDD production with parameter %s", string_get_cstr(buf));
         string_clear(buf);
     }
@@ -94,21 +94,23 @@ void setUp(void)
          * Register CONST objects
          */
         {
-            refda_amm_const_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_const_desc_t));
+            refda_amm_const_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
             refda_amm_const_desc_init(objdata);
             {
-                ari_ac_t acinit;
-                ari_ac_init(&acinit);
+                cace_ari_ac_t acinit;
+                cace_ari_ac_init(&acinit);
                 {
-                    ari_t *item = ari_list_push_back_new(acinit.items);
-                    ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, ARI_TYPE_EDD, 1); // ari://example-adm/EDD/edd1
+                    cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
+                    cace_ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_EDD,
+                                                   1); // ari://example-adm/EDD/edd1
                 }
                 {
-                    ari_t *item = ari_list_push_back_new(acinit.items);
-                    ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, ARI_TYPE_VAR, 1); // ari://example-adm/VAR/var2
+                    cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
+                    cace_ari_set_objref_path_intid(item, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
+                                                   1); // ari://example-adm/VAR/var2
                 }
 
-                ari_set_ac(&(objdata->value), &acinit);
+                cace_ari_set_ac(&(objdata->value), &acinit);
             }
 
             obj = refda_register_const(adm, cace_amm_obj_id_withenum("rptt1", 1), objdata);
@@ -119,10 +121,10 @@ void setUp(void)
          * Register VAR objects
          */
         {
-            refda_amm_var_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_var_desc_t));
+            refda_amm_var_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_var_desc_t));
             refda_amm_var_desc_init(objdata);
-            amm_type_set_use_direct(&(objdata->val_type), amm_type_get_builtin(ARI_TYPE_VAST));
-            ari_set_vast(&(objdata->value), 123456);
+            cace_amm_type_set_use_direct(&(objdata->val_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+            cace_ari_set_vast(&(objdata->value), 123456);
 
             obj = refda_register_var(adm, cace_amm_obj_id_withenum("var1", 1), objdata);
             // no parameters
@@ -132,18 +134,18 @@ void setUp(void)
          * Register EDD objects
          */
         {
-            refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
-            amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_INT));
+            cace_amm_type_set_use_direct(&(objdata->prod_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_int;
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd1", 1), objdata);
             // no parameters
         }
         {
-            refda_amm_edd_desc_t *objdata = ARI_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
-            amm_type_set_use_direct(&(objdata->prod_type), amm_type_get_builtin(ARI_TYPE_INT));
+            cace_amm_type_set_use_direct(&(objdata->prod_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_one_int;
 
             obj = refda_register_edd(adm, cace_amm_obj_id_withenum("edd2", 2), objdata);
@@ -160,14 +162,14 @@ void tearDown(void)
     refda_agent_deinit(&agent);
 }
 
-static ari_report_t *assert_rptset_items(ari_t *val)
+static cace_ari_report_t *assert_rptset_items(cace_ari_t *val)
 {
     TEST_ASSERT_FALSE(val->is_ref);
     TEST_ASSERT_TRUE(val->as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL(ARI_TYPE_RPTSET, val->as_lit.ari_type);
-    ari_report_list_t *rpts = &(val->as_lit.value.as_rptset->reports);
-    TEST_ASSERT_EQUAL_INT(1, ari_report_list_size(*rpts));
-    return ari_report_list_front(*rpts);
+    TEST_ASSERT_EQUAL(CACE_ARI_TYPE_RPTSET, val->as_lit.ari_type);
+    cace_ari_report_list_t *rpts = &(val->as_lit.value.as_rptset->reports);
+    TEST_ASSERT_EQUAL_INT(1, cace_ari_report_list_size(*rpts));
+    return cace_ari_report_list_front(*rpts);
 }
 
 // clang-format off
@@ -181,12 +183,12 @@ TEST_CASE("821182821181831A000100002301821181831A000100002A01", 0, "821182""8204
 // clang-format on
 void test_refda_reporting_target(const char *targethex, int expect_res, const char *expectloghex)
 {
-    ari_t target = ARI_INIT_UNDEFINED;
+    cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
 
-    ari_t expect_rpt_items = ARI_INIT_UNDEFINED;
+    cace_ari_t expect_rpt_items = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_rpt_items, expectloghex));
-    ari_ac_t *expect_seq = ari_get_ac(&expect_rpt_items);
+    cace_ari_ac_t *expect_seq = cace_ari_get_ac(&expect_rpt_items);
     TEST_ASSERT_NOT_NULL(expect_seq);
 
     refda_runctx_t runctx;
@@ -199,25 +201,27 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     TEST_ASSERT_EQUAL_INT(1, refda_msgdata_queue_size(agent.rptgs));
     refda_msgdata_t got_rptset;
     TEST_ASSERT_TRUE(refda_msgdata_queue_pop(&got_rptset, agent.rptgs));
-    ari_report_t *rpt = assert_rptset_items(&got_rptset.value);
+    cace_ari_report_t *rpt = assert_rptset_items(&got_rptset.value);
     TEST_ASSERT_NOT_NULL(rpt);
 
     // verify RPTSET result
-    ari_list_it_t expect_it;
-    ari_list_it(expect_it, expect_seq->items);
-    ari_list_it_t got_it;
-    ari_list_it(got_it, rpt->items);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(ari_list_size(expect_seq->items), ari_list_size(rpt->items), "RPT size mismatch");
+    cace_ari_list_it_t expect_it;
+    cace_ari_list_it(expect_it, expect_seq->items);
+    cace_ari_list_it_t got_it;
+    cace_ari_list_it(got_it, rpt->items);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(cace_ari_list_size(expect_seq->items), cace_ari_list_size(rpt->items),
+                                  "RPT size mismatch");
     size_t item_ix = 0;
-    for (; !ari_list_end_p(expect_it) && !ari_list_end_p(got_it); ari_list_next(expect_it), ari_list_next(got_it))
+    for (; !cace_ari_list_end_p(expect_it) && !cace_ari_list_end_p(got_it);
+         cace_ari_list_next(expect_it), cace_ari_list_next(got_it))
     {
         TEST_PRINTF("Checking ARI %z", item_ix++);
-        const bool equal = ari_equal(ari_list_cref(expect_it), ari_list_cref(got_it));
+        const bool equal = cace_ari_equal(cace_ari_list_cref(expect_it), cace_ari_list_cref(got_it));
         TEST_ASSERT_TRUE_MESSAGE(equal, "RPT ARI is different");
     }
 
     refda_msgdata_deinit(&got_rptset);
     refda_runctx_deinit(&runctx);
-    ari_deinit(&expect_rpt_items);
-    ari_deinit(&target);
+    cace_ari_deinit(&expect_rpt_items);
+    cace_ari_deinit(&target);
 }

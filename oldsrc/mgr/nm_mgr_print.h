@@ -99,7 +99,7 @@ void ui_fprint_table(ui_print_cfg_t *fd, tbl_t *rpt);
 void ui_print_table_set(agent_t *agent);
 
 char *ui_str_from_ac(ac_t *ac);
-char *ui_str_from_ari(ari_t *id, tnvc_t *ap, int desc);
+char *ui_str_from_ari(cace_ari_t *id, tnvc_t *ap, int desc);
 char *ui_str_from_blob(blob_t *blob);
 char *ui_str_from_ctrl(ctrl_t *ctrl);
 char *ui_str_from_edd(edd_t *edd);

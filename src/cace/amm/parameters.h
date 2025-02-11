@@ -41,9 +41,9 @@ typedef struct
      * All type references are fully recursively resolved.
      * The type object is owned by this formal parameter.
      */
-    amm_type_t typeobj;
+    cace_amm_type_t typeobj;
     /// Optional default value, or the undefined value
-    ari_t defval;
+    cace_ari_t defval;
 } cace_amm_formal_param_t;
 
 void cace_amm_formal_param_init(cace_amm_formal_param_t *obj);
@@ -65,7 +65,7 @@ DEQUE_DEF(cace_amm_formal_param_list, cace_amm_formal_param_t)
  * @return Zero upon success.
  */
 int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_formal_param_list_t fparams,
-                                       const ari_params_t *gparams);
+                                       const cace_ari_params_t *gparams);
 
 #ifdef __cplusplus
 } // extern C

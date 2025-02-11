@@ -31,7 +31,7 @@ extern "C" {
  * Dictionary from case-sensitive name to external ARI pointer
  */
 /// @cond Doxygen_Suppress
-M_DICT_DEF2(named_ari_ptr_dict, const char *, M_CSTR_OPLIST, ari_t *, M_PTR_OPLIST)
+M_DICT_DEF2(cace_named_ari_ptr_dict, const char *, M_CSTR_OPLIST, cace_ari_t *, M_PTR_OPLIST)
 /// @endcond
 
 /** A itemized (indexed and named) set of ARIs.
@@ -39,9 +39,9 @@ M_DICT_DEF2(named_ari_ptr_dict, const char *, M_CSTR_OPLIST, ari_t *, M_PTR_OPLI
 typedef struct
 {
     /// Lookup by ordinal index
-    ari_array_t ordered;
+    cace_ari_array_t ordered;
     /// Lookup by (case-sensitive) text name
-    named_ari_ptr_dict_t named;
+    cace_named_ari_ptr_dict_t named;
 } cace_ari_itemized_t;
 
 /** Initialize a new empty set.

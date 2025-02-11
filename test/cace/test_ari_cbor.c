@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * Test the ari_cbor.h interfaces.
+ * Test the cace_ari_cbor.h interfaces.
  *
  * As a shortcut to producing expected binary contents, use commands similar to:
  *  echo "42" | diag2cbor.rb | xxd -i
@@ -53,16 +53,16 @@ void tearDown(void)
     }
 }
 
-static void check_encoding(const ari_t *ari, const char *expect_hex)
+static void check_encoding(const cace_ari_t *ari, const char *expect_hex)
 {
     cace_data_t buf;
     cace_data_init(&buf);
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ari_cbor_encode(&buf, ari), "ari_cbor_encode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_ari_cbor_encode(&buf, ari), "cace_ari_cbor_encode() failed");
 
     string_t outhex;
     string_init(outhex);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, base16_encode(outhex, &buf, true), "ari_cbor_encode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_encode(outhex, &buf, true), "cace_ari_cbor_encode() failed");
 
     TEST_ASSERT_EQUAL_STRING_MESSAGE(expect_hex, string_get_cstr(outhex), "Mismatch in encoded data");
 
@@ -70,105 +70,105 @@ static void check_encoding(const ari_t *ari, const char *expect_hex)
     cace_data_deinit(&buf);
 }
 
-void test_ari_cbor_encode_lit_prim_undef(void)
+void test_cace_ari_cbor_encode_lit_prim_undef(void)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
     // no value is undefined
 
     check_encoding(&ari, "F7");
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
-void test_ari_cbor_encode_lit_prim_null(void)
+void test_cace_ari_cbor_encode_lit_prim_null(void)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_null(&ari);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_null(&ari);
 
     check_encoding(&ari, "F6");
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
-void test_ari_cbor_encode_lit_prim_uint(void)
+void test_cace_ari_cbor_encode_lit_prim_uint(void)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_prim_uint64(&ari, 1234);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_prim_uint64(&ari, 1234);
 
     check_encoding(&ari, "1904D2");
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-void test_ari_cbor_encode_lit_prim_text_nocopy(void)
+void test_cace_ari_cbor_encode_lit_prim_text_nocopy(void)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_tstr(&ari, "test", false);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tstr(&ari, "test", false);
 
     check_encoding(&ari, "6474657374");
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
-void test_ari_cbor_encode_lit_prim_text_copy(void)
+void test_cace_ari_cbor_encode_lit_prim_text_copy(void)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_tstr(&ari, "test", true);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tstr(&ari, "test", true);
 
     check_encoding(&ari, "6474657374");
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-void test_ari_cbor_encode_lit_typed_tp(void)
+void test_cace_ari_cbor_encode_lit_typed_tp(void)
 {
     const struct timespec delta = {
         .tv_sec = 30,
     };
-    ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_tp(&ari, delta);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tp(&ari, delta);
 
     check_encoding(&ari, "820C181E");
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-void test_ari_cbor_encode_lit_typed_td(void)
+void test_cace_ari_cbor_encode_lit_typed_td(void)
 {
     const struct timespec delta = {
         .tv_sec = 30,
     };
-    ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_td(&ari, delta);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_td(&ari, delta);
 
     check_encoding(&ari, "820D181E");
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-void test_ari_cbor_encode_lit_typed_ac_empty(void)
+void test_cace_ari_cbor_encode_lit_typed_ac_empty(void)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
-    ari_set_ac(&ari, NULL);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_ac(&ari, NULL);
 
     check_encoding(&ari, "821180");
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-void test_ari_cbor_encode_lit_typed_ac_1item(void)
+void test_cace_ari_cbor_encode_lit_typed_ac_1item(void)
 {
     {
-        ari_ac_t acinit;
-        ari_ac_init(&acinit);
+        cace_ari_ac_t acinit;
+        cace_ari_ac_init(&acinit);
         {
-            ari_t *item = ari_list_push_back_new(acinit.items);
-            ari_set_null(item);
+            cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
+            cace_ari_set_null(item);
         }
 
-        ari_t ari = ARI_INIT_UNDEFINED;
-        ari_set_ac(&ari, &acinit);
+        cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_ac(&ari, &acinit);
 
         check_encoding(&ari, "821181F6");
 
-        ari_deinit(&ari);
+        cace_ari_deinit(&ari);
     }
 }
 
@@ -177,71 +177,72 @@ TEST_CASE("example-adm-a@2024-06-25", false, 0, NULL,
 TEST_CASE("example-adm-a", false, 0, NULL, "836D6578616D706C652D61646D2D61F6F6")    // ari://example-adm-a/
 TEST_CASE("!example-odm-b", false, 0, NULL, "836E216578616D706C652D6F646D2D62F6F6") // ari://!example-odm-b/
 TEST_CASE("adm", false, 0, NULL, "836361646DF6F6")                                  // ari://adm/
-TEST_CASE(NULL, true, ARI_TYPE_CONST, "hi", "83F621626869")                         // "./CONST/hi
-TEST_CASE("adm", true, ARI_TYPE_CONST, "hi", "836361646D21626869")                  // ari://adm/CONST/hi
-TEST_CASE("test", true, ARI_TYPE_CONST, "that", "836474657374216474686174")         // ari://test/CONST/that
-TEST_CASE("test@1234", true, ARI_TYPE_CONST, "that", "8369746573744031323334216474686174") // ari://test@1234/CONST/that
-TEST_CASE("!test", true, ARI_TYPE_CONST, "that", "83652174657374216474686174")             // ari://!test/CONST/that
-void test_ari_cbor_encode_objref_path_text(const char *ns_id, bool has_type, ari_type_t type_id, const char *obj_id,
-                                           const char *expect)
+TEST_CASE(NULL, true, CACE_ARI_TYPE_CONST, "hi", "83F621626869")                    // "./CONST/hi
+TEST_CASE("adm", true, CACE_ARI_TYPE_CONST, "hi", "836361646D21626869")             // ari://adm/CONST/hi
+TEST_CASE("test", true, CACE_ARI_TYPE_CONST, "that", "836474657374216474686174")    // ari://test/CONST/that
+TEST_CASE("test@1234", true, CACE_ARI_TYPE_CONST, "that",
+          "8369746573744031323334216474686174")                                     // ari://test@1234/CONST/that
+TEST_CASE("!test", true, CACE_ARI_TYPE_CONST, "that", "83652174657374216474686174") // ari://!test/CONST/that
+void test_cace_ari_cbor_encode_objref_path_text(const char *ns_id, bool has_type, cace_ari_type_t type_id,
+                                                const char *obj_id, const char *expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
-    ari_objpath_set_textid_opt(&(ari_set_objref(&ari)->objpath), ns_id, has_type ? &type_id : NULL, obj_id);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_objpath_set_textid_opt(&(cace_ari_set_objref(&ari)->objpath), ns_id, has_type ? &type_id : NULL, obj_id);
 
     check_encoding(&ari, expect);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-TEST_CASE(true, 18, false, 0, false, 0, "8312F6F6")               // ari://18/
-TEST_CASE(true, 65536, false, 0, false, 0, "831A00010000F6F6")    // ari://65536/
-TEST_CASE(true, -20, false, 0, false, 0, "8333F6F6")              // ari://-20/
-TEST_CASE(false, 0, true, ARI_TYPE_IDENT, true, 34, "83F6201822") // ./IDENT/34
-TEST_CASE(true, 18, true, ARI_TYPE_IDENT, true, 34, "8312201822") // ari://18/IDENT/34
-void test_ari_cbor_encode_objref_path_int(bool has_ns, int64_t ns_id, bool has_type, ari_type_t type_id, bool has_obj,
-                                          int64_t obj_id, const char *expect)
+TEST_CASE(true, 18, false, 0, false, 0, "8312F6F6")                    // ari://18/
+TEST_CASE(true, 65536, false, 0, false, 0, "831A00010000F6F6")         // ari://65536/
+TEST_CASE(true, -20, false, 0, false, 0, "8333F6F6")                   // ari://-20/
+TEST_CASE(false, 0, true, CACE_ARI_TYPE_IDENT, true, 34, "83F6201822") // ./IDENT/34
+TEST_CASE(true, 18, true, CACE_ARI_TYPE_IDENT, true, 34, "8312201822") // ari://18/IDENT/34
+void test_cace_ari_cbor_encode_objref_path_int(bool has_ns, int64_t ns_id, bool has_type, cace_ari_type_t type_id,
+                                               bool has_obj, int64_t obj_id, const char *expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
-    ari_objpath_set_intid_opt(&(ari_set_objref(&ari)->objpath), has_ns ? &ns_id : NULL, has_type ? &type_id : NULL,
-                              has_obj ? &obj_id : NULL);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_objpath_set_intid_opt(&(cace_ari_set_objref(&ari)->objpath), has_ns ? &ns_id : NULL,
+                                   has_type ? &type_id : NULL, has_obj ? &obj_id : NULL);
 
     check_encoding(&ari, expect);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-static void check_decoding(ari_t *ari, const char *inhex)
+static void check_decoding(cace_ari_t *ari, const char *inhex)
 {
     string_t intext;
     string_init_set_str(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
-    TEST_ASSERT_EQUAL_INT(0, base16_decode(&indata, intext));
+    TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
     string_clear(intext);
 
     const size_t inlen = indata.len;
     size_t       used;
-    int          res = ari_cbor_decode(ari, &indata, &used, &errm);
+    int          res = cace_ari_cbor_decode(ari, &indata, &used, &errm);
     cace_data_deinit(&indata);
     if (res && errm)
     {
         TEST_FAIL_MESSAGE(errm);
     }
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(inlen, used, "ari_cbor_decode() did not use all data");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(inlen, used, "cace_ari_cbor_decode() did not use all data");
 
-    TEST_ASSERT_TRUE_MESSAGE(amm_builtin_validate(ari), "amm_builtin_validate() failed");
+    TEST_ASSERT_TRUE_MESSAGE(cace_amm_builtin_validate(ari), "cace_amm_builtin_validate() failed");
 }
 
-TEST_CASE("836361646D21626869", "adm", ARI_TYPE_CONST, "hi")                         // ari://adm/CONST/hi
-TEST_CASE("836474657374216474686174", "test", ARI_TYPE_CONST, "that")                // ari://test/CONST/that
-TEST_CASE("8369746573744031323334216474686174", "test@1234", ARI_TYPE_CONST, "that") // ari://test@1234/CONST/that
-TEST_CASE("83652174657374216474686174", "!test", ARI_TYPE_CONST, "that")             // ari://!test/CONST/that
-TEST_CASE("846474657374226474686174811822", "test", ARI_TYPE_CTRL, "that")           // ari://test/CTRL/that(34)
-void test_ari_cbor_decode_objref_path_text(const char *hexval, const char *ns_id, ari_type_t type_id,
-                                           const char *obj_id)
+TEST_CASE("836361646D21626869", "adm", CACE_ARI_TYPE_CONST, "hi")                         // ari://adm/CONST/hi
+TEST_CASE("836474657374216474686174", "test", CACE_ARI_TYPE_CONST, "that")                // ari://test/CONST/that
+TEST_CASE("8369746573744031323334216474686174", "test@1234", CACE_ARI_TYPE_CONST, "that") // ari://test@1234/CONST/that
+TEST_CASE("83652174657374216474686174", "!test", CACE_ARI_TYPE_CONST, "that")             // ari://!test/CONST/that
+TEST_CASE("846474657374226474686174811822", "test", CACE_ARI_TYPE_CTRL, "that")           // ari://test/CTRL/that(34)
+void test_cace_ari_cbor_decode_objref_path_text(const char *hexval, const char *ns_id, cace_ari_type_t type_id,
+                                                const char *obj_id)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, hexval);
     TEST_ASSERT_TRUE(ari.is_ref);
@@ -249,14 +250,15 @@ void test_ari_cbor_decode_objref_path_text(const char *hexval, const char *ns_id
     TEST_ASSERT_EQUAL_INT(type_id, ari.as_ref.objpath.type_id.as_int);
     TEST_ASSERT_EQUAL_STRING(obj_id, ari.as_ref.objpath.obj_id.as_text);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-TEST_CASE("8312201822", 18, ARI_TYPE_IDENT, 34)
-TEST_CASE("8402220481626869", 2, ARI_TYPE_CTRL, 4) // ari://2/CTRL/4(hi)
-void test_ari_cbor_decode_objref_path_int(const char *hexval, int64_t ns_id, ari_type_t type_id, int64_t obj_id)
+TEST_CASE("8312201822", 18, CACE_ARI_TYPE_IDENT, 34)
+TEST_CASE("8402220481626869", 2, CACE_ARI_TYPE_CTRL, 4) // ari://2/CTRL/4(hi)
+void test_cace_ari_cbor_decode_objref_path_int(const char *hexval, int64_t ns_id, cace_ari_type_t type_id,
+                                               int64_t obj_id)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, hexval);
     TEST_ASSERT_TRUE(ari.is_ref);
@@ -264,20 +266,20 @@ void test_ari_cbor_decode_objref_path_int(const char *hexval, int64_t ns_id, ari
     TEST_ASSERT_EQUAL_INT(type_id, ari.as_ref.objpath.type_id.as_int);
     TEST_ASSERT_EQUAL_INT(obj_id, ari.as_ref.objpath.obj_id.as_int);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
 // ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
 TEST_CASE("8215831904D21903E8850083647465737422626869F603426869", 1234, 1000, 0, 1)
 TEST_CASE("8215831904D282211904D2850083647465737422626869F603426869", 1234, 12, 340000000, 1)
-void test_ari_cbor_decode_rptset(const char *hexval, int expect_nonce, time_t expect_tv_sec, long expect_tv_nsec,
-                                 int expect_reports)
+void test_cace_ari_cbor_decode_rptset(const char *hexval, int expect_nonce, time_t expect_tv_sec, long expect_tv_nsec,
+                                      int expect_reports)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, hexval);
 
-    const ari_rptset_t *set = ari_get_rptset(&ari);
+    const cace_ari_rptset_t *set = cace_ari_get_rptset(&ari);
     TEST_ASSERT_NOT_NULL(set);
     TEST_ASSERT_EQUAL_INT(set->nonce.as_lit.value.as_int64, expect_nonce);
 
@@ -285,64 +287,64 @@ void test_ari_cbor_decode_rptset(const char *hexval, int expect_nonce, time_t ex
     TEST_ASSERT_EQUAL_INT(tm->tv_sec, expect_tv_sec);
     TEST_ASSERT_EQUAL_INT(tm->tv_nsec, expect_tv_nsec);
 
-    const ari_report_list_t *reports = &(set->reports);
-    TEST_ASSERT_EQUAL_INT(ari_report_list_size(*reports), expect_reports);
+    const cace_ari_report_list_t *reports = &(set->reports);
+    TEST_ASSERT_EQUAL_INT(cace_ari_report_list_size(*reports), expect_reports);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
 TEST_CASE("82158282041904D21903E8", 1234, 1000, 0)
-void test_ari_cbor_encode_rptset(const char *expect_hexval, int nonce, time_t tv_sec, long tv_nsec)
+void test_cace_ari_cbor_encode_rptset(const char *expect_hexval, int nonce, time_t tv_sec, long tv_nsec)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     struct timespec tm = { .tv_sec = tv_sec, .tv_nsec = tv_nsec };
 
-    ari_rptset_t *set = ari_set_rptset(&ari);
-    ari_set_int(&set->nonce, nonce);
-    ari_set_tp(&set->reftime, tm);
+    cace_ari_rptset_t *set = cace_ari_set_rptset(&ari);
+    cace_ari_set_int(&set->nonce, nonce);
+    cace_ari_set_tp(&set->reftime, tm);
 
     check_encoding(&ari, expect_hexval);
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-void test_ari_cbor_decode_lit_prim_undef(void)
+void test_cace_ari_cbor_decode_lit_prim_undef(void)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, "F7");
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_UNDEFINED, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_UNDEFINED, ari.as_lit.prim_type);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-void test_ari_cbor_decode_lit_prim_null(void)
+void test_cace_ari_cbor_decode_lit_prim_null(void)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, "F6");
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_NULL, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_NULL, ari.as_lit.prim_type);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
 TEST_CASE("F4", false)
 TEST_CASE("F5", true)
-void test_ari_cbor_decode_lit_prim_bool(const char *inhex, bool expect)
+void test_cace_ari_cbor_decode_lit_prim_bool(const char *inhex, bool expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_BOOL, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_BOOL, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_INT(expect, ari.as_lit.value.as_bool);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
 TEST_CASE("3B7FFFFFFFFFFFFFFF", -0x8000000000000000)
@@ -354,78 +356,76 @@ TEST_CASE("0a", 10)
 TEST_CASE("1904D2", 1234)
 TEST_CASE("1B0000000100000000", 4294967296)
 TEST_CASE("1B7FFFFFFFFFFFFFFF", 0x7FFFFFFFFFFFFFFF)
-void test_ari_cbor_decode_lit_prim_int64(const char *inhex, int64_t expect)
+void test_cace_ari_cbor_decode_lit_prim_int64(const char *inhex, int64_t expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_INT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_INT64, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_INT(expect, ari.as_lit.value.as_int64);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
 TEST_CASE("1B8000000000000000", 0x8000000000000000)
 TEST_CASE("1BFFFFFFFFFFFFFFFF", 0xFFFFFFFFFFFFFFFF)
-void test_ari_cbor_decode_lit_prim_uint64(const char *inhex, uint64_t expect)
+void test_cace_ari_cbor_decode_lit_prim_uint64(const char *inhex, uint64_t expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_UINT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_UINT64, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_INT(expect, ari.as_lit.value.as_uint64);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-/*
 TEST_CASE("F93E00", 1.5)
-TEST_CASE("F97E00", (ari_real32)NAN)
-void test_ari_cbor_decode_lit_prim_float32(const char *inhex, ari_real32 expect)
+TEST_CASE("F97E00", (cace_ari_real32)NAN)
+void test_cace_ari_cbor_decode_lit_prim_float32(const char *inhex, cace_ari_real32 expect)
 {
-  ari_t ari = ARI_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
-  check_decoding(&ari, inhex);
-  TEST_ASSERT_FALSE(ari.is_ref);
-  TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
-  TEST_ASSERT_EQUAL_INT(ARI_PRIM_FLOAT32, ari.as_lit.prim_type);
-  TEST_ASSERT_EQUAL_FLOAT(expect, ari.as_lit.value.as_float32);
+    check_decoding(&ari, inhex);
+    TEST_ASSERT_FALSE(ari.is_ref);
+    TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_FLOAT(expect, ari.as_lit.value.as_float64);
 
-  ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
-*/
 
 TEST_CASE("F90000", 0.0)
 TEST_CASE("F93E00", 1.5)
-TEST_CASE("F97E00", (ari_real64)NAN)
-TEST_CASE("F97C00", (ari_real64)INFINITY)
-TEST_CASE("F9FC00", (ari_real64)-INFINITY)
-void test_ari_cbor_decode_lit_prim_float64(const char *inhex, ari_real64 expect)
+TEST_CASE("F97E00", (cace_ari_real64)NAN)
+TEST_CASE("F97C00", (cace_ari_real64)INFINITY)
+TEST_CASE("F9FC00", (cace_ari_real64)-INFINITY)
+void test_cace_ari_cbor_decode_lit_prim_float64(const char *inhex, cace_ari_real64 expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_DOUBLE(expect, ari.as_lit.value.as_float64);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 TEST_CASE("60", "")
 TEST_CASE("626869", "hi")
-void test_ari_cbor_decode_lit_prim_tstr(const char *inhex, const char *expect)
+void test_cace_ari_cbor_decode_lit_prim_tstr(const char *inhex, const char *expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_TSTR, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_TSTR, ari.as_lit.prim_type);
     if (expect)
     {
         TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
@@ -439,19 +439,19 @@ void test_ari_cbor_decode_lit_prim_tstr(const char *inhex, const char *expect)
         TEST_ASSERT_NULL(ari.as_lit.value.as_data.ptr);
     }
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
 TEST_CASE("40", NULL, 0)
 TEST_CASE("426869", "hi", 2)
-void test_ari_cbor_decode_lit_prim_bstr(const char *inhex, const char *expect, size_t expect_len)
+void test_cace_ari_cbor_decode_lit_prim_bstr(const char *inhex, const char *expect, size_t expect_len)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_BSTR, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_BSTR, ari.as_lit.prim_type);
     if (expect)
     {
         TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
@@ -465,86 +465,86 @@ void test_ari_cbor_decode_lit_prim_bstr(const char *inhex, const char *expect, s
         TEST_ASSERT_NULL(ari.as_lit.value.as_data.ptr);
     }
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-void test_ari_cbor_decode_lit_typed_null(void)
+void test_cace_ari_cbor_decode_lit_typed_null(void)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, "8200F6");
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_TYPE_NULL, ari.as_lit.ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_NULL, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_TYPE_NULL, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_NULL, ari.as_lit.prim_type);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
 TEST_CASE("8201F4", false)
 TEST_CASE("8201F5", true)
-void test_ari_cbor_decode_lit_typed_bool(const char *inhex, bool expect)
+void test_cace_ari_cbor_decode_lit_typed_bool(const char *inhex, bool expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_TYPE_BOOL, ari.as_lit.ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_BOOL, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_TYPE_BOOL, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_BOOL, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_INT(expect, ari.as_lit.value.as_bool);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
-TEST_CASE("820200", ARI_TYPE_BYTE, 0)
-TEST_CASE("82021864", ARI_TYPE_BYTE, 100)
-TEST_CASE("82041864", ARI_TYPE_INT, 100)
-TEST_CASE("82051864", ARI_TYPE_UINT, 100)
-TEST_CASE("82061864", ARI_TYPE_VAST, 100)
-TEST_CASE("82071864", ARI_TYPE_UVAST, 100)
-void test_ari_cbor_decode_lit_typed_int64(const char *inhex, ari_type_t typ, int64_t expect)
+TEST_CASE("820200", CACE_ARI_TYPE_BYTE, 0)
+TEST_CASE("82021864", CACE_ARI_TYPE_BYTE, 100)
+TEST_CASE("82041864", CACE_ARI_TYPE_INT, 100)
+TEST_CASE("82051864", CACE_ARI_TYPE_UINT, 100)
+TEST_CASE("82061864", CACE_ARI_TYPE_VAST, 100)
+TEST_CASE("82071864", CACE_ARI_TYPE_UVAST, 100)
+void test_cace_ari_cbor_decode_lit_typed_int64(const char *inhex, cace_ari_type_t typ, int64_t expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
     TEST_ASSERT_EQUAL_INT(typ, ari.as_lit.ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_INT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_INT64, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_INT(expect, ari.as_lit.value.as_int64);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
 TEST_CASE("8209F93E00", true)
-void test_ari_cbor_decode_lit_typed_real64(const char *inhex, bool expect)
+void test_cace_ari_cbor_decode_lit_typed_real64(const char *inhex, bool expect)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_TYPE_REAL64, ari.as_lit.ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_TYPE_REAL64, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_FLOAT64, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_INT(expect, ari.as_lit.value.as_float64);
 
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 }
 
 TEST_CASE("820C82200C", 1, 200000000)
 TEST_CASE("820C82080C", 1200000000, 0)
 TEST_CASE("820C82070C", 120000000, 0)
 TEST_CASE("820C82280C", 0, 12)
-void test_ari_cbor_decode_tp(const char *inhex, time_t expect_sec, long expect_nsec)
+void test_cace_ari_cbor_decode_tp(const char *inhex, time_t expect_sec, long expect_nsec)
 {
-    ari_t ari = ARI_INIT_UNDEFINED;
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
 
     check_decoding(&ari, inhex);
     TEST_ASSERT_FALSE(ari.is_ref);
     TEST_ASSERT_TRUE(ari.as_lit.has_ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_TYPE_TP, ari.as_lit.ari_type);
-    TEST_ASSERT_EQUAL_INT(ARI_PRIM_TIMESPEC, ari.as_lit.prim_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_TYPE_TP, ari.as_lit.ari_type);
+    TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_TIMESPEC, ari.as_lit.prim_type);
     TEST_ASSERT_EQUAL_INT(expect_sec, ari.as_lit.value.as_timespec.tv_sec);
     TEST_ASSERT_EQUAL_INT(expect_nsec, ari.as_lit.value.as_timespec.tv_nsec);
 }
@@ -567,51 +567,51 @@ TEST_CASE(
     "8215831904D26474657374850083647465737422626869F603426869") // ari:/RPTSET/n=1234;r=test;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
 TEST_CASE(
     "8215831904D28209F93C00850083647465737422626869F603426869") // ari:/RPTSET/n=1234;r=/REAL64/1.0;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
-void test_ari_cbor_decode_failure(const char *inhex)
+void test_cace_ari_cbor_decode_failure(const char *inhex)
 {
     string_t intext;
     string_init_set_str(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
-    TEST_ASSERT_EQUAL_INT(0, base16_decode(&indata, intext));
+    TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
     string_clear(intext);
 
     const size_t inlen = indata.len;
-    ari_t        ari   = ARI_INIT_UNDEFINED;
+    cace_ari_t   ari   = CACE_ARI_INIT_UNDEFINED;
     size_t       used;
-    int          res = ari_cbor_decode(&ari, &indata, &used, &errm);
+    int          res = cace_ari_cbor_decode(&ari, &indata, &used, &errm);
     cace_data_deinit(&indata);
-    ari_deinit(&ari);
+    cace_ari_deinit(&ari);
 
     TEST_ASSERT_NOT_EQUAL_INT(0, res);
     TEST_ASSERT_NOT_NULL_MESSAGE(errm, "decode failure must provide a message");
     TEST_MESSAGE(errm);
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(inlen, used, "ari_cbor_decode() did not use all data");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(inlen, used, "cace_ari_cbor_decode() did not use all data");
 }
 
 TEST_CASE("0001") // too much data
-void test_ari_cbor_decode_partial(const char *inhex)
+void test_cace_ari_cbor_decode_partial(const char *inhex)
 {
     string_t intext;
     string_init_set_str(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
-    TEST_ASSERT_EQUAL_INT(0, base16_decode(&indata, intext));
+    TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
     string_clear(intext);
 
     const size_t inlen = indata.len;
-    ari_t        ari   = ARI_INIT_UNDEFINED;
+    cace_ari_t   ari   = CACE_ARI_INIT_UNDEFINED;
     size_t       used;
-    int          res = ari_cbor_decode(&ari, &indata, &used, &errm);
+    int          res = cace_ari_cbor_decode(&ari, &indata, &used, &errm);
     cace_data_deinit(&indata);
     if (res && errm)
     {
         TEST_FAIL_MESSAGE(errm);
     }
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
 
-    TEST_ASSERT_LESS_THAN_INT_MESSAGE(inlen, used, "ari_cbor_decode() used all data");
+    TEST_ASSERT_LESS_THAN_INT_MESSAGE(inlen, used, "cace_ari_cbor_decode() used all data");
 }
 
 TEST_CASE("820001")                 // ari:/NULL/1
@@ -627,30 +627,30 @@ TEST_CASE("82061B8000000000000000") // ari:/VAST/0x8000000000000000
 TEST_CASE("820720")                 // ari:/UVAST/-1
 TEST_CASE("8208FBC7EFFFFFE091FF3D") // ari:/REAL32/-3.40282347E+38
 TEST_CASE("8208FB47EFFFFFE091FF3D") // ari:/REAL32/3.40282347E+38
-void test_ari_cbor_decode_invalid(const char *inhex)
+void test_cace_ari_cbor_decode_invalid(const char *inhex)
 {
     string_t intext;
     string_init_set_str(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
-    TEST_ASSERT_EQUAL_INT(0, base16_decode(&indata, intext));
+    TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
     string_clear(intext);
 
     const size_t inlen = indata.len;
-    ari_t        ari   = ARI_INIT_UNDEFINED;
+    cace_ari_t   ari   = CACE_ARI_INIT_UNDEFINED;
     size_t       used;
-    int          res = ari_cbor_decode(&ari, &indata, &used, &errm);
+    int          res = cace_ari_cbor_decode(&ari, &indata, &used, &errm);
     cace_data_deinit(&indata);
     if (res && errm)
     {
         TEST_FAIL_MESSAGE(errm);
     }
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
 
-    TEST_ASSERT_FALSE_MESSAGE(amm_builtin_validate(&ari), "amm_builtin_validate() succeeded");
-    ari_deinit(&ari);
+    TEST_ASSERT_FALSE_MESSAGE(cace_amm_builtin_validate(&ari), "cace_amm_builtin_validate() succeeded");
+    cace_ari_deinit(&ari);
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(inlen, used, "ari_cbor_decode() did not use all data");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(inlen, used, "cace_ari_cbor_decode() did not use all data");
 }
 
 TEST_CASE("F7") // ari:undefined
@@ -712,28 +712,28 @@ TEST_CASE("846474657374226474686174811822")     // ari://test/CTRL/that(34)
 TEST_CASE("8402220481626869")                   // ari://2/CTRL/4(hi)
 TEST_CASE("820F410A")                           // ari:/CBOR/h'0A'
 TEST_CASE("820F4BA164746573748203F94480")       // ari:/CBOR/h'A164746573748203F94480'
-void test_ari_cbor_loopback(const char *inhex)
+void test_cace_ari_cbor_loopback(const char *inhex)
 {
     string_t intext;
     string_init_set_str(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, base16_decode(&indata, intext), "base16_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_decode(&indata, intext), "cace_base16_decode() failed");
     string_clear(intext);
 
-    ari_t ari = ARI_INIT_UNDEFINED;
-    int   res = ari_cbor_decode(&ari, &indata, NULL, &errm);
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    int        res = cace_ari_cbor_decode(&ari, &indata, NULL, &errm);
     if (res && errm)
     {
         TEST_FAIL_MESSAGE(errm);
     }
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
 
     cace_data_t outdata;
     cace_data_init(&outdata);
-    res = ari_cbor_encode(&outdata, &ari);
-    ari_deinit(&ari);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_encode() failed");
+    res = cace_ari_cbor_encode(&outdata, &ari);
+    cace_ari_deinit(&ari);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_encode() failed");
 
     TEST_ASSERT_EQUAL_INT(indata.len, outdata.len);
     TEST_ASSERT_EQUAL_MEMORY(indata.ptr, outdata.ptr, indata.len);

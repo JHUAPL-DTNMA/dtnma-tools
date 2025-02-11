@@ -37,17 +37,17 @@ void *refda_egress_worker(void *arg)
             continue;
         }
         // sentinel for end-of-input
-        const bool at_end = ari_is_undefined(&(item.value));
+        const bool at_end = cace_ari_is_undefined(&(item.value));
         CACE_LOG_DEBUG("Processing rptgs item (end %d)", at_end);
         if (!at_end)
         {
-            ari_list_t data;
-            ari_list_init(data);
+            cace_ari_list_t data;
+            cace_ari_list_init(data);
 
             cace_amm_msg_if_metadata_t meta;
             cace_amm_msg_if_metadata_init(&meta);
             m_string_swap(meta.dest, item.ident);
-            ari_list_push_back_move(data, &item.value);
+            cace_ari_list_push_back_move(data, &item.value);
 
             int send_res = (agent->mif.send)(data, &meta, agent->mif.ctx);
             if (send_res)
@@ -56,7 +56,7 @@ void *refda_egress_worker(void *arg)
                 atomic_fetch_add(&agent->instr.num_rptset_sent_failure, 1);
             }
 
-            ari_list_clear(data);
+            cace_ari_list_clear(data);
             cace_amm_msg_if_metadata_deinit(&meta);
 
             atomic_fetch_add(&agent->instr.num_rptset_sent, 1);
@@ -65,7 +65,7 @@ void *refda_egress_worker(void *arg)
         if (at_end)
         {
             // No more reports possible
-            daemon_run_stop(&agent->running); // FIXME move farther down chain
+            cace_daemon_run_stop(&agent->running); // FIXME move farther down chain
 
             break;
         }

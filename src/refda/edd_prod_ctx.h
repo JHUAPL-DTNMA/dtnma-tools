@@ -65,9 +65,9 @@ void refda_edd_prod_ctx_deinit(refda_edd_prod_ctx_t *obj);
  * @param[in] index The index into the parameter list.
  * @return A pointer to the parameter value or NULL if no such parameter is present.
  */
-const ari_t *refda_edd_prod_ctx_get_aparam_index(const refda_edd_prod_ctx_t *ctx, size_t index);
+const cace_ari_t *refda_edd_prod_ctx_get_aparam_index(const refda_edd_prod_ctx_t *ctx, size_t index);
 /// @overload
-const ari_t *refda_edd_prod_ctx_get_aparam_name(const refda_edd_prod_ctx_t *ctx, const char *name);
+const cace_ari_t *refda_edd_prod_ctx_get_aparam_name(const refda_edd_prod_ctx_t *ctx, const char *name);
 
 /** Set the result for a value production.
  *
@@ -76,9 +76,9 @@ const ari_t *refda_edd_prod_ctx_get_aparam_name(const refda_edd_prod_ctx_t *ctx,
  * @return Zero if successful and the value has a matching type.
  * Otherwise REFDA_EDD_PROD_RESULT_TYPE_NOMATCH.
  */
-int refda_edd_prod_ctx_set_result_copy(refda_edd_prod_ctx_t *ctx, const ari_t *value);
+int refda_edd_prod_ctx_set_result_copy(refda_edd_prod_ctx_t *ctx, const cace_ari_t *value);
 /// @overload
-int refda_edd_prod_ctx_set_result_move(refda_edd_prod_ctx_t *ctx, ari_t *value);
+int refda_edd_prod_ctx_set_result_move(refda_edd_prod_ctx_t *ctx, cace_ari_t *value);
 
 #ifdef __cplusplus
 } // extern C

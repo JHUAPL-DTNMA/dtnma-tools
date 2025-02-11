@@ -24,8 +24,8 @@
 
 typedef struct
 {
-    ari_type_t  type;
-    const char *name;
+    cace_ari_type_t type;
+    const char     *name;
 } _ari_type_name_pair_t;
 
 // clang-format off
@@ -34,53 +34,53 @@ typedef struct
  * "Managed Object Types" from @cite IANA:DTNMA.
  */
 static _ari_type_name_pair_t _ari_type_names[] = {
-    {ARI_TYPE_LITERAL, "LITERAL"},
-    {ARI_TYPE_NULL, "NULL"},
-    {ARI_TYPE_BOOL, "BOOL"},
-    {ARI_TYPE_BYTE, "BYTE"},
-    {ARI_TYPE_INT, "INT"},
-    {ARI_TYPE_UINT, "UINT"},
-    {ARI_TYPE_VAST, "VAST"},
-    {ARI_TYPE_UVAST, "UVAST"},
-    {ARI_TYPE_REAL32, "REAL32"},
-    {ARI_TYPE_REAL64, "REAL64"},
-    {ARI_TYPE_TEXTSTR, "TEXTSTR"},
-    {ARI_TYPE_BYTESTR, "BYTESTR"},
-    {ARI_TYPE_TP, "TP"},
-    {ARI_TYPE_TD, "TD"},
-    {ARI_TYPE_LABEL, "LABEL"},
-    {ARI_TYPE_CBOR, "CBOR"},
-    {ARI_TYPE_ARITYPE, "ARITYPE"},
-    {ARI_TYPE_AC, "AC"},
-    {ARI_TYPE_AM, "AM"},
-    {ARI_TYPE_TBL, "TBL"},
-    {ARI_TYPE_EXECSET, "EXECSET"},
-    {ARI_TYPE_RPTSET, "RPTSET"},
+    {CACE_ARI_TYPE_LITERAL, "LITERAL"},
+    {CACE_ARI_TYPE_NULL, "NULL"},
+    {CACE_ARI_TYPE_BOOL, "BOOL"},
+    {CACE_ARI_TYPE_BYTE, "BYTE"},
+    {CACE_ARI_TYPE_INT, "INT"},
+    {CACE_ARI_TYPE_UINT, "UINT"},
+    {CACE_ARI_TYPE_VAST, "VAST"},
+    {CACE_ARI_TYPE_UVAST, "UVAST"},
+    {CACE_ARI_TYPE_REAL32, "REAL32"},
+    {CACE_ARI_TYPE_REAL64, "REAL64"},
+    {CACE_ARI_TYPE_TEXTSTR, "TEXTSTR"},
+    {CACE_ARI_TYPE_BYTESTR, "BYTESTR"},
+    {CACE_ARI_TYPE_TP, "TP"},
+    {CACE_ARI_TYPE_TD, "TD"},
+    {CACE_ARI_TYPE_LABEL, "LABEL"},
+    {CACE_ARI_TYPE_CBOR, "CBOR"},
+    {CACE_ARI_TYPE_ARITYPE, "ARITYPE"},
+    {CACE_ARI_TYPE_AC, "AC"},
+    {CACE_ARI_TYPE_AM, "AM"},
+    {CACE_ARI_TYPE_TBL, "TBL"},
+    {CACE_ARI_TYPE_EXECSET, "EXECSET"},
+    {CACE_ARI_TYPE_RPTSET, "RPTSET"},
 
-    {ARI_TYPE_OBJECT, "OBJECT"},
-    {ARI_TYPE_IDENT, "IDENT"},
-    {ARI_TYPE_TYPEDEF, "TYPEDEF"},
-    {ARI_TYPE_CONST, "CONST"},
-    {ARI_TYPE_VAR, "VAR"},
-    {ARI_TYPE_EDD, "EDD"},
-    {ARI_TYPE_CTRL, "CTRL"},
-    {ARI_TYPE_OPER, "OPER"},
-    {ARI_TYPE_SBR, "SBR"},
-    {ARI_TYPE_TBR, "TBR"},
+    {CACE_ARI_TYPE_OBJECT, "OBJECT"},
+    {CACE_ARI_TYPE_IDENT, "IDENT"},
+    {CACE_ARI_TYPE_TYPEDEF, "TYPEDEF"},
+    {CACE_ARI_TYPE_CONST, "CONST"},
+    {CACE_ARI_TYPE_VAR, "VAR"},
+    {CACE_ARI_TYPE_EDD, "EDD"},
+    {CACE_ARI_TYPE_CTRL, "CTRL"},
+    {CACE_ARI_TYPE_OPER, "OPER"},
+    {CACE_ARI_TYPE_SBR, "SBR"},
+    {CACE_ARI_TYPE_TBR, "TBR"},
 };
 // clang-format on
 
 #ifdef ENABLE_LUT_CACHE
 
-DICT_DEF2(_ari_type_by_id, ari_type_t, M_BASIC_OPLIST, const char *, M_CSTR_NOCASE_OPLIST)
-DICT_DEF2(_ari_type_by_name, const char *, M_CSTR_NOCASE_OPLIST, ari_type_t, M_BASIC_OPLIST)
+M_DICT_DEF2(_ari_type_by_id, cace_ari_type_t, M_BASIC_OPLIST, const char *, M_CSTR_NOCASE_OPLIST)
+M_DICT_DEF2(_ari_type_by_name, const char *, M_CSTR_NOCASE_OPLIST, cace_ari_type_t, M_BASIC_OPLIST)
 
 /// Cached type dictionary
 static _ari_type_by_id_t   _ari_type_id_dict;
 static _ari_type_by_name_t _ari_type_name_dict;
 
 /// Initializer for #amm_builtin_dict
-void _ari_type_dict_init(void)
+static void _ari_type_dict_init(void)
 {
     const _ari_type_name_pair_t *curs = _ari_type_names;
     const size_t                 len  = sizeof(_ari_type_names) / sizeof(_ari_type_name_pair_t);
@@ -98,19 +98,19 @@ void _ari_type_dict_init(void)
 /// Guard for amm_builtin_dict_init()
 static pthread_once_t _ari_type_dict_ctrl = PTHREAD_ONCE_INIT;
 
-const char *ari_type_to_name(int32_t typenum)
+const char *cace_ari_type_to_name(int32_t typenum)
 {
     pthread_once(&_ari_type_dict_ctrl, _ari_type_dict_init);
     const char **found = _ari_type_by_id_get(_ari_type_id_dict, typenum);
     return found ? *found : NULL;
 }
 
-int ari_type_from_name(int32_t *typenum, const char *name)
+int cace_ari_type_from_name(int32_t *typenum, const char *name)
 {
     CHKERR1(name);
 
     pthread_once(&_ari_type_dict_ctrl, _ari_type_dict_init);
-    ari_type_t *found = _ari_type_by_name_get(_ari_type_name_dict, name);
+    cace_ari_type_t *found = _ari_type_by_name_get(_ari_type_name_dict, name);
     if (typenum && found)
     {
         *typenum = *found;
@@ -120,7 +120,7 @@ int ari_type_from_name(int32_t *typenum, const char *name)
 
 #else
 
-const char *ari_type_to_name(int32_t typenum)
+const char *cace_ari_type_to_name(int32_t typenum)
 {
     const _ari_type_name_pair_t *curs = _ari_type_names;
     const _ari_type_name_pair_t *end  = curs + sizeof(_ari_type_names) / sizeof(_ari_type_name_pair_t);
@@ -134,7 +134,7 @@ const char *ari_type_to_name(int32_t typenum)
     return NULL;
 }
 
-int ari_type_from_name(int32_t *typenum, const char *name)
+int cace_ari_type_from_name(int32_t *typenum, const char *name)
 {
     CHKERR1(typenum);
     CHKERR1(name);

@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-/** Context used for ari_visitor_t functions.
+/** Context used for cace_ari_visitor_t functions.
  */
 typedef struct
 {
@@ -37,16 +37,16 @@ typedef struct
      * member of that container.
      * If this is an object reference, the visited value is a parameter.
      */
-    const ari_t *parent;
+    const cace_ari_t *parent;
 
     /// True if the parent is an AM literal and this is a map key
     bool is_map_key;
 
-    /// User-supplied pointer to ari_visit()
+    /// User-supplied pointer to cace_ari_visit()
     void *user_data;
-} ari_visit_ctx_t;
+} cace_ari_visit_ctx_t;
 
-/** Function pointers to implement the ari_visit() behavior.
+/** Function pointers to implement the cace_ari_visit() behavior.
  */
 typedef struct
 {
@@ -58,33 +58,33 @@ typedef struct
      * @param[in] ctx Visitor context information.
      * @return Zero to continue iterating, or non-zero to stop immediately.
      */
-    int (*visit_ari)(ari_t *ari, const ari_visit_ctx_t *ctx);
+    int (*visit_ari)(cace_ari_t *ari, const cace_ari_visit_ctx_t *ctx);
 
     /// @overload
-    int (*visit_ref)(ari_ref_t *obj, const ari_visit_ctx_t *ctx);
+    int (*visit_ref)(cace_ari_ref_t *obj, const cace_ari_visit_ctx_t *ctx);
 
     /// @overload
-    int (*visit_objpath)(ari_objpath_t *obj, const ari_visit_ctx_t *ctx);
+    int (*visit_objpath)(cace_ari_objpath_t *obj, const cace_ari_visit_ctx_t *ctx);
 
     /** @overload
      * This is called before and in addition to any visiting of container
      * contents.
      */
-    int (*visit_lit)(ari_lit_t *obj, const ari_visit_ctx_t *ctx);
+    int (*visit_lit)(cace_ari_lit_t *obj, const cace_ari_visit_ctx_t *ctx);
 
-} ari_visitor_t;
+} cace_ari_visitor_t;
 
 /** Visit an ARI recursively.
  *
  * @param[in] ari The value to visit.
  * @param[in] visitor The visitor descriptor.
- * @param[in] user_data Data passed to the ari_visitor_t functions.
+ * @param[in] user_data Data passed to the cace_ari_visitor_t functions.
  * @return Zero upon success, or non-zero if one of the visitor functions
  * returned non-zero.
  */
-int ari_visit(ari_t *ari, const ari_visitor_t *visitor, void *user_data);
+int cace_ari_visit(cace_ari_t *ari, const cace_ari_visitor_t *visitor, void *user_data);
 
-/** Context used for ari_translator_t functions.
+/** Context used for cace_ari_translator_t functions.
  */
 typedef struct
 {
@@ -93,16 +93,16 @@ typedef struct
      * member of that container.
      * If this is an object reference, the visited value is a parameter.
      */
-    const ari_t *parent;
+    const cace_ari_t *parent;
 
     /// True if the parent is an AM literal and this is a map key
     bool is_map_key;
 
-    /// User-supplied pointer to ari_translate()
+    /// User-supplied pointer to cace_ari_translate()
     void *user_data;
-} ari_translate_ctx_t;
+} cace_ari_translate_ctx_t;
 
-/** Function pointers to implement the ari_translate() behavior.
+/** Function pointers to implement the cace_ari_translate() behavior.
  * For any input value, the #map_ari is first called (with fallback behavior)
  * followed by either #map_objpath or #map_lit depending on the ARI type.
  */
@@ -119,19 +119,19 @@ typedef struct
      * @param[in] ctx Visitor context information.
      * @return Zero to continue iterating, or non-zero to stop immediately.
      */
-    int (*map_ari)(ari_t *out, const ari_t *in, const ari_translate_ctx_t *ctx);
+    int (*map_ari)(cace_ari_t *out, const cace_ari_t *in, const cace_ari_translate_ctx_t *ctx);
 
     /** @overload
-     * If not provided, the standard ari_objpath_copy() will be used.
+     * If not provided, the standard cace_ari_objpath_copy() will be used.
      */
-    int (*map_objpath)(ari_objpath_t *out, const ari_objpath_t *in, const ari_translate_ctx_t *ctx);
+    int (*map_objpath)(cace_ari_objpath_t *out, const cace_ari_objpath_t *in, const cace_ari_translate_ctx_t *ctx);
 
     /** @overload
-     * If not provided, the standard ari_lit_copy() will be used.
+     * If not provided, the standard cace_ari_lit_copy() will be used.
      */
-    int (*map_lit)(ari_lit_t *out, const ari_lit_t *in, const ari_translate_ctx_t *ctx);
+    int (*map_lit)(cace_ari_lit_t *out, const cace_ari_lit_t *in, const cace_ari_translate_ctx_t *ctx);
 
-} ari_translator_t;
+} cace_ari_translator_t;
 
 /** Translate from an input ARI into an output of the same structure.
  *
@@ -139,19 +139,19 @@ typedef struct
  * @param[out] out The result of translation.
  * @param[in] in The value to translate.
  * @param[in] translator The translator descriptor.
- * @param[in] user_data Data passed to the ari_translator_t functions.
+ * @param[in] user_data Data passed to the cace_ari_translator_t functions.
  * @return Zero upon success, or non-zero if one of the translator functions
  * returned non-zero.
  */
-int ari_translate(ari_t *out, const ari_t *in, const ari_translator_t *translator, void *user_data);
+int cace_ari_translate(cace_ari_t *out, const cace_ari_t *in, const cace_ari_translator_t *translator, void *user_data);
 
 /** Interface for M*LIB @c HASH operation.
- * This uses the ari_visit() internally to walk an ARI tree.
+ * This uses the cace_ari_visit() internally to walk an ARI tree.
  *
  * @param[in] ari The object to hash, which contains nested state.
  * @return The hash value.
  */
-size_t ari_hash(const ari_t *ari);
+size_t cace_ari_hash(const cace_ari_t *ari);
 
 /** Compare two ARIs for ordering.
  *
@@ -160,7 +160,7 @@ size_t ari_hash(const ari_t *ari);
  * @return -1 if the left value is less than, +1 if greater than, or
  * 0 if they are by-value equal.
  */
-int ari_cmp(const ari_t *left, const ari_t *right);
+int cace_ari_cmp(const cace_ari_t *left, const cace_ari_t *right);
 
 /** Determine if two ARIs have identical value.
  *
@@ -168,13 +168,14 @@ int ari_cmp(const ari_t *left, const ari_t *right);
  * @param right Other value to compare.
  * @return True if the two are by-value equal.
  */
-bool ari_equal(const ari_t *left, const ari_t *right);
+bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right);
 
-/// Default OPLIST for ari_t
-#define M_OPL_ari_t()                                                                                                  \
-    (INIT(API_2(ari_init)), INIT_SET(API_6(ari_init_copy)), INIT_MOVE(API_6(ari_init_move)), CLEAR(API_2(ari_deinit)), \
-     RESET(API_2(ari_reset)), SET(API_6(ari_set_copy)), MOVE(API_6(ari_set_move)), HASH(API_2(ari_hash)),              \
-     CMP(API_6(ari_cmp)), EQUAL(API_6(ari_equal)))
+/// Default OPLIST for cace_ari_t
+#define M_OPL_cace_ari_t()                                                                                  \
+    (INIT(API_2(cace_ari_init)), INIT_SET(API_6(cace_ari_init_copy)), INIT_MOVE(API_6(cace_ari_init_move)), \
+     CLEAR(API_2(cace_ari_deinit)), RESET(API_2(cace_ari_reset)), SET(API_6(cace_ari_set_copy)),            \
+     MOVE(API_6(cace_ari_set_move)), HASH(API_2(cace_ari_hash)), CMP(API_6(cace_ari_cmp)),                  \
+     EQUAL(API_6(cace_ari_equal)))
 
 #ifdef __cplusplus
 }

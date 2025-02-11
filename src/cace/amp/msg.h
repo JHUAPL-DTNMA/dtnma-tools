@@ -36,7 +36,7 @@ extern "C" {
  * @param[in] items The items to encode.
  * @return Zero if successful.
  */
-int cace_amp_msg_encode(m_bstring_t msgbuf, const ari_list_t items);
+int cace_amp_msg_encode(m_bstring_t msgbuf, const cace_ari_list_t items);
 
 /** Decode a single AMP message into a set of ARI items.
  *
@@ -45,7 +45,7 @@ int cace_amp_msg_encode(m_bstring_t msgbuf, const ari_list_t items);
  * @param[in] msgbuf The message buffer to decode from.
  * @return Zero if successful.
  */
-int cace_amp_msg_decode(ari_list_t items, const m_bstring_t msgbuf);
+int cace_amp_msg_decode(cace_ari_list_t items, const m_bstring_t msgbuf);
 
 #ifdef __cplusplus
 } // extern C

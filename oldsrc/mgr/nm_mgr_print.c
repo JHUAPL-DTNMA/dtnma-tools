@@ -453,9 +453,9 @@ void ui_fprint_report(ui_print_cfg_t *fd, rpt_t *rpt)
 
         for (i = 0; i < num_entries; i++)
         {
-            ari_t *entry_id = (tpl == NULL) ? NULL : ac_get(&(tpl->contents), i);
-            entry_info      = (entry_id == NULL) ? NULL : rhht_retrieve_key(&(gMgrDB.metadata), entry_id);
-            val             = tnvc_get(rpt->entries, i);
+            cace_ari_t *entry_id = (tpl == NULL) ? NULL : ac_get(&(tpl->contents), i);
+            entry_info           = (entry_id == NULL) ? NULL : rhht_retrieve_key(&(gMgrDB.metadata), entry_id);
+            val                  = tnvc_get(rpt->entries, i);
 
             if (entry_info == NULL)
             {
@@ -597,9 +597,9 @@ cJSON *ui_json_report(rpt_t *rpt)
 
         for (i = 0; i < num_entries; i++)
         {
-            ari_t *entry_id = (tpl == NULL) ? NULL : ac_get(&(tpl->contents), i);
-            entry_info      = (entry_id == NULL) ? NULL : rhht_retrieve_key(&(gMgrDB.metadata), entry_id);
-            val             = tnvc_get(rpt->entries, i);
+            cace_ari_t *entry_id = (tpl == NULL) ? NULL : ac_get(&(tpl->contents), i);
+            entry_info           = (entry_id == NULL) ? NULL : rhht_retrieve_key(&(gMgrDB.metadata), entry_id);
+            val                  = tnvc_get(rpt->entries, i);
 
             if (entry_info == NULL)
             {
@@ -798,8 +798,8 @@ char *ui_str_from_ac(ac_t *ac)
 
     for (it = vecit_first(&(ac->values)); vecit_valid(it); it = vecit_next(it))
     {
-        ari_t *id      = (ari_t *)vecit_data(it);
-        char  *alt_str = ui_str_from_ari(id, NULL, 0);
+        cace_ari_t *id      = (cace_ari_t *)vecit_data(it);
+        char       *alt_str = ui_str_from_ari(id, NULL, 0);
         strcat(str, (alt_str == NULL) ? "null" : alt_str);
         strcat(str, " ");
         SRELEASE(alt_str);
@@ -808,10 +808,10 @@ char *ui_str_from_ac(ac_t *ac)
     return str;
 }
 
-char *ui_str_from_ari(ari_t *id, tnvc_t *ap, int desc)
+char *ui_str_from_ari(cace_ari_t *id, tnvc_t *ap, int desc)
 {
     metadata_t *meta     = NULL;
-    ari_t      *print_id = NULL;
+    cace_ari_t *print_id = NULL;
     char       *str      = STAKE(1024);
 
     CHKNULL(str);
@@ -1017,8 +1017,8 @@ char *ui_str_from_rpttpl(rpttpl_t *rpttpl)
     num = ac_get_count(&(rpttpl->contents));
     for (i = 0; i < num; i++)
     {
-        ari_t *cur_ari = ac_get(&(rpttpl->contents), i);
-        tmp            = ui_str_from_ari(cur_ari, NULL, 0);
+        cace_ari_t *cur_ari = ac_get(&(rpttpl->contents), i);
+        tmp                 = ui_str_from_ari(cur_ari, NULL, 0);
         if (i != 0)
         {
             strcat(result, ", ");

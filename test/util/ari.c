@@ -22,7 +22,7 @@
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
-int test_util_ari_decode(ari_t *ari, const char *inhex)
+int test_util_ari_decode(cace_ari_t *ari, const char *inhex)
 {
     CHKERR1(ari);
     CHKERR1(inhex);
@@ -31,25 +31,25 @@ int test_util_ari_decode(ari_t *ari, const char *inhex)
     string_init_set_str(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
-    int res = base16_decode(&indata, intext);
+    int res = cace_base16_decode(&indata, intext);
     string_clear(intext);
     if (res)
     {
-        CACE_LOG_ERR("base16_decode() failed");
+        CACE_LOG_ERR("cace_base16_decode() failed");
         return 2;
     }
 
-    res = ari_cbor_decode(ari, &indata, NULL, NULL);
+    res = cace_ari_cbor_decode(ari, &indata, NULL, NULL);
     cace_data_deinit(&indata);
     if (res)
     {
-        CACE_LOG_ERR("ari_cbor_decode() failed");
+        CACE_LOG_ERR("cace_ari_cbor_decode() failed");
         return 3;
     }
     return 0;
 }
 
-int test_util_ari_encode(m_string_t outhex, const ari_t *ari)
+int test_util_ari_encode(m_string_t outhex, const cace_ari_t *ari)
 {
     CHKERR1(outhex);
     CHKERR1(ari);
@@ -57,7 +57,7 @@ int test_util_ari_encode(m_string_t outhex, const ari_t *ari)
 
     cace_data_t outdata;
     cace_data_init(&outdata);
-    int res = ari_cbor_encode(&outdata, ari);
+    int res = cace_ari_cbor_encode(&outdata, ari);
     if (res)
     {
         CACE_LOG_ERR("ari_cbor_encode() failed");
@@ -65,11 +65,11 @@ int test_util_ari_encode(m_string_t outhex, const ari_t *ari)
         return 2;
     }
 
-    res = base16_encode(outhex, &outdata, true);
+    res = cace_base16_encode(outhex, &outdata, true);
     cace_data_deinit(&outdata);
     if (res)
     {
-        CACE_LOG_ERR("base16_decode() failed");
+        CACE_LOG_ERR("cace_base16_decode() failed");
         return 2;
     }
 

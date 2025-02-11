@@ -40,7 +40,7 @@ typedef struct
 
     /** A copy of the single-CTRL reference which created this item.
      */
-    ari_t ref;
+    cace_ari_t ref;
 
     /** Dereference result for CTRL of this item.
      */
@@ -56,7 +56,7 @@ typedef struct
      * This is initialized as undefined and may be set to any other value
      * to indicate that a result is produced.
      */
-    ari_t result;
+    cace_ari_t result;
 
 } refda_exec_item_t;
 

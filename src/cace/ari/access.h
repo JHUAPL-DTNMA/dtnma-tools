@@ -33,35 +33,35 @@ extern "C" {
 /** Determine if this is the @c undefined value.
  *
  * @param[in] ari The value to check.
- * @sa ARI_UNDEFINED ari_init()
+ * @sa ARI_UNDEFINED cace_ari_init()
  */
-bool ari_is_undefined(const ari_t *ari);
+bool cace_ari_is_undefined(const cace_ari_t *ari);
 
 /** Set the ARI value to be undefined.
  *
  * @param[in,out] ari The value to set.
  */
-void ari_set_undefined(ari_t *ari);
+void cace_ari_set_undefined(cace_ari_t *ari);
 
 /** Determine if this is a typed or untyped null value.
  *
  * @param[in] ari The value to check.
- * @sa ari_set_null()
+ * @sa cace_ari_set_null()
  */
-bool ari_is_null(const ari_t *ari);
+bool cace_ari_is_null(const cace_ari_t *ari);
 
 /** Set the ARI value to be untyped null.
  *
  * @param[in,out] ari The value to set.
  */
-void ari_set_null(ari_t *ari);
+void cace_ari_set_null(cace_ari_t *ari);
 
 /** Determine if this ARI contains a primitive boolean type.
  *
  * @param[in] ari Non-null pointer to the ARI to read.
  * @return True if the primitive is boolean.
  */
-bool ari_is_bool(const ari_t *ari);
+bool cace_ari_is_bool(const cace_ari_t *ari);
 
 /** Extract a boolean value, if present, from an ARI.
  * This works for both typed and untyped literal values.
@@ -70,7 +70,7 @@ bool ari_is_bool(const ari_t *ari);
  * @param[out] out The value to output.
  * @return Zero upon success.
  */
-int ari_get_bool(const ari_t *ari, ari_bool *out);
+int cace_ari_get_bool(const cace_ari_t *ari, cace_ari_bool *out);
 
 /** Extract an integer value, if present, from an ARI.
  * This works for both typed and untyped literal values and will coerce signed and unsigned values to the desired type
@@ -80,29 +80,29 @@ int ari_get_bool(const ari_t *ari, ari_bool *out);
  * @param[out] out The value to output.
  * @return Zero upon success.
  */
-int ari_get_int(const ari_t *ari, ari_int *out);
+int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out);
 
 /// @overload
-int ari_get_uint(const ari_t *ari, ari_uint *out);
+int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out);
 
 /// @overload
-int ari_get_vast(const ari_t *ari, ari_vast *out);
+int cace_ari_get_vast(const cace_ari_t *ari, cace_ari_vast *out);
 
 /// @overload
-int ari_get_uvast(const ari_t *ari, ari_uvast *out);
+int cace_ari_get_uvast(const cace_ari_t *ari, cace_ari_uvast *out);
 
 /** @overload
  * The output in this case is in the DTN time epoch.
  */
-int ari_get_tp(const ari_t *ari, struct timespec *out);
+int cace_ari_get_tp(const cace_ari_t *ari, struct timespec *out);
 
 /** @overload
  * The output in this case is in the POSIX time epoch.
  */
-int ari_get_tp_posix(const ari_t *ari, struct timespec *out);
+int cace_ari_get_tp_posix(const cace_ari_t *ari, struct timespec *out);
 
 /// @overload
-int ari_get_td(const ari_t *ari, struct timespec *out);
+int cace_ari_get_td(const cace_ari_t *ari, struct timespec *out);
 
 /** Determine if this is a typed literal of a specific type.
  *
@@ -110,14 +110,14 @@ int ari_get_td(const ari_t *ari, struct timespec *out);
  * @param typ The type to compare with.
  * @return True if the value is of that type.
  */
-bool ari_is_lit_typed(const ari_t *ari, ari_type_t typ);
+bool cace_ari_is_lit_typed(const cace_ari_t *ari, cace_ari_type_t typ);
 
 /** Require an ARITYPE literal value.
  *
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained type value, if present, otherwise NULL.
  */
-const int64_t *ari_get_aritype(const ari_t *ari);
+const int64_t *cace_ari_get_aritype(const cace_ari_t *ari);
 
 /** Set an ARI as an untyped literal value.
  *
@@ -125,16 +125,16 @@ const int64_t *ari_get_aritype(const ari_t *ari);
  * This must have been initialized.
  * @param src The primitive value to set to.
  */
-void ari_set_prim_bool(ari_t *ari, ari_bool src);
+void cace_ari_set_prim_bool(cace_ari_t *ari, cace_ari_bool src);
 
 /// @overload
-void ari_set_prim_uint64(ari_t *ari, uint64_t src);
+void cace_ari_set_prim_uint64(cace_ari_t *ari, uint64_t src);
 
 /// @overload
-void ari_set_prim_int64(ari_t *ari, int64_t src);
+void cace_ari_set_prim_int64(cace_ari_t *ari, int64_t src);
 
 /// @overload
-void ari_set_prim_float64(ari_t *ari, ari_real64 src);
+void cace_ari_set_prim_float64(cace_ari_t *ari, cace_ari_real64 src);
 
 /** Set an ARI as a typed literal value.
  *
@@ -142,72 +142,72 @@ void ari_set_prim_float64(ari_t *ari, ari_real64 src);
  * This must have been initialized.
  * @param src The value to set to.
  */
-void ari_set_bool(ari_t *ari, ari_bool src);
+void cace_ari_set_bool(cace_ari_t *ari, cace_ari_bool src);
 
 /// @overload
-void ari_set_byte(ari_t *ari, ari_byte src);
+void cace_ari_set_byte(cace_ari_t *ari, cace_ari_byte src);
 
 /// @overload
-void ari_set_int(ari_t *ari, ari_int src);
+void cace_ari_set_int(cace_ari_t *ari, cace_ari_int src);
 
 /// @overload
-void ari_set_uint(ari_t *ari, ari_uint src);
+void cace_ari_set_uint(cace_ari_t *ari, cace_ari_uint src);
 
 /// @overload
-void ari_set_vast(ari_t *ari, ari_vast src);
+void cace_ari_set_vast(cace_ari_t *ari, cace_ari_vast src);
 
 /// @overload
-void ari_set_uvast(ari_t *ari, ari_uvast src);
+void cace_ari_set_uvast(cace_ari_t *ari, cace_ari_uvast src);
 
 /// @overload
-void ari_set_real32(ari_t *ari, ari_real32 src);
+void cace_ari_set_real32(cace_ari_t *ari, cace_ari_real32 src);
 
 /// @overload
-void ari_set_real64(ari_t *ari, ari_real64 src);
+void cace_ari_set_real64(cace_ari_t *ari, cace_ari_real64 src);
 
 /// @overload
-void ari_set_tstr(ari_t *ari, const char *buf, bool copy);
+void cace_ari_set_tstr(cace_ari_t *ari, const char *buf, bool copy);
 
 /// @overload
-void ari_set_bstr(ari_t *ari, cace_data_t *src, bool copy);
+void cace_ari_set_bstr(cace_ari_t *ari, cace_data_t *src, bool copy);
 
 /** @overload
  * The input in this case is in the DTN time epoch.
  */
-void ari_set_tp(ari_t *ari, struct timespec dtntime);
+void cace_ari_set_tp(cace_ari_t *ari, struct timespec dtntime);
 /** @overload
  * The input in this case is in the POSIX time epoch.
  */
-void ari_set_tp_posix(ari_t *ari, struct timespec ptime);
+void cace_ari_set_tp_posix(cace_ari_t *ari, struct timespec ptime);
 
 /// @overload
-void ari_set_td(ari_t *ari, struct timespec delta);
+void cace_ari_set_td(cace_ari_t *ari, struct timespec delta);
 
 /// @overload
-void ari_set_aritype(ari_t *ari, ari_type_t type);
+void cace_ari_set_aritype(cace_ari_t *ari, cace_ari_type_t type);
 /// @overload
-void ari_set_aritype_text(ari_t *ari, ari_type_t type);
+void cace_ari_set_aritype_text(cace_ari_t *ari, cace_ari_type_t type);
 
 /** Set the ARI as an AC, optionally moving values from an external source.
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in,out] src An optional existing value struct to move from.
  */
-void ari_set_ac(ari_t *ari, struct ari_ac_s *src);
+void cace_ari_set_ac(cace_ari_t *ari, struct cace_ari_ac_s *src);
 
 /** Set the ARI as an AM, optionally moving values from an external source.
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in,out] src An optional existing value struct to move from.
  */
-void ari_set_am(ari_t *ari, struct ari_am_s *src);
+void cace_ari_set_am(cace_ari_t *ari, struct cace_ari_am_s *src);
 
 /** Set the ARI as a TBL, optionally moving values from an external source.
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in,out] src An optional existing value struct to move from.
  */
-void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
+void cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src);
 
 /** Require a TEXTSTR value and get the pointer to its storage.
  *
@@ -215,41 +215,41 @@ void ari_set_tbl(ari_t *ari, struct ari_tbl_s *src);
  * @return Pointer to the contained data, if present, otherwise NULL.
  * @notice This data will always have a terminating null byte.
  */
-const cace_data_t *ari_cget_tstr(const ari_t *ari);
+const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari);
 
 /// @overload
-const cace_data_t *ari_cget_bstr(const ari_t *ari);
+const cace_data_t *cace_ari_cget_bstr(const cace_ari_t *ari);
 
 /** Require an AC value and extract a pointer to its item list.
  *
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained AC struct, if present, otherwise NULL.
  */
-struct ari_ac_s *ari_get_ac(ari_t *ari);
+struct cace_ari_ac_s *cace_ari_get_ac(cace_ari_t *ari);
 /// @overload
-const struct ari_ac_s *ari_cget_ac(const ari_t *ari);
+const struct cace_ari_ac_s *cace_ari_cget_ac(const cace_ari_t *ari);
 
 /** Require an AM value and extract a pointer to its item list.
  *
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained AM struct, if present, otherwise NULL.
  */
-struct ari_am_s *ari_get_am(ari_t *ari);
+struct cace_ari_am_s *cace_ari_get_am(cace_ari_t *ari);
 /// @overload
-const struct ari_am_s *ari_cget_am(const ari_t *ari);
+const struct cace_ari_am_s *cace_ari_cget_am(const cace_ari_t *ari);
 
-struct ari_tbl_s *ari_get_tbl(ari_t *ari);
+struct cace_ari_tbl_s *cace_ari_get_tbl(cace_ari_t *ari);
 /// @overload
-const struct ari_tbl_s *ari_cget_tbl(const ari_t *ari);
+const struct cace_ari_tbl_s *cace_ari_cget_tbl(const cace_ari_t *ari);
 
 /** Require an EXECSET value and extract a pointer to its struct.
  *
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained struct, if present, otherwise NULL.
  */
-struct ari_execset_s *ari_get_execset(ari_t *ari);
+struct cace_ari_execset_s *cace_ari_get_execset(cace_ari_t *ari);
 /// @overload
-const struct ari_execset_s *ari_cget_execset(const ari_t *ari);
+const struct cace_ari_execset_s *cace_ari_cget_execset(const cace_ari_t *ari);
 
 /** Set an ARI as an EXECSET literal value.
  * Any previous value is de-initialized.
@@ -257,16 +257,16 @@ const struct ari_execset_s *ari_cget_execset(const ari_t *ari);
  * @param[out] ari The value to set.
  * @return The new execset struct.
  */
-struct ari_execset_s *ari_set_execset(ari_t *ari);
+struct cace_ari_execset_s *cace_ari_set_execset(cace_ari_t *ari);
 
 /** Require an RPTSET value and extract a pointer to its struct.
  *
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained struct, if present, otherwise NULL.
  */
-struct ari_rptset_s *ari_get_rptset(ari_t *ari);
+struct cace_ari_rptset_s *cace_ari_get_rptset(cace_ari_t *ari);
 /// @overload
-const struct ari_rptset_s *ari_cget_rptset(const ari_t *ari);
+const struct cace_ari_rptset_s *cace_ari_cget_rptset(const cace_ari_t *ari);
 
 /** Set an ARI as an RPTSET literal value.
  * Any previous value is de-initialized.
@@ -274,18 +274,20 @@ const struct ari_rptset_s *ari_cget_rptset(const ari_t *ari);
  * @param[out] ari The value to set.
  * @return The new rptset struct.
  */
-struct ari_rptset_s *ari_set_rptset(ari_t *ari);
+struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari);
 
 /** Convenience setter.
  */
-static inline void ari_set_objref_path_intid(ari_t *ari, int64_t ns_id, ari_type_t type_id, int64_t obj_id)
+static inline void cace_ari_set_objref_path_intid(cace_ari_t *ari, int64_t ns_id, cace_ari_type_t type_id,
+                                                  int64_t obj_id)
 {
-    ari_objpath_set_intid(&(ari_set_objref(ari)->objpath), ns_id, type_id, obj_id);
+    cace_ari_objpath_set_intid(&(cace_ari_set_objref(ari)->objpath), ns_id, type_id, obj_id);
 }
 /// @overload
-static inline void ari_set_objref_path_textid(ari_t *ari, const char *ns_id, ari_type_t type_id, const char *obj_id)
+static inline void cace_ari_set_objref_path_textid(cace_ari_t *ari, const char *ns_id, cace_ari_type_t type_id,
+                                                   const char *obj_id)
 {
-    ari_objpath_set_textid(&(ari_set_objref(ari)->objpath), ns_id, type_id, obj_id);
+    cace_ari_objpath_set_textid(&(cace_ari_set_objref(ari)->objpath), ns_id, type_id, obj_id);
 }
 
 #ifdef __cplusplus

@@ -67,8 +67,8 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
         .dir        = "." // root log directory will be the working directory mgr started from as default
     };
 
-    daemon_run_init(&(mgr->running));
-    threadset_init(mgr->threads);
+    cace_daemon_run_init(&(mgr->running));
+    cace_threadset_init(mgr->threads);
     refdm_agent_list_init(mgr->agent_list);
     refdm_agent_dict_init(mgr->agent_dict);
     pthread_mutex_init(&(mgr->agent_mutex), NULL);
@@ -98,17 +98,17 @@ void refdm_mgr_deinit(refdm_mgr_t *mgr)
         {
             refdm_agent_t *agent = *refdm_agent_list_ref(it);
             refdm_agent_deinit(agent);
-            ARI_FREE(agent);
+            CACE_FREE(agent);
         }
     }
     refdm_agent_list_clear(mgr->agent_list);
-    threadset_clear(mgr->threads);
-    daemon_run_cleanup(&(mgr->running));
+    cace_threadset_clear(mgr->threads);
+    cace_daemon_run_cleanup(&(mgr->running));
 }
 
 int refdm_mgr_start(refdm_mgr_t *mgr)
 {
-    threadinfo_t threadinfo[3] = {
+    cace_threadinfo_t threadinfo[3] = {
         { &refdm_ingress_worker, "refdm_ingress" },
         //        { &ui_thread, "nm_mgr_ui" },
         { NULL, NULL },
@@ -116,13 +116,13 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     threadinfo[2] = (threadinfo_t) { &db_mgt_daemon, "nm_mgr_db" };
 #endif
-    if (threadset_start(mgr->threads, threadinfo, sizeof(threadinfo) / sizeof(threadinfo_t), mgr))
+    if (cace_threadset_start(mgr->threads, threadinfo, sizeof(threadinfo) / sizeof(cace_threadinfo_t), mgr))
     {
         return 2;
     }
 
 #ifdef USE_CIVETWEB
-    nm_rest_start(&(mgr->rest), mgr);
+    refdm_nm_rest_start(&(mgr->rest), mgr);
 #endif
 
     return 0;
@@ -131,14 +131,14 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
 int refdm_mgr_stop(refdm_mgr_t *mgr)
 {
     /* Notify threads */
-    daemon_run_stop(&mgr->running);
+    cace_daemon_run_stop(&mgr->running);
 
 #ifdef USE_CIVETWEB
-    nm_rest_stop(mgr->rest);
+    refdm_nm_rest_stop(mgr->rest);
     mgr->rest = NULL;
 #endif
 
-    threadset_join(mgr->threads);
+    cace_threadset_join(mgr->threads);
 
     return 0;
 }
@@ -158,7 +158,7 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
     if (!refdm_agent_dict_get(mgr->agent_dict, agent_eid))
     {
         // agent does not already exist
-        agent = ARI_MALLOC(sizeof(refdm_agent_t));
+        agent = CACE_MALLOC(sizeof(refdm_agent_t));
         refdm_agent_init(agent);
         string_set_str(agent->eid, agent_eid);
 
@@ -224,5 +224,5 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
 void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
 {
-    ari_list_reset(agent->rptsets);
+    cace_ari_list_reset(agent->rptsets);
 }

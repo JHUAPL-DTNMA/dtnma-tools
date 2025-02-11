@@ -77,7 +77,7 @@ typedef struct
     /** During execution, a reference to a context nonce value.
      * Otherwise this will be the undefined value.
      */
-    ari_t nonce;
+    cace_ari_t nonce;
 
 } refda_runctx_t;
 

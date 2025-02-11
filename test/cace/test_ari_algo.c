@@ -28,7 +28,7 @@
 // Allow this macro
 #define TEST_CASE(...)
 
-M_DICT_DEF2(test_seen_ari, string_t, STRING_OPLIST, ari_t, M_OPL_ari_t())
+M_DICT_DEF2(test_seen_ari, string_t, STRING_OPLIST, cace_ari_t, M_OPL_cace_ari_t())
 
 M_DICT_DEF2(test_seen_hash, string_t, STRING_OPLIST, size_t, M_BASIC_OPLIST)
 
@@ -67,19 +67,19 @@ void test_ari_hash()
         string_init_set_str(intext, *curs);
         cace_data_t indata;
         cace_data_init(&indata);
-        TEST_ASSERT_EQUAL_INT(0, base16_decode(&indata, intext));
+        TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
 
-        ari_t ari_a;
-        ari_init(&ari_a);
-        int   res = ari_cbor_decode(&ari_a, &indata, NULL, NULL);
-        ari_t ari_b;
-        ari_init(&ari_b);
-        res += ari_cbor_decode(&ari_b, &indata, NULL, NULL);
+        cace_ari_t ari_a;
+        cace_ari_init(&ari_a);
+        int        res = cace_ari_cbor_decode(&ari_a, &indata, NULL, NULL);
+        cace_ari_t ari_b;
+        cace_ari_init(&ari_b);
+        res += cace_ari_cbor_decode(&ari_b, &indata, NULL, NULL);
         cace_data_deinit(&indata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
 
-        const size_t hash_a = ari_hash(&ari_a);
-        const size_t hash_b = ari_hash(&ari_b);
+        const size_t hash_a = cace_ari_hash(&ari_a);
+        const size_t hash_b = cace_ari_hash(&ari_b);
         TEST_ASSERT_EQUAL_INT_MESSAGE(hash_a, hash_b, "hashes from same data differ");
 
         {
@@ -97,8 +97,8 @@ void test_ari_hash()
         test_seen_hash_set_at(hash_history, intext, hash_a);
 
         string_clear(intext);
-        ari_deinit(&ari_a);
-        ari_deinit(&ari_b);
+        cace_ari_deinit(&ari_a);
+        cace_ari_deinit(&ari_b);
     }
 
     test_seen_hash_clear(hash_history);
@@ -117,20 +117,20 @@ void test_ari_equal()
         string_init_set_str(intext, *curs);
         cace_data_t indata;
         cace_data_init(&indata);
-        TEST_ASSERT_EQUAL_INT(0, base16_decode(&indata, intext));
+        TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
 
-        ari_t ari_a;
-        ari_init(&ari_a);
-        int   res = ari_cbor_decode(&ari_a, &indata, NULL, NULL);
-        ari_t ari_b;
-        ari_init(&ari_b);
-        res += ari_cbor_decode(&ari_b, &indata, NULL, NULL);
+        cace_ari_t ari_a;
+        cace_ari_init(&ari_a);
+        int        res = cace_ari_cbor_decode(&ari_a, &indata, NULL, NULL);
+        cace_ari_t ari_b;
+        cace_ari_init(&ari_b);
+        res += cace_ari_cbor_decode(&ari_b, &indata, NULL, NULL);
         cace_data_deinit(&indata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
 
-        TEST_ASSERT_TRUE_MESSAGE(ari_equal(&ari_a, &ari_b), "ari_equal() differs");
+        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_a, &ari_b), "cace_ari_equal() differs");
         {
-            ari_t *found = test_seen_ari_get(ari_history, intext);
+            cace_ari_t *found = test_seen_ari_get(ari_history, intext);
             TEST_ASSERT_NULL(found); // no duplicates
         }
         {
@@ -138,14 +138,14 @@ void test_ari_equal()
             for (test_seen_ari_it(it, ari_history); !test_seen_ari_end_p(it); test_seen_ari_next(it))
             {
                 test_seen_ari_itref_t *pair = test_seen_ari_ref(it);
-                TEST_ASSERT_FALSE(ari_equal(&ari_a, &(pair->value)));
+                TEST_ASSERT_FALSE(cace_ari_equal(&ari_a, &(pair->value)));
             }
         }
-        ari_t *val = test_seen_ari_safe_get(ari_history, intext);
-        ari_set_move(val, &ari_a);
+        cace_ari_t *val = test_seen_ari_safe_get(ari_history, intext);
+        cace_ari_set_move(val, &ari_a);
 
         string_clear(intext);
-        ari_deinit(&ari_b);
+        cace_ari_deinit(&ari_b);
     }
 
     test_seen_ari_clear(ari_history);

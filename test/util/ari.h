@@ -27,13 +27,13 @@ extern "C" {
 /** Decode an ARI from a hex-encoded text string.
  *
  */
-int test_util_ari_decode(ari_t *ari, const char *inhex);
+int test_util_ari_decode(cace_ari_t *ari, const char *inhex);
 
 /** Encode an ARI to a hex-encoded text string.
  *
  * @param[out] outhex An uninitialized string buffer.
  */
-int test_util_ari_encode(m_string_t outhex, const ari_t *ari);
+int test_util_ari_encode(m_string_t outhex, const cace_ari_t *ari);
 
 #ifdef __cplusplus
 } // extern C
