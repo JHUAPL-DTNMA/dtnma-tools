@@ -21,18 +21,16 @@ set(CIVETWEB_FOUND ${civetweb_FOUND})
 configure_file("config.h.in" "config.h")
 set(HFILES
   ${CMAKE_CURRENT_BINARY_DIR}/config.h
-  instr.h
   agents.h
   ingress.h
-#  metadata.h
+  instr.h
 #  nm_mgr_sql.h
   mgr.h
 )
 set(CFILES
-  instr.c
   agents.c
   ingress.c
-#  metadata.c
+  instr.c
 #  nm_mgr_sql.c
   mgr.c
 )
