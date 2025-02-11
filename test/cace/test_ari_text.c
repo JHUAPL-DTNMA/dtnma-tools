@@ -1213,9 +1213,9 @@ TEST_CASE("ari:/EXECSET/n=1234;(//example/test/CTRL/hi)")
 TEST_CASE("ari:/EXECSET/n=h'6869';(//example/test/CTRL/hi,//example/test/CTRL/eh)")
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//example/test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/PT0S;s=//example/test/CTRL/hi;(null,3,h'6869'))")
-TEST_CASE("ari://example/test/CONST/that")      // ADM path
+TEST_CASE("ari://example/test/CONST/that")            // ADM path
 TEST_CASE("ari://example/test@2024-06-25/CONST/that") // ADM revision
-TEST_CASE("ari://example/!test/CONST/that")     // ODM path
+TEST_CASE("ari://example/!test/CONST/that")           // ODM path
 TEST_CASE("ari://example/test/CTRL/that(34)")
 TEST_CASE("ari://65535/2/CTRL/4(hi)")
 TEST_CASE("./CTRL/do_thing")

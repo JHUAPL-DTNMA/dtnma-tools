@@ -122,7 +122,12 @@ static int cace_ari_cbor_encode_optdate(QCBOREncodeContext *enc, const cace_ari_
 {
     if (obj->valid)
     {
-        QCBOREncode_AddTDaysEpoch(enc, QCBOR_ENCODE_AS_TAG, 100); // FIXME TBD
+        // text date
+        m_string_t text;
+        m_string_init(text);
+        cace_date_encode(text, &(obj->parts), true);
+        QCBOREncode_AddTDaysString(enc, QCBOR_ENCODE_AS_TAG, m_string_get_cstr(text));
+        m_string_clear(text);
     }
     return 0;
 }
@@ -136,19 +141,30 @@ static int cace_ari_cbor_decode_optdate(QCBORDecodeContext *dec, cace_ari_date_t
         return 2;
     }
 
+    int retval = 0;
     switch (decitem.uDataType)
     {
         case QCBOR_TYPE_DAYS_EPOCH:
+            // actual read
+            QCBORDecode_VGetNext(dec, &decitem);
             obj->valid = true;
             // FIXME decode
             break;
         case QCBOR_TYPE_DAYS_STRING:
         {
+            // actual read
+            QCBORDecode_VGetNext(dec, &decitem);
             obj->valid = true;
 
+            // need to append null terminator
             cace_data_t text;
-            cace_data_init_view(&text, decitem.val.dateString.len, (cace_data_ptr_t)decitem.val.dateString.ptr);
-            cace_date_decode(&(obj->parts), &text);
+            cace_data_init(&text);
+            cace_data_copy_from(&text, decitem.val.dateString.len, (cace_data_ptr_t)decitem.val.dateString.ptr);
+            cace_data_append_byte(&text, '\0');
+            if (cace_date_decode(&(obj->parts), &text))
+            {
+                retval = 3;
+            }
             cace_data_deinit(&text);
             break;
         }
@@ -156,7 +172,7 @@ static int cace_ari_cbor_decode_optdate(QCBORDecodeContext *dec, cace_ari_date_t
             // optional tagged value not present
             break;
     }
-    return 0;
+    return retval;
 }
 
 static const int64_t nsec_scale = (int64_t)1e9;
@@ -856,6 +872,7 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *enc, const cace_ari_t *ari)
         cace_ari_cbor_encode_idseg(enc, &(obj->objpath.org_id));
         cace_ari_cbor_encode_idseg(enc, &(obj->objpath.model_id));
         cace_ari_cbor_encode_optdate(enc, &(obj->objpath.model_rev));
+        // prefer enumerated object type
         if (obj->objpath.has_ari_type)
         {
             QCBOREncode_AddInt64(enc, obj->objpath.ari_type);
@@ -1193,24 +1210,39 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
         }
         else if (decitem.val.uCount > 2)
         {
+            int remain = decitem.val.uCount;
             cace_ari_ref_t *obj = cace_ari_init_objref(ari);
 
-            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.org_id));
-            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.model_id));
-            cace_ari_cbor_decode_optdate(dec, &(obj->objpath.model_rev));
-            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.type_id));
-            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.obj_id));
-            int err = cace_ari_objpath_derive_type(&(obj->objpath));
+            int fail = 0;
+            fail += cace_ari_cbor_decode_idseg(dec, &(obj->objpath.org_id));
+            --remain;
+            fail += cace_ari_cbor_decode_idseg(dec, &(obj->objpath.model_id));
+            --remain;
+            fail += cace_ari_cbor_decode_optdate(dec, &(obj->objpath.model_rev));
+            if (obj->objpath.model_rev.valid)
+            {
+                --remain;
+            }
+            fail += cace_ari_cbor_decode_idseg(dec, &(obj->objpath.type_id));
+            --remain;
+            fail += cace_ari_cbor_decode_idseg(dec, &(obj->objpath.obj_id));
+            --remain;
+            if (fail)
+            {
+                return 3;
+            }
 
             // Validate AMM object type
+            int err = cace_ari_objpath_derive_type(&(obj->objpath));
             if (err)
             {
                 return 3;
             }
 
             obj->params.state = CACE_ARI_PARAMS_NONE;
-            if (decitem.val.uCount > 3)
+            if (remain == 1)
             {
+                --remain;
                 // some parameters present
                 QCBORDecode_VPeekNext(dec, &decitem);
                 if (QCBORDecode_GetError(dec))
@@ -1245,6 +1277,12 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
                         retval = 4;
                         break;
                 }
+            }
+
+            if (remain > 0)
+            {
+                // extra items beyond optional parameters
+                retval = 5;
             }
         }
 

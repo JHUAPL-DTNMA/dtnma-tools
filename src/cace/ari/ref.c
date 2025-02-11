@@ -127,7 +127,6 @@ void cace_ari_idseg_init_text(cace_ari_idseg_t *idseg, string_t text)
     string_init_move(*value, text);
 }
 
-
 void cace_ari_idseg_derive_form(cace_ari_idseg_t *idseg)
 {
     CHKVOID(idseg);
@@ -141,7 +140,7 @@ void cace_ari_idseg_derive_form(cace_ari_idseg_t *idseg)
     // text IDs are disjoint from numeric IDs
     if ((instr[0] == '-') || isdigit(instr[0]))
     {
-        char *end;
+        char             *end;
         cace_ari_int_id_t tmp = strtoll(instr, &end, 0);
 
         m_string_clear(idseg->as_text);
