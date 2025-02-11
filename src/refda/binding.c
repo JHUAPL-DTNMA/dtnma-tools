@@ -350,12 +350,12 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
     CHKERR1(desc);
 
     int                       failcnt = 0;
-    amm_named_type_array_it_t ait;
-    for (amm_named_type_array_it(ait, desc->operand_types); !amm_named_type_array_end_p(ait);
-         amm_named_type_array_next(ait))
+    cace_amm_named_type_array_it_t ait;
+    for (cace_amm_named_type_array_it(ait, desc->operand_types); !cace_amm_named_type_array_end_p(ait);
+            cace_amm_named_type_array_next(ait))
     {
-        amm_named_type_t *operand = amm_named_type_array_ref(ait);
-        CACE_LOG_DEBUG("Binding operand \"%s\"", string_get_cstr(operand->name));
+        cace_amm_named_type_t *operand = cace_amm_named_type_array_ref(ait);
+        CACE_LOG_DEBUG("Binding operand \"%s\"", m_string_get_cstr(operand->name));
         failcnt += refda_binding_typeobj(&(operand->typeobj), store);
     }
     failcnt += refda_binding_typeobj(&(desc->res_type), store);

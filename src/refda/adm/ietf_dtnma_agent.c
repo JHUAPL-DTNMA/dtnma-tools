@@ -1499,13 +1499,13 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_not BODY
      * +-------------------------------------------------------------------------+
      */
-    const ari_t *val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    ari_bool     raw_val;
+    const cace_ari_t *val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    cace_ari_bool     raw_val;
 
-    if (!ari_get_bool(val, &raw_val))
+    if (!cace_ari_get_bool(val, &raw_val))
     {
-        ari_t result = ARI_INIT_UNDEFINED;
-        ari_set_bool(&result, !raw_val);
+        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_bool(&result, !raw_val);
 
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -1530,14 +1530,14 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_and BODY
      * +-------------------------------------------------------------------------+
      */
-    const ari_t *left  = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    const ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    ari_bool     l_val, r_val;
+    const cace_ari_t *left  = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_bool     l_val, r_val;
 
-    if (!ari_get_bool(left, &l_val) && !ari_get_bool(right, &r_val))
+    if (!cace_ari_get_bool(left, &l_val) && !cace_ari_get_bool(right, &r_val))
     {
-        ari_t result = ARI_INIT_UNDEFINED;
-        ari_set_bool(&result, l_val && r_val);
+        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_bool(&result, l_val && r_val);
 
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -1562,14 +1562,14 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_or BODY
      * +-------------------------------------------------------------------------+
      */
-    const ari_t *left  = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    const ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    ari_bool     l_val, r_val;
+    const cace_ari_t *left  = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_bool     l_val, r_val;
 
-    if (!ari_get_bool(left, &l_val) && !ari_get_bool(right, &r_val))
+    if (!cace_ari_get_bool(left, &l_val) && !cace_ari_get_bool(right, &r_val))
     {
-        ari_t result = ARI_INIT_UNDEFINED;
-        ari_set_bool(&result, l_val || r_val);
+        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_bool(&result, l_val || r_val);
 
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -1594,14 +1594,14 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bool_xor BODY
      * +-------------------------------------------------------------------------+
      */
-    const ari_t *left  = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    const ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    ari_bool     l_val, r_val;
+    const cace_ari_t *left  = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *right = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_bool     l_val, r_val;
 
-    if (!ari_get_bool(left, &l_val) && !ari_get_bool(right, &r_val))
+    if (!cace_ari_get_bool(left, &l_val) && !cace_ari_get_bool(right, &r_val))
     {
-        ari_t result = ARI_INIT_UNDEFINED;
-        ari_set_bool(&result, l_val != r_val);
+        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_bool(&result, l_val != r_val);
 
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -3195,9 +3195,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "operand");
                 {
-                    ari_t name = ARI_INIT_UNDEFINED;
-                    ari_set_aritype(&name, ARI_TYPE_BOOL);
-                    amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
                 }
             }
             // result type:
