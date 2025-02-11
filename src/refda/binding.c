@@ -349,10 +349,10 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
     refda_amm_oper_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
-    int                       failcnt = 0;
+    int                            failcnt = 0;
     cace_amm_named_type_array_it_t ait;
     for (cace_amm_named_type_array_it(ait, desc->operand_types); !cace_amm_named_type_array_end_p(ait);
-            cace_amm_named_type_array_next(ait))
+         cace_amm_named_type_array_next(ait))
     {
         cace_amm_named_type_t *operand = cace_amm_named_type_array_ref(ait);
         CACE_LOG_DEBUG("Binding operand \"%s\"", m_string_get_cstr(operand->name));
