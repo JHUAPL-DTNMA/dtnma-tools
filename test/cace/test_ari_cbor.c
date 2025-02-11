@@ -174,15 +174,17 @@ void test_cace_ari_cbor_encode_lit_typed_ac_1item(void)
 }
 
 TEST_CASE("example", "adm-a", "2024-06-25", false, 0, NULL,
-          "8478186578616D706C652D61646D2D6140323032342D30362D3235F6F6") // ari://example/adm-a@2024-06-25/
-TEST_CASE("example", "adm-a", NULL, false, 0, NULL, "836D6578616D706C652D61646D2D61F6F6")   // ari://example/adm-a/
-TEST_CASE("example", "odm-b", NULL, false, 0, NULL, "836E216578616D706C652D6F646D2D62F6F6") // ari://example/!odm-b/
-TEST_CASE(NULL, NULL, NULL, true, CACE_ARI_TYPE_CONST, "hi", "84F6F621626869")              // "./CONST/hi
-TEST_CASE("example", "adm", NULL, true, CACE_ARI_TYPE_CONST, "hi", "846361646D21626869") // ari://example/adm/CONST/hi
+          "85676578616D706C656561646D2D61D903EC6A323032342D30362D3235F6F6") // ari://example/adm-a@2024-06-25/
+TEST_CASE("example", "adm-a", NULL, false, 0, NULL, "84676578616D706C656561646D2D61F6F6")    // ari://example/adm-a/
+TEST_CASE("example", "!odm-b", NULL, false, 0, NULL, "84676578616D706C6566216F646D2D62F6F6") // ari://example/!odm-b/
+TEST_CASE(NULL, NULL, NULL, true, CACE_ARI_TYPE_CONST, "hi", "84F6F621626869")               // "./CONST/hi
+TEST_CASE("example", "adm", NULL, true, CACE_ARI_TYPE_CONST, "hi",
+          "84676578616D706C656361646D21626869") // ari://example/adm/CONST/hi
 TEST_CASE("example", "test", NULL, true, CACE_ARI_TYPE_CONST, "that",
           "84676578616D706C656474657374216474686174") // ari://example/test/CONST/that
-TEST_CASE("example", "test", "2024-06-25", true, CACE_ARI_TYPE_CONST, "that",
-          "84676578616D706C6569746573744031323334216474686174") // ari://example/test@2024-06-25/CONST/that
+TEST_CASE(
+    "example", "test", "2024-06-25", true, CACE_ARI_TYPE_CONST, "that",
+    "85676578616D706C656474657374D903EC6A323032342D30362D3235216474686174") // ari://example/test@2024-06-25/CONST/that
 TEST_CASE("example", "!test", NULL, true, CACE_ARI_TYPE_CONST, "that",
           "84676578616D706C65652174657374216474686174") // ari://example/!test/CONST/that
 void test_cace_ari_cbor_encode_objref_path_text(const char *org_id, const char *model_id, const char *model_rev,
@@ -201,11 +203,11 @@ void test_cace_ari_cbor_encode_objref_path_text(const char *org_id, const char *
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE(true, 65535, true, 18, false, 0, false, 0, "8312F6F6")                    // ari://65535/18/
-TEST_CASE(true, 65535, true, -20, false, 0, false, 0, "8333F6F6")                   // ari://65535/-20/
-TEST_CASE(true, -15, true, 6, false, 0, false, 0, "8333F6F6")                       // ari://-15/6/
-TEST_CASE(false, 0, false, 0, true, CACE_ARI_TYPE_IDENT, true, 34, "83F6201822")    // ./IDENT/34
-TEST_CASE(true, 65535, true, 18, true, CACE_ARI_TYPE_IDENT, true, 34, "8312201822") // ari://65535/18/IDENT/34
+TEST_CASE(true, 65535, true, 18, false, 0, false, 0, "8419FFFF12F6F6")                    // ari://65535/18/
+TEST_CASE(true, 65535, true, -20, false, 0, false, 0, "8419FFFF33F6F6")                   // ari://65535/-20/
+TEST_CASE(true, -15, true, 6, false, 0, false, 0, "842E06F6F6")                           // ari://-15/6/
+TEST_CASE(false, 0, false, 0, true, CACE_ARI_TYPE_IDENT, true, 34, "84F6F6201822")        // ./IDENT/34
+TEST_CASE(true, 65535, true, 18, true, CACE_ARI_TYPE_IDENT, true, 34, "8419FFFF12201822") // ari://65535/18/IDENT/34
 void test_cace_ari_cbor_encode_objref_path_int(bool has_org, cace_ari_int_id_t org_id, bool has_model,
                                                cace_ari_int_id_t model_id, bool has_type, cace_ari_type_t type_id,
                                                bool has_obj, cace_ari_int_id_t obj_id, const char *expect_hex)
@@ -238,18 +240,27 @@ static void check_decoding(cace_ari_t *ari, const char *inhex)
     }
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
     TEST_ASSERT_EQUAL_INT_MESSAGE(inlen, used, "cace_ari_cbor_decode() did not use all data");
+    {
+        m_string_t debug;
+        m_string_init(debug);
+        cace_ari_text_encode(debug, ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        TEST_PRINTF("decoded to %s", m_string_get_cstr(debug));
+        m_string_clear(debug);
+    }
 
     TEST_ASSERT_TRUE_MESSAGE(cace_amm_builtin_validate(ari), "cace_amm_builtin_validate() failed");
 }
 
-TEST_CASE("836361646D21626869", "example", "adm", NULL, CACE_ARI_TYPE_CONST, "hi") // ari://example/adm/CONST/hi
-TEST_CASE("836474657374216474686174", "example", "test", NULL, CACE_ARI_TYPE_CONST,
+TEST_CASE("84676578616D706C656361646D21626869", "example", "adm", NULL, CACE_ARI_TYPE_CONST,
+          "hi") // ari://example/adm/CONST/hi
+TEST_CASE("84676578616D706C656474657374216474686174", "example", "test", NULL, CACE_ARI_TYPE_CONST,
           "that") // ari://example/test/CONST/that
-TEST_CASE("8369746573744031323334216474686174", "example", "test", "2024-06-25", CACE_ARI_TYPE_CONST,
+TEST_CASE("85676578616D706C656474657374D903EC6A323032342D30362D3235216474686174", "example", "test", "2024-06-25",
+          CACE_ARI_TYPE_CONST,
           "that") // ari://example/test@2024-06-25/CONST/that
-TEST_CASE("83652174657374216474686174", "example", "!test", NULL, CACE_ARI_TYPE_CONST,
+TEST_CASE("84676578616D706C65652174657374216474686174", "example", "!test", NULL, CACE_ARI_TYPE_CONST,
           "that") // ari://example/!test/CONST/that
-TEST_CASE("846474657374226474686174811822", "example", "test", NULL, CACE_ARI_TYPE_CTRL,
+TEST_CASE("85676578616D706C656474657374226474686174811822", "example", "test", NULL, CACE_ARI_TYPE_CTRL,
           "that") // ari://example/test/CTRL/that(34)
 void test_cace_ari_cbor_decode_objref_path_text(const char *hexval, const char *org_id, const char *model_id,
                                                 const char *model_rev, cace_ari_type_t type_id, const char *obj_id)
@@ -312,9 +323,9 @@ void test_cace_ari_cbor_decode_objref_path_int(const char *hexval, cace_ari_int_
     cace_ari_deinit(&ari);
 }
 
-// ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
-TEST_CASE("8215831904D21903E8850083647465737422626869F603426869", 1234, 1000, 0, 1)
-TEST_CASE("8215831904D282211904D2850083647465737422626869F603426869", 1234, 12, 340000000, 1)
+// ari:/RPTSET/n=1234;r=/TP/20000101T001640Z;(t=/TD/PT0S;s=//example/test/CTRL/hi;(null,3,h'6869'))
+TEST_CASE("8215831904D21903E8850084676578616D706C65647465737422626869F603426869", 1234, 1000, 0, 1)
+TEST_CASE("8215831904D282211904D2850084676578616D706C65647465737422626869F603426869", 1234, 12, 340000000, 1)
 void test_cace_ari_cbor_decode_rptset(const char *hexval, int expect_nonce, time_t expect_tv_sec, long expect_tv_nsec,
                                       int expect_reports)
 {
@@ -749,13 +760,15 @@ TEST_CASE(
 TEST_CASE(
     "8215831904D21A2B450625850084676578616D706C65647465737422626869F603426869") // ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/PT0S;s=//example/test/CTRL/hi;(null,3,h'6869'))
 TEST_CASE("84676578616D706C656474657374216474686174") // ari://example/test/CONST/that
-TEST_CASE(
-    "85676578616D706C656474657374D903EC6A323032342D30362D3235216474686174") // ari://example/test@2024-06-25/CONST/that
-TEST_CASE("84676578616D706C65652174657374216474686174")                     // ari://example/!test/CONST/that
-TEST_CASE("85676578616D706C6564746573742A6474686174811822")                 // ari://example/test/CTRL/that(34)
-TEST_CASE("8519FFFF02220481626869")                                         // ari://65535/2/CTRL/4(hi)
-TEST_CASE("820F410A")                                                       // ari:/CBOR/h'0A'
-TEST_CASE("820F4BA164746573748203F94480")                                   // ari:/CBOR/h'A164746573748203F94480'
+// ari://example/test@2024-06-25/
+TEST_CASE("85676578616D706C656474657374D903EC6A323032342D30362D3235F6F6")
+// ari://example/test@2024-06-25/CONST/that
+TEST_CASE("85676578616D706C656474657374D903EC6A323032342D30362D3235216474686174")
+TEST_CASE("84676578616D706C65652174657374216474686174")     // ari://example/!test/CONST/that
+TEST_CASE("85676578616D706C6564746573742A6474686174811822") // ari://example/test/CTRL/that(34)
+TEST_CASE("8519FFFF02220481626869")                         // ari://65535/2/CTRL/4(hi)
+TEST_CASE("820F410A")                                       // ari:/CBOR/h'0A'
+TEST_CASE("820F4BA164746573748203F94480")                   // ari:/CBOR/h'A164746573748203F94480'
 void test_cace_ari_cbor_loopback(const char *inhex)
 {
     string_t intext;
@@ -773,11 +786,11 @@ void test_cace_ari_cbor_loopback(const char *inhex)
     }
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
     {
-        m_string_t text;
-        m_string_init(text);
-        cace_ari_text_encode(text, &ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        TEST_PRINTF("decoded to %s", m_string_get_cstr(text));
-        m_string_clear(text);
+        m_string_t debug;
+        m_string_init(debug);
+        cace_ari_text_encode(debug, &ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        TEST_PRINTF("decoded to %s", m_string_get_cstr(debug));
+        m_string_clear(debug);
     }
 
     cace_data_t outdata;
@@ -786,11 +799,11 @@ void test_cace_ari_cbor_loopback(const char *inhex)
     cace_ari_deinit(&ari);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_encode() failed");
     {
-        m_string_t text;
-        m_string_init(text);
-        cace_base16_encode(text, &outdata, true);
-        TEST_PRINTF("encoded to %s", m_string_get_cstr(text));
-        m_string_clear(text);
+        m_string_t debug;
+        m_string_init(debug);
+        cace_base16_encode(debug, &outdata, true);
+        TEST_PRINTF("encoded to %s", m_string_get_cstr(debug));
+        m_string_clear(debug);
     }
 
     TEST_ASSERT_EQUAL_INT(indata.len, outdata.len);

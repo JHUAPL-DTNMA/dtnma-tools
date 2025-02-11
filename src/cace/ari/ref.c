@@ -253,10 +253,11 @@ int cace_ari_objpath_derive_type(cace_ari_objpath_t *path)
 {
     CHKERR1(path);
 
-    path->has_ari_type = false;
+    int retval = 0;
     switch (path->type_id.form)
     {
         case CACE_ARI_IDSEG_NULL:
+            path->has_ari_type = false;
             break;
         case CACE_ARI_IDSEG_TEXT:
         {
@@ -264,33 +265,47 @@ int cace_ari_objpath_derive_type(cace_ari_objpath_t *path)
             const char     *name = string_get_cstr(path->type_id.as_text);
             if (!cace_ari_type_from_name(&found, name))
             {
-                path->has_ari_type = true;
-                path->ari_type     = found;
                 if (!cace_ari_valid_type_for_objpath(found))
                 {
-                    return 3; // Invalid ARI
+                    retval = 3; // Invalid ARI
                 }
+                else
+                {
+                    path->has_ari_type = true;
+                    path->ari_type     = found;
+                }
+            }
+            else
+            {
+                retval = 2;
             }
             break;
         }
         case CACE_ARI_IDSEG_INT:
         {
-            if (!cace_ari_valid_type_for_objpath(path->type_id.as_int))
-            {
-                return 3; // Invalid ARI
-            }
-
             // validate the ID by getting a static name
             if ((path->type_id.as_int < 0) && cace_ari_type_to_name(path->type_id.as_int))
             {
-                path->has_ari_type = true;
-                path->ari_type     = path->type_id.as_int;
+                cace_ari_type_t found = path->type_id.as_int;
+                if (!cace_ari_valid_type_for_objpath(found))
+                {
+                    retval = 3; // Invalid ARI
+                }
+                else
+                {
+                    path->has_ari_type = true;
+                    path->ari_type     = found;
+                }
+            }
+            else
+            {
+                retval = 2;
             }
             break;
         }
     }
 
-    return path->has_ari_type ? 0 : 2;
+    return retval;
 }
 
 void cace_ari_objpath_set_textid(cace_ari_objpath_t *path, const char *org_id, const char *model_id,

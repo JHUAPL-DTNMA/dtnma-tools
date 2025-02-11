@@ -96,6 +96,8 @@ static int cace_ari_cbor_decode_idseg(QCBORDecodeContext *dec, cace_ari_idseg_t 
         case QCBOR_TYPE_NULL:
         {
             obj->form = CACE_ARI_IDSEG_NULL;
+            // pass the item
+            QCBORDecode_GetNext(dec, &decitem);
             break;
         }
         case QCBOR_TYPE_TEXT_STRING:
@@ -1210,8 +1212,8 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
         }
         else if (decitem.val.uCount > 2)
         {
-            int remain = decitem.val.uCount;
-            cace_ari_ref_t *obj = cace_ari_init_objref(ari);
+            int             remain = decitem.val.uCount;
+            cace_ari_ref_t *obj    = cace_ari_init_objref(ari);
 
             int fail = 0;
             fail += cace_ari_cbor_decode_idseg(dec, &(obj->objpath.org_id));
