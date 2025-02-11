@@ -272,6 +272,42 @@ TEST_CASE("821181841A000100002302810A", "82060A")
 TEST_CASE("821183820603820605841A000100002501810A", "820612")
 // ari:/AC/(//65536/EDD/2(10),//65536/VAR/1,//65536/OPER/1(10)) -> /VAST/123476
 TEST_CASE("821183841A000100002302810A831A000100002A01841A000100002501810A", "82061A0001E254")
+
+// ari:/AC/(/BOOL/false,//ietf-dtnma-agent/OPER/bool-not) -> /BOOL/true
+TEST_CASE("8211828201F48370696574662D64746E6D612D6167656E742568626F6F6C2D6E6F74", "8201F5")
+// ari:/AC/(/BOOL/true,//1/OPER/bool-not) -> /BOOL/false
+TEST_CASE("8211828201F583012568626F6F6C2D6E6F74", "8201F4")
+//  ari:/AC/(/VAST/0,//1/OPER/bool-not) -> /BOOL/true
+TEST_CASE("82118282060083012568626F6F6C2D6E6F74", "8201F5")
+// ari:/AC/(/TEXTSTR/test,//1/OPER/bool-not) -> /BOOL/false
+TEST_CASE("821182820A647465737483012568626F6F6C2D6E6F74", "8201F4")
+
+// ari:/AC/(/BOOL/true,/BOOL/false,//ietf-dtnma-agent/OPER/bool-and) -> /BOOL/false
+TEST_CASE("8211838201F58201F48370696574662D64746E6D612D6167656E742568626F6F6C2D616E64", "8201F4")
+// ari:/AC/(/BOOL/false,/BOOL/false,//1/OPER/bool-and) -> /BOOL/false
+TEST_CASE("8211838201F48201F483012568626F6F6C2D616E64", "8201F4")
+// ari:/AC/(/BOOL/false,/VAST/0,//1/OPER/bool-and) -> /BOOL/false
+TEST_CASE("8211838201F482060083012568626F6F6C2D616E64", "8201F4")
+// ari:/AC/(/BOOL/true,/TEXTSTR/test,//1/OPER/bool-and) -> /BOOL/true
+TEST_CASE("8211838201F5820A647465737483012568626F6F6C2D616E64", "8201F5")
+
+// ari:/AC/(/BOOL/true,/BOOL/false,//ietf-dtnma-agent/OPER/bool-or) -> /BOOL/true
+TEST_CASE("8211838201F58201F48370696574662D64746E6D612D6167656E742567626F6F6C2D6F72", "8201F5")
+// ari:/AC/(/BOOL/false,/BOOL/false,//1/OPER/bool-or) -> /BOOL/false
+TEST_CASE("8211838201F48201F483012567626F6F6C2D6F72", "8201F4")
+// ari:/AC/(/BOOL/false,/VAST/0,//1/OPER/bool-or) -> /BOOL/false
+TEST_CASE("8211838201F482060083012567626F6F6C2D6F72", "8201F4")
+// ari:/AC/(/BOOL/true,/TEXTSTR/test,//1/OPER/bool-or) -> /BOOL/true
+TEST_CASE("8211838201F5820A647465737483012567626F6F6C2D6F72", "8201F5")
+
+// ari:/AC/(/BOOL/true,/BOOL/false,//ietf-dtnma-agent/OPER/bool-xor) -> /BOOL/true
+TEST_CASE("8211838201F58201F48370696574662D64746E6D612D6167656E742568626F6F6C2D786F72", "8201F5")
+// ari:/AC/(/BOOL/false,/BOOL/false,//1/OPER/bool-xor) -> /BOOL/false
+TEST_CASE("8211838201F48201F483012568626F6F6C2D786F72", "8201F4")
+// ari:/AC/(/BOOL/false,/VAST/0,//1/OPER/bool-xor) -> /BOOL/false
+TEST_CASE("8211838201F482060083012568626F6F6C2D786F72", "8201F4")
+// ari:/AC/(/BOOL/true,/TEXTSTR/test,//1/OPER/bool-xor) -> /BOOL/false
+TEST_CASE("8211838201F5820A647465737483012568626F6F6C2D786F72", "8201F4")
 void test_refda_eval_target_valid(const char *targethex, const char *expectloghex)
 {
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
@@ -280,6 +316,34 @@ void test_refda_eval_target_valid(const char *targethex, const char *expectloghe
     cace_ari_t expect_result = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_result, expectloghex));
     TEST_ASSERT_FALSE(cace_ari_is_undefined(&expect_result));
+
+    refda_runctx_t runctx;
+    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    int        res    = refda_eval_target(&runctx, &result, &target);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_eval_target() disagrees");
+
+    // verify result value
+    const bool equal = cace_ari_equal(&expect_result, &result);
+    TEST_ASSERT_TRUE_MESSAGE(equal, "result ARI is different");
+
+    cace_ari_deinit(&result);
+    refda_runctx_deinit(&runctx);
+    cace_ari_deinit(&expect_result);
+    cace_ari_deinit(&target);
+}
+
+// ari:/AC/(/BOOL/false,undefined,//1/OPER/bool-and) -> undefined
+TEST_CASE("8211838201F4F783012568626F6F6C2D616E64", "F7")
+void test_refda_eval_target_undefined(const char *targethex, const char *expectloghex)
+{
+    cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
+
+    cace_ari_t expect_result = CACE_ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_result, expectloghex));
+    TEST_ASSERT_TRUE(cace_ari_is_undefined(&expect_result));
 
     refda_runctx_t runctx;
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
