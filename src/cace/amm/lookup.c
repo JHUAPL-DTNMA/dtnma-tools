@@ -102,7 +102,7 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
         default:
             break;
     }
-    if (!(res->ns))
+    if (!org)
     {
         return 3;
     }
