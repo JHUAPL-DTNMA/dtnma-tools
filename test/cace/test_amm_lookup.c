@@ -109,13 +109,13 @@ static void check_lookup(const char *inhex, int expect_cbor_decode, int expect_r
     cace_ari_deinit(&inval);
 }
 
-TEST_CASE("8318192000", 0, 0)     // ari://25/-1/0 found
-TEST_CASE("830A2004", 0, 3)       // ari://10/-1/4 missing NS
-TEST_CASE("83181939FF0004", 3, 2) // ari://25/-65281/4 unknown obj-type
-TEST_CASE("8318192004", 0, 4)     // ari://25/-1/4 missing obj-id
-TEST_CASE("8318192001", 0, 0)     // ari://25/-1/1 found, default parameter
-TEST_CASE("8418192001810A", 0, 0) // ari://25/-1/1(10)
-TEST_CASE("841819200181F6", 0, 7) // ari://25/-1/1(null) bad parameter
+TEST_CASE("8419FFFF18192000", 0, 0)     // ari://65535/25/-1/0 found
+TEST_CASE("8419FFFF0A2004", 0, 4)       // ari://65535/10/-1/4 missing NS
+TEST_CASE("8419FFFF181939FF0004", 3, 2) // ari://65535/25/-65281/4 unknown obj-type
+TEST_CASE("8419FFFF18192004", 0, 6)     // ari://65535/25/-1/4 missing obj-id
+TEST_CASE("8419FFFF18192001", 0, 0)     // ari://65535/25/-1/1 found, default parameter
+TEST_CASE("8519FFFF18192001810A", 0, 0) // ari://65535/25/-1/1(10)
+TEST_CASE("8519FFFF1819200181F6", 0, 9) // ari://65535/25/-1/1(null) bad parameter
 void test_lookup_deref(const char *inhex, int expect_cbor_decode, int expect_res)
 {
     check_lookup(inhex, expect_cbor_decode, expect_res);
