@@ -32,6 +32,12 @@ void cace_amm_obj_store_deinit(cace_amm_obj_store_t *store)
 {
     cace_amm_obj_org_by_name_clear(store->org_by_name);
     cace_amm_obj_org_by_enum_clear(store->org_by_enum);
+    cace_amm_obj_org_list_it_t it;
+    for(cace_amm_obj_org_list_it(it, store->org_list);!cace_amm_obj_org_list_end_p(it); 
+       cace_amm_obj_org_list_next(it)) {
+        cace_amm_obj_org_ptr_t **org_ptr = cace_amm_obj_org_list_ref(it);
+        cace_amm_obj_org_ptr_clear(*org_ptr);
+    }
     cace_amm_obj_org_list_clear(store->org_list);
     cace_amm_obj_ns_list_clear(store->ns_list);
 }
