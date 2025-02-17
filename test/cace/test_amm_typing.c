@@ -135,14 +135,14 @@ void test_amm_type_get_name(cace_ari_type_t type)
     TEST_PRINTF("got name %s", (const char *)(data->ptr));
 }
 
-TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
-TEST_CASE("F6", CACE_AMM_TYPE_MATCH_POSITIVE)               // ari:null
-TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:false
-TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:true
-TEST_CASE("0A", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:10
-TEST_CASE("8201F5", CACE_AMM_TYPE_MATCH_NEGATIVE)           // ari:/BOOL/true
-TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/INT/100 matches
-TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100 explicitly not an INT
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_POSITIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("0A", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:10
+TEST_CASE("8201F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                 // ari:/BOOL/true
+TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/INT/100 matches
+TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/VAST/100 explicitly not an INT
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
 void test_amm_type_match_null(const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -150,15 +150,15 @@ void test_amm_type_match_null(const char *inhex, cace_amm_type_match_res_t expec
     check_match(type, inhex, expect);
 }
 
-TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
-TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:null
-TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:false
-TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:true
-TEST_CASE("0A", CACE_AMM_TYPE_MATCH_POSITIVE)               // ari:10
-TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_POSITIVE)         // ari:/INT/100 matches
-TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100 explicitly not an INT
-TEST_CASE("FA49864700", CACE_AMM_TYPE_MATCH_POSITIVE)       // ari:1.1e+06
-TEST_CASE("8208FA49864700", CACE_AMM_TYPE_MATCH_NEGATIVE)   // ari:/REAL32/1.1e+06 explicitly not an INT
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("0A", CACE_AMM_TYPE_MATCH_POSITIVE)                     // ari:10
+TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_POSITIVE)               // ari:/INT/100 matches
+TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/VAST/100 explicitly not an INT
+TEST_CASE("FA49864700", CACE_AMM_TYPE_MATCH_POSITIVE)             // ari:1.1e+06
+TEST_CASE("8208FA49864700", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/REAL32/1.1e+06 explicitly not an INT
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
 void test_amm_type_match_int(const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -166,14 +166,14 @@ void test_amm_type_match_int(const char *inhex, cace_amm_type_match_res_t expect
     check_match(type, inhex, expect);
 }
 
-TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
-TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:null
-TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:false
-TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:true
-TEST_CASE("0A", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:10
-TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/INT/100
-TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100
-TEST_CASE("FA49864700", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:1.1e+06
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("0A", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:10
+TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/INT/100
+TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/VAST/100
+TEST_CASE("FA49864700", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:1.1e+06
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_POSITIVE) // ari://65535/2/-1/4(hi)
 void test_amm_type_match_ident(const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -181,13 +181,13 @@ void test_amm_type_match_ident(const char *inhex, cace_amm_type_match_res_t expe
     check_match(type, inhex, expect);
 }
 
-TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
-TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:null
-TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:false
-TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:true
-TEST_CASE("0A", CACE_AMM_TYPE_MATCH_POSITIVE)               // ari:10
-TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_POSITIVE)         // ari:/INT/100 matches
-TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100 explicitly not an INT
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("0A", CACE_AMM_TYPE_MATCH_POSITIVE)                     // ari:10
+TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_POSITIVE)               // ari:/INT/100 matches
+TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/VAST/100 explicitly not an INT
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
 void test_amm_type_match_semtype_use_1(const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -202,17 +202,17 @@ void test_amm_type_match_semtype_use_1(const char *inhex, cace_amm_type_match_re
     cace_amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
-TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:null
-TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:false
-TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:true
-TEST_CASE("82040A", CACE_AMM_TYPE_MATCH_NEGATIVE)           // ari:/INT/10
-TEST_CASE("82118101", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/AC/(1)
-TEST_CASE("8211820102", CACE_AMM_TYPE_MATCH_POSITIVE)       // ari:/AC/(1,2)
-TEST_CASE("821183010203", CACE_AMM_TYPE_MATCH_POSITIVE)     // ari:/AC/(1,2,3)
-TEST_CASE("82118201F5", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,true)
-TEST_CASE("8212A10102", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:/AM/(1=2)
-TEST_CASE("82138102", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/TBL/c=2;
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("82040A", CACE_AMM_TYPE_MATCH_NEGATIVE)                 // ari:/INT/10
+TEST_CASE("82118101", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/AC/(1)
+TEST_CASE("8211820102", CACE_AMM_TYPE_MATCH_POSITIVE)             // ari:/AC/(1,2)
+TEST_CASE("821183010203", CACE_AMM_TYPE_MATCH_POSITIVE)           // ari:/AC/(1,2,3)
+TEST_CASE("82118201F5", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:/AC/(1,true)
+TEST_CASE("8212A10102", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:/AM/(1=2)
+TEST_CASE("82138102", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/TBL/c=2;
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
 void test_amm_type_match_semtype_ulist_1(const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -232,17 +232,17 @@ void test_amm_type_match_semtype_ulist_1(const char *inhex, cace_amm_type_match_
     cace_amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
-TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:null
-TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:false
-TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:true
-TEST_CASE("82040A", CACE_AMM_TYPE_MATCH_NEGATIVE)           // ari:/INT/10
-TEST_CASE("82118101", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/AC/(1) too few items
-TEST_CASE("8211820102", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,2) bad item type
-TEST_CASE("82118201F5", CACE_AMM_TYPE_MATCH_POSITIVE)       // ari:/AC/(1,true)
-TEST_CASE("82118301F503", CACE_AMM_TYPE_MATCH_NEGATIVE)     // ari:/AC/(1,true,3) too many items
-TEST_CASE("8212A10102", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:/AM/(1=2)
-TEST_CASE("82138102", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/TBL/c=2;
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("82040A", CACE_AMM_TYPE_MATCH_NEGATIVE)                 // ari:/INT/10
+TEST_CASE("82118101", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/AC/(1) too few items
+TEST_CASE("8211820102", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:/AC/(1,2) bad item type
+TEST_CASE("82118201F5", CACE_AMM_TYPE_MATCH_POSITIVE)             // ari:/AC/(1,true)
+TEST_CASE("82118301F503", CACE_AMM_TYPE_MATCH_NEGATIVE)           // ari:/AC/(1,true,3) too many items
+TEST_CASE("8212A10102", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:/AM/(1=2)
+TEST_CASE("82138102", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/TBL/c=2;
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
 void test_amm_type_match_semtype_dlist_2item(const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -268,19 +268,19 @@ void test_amm_type_match_semtype_dlist_2item(const char *inhex, cace_amm_type_ma
     cace_amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
-TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:null
-TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:false
-TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:true
-TEST_CASE("82040A", CACE_AMM_TYPE_MATCH_NEGATIVE)           // ari:/INT/10
-TEST_CASE("82118101", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/AC/(1) too few items
-TEST_CASE("8211820102", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,2) bad item type
-TEST_CASE("82118201F5", CACE_AMM_TYPE_MATCH_POSITIVE)       // ari:/AC/(1,true)
-TEST_CASE("82118301F5F4", CACE_AMM_TYPE_MATCH_POSITIVE)     // ari:/AC/(1,true,false)
-TEST_CASE("82118401F5F4F5", CACE_AMM_TYPE_MATCH_NEGATIVE)   // ari:/AC/(1,true,false,true)
-TEST_CASE("82118301F503", CACE_AMM_TYPE_MATCH_NEGATIVE)     // ari:/AC/(1,true,3) unmatched items
-TEST_CASE("8212A10102", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:/AM/(1=2)
-TEST_CASE("82138102", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/TBL/c=2;
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("82040A", CACE_AMM_TYPE_MATCH_NEGATIVE)                 // ari:/INT/10
+TEST_CASE("82118101", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/AC/(1) too few items
+TEST_CASE("8211820102", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:/AC/(1,2) bad item type
+TEST_CASE("82118201F5", CACE_AMM_TYPE_MATCH_POSITIVE)             // ari:/AC/(1,true)
+TEST_CASE("82118301F5F4", CACE_AMM_TYPE_MATCH_POSITIVE)           // ari:/AC/(1,true,false)
+TEST_CASE("82118401F5F4F5", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/AC/(1,true,false,true)
+TEST_CASE("82118301F503", CACE_AMM_TYPE_MATCH_NEGATIVE)           // ari:/AC/(1,true,3) unmatched items
+TEST_CASE("8212A10102", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:/AM/(1=2)
+TEST_CASE("82138102", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/TBL/c=2;
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
 void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -312,16 +312,16 @@ void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, cace_amm_ty
     cace_amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
-TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:null
-TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:false
-TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:true
-TEST_CASE("82040A", CACE_AMM_TYPE_MATCH_NEGATIVE)           // ari:/INT/10
-TEST_CASE("8211820102", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,2)
-TEST_CASE("82118201F5", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:/AC/(1,true)
-TEST_CASE("8212A10102", CACE_AMM_TYPE_MATCH_NEGATIVE)       // ari:/AM/(1=2)
-TEST_CASE("8212A101F5", CACE_AMM_TYPE_MATCH_POSITIVE)       // ari:/AM/(1=true)
-TEST_CASE("82138102", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/TBL/c=2;
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("82040A", CACE_AMM_TYPE_MATCH_NEGATIVE)                 // ari:/INT/10
+TEST_CASE("8211820102", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:/AC/(1,2)
+TEST_CASE("82118201F5", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:/AC/(1,true)
+TEST_CASE("8212A10102", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:/AM/(1=2)
+TEST_CASE("8212A101F5", CACE_AMM_TYPE_MATCH_POSITIVE)             // ari:/AM/(1=true)
+TEST_CASE("82138102", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/TBL/c=2;
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
 void test_amm_type_match_semtype_umap_1(const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -368,13 +368,13 @@ void test_amm_type_match_semtype_tblt_1(const char *inhex, cace_amm_type_match_r
     cace_amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)              // ari:undefined
-TEST_CASE("F6", CACE_AMM_TYPE_MATCH_POSITIVE)               // ari:null
-TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:false
-TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:true
-TEST_CASE("0A", CACE_AMM_TYPE_MATCH_POSITIVE)               // ari:10
-TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_POSITIVE)         // ari:/INT/100 matches
-TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/VAST/100 explicitly not an INT
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_POSITIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("0A", CACE_AMM_TYPE_MATCH_POSITIVE)                     // ari:10
+TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_POSITIVE)               // ari:/INT/100 matches
+TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/VAST/100 explicitly not an INT
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
 void test_amm_type_match_semtype_union_1(const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -399,13 +399,13 @@ void test_amm_type_match_semtype_union_1(const char *inhex, cace_amm_type_match_
     cace_amm_type_deinit(&mytype);
 }
 
-TEST_CASE("F7", "F7")                   // ari:undefined
-TEST_CASE("F6", "8200F6")               // ari:null
-TEST_CASE("F5", "8200F6")               // ari:true
-TEST_CASE("0A", "8200F6")               // ari:10
-TEST_CASE("82041864", "8200F6")         // ari:/INT/100
-TEST_CASE("82061864", "8200F6")         // ari:/VAST/100
-TEST_CASE("821181F6", "8200F6")         // ari:/AC/(undefined)
+TEST_CASE("F7", "F7")                         // ari:undefined
+TEST_CASE("F6", "8200F6")                     // ari:null
+TEST_CASE("F5", "8200F6")                     // ari:true
+TEST_CASE("0A", "8200F6")                     // ari:10
+TEST_CASE("82041864", "8200F6")               // ari:/INT/100
+TEST_CASE("82061864", "8200F6")               // ari:/VAST/100
+TEST_CASE("821181F6", "8200F6")               // ari:/AC/(undefined)
 TEST_CASE("8519FFFF02200481626869", "8200F6") // ari://65535/2/-1/4(hi)
 void test_amm_type_convert_null(const char *inhex, const char *expecthex)
 {
@@ -413,15 +413,15 @@ void test_amm_type_convert_null(const char *inhex, const char *expecthex)
     check_convert(type, inhex, expecthex);
 }
 
-TEST_CASE("F7", "F7")                   // ari:undefined
-TEST_CASE("F6", "8201F4")               // ari:null
-TEST_CASE("F5", "8201F5")               // ari:true
-TEST_CASE("00", "8201F4")               // ari:0
-TEST_CASE("0A", "8201F5")               // ari:10
-TEST_CASE("820400", "8201F4")           // ari:/INT/0
-TEST_CASE("82041864", "8201F5")         // ari:/INT/100
-TEST_CASE("82061864", "8201F5")         // ari:/VAST/100
-TEST_CASE("821181F6", "8201F5")         // ari:/AC/(undefined)
+TEST_CASE("F7", "F7")                         // ari:undefined
+TEST_CASE("F6", "8201F4")                     // ari:null
+TEST_CASE("F5", "8201F5")                     // ari:true
+TEST_CASE("00", "8201F4")                     // ari:0
+TEST_CASE("0A", "8201F5")                     // ari:10
+TEST_CASE("820400", "8201F4")                 // ari:/INT/0
+TEST_CASE("82041864", "8201F5")               // ari:/INT/100
+TEST_CASE("82061864", "8201F5")               // ari:/VAST/100
+TEST_CASE("821181F6", "8201F5")               // ari:/AC/(undefined)
 TEST_CASE("8519FFFF02200481626869", "8201F5") // ari://65535/2/-1/4(hi)
 void test_amm_type_convert_bool(const char *inhex, const char *expecthex)
 {
@@ -429,16 +429,16 @@ void test_amm_type_convert_bool(const char *inhex, const char *expecthex)
     check_convert(type, inhex, expecthex);
 }
 
-TEST_CASE("F7", "F7")               // ari:undefined
-TEST_CASE("F5", NULL)               // ari:true
-TEST_CASE("F4", NULL)               // ari:false
-TEST_CASE("00", "820200")           // ari:0
-TEST_CASE("0A", "82020A")           // ari:10
-TEST_CASE("820400", "820200")       // ari:/INT/0
-TEST_CASE("82041864", "82021864")   // ari:/INT/100
-TEST_CASE("82061864", "82021864")   // ari:/VAST/100
-TEST_CASE("82061904D2", NULL)       // ari:/VAST/1234
-TEST_CASE("821181F6", NULL)         // ari:/AC/(undefined)
+TEST_CASE("F7", "F7")                     // ari:undefined
+TEST_CASE("F5", NULL)                     // ari:true
+TEST_CASE("F4", NULL)                     // ari:false
+TEST_CASE("00", "820200")                 // ari:0
+TEST_CASE("0A", "82020A")                 // ari:10
+TEST_CASE("820400", "820200")             // ari:/INT/0
+TEST_CASE("82041864", "82021864")         // ari:/INT/100
+TEST_CASE("82061864", "82021864")         // ari:/VAST/100
+TEST_CASE("82061904D2", NULL)             // ari:/VAST/1234
+TEST_CASE("821181F6", NULL)               // ari:/AC/(undefined)
 TEST_CASE("8519FFFF02200481626869", NULL) // ari://65535/2/-1/4(hi)
 void test_amm_type_convert_byte(const char *inhex, const char *expecthex)
 {
@@ -484,19 +484,19 @@ void test_amm_type_convert_real64(const char *inhex, const char *expecthex)
     check_convert(type, inhex, expecthex);
 }
 
-TEST_CASE("F7", "F7")                             // ari:undefined
-TEST_CASE("F6", NULL)                             // ari:null
-TEST_CASE("F5", NULL)                             // ari:true
-TEST_CASE("F4", NULL)                             // ari:false
-TEST_CASE("00", NULL)                             // ari:0
-TEST_CASE("0A", NULL)                             // ari:10
-TEST_CASE("820400", NULL)                         // ari:/INT/0
-TEST_CASE("82041864", NULL)                       // ari:/INT/100
-TEST_CASE("82061864", NULL)                       // ari:/VAST/100
-TEST_CASE("FA49864700", NULL)                     // ari:1.1e+06
-TEST_CASE("8208FA49864700", NULL)                 // ari:/REAL32/1.1e+06
-TEST_CASE("821181F6", NULL)                       // ari:/AC/(undefined)
-TEST_CASE("8519FFFF02200481626869", "8519FFFF02200481626869")     // ari://65535/2/-1/4(hi)
+TEST_CASE("F7", "F7")                                         // ari:undefined
+TEST_CASE("F6", NULL)                                         // ari:null
+TEST_CASE("F5", NULL)                                         // ari:true
+TEST_CASE("F4", NULL)                                         // ari:false
+TEST_CASE("00", NULL)                                         // ari:0
+TEST_CASE("0A", NULL)                                         // ari:10
+TEST_CASE("820400", NULL)                                     // ari:/INT/0
+TEST_CASE("82041864", NULL)                                   // ari:/INT/100
+TEST_CASE("82061864", NULL)                                   // ari:/VAST/100
+TEST_CASE("FA49864700", NULL)                                 // ari:1.1e+06
+TEST_CASE("8208FA49864700", NULL)                             // ari:/REAL32/1.1e+06
+TEST_CASE("821181F6", NULL)                                   // ari:/AC/(undefined)
+TEST_CASE("8519FFFF02200481626869", "8519FFFF02200481626869") // ari://65535/2/-1/4(hi)
 void test_amm_type_convert_ident(const char *inhex, const char *expecthex)
 {
     const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_IDENT);
