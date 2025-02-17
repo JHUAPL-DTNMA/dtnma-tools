@@ -98,24 +98,24 @@ static void check_execute(const cace_ari_t *target)
 }
 
 // clang-format off
-// ari://1/EDD/0 -> ari:%22JHU%2FAPL%22
-TEST_CASE("83012300", 0, CACE_ARI_PRIM_TSTR, 0)
-// ari://1/EDD/1 -> ari:%220.0.0%22
-TEST_CASE("83012301", 0, CACE_ARI_PRIM_TSTR, 0)
-// ari://1/EDD/2 -> ari:/TBL/c=4;
-TEST_CASE("83012302", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/typedef-list -> ari:/TBL/c=1;
-TEST_CASE("8301230A", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/typedef-list(true) -> ari:/TBL/c=1;(...)
-TEST_CASE("8401230A81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/var-list -> ari:/TBL/c=2;
-TEST_CASE("8301230B", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/var-list(true) -> ari:/TBL/c=2;
-TEST_CASE("8401230B81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/const-list -> ari:/TBL/c=2;
-TEST_CASE("8301230E", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/const-list(true) -> ari:/TBL/c=2;
-TEST_CASE("8401230E81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/0 -> ari:%22JHU%2FAPL%22
+TEST_CASE("8401012300", 0, CACE_ARI_PRIM_TSTR, 0)
+// ari://1/1/EDD/1 -> ari:%220.0.0%22
+TEST_CASE("8401012301", 0, CACE_ARI_PRIM_TSTR, 0)
+// ari://1/1/EDD/2 -> ari:/TBL/c=4;
+TEST_CASE("8401012302", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/typedef-list -> ari:/TBL/c=1;
+TEST_CASE("840101230A", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/typedef-list(true) -> ari:/TBL/c=1;(...)
+TEST_CASE("850101230A81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/var-list -> ari:/TBL/c=2;
+TEST_CASE("840101230B", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/var-list(true) -> ari:/TBL/c=2;
+TEST_CASE("850101230B81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/const-list -> ari:/TBL/c=2;
+TEST_CASE("840101230E", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/const-list(true) -> ari:/TBL/c=2;
+TEST_CASE("850101230E81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
 // clang-format on
 void test_refda_adm_ietf_dtnma_agent_edd_produce(const char *targethex, int expect_res,
                                                  enum cace_ari_prim_type_e expect_prim, cace_ari_type_t expect_type)
