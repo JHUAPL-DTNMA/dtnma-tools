@@ -31,7 +31,6 @@
 
 /*   START CUSTOM INCLUDES HERE  */
 /*             TODO              */
-#include "refda/adm/ietf.h"
 /*   STOP CUSTOM INCLUDES HERE  */
 
 #ifdef __cplusplus
