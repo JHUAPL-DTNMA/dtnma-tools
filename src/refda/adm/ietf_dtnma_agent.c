@@ -1295,6 +1295,10 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
      */
 }
 
+static cace_ari_uvast numeric_add_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left + right; } 
+static cace_ari_vast  numeric_add_vast(cace_ari_vast left, cace_ari_vast right){ return left + right; }
+static cace_ari_real64 numeric_add_real64(cace_ari_real64 left, cace_ari_real64 right){ return left + right; }
+
 /* Name: add
  * Description:
  *   Add two numeric values. The operands are cast to the least compatible
@@ -1311,6 +1315,12 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_add BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_add_uvast, numeric_add_vast, numeric_add_real64)){
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_add BODY

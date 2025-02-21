@@ -26,6 +26,7 @@ extern "C" {
 
 typedef cace_ari_uvast (*cace_binop_uvast)(cace_ari_uvast, cace_ari_uvast);
 typedef cace_ari_vast (*cace_binop_vast)(cace_ari_vast, cace_ari_vast);
+typedef cace_ari_real64 (*cace_binop_real64)(cace_ari_real64, cace_ari_real64);
 
 /** Determine the numeric type which is the least common promotion type.
  * This is done in accordance with Section 6.11.2.1 of @cite amm.
@@ -45,6 +46,15 @@ int cace_amm_numeric_promote_type(cace_ari_type_t *result, const cace_ari_t *lef
  * @return Zero if successful.
  */
 int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast);
+
+/** Execute a numeric operation accepting two parameters.
+ *
+ * @param[out] result Output value.
+ * @param[in] left One input value.
+ * @param[in] right The other input value.
+ * @return Zero if successful.
+ */
+int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64);
 
 #ifdef __cplusplus
 } // extern C
