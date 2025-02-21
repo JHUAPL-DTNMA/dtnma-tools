@@ -203,6 +203,53 @@ int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, c
     return retval;
 }
 
+int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64)
+{
+    cace_ari_type_t promote;
+    if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
+    {
+        return 2;
+    }
+
+    const cace_amm_type_t *amm_promote = cace_amm_type_get_builtin(promote);
+    cace_ari_t             lt_prom     = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_t             rt_prom     = CACE_ARI_INIT_UNDEFINED;
+    cace_amm_type_convert(amm_promote, &lt_prom, lt_val);
+    cace_amm_type_convert(amm_promote, &rt_prom, rt_val);
+
+    cace_ari_deinit(result);
+    cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
+
+    int retval = 0;
+    switch (lt_prom.as_lit.prim_type)
+    {
+        case CACE_ARI_PRIM_UINT64:
+            res_lit->value.as_bool = op_uvast(lt_prom.as_lit.value.as_uint64 , rt_prom.as_lit.value.as_uint64);
+            break;
+        case CACE_ARI_PRIM_INT64:
+            res_lit->value.as_bool = op_vast(lt_prom.as_lit.value.as_int64 , rt_prom.as_lit.value.as_int64);
+            break;
+        case CACE_ARI_PRIM_FLOAT64:
+            res_lit->value.as_bool = op_real64(lt_prom.as_lit.value.as_float64 , rt_prom.as_lit.value.as_float64);
+            break;
+        default:
+            // leave lit as default undefined
+            retval = 3;
+            break;
+    }
+
+    if (!retval)
+    {
+        res_lit->prim_type    = CACE_ARI_PRIM_BOOL;
+        res_lit->has_ari_type = true;
+        res_lit->ari_type     = CACE_ARI_TYPE_BOOL;
+    }
+
+    cace_ari_deinit(&lt_prom);
+    cace_ari_deinit(&rt_prom);
+    return retval;
+}
+
 bool cace_numeric_is_zero(const cace_ari_t *val)
 {
     switch (val->as_lit.prim_type)

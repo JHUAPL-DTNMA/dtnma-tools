@@ -52,9 +52,24 @@ int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *l
  * @param[out] result Output value.
  * @param[in] left One input value.
  * @param[in] right The other input value.
+ * @param[in] op_uvast Operator function for uvast types.
+ * @param[in] op_vast Operator function for vast types.
+ * @param[in] op_real64 Operator function for real64 types.
  * @return Zero if successful.
  */
 int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64);
+
+/** Compare two numeric values.
+ *
+ * @param[out] result Output result as a boolean.
+ * @param[in] left One input value.
+ * @param[in] right The other input value.
+ * @param[in] op_uvast Operator function for uvast types.
+ * @param[in] op_vast Operator function for vast types.
+ * @param[in] op_real64 Operator function for real64 types.
+ * @return Zero if successful.
+ */
+int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64);
 
 /** Determine if given value is zero.
  *
