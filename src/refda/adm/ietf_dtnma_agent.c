@@ -36,6 +36,7 @@
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
+#include "math.h"
 #include "cace/amm/numeric.h"
 #include "refda/eval.h"
 #include <timespec.h>
@@ -1288,6 +1289,33 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_negate BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    int retval = 0;
+    switch (val->as_lit.prim_type)
+    {
+        case CACE_ARI_PRIM_UINT64:
+            result.as_lit.value.as_uint64 = val->as_lit.value.as_uint64 * -1;
+            break;
+        case CACE_ARI_PRIM_INT64:
+            result.as_lit.value.as_int64 = val->as_lit.value.as_int64 * -1;
+            break;
+        case CACE_ARI_PRIM_FLOAT64:
+            result.as_lit.value.as_float64 = val->as_lit.value.as_float64 * -1.0;
+            break;
+        default:
+            // leave lit as default undefined
+            retval = 3;
+            break;
+    }
+
+    if (!retval)
+    {
+        result.as_lit.prim_type    = val->as_lit.prim_type;
+        result.as_lit.has_ari_type = true;
+        result.as_lit.ari_type     = val->as_lit.ari_type;
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_negate BODY
@@ -1298,6 +1326,22 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
 static cace_ari_uvast numeric_add_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left + right; } 
 static cace_ari_vast  numeric_add_vast(cace_ari_vast left, cace_ari_vast right){ return left + right; }
 static cace_ari_real64 numeric_add_real64(cace_ari_real64 left, cace_ari_real64 right){ return left + right; }
+
+static cace_ari_uvast numeric_sub_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left - right; } 
+static cace_ari_vast  numeric_sub_vast(cace_ari_vast left, cace_ari_vast right){ return left - right; }
+static cace_ari_real64 numeric_sub_real64(cace_ari_real64 left, cace_ari_real64 right){ return left - right; }
+
+static cace_ari_uvast numeric_mul_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left * right; } 
+static cace_ari_vast  numeric_mul_vast(cace_ari_vast left, cace_ari_vast right){ return left * right; }
+static cace_ari_real64 numeric_mul_real64(cace_ari_real64 left, cace_ari_real64 right){ return left * right; }
+
+static cace_ari_uvast numeric_div_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left / right; } 
+static cace_ari_vast  numeric_div_vast(cace_ari_vast left, cace_ari_vast right){ return left / right; }
+static cace_ari_real64 numeric_div_real64(cace_ari_real64 left, cace_ari_real64 right){ return left / right; }
+
+static cace_ari_uvast numeric_mod_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left % right; } 
+static cace_ari_vast  numeric_mod_vast(cace_ari_vast left, cace_ari_vast right){ return left % right; }
+static cace_ari_real64 numeric_mod_real64(cace_ari_real64 left, cace_ari_real64 right){ return fmod(left, right); }
 
 /* Name: add
  * Description:
@@ -1342,6 +1386,12 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_sub BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_sub_uvast, numeric_sub_vast, numeric_sub_real64)){
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_sub BODY
@@ -1363,6 +1413,12 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_multiply BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mul_uvast, numeric_mul_vast, numeric_mul_real64)){
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_multiply BODY
@@ -1384,6 +1440,15 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_divide BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    
+    // TODO: prevent divide by zero (and add test case)
+
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_div_uvast, numeric_div_vast, numeric_div_real64)){
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_divide BODY
@@ -1405,6 +1470,15 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_remainder BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    
+    // TODO: prevent divide by zero (and add test case)
+
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mod_uvast, numeric_mod_vast, numeric_mod_real64)){
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_remainder BODY
