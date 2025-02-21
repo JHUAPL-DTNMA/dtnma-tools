@@ -202,3 +202,23 @@ int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, c
     cace_ari_deinit(&rt_prom);
     return retval;
 }
+
+bool cace_numeric_is_zero(const cace_ari_t *val)
+{
+    switch (val->as_lit.prim_type)
+    {
+        case CACE_ARI_PRIM_UINT64:
+            return val->as_lit.value.as_uint64 == 0;
+            break;
+        case CACE_ARI_PRIM_INT64:
+            return val->as_lit.value.as_int64 == 0;
+            break;
+        case CACE_ARI_PRIM_FLOAT64:
+            return val->as_lit.value.as_float64 == 0.0;
+            break;
+        default:
+            break;
+    }
+
+    return false;
+}

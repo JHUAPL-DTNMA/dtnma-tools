@@ -340,16 +340,11 @@ TEST_CASE("82118382040182071083012563737562", "82060F")
 TEST_CASE("821183820401820710830125686D756C7469706C79", "820610")
 // ari:/AC/(/INT/0x10,/UVAST/1,//1/OPER/divide) -> /VAST/0
 TEST_CASE("82118382041082070183012566646976696465", "820600")
-// FIXME: divide by zero (need to test elsewhere in this file)
-//// ari:/AC/(/INT/0x0,/UVAST/1,//1/OPER/divide) -> /VAST/0
-//TEST_CASE("82118382040082070183012566646976696465", "820600")
+
 // ari:/AC/(/INT/0x10,/UVAST/1,//1/OPER/remainder) -> /VAST/1
 TEST_CASE("8211838204108207018301256972656D61696E646572", "820601")
 // ari:/AC/(/INT/3,/UVAST/7,//1/OPER/remainder) -> /VAST/1
 TEST_CASE("8211838204038207078301256972656D61696E646572", "820601")
-// FIXME: divide by 0
-// ari:/AC/(/INT/0x0,/UVAST/1,//1/OPER/remainder) -> /VAST/1
-//TEST_CASE("8211838204008207018301256972656D61696E646572", "820601")
 
 // ari:/AC/(/INT/3,//1/OPER/negate) -> /INT/-3
 TEST_CASE("821182820403830125666E6567617465", "820422")
@@ -383,34 +378,38 @@ void test_refda_eval_target_valid(const char *targethex, const char *expectloghe
     cace_ari_deinit(&target);
 }
 
-//// ari:/AC/(/BOOL/false,undefined,//1/OPER/bool-and) -> undefined
-//TEST_CASE("8211838201F4F783012568626F6F6C2D616E64", "F7")
-//void test_refda_eval_target_undefined(const char *targethex, const char *expectloghex)
-//{
-//    cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
-//    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
-//
-//    cace_ari_t expect_result = CACE_ARI_INIT_UNDEFINED;
-//    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_result, expectloghex));
-//    TEST_ASSERT_TRUE(cace_ari_is_undefined(&expect_result));
-//
-//    refda_runctx_t runctx;
-//    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
-//
-//    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-//    int        res    = refda_eval_target(&runctx, &result, &target);
-//    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_eval_target() disagrees");
-//
-//    // verify result value
-//    const bool equal = cace_ari_equal(&expect_result, &result);
-//    TEST_ASSERT_TRUE_MESSAGE(equal, "result ARI is different");
-//
-//    cace_ari_deinit(&result);
-//    refda_runctx_deinit(&runctx);
-//    cace_ari_deinit(&expect_result);
-//    cace_ari_deinit(&target);
-//}
-//
+// ari:/AC/(/BOOL/false,undefined,//1/OPER/bool-and) -> undefined
+TEST_CASE("8211838201F4F783012568626F6F6C2D616E64", "F7")
+// ari:/AC/(/INT/0x0,/UVAST/1,//1/OPER/divide) -> undefined
+TEST_CASE("82118382040082070183012566646976696465", "F7")
+// ari:/AC/(/INT/0x0,/UVAST/1,//1/OPER/remainder) -> undefined
+TEST_CASE("8211838204008207018301256972656D61696E646572", "F7")
+void test_refda_eval_target_undefined(const char *targethex, const char *expectloghex)
+{
+    cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
+
+    cace_ari_t expect_result = CACE_ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_result, expectloghex));
+    TEST_ASSERT_TRUE(cace_ari_is_undefined(&expect_result));
+
+    refda_runctx_t runctx;
+    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    int        res    = refda_eval_target(&runctx, &result, &target);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_eval_target() disagrees");
+
+    // verify result value
+    const bool equal = cace_ari_equal(&expect_result, &result);
+    TEST_ASSERT_TRUE_MESSAGE(equal, "result ARI is different");
+
+    cace_ari_deinit(&result);
+    refda_runctx_deinit(&runctx);
+    cace_ari_deinit(&expect_result);
+    cace_ari_deinit(&target);
+}
+
 //TEST_CASE("821180", 6)             // Empty stack ari:/AC/()
 //TEST_CASE("821182820601820602", 6) // Extra stack ari:/AC/(/VAST/1,/VAST/2)
 //void test_refda_eval_target_failure(const char *targethex, int expect_res)

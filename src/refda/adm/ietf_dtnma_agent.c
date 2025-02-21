@@ -1444,9 +1444,8 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     
-    // TODO: prevent divide by zero (and add test case)
-
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_div_uvast, numeric_div_vast, numeric_div_real64)){
+    if (!cace_numeric_is_zero(rt_val) && 
+        !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_div_uvast, numeric_div_vast, numeric_div_real64)){
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1474,9 +1473,7 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     
-    // TODO: prevent divide by zero (and add test case)
-
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mod_uvast, numeric_mod_vast, numeric_mod_real64)){
+    if (!cace_numeric_is_zero(rt_val) && !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mod_uvast, numeric_mod_vast, numeric_mod_real64)){
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*

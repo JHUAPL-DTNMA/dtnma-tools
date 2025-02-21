@@ -56,6 +56,13 @@ int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *l
  */
 int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64);
 
+/** Determine if given value is zero.
+ *
+ * @param[in] val Input value.
+ * @return true if equal to zero.
+ */
+bool cace_numeric_is_zero(const cace_ari_t *val);
+
 #ifdef __cplusplus
 } // extern C
 #endif
