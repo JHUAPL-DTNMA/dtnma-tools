@@ -1423,60 +1423,12 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
      */
 }
 
-typedef cace_ari_uvast (*cace_binop_uvast)(cace_ari_uvast, cace_ari_uvast);
-typedef cace_ari_vast (*cace_binop_vast)(cace_ari_vast, cace_ari_vast);
-
 cace_ari_uvast bitwise_and_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left & right; } 
 cace_ari_vast bitwise_and_vast(cace_ari_vast left, cace_ari_vast right){ return left & right; }
 cace_ari_uvast bitwise_or_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left | right; } 
 cace_ari_vast bitwise_or_vast(cace_ari_vast left, cace_ari_vast right){ return left | right; }
 cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left ^ right; } 
 cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right){ return left ^ right; }
-
-static int cace_numeric_integer_binop(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
- cace_binop_uvast op_uvast, cace_binop_vast op_vast)
-{
-    cace_ari_type_t promote;
-    if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
-    {
-        return 2;
-    }
-
-    const cace_amm_type_t *amm_promote = cace_amm_type_get_builtin(promote);
-    cace_ari_t             lt_prom     = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_t             rt_prom     = CACE_ARI_INIT_UNDEFINED;
-    cace_amm_type_convert(amm_promote, &lt_prom, lt_val);
-    cace_amm_type_convert(amm_promote, &rt_prom, rt_val);
-
-    cace_ari_deinit(result);
-    cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
-
-    int retval = 0;
-    switch (lt_prom.as_lit.prim_type)
-    {
-        case CACE_ARI_PRIM_UINT64:
-            res_lit->value.as_uint64 = op_uvast(lt_prom.as_lit.value.as_uint64 , rt_prom.as_lit.value.as_uint64);
-            break;
-        case CACE_ARI_PRIM_INT64:
-            res_lit->value.as_int64 = op_vast(lt_prom.as_lit.value.as_int64 , rt_prom.as_lit.value.as_int64);
-            break;
-        default:
-            // leave lit as default undefined
-            retval = 3;
-            break;
-    }
-
-    if (!retval)
-    {
-        res_lit->prim_type    = lt_prom.as_lit.prim_type;
-        res_lit->has_ari_type = true;
-        res_lit->ari_type     = promote;
-    }
-
-    cace_ari_deinit(&lt_prom);
-    cace_ari_deinit(&rt_prom);
-    return retval;
-}
 
 /* Name: bit-and
  * Description MISSING
@@ -1495,7 +1447,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_integer_binop(&result, lt_val, rt_val, bitwise_and_uvast, bitwise_and_vast)) {
+    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_and_uvast, bitwise_and_vast)) {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1522,7 +1474,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_integer_binop(&result, lt_val, rt_val, bitwise_or_uvast, bitwise_or_vast)) {
+    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_or_uvast, bitwise_or_vast)) {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1549,7 +1501,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_integer_binop(&result, lt_val, rt_val, bitwise_xor_uvast, bitwise_xor_vast)) {
+    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_xor_uvast, bitwise_xor_vast)) {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
