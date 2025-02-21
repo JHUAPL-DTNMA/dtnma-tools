@@ -1416,6 +1416,30 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_not BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    int retval = 0;
+    switch (val->as_lit.prim_type)
+    {
+        case CACE_ARI_PRIM_UINT64:
+            result.as_lit.value.as_uint64 = ~val->as_lit.value.as_uint64;
+            break;
+        case CACE_ARI_PRIM_INT64:
+            result.as_lit.value.as_int64 = ~val->as_lit.value.as_int64;
+            break;
+        default:
+            // leave lit as default undefined
+            retval = 3;
+            break;
+    }
+
+    if (!retval)
+    {
+        result.as_lit.prim_type    = val->as_lit.prim_type;
+        result.as_lit.has_ari_type = true;
+        result.as_lit.ari_type     = val->as_lit.ari_type;
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_not BODY
@@ -1423,12 +1447,12 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
      */
 }
 
-cace_ari_uvast bitwise_and_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left & right; } 
-cace_ari_vast bitwise_and_vast(cace_ari_vast left, cace_ari_vast right){ return left & right; }
-cace_ari_uvast bitwise_or_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left | right; } 
-cace_ari_vast bitwise_or_vast(cace_ari_vast left, cace_ari_vast right){ return left | right; }
-cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left ^ right; } 
-cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right){ return left ^ right; }
+static cace_ari_uvast bitwise_and_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left & right; } 
+static cace_ari_vast bitwise_and_vast(cace_ari_vast left, cace_ari_vast right){ return left & right; }
+static cace_ari_uvast bitwise_or_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left | right; } 
+static cace_ari_vast bitwise_or_vast(cace_ari_vast left, cace_ari_vast right){ return left | right; }
+static cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left ^ right; } 
+static cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right){ return left ^ right; }
 
 /* Name: bit-and
  * Description MISSING
