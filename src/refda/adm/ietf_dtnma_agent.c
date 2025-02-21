@@ -1343,6 +1343,14 @@ static cace_ari_uvast numeric_mod_uvast(cace_ari_uvast left, cace_ari_uvast righ
 static cace_ari_vast  numeric_mod_vast(cace_ari_vast left, cace_ari_vast right){ return left % right; }
 static cace_ari_real64 numeric_mod_real64(cace_ari_real64 left, cace_ari_real64 right){ return fmod(left, right); }
 
+static cace_ari_uvast numeric_eq_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left == right; } 
+static cace_ari_vast  numeric_eq_vast(cace_ari_vast left, cace_ari_vast right){ return left == right; }
+static cace_ari_real64 numeric_eq_real64(cace_ari_real64 left, cace_ari_real64 right){ return left == right; }
+
+static cace_ari_uvast numeric_ne_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left != right; } 
+static cace_ari_vast  numeric_ne_vast(cace_ari_vast left, cace_ari_vast right){ return left != right; }
+static cace_ari_real64 numeric_ne_real64(cace_ari_real64 left, cace_ari_real64 right){ return left != right; }
+
 static cace_ari_uvast numeric_gt_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left > right; } 
 static cace_ari_vast  numeric_gt_vast(cace_ari_vast left, cace_ari_vast right){ return left > right; }
 static cace_ari_real64 numeric_gt_real64(cace_ari_real64 left, cace_ari_real64 right){ return left > right; }
@@ -1773,6 +1781,15 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_eq BODY
      * +-------------------------------------------------------------------------+
      */
+    
+    // FIXME: handle non-numeric types
+
+    const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_eq_uvast, numeric_eq_vast, numeric_eq_real64)){
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_eq BODY
@@ -1794,6 +1811,15 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ne BODY
      * +-------------------------------------------------------------------------+
      */
+    
+    // FIXME: handle non-numeric types
+
+    const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_ne_uvast, numeric_ne_vast, numeric_ne_real64)){
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ne BODY
