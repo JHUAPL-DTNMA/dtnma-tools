@@ -36,14 +36,15 @@ void suiteSetUp(void)
     cace_amm_obj_store_init(&store);
 
     // initial population
-    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&store, "example-adm", "", true, 25);
+    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(&store, cace_amm_idseg_ref_withenum("example", 65535),
+                                                       cace_amm_idseg_ref_withenum("adm", 25), "2025-02-10");
     TEST_ASSERT_NOT_NULL(adm);
     cace_amm_obj_desc_t *obj;
 
-    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_withenum("noparam", 0));
+    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_withenum("noparam", 0));
     TEST_ASSERT_NOT_NULL(obj);
 
-    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_withenum("withparam", 1));
+    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_withenum("withparam", 1));
     TEST_ASSERT_NOT_NULL(obj);
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj->fparams);
@@ -54,7 +55,7 @@ void suiteSetUp(void)
         cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
     }
 
-    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_TYPEDEF, cace_amm_obj_id_withenum("semtype", 0));
+    obj = cace_amm_obj_ns_add_obj(adm, CACE_ARI_TYPE_TYPEDEF, cace_amm_idseg_ref_withenum("semtype", 0));
     TEST_ASSERT_NOT_NULL(obj);
 }
 
@@ -108,13 +109,13 @@ static void check_lookup(const char *inhex, int expect_cbor_decode, int expect_r
     cace_ari_deinit(&inval);
 }
 
-TEST_CASE("8318192000", 0, 0)     // ari://25/-1/0 found
-TEST_CASE("830A2004", 0, 3)       // ari://10/-1/4 missing NS
-TEST_CASE("83181939FF0004", 3, 2) // ari://25/-65281/4 unknown obj-type
-TEST_CASE("8318192004", 0, 4)     // ari://25/-1/4 missing obj-id
-TEST_CASE("8318192001", 0, 0)     // ari://25/-1/1 found, default parameter
-TEST_CASE("8418192001810A", 0, 0) // ari://25/-1/1(10)
-TEST_CASE("841819200181F6", 0, 7) // ari://25/-1/1(null) bad parameter
+TEST_CASE("8419FFFF18192000", 0, 0)     // ari://65535/25/-1/0 found
+TEST_CASE("8419FFFF0A2004", 0, 4)       // ari://65535/10/-1/4 missing NS
+TEST_CASE("8419FFFF181939FF0004", 3, 2) // ari://65535/25/-65281/4 unknown obj-type
+TEST_CASE("8419FFFF18192004", 0, 6)     // ari://65535/25/-1/4 missing obj-id
+TEST_CASE("8419FFFF18192001", 0, 0)     // ari://65535/25/-1/1 found, default parameter
+TEST_CASE("8519FFFF18192001810A", 0, 0) // ari://65535/25/-1/1(10)
+TEST_CASE("8519FFFF1819200181F6", 0, 9) // ari://65535/25/-1/1(null) bad parameter
 void test_lookup_deref(const char *inhex, int expect_cbor_decode, int expect_res)
 {
     check_lookup(inhex, expect_cbor_decode, expect_res);

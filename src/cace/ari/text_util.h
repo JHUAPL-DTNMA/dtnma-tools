@@ -186,13 +186,35 @@ int cace_base64_encode(m_string_t out, const cace_data_t *in, bool useurl);
  */
 int cace_base64_decode(cace_data_t *out, const m_string_t in);
 
+/** Encode to a Gregorian date in text form.
+ * This is defined as "full-date" in Appendix A of RFC 3339 @cite rfc3339.
+ * @note The CBOR tag 100 epoch of 1970-01-01 is used from @cite rfc8943.
+ *
+ * @param[out] out The output buffer, which will be sized to its text and
+ * null terminated.
+ * @param[in] in The time in separated fields.
+ * @param usesep If true component separators will be added, if false
+ * the concise form is used.
+ * @return Zero upon success.
+ */
+int cace_date_encode(m_string_t out, const struct tm *in, bool usesep);
+
+/** Decode a UTC time from text form.
+ * This is defined in Appendix A of RFC 3339 @cite rfc3339.
+ *
+ * @param[out] out The decoded time from DTN epoch.
+ * @param in The input buffer to read, which may be null terminated.
+ * @return Zero upon success.
+ */
+int cace_date_decode(struct tm *out, const cace_data_t *in);
+
 /** Encode to a UTC time in text form.
  * This is defined in Appendix A of RFC 3339 @cite rfc3339.
  * @note The DTN epoch is 2000-01-01T00:00:00Z from @cite rfc9171.
  *
  * @param[out] out The output buffer, which will be sized to its text and
  * null terminated.
- * @param in The time from DTN epoch.
+ * @param[in] in The time from DTN epoch.
  * @param usesep If true component separators will be added, if false
  * the concise form is used.
  * @return Zero upon success.
@@ -204,7 +226,7 @@ int cace_utctime_encode(m_string_t out, const struct timespec *in, bool usesep);
  * of an optional leading sign character.
  *
  * @param[out] out The decoded time from DTN epoch.
- * @param in The input buffer to read, which may be null terminated.
+ * @param[in] in The input buffer to read, which may be null terminated.
  * @return Zero upon success.
  */
 int cace_utctime_decode(struct timespec *out, const cace_data_t *in);

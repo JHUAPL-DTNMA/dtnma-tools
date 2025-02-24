@@ -51,11 +51,11 @@ static void check_normalize(cace_ari_itemized_t *aparams, const cace_amm_formal_
     TEST_ASSERT_EQUAL_INT(formal_size, cace_named_ari_ptr_dict_size(aparams->named));
 }
 
-TEST_CASE("83022004", 0)           // ari://2/-1/4
-TEST_CASE("8402200480", 0)         // ari://2/-1/4() special case empty params
-TEST_CASE("8402200481626869", 3)   // ari://2/-1/4(hi) too many params
-TEST_CASE("84022004A1010A", 3)     // ari://2/-1/4(1=10) too many params
-TEST_CASE("84022004A16268690A", 3) // ari://2/-1/4(hi=10) too many params
+TEST_CASE("8419FFFF022004", 0)           // ari://65535/2/-1/4
+TEST_CASE("8519FFFF02200480", 0)         // ari://65535/2/-1/4() special case empty params
+TEST_CASE("8519FFFF02200481626869", 3)   // ari://65535/2/-1/4(hi) too many params
+TEST_CASE("8519FFFF022004A1010A", 3)     // ari://65535/2/-1/4(1=10) too many params
+TEST_CASE("8519FFFF022004A16268690A", 3) // ari://65535/2/-1/4(hi=10) too many params
 void test_fparam_empty(const char *inhex, int expect_res)
 {
     cace_amm_formal_param_list_t fparams;
@@ -69,10 +69,10 @@ void test_fparam_empty(const char *inhex, int expect_res)
     cace_amm_formal_param_list_clear(fparams);
 }
 
-TEST_CASE("83022004", 0)         // ari://2/-1/4
-TEST_CASE("8402200480", 0)       // ari://2/-1/4() special case empty params
-TEST_CASE("8402200481F5", 0)     // ari://2/-1/4(true)
-TEST_CASE("8402200481626869", 0) // ari://2/-1/4(hi) implicit cast to bool
+TEST_CASE("8419FFFF022004", 0)         // ari://65535/2/-1/4
+TEST_CASE("8519FFFF02200480", 0)       // ari://65535/2/-1/4() special case empty params
+TEST_CASE("8519FFFF02200481F5", 0)     // ari://65535/2/-1/4(true)
+TEST_CASE("8519FFFF02200481626869", 0) // ari://65535/2/-1/4(hi) implicit cast to bool
 void test_fparam_one_bool(const char *inhex, int expect_res)
 {
     cace_amm_formal_param_list_t fparams;
@@ -94,15 +94,15 @@ void test_fparam_one_bool(const char *inhex, int expect_res)
     cace_amm_formal_param_list_clear(fparams);
 }
 
-TEST_CASE("83022004", 0)           // ari://2/-1/4
-TEST_CASE("8402200480", 0)         // ari://2/-1/4() special case empty params
-TEST_CASE("840220048101", 0)       // ari://2/-1/4(1)
-TEST_CASE("840220048120", 0)       // ari://2/-1/4(-1)
-TEST_CASE("84022004A1000A", 0)     // ari://2/-1/4(0=10) by index
-TEST_CASE("84022004A16268690A", 0) // ari://2/-1/4(hi=10) by name
-TEST_CASE("8402200481626869", 2)   // ari://2/-1/4(hi) implicit cast failure
-TEST_CASE("84022004820102", 3)     // ari://2/-1/4(1,2) too many params
-TEST_CASE("84022004A1020A", 3)     // ari://2/-1/4(2=10) too many params
+TEST_CASE("8419FFFF022004", 0)           // ari://65535/2/-1/4
+TEST_CASE("8519FFFF02200480", 0)         // ari://65535/2/-1/4() special case empty params
+TEST_CASE("8519FFFF0220048101", 0)       // ari://65535/2/-1/4(1)
+TEST_CASE("8519FFFF0220048120", 0)       // ari://65535/2/-1/4(-1)
+TEST_CASE("8519FFFF022004A1000A", 0)     // ari://65535/2/-1/4(0=10) by index
+TEST_CASE("8519FFFF022004A16268690A", 0) // ari://65535/2/-1/4(hi=10) by name
+TEST_CASE("8519FFFF02200481626869", 2)   // ari://65535/2/-1/4(hi) implicit cast failure
+TEST_CASE("8519FFFF022004820102", 3)     // ari://65535/2/-1/4(1,2) too many params
+TEST_CASE("8519FFFF022004A1020A", 3)     // ari://65535/2/-1/4(2=10) too many params
 void test_fparam_one_int(const char *inhex, int expect_res)
 {
     cace_amm_formal_param_list_t fparams;
@@ -124,8 +124,8 @@ void test_fparam_one_int(const char *inhex, int expect_res)
     cace_amm_formal_param_list_clear(fparams);
 }
 
-TEST_CASE("840122058183012301", 0)                     // ari://2/-1/4(//1/EDD/1)
-TEST_CASE("84012205818301236A73775F76657273696F6E", 0) // ari://2/-1/4(//1/EDD/sw_version)
+TEST_CASE("8519FFFF012205818419FFFF012301", 0)                     // ari://65535/2/-1/4(//65535/1/EDD/1)
+TEST_CASE("8519FFFF012205818419FFFF01236A73775F76657273696F6E", 0) // ari://65535/2/-1/4(//65535/1/EDD/sw_version)
 void test_fparam_one_object(const char *inhex, int expect_res)
 {
     cace_amm_formal_param_list_t fparams;

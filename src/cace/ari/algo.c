@@ -431,10 +431,19 @@ int cace_ari_translate(cace_ari_t *out, const cace_ari_t *in, const cace_ari_tra
 static int cace_ari_hash_visit_objpath(cace_ari_objpath_t *path, const cace_ari_visit_ctx_t *ctx)
 {
     size_t *accum = ctx->user_data;
-    M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->ns_id)));
+    M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->org_id)));
+    M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->model_id)));
+    M_HASH_UP(*accum, M_HASH_DEFAULT(path->model_rev.valid));
+    if (path->model_rev.valid)
+    {
+        M_HASH_UP(*accum, M_HASH_DEFAULT(path->model_rev.parts.tm_year));
+        M_HASH_UP(*accum, M_HASH_DEFAULT(path->model_rev.parts.tm_mon));
+        M_HASH_UP(*accum, M_HASH_DEFAULT(path->model_rev.parts.tm_mday));
+    }
+    M_HASH_UP(*accum, M_HASH_DEFAULT(path->has_ari_type));
     if (path->has_ari_type)
     {
-        M_HASH_UP(*accum, path->ari_type);
+        M_HASH_UP(*accum, M_HASH_DEFAULT(path->ari_type));
     }
     else
     {
@@ -512,7 +521,17 @@ size_t cace_ari_hash(const cace_ari_t *ari)
 
 static bool cace_ari_objpath_cmp(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right)
 {
-    int part_cmp = cace_ari_idseg_cmp(&(left->ns_id), &(right->ns_id));
+    int part_cmp = cace_ari_idseg_cmp(&(left->org_id), &(right->org_id));
+    if (part_cmp)
+    {
+        return part_cmp;
+    }
+    part_cmp = cace_ari_idseg_cmp(&(left->model_id), &(right->model_id));
+    if (part_cmp)
+    {
+        return part_cmp;
+    }
+    part_cmp = cace_ari_date_cmp(&(left->model_rev), &(right->model_rev));
     if (part_cmp)
     {
         return part_cmp;
@@ -548,7 +567,9 @@ static bool cace_ari_objpath_equal(const cace_ari_objpath_t *left, const cace_ar
         type_equal = cace_ari_idseg_equal(&(left->type_id), &(right->type_id));
     }
 
-    return (cace_ari_idseg_equal(&(left->ns_id), &(right->ns_id)) && type_equal
+    return (cace_ari_idseg_equal(&(left->org_id), &(right->org_id))
+            && cace_ari_idseg_equal(&(left->model_id), &(right->model_id))
+            && (cace_ari_date_cmp(&(left->model_rev), &(right->model_rev)) == 0) && type_equal
             && cace_ari_idseg_equal(&(left->obj_id), &(right->obj_id)));
 }
 

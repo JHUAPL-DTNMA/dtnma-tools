@@ -24,6 +24,7 @@
  */
 #include "cbor.h"
 #include "access.h"
+#include "text_util.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
 #include <qcbor/qcbor_spiffy_decode.h>
@@ -95,6 +96,8 @@ static int cace_ari_cbor_decode_idseg(QCBORDecodeContext *dec, cace_ari_idseg_t 
         case QCBOR_TYPE_NULL:
         {
             obj->form = CACE_ARI_IDSEG_NULL;
+            // pass the item
+            QCBORDecode_GetNext(dec, &decitem);
             break;
         }
         case QCBOR_TYPE_TEXT_STRING:
@@ -115,6 +118,63 @@ static int cace_ari_cbor_decode_idseg(QCBORDecodeContext *dec, cace_ari_idseg_t 
             return 3;
     }
     return 0;
+}
+
+static int cace_ari_cbor_encode_optdate(QCBOREncodeContext *enc, const cace_ari_date_t *obj)
+{
+    if (obj->valid)
+    {
+        // text date
+        m_string_t text;
+        m_string_init(text);
+        cace_date_encode(text, &(obj->parts), true);
+        QCBOREncode_AddTDaysString(enc, QCBOR_ENCODE_AS_TAG, m_string_get_cstr(text));
+        m_string_clear(text);
+    }
+    return 0;
+}
+
+static int cace_ari_cbor_decode_optdate(QCBORDecodeContext *dec, cace_ari_date_t *obj)
+{
+    QCBORItem decitem;
+    QCBORDecode_VPeekNext(dec, &decitem);
+    if (QCBORDecode_GetError(dec))
+    {
+        return 2;
+    }
+
+    int retval = 0;
+    switch (decitem.uDataType)
+    {
+        case QCBOR_TYPE_DAYS_EPOCH:
+            // actual read
+            QCBORDecode_VGetNext(dec, &decitem);
+            obj->valid = true;
+            // FIXME decode
+            break;
+        case QCBOR_TYPE_DAYS_STRING:
+        {
+            // actual read
+            QCBORDecode_VGetNext(dec, &decitem);
+            obj->valid = true;
+
+            // need to append null terminator
+            cace_data_t text;
+            cace_data_init(&text);
+            cace_data_copy_from(&text, decitem.val.dateString.len, (cace_data_ptr_t)decitem.val.dateString.ptr);
+            cace_data_append_byte(&text, '\0');
+            if (cace_date_decode(&(obj->parts), &text))
+            {
+                retval = 3;
+            }
+            cace_data_deinit(&text);
+            break;
+        }
+        default:
+            // optional tagged value not present
+            break;
+    }
+    return retval;
 }
 
 static const int64_t nsec_scale = (int64_t)1e9;
@@ -811,7 +871,10 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *enc, const cace_ari_t *ari)
         const cace_ari_ref_t *obj = &(ari->as_ref);
 
         QCBOREncode_OpenArray(enc);
-        cace_ari_cbor_encode_idseg(enc, &(obj->objpath.ns_id));
+        cace_ari_cbor_encode_idseg(enc, &(obj->objpath.org_id));
+        cace_ari_cbor_encode_idseg(enc, &(obj->objpath.model_id));
+        cace_ari_cbor_encode_optdate(enc, &(obj->objpath.model_rev));
+        // prefer enumerated object type
         if (obj->objpath.has_ari_type)
         {
             QCBOREncode_AddInt64(enc, obj->objpath.ari_type);
@@ -821,6 +884,7 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *enc, const cace_ari_t *ari)
             cace_ari_cbor_encode_idseg(enc, &(obj->objpath.type_id));
         }
         cace_ari_cbor_encode_idseg(enc, &(obj->objpath.obj_id));
+
         switch (obj->params.state)
         {
             case CACE_ARI_PARAMS_NONE:
@@ -1148,22 +1212,39 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
         }
         else if (decitem.val.uCount > 2)
         {
-            cace_ari_ref_t *obj = cace_ari_init_objref(ari);
+            int             remain = decitem.val.uCount;
+            cace_ari_ref_t *obj    = cace_ari_init_objref(ari);
 
-            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.ns_id));
-            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.type_id));
-            cace_ari_cbor_decode_idseg(dec, &(obj->objpath.obj_id));
-            int err = cace_ari_objpath_derive_type(&(obj->objpath));
+            int fail = 0;
+            fail += cace_ari_cbor_decode_idseg(dec, &(obj->objpath.org_id));
+            --remain;
+            fail += cace_ari_cbor_decode_idseg(dec, &(obj->objpath.model_id));
+            --remain;
+            fail += cace_ari_cbor_decode_optdate(dec, &(obj->objpath.model_rev));
+            if (obj->objpath.model_rev.valid)
+            {
+                --remain;
+            }
+            fail += cace_ari_cbor_decode_idseg(dec, &(obj->objpath.type_id));
+            --remain;
+            fail += cace_ari_cbor_decode_idseg(dec, &(obj->objpath.obj_id));
+            --remain;
+            if (fail)
+            {
+                return 3;
+            }
 
             // Validate AMM object type
+            int err = cace_ari_objpath_derive_type(&(obj->objpath));
             if (err)
             {
                 return 3;
             }
 
             obj->params.state = CACE_ARI_PARAMS_NONE;
-            if (decitem.val.uCount > 3)
+            if (remain == 1)
             {
+                --remain;
                 // some parameters present
                 QCBORDecode_VPeekNext(dec, &decitem);
                 if (QCBORDecode_GetError(dec))
@@ -1198,6 +1279,12 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
                         retval = 4;
                         break;
                 }
+            }
+
+            if (remain > 0)
+            {
+                // extra items beyond optional parameters
+                retval = 5;
             }
         }
 

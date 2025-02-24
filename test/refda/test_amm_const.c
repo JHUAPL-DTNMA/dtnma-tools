@@ -95,8 +95,8 @@ static void check_produce(cace_ari_t *value, const char *refhex, const char *out
     cace_ari_deinit(&inref);
 }
 
-// References are based on ari://2/CONST/4
-TEST_CASE("0A", "83022104", "0A", 0)
+// References are based on ari://2/2/CONST/4
+TEST_CASE("0A", "8402022104", "0A", 0)
 void test_const_produce_param_none(const char *valhex, const char *refhex, const char *outhex, int expect_res)
 {
     // initial state
@@ -109,10 +109,10 @@ void test_const_produce_param_none(const char *valhex, const char *refhex, const
 }
 
 // References are based on ari://2/CONST/4
-TEST_CASE("0A", "83022104", "0A", 0)
-TEST_CASE("0A", "84022104810A", "0A", 0) // [10] not used, but not an error
-// FIXME: TEST_CASE("820E00", "84022104810A", "0A", 0)     // [10] label substituted by index
-// FIXME: TEST_CASE("820E626869", "84022104810A", "0A", 0) // [10] label substituted by name
+TEST_CASE("0A", "8402022104", "0A", 0)
+TEST_CASE("0A", "8502022104810A", "0A", 0) // [10] not used, but not an error
+// FIXME: TEST_CASE("820E00", "8502022104810A", "0A", 0)     // [10] label substituted by index
+// FIXME: TEST_CASE("820E626869", "8502022104810A", "0A", 0) // [10] label substituted by name
 void test_const_produce_param_one_int(const char *valhex, const char *refhex, const char *outhex, int expect_res)
 {
     {

@@ -357,7 +357,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         # first check behavior with one report
         sock_path = self._send_rptset(
-            'ari:/RPTSET/n=null;r=20240102T030405Z;(t=PT;s=//ietf-dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=null;r=20240102T030405Z;(t=PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
@@ -396,10 +396,10 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
 
         self._send_rptset(
-            'ari:/RPTSET/n=null;r=20240102T030406Z;(t=PT;s=//ietf-dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=null;r=20240102T030406Z;(t=PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         sock_path = self._send_rptset(
-            'ari:/RPTSET/n=null;r=20240102T030405Z;(t=PT;s=//ietf-dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=null;r=20240102T030405Z;(t=PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
@@ -448,7 +448,7 @@ class TestRefdmSocket(unittest.TestCase):
         )
         self.assertEqual(200, resp.status_code)
 
-        textform = "ari:/EXECSET/n=h'6869';(//ietf-dtnma-agent/CTRL/inspect)"
+        textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
         send_ari = self._ari_text_to_obj(textform)
         send_data = self._ari_obj_to_cbor(send_ari)
 
@@ -485,7 +485,7 @@ class TestRefdmSocket(unittest.TestCase):
         )
         self.assertEqual(200, resp.status_code)
 
-        textform = "ari:/EXECSET/n=h'6869';(//ietf-dtnma-agent/CTRL/inspect)"
+        textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
         send_ari = self._ari_text_to_obj(textform)
         send_text = self._ari_obj_to_text(send_ari)
 

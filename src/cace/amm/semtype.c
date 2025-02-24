@@ -47,7 +47,7 @@ static void cace_amm_semtype_use_name(const cace_amm_type_t *self, cace_ari_t *n
     CHKVOID(semtype);
 
     cace_ari_ref_t *ref = cace_ari_set_objref(name);
-    cace_ari_objpath_set_textid(&(ref->objpath), "ietf-amm", CACE_ARI_TYPE_IDENT, "semtype-use");
+    cace_ari_objpath_set_textid(&(ref->objpath), "ietf", "amm", CACE_ARI_TYPE_IDENT, "semtype-use");
 
     cace_ari_tree_t params;
     cace_ari_tree_init(params);
@@ -163,7 +163,7 @@ static void cace_amm_semtype_ulist_name(const cace_amm_type_t *self, cace_ari_t 
     CHKVOID(semtype);
 
     cace_ari_ref_t *ref = cace_ari_set_objref(name);
-    cace_ari_objpath_set_textid(&(ref->objpath), "ietf-amm", CACE_ARI_TYPE_IDENT, "semtype-ulist");
+    cace_ari_objpath_set_textid(&(ref->objpath), "ietf", "amm", CACE_ARI_TYPE_IDENT, "semtype-ulist");
 
     cace_ari_tree_t params;
     cace_ari_tree_init(params);
@@ -768,7 +768,7 @@ static void cace_amm_semtype_union_name(const cace_amm_type_t *self, cace_ari_t 
     CHKVOID(semtype);
 
     cace_ari_ref_t *ref = cace_ari_set_objref(name);
-    cace_ari_objpath_set_textid(&(ref->objpath), "ietf-amm", CACE_ARI_TYPE_IDENT, "semtype-union");
+    cace_ari_objpath_set_textid(&(ref->objpath), "ietf", "amm", CACE_ARI_TYPE_IDENT, "semtype-union");
 
     cace_ari_tree_t params;
     cace_ari_tree_init(params);
