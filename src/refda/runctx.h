@@ -95,10 +95,10 @@ void refda_runctx_deinit(refda_runctx_t *ctx);
 int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
 
 /// M*LIB OPLIST for refda_runctx_t
-#define M_OPL_refda_runctx_t() (INIT(API_2(refda_runctx_init)), CLEAR(API_2(refda_runctx_deinit)))
+#define M_OPL_refda_runctx_t() (INIT(API_2(refda_runctx_init)), INIT_SET(0), CLEAR(API_2(refda_runctx_deinit)), SET(0))
 
 /// @cond Doxygen_Suppress
-SHARED_PTR_DEF(refda_runctx_ptr, refda_runctx_t)
+M_SHARED_PTR_DEF(refda_runctx_ptr, refda_runctx_t)
 /// @endcond
 
 #ifdef __cplusplus

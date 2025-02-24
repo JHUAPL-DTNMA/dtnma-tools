@@ -11,12 +11,15 @@
 #include "cace/ari/text_str_scan.h"
 #include "cace/ari/text_val_parse.h"
 #include "cace/ari/text_util.h"
+#include "cace/ari/text.h"
 #include "cace/config.h"
 #include <stdlib.h>
 
 #define YYMALLOC(size) CACE_MALLOC(size)
 #define YYFREE(ptr) CACE_FREE(ptr)
 
+static int cace_model_split_rev(cace_ari_objpath_t *path, cace_ari_idseg_t *seg);
+static int cace_validate_objpath(cace_ari_objpath_t *path);
 static int cace_ari_lit_from_text(yyscan_t *scanner, cace_ari_text_str_t *input, cace_ari_lit_t *lit, cace_ari_type_t *typ, string_t val);
 
 int yydebug = 0;
@@ -48,9 +51,9 @@ typedef void * yyscan_t;
  *
  * @param scanner The scanner state at error.
  * @param[in,out] input The input struct to update.
- * @param msg The specific error message.
+ * @param format The specific error message format string.
  */
-void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char const *msg);
+void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char const *format, ...);
 
 }
 
@@ -94,11 +97,14 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 %token T_LITTYPE_EXECSET
 %token T_LITTYPE_RPTSET
 
+%token T_REF_ABS ///< start of absolute reference ARI
+%token T_REF_REL_DOT
+%token T_REF_REL_DOTDOT
+%token <idseg> T_IDSEG
 %token <text> T_VALSEG
 
 %type <objref> ssp-objref
 %type <objpath> objpath
-%token <idseg> T_IDSEG
 %type <params> params
 
 %type <ari> ari
@@ -162,7 +168,7 @@ ssp-literal:
         }
         if (!valid)
         {
-            cace_ari_text_str_error(scanner, input, "TBL has invalid key \"c\"");
+            cace_ari_text_str_error(scanner, input, "TBL has invalid key \"c\": %s", m_string_get_cstr(key));
             YYERROR;
         }
         input->tbl_c = ncols;
@@ -208,7 +214,7 @@ ssp-literal:
         {
             cace_named_ari_dict_clear($2);
             cace_ari_lit_deinit(&$3);
-            cace_ari_text_str_error(scanner, input, "EXECSET has invalid key \"n\"");
+            cace_ari_text_str_error(scanner, input, "EXECSET has invalid key \"n\": %s", m_string_get_cstr(key));
             YYERROR;
         }
 
@@ -262,7 +268,7 @@ ssp-literal:
         {
             cace_named_ari_dict_clear($2);
             cace_ari_lit_deinit(&$3);
-            cace_ari_text_str_error(scanner, input, "RPTSET has invalid key \"n\"");
+            cace_ari_text_str_error(scanner, input, "RPTSET has invalid key \"n\": %s", m_string_get_cstr(key));
             YYERROR;
         }
 
@@ -295,7 +301,7 @@ ssp-literal:
         {
             cace_named_ari_dict_clear($2);
             cace_ari_lit_deinit(&$3);
-            cace_ari_text_str_error(scanner, input, "RPTSET has invalid key \"r\"");
+            cace_ari_text_str_error(scanner, input, "RPTSET has invalid key \"r\": %s", m_string_get_cstr(key));
             YYERROR;
         }
 
@@ -363,7 +369,7 @@ litparamlist:
         if (val) { // Detect duplicate keys
             cace_named_ari_dict_clear($$);
             string_clear($2);
-            cace_ari_text_str_error(scanner, input, "Parameter list has duplicate key");
+            cace_ari_text_str_error(scanner, input, "Parameter list has duplicate key: %s", m_string_get_cstr($2));
             YYERROR;
         }
         val = cace_named_ari_dict_safe_get($$, $2);
@@ -446,7 +452,7 @@ report:
         {
             cace_named_ari_dict_clear($2);
             cace_ari_lit_deinit(&$3);
-            cace_ari_text_str_error(scanner, input, "RPT has invalid key \"t\"");
+            cace_ari_text_str_error(scanner, input, "RPT has invalid key \"t\": %s", m_string_get_cstr(key));
             YYERROR;
         }
 
@@ -470,7 +476,7 @@ report:
         {
             cace_named_ari_dict_clear($2);
             cace_ari_lit_deinit(&$3);
-            cace_ari_text_str_error(scanner, input, "RPT has invalid key \"s\"");
+            cace_ari_text_str_error(scanner, input, "RPT has invalid key \"s\": %s", m_string_get_cstr(key));
             YYERROR;
         }
 
@@ -490,22 +496,70 @@ ssp-objref:
 ;
 
 objpath:
-    T_IDSEG T_IDSEG T_IDSEG {
+    T_REF_ABS T_IDSEG T_IDSEG T_IDSEG T_IDSEG {
+        // absolute object reference
         cace_ari_objpath_init(&$$);
-        $$.ns_id = $1;
-        $$.type_id = $2;
-        $$.obj_id = $3;
-        int err = cace_ari_objpath_derive_type(&$$);
-
-        if (err)
+        $$.org_id = $2;
+        if (cace_model_split_rev(&$$, &$3))
         {
-          cace_ari_text_str_error(scanner, input, "Invalid object type");
-          YYERROR;
+            cace_ari_text_str_error(scanner, input, "Invalid model revision");
+            YYERROR;
+        }
+        $$.type_id = $4;
+        $$.obj_id = $5;
+        if (cace_validate_objpath(&$$))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid object type");
+            YYERROR;
         }
     }
-    | T_IDSEG {
+    | T_REF_REL_DOTDOT T_IDSEG T_IDSEG T_IDSEG {
+        // org-relative reference
         cace_ari_objpath_init(&$$);
-        $$.ns_id = $1;
+        if (cace_model_split_rev(&$$, &$2))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid model revision");
+            YYERROR;
+        }
+        $$.type_id = $3;
+        $$.obj_id = $4;
+        if (cace_validate_objpath(&$$))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid object type");
+            YYERROR;
+        }
+    }
+    | T_REF_REL_DOT T_IDSEG T_IDSEG {
+        // model-relative reference
+        cace_ari_objpath_init(&$$);
+        $$.type_id = $2;
+        $$.obj_id = $3;
+        if (cace_validate_objpath(&$$))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid object type");
+            YYERROR;
+        }
+    }
+    | T_REF_ABS T_IDSEG T_IDSEG {
+        // absolute namespace
+        cace_ari_objpath_init(&$$);
+        $$.org_id = $2;
+        if (cace_model_split_rev(&$$, &$3))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid model revision");
+            YYERROR;
+        }
+        cace_validate_objpath(&$$);
+    }
+    | T_REF_REL_DOTDOT T_IDSEG {
+        // org-relative namespace
+        cace_ari_objpath_init(&$$);
+        if (cace_model_split_rev(&$$, &$2))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid model revision");
+            YYERROR;
+        }
+        cace_validate_objpath(&$$);
     }
 ;
 
@@ -536,6 +590,32 @@ int cace_ari_text_decode(cace_ari_t *ari, const string_t text, const char **errm
     return res;
 }
 
+static int cace_model_split_rev(cace_ari_objpath_t *path, cace_ari_idseg_t *seg)
+{
+    // pop off revision date if present
+    int retval = 0;
+    const size_t rev_at = m_string_search_char(seg->as_text, '@', 0);
+    if (rev_at != M_STRING_FAILURE)
+    {
+        cace_ari_date_from_text(&path->model_rev, m_string_get_cstr(seg->as_text) + rev_at + 1);
+        m_string_left(seg->as_text, rev_at);
+        retval = path->model_rev.valid ? 0 : 2;
+    }
+    path->model_id = *seg;
+    return retval;
+}
+
+static int cace_validate_objpath(cace_ari_objpath_t *path)
+{
+    cace_ari_idseg_derive_form(&path->org_id);
+    cace_ari_idseg_derive_form(&path->model_id);
+    cace_ari_idseg_derive_form(&path->type_id);
+    cace_ari_idseg_derive_form(&path->obj_id);
+
+    int err = cace_ari_objpath_derive_type(path);
+    return err;
+}
+
 int cace_ari_lit_from_text(yyscan_t *scanner, cace_ari_text_str_t *input, cace_ari_lit_t *lit, cace_ari_type_t *typ, string_t val)
 {
     *lit = (cace_ari_lit_t){
@@ -547,7 +627,7 @@ int cace_ari_lit_from_text(yyscan_t *scanner, cace_ari_text_str_t *input, cace_a
     int res = cace_ari_text_valseg_decode(lit, string_get_cstr(val), &errm);
     if (res)
     {
-        cace_ari_text_str_error(scanner, input, errm);
+        cace_ari_text_str_error(scanner, input, "%s", errm);
         if (errm)
         {
             M_MEMORY_FREE((char *)errm);
@@ -557,7 +637,7 @@ int cace_ari_lit_from_text(yyscan_t *scanner, cace_ari_text_str_t *input, cace_a
     return 0;
 }
 
-void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char const *msg)
+void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char const *format, ...)
 {
     if (!input || !(input->errm))
     {
@@ -566,8 +646,13 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 
     string_t str;
     string_init(str);
-    string_cat_printf(str, "Parse error at %d: %s", 
-                      cace_ari_text_str_get_column(scanner), msg);
+    string_cat_printf(str, "Parse error at %d:", cace_ari_text_str_get_column(scanner));
+    {
+        va_list val;
+        va_start(val, format);
+        m_string_vprintf(str, format, val);
+        va_end(val);
+    }
 
     *(input->errm) = m_string_clear_get_cstr(str);
 }

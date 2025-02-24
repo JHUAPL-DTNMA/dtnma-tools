@@ -134,9 +134,9 @@ void tearDown(void)
     cace_ari_deinit(&mock_result_store);
 }
 
-// References are based on ari://2/CONST/4
-TEST_CASE(CACE_ARI_TYPE_NULL, "83022104", "8200F6")
-TEST_CASE(CACE_ARI_TYPE_INT, "83022104", "82040A")
+// References are based on ari://2/2/CONST/4
+TEST_CASE(CACE_ARI_TYPE_NULL, "8402022104", "8200F6")
+TEST_CASE(CACE_ARI_TYPE_INT, "8402022104", "82040A")
 void test_ctrl_execute_param_none(cace_ari_type_t restype, const char *refhex, const char *outhex)
 {
     refda_amm_ctrl_desc_t obj;
@@ -156,12 +156,12 @@ void test_ctrl_execute_param_none(cace_ari_type_t restype, const char *refhex, c
     refda_amm_ctrl_desc_deinit(&obj);
 }
 
-// References are based on ari://2/CONST/4
-TEST_CASE("83022104", "820403")           // no parameters, default value
-TEST_CASE("84022104810A", "82040A")       // pass through parameter
-TEST_CASE("84022104A1000A", "82040A")     // pass through parameter by index
-TEST_CASE("84022104A16268690A", "82040A") // pass through parameter by name
-TEST_CASE("8402210481F7", "F7")           // pass through undefined parameter
+// References are based on ari://2/2/CONST/4
+TEST_CASE("8402022104", "820403")           // no parameters, default value
+TEST_CASE("8502022104810A", "82040A")       // pass through parameter
+TEST_CASE("8502022104A1000A", "82040A")     // pass through parameter by index
+TEST_CASE("8502022104A16268690A", "82040A") // pass through parameter by name
+TEST_CASE("850202210481F7", "F7")           // pass through undefined parameter
 void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex)
 {
     refda_amm_ctrl_desc_t obj;

@@ -107,7 +107,7 @@ static int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        CACE_LOG_DEBUG("Evaluating OPER %s with %d operands", string_get_cstr(deref->obj->name),
+        CACE_LOG_DEBUG("Evaluating OPER %s with %d operands", string_get_cstr(deref->obj->obj_id.name),
                        cace_ari_array_size(operctx.operands.ordered));
     }
     (desc->evaluate)(&operctx);

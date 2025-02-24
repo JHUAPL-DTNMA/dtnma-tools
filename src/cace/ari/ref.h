@@ -28,10 +28,14 @@
 #include <m-string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/// Integer type for object reference parts
+typedef int64_t cace_ari_int_id_t;
 
 /** Represent an identifier component of an ARI.
  * It is used by object reference ARI for component values.
@@ -52,25 +56,17 @@ typedef struct
     union
     {
         /// Integer enumeration. Must fit within 64-bit signed int.
-        int64_t as_int;
+        cace_ari_int_id_t as_int;
         /// Text string data
-        string_t as_text;
+        m_string_t as_text;
     };
 } cace_ari_idseg_t;
 
 /** Initialize a null ID segment.
  *
- * @param[out] idseg The segment to initialize.
+ * @param[out] obj The segment to initialize.
  */
-void cace_ari_idseg_init(cace_ari_idseg_t *idseg);
-
-/** Initialize an ID segment from any text.
- *
- * @param[out] idseg The segment to initialize.
- * @param[in,out] text The text to take from and clear.
- * @return Zero upon success.
- */
-int cace_ari_idseg_init_from_text(cace_ari_idseg_t *idseg, string_t text);
+void cace_ari_idseg_init(cace_ari_idseg_t *obj);
 
 void cace_ari_idseg_deinit(cace_ari_idseg_t *obj);
 
@@ -82,13 +78,51 @@ int cace_ari_idseg_cmp(const cace_ari_idseg_t *left, const cace_ari_idseg_t *rig
 
 bool cace_ari_idseg_equal(const cace_ari_idseg_t *left, const cace_ari_idseg_t *right);
 
+/** Initialize an ID segment from any text.
+ *
+ * @param[out] obj The segment to initialize.
+ * @param[in,out] text The text to take from and clear.
+ */
+void cace_ari_idseg_init_text(cace_ari_idseg_t *obj, string_t text);
+
+/** Derive an integer value if the segment contains text that matches an integer pattern.
+ * @param[in,out] idset The object to update.
+ */
+void cace_ari_idseg_derive_form(cace_ari_idseg_t *idset);
+
+/** Represent a decoded date value.
+ */
+typedef struct
+{
+    /// True if #parts is valid
+    bool valid;
+    /// Decoded date-only parts
+    struct tm parts;
+} cace_ari_date_t;
+
+void cace_ari_date_init(cace_ari_date_t *obj);
+void cace_ari_date_deinit(cace_ari_date_t *obj);
+void cace_ari_date_copy(cace_ari_date_t *obj, const cace_ari_date_t *src);
+int  cace_ari_date_cmp(const cace_ari_date_t *left, const cace_ari_date_t *right);
+
+/** A helper function to decode date text.
+ *
+ * @param[out] obj The object to decode into, setting its cace_ari_date_t#valid state depending on decoding success.
+ * @param[in] text The text to decode.
+ */
+int cace_ari_date_from_text(cace_ari_date_t *obj, const char *text);
+
 /** The entire object path as part of a full obj_ref_t.
  * Keeping this separate allows using just the identity portion for searching.
  */
 typedef struct
 {
-    /// The namespace-id segment of the path
-    cace_ari_idseg_t ns_id;
+    /// The organization-id segment of the path
+    cace_ari_idseg_t org_id;
+    /// The model-id segment of the path
+    cace_ari_idseg_t model_id;
+    /// Date from 1970-01-01 epoch
+    cace_ari_date_t model_rev;
     /// The object-type segment of the path
     cace_ari_idseg_t type_id;
     /// The object-id segment of the path
@@ -117,45 +151,51 @@ int cace_ari_objpath_derive_type(cace_ari_objpath_t *path);
 /** Set the ARI as an object reference with a specific text-named path.
  *
  * @param[in,out] path The path to modify.
- * @param[in] ns_id The namespace path segment.
- * @param type_id The object type path segment.
- * @param[in] obj_id The object ID path segment.
+ * @param[in] org_id The organization ID.
+ * @param[in] model_id The model ID.
+ * @param type_id The object type ID.
+ * @param[in] obj_id The object ID.
  */
-void cace_ari_objpath_set_textid(cace_ari_objpath_t *path, const char *ns_id, cace_ari_type_t type_id,
-                                 const char *obj_id);
+void cace_ari_objpath_set_textid(cace_ari_objpath_t *path, const char *org_id, const char *model_id,
+                                 cace_ari_type_t type_id, const char *obj_id);
 
 /** Set the ARI as an object reference with a specific text-named path.
+ * For all pointer arguments, the pointed-to lifetime does not need to outlast this function call.
+ * Pointed-to values are copied into the path.
  *
  * @param[in,out] path The path to modify.
- * @param[in] ns_id The namespace path segment, or NULL for none.
- * @param type_id The object type path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
- * function call.
- * @param[in] obj_id The object ID path segment, or NULL for none.
+ * @param[in] org_id The organization ID, or NULL for none.
+ * @param[in] model_id The model ID, or NULL for none.
+ * @param type_id The object type ID, or NULL for none.
+ * @param[in] obj_id The object ID, or NULL for none.
  */
-void cace_ari_objpath_set_textid_opt(cace_ari_objpath_t *path, const char *ns_id, const cace_ari_type_t *type_id,
-                                     const char *obj_id);
+void cace_ari_objpath_set_textid_opt(cace_ari_objpath_t *path, const char *org_id, const char *model_id,
+                                     const cace_ari_type_t *type_id, const char *obj_id);
 
 /** Set the ARI as an object reference with a specific integer-enumerated path.
  *
  * @param[in,out] path The path to modify.
- * @param ns_id The namespace path segment.
- * @param type_id The object type path segment.
- * @param obj_id The object ID path segment.
+ * @param[in] org_id The organization ID.
+ * @param[in] model_id The model ID.
+ * @param type_id The object type ID.
+ * @param[in] obj_id The object ID.
  */
-void cace_ari_objpath_set_intid(cace_ari_objpath_t *path, int64_t ns_id, cace_ari_type_t type_id, int64_t obj_id);
+void cace_ari_objpath_set_intid(cace_ari_objpath_t *path, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
+                                cace_ari_type_t type_id, cace_ari_int_id_t obj_id);
 
 /** Set the ARI as an object reference with a specific integer-enumerated path.
+ * For all pointer arguments, the pointed-to lifetime does not need to outlast this function call.
+ * Pointed-to values are copied into the path.
  *
  * @param[in,out] path The path to modify.
- * @param ns_id The namespace path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
- * function call.
- * @param type_id The object type path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
- * function call.
- * @param obj_id The object ID path segment, or NULL for none. The pointed-to lifetime does not need to outlast this
- * function call.
+ * @param[in] org_id The organization ID, or NULL for none.
+ * @param[in] model_id The model ID, or NULL for none.
+ * @param type_id The object type ID, or NULL for none.
+ * @param[in] obj_id The object ID, or NULL for none.
  */
-void cace_ari_objpath_set_intid_opt(cace_ari_objpath_t *path, const int64_t *ns_id, const cace_ari_type_t *type_id,
-                                    const int64_t *obj_id);
+void cace_ari_objpath_set_intid_opt(cace_ari_objpath_t *path, const cace_ari_int_id_t *org_id,
+                                    const cace_ari_int_id_t *model_id, const cace_ari_type_t *type_id,
+                                    const cace_ari_int_id_t *obj_id);
 
 // forward declarations
 struct cace_ari_ac_s;

@@ -132,10 +132,12 @@ int refda_agent_nowtime(refda_agent_t *agent, cace_ari_t *val);
  * @pre The agent object store must already be locked.
  *
  * @param[in] agent The agent to search within.
- * @param ns_id The namespace enumeration.
+ * @param org_id The namespace organization enumeration.
+ * @param model_id The namespace model enumeration.
  * @param obj_id The object enumeration.
  */
-cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, int64_t ns_id, int64_t obj_id);
+cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
+                                         cace_ari_int_id_t obj_id);
 
 /** After all ADMs are registered, bind cross-references between them.
  *

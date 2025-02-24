@@ -43,11 +43,11 @@ void test_obj_ns_find_obj(void)
     cace_amm_obj_ns_init(&ns);
 
     cace_amm_obj_desc_t *ident1 =
-        cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_withenum("name", 1));
+        cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_withenum("name", 1));
     TEST_ASSERT_NOT_NULL(ident1);
 
     cace_amm_obj_desc_t *ident2 =
-        cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_withenum("other", 2));
+        cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_withenum("other", 2));
     TEST_ASSERT_NOT_NULL(ident2);
 
     cace_amm_obj_desc_t *found;
@@ -79,15 +79,15 @@ void test_obj_ns_add_obj_duplicate(void)
     cace_amm_obj_ns_init(&ns);
 
     cace_amm_obj_desc_t *ident1 =
-        cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_withenum("name", 1));
+        cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_withenum("name", 1));
     TEST_ASSERT_NOT_NULL(ident1);
 
     cace_amm_obj_desc_t *dupe;
-    dupe = cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_withenum("name", 2));
+    dupe = cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_withenum("name", 2));
     TEST_ASSERT_NULL(dupe);
-    dupe = cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_noenum("name"));
+    dupe = cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_noenum("name"));
     TEST_ASSERT_NULL(dupe);
-    dupe = cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_obj_id_withenum("other", 1));
+    dupe = cace_amm_obj_ns_add_obj(&ns, CACE_ARI_TYPE_IDENT, cace_amm_idseg_ref_withenum("other", 1));
     TEST_ASSERT_NULL(dupe);
 
     cace_amm_obj_ns_deinit(&ns);

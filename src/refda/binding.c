@@ -349,7 +349,8 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
     refda_amm_oper_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
-    int                            failcnt = 0;
+    int failcnt = 0;
+
     cace_amm_named_type_array_it_t ait;
     for (cace_amm_named_type_array_it(ait, desc->operand_types); !cace_amm_named_type_array_end_p(ait);
          cace_amm_named_type_array_next(ait))
@@ -365,7 +366,7 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
 
 int refda_binding_obj(cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
 {
-    CACE_LOG_DEBUG("Binding object ./%s/%s", cace_ari_type_to_name(obj_type), string_get_cstr(obj->name));
+    CACE_LOG_DEBUG("Binding object ./%s/%s", cace_ari_type_to_name(obj_type), string_get_cstr(obj->obj_id.name));
     switch (obj_type)
     {
         case CACE_ARI_TYPE_IDENT:

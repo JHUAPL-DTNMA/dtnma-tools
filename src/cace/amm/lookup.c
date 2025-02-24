@@ -90,21 +90,39 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
         return 2;
     }
 
-    switch (path->ns_id.form)
+    cace_amm_obj_org_t *org = NULL;
+    switch (path->org_id.form)
     {
         case CACE_ARI_IDSEG_INT:
-            res->ns = cace_amm_obj_store_find_ns_enum(store, path->ns_id.as_int);
+            org = cace_amm_obj_store_find_org_enum(store, path->org_id.as_int);
             break;
         case CACE_ARI_IDSEG_TEXT:
-            res->ns = cace_amm_obj_store_find_ns_name(store, string_get_cstr(path->ns_id.as_text));
+            org = cace_amm_obj_store_find_org_name(store, m_string_get_cstr(path->org_id.as_text));
+            break;
+        default:
+            break;
+    }
+    if (!org)
+    {
+        return 3;
+    }
+    switch (path->model_id.form)
+    {
+        case CACE_ARI_IDSEG_INT:
+            res->ns = cace_amm_obj_org_find_ns_enum(org, path->model_id.as_int);
+            break;
+        case CACE_ARI_IDSEG_TEXT:
+            res->ns = cace_amm_obj_org_find_ns_name(org, m_string_get_cstr(path->model_id.as_text));
             break;
         default:
             break;
     }
     if (!(res->ns))
     {
-        return 3;
+        return 4;
     }
+
+    // FIXME handle model_rev
 
     switch (path->obj_id.form)
     {
@@ -119,7 +137,7 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
     }
     if (!(res->obj))
     {
-        return 4;
+        return 6;
     }
 
     res->obj_type = path->ari_type;
@@ -127,7 +145,7 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
     int pop_res = cace_amm_actual_param_set_populate(&(res->aparams), res->obj->fparams, &(ref->as_ref.params));
     if (pop_res)
     {
-        return 5 + pop_res;
+        return 7 + pop_res;
     }
 
     return 0;

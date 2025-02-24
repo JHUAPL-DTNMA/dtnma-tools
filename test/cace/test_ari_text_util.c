@@ -304,6 +304,50 @@ void test_cace_base64_decode_invalid(const char *text)
     string_clear(in_text);
 }
 
+// Integer parameters according to POSIX `struct tm`
+TEST_CASE(124, 5, 24, true, "2024-06-24")
+TEST_CASE(124, 5, 24, false, "20240624")
+void test_cace_date_encode_valid(int year, int mon, int mday, bool usesep, const char *expect)
+{
+    struct tm in = { .tm_year = year, .tm_mon = mon, .tm_mday = mday };
+
+    string_t out_text;
+    string_init(out_text);
+    TEST_ASSERT_EQUAL_INT(0, cace_date_encode(out_text, &in, usesep));
+    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
+
+    string_clear(out_text);
+}
+TEST_CASE("2024-06-24", 124, 5, 24)
+TEST_CASE("20240624", 124, 5, 24)
+void test_cace_date_decode_valid(const char *text, int expect_year, int expect_mon, int expect_mday)
+{
+    cace_data_t in_data;
+    cace_data_init_view(&in_data, strlen(text) + 1, (cace_data_ptr_t)text);
+
+    struct tm out;
+    TEST_ASSERT_EQUAL_INT(0, cace_date_decode(&out, &in_data));
+
+    TEST_ASSERT_EQUAL(expect_year, out.tm_year);
+    TEST_ASSERT_EQUAL(expect_mon, out.tm_mon);
+    TEST_ASSERT_EQUAL(expect_mday, out.tm_mday);
+
+    cace_data_deinit(&in_data);
+}
+
+TEST_CASE("test")
+TEST_CASE("2020-1-1")
+void test_cace_date_decode_invalid(const char *text)
+{
+    cace_data_t in_data;
+    cace_data_init_view(&in_data, strlen(text) + 1, (cace_data_ptr_t)text);
+
+    struct tm out;
+    TEST_ASSERT_NOT_EQUAL_INT(0, cace_date_decode(&out, &in_data));
+
+    cace_data_deinit(&in_data);
+}
+
 TEST_CASE(20, 0, true, "2000-01-01T00:00:20Z")
 TEST_CASE(20, 0, false, "20000101T000020Z")
 TEST_CASE(20, 1e3, false, "20000101T000020.000001Z")

@@ -48,7 +48,8 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-#define EXAMPLE_ADM_ENUM 65536
+#define EXAMPLE_ORG_ENUM 65535
+#define EXAMPLE_ADM_ENUM 10
 
 /// Agent context for testing
 static refda_agent_t agent;
@@ -62,7 +63,8 @@ void setUp(void)
     TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(&agent));
     TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(&agent));
 
-    ex_adm = cace_amm_obj_store_add_ns(&(agent.objs), "example-adm", "2025-01-03", true, EXAMPLE_ADM_ENUM);
+    ex_adm = cace_amm_obj_store_add_ns(&(agent.objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
+                                       cace_amm_idseg_ref_withenum("adm", EXAMPLE_ADM_ENUM), "2025-01-03");
     TEST_ASSERT_NOT_NULL(ex_adm);
 
     int res = refda_agent_bindrefs(&agent);
@@ -96,24 +98,24 @@ static void check_execute(const cace_ari_t *target)
 }
 
 // clang-format off
-// ari://1/EDD/0 -> ari:%22JHU%2FAPL%22
-TEST_CASE("83012300", 0, CACE_ARI_PRIM_TSTR, 0)
-// ari://1/EDD/1 -> ari:%220.0.0%22
-TEST_CASE("83012301", 0, CACE_ARI_PRIM_TSTR, 0)
-// ari://1/EDD/2 -> ari:/TBL/c=4;
-TEST_CASE("83012302", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/typedef-list -> ari:/TBL/c=1;
-TEST_CASE("8301230A", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/typedef-list(true) -> ari:/TBL/c=1;(...)
-TEST_CASE("8401230A81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/var-list -> ari:/TBL/c=2;
-TEST_CASE("8301230B", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/var-list(true) -> ari:/TBL/c=2;
-TEST_CASE("8401230B81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/const-list -> ari:/TBL/c=2;
-TEST_CASE("8301230E", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
-// ari://1/EDD/const-list(true) -> ari:/TBL/c=2;
-TEST_CASE("8401230E81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/0 -> ari:%22JHU%2FAPL%22
+TEST_CASE("8401012300", 0, CACE_ARI_PRIM_TSTR, 0)
+// ari://1/1/EDD/1 -> ari:%220.0.0%22
+TEST_CASE("8401012301", 0, CACE_ARI_PRIM_TSTR, 0)
+// ari://1/1/EDD/2 -> ari:/TBL/c=4;
+TEST_CASE("8401012302", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/typedef-list -> ari:/TBL/c=1;
+TEST_CASE("840101230A", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/typedef-list(true) -> ari:/TBL/c=1;(...)
+TEST_CASE("850101230A81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/var-list -> ari:/TBL/c=2;
+TEST_CASE("840101230B", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/var-list(true) -> ari:/TBL/c=2;
+TEST_CASE("850101230B81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/const-list -> ari:/TBL/c=2;
+TEST_CASE("840101230E", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/const-list(true) -> ari:/TBL/c=2;
+TEST_CASE("850101230E81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
 // clang-format on
 void test_refda_adm_ietf_dtnma_agent_edd_produce(const char *targethex, int expect_res,
                                                  enum cace_ari_prim_type_e expect_prim, cace_ari_type_t expect_type)
@@ -170,15 +172,15 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_reset(void)
         }
         cace_ari_set_int(&objdata->init_val, 100);
 
-        obj = refda_register_var(ex_adm, cace_amm_obj_id_withenum("test", test_var_enum), objdata);
+        obj = refda_register_var(ex_adm, cace_amm_idseg_ref_withenum("test", test_var_enum), objdata);
         // no parameters
     }
     int res = refda_binding_obj(CACE_ARI_TYPE_VAR, obj, &agent.objs);
     TEST_ASSERT_EQUAL_INT(0, res);
 
     cace_ari_t var_ref;
-    cace_ari_objpath_set_intid(&(cace_ari_init_objref(&var_ref)->objpath), EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
-                               test_var_enum);
+    cace_ari_objpath_set_intid(&(cace_ari_init_objref(&var_ref)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM,
+                               CACE_ARI_TYPE_VAR, test_var_enum);
 
     refda_runctx_t runctx;
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
@@ -203,15 +205,15 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_reset(void)
         cace_ari_t ctrl_ref;
         {
             cace_ari_ref_t *ref = cace_ari_init_objref(&ctrl_ref);
-            cace_ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
+            cace_ari_objpath_set_intid(&(ref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
                                        REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_RESET);
 
             cace_ari_list_t params;
             cace_ari_list_init(params);
             {
                 cace_ari_t *param = cace_ari_list_push_back_new(params);
-                cace_ari_objpath_set_intid(&(cace_ari_init_objref(param)->objpath), EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
-                                           test_var_enum);
+                cace_ari_objpath_set_intid(&(cace_ari_init_objref(param)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM,
+                                           CACE_ARI_TYPE_VAR, test_var_enum);
             }
             cace_ari_params_set_ac(&(ref->params), params);
         }
@@ -253,15 +255,15 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_store(void)
             cace_amm_type_set_use_ref_move(&objdata->val_type, &name);
         }
 
-        obj = refda_register_var(ex_adm, cace_amm_obj_id_withenum("test", test_var_enum), objdata);
+        obj = refda_register_var(ex_adm, cace_amm_idseg_ref_withenum("test", test_var_enum), objdata);
         // no parameters
     }
     int res = refda_binding_obj(CACE_ARI_TYPE_VAR, obj, &agent.objs);
     TEST_ASSERT_EQUAL_INT(0, res);
 
     cace_ari_t var_ref;
-    cace_ari_objpath_set_intid(&(cace_ari_init_objref(&var_ref)->objpath), EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
-                               test_var_enum);
+    cace_ari_objpath_set_intid(&(cace_ari_init_objref(&var_ref)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM,
+                               CACE_ARI_TYPE_VAR, test_var_enum);
 
     refda_runctx_t runctx;
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
@@ -286,15 +288,15 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_store(void)
         cace_ari_t ctrl_ref;
         {
             cace_ari_ref_t *ref = cace_ari_init_objref(&ctrl_ref);
-            cace_ari_objpath_set_intid(&(ref->objpath), REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
+            cace_ari_objpath_set_intid(&(ref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
                                        REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_STORE);
 
             cace_ari_list_t params;
             cace_ari_list_init(params);
             {
                 cace_ari_t *param = cace_ari_list_push_back_new(params);
-                cace_ari_objpath_set_intid(&(cace_ari_init_objref(param)->objpath), EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR,
-                                           test_var_enum);
+                cace_ari_objpath_set_intid(&(cace_ari_init_objref(param)->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM,
+                                           CACE_ARI_TYPE_VAR, test_var_enum);
             }
             {
                 cace_ari_t *param = cace_ari_list_push_back_new(params);

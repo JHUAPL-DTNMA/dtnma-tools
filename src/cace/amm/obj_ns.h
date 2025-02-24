@@ -19,6 +19,9 @@
 #define CACE_AMM_OBJ_NS_H_
 
 #include "obj_desc.h"
+#include "idseg_val.h"
+#include "idseg_ref.h"
+#include "cace/ari/ref.h"
 #include "cace/util/nocase.h"
 #include <m-rbtree.h>
 #include <m-shared-ptr.h>
@@ -57,27 +60,31 @@ void cace_amm_obj_ns_ctr_init(cace_amm_obj_ns_ctr_t *obj);
 
 void cace_amm_obj_ns_ctr_deinit(cace_amm_obj_ns_ctr_t *obj);
 
-#define M_OPL_cace_amm_obj_ns_ctr_t() (INIT(API_2(cace_amm_obj_ns_ctr_init)), CLEAR(API_2(cace_amm_obj_ns_ctr_deinit)))
+#define M_OPL_cace_amm_obj_ns_ctr_t() \
+    (INIT(API_2(cace_amm_obj_ns_ctr_init)), INIT_SET(0), CLEAR(API_2(cace_amm_obj_ns_ctr_deinit)), SET(0))
 
 /** @struct cace_amm_obj_ns_ctr_dict_t
  * A mapping from ari_type_t integer enumeration to cace_amm_obj_ns_ctr_t
  * object containers.
  */
 /// @cond Doxygen_Suppress
-M_DICT_DEF2(cace_amm_obj_ns_ctr_dict, cace_ari_type_t, M_OPL_cace_ari_type_t(), cace_amm_obj_ns_ctr_t,
-            M_OPL_cace_amm_obj_ns_ctr_t())
+M_SHARED_WEAK_PTR_DEF(cace_amm_obj_ns_ctr_ptr, cace_amm_obj_ns_ctr_t, M_OPL_cace_amm_obj_ns_ctr_t())
+M_DICT_DEF2(cace_amm_obj_ns_ctr_dict, cace_ari_type_t, M_OPL_cace_ari_type_t(), cace_amm_obj_ns_ctr_ptr_t *,
+            M_SHARED_PTR_OPLIST(cace_amm_obj_ns_ctr_ptr, M_OPL_cace_amm_obj_ns_ctr_t()))
 /// @endcond
 
+typedef struct cace_amm_obj_org_s cace_amm_obj_org_t;
+
+/** Storage of a namespace, its identifiers, and its contained objects.
+ */
 typedef struct
 {
-    /// Indication of whether this namespace has an enumeration assigned
-    bool has_enum;
-    /// Optional integer enumeration for this namespace if #has_enum is true
-    int64_t intenum;
-    /// Mandatory name for this namespace
-    m_string_t name;
-    /// Revision being supported
-    m_string_t revision;
+    /// Parent organization ID (non-authoritative but necessary for bookkeeping)
+    cace_amm_idseg_val_t org_id;
+    /// Model ID, which must have a text name
+    cace_amm_idseg_val_t model_id;
+    /// Revision being supported, which must be valid
+    cace_ari_date_t model_rev;
 
     /// Features supported within this namespace
     string_tree_set_t feature_supp;
@@ -90,34 +97,18 @@ void cace_amm_obj_ns_init(cace_amm_obj_ns_t *ns);
 
 void cace_amm_obj_ns_deinit(cace_amm_obj_ns_t *ns);
 
-/// Oplist to store namespaces in containers
-#define M_OPL_cace_amm_obj_ns_t() (INIT(API_2(cace_amm_obj_ns_init)), CLEAR(API_2(cace_amm_obj_ns_deinit)))
-
-typedef struct
-{
-    const char *name;
-    bool        has_enum;
-    int64_t     intenum;
-} cace_amm_obj_id_t;
-
-/** Construct an object ID with an integer enum.
- *
- * @param[in] name The object name, which must be non-null.
- * @param The object enumeration.
- * @return The full object ID.
- */
-cace_amm_obj_id_t cace_amm_obj_id_withenum(const char *name, int64_t intenum);
-/// @overload
-cace_amm_obj_id_t cace_amm_obj_id_noenum(const char *name);
+/// M*LIB oplist for cace_amm_obj_ns_t
+#define M_OPL_cace_amm_obj_ns_t() \
+    (INIT(API_2(cace_amm_obj_ns_init)), INIT_SET(0), CLEAR(API_2(cace_amm_obj_ns_deinit)), SET(0))
 
 cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
-                                             const cace_amm_obj_id_t obj_id);
+                                             const cace_amm_idseg_ref_t obj_id);
 
 cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_name(const cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
                                                    const char *name);
 
 cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
-                                                   int64_t intenum);
+                                                   cace_ari_int_id_t intenum);
 
 #ifdef __cplusplus
 } // extern C
