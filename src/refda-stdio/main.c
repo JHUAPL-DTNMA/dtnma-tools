@@ -163,6 +163,7 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
                     }
 
                     string_t inhex;
+                    string_init(inhex);
                     m_string_set_cstrn(inhex, curs, plen);
                     CACE_LOG_DEBUG("decoding ARI item from base-16: %s", m_string_get_cstr(inhex));
 
