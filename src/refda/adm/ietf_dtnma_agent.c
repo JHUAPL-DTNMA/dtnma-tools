@@ -377,31 +377,32 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx(refda_edd_prod_ctx_t *ctx)
      */
 }
 
-/* Name: num-msg-tx-failed
- * Description MISSING
- *
- * Parameters: none
- *
- * Produced type: use of ari://ietf/amm/TYPEDEF/counter64
- */
-static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed(refda_edd_prod_ctx_t *ctx)
-{
-    /*
-     * +-------------------------------------------------------------------------+
-     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
-     * +-------------------------------------------------------------------------+
-     */
-    refda_agent_t *agent  = ctx->prodctx->parent->agent;
-    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
-    atomic_ullong  val    = atomic_load(&agent->instr.num_rptset_sent_failure);
-    cace_ari_set_uvast(&result, val);
-    refda_edd_prod_ctx_set_result_move(ctx, &result);
-    /*
-     * +-------------------------------------------------------------------------+
-     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failure BODY
-     * +-------------------------------------------------------------------------+
-     */
-}
+// FUTURE:
+///* Name: num-msg-tx-failed
+// * Description MISSING
+// *
+// * Parameters: none
+// *
+// * Produced type: use of ari://ietf/amm/TYPEDEF/counter64
+// */
+// static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed(refda_edd_prod_ctx_t *ctx)
+//{
+//    /*
+//     * +-------------------------------------------------------------------------+
+//     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
+//     * +-------------------------------------------------------------------------+
+//     */
+//    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+//    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
+//    atomic_ullong  val    = atomic_load(&agent->instr.num_rptset_sent_failure);
+//    cace_ari_set_uvast(&result, val);
+//    refda_edd_prod_ctx_set_result_move(ctx, &result);
+//    /*
+//     * +-------------------------------------------------------------------------+
+//     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failure BODY
+//     * +-------------------------------------------------------------------------+
+//     */
+//}
 
 /* Name: num-exec-started
  * Description MISSING
@@ -2459,26 +2460,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_edd(
                 adm, cace_amm_idseg_ref_withenum("num-msg-tx", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX),
-                objdata);
-            // no parameters
-        }
-        { // For ./EDD/num-msg-tx-failed
-            refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
-            refda_amm_edd_desc_init(objdata);
-            // produced type
-            {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm/TYPEDEF/counter64
-                cace_ari_set_objref_path_intid(&name, 1, 0, CACE_ARI_TYPE_TYPEDEF, 12);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
-            }
-            // callback:
-            objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed;
-
-            obj = refda_register_edd(
-                adm,
-                cace_amm_idseg_ref_withenum("num-msg-tx-failed",
-                                            REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX_FAILED),
                 objdata);
             // no parameters
         }
