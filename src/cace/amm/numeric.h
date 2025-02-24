@@ -45,7 +45,8 @@ int cace_amm_numeric_promote_type(cace_ari_type_t *result, const cace_ari_t *lef
  * @param[in] right The other input value.
  * @return Zero if successful.
  */
-int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast);
+int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
+                                         cace_binop_uvast op_uvast, cace_binop_vast op_vast);
 
 /** Execute a numeric operation accepting two parameters.
  *
@@ -57,7 +58,8 @@ int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *l
  * @param[in] op_real64 Operator function for real64 types.
  * @return Zero if successful.
  */
-int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64);
+int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
+                                 cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64);
 
 /** Compare two numeric values.
  *
@@ -69,7 +71,9 @@ int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, c
  * @param[in] op_real64 Operator function for real64 types.
  * @return Zero if successful.
  */
-int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64);
+int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
+                                            cace_binop_uvast op_uvast, cace_binop_vast op_vast,
+                                            cace_binop_real64 op_real64);
 
 /** Determine if given value is zero.
  *

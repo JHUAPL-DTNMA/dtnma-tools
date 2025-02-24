@@ -313,9 +313,9 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    atomic_ullong val = atomic_load(&agent->instr.num_execset_recv);
+    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
+    atomic_ullong  val    = atomic_load(&agent->instr.num_execset_recv);
     cace_ari_set_uvast(&result, val);
     refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
@@ -1340,9 +1340,9 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_negate BODY
      * +-------------------------------------------------------------------------+
      */
-    const cace_ari_t *val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    int retval = 0;
+    const cace_ari_t *val    = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    int               retval = 0;
     switch (val->as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
@@ -1374,49 +1374,148 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
      */
 }
 
-static cace_ari_uvast numeric_add_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left + right; } 
-static cace_ari_vast  numeric_add_vast(cace_ari_vast left, cace_ari_vast right){ return left + right; }
-static cace_ari_real64 numeric_add_real64(cace_ari_real64 left, cace_ari_real64 right){ return left + right; }
+static cace_ari_uvast numeric_add_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left + right;
+}
+static cace_ari_vast numeric_add_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left + right;
+}
+static cace_ari_real64 numeric_add_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left + right;
+}
 
-static cace_ari_uvast numeric_sub_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left - right; } 
-static cace_ari_vast  numeric_sub_vast(cace_ari_vast left, cace_ari_vast right){ return left - right; }
-static cace_ari_real64 numeric_sub_real64(cace_ari_real64 left, cace_ari_real64 right){ return left - right; }
+static cace_ari_uvast numeric_sub_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left - right;
+}
+static cace_ari_vast numeric_sub_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left - right;
+}
+static cace_ari_real64 numeric_sub_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left - right;
+}
 
-static cace_ari_uvast numeric_mul_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left * right; } 
-static cace_ari_vast  numeric_mul_vast(cace_ari_vast left, cace_ari_vast right){ return left * right; }
-static cace_ari_real64 numeric_mul_real64(cace_ari_real64 left, cace_ari_real64 right){ return left * right; }
+static cace_ari_uvast numeric_mul_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left * right;
+}
+static cace_ari_vast numeric_mul_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left * right;
+}
+static cace_ari_real64 numeric_mul_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left * right;
+}
 
-static cace_ari_uvast numeric_div_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left / right; } 
-static cace_ari_vast  numeric_div_vast(cace_ari_vast left, cace_ari_vast right){ return left / right; }
-static cace_ari_real64 numeric_div_real64(cace_ari_real64 left, cace_ari_real64 right){ return left / right; }
+static cace_ari_uvast numeric_div_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left / right;
+}
+static cace_ari_vast numeric_div_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left / right;
+}
+static cace_ari_real64 numeric_div_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left / right;
+}
 
-static cace_ari_uvast numeric_mod_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left % right; } 
-static cace_ari_vast  numeric_mod_vast(cace_ari_vast left, cace_ari_vast right){ return left % right; }
-static cace_ari_real64 numeric_mod_real64(cace_ari_real64 left, cace_ari_real64 right){ return fmod(left, right); }
+static cace_ari_uvast numeric_mod_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left % right;
+}
+static cace_ari_vast numeric_mod_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left % right;
+}
+static cace_ari_real64 numeric_mod_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return fmod(left, right);
+}
 
-static cace_ari_uvast numeric_eq_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left == right; } 
-static cace_ari_vast  numeric_eq_vast(cace_ari_vast left, cace_ari_vast right){ return left == right; }
-static cace_ari_real64 numeric_eq_real64(cace_ari_real64 left, cace_ari_real64 right){ return left == right; }
+static cace_ari_uvast numeric_eq_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left == right;
+}
+static cace_ari_vast numeric_eq_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left == right;
+}
+static cace_ari_real64 numeric_eq_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left == right;
+}
 
-static cace_ari_uvast numeric_ne_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left != right; } 
-static cace_ari_vast  numeric_ne_vast(cace_ari_vast left, cace_ari_vast right){ return left != right; }
-static cace_ari_real64 numeric_ne_real64(cace_ari_real64 left, cace_ari_real64 right){ return left != right; }
+static cace_ari_uvast numeric_ne_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left != right;
+}
+static cace_ari_vast numeric_ne_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left != right;
+}
+static cace_ari_real64 numeric_ne_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left != right;
+}
 
-static cace_ari_uvast numeric_gt_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left > right; } 
-static cace_ari_vast  numeric_gt_vast(cace_ari_vast left, cace_ari_vast right){ return left > right; }
-static cace_ari_real64 numeric_gt_real64(cace_ari_real64 left, cace_ari_real64 right){ return left > right; }
+static cace_ari_uvast numeric_gt_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left > right;
+}
+static cace_ari_vast numeric_gt_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left > right;
+}
+static cace_ari_real64 numeric_gt_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left > right;
+}
 
-static cace_ari_uvast numeric_gte_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left >= right; } 
-static cace_ari_vast  numeric_gte_vast(cace_ari_vast left, cace_ari_vast right){ return left >= right; }
-static cace_ari_real64 numeric_gte_real64(cace_ari_real64 left, cace_ari_real64 right){ return left >= right; }
+static cace_ari_uvast numeric_gte_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left >= right;
+}
+static cace_ari_vast numeric_gte_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left >= right;
+}
+static cace_ari_real64 numeric_gte_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left >= right;
+}
 
-static cace_ari_uvast numeric_lt_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left < right; } 
-static cace_ari_vast  numeric_lt_vast(cace_ari_vast left, cace_ari_vast right){ return left < right; }
-static cace_ari_real64 numeric_lt_real64(cace_ari_real64 left, cace_ari_real64 right){ return left < right; }
+static cace_ari_uvast numeric_lt_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left < right;
+}
+static cace_ari_vast numeric_lt_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left < right;
+}
+static cace_ari_real64 numeric_lt_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left < right;
+}
 
-static cace_ari_uvast numeric_lte_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left <= right; } 
-static cace_ari_vast  numeric_lte_vast(cace_ari_vast left, cace_ari_vast right){ return left <= right; }
-static cace_ari_real64 numeric_lte_real64(cace_ari_real64 left, cace_ari_real64 right){ return left <= right; }
+static cace_ari_uvast numeric_lte_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left <= right;
+}
+static cace_ari_vast numeric_lte_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left <= right;
+}
+static cace_ari_real64 numeric_lte_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left <= right;
+}
 
 /* Name: add
  * Description:
@@ -1436,8 +1535,9 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_add_uvast, numeric_add_vast, numeric_add_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_add_uvast, numeric_add_vast, numeric_add_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1463,8 +1563,9 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_sub_uvast, numeric_sub_vast, numeric_sub_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_sub_uvast, numeric_sub_vast, numeric_sub_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1490,8 +1591,9 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mul_uvast, numeric_mul_vast, numeric_mul_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mul_uvast, numeric_mul_vast, numeric_mul_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1517,10 +1619,12 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    
-    if (!cace_numeric_is_zero(rt_val) && 
-        !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_div_uvast, numeric_div_vast, numeric_div_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+
+    if (!cace_numeric_is_zero(rt_val)
+        && !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_div_uvast, numeric_div_vast,
+                                         numeric_div_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1546,9 +1650,12 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    
-    if (!cace_numeric_is_zero(rt_val) && !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mod_uvast, numeric_mod_vast, numeric_mod_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+
+    if (!cace_numeric_is_zero(rt_val)
+        && !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mod_uvast, numeric_mod_vast,
+                                         numeric_mod_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1572,9 +1679,9 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_not BODY
      * +-------------------------------------------------------------------------+
      */
-    const cace_ari_t *val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    int retval = 0;
+    const cace_ari_t *val    = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    int               retval = 0;
     switch (val->as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
@@ -1603,12 +1710,30 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
      */
 }
 
-static cace_ari_uvast bitwise_and_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left & right; } 
-static cace_ari_vast bitwise_and_vast(cace_ari_vast left, cace_ari_vast right){ return left & right; }
-static cace_ari_uvast bitwise_or_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left | right; } 
-static cace_ari_vast bitwise_or_vast(cace_ari_vast left, cace_ari_vast right){ return left | right; }
-static cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast right){ return left ^ right; } 
-static cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right){ return left ^ right; }
+static cace_ari_uvast bitwise_and_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left & right;
+}
+static cace_ari_vast bitwise_and_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left & right;
+}
+static cace_ari_uvast bitwise_or_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left | right;
+}
+static cace_ari_vast bitwise_or_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left | right;
+}
+static cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left ^ right;
+}
+static cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left ^ right;
+}
 
 /* Name: bit-and
  * Description MISSING
@@ -1626,8 +1751,9 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_and_uvast, bitwise_and_vast)) {
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_and_uvast, bitwise_and_vast))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1653,8 +1779,9 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_or_uvast, bitwise_or_vast)) {
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_or_uvast, bitwise_or_vast))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1680,8 +1807,9 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_xor_uvast, bitwise_xor_vast)) {
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_xor_uvast, bitwise_xor_vast))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1832,13 +1960,15 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_eq BODY
      * +-------------------------------------------------------------------------+
      */
-    
+
     // FIXME: handle non-numeric types
 
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_eq_uvast, numeric_eq_vast, numeric_eq_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_eq_uvast, numeric_eq_vast,
+                                                 numeric_eq_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1862,13 +1992,15 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ne BODY
      * +-------------------------------------------------------------------------+
      */
-    
+
     // FIXME: handle non-numeric types
 
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_ne_uvast, numeric_ne_vast, numeric_ne_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_ne_uvast, numeric_ne_vast,
+                                                 numeric_ne_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1897,8 +2029,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ct
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_gt_uvast, numeric_gt_vast, numeric_gt_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_gt_uvast, numeric_gt_vast,
+                                                 numeric_gt_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1927,8 +2061,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ct
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_gte_uvast, numeric_gte_vast, numeric_gte_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_gte_uvast, numeric_gte_vast,
+                                                 numeric_gte_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1957,8 +2093,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ct
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_lt_uvast, numeric_lt_vast, numeric_lt_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_lt_uvast, numeric_lt_vast,
+                                                 numeric_lt_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*
@@ -1987,8 +2125,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
      */
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_lte_uvast, numeric_lte_vast, numeric_lte_real64)){
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_lte_uvast, numeric_lte_vast,
+                                                 numeric_lte_real64))
+    {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
     /*

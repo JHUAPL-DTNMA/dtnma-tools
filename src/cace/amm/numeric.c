@@ -112,7 +112,7 @@ int cace_amm_numeric_promote_type(cace_ari_type_t *result, const cace_ari_t *lef
 }
 
 int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
- cace_binop_uvast op_uvast, cace_binop_vast op_vast)
+                                         cace_binop_uvast op_uvast, cace_binop_vast op_vast)
 {
     cace_ari_type_t promote;
     if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
@@ -133,10 +133,10 @@ int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *l
     switch (lt_prom.as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
-            res_lit->value.as_uint64 = op_uvast(lt_prom.as_lit.value.as_uint64 , rt_prom.as_lit.value.as_uint64);
+            res_lit->value.as_uint64 = op_uvast(lt_prom.as_lit.value.as_uint64, rt_prom.as_lit.value.as_uint64);
             break;
         case CACE_ARI_PRIM_INT64:
-            res_lit->value.as_int64 = op_vast(lt_prom.as_lit.value.as_int64 , rt_prom.as_lit.value.as_int64);
+            res_lit->value.as_int64 = op_vast(lt_prom.as_lit.value.as_int64, rt_prom.as_lit.value.as_int64);
             break;
         default:
             // leave lit as default undefined
@@ -156,7 +156,8 @@ int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *l
     return retval;
 }
 
-int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64)
+int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
+                                 cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64)
 {
     cace_ari_type_t promote;
     if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
@@ -177,13 +178,13 @@ int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, c
     switch (lt_prom.as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
-            res_lit->value.as_uint64 = op_uvast(lt_prom.as_lit.value.as_uint64 , rt_prom.as_lit.value.as_uint64);
+            res_lit->value.as_uint64 = op_uvast(lt_prom.as_lit.value.as_uint64, rt_prom.as_lit.value.as_uint64);
             break;
         case CACE_ARI_PRIM_INT64:
-            res_lit->value.as_int64 = op_vast(lt_prom.as_lit.value.as_int64 , rt_prom.as_lit.value.as_int64);
+            res_lit->value.as_int64 = op_vast(lt_prom.as_lit.value.as_int64, rt_prom.as_lit.value.as_int64);
             break;
         case CACE_ARI_PRIM_FLOAT64:
-            res_lit->value.as_float64 = op_real64(lt_prom.as_lit.value.as_float64 , rt_prom.as_lit.value.as_float64);
+            res_lit->value.as_float64 = op_real64(lt_prom.as_lit.value.as_float64, rt_prom.as_lit.value.as_float64);
             break;
         default:
             // leave lit as default undefined
@@ -203,7 +204,9 @@ int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, c
     return retval;
 }
 
-int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val, cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64)
+int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
+                                            cace_binop_uvast op_uvast, cace_binop_vast op_vast,
+                                            cace_binop_real64 op_real64)
 {
     cace_ari_type_t promote;
     if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
@@ -224,13 +227,13 @@ int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t
     switch (lt_prom.as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
-            res_lit->value.as_bool = op_uvast(lt_prom.as_lit.value.as_uint64 , rt_prom.as_lit.value.as_uint64);
+            res_lit->value.as_bool = op_uvast(lt_prom.as_lit.value.as_uint64, rt_prom.as_lit.value.as_uint64);
             break;
         case CACE_ARI_PRIM_INT64:
-            res_lit->value.as_bool = op_vast(lt_prom.as_lit.value.as_int64 , rt_prom.as_lit.value.as_int64);
+            res_lit->value.as_bool = op_vast(lt_prom.as_lit.value.as_int64, rt_prom.as_lit.value.as_int64);
             break;
         case CACE_ARI_PRIM_FLOAT64:
-            res_lit->value.as_bool = op_real64(lt_prom.as_lit.value.as_float64 , rt_prom.as_lit.value.as_float64);
+            res_lit->value.as_bool = op_real64(lt_prom.as_lit.value.as_float64, rt_prom.as_lit.value.as_float64);
             break;
         default:
             // leave lit as default undefined
