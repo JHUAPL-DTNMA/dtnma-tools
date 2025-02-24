@@ -71,6 +71,7 @@ void *refda_ingress_worker(void *arg)
         if (recv_res)
         {
             CACE_LOG_INFO("Got mif.recv result=%d, stopping", recv_res);
+            atomic_fetch_add(&agent->instr.num_execset_recv_failure, 1);
 
             // flush the input queue but keep the daemon running
             refda_msgdata_t undef;

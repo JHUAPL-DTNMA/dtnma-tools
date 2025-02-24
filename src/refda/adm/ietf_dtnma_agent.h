@@ -87,6 +87,8 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SBR_LIST 12
 /// For ./EDD/tbr-list
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TBR_LIST 13
+/// For ./EDD/num-msg-tx-failed
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX_FAILED 14
 
 /*
  * Enumerations for CTRL objects
