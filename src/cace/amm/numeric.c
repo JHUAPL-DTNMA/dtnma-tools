@@ -159,6 +159,12 @@ int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *l
 int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
                                  cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64)
 {
+    CHKERR1(result);
+    CHKERR1(lt_val);
+    CHKERR1(rt_val);
+    CHKERR1(op_uvast);
+    CHKERR1(op_vast);
+    CHKERR1(op_real64);
     cace_ari_type_t promote;
     if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
     {
@@ -208,6 +214,13 @@ int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t
                                             cace_binop_uvast op_uvast, cace_binop_vast op_vast,
                                             cace_binop_real64 op_real64)
 {
+    CHKERR1(result);
+    CHKERR1(lt_val);
+    CHKERR1(rt_val);
+    CHKERR1(op_uvast);
+    CHKERR1(op_vast);
+    CHKERR1(op_real64);
+
     cace_ari_type_t promote;
     if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
     {
@@ -255,6 +268,7 @@ int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t
 
 bool cace_numeric_is_zero(const cace_ari_t *val)
 {
+    CHKERR1(val);
     switch (val->as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
