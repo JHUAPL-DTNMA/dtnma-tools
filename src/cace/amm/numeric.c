@@ -273,16 +273,11 @@ bool cace_numeric_is_zero(const cace_ari_t *val)
     {
         case CACE_ARI_PRIM_UINT64:
             return val->as_lit.value.as_uint64 == 0;
-            break;
         case CACE_ARI_PRIM_INT64:
             return val->as_lit.value.as_int64 == 0;
-            break;
         case CACE_ARI_PRIM_FLOAT64:
             return val->as_lit.value.as_float64 == 0.0;
-            break;
         default:
-            break;
+            return false;
     }
-
-    return false;
 }
