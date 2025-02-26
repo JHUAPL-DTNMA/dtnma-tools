@@ -1482,32 +1482,6 @@ static cace_ari_real64 numeric_mod_real64(cace_ari_real64 left, cace_ari_real64 
     return fmod(left, right);
 }
 
-static cace_ari_uvast numeric_eq_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left == right;
-}
-static cace_ari_vast numeric_eq_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left == right;
-}
-static cace_ari_real64 numeric_eq_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left == right;
-}
-
-static cace_ari_uvast numeric_ne_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left != right;
-}
-static cace_ari_vast numeric_ne_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left != right;
-}
-static cace_ari_real64 numeric_ne_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left != right;
-}
-
 static cace_ari_uvast numeric_gt_uvast(cace_ari_uvast left, cace_ari_uvast right)
 {
     return left > right;
