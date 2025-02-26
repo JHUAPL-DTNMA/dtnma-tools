@@ -82,6 +82,37 @@ static int numeric_rank(cace_ari_type_t typ)
     }
 }
 
+bool cace_is_numeric_type(cace_ari_type_t typ)
+{
+    switch (typ)
+    {
+        case CACE_ARI_TYPE_BYTE:
+        case CACE_ARI_TYPE_UINT:
+        case CACE_ARI_TYPE_INT:
+        case CACE_ARI_TYPE_UVAST:
+        case CACE_ARI_TYPE_VAST:
+        case CACE_ARI_TYPE_REAL32:
+        case CACE_ARI_TYPE_REAL64:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool cace_has_numeric_prim_type(const cace_ari_t *obj)
+{
+    CHKERR1(obj);
+    switch (obj->as_lit.prim_type)
+    {
+        case CACE_ARI_PRIM_UINT64:
+        case CACE_ARI_PRIM_INT64:
+        case CACE_ARI_PRIM_FLOAT64:
+            return true;
+        default:
+            return false;
+    }
+}
+
 int cace_amm_numeric_promote_type(cace_ari_type_t *result, const cace_ari_t *left, const cace_ari_t *right)
 {
     CHKERR1(result);

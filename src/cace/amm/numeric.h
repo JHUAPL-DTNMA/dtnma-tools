@@ -82,6 +82,20 @@ int cace_numeric_binary_comparison_operator(cace_ari_t *result, const cace_ari_t
  */
 bool cace_numeric_is_zero(const cace_ari_t *val);
 
+/** Determine if given type is numeric.
+ *
+ * @param[in] val Input value.
+ * @return true if numeric type.
+ */
+bool cace_is_numeric_type(cace_ari_type_t typ);
+
+/** Determine if given object is using a numeric primitive type.
+ *
+ * @param[in] val Input object.
+ * @return true if numeric prim type.
+ */
+bool cace_has_numeric_prim_type(const cace_ari_t *obj);
+
 #ifdef __cplusplus
 } // extern C
 #endif
