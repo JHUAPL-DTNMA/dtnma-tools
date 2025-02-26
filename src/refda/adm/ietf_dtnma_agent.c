@@ -1398,6 +1398,7 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
             break;
         default:
             // leave lit as default undefined
+            CACE_LOG_WARNING("negate: Unhandled numeric type %d", val->as_lit.prim_type);
             retval = 3;
             break;
     }
@@ -1734,6 +1735,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
             break;
         default:
             // leave lit as default undefined
+            CACE_LOG_WARNING("bit-not: Unhandled numeric type %d", val->as_lit.prim_type);
             retval = 3;
             break;
     }
