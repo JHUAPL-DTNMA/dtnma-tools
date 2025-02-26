@@ -18,6 +18,8 @@
 #include "algo.h"
 #include "containers.h"
 #include "cace/util/defs.h"
+#include "cace/amm/numeric.h"
+#include "cace/amm/typing.h"
 #include <math.h>
 
 static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor, const cace_ari_visit_ctx_t *ctx);
@@ -802,60 +804,83 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
                     break;
             }
         }
+
+        bool result = true;
+
+        cace_ari_type_t promote;
+        cace_ari_t      lt_prom = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_t      rt_prom = CACE_ARI_INIT_UNDEFINED;
+
+        if (cace_has_numeric_prim_type(left) && cace_has_numeric_prim_type(right)
+            && !cace_amm_numeric_promote_type(&promote, left, right))
+        {
+            const cace_amm_type_t *amm_promote = cace_amm_type_get_builtin(promote);
+            cace_amm_type_convert(amm_promote, &lt_prom, left);
+            cace_amm_type_convert(amm_promote, &rt_prom, right);
+            left  = &lt_prom;
+            right = &rt_prom;
+        }
+
         if (left->as_lit.prim_type != right->as_lit.prim_type)
         {
-            return false;
+            result = false;
         }
-        switch (left->as_lit.prim_type)
+        else
         {
-            case CACE_ARI_PRIM_UNDEFINED:
-            case CACE_ARI_PRIM_NULL:
-                break;
-            case CACE_ARI_PRIM_BOOL:
-                if (left->as_lit.value.as_bool != right->as_lit.value.as_bool)
-                {
-                    return false;
-                }
-                break;
-            case CACE_ARI_PRIM_UINT64:
-                if (left->as_lit.value.as_uint64 != right->as_lit.value.as_uint64)
-                {
-                    return false;
-                }
-                break;
-            case CACE_ARI_PRIM_INT64:
-                if (left->as_lit.value.as_int64 != right->as_lit.value.as_int64)
-                {
-                    return false;
-                }
-                break;
-            case CACE_ARI_PRIM_FLOAT64:
-                if (isnan(left->as_lit.value.as_float64) != isnan(right->as_lit.value.as_float64))
-                {
-                    return false;
-                }
-                if (!isnan(left->as_lit.value.as_float64)
-                    && (left->as_lit.value.as_float64 != right->as_lit.value.as_float64))
-                {
-                    return false;
-                }
-                break;
-            case CACE_ARI_PRIM_TSTR:
-            case CACE_ARI_PRIM_BSTR:
-                if (!cace_data_equal(&(left->as_lit.value.as_data), &(right->as_lit.value.as_data)))
-                {
-                    return false;
-                }
-                break;
-            case CACE_ARI_PRIM_TIMESPEC:
-                if (!M_MEMCMP1_DEFAULT(left->as_lit.value.as_timespec, right->as_lit.value.as_timespec))
-                {
-                    return false;
-                }
-                break;
-            default:
-                break;
+            switch (left->as_lit.prim_type)
+            {
+                case CACE_ARI_PRIM_UNDEFINED:
+                case CACE_ARI_PRIM_NULL:
+                    break;
+                case CACE_ARI_PRIM_BOOL:
+                    if (left->as_lit.value.as_bool != right->as_lit.value.as_bool)
+                    {
+                        result = false;
+                    }
+                    break;
+                case CACE_ARI_PRIM_UINT64:
+                    if (left->as_lit.value.as_uint64 != right->as_lit.value.as_uint64)
+                    {
+                        result = false;
+                    }
+                    break;
+                case CACE_ARI_PRIM_INT64:
+                    if (left->as_lit.value.as_int64 != right->as_lit.value.as_int64)
+                    {
+                        result = false;
+                    }
+                    break;
+                case CACE_ARI_PRIM_FLOAT64:
+                    if (isnan(left->as_lit.value.as_float64) != isnan(right->as_lit.value.as_float64))
+                    {
+                        result = false;
+                    }
+                    if (!isnan(left->as_lit.value.as_float64)
+                        && (left->as_lit.value.as_float64 != right->as_lit.value.as_float64))
+                    {
+                        result = false;
+                    }
+                    break;
+                case CACE_ARI_PRIM_TSTR:
+                case CACE_ARI_PRIM_BSTR:
+                    if (!cace_data_equal(&(left->as_lit.value.as_data), &(right->as_lit.value.as_data)))
+                    {
+                        result = false;
+                    }
+                    break;
+                case CACE_ARI_PRIM_TIMESPEC:
+                    if (!M_MEMCMP1_DEFAULT(left->as_lit.value.as_timespec, right->as_lit.value.as_timespec))
+                    {
+                        result = false;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
-        return true;
+
+        cace_ari_deinit(&lt_prom);
+        cace_ari_deinit(&rt_prom);
+        return result;
     }
 }
