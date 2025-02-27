@@ -1,20 +1,15 @@
 name: Build and run tests
 on:
+  schedule:
+    - cron: '0 0 * * 0'
   push:
-    paths:
-      - .github/workflows/build-test.yaml
-      - deps/**
-      - cmake/**
-      - src/**
-      - test/**
-      - testenv/**
-  pull_request:
     branches:
-    - main
+      - main
+      - 'apl-fy[0-9][0-9]'
+  pull_request: {} # any target
 
 jobs:
   unit-test:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -40,7 +35,6 @@ jobs:
         run: ./build.sh check
 
   agent-test:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -74,7 +68,6 @@ jobs:
         run: python3 -m pytest agent-test --capture=no --log-cli-level=debug
 
   integration-test:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
