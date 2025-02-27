@@ -529,6 +529,30 @@ static cace_amm_type_match_res_t builtin_real32_match(const cace_amm_type_t *sel
     return cace_amm_type_match_pos_neg(builtin_anyfloat_constraints(&_builtin_real32_cnst, NULL, ari));
 }
 
+static int builtin_real32_convert(const cace_amm_type_t *self, cace_ari_t *out, const cace_ari_t *in)
+{
+    if (builtin_common_convert(self, out, in))
+    {
+        return 0;
+    }
+
+    if (in->is_ref)
+    {
+        return CACE_AMM_ERR_CONVERT_BADVALUE;
+    }
+    else
+    {
+        double result;
+        if (!builtin_anyfloat_constraints(&_builtin_real32_cnst, &result, in))
+        {
+            return CACE_AMM_ERR_CONVERT_BADVALUE;
+        }
+        cace_ari_set_real32(out, result);
+        cace_ari_force_lit_type(out, self->as_builtin.ari_type);
+        return 0;
+    }
+}
+
 static cace_amm_type_match_res_t builtin_real64_match(const cace_amm_type_t *self, const cace_ari_t *ari)
 {
     cace_amm_type_match_res_t got = builtin_common_lit_match(self, ari);
@@ -757,7 +781,7 @@ static cace_amm_type_t cace_amm_builtins[] = {
         .as_builtin.ari_type = CACE_ARI_TYPE_REAL32,
         .ari_name            = builtin_ari_name,
         .match               = builtin_real32_match,
-        .convert             = builtin_default_convert,
+        .convert             = builtin_real32_convert,
     },
     {
         .type_class          = CACE_AMM_TYPE_BUILTIN,

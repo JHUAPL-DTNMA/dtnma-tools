@@ -25,6 +25,7 @@
 void refda_instr_init(refda_instr_t *obj)
 {
     atomic_init(&(obj->num_execset_recv), 0);
+    atomic_init(&(obj->num_execset_recv_failure), 0);
     atomic_init(&(obj->num_rptset_sent), 0);
     atomic_init(&(obj->num_rptset_sent_failure), 0);
     atomic_init(&(obj->num_tbrs), 0);

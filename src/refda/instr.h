@@ -30,6 +30,8 @@ typedef struct
 {
     /// Count of EXECSET values received from any manager
     atomic_ullong num_execset_recv;
+    /// Count of EXECSET values failed to receive
+    atomic_ullong num_execset_recv_failure;
     /// Count of RPTSET values sent to any manager
     atomic_ullong num_rptset_sent;
     /// Count of RPTSET values failed to send
