@@ -18,7 +18,7 @@
 
 /** @file
  * This is the header for the implementation of the
- * ADM "ietf-amm" for the C-language reference DA.
+ * ADM module "ietf-amm" for the C-language reference DA.
  * This contains defines for each enumeration in the ADM and
  * declarations of module-level initialization functions.
  */
@@ -120,7 +120,7 @@ extern "C" {
 /// For ./TYPEDEF/rptt
 #define REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPTT 24
 
-/** Initializer for the ADM ietf-amm.
+/** Initializer for the ADM module ietf-amm.
  * @param[in,out] agent The agent to register this namespace and its
  * objects within.
  * @return Zero upon success.

@@ -18,7 +18,7 @@
 
 /** @file
  * This is the header for the implementation of the
- * ADM "ietf-dtnma-agent" for the C-language reference DA.
+ * ADM module "ietf-dtnma-agent" for the C-language reference DA.
  * This contains defines for each enumeration in the ADM and
  * declarations of module-level initialization functions.
  */
@@ -43,8 +43,6 @@ extern "C" {
 /*
  * Enumerations for TYPEDEF objects
  */
-/// For ./TYPEDEF/hellotyp
-#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_HELLOTYP 0
 /// For ./TYPEDEF/column-id
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_COLUMN_ID 1
 
@@ -164,7 +162,7 @@ extern "C" {
 /// For ./OPER/tbl-filter
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_TBL_FILTER 20
 
-/** Initializer for the ADM ietf-dtnma-agent.
+/** Initializer for the ADM module ietf-dtnma-agent.
  * @param[in,out] agent The agent to register this namespace and its
  * objects within.
  * @return Zero upon success.

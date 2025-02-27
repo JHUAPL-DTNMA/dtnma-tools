@@ -18,7 +18,7 @@
 
 /** @file
  * This is the compilation unit for the implementation of the
- * ADM "ietf-dtnma-agent" for the C-language reference DA.
+ * ADM module "ietf-dtnma-agent" for the C-language reference DA.
  * This contains definitions of every AMM object instance in the ADM and
  * file-local callback functions for all EDDs, CTRLs, and OPERs.
  */
@@ -153,6 +153,148 @@ static void refda_adm_ietf_dtnma_agent_set_objpath(cace_ari_objpath_t *path, con
         path->obj_id.form = CACE_ARI_IDSEG_TEXT;
         string_init_set(path->obj_id.as_text, obj->obj_id.name);
     }
+}
+
+static cace_ari_uvast numeric_add_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left + right;
+}
+static cace_ari_vast numeric_add_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left + right;
+}
+static cace_ari_real64 numeric_add_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left + right;
+}
+
+static cace_ari_uvast numeric_sub_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left - right;
+}
+static cace_ari_vast numeric_sub_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left - right;
+}
+static cace_ari_real64 numeric_sub_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left - right;
+}
+
+static cace_ari_uvast numeric_mul_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left * right;
+}
+static cace_ari_vast numeric_mul_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left * right;
+}
+static cace_ari_real64 numeric_mul_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left * right;
+}
+
+static cace_ari_uvast numeric_div_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left / right;
+}
+static cace_ari_vast numeric_div_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left / right;
+}
+static cace_ari_real64 numeric_div_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left / right;
+}
+
+static cace_ari_uvast numeric_mod_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left % right;
+}
+static cace_ari_vast numeric_mod_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left % right;
+}
+static cace_ari_real64 numeric_mod_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return fmod(left, right);
+}
+
+static cace_ari_uvast numeric_gt_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left > right;
+}
+static cace_ari_vast numeric_gt_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left > right;
+}
+static cace_ari_real64 numeric_gt_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left > right;
+}
+
+static cace_ari_uvast numeric_gte_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left >= right;
+}
+static cace_ari_vast numeric_gte_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left >= right;
+}
+static cace_ari_real64 numeric_gte_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left >= right;
+}
+
+static cace_ari_uvast numeric_lt_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left < right;
+}
+static cace_ari_vast numeric_lt_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left < right;
+}
+static cace_ari_real64 numeric_lt_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left < right;
+}
+
+static cace_ari_uvast numeric_lte_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left <= right;
+}
+static cace_ari_vast numeric_lte_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left <= right;
+}
+static cace_ari_real64 numeric_lte_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left <= right;
+}
+
+static cace_ari_uvast bitwise_and_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left & right;
+}
+static cace_ari_vast bitwise_and_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left & right;
+}
+static cace_ari_uvast bitwise_or_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left | right;
+}
+static cace_ari_vast bitwise_or_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left | right;
+}
+static cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left ^ right;
+}
+static cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left ^ right;
 }
 
 /*   STOP CUSTOM FUNCTIONS HERE  */
@@ -376,33 +518,6 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx(refda_edd_prod_ctx_t *ctx)
      * +-------------------------------------------------------------------------+
      */
 }
-
-// FUTURE:
-///* Name: num-msg-tx-failed
-// * Description MISSING
-// *
-// * Parameters: none
-// *
-// * Produced type: use of ari://ietf/amm/TYPEDEF/counter64
-// */
-// static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed(refda_edd_prod_ctx_t *ctx)
-//{
-//    /*
-//     * +-------------------------------------------------------------------------+
-//     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
-//     * +-------------------------------------------------------------------------+
-//     */
-//    refda_agent_t *agent  = ctx->prodctx->parent->agent;
-//    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
-//    atomic_ullong  val    = atomic_load(&agent->instr.num_rptset_sent_failure);
-//    cace_ari_set_uvast(&result, val);
-//    refda_edd_prod_ctx_set_result_move(ctx, &result);
-//    /*
-//     * +-------------------------------------------------------------------------+
-//     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failure BODY
-//     * +-------------------------------------------------------------------------+
-//     */
-//}
 
 /* Name: num-exec-started
  * Description MISSING
@@ -828,7 +943,8 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
 }
 
 /* Name: sbr-list
- * Description MISSING
+ * Description:
+ *   A table of SBR within the agent.
  *
  * Parameters: none
  *
@@ -850,7 +966,8 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 }
 
 /* Name: tbr-list
- * Description MISSING
+ * Description:
+ *   A table of TBR within the agent.
  *
  * Parameters: none
  *
@@ -1113,14 +1230,15 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 
 /* Name: report-on
  * Description:
- *   Generate a report on an object without needing to define an object.
+ *   Agent-wide control to generate a report from a report template (RPTT).
  *   The parameter is a single RPTT list that would be produced by an
  *   object. If used for more than one-shot diagnostics, defining a RPTT
- *   (e.g. in a VAR) is more efficient because the RPTT item would not be
- *   present in the report.
+ *   (e.g. in a CONST within an ODM) is more efficient because the RPTT
+ *   value would not need be present in the EXECSET or RPTSET.
  *
  * Parameters list:
- *  * Index 0, name "rptt", type: use of ari://ietf/amm/TYPEDEF/rpt-tgt
+ *  * Index 0, name "template", type: use of ari://ietf/amm/TYPEDEF/rpt-tgt
+ *  * Index 1, name "destinations", type: union of 2 types (use of ari:/ARITYPE/TEXTSTR, use of ari:/ARITYPE/NULL)
  *
  * Result: none
  */
@@ -1417,123 +1535,6 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
      */
 }
 
-static cace_ari_uvast numeric_add_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left + right;
-}
-static cace_ari_vast numeric_add_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left + right;
-}
-static cace_ari_real64 numeric_add_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left + right;
-}
-
-static cace_ari_uvast numeric_sub_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left - right;
-}
-static cace_ari_vast numeric_sub_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left - right;
-}
-static cace_ari_real64 numeric_sub_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left - right;
-}
-
-static cace_ari_uvast numeric_mul_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left * right;
-}
-static cace_ari_vast numeric_mul_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left * right;
-}
-static cace_ari_real64 numeric_mul_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left * right;
-}
-
-static cace_ari_uvast numeric_div_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left / right;
-}
-static cace_ari_vast numeric_div_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left / right;
-}
-static cace_ari_real64 numeric_div_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left / right;
-}
-
-static cace_ari_uvast numeric_mod_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left % right;
-}
-static cace_ari_vast numeric_mod_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left % right;
-}
-static cace_ari_real64 numeric_mod_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return fmod(left, right);
-}
-
-static cace_ari_uvast numeric_gt_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left > right;
-}
-static cace_ari_vast numeric_gt_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left > right;
-}
-static cace_ari_real64 numeric_gt_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left > right;
-}
-
-static cace_ari_uvast numeric_gte_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left >= right;
-}
-static cace_ari_vast numeric_gte_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left >= right;
-}
-static cace_ari_real64 numeric_gte_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left >= right;
-}
-
-static cace_ari_uvast numeric_lt_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left < right;
-}
-static cace_ari_vast numeric_lt_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left < right;
-}
-static cace_ari_real64 numeric_lt_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left < right;
-}
-
-static cace_ari_uvast numeric_lte_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left <= right;
-}
-static cace_ari_vast numeric_lte_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left <= right;
-}
-static cace_ari_real64 numeric_lte_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left <= right;
-}
-
 /* Name: add
  * Description:
  *   Add two numeric values. The operands are cast to the least compatible
@@ -1726,31 +1727,6 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_bit_not BODY
      * +-------------------------------------------------------------------------+
      */
-}
-
-static cace_ari_uvast bitwise_and_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left & right;
-}
-static cace_ari_vast bitwise_and_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left & right;
-}
-static cace_ari_uvast bitwise_or_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left | right;
-}
-static cace_ari_vast bitwise_or_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left | right;
-}
-static cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left ^ right;
-}
-static cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left ^ right;
 }
 
 /* Name: bit-and
@@ -2195,36 +2171,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         /**
          * Register TYPEDEF objects
          */
-        { // For ./TYPEDEF/hellotyp
-            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
-            refda_amm_typedef_desc_init(objdata);
-            // named type:
-            {
-                // union
-                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 2);
-                {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
-                    {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_BYTE);
-                        cace_amm_type_set_use_ref_move(choice, &name);
-                    }
-                }
-                {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
-                    {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_UINT);
-                        cace_amm_type_set_use_ref_move(choice, &name);
-                    }
-                }
-            }
-
-            obj = refda_register_typedef(
-                adm, cace_amm_idseg_ref_withenum("hellotyp", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_HELLOTYP),
-                objdata);
-            // no parameters possible
-        }
         { // For ./TYPEDEF/column-id
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
@@ -2332,10 +2278,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // produced type
             {
                 // table template
-                cace_amm_semtype_tblt_t *semtype = cace_amm_type_set_tblt_size(&(objdata->prod_type), 4);
+                cace_amm_semtype_tblt_t *semtype = cace_amm_type_set_tblt_size(&(objdata->prod_type), 6);
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
-                    m_string_set_cstr(col->name, "adm-name");
+                    m_string_set_cstr(col->name, "org-name");
                     {
                         cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
                         cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
@@ -2344,7 +2290,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
-                    m_string_set_cstr(col->name, "enum");
+                    m_string_set_cstr(col->name, "org-enum");
                     {
                         cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
                         cace_ari_set_aritype(&name, CACE_ARI_TYPE_VAST);
@@ -2353,7 +2299,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
-                    m_string_set_cstr(col->name, "revision");
+                    m_string_set_cstr(col->name, "model-name");
                     {
                         cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
                         cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
@@ -2362,6 +2308,24 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
+                    m_string_set_cstr(col->name, "model-enum");
+                    {
+                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_VAST);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                    }
+                }
+                {
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
+                    m_string_set_cstr(col->name, "revision");
+                    {
+                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                    }
+                }
+                {
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 5);
                     m_string_set_cstr(col->name, "features");
                     {
                         cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(col->typeobj));
@@ -3031,12 +2995,35 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 objdata);
             // parameters:
             {
-                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "rptt");
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "template");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
                     // ari://ietf/amm/TYPEDEF/rpt-tgt
                     cace_ari_set_objref_path_intid(&name, 1, 0, CACE_ARI_TYPE_TYPEDEF, 22);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "destinations");
+                {
+                    // union
+                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(fparam->typeobj), 2);
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
+                        {
+                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
+                            cace_amm_type_set_use_ref_move(choice, &name);
+                        }
+                    }
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
+                        {
+                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
+                            cace_amm_type_set_use_ref_move(choice, &name);
+                        }
+                    }
                 }
             }
         }
@@ -3609,7 +3596,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             cace_amm_named_type_array_resize(objdata->operand_types, 1);
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
-                string_set_str(operand->name, "operand");
+                string_set_str(operand->name, "val");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
                     cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
