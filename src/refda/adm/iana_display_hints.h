@@ -18,7 +18,7 @@
 
 /** @file
  * This is the header for the implementation of the
- * ADM "iana-display-hints" for the C-language reference DA.
+ * ADM module "iana-display-hints" for the C-language reference DA.
  * This contains defines for each enumeration in the ADM and
  * declarations of module-level initialization functions.
  */
@@ -69,6 +69,8 @@ extern "C" {
 #define REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_DISPLAY_BSTR_BASE64 12
 /// For ./IDENT/display-bstr-ipaddress
 #define REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_DISPLAY_BSTR_IPADDRESS 16
+/// For ./IDENT/display-bstr-uuid
+#define REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_DISPLAY_BSTR_UUID 17
 /// For ./IDENT/base-time
 #define REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_BASE_TIME 13
 /// For ./IDENT/display-time-text
@@ -76,7 +78,7 @@ extern "C" {
 /// For ./IDENT/display-time-dec
 #define REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_DISPLAY_TIME_DEC 15
 
-/** Initializer for the ADM iana-display-hints.
+/** Initializer for the ADM module iana-display-hints.
  * @param[in,out] agent The agent to register this namespace and its
  * objects within.
  * @return Zero upon success.
