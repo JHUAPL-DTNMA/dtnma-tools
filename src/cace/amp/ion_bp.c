@@ -127,7 +127,7 @@ int cace_amp_ion_bp_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
         int res = bp_send(state->sap,
                           (char *)m_string_get_cstr(meta->dest), // recipient
                           NULL,                                  // report-to
-                          300,                                   // lifespan (?)
+                          300,                                   // lifetime in seconds
                           BP_STD_PRIORITY,                       // Class-of-Service / Priority
                           NoCustodyRequested,                    // Custody Switch
                           0,                                     // SRR Flags
