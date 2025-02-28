@@ -1,0 +1,658 @@
+%define api.pure full
+%lex-param {void *scanner}
+%parse-param {void *scanner}{cace_ari_text_str_t *input}
+
+%define parse.trace
+%define parse.error verbose
+
+%{
+#include "cace/amm/typing.h"
+#include "cace/ari/text_str_parse.h"
+#include "cace/ari/text_str_scan.h"
+#include "cace/ari/text_val_parse.h"
+#include "cace/ari/text_util.h"
+#include "cace/ari/text.h"
+#include "cace/config.h"
+#include <stdlib.h>
+
+#define YYMALLOC(size) CACE_MALLOC(size)
+#define YYFREE(ptr) CACE_FREE(ptr)
+
+static int cace_model_split_rev(cace_ari_objpath_t *path, cace_ari_idseg_t *seg);
+static int cace_validate_objpath(cace_ari_objpath_t *path);
+static int cace_ari_lit_from_text(yyscan_t *scanner, cace_ari_text_str_t *input, cace_ari_lit_t *lit, cace_ari_type_t *typ, string_t val);
+
+int yydebug = 0;
+%}
+
+%code requires
+{
+#include "cace/ari/base.h"
+#include "cace/ari/containers.h"
+#include <m-string.h>
+#include <m-dict.h>
+
+typedef struct {
+    /// The input stream
+    FILE *src;
+    /// The final result ARI
+    cace_ari_t *ari;
+    /// Optional error text storage
+    const char **errm;
+    
+    /// Storage for container parameters
+    size_t tbl_c;
+} cace_ari_text_str_t;
+
+// Match the definition in generated C file
+typedef void * yyscan_t;
+
+/** Handle an error in ARI text decoding.
+ *
+ * @param scanner The scanner state at error.
+ * @param[in,out] input The input struct to update.
+ * @param format The specific error message format string.
+ */
+void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char const *format, ...);
+
+}
+
+/* Generate YYSTYPE from these types: */
+%union {
+  cace_ari_t ari;
+  
+  cace_ari_lit_t lit;
+  cace_ari_type_t ari_type;
+  cace_named_ari_dict_t litparams;
+  struct cace_ari_report_s *report;
+  
+  cace_ari_ref_t objref;
+  cace_ari_objpath_t objpath;
+  cace_ari_idseg_t idseg;
+  cace_ari_params_t params;
+  
+  string_t text;
+}
+
+%token T_ARI_PREFIX
+%token T_COMMA
+%token T_LPAREN
+%token T_RPAREN
+%token T_EQ
+%token T_SC
+
+%type <lit> ssp-literal
+%type <lit> acbracket
+%type <lit> aclist
+%type <lit> ambracket
+%type <lit> amlist
+%type <litparams> litparamlist
+%type <lit> tblrowlist
+%type <lit> reportlist
+%type <report> report
+%token <ari_type> T_LITTYPE
+%token T_LITTYPE_AC
+%token T_LITTYPE_AM
+%token T_LITTYPE_TBL
+%token T_LITTYPE_EXECSET
+%token T_LITTYPE_RPTSET
+
+%token T_REF_ABS ///< start of absolute reference ARI
+%token T_REF_REL_DOT
+%token T_REF_REL_DOTDOT
+%token <idseg> T_IDSEG
+%token <text> T_VALSEG
+
+%type <objref> ssp-objref
+%type <objpath> objpath
+%type <params> params
+
+%type <ari> ari
+%type <ari> ssp
+
+%destructor { string_clear($$); } <text>
+%destructor { cace_named_ari_dict_clear($$); } <litparams>
+%destructor { cace_ari_lit_deinit(&$$); } <lit>
+%destructor { if ($$) { cace_ari_report_deinit($$); M_MEMORY_DEL($$); } } <report>
+%destructor { cace_ari_ref_deinit(&$$); } <objref>
+%destructor { cace_ari_objpath_deinit(&$$); } <objpath>
+%destructor { cace_ari_idseg_deinit(&$$); } <idseg>
+%destructor { cace_ari_deinit(&$$); } <ari>
+
+%start setinput
+
+%%
+
+setinput : ari YYEOF {
+    cace_ari_init_move(input->ari, &$1);
+}
+
+ari:
+    T_ARI_PREFIX ssp { $$ = $2; }
+    | ssp { $$ = $1; }
+;
+
+ssp:
+    ssp-objref { *cace_ari_init_objref(&$$) = $1; }
+    | ssp-literal { *cace_ari_init_lit(&$$) = $1; }
+;
+
+ssp-literal:
+    T_VALSEG {
+        int res = cace_ari_lit_from_text(scanner, input, &$$, NULL, $1);
+        string_clear($1);
+        if (res) { YYERROR; }
+    }
+    | T_LITTYPE T_VALSEG {
+        int res = cace_ari_lit_from_text(scanner, input, &$$, &$1, $2);
+        string_clear($2);
+        if (res) { YYERROR; }
+    }
+    | T_LITTYPE_AC acbracket {
+        $$ = $2;
+    }
+    | T_LITTYPE_AM ambracket {
+        $$ = $2;
+    }
+    | T_LITTYPE_TBL litparamlist {
+        string_t key;
+        string_init_set_str(key, "c");
+        cace_ari_t *found_c = cace_named_ari_dict_get($2, key);
+        string_clear(key);
+
+        bool valid = false;
+        size_t ncols = 0;
+        if (found_c)
+        {
+            valid = (cace_ari_get_uvast(found_c, &ncols) == 0);
+        }
+        if (!valid)
+        {
+            cace_ari_text_str_error(scanner, input, "TBL has invalid key \"c\": %s", m_string_get_cstr(key));
+            YYERROR;
+        }
+        input->tbl_c = ncols;
+    } tblrowlist {
+        cace_named_ari_dict_clear($2); // parameter still kept up to this point
+        $$ = $4;
+    }
+    | T_LITTYPE_EXECSET litparamlist acbracket {
+        string_t key;
+        string_init_set_str(key, "n");
+        cace_ari_t *found_n = cace_named_ari_dict_get($2, key);
+        string_clear(key);
+
+        if (found_n)
+        {
+            if (found_n->is_ref)
+            {
+                cace_ari_deinit(found_n);
+                found_n = NULL;
+            }
+            else
+            {
+                switch (found_n->as_lit.prim_type)
+                {
+                    case CACE_ARI_PRIM_NULL:
+                    case CACE_ARI_PRIM_UINT64:
+                    case CACE_ARI_PRIM_BSTR:
+                        break;
+                    case CACE_ARI_PRIM_INT64:
+                        if (found_n->as_lit.value.as_int64 < 0)
+                        {
+                          cace_ari_deinit(found_n);
+                          found_n = NULL;
+                        }
+                        break;
+                    default:
+                        cace_ari_deinit(found_n);
+                        found_n = NULL;
+                }
+            }
+        }
+        if (!found_n)
+        {
+            cace_named_ari_dict_clear($2);
+            cace_ari_lit_deinit(&$3);
+            cace_ari_text_str_error(scanner, input, "EXECSET has invalid key \"n\": %s", m_string_get_cstr(key));
+            YYERROR;
+        }
+
+        cace_ari_lit_init_container(&$$, CACE_ARI_TYPE_EXECSET);
+        cace_ari_init_move(&($$.value.as_execset->nonce), found_n);
+        cace_named_ari_dict_clear($2);
+
+        cace_ari_list_move($$.value.as_execset->targets, $3.value.as_ac->items);
+        cace_ari_list_init($3.value.as_ac->items);
+        cace_ari_lit_deinit(&$3);
+    }
+    | T_LITTYPE_RPTSET litparamlist reportlist {
+        string_t key;
+        string_init_set_str(key, "n");
+        cace_ari_t *found_n = cace_named_ari_dict_get($2, key);
+        string_clear(key);
+
+        string_init_set_str(key, "r");
+        cace_ari_t *found_r = cace_named_ari_dict_get($2, key);
+        string_clear(key);
+
+        if (found_n)
+        {
+            if (found_n->is_ref)
+            {
+                cace_ari_deinit(found_n);
+                found_n = NULL;
+            }
+            else
+            {
+                switch (found_n->as_lit.prim_type)
+                {
+                    case CACE_ARI_PRIM_NULL:
+                    case CACE_ARI_PRIM_UINT64:
+                    case CACE_ARI_PRIM_BSTR:
+                        break;
+                    case CACE_ARI_PRIM_INT64:
+                        if (found_n->as_lit.value.as_int64 < 0)
+                        {
+                          cace_ari_deinit(found_n);
+                          found_n = NULL;
+                        }
+                        break;
+                    default:
+                        cace_ari_deinit(found_n);
+                        found_n = NULL;
+                }
+            }
+        }
+        if (!found_n)
+        {
+            cace_named_ari_dict_clear($2);
+            cace_ari_lit_deinit(&$3);
+            cace_ari_text_str_error(scanner, input, "RPTSET has invalid key \"n\": %s", m_string_get_cstr(key));
+            YYERROR;
+        }
+
+        if (found_r)
+        {
+            if (found_r->is_ref)
+            {
+                cace_ari_deinit(found_r);
+                found_r = NULL;
+            }
+            else
+            {
+              cace_ari_t tmp;
+              cace_ari_init(&tmp);
+              int err = cace_amm_type_convert(cace_amm_type_get_builtin(CACE_ARI_TYPE_TP), &tmp, found_r);
+              if (err) 
+              {
+                cace_ari_deinit(found_r);
+                cace_ari_deinit(&tmp);
+                found_r = NULL;
+              }
+              else
+              {
+                cace_ari_set_move(found_r, &tmp);
+                cace_ari_deinit(&tmp);
+              }
+            }
+        }
+        if (!found_r)
+        {
+            cace_named_ari_dict_clear($2);
+            cace_ari_lit_deinit(&$3);
+            cace_ari_text_str_error(scanner, input, "RPTSET has invalid key \"r\": %s", m_string_get_cstr(key));
+            YYERROR;
+        }
+
+        $$ = $3;
+        cace_ari_init_move(&($$.value.as_rptset->nonce), found_n);
+        cace_ari_init_move(&($$.value.as_rptset->reftime), found_r);
+        cace_named_ari_dict_clear($2);
+    }
+;
+
+acbracket:
+    T_LPAREN T_RPAREN {
+        cace_ari_lit_init_container(&$$, CACE_ARI_TYPE_AC);
+    }
+    | T_LPAREN aclist T_RPAREN {
+        $$ = $2;
+    }
+;
+
+aclist:
+    ari {
+        cace_ari_lit_init_container(&$$, CACE_ARI_TYPE_AC);
+        cace_ari_t *item = cace_ari_list_push_back_new($$.value.as_ac->items);
+        *item = $1;
+    }
+    | aclist T_COMMA ari {
+        $$ = $1;
+        cace_ari_t *item = cace_ari_list_push_back_new($$.value.as_ac->items);
+        *item = $3;
+    }
+;
+
+ambracket:
+    T_LPAREN T_RPAREN {
+        cace_ari_lit_init_container(&$$, CACE_ARI_TYPE_AM);
+    }
+    | T_LPAREN amlist T_RPAREN {
+        $$ = $2;
+    }
+;
+
+amlist:
+    ari T_EQ ari {
+        cace_ari_lit_init_container(&$$, CACE_ARI_TYPE_AM);
+        cace_ari_t *val = cace_ari_tree_safe_get($$.value.as_am->items, $1);
+        cace_ari_set_move(val, &$3);
+        cace_ari_deinit(&$1);
+    }
+    | amlist T_COMMA ari T_EQ ari {
+        $$ = $1;
+        cace_ari_t *val = cace_ari_tree_safe_get($$.value.as_am->items, $3);
+        cace_ari_set_move(val, &$5);
+        cace_ari_deinit(&$3);
+    }
+;
+
+litparamlist:
+    %empty {
+        cace_named_ari_dict_init($$);
+    }
+    | litparamlist T_VALSEG T_EQ ari T_SC {
+        cace_named_ari_dict_init_move($$, $1);
+        cace_string_tolower($2);
+        cace_ari_t *val = cace_named_ari_dict_get($$, $2);
+        if (val) { // Detect duplicate keys
+            cace_named_ari_dict_clear($$);
+            string_clear($2);
+            cace_ari_text_str_error(scanner, input, "Parameter list has duplicate key: %s", m_string_get_cstr($2));
+            YYERROR;
+        }
+        val = cace_named_ari_dict_safe_get($$, $2);
+        cace_ari_set_move(val, &$4);
+        string_clear($2);
+    }
+;
+
+tblrowlist:
+    %empty {
+        cace_ari_lit_init_container(&$$, CACE_ARI_TYPE_TBL);
+        // count taken from "litparamlist" rule
+        $$.value.as_tbl->ncols = input->tbl_c;
+    }
+    | tblrowlist acbracket {
+        $$ = $1;
+
+        int res = cace_ari_tbl_move_row_ac($$.value.as_tbl, $2.value.as_ac);
+        cace_ari_lit_deinit(&$2);
+        if (res)
+        {
+            cace_ari_lit_deinit(&$$);
+            cace_ari_text_str_error(scanner, input, "Table row size is mismatched from table");
+            YYERROR;
+        }
+    }
+;
+
+reportlist:
+    %empty {
+        cace_ari_lit_init_container(&$$, CACE_ARI_TYPE_RPTSET);
+    }
+    | reportlist report {
+        $$ = $1;
+        cace_ari_report_list_push_back_move($$.value.as_rptset->reports, $2);
+        CACE_FREE($2);
+    }
+;
+
+report:
+    T_LPAREN litparamlist acbracket T_RPAREN {
+        $$ = CACE_MALLOC(sizeof(struct cace_ari_report_s));
+        cace_ari_report_init($$);
+
+        string_t key;
+        string_init_set_str(key, "t");
+        cace_ari_t *found_t = cace_named_ari_dict_get($2, key);
+        string_clear(key);
+
+        string_init_set_str(key, "s");
+        cace_ari_t *found_s = cace_named_ari_dict_get($2, key);
+        string_clear(key);
+
+        if (found_t)
+        {
+            if (found_t->is_ref)
+            {
+                cace_ari_deinit(found_t);
+                found_t = NULL;
+            }
+            else
+            {
+                cace_ari_t tmp;
+                cace_ari_init(&tmp);
+                int err = cace_amm_type_convert(cace_amm_type_get_builtin(CACE_ARI_TYPE_TD), &tmp, found_t);
+                if (err) 
+                {
+                  cace_ari_deinit(found_t);
+                  cace_ari_deinit(&tmp);
+                  found_t = NULL;
+                }
+                else 
+                {
+                  cace_ari_set_move(found_t, &tmp);
+                  cace_ari_deinit(&tmp);
+                }
+            }
+        }
+        if (!found_t)
+        {
+            cace_named_ari_dict_clear($2);
+            cace_ari_lit_deinit(&$3);
+            cace_ari_text_str_error(scanner, input, "RPT has invalid key \"t\": %s", m_string_get_cstr(key));
+            YYERROR;
+        }
+
+        if (found_s)
+        {
+            if (!(found_s->is_ref))
+            {
+                cace_ari_deinit(found_s);
+                found_s = NULL;
+            }
+            else
+            {
+                if (!found_s->as_ref.objpath.has_ari_type) 
+                {
+                  cace_ari_deinit(found_s);
+                  found_s = NULL;
+                }
+            }
+        }
+        if (!found_s)
+        {
+            cace_named_ari_dict_clear($2);
+            cace_ari_lit_deinit(&$3);
+            cace_ari_text_str_error(scanner, input, "RPT has invalid key \"s\": %s", m_string_get_cstr(key));
+            YYERROR;
+        }
+
+        cace_ari_init_move(&($$->reltime), found_t);
+        cace_ari_init_move(&($$->source), found_s);
+        cace_named_ari_dict_clear($2);
+
+        cace_ari_list_move($$->items, $3.value.as_ac->items);
+        cace_ari_list_init($3.value.as_ac->items);
+        cace_ari_lit_deinit(&$3);
+    }
+;
+
+ssp-objref:
+    objpath { $$.objpath = $1; $$.params.state = CACE_ARI_PARAMS_NONE; }
+    | objpath params { $$.objpath = $1; $$.params = $2; }
+;
+
+objpath:
+    T_REF_ABS T_IDSEG T_IDSEG T_IDSEG T_IDSEG {
+        // absolute object reference
+        cace_ari_objpath_init(&$$);
+        $$.org_id = $2;
+        if (cace_model_split_rev(&$$, &$3))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid model revision");
+            YYERROR;
+        }
+        $$.type_id = $4;
+        $$.obj_id = $5;
+        if (cace_validate_objpath(&$$))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid object type");
+            YYERROR;
+        }
+    }
+    | T_REF_REL_DOTDOT T_IDSEG T_IDSEG T_IDSEG {
+        // org-relative reference
+        cace_ari_objpath_init(&$$);
+        if (cace_model_split_rev(&$$, &$2))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid model revision");
+            YYERROR;
+        }
+        $$.type_id = $3;
+        $$.obj_id = $4;
+        if (cace_validate_objpath(&$$))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid object type");
+            YYERROR;
+        }
+    }
+    | T_REF_REL_DOT T_IDSEG T_IDSEG {
+        // model-relative reference
+        cace_ari_objpath_init(&$$);
+        $$.type_id = $2;
+        $$.obj_id = $3;
+        if (cace_validate_objpath(&$$))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid object type");
+            YYERROR;
+        }
+    }
+    | T_REF_ABS T_IDSEG T_IDSEG {
+        // absolute namespace
+        cace_ari_objpath_init(&$$);
+        $$.org_id = $2;
+        if (cace_model_split_rev(&$$, &$3))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid model revision");
+            YYERROR;
+        }
+        cace_validate_objpath(&$$);
+    }
+    | T_REF_REL_DOTDOT T_IDSEG {
+        // org-relative namespace
+        cace_ari_objpath_init(&$$);
+        if (cace_model_split_rev(&$$, &$2))
+        {
+            cace_ari_text_str_error(scanner, input, "Invalid model revision");
+            YYERROR;
+        }
+        cace_validate_objpath(&$$);
+    }
+;
+
+params:
+    T_LPAREN T_RPAREN { $$.state = CACE_ARI_PARAMS_NONE; }
+    | T_LPAREN aclist T_RPAREN { $$.state = CACE_ARI_PARAMS_AC; $$.as_ac = $2.value.as_ac; }
+    | T_LPAREN amlist T_RPAREN { $$.state = CACE_ARI_PARAMS_AM; $$.as_am = $2.value.as_am; }
+;
+
+%%
+
+int cace_ari_text_decode(cace_ari_t *ari, const string_t text, const char **errm)
+{
+    yyscan_t scanner;
+    int res;
+    cace_ari_text_str_t input = {
+      .src = fmemopen((void *)string_get_cstr(text), string_size(text) + 1, "r"),
+      .ari = ari,
+      .errm = errm,
+    };
+
+    cace_ari_text_str_lex_init_extra(&input, &scanner);
+    cace_ari_text_str_set_in(input.src, scanner);
+    res = cace_ari_text_str_parse(scanner, &input);
+    cace_ari_text_str_lex_destroy(scanner);
+    fclose(input.src);
+
+    return res;
+}
+
+static int cace_model_split_rev(cace_ari_objpath_t *path, cace_ari_idseg_t *seg)
+{
+    // pop off revision date if present
+    int retval = 0;
+    const size_t rev_at = m_string_search_char(seg->as_text, '@', 0);
+    if (rev_at != M_STRING_FAILURE)
+    {
+        cace_ari_date_from_text(&path->model_rev, m_string_get_cstr(seg->as_text) + rev_at + 1);
+        m_string_left(seg->as_text, rev_at);
+        retval = path->model_rev.valid ? 0 : 2;
+    }
+    path->model_id = *seg;
+    return retval;
+}
+
+static int cace_validate_objpath(cace_ari_objpath_t *path)
+{
+    cace_ari_idseg_derive_form(&path->org_id);
+    cace_ari_idseg_derive_form(&path->model_id);
+    cace_ari_idseg_derive_form(&path->type_id);
+    cace_ari_idseg_derive_form(&path->obj_id);
+
+    int err = cace_ari_objpath_derive_type(path);
+    return err;
+}
+
+int cace_ari_lit_from_text(yyscan_t *scanner, cace_ari_text_str_t *input, cace_ari_lit_t *lit, cace_ari_type_t *typ, string_t val)
+{
+    *lit = (cace_ari_lit_t){
+        .has_ari_type = (!!typ),
+        .ari_type = (typ ? *typ : CACE_ARI_TYPE_NULL),
+    };
+
+    const char *errm = NULL;
+    int res = cace_ari_text_valseg_decode(lit, string_get_cstr(val), &errm);
+    if (res)
+    {
+        cace_ari_text_str_error(scanner, input, "%s", errm);
+        if (errm)
+        {
+            M_MEMORY_FREE((char *)errm);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char const *format, ...)
+{
+    if (!input || !(input->errm))
+    {
+        return;
+    }
+
+    string_t str;
+    string_init(str);
+    string_cat_printf(str, "Parse error at %d:", cace_ari_text_str_get_column(scanner));
+    {
+        va_list val;
+        va_start(val, format);
+        m_string_vprintf(str, format, val);
+        va_end(val);
+    }
+
+    *(input->errm) = m_string_clear_get_cstr(str);
+}

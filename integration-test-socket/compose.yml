@@ -1,0 +1,20 @@
+services:
+  combined:
+    build:
+      context: ..
+      dockerfile: integration-test-socket/Containerfile
+    ports:
+      - "8089:8089/tcp"
+    depends_on: {}
+    privileged: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_NICE
+    environment:
+      container: docker
+      DTNMA_LOGLEVEL: debug
+      REFDA_EID: file:/var/run/refda.sock
+      REFDA_SOCKET: /var/run/refda.sock
+      REFDM_SOCKET: /var/run/refdm.sock
