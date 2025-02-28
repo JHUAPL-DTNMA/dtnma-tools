@@ -45,41 +45,45 @@ extern "C" {
 /* Able to use GNU Getopt extensions. */
 #cmakedefine HAVE_GETOPT_LONG
 
-#ifndef ARI_MALLOC
+#ifndef CACE_MALLOC
 /** Uses the same function signature as C99 malloc().
  */
-#define ARI_MALLOC malloc
-#endif /* ARI_MALLOC */
+#define CACE_MALLOC malloc
+#endif /* CACE_MALLOC */
 
-#ifndef ARI_REALLOC
+#ifndef CACE_REALLOC
 /** Uses the same function signature as C99 realloc().
  */
-#define ARI_REALLOC realloc
-#endif /* ARI_REALLOC */
+#define CACE_REALLOC realloc
+#endif /* CACE_REALLOC */
 
-#ifndef ARI_FREE
+#ifndef CACE_FREE
 /** Uses the same function signature as C99 free().
  */
-#define ARI_FREE free
-#endif /* ARI_FREE */
+#define CACE_FREE free
+#endif /* CACE_FREE */
+
+/** Force the use of M_ prefixed macros for M*LIB
+ */
+//#define M_USE_SMALL_NAME 0
 
 /** Define to override value/struct allocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_ALLOC(type) ((type *) ARI_MALLOC(sizeof(type)))
+#define M_MEMORY_ALLOC(type) ((type *) CACE_MALLOC(sizeof(type)))
 /** Define to override value/struct deallocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_DEL(ptr) ARI_FREE(ptr)
+#define M_MEMORY_DEL(ptr) CACE_FREE(ptr)
 
 /** Define to override array allocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? (type *) NULL : (type *) ARI_REALLOC((ptr), (n)*sizeof (type)))
+#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? (type *) NULL : (type *) CACE_REALLOC((ptr), (n)*sizeof (type)))
 /** Define to override array deallocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_FREE(ptr) ARI_FREE(ptr)
+#define M_MEMORY_FREE(ptr) CACE_FREE(ptr)
 
 #ifdef __cplusplus
 } // extern C

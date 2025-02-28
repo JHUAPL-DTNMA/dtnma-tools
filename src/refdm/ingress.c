@@ -57,7 +57,7 @@
  * @param[in] agent The agent object associated with this reception.
  * @param[in,out] val The value to move from.
  */
-static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, ari_t *val)
+static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 {
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
@@ -69,7 +69,7 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, ari_t *val)
     db_insert_msg_rpt_set(incoming_idx, rpt_msg, &db_status);
 #endif
 
-    ari_set_move(ari_list_push_back_new(agent->rptsets), val);
+    cace_ari_set_move(cace_ari_list_push_back_new(agent->rptsets), val);
 
     {
         bool wrote = false;
@@ -78,7 +78,7 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, ari_t *val)
         {
             string_t buf;
             string_init(buf);
-            ari_text_encode(buf, val, ARI_TEXT_ENC_OPTS_DEFAULT);
+            cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
             fprintf(agent->log_fd, "Received value from %s with %s", string_get_cstr(agent->eid), string_get_cstr(buf));
             string_clear(buf);
@@ -117,8 +117,8 @@ void *refdm_ingress_worker(void *arg)
     refdm_mgr_t *mgr = arg;
     CACE_LOG_INFO("Worker started");
 
-    ari_list_t values;
-    ari_list_init(values);
+    cace_ari_list_t values;
+    cace_ari_list_init(values);
     cace_amm_msg_if_metadata_t meta;
     cace_amm_msg_if_metadata_init(&meta);
 
@@ -126,14 +126,14 @@ void *refdm_ingress_worker(void *arg)
      * mgr->running controls the overall execution of threads in the
      * NM Agent.
      */
-    while (daemon_run_get(&mgr->running))
+    while (cace_daemon_run_get(&mgr->running))
     {
-        ari_list_reset(values);
+        cace_ari_list_reset(values);
         int recv_res = mgr->mif.recv(values, &meta, &mgr->running, mgr->mif.ctx);
         // process received items even if failed status
-        CACE_LOG_INFO("Message from %s has %zd ARIs", m_string_get_cstr(meta.src), ari_list_size(values));
+        CACE_LOG_INFO("Message from %s has %zd ARIs", m_string_get_cstr(meta.src), cace_ari_list_size(values));
 
-        if (!ari_list_empty_p(values))
+        if (!cace_ari_list_empty_p(values))
         {
             // might be unknown and NULL
             refdm_agent_t *agent = refdm_mgr_agent_get_eid(mgr, m_string_get_cstr(meta.src));
@@ -143,12 +143,12 @@ void *refdm_ingress_worker(void *arg)
                 agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(meta.src));
             }
 
-            ari_list_it_t val_it;
+            cace_ari_list_it_t val_it;
             /* For each received ARI, validate it */
-            for (ari_list_it(val_it, values); !ari_list_end_p(val_it); ari_list_next(val_it))
+            for (cace_ari_list_it(val_it, values); !cace_ari_list_end_p(val_it); cace_ari_list_next(val_it))
             {
-                ari_t *val = ari_list_ref(val_it);
-                if (!ari_get_rptset(val))
+                cace_ari_t *val = cace_ari_list_ref(val_it);
+                if (!cace_ari_get_rptset(val))
                 {
                     CACE_LOG_ERR("Ignoring input ARI that is not an RPTSET");
                     // item is left in list for later deinit
@@ -170,7 +170,7 @@ void *refdm_ingress_worker(void *arg)
     }
 
     cace_amm_msg_if_metadata_deinit(&meta);
-    ari_list_clear(values);
+    cace_ari_list_clear(values);
 
     CACE_LOG_INFO("Worker stopped");
     return NULL;

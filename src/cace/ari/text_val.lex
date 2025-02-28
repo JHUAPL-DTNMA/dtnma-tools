@@ -39,27 +39,27 @@ DECDIG [0-9]
 %%
 
 <PRIMITIVE>(?i:undefined) {
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_UNDEFINED,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_UNDEFINED,
     };
     return T_UNDEFINED;
 }
 <PRIMITIVE,LT_NULL>(?i:null) {
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_NULL,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_NULL,
     };
     return T_NULL;
 }
 <PRIMITIVE,LT_BOOL>(?i:false) {
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_BOOL,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_BOOL,
         .value.as_bool = false,
     };
     return T_BOOL;
 }
 <PRIMITIVE,LT_BOOL>(?i:true) {
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_BOOL,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_BOOL,
         .value.as_bool = true,
     };
     return T_BOOL;
@@ -70,7 +70,7 @@ DECDIG [0-9]
           string_init_set_str(text, yytext);
 
         uint64_t val;
-        int ret = ari_uint64_decode(&val, text);
+        int ret = cace_ari_uint64_decode(&val, text);
         string_clear(text);
         if (ret)
         {
@@ -81,16 +81,16 @@ DECDIG [0-9]
         // prefer signed integer use
         if (val <= INT64_MAX)
         {
-            yylval->lit = (ari_lit_t){
-                .prim_type = ARI_PRIM_INT64,
+            yylval->lit = (cace_ari_lit_t){
+                .prim_type = CACE_ARI_PRIM_INT64,
                 .value.as_int64 = (int64_t)val,
             };
             return T_INT;
         }
         else
         {
-            yylval->lit = (ari_lit_t){
-                .prim_type = ARI_PRIM_UINT64,
+            yylval->lit = (cace_ari_lit_t){
+                .prim_type = CACE_ARI_PRIM_UINT64,
                 .value.as_uint64 = val,
             };
             return T_UINT;
@@ -103,7 +103,7 @@ DECDIG [0-9]
         string_t text;
         string_init_set_str(text, yytext + 1);
         uint64_t neg;
-        int ret = ari_uint64_decode(&neg, text);
+        int ret = cace_ari_uint64_decode(&neg, text);
         string_clear(text);
         if (ret)
         {
@@ -118,8 +118,8 @@ DECDIG [0-9]
             return YYerror;
         }
 
-        yylval->lit = (ari_lit_t){
-            .prim_type = ARI_PRIM_INT64,
+        yylval->lit = (cace_ari_lit_t){
+            .prim_type = CACE_ARI_PRIM_INT64,
             .value.as_int64 = -(int64_t)neg,
         };
         return T_INT;
@@ -133,7 +133,7 @@ DECDIG [0-9]
           string_init_set_str(text, yytext);
         }
         uint64_t val;
-        int ret = ari_uint64_decode(&val, text);
+        int ret = cace_ari_uint64_decode(&val, text);
         string_clear(text);
         if (ret)
         {
@@ -144,16 +144,16 @@ DECDIG [0-9]
         // prefer signed integer use
         if (val <= INT64_MAX)
         {
-            yylval->lit = (ari_lit_t){
-                .prim_type = ARI_PRIM_INT64,
+            yylval->lit = (cace_ari_lit_t){
+                .prim_type = CACE_ARI_PRIM_INT64,
                 .value.as_int64 = (int64_t)val,
             };
             return T_INT;
         }
         else
         {
-            yylval->lit = (ari_lit_t){
-                .prim_type = ARI_PRIM_UINT64,
+            yylval->lit = (cace_ari_lit_t){
+                .prim_type = CACE_ARI_PRIM_UINT64,
                 .value.as_uint64 = val,
             };
             return T_UINT;
@@ -162,8 +162,8 @@ DECDIG [0-9]
 }
 
 <PRIMITIVE,LT_ANYFLOAT>[+-]?(({DECDIG}+|{DECDIG}*\.{DECDIG}*)([eE][+-]?{DECDIG}+)|0[xX]({HEXDIG}+|{HEXDIG}*\.{HEXDIG}*)([pP][+-]?{DECDIG})?|{DECDIG}*(\.{DECDIG}*)?|(?i:Infinity))|(?i:NaN) {
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_FLOAT64,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_FLOAT64,
         .value.as_float64 = strtod(yytext, NULL),
     };
     return T_FLOAT;
@@ -184,15 +184,15 @@ DECDIG [0-9]
 
         string_t text_unesc;
         string_init(text_unesc);
-        slash_unescape(text_unesc, &text_view);
+        cace_slash_unescape(text_unesc, &text_view);
         cace_data_deinit(&text_view);
 
         cace_data_from_m_string(&data, text_unesc);
         string_clear(text_unesc);
     }
 
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_TSTR,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_TSTR,
         .value.as_data = data,
     };
     return T_TSTR;
@@ -216,8 +216,8 @@ DECDIG [0-9]
         {
             string_t clean;
             string_init(clean);
-            strip_space(clean, text_begin, text_len);
-            int ret = base16_decode(&data, clean);
+            cace_strip_space(clean, text_begin, text_len);
+            int ret = cace_base16_decode(&data, clean);
             string_clear(clean);
             if (ret)
             {
@@ -229,8 +229,8 @@ DECDIG [0-9]
         {
             string_t clean;
             string_init(clean);
-            strip_space(clean, text_begin, text_len);
-            int ret = base64_decode(&data, clean);
+            cace_strip_space(clean, text_begin, text_len);
+            int ret = cace_base64_decode(&data, clean);
             string_clear(clean);
             if (ret)
             {
@@ -245,7 +245,7 @@ DECDIG [0-9]
 
             string_t text_unesc;
             string_init(text_unesc);
-            slash_unescape(text_unesc, &text_view);
+            cace_slash_unescape(text_unesc, &text_view);
             cace_data_deinit(&text_view);
         
             // direct copy
@@ -256,8 +256,8 @@ DECDIG [0-9]
         }
     }
 
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_BSTR,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_BSTR,
         .value.as_data = data,
     };
     return T_BSTR;
@@ -268,15 +268,15 @@ DECDIG [0-9]
     cace_data_init_view(&text_view, yyleng, (cace_data_ptr_t)yytext);
 
     struct timespec val;
-    int ret = utctime_decode(&val, &text_view);
+    int ret = cace_utctime_decode(&val, &text_view);
     cace_data_deinit(&text_view);
     if (ret)
     {
         return YYerror;
     }
 
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_TIMESPEC,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_TIMESPEC,
         .value.as_timespec = val,
     };
     return T_TIMEPOINT;
@@ -287,15 +287,15 @@ DECDIG [0-9]
     cace_data_init_view(&text_view, yyleng, (cace_data_ptr_t)yytext);
 
     struct timespec val;
-    int ret = timeperiod_decode(&val, &text_view);
+    int ret = cace_timeperiod_decode(&val, &text_view);
     cace_data_deinit(&text_view);
     if (ret)
     {
         return YYerror;
     }
 
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_TIMESPEC,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_TIMESPEC,
         .value.as_timespec = val,
     };
     return T_TIMEDIFF;
@@ -306,15 +306,15 @@ DECDIG [0-9]
     cace_data_init_view(&text_view, yyleng, (cace_data_ptr_t)yytext);
     
     struct timespec val;
-    int ret = decfrac_decode(&val, &text_view);
+    int ret = cace_decfrac_decode(&val, &text_view);
     cace_data_deinit(&text_view);
     if (ret)
     {
         return YYerror;
     }
 
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_TIMESPEC,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_TIMESPEC,
         .value.as_timespec = val,
     };
     return T_DECFRAC;
@@ -326,8 +326,8 @@ DECDIG [0-9]
     cace_data_init(&data);
     cace_data_copy_from(&data, yyleng + 1, (cace_data_ptr_t)yytext);
 
-    yylval->lit = (ari_lit_t){
-        .prim_type = ARI_PRIM_TSTR,
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_TSTR,
         .value.as_data = data,
     };
     return T_IDENTITY;
@@ -352,17 +352,17 @@ DECDIG [0-9]
 
 void *cace_ari_text_val_alloc(yy_size_t size, yyscan_t yyscanner _U_)
 {
-    return ARI_MALLOC(size);
+    return CACE_MALLOC(size);
 }
 
 void *cace_ari_text_val_realloc(void *ptr, yy_size_t size, yyscan_t yyscanner _U_)
 {
-    return ARI_REALLOC(ptr, size);
+    return CACE_REALLOC(ptr, size);
 }
 
 void cace_ari_text_val_free(void *ptr, yyscan_t yyscanner _U_)
 {
-    ARI_FREE(ptr);
+    CACE_FREE(ptr);
 }
 
 void cace_ari_text_val_startcond(yyscan_t *scanner)
@@ -379,45 +379,45 @@ void cace_ari_text_val_startcond(yyscan_t *scanner)
     }
     switch (*ari_type)
     {
-        case ARI_TYPE_NULL:
+        case CACE_ARI_TYPE_NULL:
             BEGIN(LT_NULL);
             break;
-        case ARI_TYPE_BOOL:
+        case CACE_ARI_TYPE_BOOL:
             BEGIN(LT_BOOL);
             break;
-        case ARI_TYPE_BYTE:
-        case ARI_TYPE_UINT:
-        case ARI_TYPE_UVAST:
+        case CACE_ARI_TYPE_BYTE:
+        case CACE_ARI_TYPE_UINT:
+        case CACE_ARI_TYPE_UVAST:
             BEGIN(LT_ANYINT);
             break;
-        case ARI_TYPE_INT:
-        case ARI_TYPE_VAST:
+        case CACE_ARI_TYPE_INT:
+        case CACE_ARI_TYPE_VAST:
             BEGIN(LT_ANYINT);
             break;
-        case ARI_TYPE_REAL32:
-        case ARI_TYPE_REAL64:
+        case CACE_ARI_TYPE_REAL32:
+        case CACE_ARI_TYPE_REAL64:
             BEGIN(LT_ANYFLOAT);
             break;
-        case ARI_TYPE_TEXTSTR:
+        case CACE_ARI_TYPE_TEXTSTR:
             BEGIN(LT_TEXTSTR);
             break;
-        case ARI_TYPE_BYTESTR:
+        case CACE_ARI_TYPE_BYTESTR:
             BEGIN(LT_BYTESTR);
             break;
 
-        case ARI_TYPE_TP:
+        case CACE_ARI_TYPE_TP:
             BEGIN(LT_TIMEPOINT);
             break;
-        case ARI_TYPE_TD:
+        case CACE_ARI_TYPE_TD:
             BEGIN(LT_TIMEDIFF);
             break;
-        case ARI_TYPE_LABEL:
+        case CACE_ARI_TYPE_LABEL:
             BEGIN(LT_LABEL);
             break;
-        case ARI_TYPE_CBOR:
+        case CACE_ARI_TYPE_CBOR:
             BEGIN(LT_CBOR);
             break;
-        case ARI_TYPE_ARITYPE:
+        case CACE_ARI_TYPE_ARITYPE:
             BEGIN(LT_ARITYPE);
             break;
 

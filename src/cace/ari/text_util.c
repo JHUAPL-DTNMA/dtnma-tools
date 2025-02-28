@@ -76,7 +76,7 @@ static int take_hex_2byte(uint16_t *out, const char **curs, const char *end)
 static const char id_text_first[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
 static const char id_text_rest[]  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-";
 
-bool ari_text_is_identity(const cace_data_t *text)
+bool cace_ari_text_is_identity(const cace_data_t *text)
 {
     CHKFALSE(text);
     const size_t in_len = text_real_len(text);
@@ -102,7 +102,7 @@ bool ari_text_is_identity(const cace_data_t *text)
  */
 static const char *unreserved = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-~";
 
-int uri_percent_encode(string_t out, const cace_data_t *in, const char *safe)
+int cace_uri_percent_encode(m_string_t out, const cace_data_t *in, const char *safe)
 {
     CHKERR1(out);
     CHKERR1(in);
@@ -111,26 +111,26 @@ int uri_percent_encode(string_t out, const cace_data_t *in, const char *safe)
     const char  *curs   = (const char *)(in->ptr);
     const char  *end    = curs + in_len;
 
-    string_t allsafe;
-    string_init(allsafe);
-    string_cat_str(allsafe, unreserved);
+    m_string_t allsafe;
+    m_string_init(allsafe);
+    m_string_cat_cstr(allsafe, unreserved);
     if (safe)
     {
-        string_cat_str(allsafe, safe);
+        m_string_cat_cstr(allsafe, safe);
     }
 
     // assume no more than half of the input chars are escaped,
     // which gives total output size of: 0.5 + 0.5 * 3 => 2
-    string_reserve(out, string_size(out) + 2 * in_len);
+    m_string_reserve(out, m_string_size(out) + 2 * in_len);
 
     int retval = 0;
     while (curs < end)
     {
-        const size_t partlen = strspn(curs, string_get_cstr(allsafe));
+        const size_t partlen = strspn(curs, m_string_get_cstr(allsafe));
 
         if (partlen)
         {
-            string_cat_printf(out, "%.*s", (int)partlen, curs);
+            m_string_cat_printf(out, "%.*s", (int)partlen, curs);
         }
         curs += partlen;
 
@@ -141,14 +141,14 @@ int uri_percent_encode(string_t out, const cace_data_t *in, const char *safe)
         }
 
         const uint8_t chr = *(curs++);
-        string_cat_printf(out, "%%%02X", chr);
+        m_string_cat_printf(out, "%%%02X", chr);
     }
 
-    string_clear(allsafe);
+    m_string_clear(allsafe);
     return retval;
 }
 
-int uri_percent_decode(string_t out, const cace_data_t *in)
+int cace_uri_percent_decode(m_string_t out, const cace_data_t *in)
 {
     CHKERR1(out);
     CHKERR1(in);
@@ -158,7 +158,7 @@ int uri_percent_decode(string_t out, const cace_data_t *in)
     const char  *end    = curs + in_len;
 
     // potentially no escaping used
-    string_reserve(out, string_size(out) + in_len);
+    m_string_reserve(out, m_string_size(out) + in_len);
 
     while (curs < end)
     {
@@ -171,7 +171,7 @@ int uri_percent_decode(string_t out, const cace_data_t *in)
 
         if (partlen)
         {
-            string_cat_printf(out, "%.*s", (int)partlen, curs);
+            m_string_cat_printf(out, "%.*s", (int)partlen, curs);
         }
         curs += partlen + 1;
 
@@ -187,13 +187,13 @@ int uri_percent_decode(string_t out, const cace_data_t *in)
         {
             return 2;
         }
-        string_push_back(out, val);
+        m_string_push_back(out, val);
     }
 
     return 0;
 }
 
-int ari_uint64_encode(string_t out, uint64_t value, int base)
+int cace_ari_uint64_encode(m_string_t out, uint64_t value, int base)
 {
     CHKERR1(out);
 
@@ -214,12 +214,12 @@ int ari_uint64_encode(string_t out, uint64_t value, int base)
             *(--curs) = '0';
         }
 
-        string_reserve(out, string_size(out) + 2 + (end - curs));
-        string_push_back(out, '0');
-        string_push_back(out, 'b');
+        m_string_reserve(out, m_string_size(out) + 2 + (end - curs));
+        m_string_push_back(out, '0');
+        m_string_push_back(out, 'b');
         for (; curs < end; ++curs)
         {
-            string_push_back(out, *curs);
+            m_string_push_back(out, *curs);
         }
     }
     else
@@ -237,30 +237,30 @@ int ari_uint64_encode(string_t out, uint64_t value, int base)
         {
             return 1;
         }
-        string_cat_printf(out, fmt, value);
+        m_string_cat_printf(out, fmt, value);
     }
 
     return 0;
 }
 
-int ari_uint64_decode(uint64_t *out, const string_t in)
+int cace_ari_uint64_decode(uint64_t *out, const m_string_t in)
 {
     CHKERR1(out);
     CHKERR1(in);
 
-    const char  *begin  = string_get_cstr(in);
-    const size_t in_len = string_size(in);
+    const char  *begin  = m_string_get_cstr(in);
+    const size_t in_len = m_string_size(in);
     const char  *end    = begin + in_len;
 
     uint64_t tmp;
-    if ((in_len >= 2) && (string_get_char(in, 0) == '0') && (tolower(string_get_char(in, 1)) == 'b'))
+    if ((in_len >= 2) && (m_string_get_char(in, 0) == '0') && (tolower(m_string_get_char(in, 1)) == 'b'))
     {
         tmp = 0;
         for (size_t ix = 2; ix < in_len; ++ix)
         {
             tmp <<= 1;
 
-            const char bit = string_get_char(in, ix);
+            const char bit = m_string_get_char(in, ix);
             switch (bit)
             {
                 case '0':
@@ -288,32 +288,32 @@ int ari_uint64_decode(uint64_t *out, const string_t in)
     return 0;
 }
 
-int ari_float64_encode(string_t out, double value, char form)
+int cace_ari_float64_encode(m_string_t out, double value, char form)
 {
     if (isnan(value))
     {
-        string_cat_str(out, "NaN");
+        m_string_cat_cstr(out, "NaN");
     }
     else if (isinf(value))
     {
-        string_push_back(out, (value < 0) ? '-' : '+');
-        string_cat_str(out, "Infinity");
+        m_string_push_back(out, (value < 0) ? '-' : '+');
+        m_string_cat_cstr(out, "Infinity");
     }
     else if (form == 'f')
     {
-        string_cat_printf(out, "%f", value);
+        m_string_cat_printf(out, "%f", value);
     }
     else if (form == 'g')
     {
-        string_cat_printf(out, "%g", value);
+        m_string_cat_printf(out, "%g", value);
     }
     else if (form == 'e')
     {
-        string_cat_printf(out, "%e", value);
+        m_string_cat_printf(out, "%e", value);
     }
     else if (form == 'a')
     {
-        string_cat_printf(out, "%a", value);
+        m_string_cat_printf(out, "%a", value);
     }
     else
     {
@@ -360,7 +360,7 @@ static int subsec_decode(subsec_t *subsec, const char **curs, const char *const 
     return 0;
 }
 
-int subsec_encode(string_t out, subsec_t subsec)
+int cace_subsec_encode(m_string_t out, subsec_t subsec)
 {
     if (!subsec)
     {
@@ -374,21 +374,21 @@ int subsec_encode(string_t out, subsec_t subsec)
         subsec /= 10;
         --digits;
     }
-    string_cat_printf(out, ".%.*lu", digits, subsec);
+    m_string_cat_printf(out, ".%.*lu", digits, subsec);
     return 0;
 }
 
-int decfrac_encode(string_t out, const struct timespec *in)
+int cace_decfrac_encode(m_string_t out, const struct timespec *in)
 {
     CHKERR1(in);
 
-    string_cat_printf(out, "%" PRId64, in->tv_sec);
-    subsec_encode(out, in->tv_nsec);
+    m_string_cat_printf(out, "%" PRId64, in->tv_sec);
+    cace_subsec_encode(out, in->tv_nsec);
 
     return 0;
 }
 
-int decfrac_decode(struct timespec *out, const cace_data_t *in)
+int cace_decfrac_decode(struct timespec *out, const cace_data_t *in)
 {
     CHKERR1(out);
     CHKERR1(in);
@@ -438,57 +438,57 @@ bool cace_data_is_utf8(const cace_data_t *in)
     return m_str1ng_utf8_valid_str_p((const char *)(in->ptr));
 }
 
-int slash_escape(string_t out, const cace_data_t *in, const char quote)
+int cace_slash_escape(m_string_t out, const cace_data_t *in, const char quote)
 {
     CHKERR1(out);
     CHKERR1(in);
 
-    string_t in_text;
+    m_string_t in_text;
     if (in->len == 0)
     {
         // fine, but nothing to do
         return 0;
     }
-    string_init_set_str(in_text, (const char *)(in->ptr));
+    m_string_init_set_cstr(in_text, (const char *)(in->ptr));
 
     // unicode iterator
-    string_it_t it;
-    for (string_it(it, in_text); !string_end_p(it); string_next(it))
+    m_string_it_t it;
+    for (m_string_it(it, in_text); !m_string_end_p(it); m_string_next(it))
     {
-        const m_string_unicode_t *chr = string_cref(it);
+        const m_string_unicode_t *chr = m_string_cref(it);
         if (*chr == (m_string_unicode_t)quote)
         {
-            string_push_back(out, '\\');
-            string_push_back(out, quote);
+            m_string_push_back(out, '\\');
+            m_string_push_back(out, quote);
         }
         else if (*chr == 0x08)
         {
-            string_cat_str(out, "\\b");
+            m_string_cat_cstr(out, "\\b");
         }
         else if (*chr == 0x0C)
         {
-            string_cat_str(out, "\\f");
+            m_string_cat_cstr(out, "\\f");
         }
         else if (*chr == 0x0A)
         {
-            string_cat_str(out, "\\n");
+            m_string_cat_cstr(out, "\\n");
         }
         else if (*chr == 0x0D)
         {
-            string_cat_str(out, "\\r");
+            m_string_cat_cstr(out, "\\r");
         }
         else if (*chr == 0x09)
         {
-            string_cat_str(out, "\\t");
+            m_string_cat_cstr(out, "\\t");
         }
         else if ((*chr <= 0xFF) && isprint(*chr))
         {
-            string_push_u(out, *chr);
+            m_string_push_u(out, *chr);
         }
         else if ((*chr <= 0xD7FF) || ((*chr >= 0xE000) && (*chr <= 0xFFFF)))
         {
             const uint16_t uprime = *chr;
-            string_cat_printf(out, "\\u%04" PRIX16, uprime);
+            m_string_cat_printf(out, "\\u%04" PRIX16, uprime);
         }
         else
         {
@@ -496,14 +496,14 @@ int slash_escape(string_t out, const cace_data_t *in, const char quote)
             const uint32_t uprime = *chr - 0x10000;
             const uint16_t high   = 0xD800 + (uprime >> 10);
             const uint16_t low    = 0xDC00 + (uprime & 0x03FF);
-            string_cat_printf(out, "\\u%04" PRIX16 "\\u%04" PRIX16, high, low);
+            m_string_cat_printf(out, "\\u%04" PRIX16 "\\u%04" PRIX16, high, low);
         }
     }
-    string_clear(in_text);
+    m_string_clear(in_text);
     return 0;
 }
 
-int slash_unescape(string_t out, const cace_data_t *in)
+int cace_slash_unescape(m_string_t out, const cace_data_t *in)
 {
     CHKERR1(out);
     CHKERR1(in);
@@ -528,7 +528,7 @@ int slash_unescape(string_t out, const cace_data_t *in)
     }
 
     // potentially no escaping used
-    string_reserve(out, string_size(out) + in_len);
+    m_string_reserve(out, m_string_size(out) + in_len);
 
     const char *curs   = (const char *)(tmp.ptr);
     const char *end    = curs + in_len;
@@ -544,7 +544,7 @@ int slash_unescape(string_t out, const cace_data_t *in)
 
         if (partlen)
         {
-            string_cat_printf(out, "%.*s", (int)partlen, curs);
+            m_string_cat_printf(out, "%.*s", (int)partlen, curs);
         }
         curs += partlen + 1;
 
@@ -562,27 +562,27 @@ int slash_unescape(string_t out, const cace_data_t *in)
 
         if (*curs == 'b')
         {
-            string_push_back(out, 0x08);
+            m_string_push_back(out, 0x08);
             curs += 1;
         }
         else if (*curs == 'f')
         {
-            string_push_back(out, 0x0C);
+            m_string_push_back(out, 0x0C);
             curs += 1;
         }
         else if (*curs == 'n')
         {
-            string_push_back(out, 0x0A);
+            m_string_push_back(out, 0x0A);
             curs += 1;
         }
         else if (*curs == 'r')
         {
-            string_push_back(out, 0x0D);
+            m_string_push_back(out, 0x0D);
             curs += 1;
         }
         else if (*curs == 't')
         {
-            string_push_back(out, 0x09);
+            m_string_push_back(out, 0x09);
             curs += 1;
         }
         else if (*curs == 'u')
@@ -634,11 +634,11 @@ int slash_unescape(string_t out, const cace_data_t *in)
                 unival = val;
             }
 
-            string_push_u(out, unival);
+            m_string_push_u(out, unival);
         }
         else
         {
-            string_push_back(out, *curs);
+            m_string_push_back(out, *curs);
             curs += 1;
         }
     }
@@ -647,19 +647,19 @@ int slash_unescape(string_t out, const cace_data_t *in)
     return retval;
 }
 
-static void strip_chars(string_t out, const char *in, size_t in_len, const char *chars)
+static void strip_chars(m_string_t out, const char *in, size_t in_len, const char *chars)
 {
     const char *curs = in;
     const char *end  = curs + in_len;
     size_t      plen;
 
     // likely no removal
-    string_reserve(out, in_len);
+    m_string_reserve(out, in_len);
 
     while (curs < end)
     {
         plen = strcspn(curs, chars);
-        string_cat_printf(out, "%.*s", (int)plen, curs);
+        m_string_cat_printf(out, "%.*s", (int)plen, curs);
         curs += plen;
 
         plen = strspn(curs, chars);
@@ -667,32 +667,32 @@ static void strip_chars(string_t out, const char *in, size_t in_len, const char 
     }
 }
 
-void strip_space(string_t out, const char *in, size_t in_len)
+void cace_strip_space(m_string_t out, const char *in, size_t in_len)
 {
     strip_chars(out, in, in_len, " \b\f\n\r\t");
 }
 
-void cace_string_tolower(string_t out)
+void cace_string_tolower(m_string_t out)
 {
     CHKVOID(out);
-    size_t len = string_size(out);
+    size_t len = m_string_size(out);
     for (size_t i = 0; i < len; i++)
     {
-        string_set_char(out, i, tolower(string_get_char(out, i)));
+        m_string_set_char(out, i, tolower(m_string_get_char(out, i)));
     }
 }
 
-void cace_string_toupper(string_t out)
+void cace_string_toupper(m_string_t out)
 {
     CHKVOID(out);
-    size_t len = string_size(out);
+    size_t len = m_string_size(out);
     for (size_t i = 0; i < len; i++)
     {
-        string_set_char(out, i, toupper(string_get_char(out, i)));
+        m_string_set_char(out, i, toupper(m_string_get_char(out, i)));
     }
 }
 
-int base16_encode(string_t out, const cace_data_t *in, bool uppercase)
+int cace_base16_encode(m_string_t out, const cace_data_t *in, bool uppercase)
 {
     const char *fmt = uppercase ? "%02X" : "%02x";
 
@@ -700,7 +700,7 @@ int base16_encode(string_t out, const cace_data_t *in, bool uppercase)
     const uint8_t *end  = curs + in->len;
     for (; curs < end; ++curs)
     {
-        string_cat_printf(out, fmt, *curs);
+        m_string_cat_printf(out, fmt, *curs);
     }
     return 0;
 }
@@ -738,17 +738,17 @@ static int base16_decode_char(uint8_t chr)
     return base16_decode_table[chr];
 }
 
-int base16_decode(cace_data_t *out, const string_t in)
+int cace_base16_decode(cace_data_t *out, const m_string_t in)
 {
     CHKERR1(out);
     CHKERR1(in);
 
-    const size_t in_len = string_size(in);
+    const size_t in_len = m_string_size(in);
     if (in_len % 2 != 0)
     {
         return 1;
     }
-    const char *curs = string_get_cstr(in);
+    const char *curs = m_string_get_cstr(in);
     const char *end  = curs + in_len;
 
     if (cace_data_resize(out, in_len / 2))
@@ -783,7 +783,7 @@ static const char *base64url_alphabet =
         "0123456789-_";
 // clang-format on
 
-int base64_encode(string_t out, const cace_data_t *in, bool useurl)
+int cace_base64_encode(m_string_t out, const cace_data_t *in, bool useurl)
 {
     size_t         in_len = in->len;
     const uint8_t *curs   = (const uint8_t *)(in->ptr);
@@ -793,13 +793,13 @@ int base64_encode(string_t out, const cace_data_t *in, bool useurl)
 
     // output length is the ceiling of ratio 8/6
     size_t out_len = ((in_len + 2) / 3) * 4;
-    string_reserve(out, string_size(out) + out_len);
+    m_string_reserve(out, m_string_size(out) + out_len);
 
     for (; curs < end; curs += 3)
     {
         uint8_t byte = (curs[0] >> 2) & 0x3F;
         char    chr  = abet[byte];
-        string_push_back(out, chr);
+        m_string_push_back(out, chr);
         --in_len;
         if (--out_len == 0)
         {
@@ -808,7 +808,7 @@ int base64_encode(string_t out, const cace_data_t *in, bool useurl)
 
         byte = ((curs[0] << 4) | (in_len ? curs[1] >> 4 : 0)) & 0x3F;
         chr  = abet[byte];
-        string_push_back(out, chr);
+        m_string_push_back(out, chr);
         if (--out_len == 0)
         {
             break;
@@ -824,7 +824,7 @@ int base64_encode(string_t out, const cace_data_t *in, bool useurl)
         {
             chr = '=';
         }
-        string_push_back(out, chr);
+        m_string_push_back(out, chr);
         if (--out_len == 0)
         {
             break;
@@ -840,7 +840,7 @@ int base64_encode(string_t out, const cace_data_t *in, bool useurl)
         {
             chr = '=';
         }
-        string_push_back(out, chr);
+        m_string_push_back(out, chr);
         if (--out_len == 0)
         {
             break;
@@ -881,13 +881,13 @@ static int base64_decode_char(uint8_t chr)
     return base64_decode_table[chr];
 }
 
-int base64_decode(cace_data_t *out, const string_t in)
+int cace_base64_decode(cace_data_t *out, const m_string_t in)
 {
     CHKERR1(out);
     CHKERR1(in);
 
-    size_t      in_len = string_size(in);
-    const char *curs   = string_get_cstr(in);
+    size_t      in_len = m_string_size(in);
+    const char *curs   = m_string_get_cstr(in);
 
     size_t out_len = (in_len / 4) * 3 + 2;
     if (cace_data_resize(out, out_len))
@@ -990,7 +990,55 @@ int base64_decode(cace_data_t *out, const string_t in)
     return (in_len > 0) ? 4 : 0;
 }
 
-int utctime_encode(string_t out, const struct timespec *in, bool usesep)
+int cace_date_encode(m_string_t out, const struct tm *in, bool usesep)
+{
+    CHKERR1(out);
+    CHKERR1(in);
+
+    const char *fmt;
+    if (usesep)
+    {
+        fmt = "%Y-%m-%d";
+    }
+    else
+    {
+        fmt = "%Y%m%d";
+    }
+    char fulldate[12]; // maximum with-separator size and trailing null
+    strftime(fulldate, sizeof(fulldate), fmt, in);
+    m_string_cat_cstr(out, fulldate);
+
+    return 0;
+}
+
+int cace_date_decode(struct tm *out, const cace_data_t *in)
+{
+    CHKERR1(out);
+    CHKERR1(in);
+    int retval = 0;
+
+    const size_t in_len = text_real_len(in);
+    const char  *curs   = (const char *)(in->ptr);
+    const char  *end    = curs + in_len;
+
+    // remove optional separators
+    m_string_t unsep;
+    m_string_init(unsep);
+    strip_chars(unsep, curs, in_len, "-");
+    curs = m_string_get_cstr(unsep);
+    end  = curs + m_string_size(unsep);
+
+    // extract parts
+    const char *subend = strptime(curs, "%Y%m%d", out);
+    if ((subend == NULL) || (subend != end))
+    {
+        retval = 2;
+    }
+
+    return retval;
+}
+
+int cace_utctime_encode(string_t out, const struct timespec *in, bool usesep)
 {
     CHKERR1(out);
     CHKERR1(in);
@@ -1018,16 +1066,16 @@ int utctime_encode(string_t out, const struct timespec *in, bool usesep)
         }
         char fullsec[20]; // maximum with-separator size and trailing null
         strftime(fullsec, sizeof(fullsec), fmt, &parts);
-        string_cat_str(out, fullsec);
+        m_string_cat_cstr(out, fullsec);
     }
 
-    subsec_encode(out, in->tv_nsec);
+    cace_subsec_encode(out, in->tv_nsec);
 
-    string_push_back(out, 'Z');
+    m_string_push_back(out, 'Z');
     return 0;
 }
 
-int utctime_decode(struct timespec *out, const cace_data_t *in)
+int cace_utctime_decode(struct timespec *out, const cace_data_t *in)
 {
     CHKERR1(out);
     CHKERR1(in);
@@ -1037,18 +1085,17 @@ int utctime_decode(struct timespec *out, const cace_data_t *in)
     const char  *end    = curs + in_len;
 
     // remove optional separators
-    string_t unsep;
-    string_init(unsep);
+    m_string_t unsep;
+    m_string_init(unsep);
     strip_chars(unsep, curs, in_len, "-:");
-    curs = string_get_cstr(unsep);
-    end  = curs + string_size(unsep);
+    curs = m_string_get_cstr(unsep);
+    end  = curs + m_string_size(unsep);
 
     // extract full seconds
     time_t fullsec;
     int    retval = 0;
     {
-        struct tm parts = { 0 };
-        // FIXME doesn't handle compressed forms
+        struct tm   parts  = { 0 };
         const char *subend = strptime(curs, "%Y%m%dT%H%M%S", &parts);
         if (subend == NULL)
         {
@@ -1106,7 +1153,7 @@ int utctime_decode(struct timespec *out, const cace_data_t *in)
     out->tv_nsec = subsec;
 
 utctime_decode_cleanup:
-    string_clear(unsep);
+    m_string_clear(unsep);
     return retval;
 }
 
@@ -1114,14 +1161,14 @@ utctime_decode_cleanup:
 #define TIMEPERIOD_HOUR   3600
 #define TIMEPERIOD_MINUTE 60
 
-int timeperiod_encode(string_t out, const struct timespec *in)
+int cace_timeperiod_encode(m_string_t out, const struct timespec *in)
 {
     CHKERR1(out);
     CHKERR1(in);
 
     if ((in->tv_sec == 0) && (in->tv_nsec == 0))
     {
-        string_cat_str(out, "PT0S");
+        m_string_cat_cstr(out, "PT0S");
         return 0;
     }
 
@@ -1130,46 +1177,46 @@ int timeperiod_encode(string_t out, const struct timespec *in)
 
     if (fullsec < 0)
     {
-        string_push_back(out, '-');
+        m_string_push_back(out, '-');
         fullsec = -fullsec;
     }
 
-    string_push_back(out, 'P');
+    m_string_push_back(out, 'P');
 
     if (fullsec >= TIMEPERIOD_DAY)
     {
         const time_t part = fullsec / TIMEPERIOD_DAY;
         fullsec %= TIMEPERIOD_DAY;
-        string_cat_printf(out, "%" PRId64 "D", part);
+        m_string_cat_printf(out, "%" PRId64 "D", part);
     }
 
-    string_push_back(out, 'T');
+    m_string_push_back(out, 'T');
 
     if (fullsec >= TIMEPERIOD_HOUR)
     {
         const time_t part = fullsec / TIMEPERIOD_HOUR;
         fullsec %= TIMEPERIOD_HOUR;
-        string_cat_printf(out, "%" PRId64 "H", part);
+        m_string_cat_printf(out, "%" PRId64 "H", part);
     }
 
     if (fullsec >= TIMEPERIOD_MINUTE)
     {
         const time_t part = fullsec / TIMEPERIOD_MINUTE;
         fullsec %= TIMEPERIOD_MINUTE;
-        string_cat_printf(out, "%" PRId64 "M", part);
+        m_string_cat_printf(out, "%" PRId64 "M", part);
     }
 
     if (fullsec || subsec)
     {
-        string_cat_printf(out, "%" PRId64, fullsec);
-        subsec_encode(out, subsec);
-        string_push_back(out, 'S');
+        m_string_cat_printf(out, "%" PRId64, fullsec);
+        cace_subsec_encode(out, subsec);
+        m_string_push_back(out, 'S');
     }
 
     return 0;
 }
 
-int timeperiod_decode(struct timespec *out, const cace_data_t *in)
+int cace_timeperiod_decode(struct timespec *out, const cace_data_t *in)
 {
     CHKERR1(out);
     CHKERR1(in);

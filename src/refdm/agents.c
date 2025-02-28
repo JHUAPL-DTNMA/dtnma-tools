@@ -45,7 +45,7 @@ void refdm_agent_init(refdm_agent_t *obj)
 {
     CHKVOID(obj);
     m_string_init(obj->eid);
-    ari_list_init(obj->rptsets);
+    cace_ari_list_init(obj->rptsets);
 
     pthread_mutex_init(&(obj->log_mutex), NULL);
     obj->log_fd       = NULL;
@@ -64,7 +64,7 @@ void refdm_agent_deinit(refdm_agent_t *obj)
     }
 
     pthread_mutex_destroy(&(obj->log_mutex));
-    ari_list_clear(obj->rptsets);
+    cace_ari_list_clear(obj->rptsets);
     m_string_clear(obj->eid);
 }
 
@@ -98,7 +98,7 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
             cace_data_t eid_bytes;
             cace_data_init_view(&eid_bytes, m_string_size(agent->eid) + 1,
                                 (cace_data_ptr_t)m_string_get_cstr(agent->eid));
-            uri_percent_encode(eid_path_seg, &eid_bytes, NULL);
+            cace_uri_percent_encode(eid_path_seg, &eid_bytes, NULL);
         }
 
         // Create sub-directories if required (first file only)

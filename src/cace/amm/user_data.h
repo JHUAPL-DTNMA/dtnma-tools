@@ -37,7 +37,7 @@ typedef struct cace_amm_user_data_s
     /// Pointer to the opaque user data being managed
     void *ptr;
     /** Set to true if the pointed-to data is owned by this struct and
-     * must be freed (using ARI_FREE) by this deinit.
+     * must be freed (using CACE_FREE) by this deinit.
      */
     bool owned;
     /// An optional cleanup function for the #ptr.

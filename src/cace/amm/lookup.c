@@ -32,7 +32,7 @@ void cace_amm_lookup_deinit(cace_amm_lookup_t *res)
     cace_ari_itemized_deinit(&(res->aparams));
     res->ns       = NULL;
     res->obj      = NULL;
-    res->obj_type = ARI_TYPE_NULL;
+    res->obj_type = CACE_ARI_TYPE_NULL;
 }
 
 void cace_amm_lookup_init_set(cace_amm_lookup_t *res, const cace_amm_lookup_t *src)
@@ -54,7 +54,7 @@ void cace_amm_lookup_init_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src)
     res->obj      = src->obj;
     src->obj      = NULL;
     res->obj_type = src->obj_type;
-    src->obj_type = ARI_TYPE_NULL;
+    src->obj_type = CACE_ARI_TYPE_NULL;
     cace_ari_itemized_init_move(&(res->aparams), &(src->aparams));
 }
 
@@ -70,7 +70,7 @@ void cace_amm_lookup_set_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src)
     cace_amm_lookup_init_move(res, src);
 }
 
-int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *store, const ari_t *ref)
+int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *store, const cace_ari_t *ref)
 {
     CHKERR1(res);
     CHKERR1(store);
@@ -80,38 +80,56 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
     // reset state
     res->ns       = NULL;
     res->obj      = NULL;
-    res->obj_type = ARI_TYPE_NULL;
+    res->obj_type = CACE_ARI_TYPE_NULL;
     cace_ari_itemized_reset(&(res->aparams));
 
-    const ari_objpath_t *path = &(ref->as_ref.objpath);
+    const cace_ari_objpath_t *path = &(ref->as_ref.objpath);
     // no possible match in this store
     if (!(path->has_ari_type))
     {
         return 2;
     }
 
-    switch (path->ns_id.form)
+    cace_amm_obj_org_t *org = NULL;
+    switch (path->org_id.form)
     {
-        case ARI_IDSEG_INT:
-            res->ns = cace_amm_obj_store_find_ns_enum(store, path->ns_id.as_int);
+        case CACE_ARI_IDSEG_INT:
+            org = cace_amm_obj_store_find_org_enum(store, path->org_id.as_int);
             break;
-        case ARI_IDSEG_TEXT:
-            res->ns = cace_amm_obj_store_find_ns_name(store, string_get_cstr(path->ns_id.as_text));
+        case CACE_ARI_IDSEG_TEXT:
+            org = cace_amm_obj_store_find_org_name(store, m_string_get_cstr(path->org_id.as_text));
+            break;
+        default:
+            break;
+    }
+    if (!org)
+    {
+        return 3;
+    }
+    switch (path->model_id.form)
+    {
+        case CACE_ARI_IDSEG_INT:
+            res->ns = cace_amm_obj_org_find_ns_enum(org, path->model_id.as_int);
+            break;
+        case CACE_ARI_IDSEG_TEXT:
+            res->ns = cace_amm_obj_org_find_ns_name(org, m_string_get_cstr(path->model_id.as_text));
             break;
         default:
             break;
     }
     if (!(res->ns))
     {
-        return 3;
+        return 4;
     }
+
+    // FIXME handle model_rev
 
     switch (path->obj_id.form)
     {
-        case ARI_IDSEG_INT:
+        case CACE_ARI_IDSEG_INT:
             res->obj = cace_amm_obj_ns_find_obj_enum(res->ns, path->ari_type, path->obj_id.as_int);
             break;
-        case ARI_IDSEG_TEXT:
+        case CACE_ARI_IDSEG_TEXT:
             res->obj = cace_amm_obj_ns_find_obj_name(res->ns, path->ari_type, string_get_cstr(path->obj_id.as_text));
             break;
         default:
@@ -119,7 +137,7 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
     }
     if (!(res->obj))
     {
-        return 4;
+        return 6;
     }
 
     res->obj_type = path->ari_type;
@@ -127,7 +145,7 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
     int pop_res = cace_amm_actual_param_set_populate(&(res->aparams), res->obj->fparams, &(ref->as_ref.params));
     if (pop_res)
     {
-        return 5 + pop_res;
+        return 7 + pop_res;
     }
 
     return 0;

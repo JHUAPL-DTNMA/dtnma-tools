@@ -35,7 +35,7 @@ typedef struct
 
     /** Pointer to the reference which led to this production.
      */
-    const ari_t *ref;
+    const cace_ari_t *ref;
 
     /** Dereference result which led to this production.
      * This will never be null.
@@ -46,7 +46,7 @@ typedef struct
      * This is initialized as undefined and must be set to any other value
      * to indicate successful production.
      */
-    ari_t value;
+    cace_ari_t value;
 } refda_valprod_ctx_t;
 
 /** Initialize a context based on an object reference ARI and
@@ -58,7 +58,7 @@ typedef struct
  * @param[in] deref The dereference result.
  * The result must outlive this context.
  */
-void refda_valprod_ctx_init(refda_valprod_ctx_t *ctx, refda_runctx_t *parent, const ari_t *ref,
+void refda_valprod_ctx_init(refda_valprod_ctx_t *ctx, refda_runctx_t *parent, const cace_ari_t *ref,
                             const cace_amm_lookup_t *deref);
 
 void refda_valprod_ctx_deinit(refda_valprod_ctx_t *ctx);

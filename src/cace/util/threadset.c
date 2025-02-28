@@ -21,9 +21,9 @@
 #include "defs.h"
 #include <errno.h>
 
-int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, void *arg)
+int cace_threadset_start(cace_threadset_t tset, const cace_threadinfo_t *info, size_t count, void *arg)
 {
-    for (const threadinfo_t *it = info; it < info + count; ++it)
+    for (const cace_threadinfo_t *it = info; it < info + count; ++it)
     {
         if (!(it->func))
         {
@@ -36,7 +36,7 @@ int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, vo
             CACE_LOG_ERR("Unable to create pthread %s, errno = %s", it->name, strerror(errno));
             return 2;
         }
-        threadset_push_back(tset, thr);
+        cace_threadset_push_back(tset, thr);
         CACE_LOG_INFO("Started thread %s", it->name);
 
 #ifdef _GNU_SOURCE
@@ -50,12 +50,12 @@ int threadset_start(threadset_t tset, const threadinfo_t *info, size_t count, vo
     return 0;
 }
 
-int threadset_join(threadset_t tset)
+int cace_threadset_join(cace_threadset_t tset)
 {
-    while (!threadset_empty_p(tset))
+    while (!cace_threadset_empty_p(tset))
     {
         pthread_t thr;
-        threadset_pop_back(&thr, tset);
+        cace_threadset_pop_back(&thr, tset);
         if (pthread_join(thr, NULL))
         {
             CACE_LOG_ERR("Unable to join pthread %s, errno = %s", "name", strerror(errno));

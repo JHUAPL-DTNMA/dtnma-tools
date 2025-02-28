@@ -127,7 +127,7 @@ jobs:
       - name: Install
         run: ./build.sh install
       - name: Check symbols
-        run: ./check_symbols.py cace refda refdm || true #FIXME enable failure
+        run: ./check_symbols.py cace refda refdm
       - name: Test
         env:
           PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}

@@ -39,7 +39,7 @@ typedef struct
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t prod_type;
+    cace_amm_type_t prod_type;
 
     /** Value production callback for an EDD object.
      * @note The success or failure of production is indicated by the result value

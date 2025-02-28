@@ -28,16 +28,16 @@ extern "C" {
  *
  * @param[out] ctx The context to store into.
  * @return Zero if successful.
- * @sa nm_rest_stop()
+ * @sa refdm_nm_rest_stop()
  */
-int nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr);
+int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr);
 
 /** Stop operation of the REST service.
  *
  * @param[in] ctx The context to stop for.
- * @sa nm_rest_start()
+ * @sa refdm_nm_rest_start()
  */
-void nm_rest_stop(struct mg_context *ctx);
+void refdm_nm_rest_stop(struct mg_context *ctx);
 
 // Standard HTTP Status Codes
 #define HTTP_OK                 200

@@ -87,13 +87,13 @@ typedef struct refdm_mgr_s
     refdm_agent_autologging_cfg_t agent_log_cfg;
 
     /// Running state
-    daemon_run_t running;
+    cace_daemon_run_t running;
     /// Messaging configuration
     cace_amm_msg_if_t mif;
     /// Instrumentation counters
     refdm_instr_t instr;
     /// Threads associated with the mgr
-    threadset_t threads;
+    cace_threadset_t threads;
 
     /// Agent state storage
     refdm_agent_list_t agent_list;

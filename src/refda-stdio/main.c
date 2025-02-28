@@ -34,20 +34,20 @@ static void daemon_signal_handler(int signum)
 {
     CACE_LOG_DEBUG("Received signal %d", signum);
     CACE_LOG_INFO("Signaling shutdown");
-    daemon_run_stop(&agent.running);
+    cace_daemon_run_stop(&agent.running);
 }
 
-static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *meta _U_, void *ctx _U_)
+static int stdout_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta _U_, void *ctx _U_)
 {
     int retval = 0;
-    CACE_LOG_DEBUG("Sending message with %d ARIs", ari_list_size(data));
+    CACE_LOG_DEBUG("Sending message with %d ARIs", cace_ari_list_size(data));
 
-    ari_list_it_t ait;
-    for (ari_list_it(ait, data); !ari_list_end_p(ait); ari_list_next(ait))
+    cace_ari_list_it_t ait;
+    for (cace_ari_list_it(ait, data); !cace_ari_list_end_p(ait); cace_ari_list_next(ait))
     {
         cace_data_t outbin;
         cace_data_init(&outbin);
-        if (ari_cbor_encode(&outbin, ari_list_cref(ait)))
+        if (cace_ari_cbor_encode(&outbin, cace_ari_list_cref(ait)))
         {
             CACE_LOG_ERR("Failed to binary encode ARI");
             retval = 3;
@@ -55,7 +55,7 @@ static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *
 
         string_t outhex;
         string_init(outhex);
-        if (base16_encode(outhex, &outbin, true))
+        if (cace_base16_encode(outhex, &outbin, true))
         {
             CACE_LOG_ERR("Failed to base-16 encode ARI");
             retval = 4;
@@ -79,7 +79,7 @@ static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *
         cace_data_deinit(&outbin);
     }
 
-    if (!ari_list_empty_p(data))
+    if (!cace_ari_list_empty_p(data))
     {
         if (fputs("\n", stdout) <= 0)
         {
@@ -92,7 +92,7 @@ static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *
     return retval;
 }
 
-static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_run_t *running, void *ctx _U_)
+static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, cace_daemon_run_t *running, void *ctx _U_)
 {
     CHKERR1(data);
     CHKERR1(meta);
@@ -120,7 +120,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
         else if (res == 0)
         {
             // nothing ready, but maybe daemon is shutting down
-            if (!daemon_run_get(running))
+            if (!cace_daemon_run_get(running))
             {
                 CACE_LOG_DEBUG("returning due to running state change");
                 return CACE_AMM_MSG_IF_RECV_END;
@@ -163,24 +163,25 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
                     }
 
                     string_t inhex;
+                    string_init(inhex);
                     m_string_set_cstrn(inhex, curs, plen);
                     CACE_LOG_DEBUG("decoding ARI item from base-16: %s", m_string_get_cstr(inhex));
 
                     cace_data_t inbin;
                     cace_data_init(&inbin);
-                    if (base16_decode(&inbin, inhex))
+                    if (cace_base16_decode(&inbin, inhex))
                     {
                         CACE_LOG_ERR("Failed to base-16 decode input %s", curs);
                         lineret = 1;
                     }
 
-                    ari_t item;
-                    ari_init(&item);
+                    cace_ari_t item;
+                    cace_ari_init(&item);
                     if (!lineret)
                     {
                         size_t      used;
                         const char *errm;
-                        res = ari_cbor_decode(&item, &inbin, &used, &errm);
+                        res = cace_ari_cbor_decode(&item, &inbin, &used, &errm);
                         if (res)
                         {
                             CACE_LOG_ERR("Failed to binary decode ARI: %s", errm);
@@ -189,7 +190,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
                         }
                         if (errm)
                         {
-                            ARI_FREE((char *)errm);
+                            CACE_FREE((char *)errm);
                         }
                     }
 
@@ -199,16 +200,16 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
                         {
                             string_t buf;
                             string_init(buf);
-                            ari_text_encode(buf, &item, ARI_TEXT_ENC_OPTS_DEFAULT);
+                            cace_ari_text_encode(buf, &item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                             CACE_LOG_DEBUG("decoded ARI item: %s", string_get_cstr(buf));
                             string_clear(buf);
                         }
 
-                        ari_list_push_back_move(data, &item);
+                        cace_ari_list_push_back_move(data, &item);
                     }
                     else
                     {
-                        ari_deinit(&item);
+                        cace_ari_deinit(&item);
                     }
 
                     cace_data_deinit(&inbin);
@@ -219,8 +220,8 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
 
                 free(lineptr);
 
-                CACE_LOG_DEBUG("decoded %d ARI items in the line", ari_list_size(data));
-                if (!ari_list_empty_p(data))
+                CACE_LOG_DEBUG("decoded %d ARI items in the line", cace_ari_list_size(data));
+                if (!cace_ari_list_empty_p(data))
                 {
                     // stop when something received
                     break;
@@ -360,7 +361,7 @@ int main(int argc, char *argv[])
     if (!retval)
     {
         // Block until stopped
-        daemon_run_wait(&agent.running);
+        cace_daemon_run_wait(&agent.running);
         CACE_LOG_INFO("Agent is shutting down");
     }
 

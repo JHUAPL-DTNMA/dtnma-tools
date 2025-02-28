@@ -55,7 +55,7 @@ typedef struct
     m_string_t eid;
 
     /// Received RPTSET values
-    ari_list_t rptsets;
+    cace_ari_list_t rptsets;
 
     /// Mutex for #log_fd and related data
     pthread_mutex_t log_mutex;

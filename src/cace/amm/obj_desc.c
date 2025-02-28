@@ -34,7 +34,7 @@ void cace_amm_user_data_deinit(cace_amm_user_data_t *obj)
         }
         if (obj->owned)
         {
-            ARI_FREE(obj->ptr);
+            CACE_FREE(obj->ptr);
         }
     }
 
@@ -54,8 +54,7 @@ void cace_amm_user_data_set_from(cace_amm_user_data_t *obj, void *ptr, bool owne
 
 void cace_amm_obj_desc_init(cace_amm_obj_desc_t *obj)
 {
-    obj->has_enum = false;
-    string_init(obj->name);
+    cace_amm_idseg_val_init(&obj->obj_id);
     cace_amm_formal_param_list_init(obj->fparams);
     cace_amm_user_data_init(&(obj->app_data));
 }
@@ -64,5 +63,5 @@ void cace_amm_obj_desc_deinit(cace_amm_obj_desc_t *obj)
 {
     cace_amm_user_data_deinit(&(obj->app_data));
     cace_amm_formal_param_list_clear(obj->fparams);
-    string_clear(obj->name);
+    cace_amm_idseg_val_deinit(&obj->obj_id);
 }

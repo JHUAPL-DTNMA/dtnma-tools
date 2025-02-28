@@ -36,14 +36,14 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, &(item->result), ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, &(item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("execution finished with result %s", string_get_cstr(buf));
         string_clear(buf);
     }
 
     refda_runctx_t *runctx = refda_runctx_ptr_ref(item->seq->runctx);
 
-    if (!ari_is_null(&(runctx->nonce)))
+    if (!cace_ari_is_null(&(runctx->nonce)))
     {
         // generate report regardless of success or failure
         CACE_LOG_DEBUG("Pushing execution result");
@@ -73,7 +73,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, &(item->ref), ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, &(item->ref), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("Execution item %s", string_get_cstr(buf));
         string_clear(buf);
     }
@@ -120,11 +120,11 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
 
 /** Execute any ARI target (reference or literal).
  */
-static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const ari_t *target);
+static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target);
 
 /** Execute an arbitrary object reference.
  */
-static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, const ari_t *target)
+static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target)
 {
     int retval = 0;
 
@@ -142,19 +142,19 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     {
         switch (deref.obj_type)
         {
-            case ARI_TYPE_CTRL:
+            case CACE_ARI_TYPE_CTRL:
             {
                 // expansion finished, execution comes later
                 refda_exec_item_t *item = refda_exec_item_list_push_back_new(seq->items);
                 item->seq               = seq;
-                ari_set_copy(&(item->ref), target);
+                cace_ari_set_copy(&(item->ref), target);
                 cace_amm_lookup_set_move(&(item->deref), &deref);
                 cace_amm_lookup_init(&deref);
                 break;
             }
-            case ARI_TYPE_CONST:
-            case ARI_TYPE_VAR:
-            case ARI_TYPE_EDD:
+            case CACE_ARI_TYPE_CONST:
+            case CACE_ARI_TYPE_VAR:
+            case CACE_ARI_TYPE_EDD:
             {
                 refda_valprod_ctx_t prodctx;
                 refda_valprod_ctx_init(&prodctx, runctx, target, &deref);
@@ -180,14 +180,14 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
 
 /** Execute a MAC-typed literal value.
  */
-static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, const ari_t *ari)
+static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *ari)
 {
-    ari_list_t *items = &(ari->as_lit.value.as_ac->items);
+    cace_ari_list_t *items = &(ari->as_lit.value.as_ac->items);
 
-    ari_list_it_t it;
-    for (ari_list_it(it, *items); !ari_list_end_p(it); ari_list_next(it))
+    cace_ari_list_it_t it;
+    for (cace_ari_list_it(it, *items); !cace_ari_list_end_p(it); cace_ari_list_next(it))
     {
-        const ari_t *item = ari_list_cref(it);
+        const cace_ari_t *item = cace_ari_list_cref(it);
 
         refda_exec_exp_item(runctx, seq, item);
     }
@@ -195,7 +195,7 @@ static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     return 0;
 }
 
-static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const ari_t *target)
+static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target)
 {
     int retval = 0;
     if (target->is_ref)
@@ -205,7 +205,7 @@ static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, co
     }
     else
     {
-        if (!amm_type_match(runctx->agent->mac_type, target))
+        if (!cace_amm_type_match(runctx->agent->mac_type, target))
         {
             CACE_LOG_WARNING("Attempt to execute a non-MAC literal");
             retval = REFDA_EXEC_ERR_BAD_TYPE;
@@ -220,7 +220,7 @@ static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, co
     return retval;
 }
 
-int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const ari_t *target)
+int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const cace_ari_t *target)
 {
     CHKERR1(target);
     refda_runctx_t *runctx = refda_runctx_ptr_ref(runctxp);
@@ -229,7 +229,7 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, target, ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("Expanding PID %" PRIu64 " target %s from source %s", seq->pid, m_string_get_cstr(buf),
                        m_string_get_cstr(runctx->mgr_ident));
         string_clear(buf);
@@ -323,12 +323,12 @@ static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *m
         return 2;
     }
 
-    ari_list_t *targets = &(msg->value.as_lit.value.as_execset->targets);
+    cace_ari_list_t *targets = &(msg->value.as_lit.value.as_execset->targets);
 
-    ari_list_it_t tgtit;
-    for (ari_list_it(tgtit, *targets); !ari_list_end_p(tgtit); ari_list_next(tgtit))
+    cace_ari_list_it_t tgtit;
+    for (cace_ari_list_it(tgtit, *targets); !cace_ari_list_end_p(tgtit); cace_ari_list_next(tgtit))
     {
-        const ari_t *tgt = ari_list_cref(tgtit);
+        const cace_ari_t *tgt = cace_ari_list_cref(tgtit);
 
         if (pthread_mutex_lock(&(agent->exec_state_mutex)))
         {
@@ -380,7 +380,7 @@ void *refda_exec_worker(void *arg)
 
                 string_t buf;
                 string_init(buf);
-                timeperiod_encode(buf, &diff);
+                cace_timeperiod_encode(buf, &diff);
                 CACE_LOG_DEBUG("waiting for exec event or %s", string_get_cstr(buf));
                 string_clear(buf);
             }
@@ -425,7 +425,7 @@ void *refda_exec_worker(void *arg)
         if (refda_msgdata_queue_pop(&item, agent->execs))
         {
             // sentinel for end-of-input
-            const bool at_end = ari_is_undefined(&(item.value));
+            const bool at_end = cace_ari_is_undefined(&(item.value));
             if (!at_end)
             {
                 refda_exec_exp_execset(agent, &item);

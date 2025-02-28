@@ -34,7 +34,7 @@ typedef struct refda_msgdata_s
     /// The peer identity as opaque text
     m_string_t ident;
     /// The associated value
-    ari_t value;
+    cace_ari_t value;
 } refda_msgdata_t;
 
 void refda_msgdata_init(refda_msgdata_t *obj);

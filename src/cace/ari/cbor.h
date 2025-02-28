@@ -41,7 +41,7 @@ extern "C" {
  * @param[in] ari The ARI to encode from.
  * @return Zero upon success.
  */
-int ari_cbor_encode(cace_data_t *buf, const ari_t *ari);
+int cace_ari_cbor_encode(cace_data_t *buf, const cace_ari_t *ari);
 
 /** Lower-level stream encoding interface.
  *
@@ -49,7 +49,7 @@ int ari_cbor_encode(cace_data_t *buf, const ari_t *ari);
  * @param[in] ari The ARI to encode from.
  * @return Zero upon success.
  */
-int ari_cbor_encode_stream(QCBOREncodeContext *encoder, const ari_t *ari);
+int cace_ari_cbor_encode_stream(QCBOREncodeContext *encoder, const cace_ari_t *ari);
 
 /** Decode an ARI from binary form.
  *
@@ -67,10 +67,10 @@ int ari_cbor_encode_stream(QCBOREncodeContext *encoder, const ari_t *ari);
  * @param[out] errm If non-null, this will be set to a specific error message
  * associated with any failure.
  * Regardless of the return code, if the pointed-to pointer is non-null it
- * must be freed using ARI_FREE().
+ * must be freed using CACE_FREE().
  * @return Zero upon success.
  */
-int ari_cbor_decode(ari_t *ari, const cace_data_t *buf, size_t *used, const char **errm);
+int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, const char **errm);
 
 /** Lower-level stream decoding interface.
  *
@@ -79,7 +79,7 @@ int ari_cbor_decode(ari_t *ari, const cace_data_t *buf, size_t *used, const char
  * The struct must already be initialized.
  * @return Zero upon success.
  */
-int ari_cbor_decode_stream(QCBORDecodeContext *decoder, ari_t *ari);
+int cace_ari_cbor_decode_stream(QCBORDecodeContext *decoder, cace_ari_t *ari);
 
 #ifdef __cplusplus
 }

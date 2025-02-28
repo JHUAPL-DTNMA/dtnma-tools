@@ -16,20 +16,10 @@
  * limitations under the License.
  */
 
-/** @file
- * This just verifies the ability for a C++11 executable to link with the
- * cace library.
- */
+#ifndef REFDA_ADM_IETF_H_
+#define REFDA_ADM_IETF_H_
 
-#include <cace/ari.h>
-#include <cace/util/defs.h>
-#include <iostream>
+/// Enumeration of the organization
+#define REFDA_ADM_IETF_ENUM 1
 
-int main(int argc _U_, char *argv[] _U_)
-{
-    cace_ari_t value;
-    cace_ari_init(&value);
-
-    cace_ari_deinit(&value);
-    return 0;
-}
+#endif /* REFDA_ADM_IETF_H_ */

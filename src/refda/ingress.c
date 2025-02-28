@@ -25,8 +25,8 @@ void *refda_ingress_worker(void *arg)
     refda_agent_t *agent = arg;
     CACE_LOG_INFO("Worker started");
 
-    ari_list_t values;
-    ari_list_init(values);
+    cace_ari_list_t values;
+    cace_ari_list_init(values);
     cace_amm_msg_if_metadata_t meta;
     cace_amm_msg_if_metadata_init(&meta);
 
@@ -34,22 +34,22 @@ void *refda_ingress_worker(void *arg)
      * agent->running controls the overall execution of threads in the
      * Agent.
      */
-    while (daemon_run_get(&agent->running))
+    while (cace_daemon_run_get(&agent->running))
     {
-        ari_list_reset(values);
+        cace_ari_list_reset(values);
         int recv_res = agent->mif.recv(values, &meta, &agent->running, agent->mif.ctx);
 
         // process received items even if failed status
-        if (!ari_list_empty_p(values))
+        if (!cace_ari_list_empty_p(values))
         {
-            CACE_LOG_INFO("Message has %d ARIs", ari_list_size(values));
+            CACE_LOG_INFO("Message has %d ARIs", cace_ari_list_size(values));
 
-            ari_list_it_t val_it;
+            cace_ari_list_it_t val_it;
             /* For each received ARI, validate it */
-            for (ari_list_it(val_it, values); !ari_list_end_p(val_it); ari_list_next(val_it))
+            for (cace_ari_list_it(val_it, values); !cace_ari_list_end_p(val_it); cace_ari_list_next(val_it))
             {
-                ari_t *val = ari_list_ref(val_it);
-                if (!ari_get_execset(val))
+                cace_ari_t *val = cace_ari_list_ref(val_it);
+                if (!cace_ari_get_execset(val))
                 {
                     CACE_LOG_ERR("Ignoring input ARI that is not an EXECSET");
                     // item is left in list for later deinit
@@ -59,7 +59,7 @@ void *refda_ingress_worker(void *arg)
                 refda_msgdata_t exec_item;
                 refda_msgdata_init(&exec_item);
                 m_string_swap(exec_item.ident, meta.src);
-                ari_set_move(&exec_item.value, val);
+                cace_ari_set_move(&exec_item.value, val);
 
                 refda_msgdata_queue_push_move(agent->execs, &exec_item);
                 sem_post(&(agent->execs_sem));
@@ -71,6 +71,7 @@ void *refda_ingress_worker(void *arg)
         if (recv_res)
         {
             CACE_LOG_INFO("Got mif.recv result=%d, stopping", recv_res);
+            atomic_fetch_add(&agent->instr.num_execset_recv_failure, 1);
 
             // flush the input queue but keep the daemon running
             refda_msgdata_t undef;
@@ -83,7 +84,7 @@ void *refda_ingress_worker(void *arg)
     }
 
     cace_amm_msg_if_metadata_deinit(&meta);
-    ari_list_clear(values);
+    cace_ari_list_clear(values);
 
     CACE_LOG_INFO("Worker stopped");
     return NULL;

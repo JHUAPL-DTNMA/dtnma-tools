@@ -37,7 +37,7 @@ extern "C" {
  * @param[in] text The null-terminated text string.
  * @return True if the text matches the identifier rule.
  */
-bool ari_text_is_identity(const cace_data_t *text);
+bool cace_ari_text_is_identity(const cace_data_t *text);
 
 /** Encode to URI percent-encoding text form.
  * This is defined in Section 2.1 of RFC 3986 @cite rfc3986.
@@ -50,7 +50,7 @@ bool ari_text_is_identity(const cace_data_t *text);
  * which is null-terminated.
  * @return Zero upon success.
  */
-int uri_percent_encode(string_t out, const cace_data_t *in, const char *safe);
+int cace_uri_percent_encode(m_string_t out, const cace_data_t *in, const char *safe);
 
 /** Decode from URI percent-encoding text form.
  * This is defined in Section 2.1 of RFC 3986 @cite rfc3986.
@@ -59,7 +59,7 @@ int uri_percent_encode(string_t out, const cace_data_t *in, const char *safe);
  * @param[in] in The input encoded text which may be null-terminated.
  * @return Zero upon success.
  */
-int uri_percent_decode(string_t out, const cace_data_t *in);
+int cace_uri_percent_decode(m_string_t out, const cace_data_t *in);
 
 /** Encode an unsigned integer to text form.
  * The sign will be prepended as necessary.
@@ -69,9 +69,9 @@ int uri_percent_decode(string_t out, const cace_data_t *in);
  * @param base The base to encode to, which must be one of: 2, 10, 16.
  * @return Zero upon success.
  */
-int ari_uint64_encode(string_t out, uint64_t value, int base);
+int cace_ari_uint64_encode(m_string_t out, uint64_t value, int base);
 
-int ari_uint64_decode(uint64_t *out, const string_t in);
+int cace_ari_uint64_decode(uint64_t *out, const m_string_t in);
 
 /** Encode a floating point number to text form.
  *
@@ -83,7 +83,7 @@ int ari_uint64_decode(uint64_t *out, const string_t in);
  *  'x'
  * @return Zero upon success.
  */
-int ari_float64_encode(string_t out, double value, char form);
+int cace_ari_float64_encode(m_string_t out, double value, char form);
 
 /** Encode a decimal fraction to text form.
  *
@@ -91,7 +91,7 @@ int ari_float64_encode(string_t out, double value, char form);
  * @param in The input fractional value with least digit 1e-9
  * @return Zero upon success.
  */
-int decfrac_encode(string_t out, const struct timespec *in);
+int cace_decfrac_encode(m_string_t out, const struct timespec *in);
 
 /** Decode a decimal fraction from text.
  *
@@ -101,7 +101,7 @@ int decfrac_encode(string_t out, const struct timespec *in);
  * Or 1 to indicate an argument error, 2 to indicate a numeric error,
  * 3 to indicate extra text at the end, and 4 to indicate value underflow.
  */
-int decfrac_decode(struct timespec *out, const cace_data_t *in);
+int cace_decfrac_decode(struct timespec *out, const cace_data_t *in);
 
 /** Determine if data contains only valid UTF-8 code points.
  *
@@ -120,7 +120,7 @@ bool cace_data_is_utf8(const cace_data_t *in);
  * @param quote The character used to quote the string.
  * @return Zero upon success.
  */
-int slash_escape(string_t out, const cace_data_t *in, const char quote);
+int cace_slash_escape(m_string_t out, const cace_data_t *in, const char quote);
 
 /** Unescape backslashes in tstr/bstr text form.
  * This is defined in Section G.2 of RFC8610 @cite rfc8610.
@@ -129,7 +129,7 @@ int slash_escape(string_t out, const cace_data_t *in, const char quote);
  * @param in The input buffer to read, which may be null terminated.
  * @return Zero upon success.
  */
-int slash_unescape(string_t out, const cace_data_t *in);
+int cace_slash_unescape(m_string_t out, const cace_data_t *in);
 
 /** Remove whitespace characters from a text string.
  * This is based on isspace() inspection.
@@ -138,21 +138,21 @@ int slash_unescape(string_t out, const cace_data_t *in);
  * @param[in] in The input text to read.
  * @param in_len The length of text not including null terminator.
  */
-void strip_space(string_t out, const char *in, size_t in_len);
+void cace_strip_space(m_string_t out, const char *in, size_t in_len);
 
 /** Convert a text string to lowercase.
  * This is written to work on byte strings, not unicode.
  *
  * @param[out] out The output buffer, which will be replaced.
  */
-void cace_string_tolower(string_t out);
+void cace_string_tolower(m_string_t out);
 
 /** Convert a text string to uppercase.
  * This is written to work on byte strings, not unicode.
  *
  * @param[out] out The output buffer, which will be replaced.
  */
-void cace_string_toupper(string_t out);
+void cace_string_toupper(m_string_t out);
 
 /** Encode to base16 text form.
  * This is defined in Section 8 of RFC 4648 @cite rfc4648.
@@ -162,7 +162,7 @@ void cace_string_toupper(string_t out);
  * @param uppercase True to use upper-case letters, false to use lower-case.
  * @return Zero upon success.
  */
-int base16_encode(string_t out, const cace_data_t *in, bool uppercase);
+int cace_base16_encode(m_string_t out, const cace_data_t *in, bool uppercase);
 
 /** Decode base16 text form.
  * This is defined in Section 8 of RFC 4648 @cite rfc4648.
@@ -172,9 +172,9 @@ int base16_encode(string_t out, const cace_data_t *in, bool uppercase);
  * Whitespace in the input must have already been removed with strip_space().
  * @return Zero upon success.
  */
-int base16_decode(cace_data_t *out, const string_t in);
+int cace_base16_decode(cace_data_t *out, const m_string_t in);
 
-int base64_encode(string_t out, const cace_data_t *in, bool useurl);
+int cace_base64_encode(m_string_t out, const cace_data_t *in, bool useurl);
 
 /** Decode base64 and base64url text forms.
  * These is defined in Section 4 and 5 of RFC 4648 @cite rfc4648.
@@ -184,7 +184,29 @@ int base64_encode(string_t out, const cace_data_t *in, bool useurl);
  * Whitespace in the input must have already been removed with strip_space().
  * @return Zero upon success.
  */
-int base64_decode(cace_data_t *out, const string_t in);
+int cace_base64_decode(cace_data_t *out, const m_string_t in);
+
+/** Encode to a Gregorian date in text form.
+ * This is defined as "full-date" in Appendix A of RFC 3339 @cite rfc3339.
+ * @note The CBOR tag 100 epoch of 1970-01-01 is used from @cite rfc8943.
+ *
+ * @param[out] out The output buffer, which will be sized to its text and
+ * null terminated.
+ * @param[in] in The time in separated fields.
+ * @param usesep If true component separators will be added, if false
+ * the concise form is used.
+ * @return Zero upon success.
+ */
+int cace_date_encode(m_string_t out, const struct tm *in, bool usesep);
+
+/** Decode a UTC time from text form.
+ * This is defined in Appendix A of RFC 3339 @cite rfc3339.
+ *
+ * @param[out] out The decoded time from DTN epoch.
+ * @param in The input buffer to read, which may be null terminated.
+ * @return Zero upon success.
+ */
+int cace_date_decode(struct tm *out, const cace_data_t *in);
 
 /** Encode to a UTC time in text form.
  * This is defined in Appendix A of RFC 3339 @cite rfc3339.
@@ -192,22 +214,22 @@ int base64_decode(cace_data_t *out, const string_t in);
  *
  * @param[out] out The output buffer, which will be sized to its text and
  * null terminated.
- * @param in The time from DTN epoch.
+ * @param[in] in The time from DTN epoch.
  * @param usesep If true component separators will be added, if false
  * the concise form is used.
  * @return Zero upon success.
  */
-int utctime_encode(string_t out, const struct timespec *in, bool usesep);
+int cace_utctime_encode(m_string_t out, const struct timespec *in, bool usesep);
 
 /** Decode a UTC time from text form.
  * This is defined in Appendix A of RFC 3339 @cite rfc3339 with the addition
  * of an optional leading sign character.
  *
  * @param[out] out The decoded time from DTN epoch.
- * @param in The input buffer to read, which may be null terminated.
+ * @param[in] in The input buffer to read, which may be null terminated.
  * @return Zero upon success.
  */
-int utctime_decode(struct timespec *out, const cace_data_t *in);
+int cace_utctime_decode(struct timespec *out, const cace_data_t *in);
 
 /** Encode a signed time period time in text form.
  * This is defined in Appendix A of RFC 3339 @cite rfc3339 with the addition
@@ -218,7 +240,7 @@ int utctime_decode(struct timespec *out, const cace_data_t *in);
  * @param in The relative time.
  * @return Zero upon success.
  */
-int timeperiod_encode(string_t out, const struct timespec *in);
+int cace_timeperiod_encode(m_string_t out, const struct timespec *in);
 
 /** Decode a signed time period from text form.
  * This is defined in Appendix A of RFC 3339 @cite rfc3339 with the addition
@@ -228,7 +250,7 @@ int timeperiod_encode(string_t out, const struct timespec *in);
  * @param in The input buffer to read, which may be null terminated.
  * @return Zero upon success.
  */
-int timeperiod_decode(struct timespec *out, const cace_data_t *in);
+int cace_timeperiod_decode(struct timespec *out, const cace_data_t *in);
 
 #ifdef __cplusplus
 }

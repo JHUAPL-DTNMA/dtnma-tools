@@ -68,9 +68,9 @@ void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj);
  * @param[in] index The index into the parameter list.
  * @return A pointer to the parameter value or NULL if no such parameter is present.
  */
-const ari_t *refda_ctrl_exec_ctx_get_aparam_index(const refda_ctrl_exec_ctx_t *ctx, size_t index);
+const cace_ari_t *refda_ctrl_exec_ctx_get_aparam_index(const refda_ctrl_exec_ctx_t *ctx, size_t index);
 /// @overload
-const ari_t *refda_ctrl_exec_ctx_get_aparam_name(const refda_ctrl_exec_ctx_t *ctx, const char *name);
+const cace_ari_t *refda_ctrl_exec_ctx_get_aparam_name(const refda_ctrl_exec_ctx_t *ctx, const char *name);
 
 // forward declaration for callback reference
 struct refda_timeline_event_s;
@@ -92,9 +92,9 @@ void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_tim
  * @return Zero if successful and the value has a matching type.
  * Otherwise REFDA_CTRL_EXEC_RESULT_TYPE_NOMATCH.
  */
-int refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const ari_t *value);
+int refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const cace_ari_t *value);
 /// @overload
-int refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, ari_t *value);
+int refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, cace_ari_t *value);
 /** @overload
  * Convenience member to mark the result as successful but null-value.
  * The null type is the default CTRL result type.

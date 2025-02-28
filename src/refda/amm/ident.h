@@ -30,7 +30,7 @@ extern "C" {
 typedef struct
 {
     /// Reference to the object
-    ari_t name;
+    cace_ari_t name;
     /** The bound object being used, which is bound based on #name.
      * This is always a reference to an externally-owned object.
      */

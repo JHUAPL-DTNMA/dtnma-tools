@@ -87,9 +87,9 @@ rule_t   *ui_create_tbr_from_parms(tnvc_t parms);
 void ui_deregister_agent();
 void ui_event_loop();
 
-void ui_list_objs(uint8_t adm_id, amp_uvast mask, ari_t **result);
+void ui_list_objs(uint8_t adm_id, amp_uvast mask, cace_ari_t **result);
 
-void ui_postprocess_ctrl(ari_t *id);
+void ui_postprocess_ctrl(cace_ari_t *id);
 
 void ui_register_agent();
 

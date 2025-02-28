@@ -101,6 +101,8 @@ Functions that can fail should have `int` return type and use the following comm
 NOTE!! This pattern is being adapted. A negative value indicates error, zero indicates succes.
 There may be times when there may be meaningful context associated with a positive value (e.g., number of bytes written).
 
+For ADM functions it is good practice to log warnings about why a result is `undefined`.
+
 # Structs and Functions
 
 Much of the public API involves state kept in a struct with associated functions to inspect and manipulate the state of that struct.

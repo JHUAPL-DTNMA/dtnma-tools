@@ -21,6 +21,7 @@
 #include "exec.h"
 #include "reporting.h"
 #include "amm/typedef.h"
+#include "adm/ietf.h"
 #include "adm/ietf_amm.h"
 #include "adm/ietf_dtnma_agent.h"
 #include "binding.h"
@@ -33,9 +34,9 @@
 void refda_agent_init(refda_agent_t *agent)
 {
     string_init(agent->agent_eid);
-    daemon_run_init(&(agent->running));
+    cace_daemon_run_init(&(agent->running));
     refda_instr_init(&(agent->instr));
-    threadset_init(agent->threads);
+    cace_threadset_init(agent->threads);
 
     cace_amm_obj_store_init(&(agent->objs));
     pthread_mutex_init(&(agent->objs_mutex), NULL);
@@ -69,15 +70,15 @@ void refda_agent_deinit(refda_agent_t *agent)
     cace_amm_obj_store_deinit(&(agent->objs));
 
     refda_instr_deinit(&(agent->instr));
-    threadset_clear(agent->threads);
-    daemon_run_cleanup(&(agent->running));
+    cace_threadset_clear(agent->threads);
+    cace_daemon_run_cleanup(&(agent->running));
     string_clear(agent->agent_eid);
 }
 
 /// Time of the DTN epoch (2000-01-01T00:00:00Z) in the POSIX clock
 #define DTN_EPOCH_IN_POSIX 946702800
 
-int refda_agent_nowtime(refda_agent_t *agent _U_, ari_t *val)
+int refda_agent_nowtime(refda_agent_t *agent _U_, cace_ari_t *val)
 {
     CHKERR1(val);
 
@@ -92,16 +93,17 @@ int refda_agent_nowtime(refda_agent_t *agent _U_, ari_t *val)
     // simple offset
     time.tv_sec -= DTN_EPOCH_IN_POSIX;
 
-    ari_set_tp(val, time);
+    cace_ari_set_tp(val, time);
     return 0;
 }
 
-amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, int64_t ns_id, int64_t obj_id)
+cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
+                                         cace_ari_int_id_t obj_id)
 {
-    amm_type_t *found = NULL;
+    cace_amm_type_t *found = NULL;
 
-    ari_t ref = ARI_INIT_UNDEFINED;
-    ari_set_objref_path_intid(&ref, ns_id, ARI_TYPE_TYPEDEF, obj_id);
+    cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_objref_path_intid(&ref, org_id, model_id, CACE_ARI_TYPE_TYPEDEF, obj_id);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -116,7 +118,7 @@ amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, int64_t ns_id, int64_t
     }
 
     cace_amm_lookup_deinit(&deref);
-    ari_deinit(&ref);
+    cace_ari_deinit(&ref);
 
     return found;
 }
@@ -126,22 +128,22 @@ int refda_agent_bindrefs(refda_agent_t *agent)
     REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     int failcnt = 0;
 
-    agent->mac_type =
-        refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM_ADM, REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_MAC);
+    agent->mac_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_ENUM_ADM,
+                                              REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_MAC);
     if (!agent->mac_type)
     {
         ++failcnt;
     }
 
-    agent->expr_type =
-        refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM_ADM, REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXPR);
+    agent->expr_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_ENUM_ADM,
+                                               REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXPR);
     if (!agent->expr_type)
     {
         ++failcnt;
     }
 
-    agent->rptt_type =
-        refda_agent_get_typedef(agent, REFDA_ADM_IETF_AMM_ENUM_ADM, REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPTT);
+    agent->rptt_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_ENUM_ADM,
+                                               REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPTT);
     if (!agent->rptt_type)
     {
         ++failcnt;
@@ -156,8 +158,10 @@ int refda_agent_bindrefs(refda_agent_t *agent)
     for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
          cace_amm_obj_ns_list_next(ns_it))
     {
-        cace_amm_obj_ns_t *ns = cace_amm_obj_ns_list_ref(ns_it);
-        CACE_LOG_DEBUG("Binding namespace ari:/%s/", string_get_cstr(ns->name));
+        cace_amm_obj_ns_ptr_t *ns_ptr = *cace_amm_obj_ns_list_ref(ns_it);
+        cace_amm_obj_ns_t     *ns     = cace_amm_obj_ns_ptr_ref(ns_ptr);
+        CACE_LOG_DEBUG("Binding namespace ari:/%s/%s/", m_string_get_cstr(ns->org_id.name),
+                       m_string_get_cstr(ns->model_id.name));
 
         cace_amm_obj_ns_ctr_dict_it_t objtype_it;
         for (cace_amm_obj_ns_ctr_dict_it(objtype_it, ns->object_types); !cace_amm_obj_ns_ctr_dict_end_p(objtype_it);
@@ -165,8 +169,8 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         {
             cace_amm_obj_ns_ctr_dict_itref_t *pair = cace_amm_obj_ns_ctr_dict_ref(objtype_it);
 
-            ari_type_t             obj_type = pair->key;
-            cace_amm_obj_ns_ctr_t *obj_ctr  = &(pair->value);
+            cace_ari_type_t        obj_type = pair->key;
+            cace_amm_obj_ns_ctr_t *obj_ctr  = cace_amm_obj_ns_ctr_ptr_ref(pair->value);
 
             cace_amm_obj_desc_list_it_t obj_it;
             for (cace_amm_obj_desc_list_it(obj_it, obj_ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
@@ -177,8 +181,9 @@ int refda_agent_bindrefs(refda_agent_t *agent)
                 const int objfailcnt = refda_binding_obj(obj_type, obj, &(agent->objs));
                 if (objfailcnt)
                 {
-                    CACE_LOG_WARNING("binding NS %s obj-type %d name %s; failures %d", string_get_cstr(ns->name),
-                                     obj_type, string_get_cstr(obj->name), objfailcnt);
+                    CACE_LOG_WARNING("binding object ari:/%s/%s/%s/%s; failures %d", m_string_get_cstr(ns->org_id.name),
+                                     m_string_get_cstr(ns->model_id.name), cace_ari_type_to_name(obj_type),
+                                     m_string_get_cstr(obj->obj_id.name), objfailcnt);
                 }
                 failcnt += objfailcnt;
             }
@@ -199,7 +204,7 @@ int refda_agent_start(refda_agent_t *agent)
     CACE_LOG_INFO("Work threads starting...");
 
     // clang-format off
-    threadinfo_t threadinfo[] = {
+    cace_threadinfo_t threadinfo[] = {
         { &refda_ingress_worker, "ingress" },
         { &refda_egress_worker, "egress" },
         { &refda_exec_worker, "exec" },
@@ -207,7 +212,7 @@ int refda_agent_start(refda_agent_t *agent)
         //        { &rda_rules, "rda_rules" },
     };
     // clang-format on
-    int res = threadset_start(agent->threads, threadinfo, sizeof(threadinfo) / sizeof(threadinfo_t), agent);
+    int res = cace_threadset_start(agent->threads, threadinfo, sizeof(threadinfo) / sizeof(cace_threadinfo_t), agent);
     if (res)
     {
         CACE_LOG_ERR("Failed to start work threads: %d", res);
@@ -224,9 +229,9 @@ int refda_agent_stop(refda_agent_t *agent)
     CACE_LOG_INFO("Work threads stopping...");
 
     /* Notify threads */
-    daemon_run_stop(&agent->running);
+    cace_daemon_run_stop(&agent->running);
 
-    threadset_join(agent->threads);
+    cace_threadset_join(agent->threads);
 
     CACE_LOG_INFO("Work threads stopped");
     return 0;
@@ -234,10 +239,10 @@ int refda_agent_stop(refda_agent_t *agent)
 
 int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
 {
-    ari_t ref = ARI_INIT_UNDEFINED;
-    // ari:/ietf-dtnma-agent/CONST/hello
-    ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, ARI_TYPE_CONST,
-                              REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
+    cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
+    // ari:/ietf/dtnma-agent/CONST/hello
+    cace_ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CONST,
+                                   REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
 
     // dummy message source
     refda_msgdata_t msg;

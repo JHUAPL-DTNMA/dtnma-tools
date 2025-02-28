@@ -38,7 +38,7 @@ typedef struct
     /// The found object, or a null pointer
     cace_amm_obj_desc_t *obj;
     /// The found object type, if #obj is non-null
-    ari_type_t obj_type;
+    cace_ari_type_t obj_type;
 
     /** Actual parameters normalized for this object from the given parameters.
      * This is set if the #obj is non-null and parameter processing succeeded
@@ -82,7 +82,7 @@ void cace_amm_lookup_set_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src);
  * 3 if the namespace ID does not resolve to a namespace.
  * 4 if the object ID does not resolve to an object.
  */
-int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *store, const ari_t *ref);
+int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *store, const cace_ari_t *ref);
 
 #define M_OPL_cace_amm_lookup_t()                                                    \
     (INIT(API_2(cace_amm_lookup_init)), INIT_MOVE(API_6(cace_amm_lookup_init_move)), \

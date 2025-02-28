@@ -80,23 +80,23 @@
    fun:_ari_type_dict_init
 }
 {
-   amm_builtin_dict_init1
+   cace_amm_builtin_dict_init1
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:realloc
    fun:*_resize_up
-   fun:amm_type_lookup_set_at
-   fun:amm_builtin_dict_init
+   fun:cace_amm_type_lookup_set_at
+   fun:cace_amm_builtin_dict_init
 }
 {
-   amm_builtin_dict_init2
+   cace_amm_builtin_dict_init2
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:malloc
    fun:*_pair_new
-   fun:amm_type_lookup_list_pair_push_raw
-   fun:amm_type_lookup_set_at
-   fun:amm_builtin_dict_init
+   fun:cace_amm_type_lookup_list_pair_push_raw
+   fun:cace_amm_type_lookup_set_at
+   fun:cace_amm_builtin_dict_init
 }
 {
    readline

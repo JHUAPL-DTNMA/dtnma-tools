@@ -18,6 +18,7 @@
 #ifndef CACE_AMM_OBJ_DESC_H_
 #define CACE_AMM_OBJ_DESC_H_
 
+#include "idseg_val.h"
 #include "user_data.h"
 #include "parameters.h"
 #include "cace/ari.h"
@@ -31,12 +32,8 @@ extern "C" {
  */
 typedef struct cace_amm_obj_desc_s
 {
-    /// Indication of whether this object has an enumeration assigned
-    bool has_enum;
-    /// Optional integer enumeration for this object if #has_enum is true
-    int64_t intenum;
-    /// Mandatory name for this object
-    string_t name;
+    /// Identifier for this object within the NS-type container
+    cace_amm_idseg_val_t obj_id;
 
     /// Formal parameters of this object instance, which may be empty
     cace_amm_formal_param_list_t fparams;
