@@ -33,7 +33,7 @@ static void daemon_signal_handler(int signum)
 {
     CACE_LOG_DEBUG("Received signal %d", signum);
     CACE_LOG_INFO("Signaling shutdown");
-    daemon_run_stop(&mgr.running);
+    cace_daemon_run_stop(&mgr.running);
 }
 
 static void show_usage(const char *argv0)
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     if (!retval)
     {
         // Block until stopped
-        daemon_run_wait(&mgr.running);
+        cace_daemon_run_wait(&mgr.running);
         CACE_LOG_INFO("Manager is shutting down");
     }
 

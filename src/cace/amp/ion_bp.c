@@ -62,7 +62,7 @@ void cace_amp_ion_bp_state_unbind(cace_amp_ion_bp_state_t *state)
     m_string_reset(state->eid);
 }
 
-int cace_amp_ion_bp_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
+int cace_amp_ion_bp_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
 {
     CHKERR1(data);
     CHKERR1(meta);
@@ -77,7 +77,7 @@ int cace_amp_ion_bp_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
     }
 
     int retval = 0;
-    CACE_LOG_DEBUG("Sending message with %d ARIs", ari_list_size(data));
+    CACE_LOG_DEBUG("Sending message with %d ARIs", cace_ari_list_size(data));
 
     // FIXME a copy could be avoided if this encoder wrote to SDR directly
     m_bstring_t msgbuf;
@@ -145,7 +145,7 @@ int cace_amp_ion_bp_send(const ari_list_t data, const cace_amm_msg_if_metadata_t
     return retval;
 }
 
-int cace_amp_ion_bp_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_run_t *running, void *ctx)
+int cace_amp_ion_bp_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, cace_daemon_run_t *running, void *ctx)
 {
     CHKERR1(data);
     CHKERR1(meta);
@@ -175,7 +175,8 @@ int cace_amp_ion_bp_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
             case BpEndpointStopped:
                 /* The endpoint stopped? Panic.*/
                 CACE_LOG_INFO("Endpoint stopped");
-                return CACE_AMM_MSG_IF_RECV_END;
+                retval = CACE_AMM_MSG_IF_RECV_END;
+                break;
 
             case BpPayloadPresent:
                 /* Clear to process the payload. */
@@ -183,7 +184,13 @@ int cace_amp_ion_bp_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
                 break;
 
             default:
-                /* No message yet. */
+                // nothing ready, but maybe daemon is shutting down
+                if (!cace_daemon_run_get(running))
+                {
+                    CACE_LOG_DEBUG("returning due to running state change");
+                    retval = CACE_AMM_MSG_IF_RECV_END;
+                    break;
+                }
                 continue;
         }
     }
@@ -234,7 +241,7 @@ int cace_amp_ion_bp_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daem
         {
             retval = 6;
         }
-        CACE_LOG_DEBUG("decoded %d ARI items in the datagram", ari_list_size(data));
+        CACE_LOG_DEBUG("decoded %d ARI items in the datagram", cace_ari_list_size(data));
     }
     m_bstring_clear(msgbuf);
 

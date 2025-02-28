@@ -80,7 +80,7 @@ then
     echo
 
     # send an inspect execution with a nonce, expecting a report back
-    CMD="echo 'ari:/EXECSET/n=12345;(//ietf-dtnma-agent/CTRL/inspect(//ietf-dtnma-agent/EDD/sw-version))' | \
+    CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version))' | \
         ace_ari --inform text --outform cborhex --must-nickname | \
         curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/send?form=hex -H 'Content-Type: text/plain' --data-binary @-; echo"
     echo $CMD | ${DEXEC} bash

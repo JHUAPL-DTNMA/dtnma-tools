@@ -263,7 +263,7 @@ int cace_amp_socket_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta,
         {
             retval = 5;
         }
-        CACE_LOG_DEBUG("decoded %d ARI items in the datagram", ari_list_size(data));
+        CACE_LOG_DEBUG("decoded %d ARI items in the datagram", cace_ari_list_size(data));
     }
     m_bstring_clear(msgbuf);
 

@@ -36,7 +36,7 @@ static void daemon_signal_handler(int signum)
 {
     CACE_LOG_DEBUG("Received signal %d", signum);
     CACE_LOG_INFO("Signaling shutdown");
-    daemon_run_stop(&agent.running);
+    cace_daemon_run_stop(&agent.running);
 }
 
 static void show_usage(const char *argv0)
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
     if (!retval)
     {
         // Block until stopped
-        daemon_run_wait(&agent.running);
+        cace_daemon_run_wait(&agent.running);
         CACE_LOG_INFO("Agent is shutting down");
     }
 
