@@ -18,9 +18,10 @@
 #include "refda/agent.h"
 #include "refda/adm/ietf_amm.h"
 #include "refda/adm/ietf_dtnma_agent.h"
-#include <cace/amp/socket.h>
+#include <cace/amp/ion_bp.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
+#include <bp.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -40,7 +41,7 @@ static void daemon_signal_handler(int signum)
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <listen-path> {-m <hello-path>}\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <listen-EID> {-m <hello-EID>}\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -54,8 +55,8 @@ int main(int argc, char *argv[])
     /* Process Command Line Arguments. */
     int log_limit = LOG_WARNING;
 
-    m_string_t sock_path;
-    m_string_init(sock_path);
+    m_string_t own_eid;
+    m_string_init(own_eid);
     m_string_t hello_eid;
     m_string_init(hello_eid);
     {
@@ -73,10 +74,10 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(sock_path, optarg);
+                        string_set_str(own_eid, optarg);
                         break;
                     case 'm':
-                        m_string_printf(hello_eid, "file:%s", optarg);
+                        string_set_str(hello_eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -91,31 +92,41 @@ int main(int argc, char *argv[])
     CACE_LOG_DEBUG("Agent starting up with log limit %d", log_limit);
 
     // check arguments
-    if (!retval && m_string_empty_p(sock_path))
+    if (!retval && m_string_empty_p(own_eid))
     {
-        fprintf(stderr, "A socket path must be supplied");
+        fprintf(stderr, "An EID URI must be supplied");
         retval = 1;
     }
 
-    cace_amp_socket_state_t sock;
-    cace_amp_socket_state_init(&sock);
+    // Attach to ION endpoint
     if (!retval)
     {
-        if (cace_amp_socket_state_bind(&sock, sock_path))
+        if (bp_attach())
         {
+            retval = 4;
+        }
+    }
+
+    cace_amp_ion_bp_state_t app;
+    cace_amp_ion_bp_state_init(&app);
+    if (!retval)
+    {
+        if (cace_amp_ion_bp_state_bind(&app, own_eid))
+        {
+            CACE_LOG_ERR("Failed to bind to ION EID %s", m_string_get_cstr(own_eid));
             retval = 4;
         }
     }
 
     if (!retval)
     {
-        m_string_printf(agent.agent_eid, "file:%s", string_get_cstr(sock_path));
+        m_string_set(agent.agent_eid, own_eid);
         CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(agent.agent_eid));
-        agent.mif.send = cace_amp_socket_send;
-        agent.mif.recv = cace_amp_socket_recv;
-        agent.mif.ctx  = &sock;
+        agent.mif.send = cace_amp_ion_bp_send;
+        agent.mif.recv = cace_amp_ion_bp_recv;
+        agent.mif.ctx  = &app;
     }
-    m_string_clear(sock_path);
+    m_string_clear(own_eid);
 
     if (!retval)
     {
@@ -220,7 +231,8 @@ int main(int argc, char *argv[])
     /* Cleanup. */
     CACE_LOG_DEBUG("Cleaning Agent Resources");
     refda_agent_deinit(&agent);
-    cace_amp_socket_state_deinit(&sock);
+    cace_amp_ion_bp_state_deinit(&app);
+    bp_detach();
 
     CACE_LOG_DEBUG("Agent shutdown completed");
     cace_closelog();

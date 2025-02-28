@@ -1,0 +1,13 @@
+[Unit]
+After=network-online.target
+
+[Service]
+Type=simple
+PassEnvironment=DUMPCAP_OUTFILE DUMPCAP_OPTS
+EnvironmentFile=-/etc/environment
+ExecStartPre=touch ${DUMPCAP_OUTFILE}
+ExecStartPre=chmod 666 ${DUMPCAP_OUTFILE}
+ExecStart=dumpcap -t -n -Z none -w ${DUMPCAP_OUTFILE} -q $DUMPCAP_OPTS
+
+[Install]
+WantedBy=multi-user.target

@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=notify
 PassEnvironment=DTNMA_LOGLEVEL REFDA_SOCKET REFDM_SOCKET
 EnvironmentFile=-/etc/environment
-ExecStart=refda-socket -l ${DTNMA_LOGLEVEL} -a ${REFDA_SOCKET} #-m ${REFDM_SOCKET}
+ExecStart=refda-socket -l ${DTNMA_LOGLEVEL} -a ${REFDA_SOCKET} -m ${REFDM_SOCKET}
 
 [Install]
 WantedBy=multi-user.target

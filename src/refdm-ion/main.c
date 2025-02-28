@@ -15,10 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "refda/agent.h"
-#include "refda/adm/ietf_amm.h"
-#include "refda/adm/ietf_dtnma_agent.h"
-#include <cace/amp/socket.h>
+#include "refdm/mgr.h"
+#include <cace/amp/ion_bp.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 #include <signal.h>
@@ -29,18 +27,18 @@
 #endif
 
 /// Per-process state
-static refda_agent_t agent;
+static refdm_mgr_t mgr;
 
 static void daemon_signal_handler(int signum)
 {
     CACE_LOG_DEBUG("Received signal %d", signum);
     CACE_LOG_INFO("Signaling shutdown");
-    cace_daemon_run_stop(&agent.running);
+    cace_daemon_run_stop(&mgr.running);
 }
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <listen-path> {-m <hello-path>}\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} -a <listen-path>\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -49,19 +47,16 @@ int main(int argc, char *argv[])
     int retval = 0;
 
     cace_openlog();
-    refda_agent_init(&agent);
+    refdm_mgr_init(&mgr);
 
     /* Process Command Line Arguments. */
-    int log_limit = LOG_WARNING;
-
-    m_string_t sock_path;
-    m_string_init(sock_path);
-    m_string_t hello_eid;
-    m_string_init(hello_eid);
+    int        log_limit = LOG_WARNING;
+    m_string_t eid;
+    m_string_init(eid);
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, ":hl:a:m:")) != -1)
+            while ((opt = getopt(argc, argv, ":hl:a:")) != -1)
             {
                 switch (opt)
                 {
@@ -73,10 +68,7 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(sock_path, optarg);
-                        break;
-                    case 'm':
-                        m_string_printf(hello_eid, "file:%s", optarg);
+                        string_set_str(eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -88,55 +80,44 @@ int main(int argc, char *argv[])
         }
     }
     cace_log_set_least_severity(log_limit);
-    CACE_LOG_DEBUG("Agent starting up with log limit %d", log_limit);
+    CACE_LOG_DEBUG("Manager starting up with log limit %d", log_limit);
 
     // check arguments
-    if (!retval && m_string_empty_p(sock_path))
+    if (!retval && m_string_empty_p(eid))
     {
-        fprintf(stderr, "A socket path must be supplied");
+        fprintf(stderr, "An EID URI must be supplied");
         retval = 1;
     }
 
-    cace_amp_socket_state_t sock;
-    cace_amp_socket_state_init(&sock);
+    // Attach to ION endpoint
     if (!retval)
     {
-        if (cace_amp_socket_state_bind(&sock, sock_path))
+        if (bp_attach())
         {
+            retval = 4;
+        }
+    }
+
+    cace_amp_ion_bp_state_t app;
+    cace_amp_ion_bp_state_init(&app);
+    if (!retval)
+    {
+        if (cace_amp_ion_bp_state_bind(&app, eid))
+        {
+            CACE_LOG_ERR("Failed to bind to ION EID %s", m_string_get_cstr(eid));
             retval = 4;
         }
     }
 
     if (!retval)
     {
-        m_string_printf(agent.agent_eid, "file:%s", string_get_cstr(sock_path));
-        CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(agent.agent_eid));
-        agent.mif.send = cace_amp_socket_send;
-        agent.mif.recv = cace_amp_socket_recv;
-        agent.mif.ctx  = &sock;
+        m_string_set(mgr.own_eid, eid);
+        CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(mgr.own_eid));
+        mgr.mif.send = cace_amp_ion_bp_send;
+        mgr.mif.recv = cace_amp_ion_bp_recv;
+        mgr.mif.ctx  = &app;
     }
-    m_string_clear(sock_path);
-
-    if (!retval)
-    {
-        // ADM initialization
-        refda_adm_ietf_amm_init(&agent);
-        refda_adm_ietf_dtnma_agent_init(&agent);
-#if 0
-  dtn_bp_agent_init();
-  dtn_ion_ionadmin_init();
-  dtn_ion_ipnadmin_init();
-  dtn_ion_ionsecadmin_init();
-  dtn_ion_ltpadmin_init();
-  dtn_ltp_agent_init();
-  dtn_ion_bpadmin_init();
-#ifdef BUILD_BPv6
-  dtn_sbsp_init();
-#else
-//  dtn_bpsec_init();
-#endif
-#endif
-    }
+    m_string_clear(eid);
 
     if (!retval)
     {
@@ -148,28 +129,17 @@ int main(int argc, char *argv[])
         sigaction(SIGTERM, &act, NULL);
     }
 
-    /* Start agent threads. */
+    /* Start manager threads. */
     if (!retval)
     {
-        int failures = refda_agent_bindrefs(&agent);
-        if (failures)
+        if (refdm_mgr_start(&mgr))
         {
-            // Warn but continue on
-            CACE_LOG_WARNING("ADM reference binding failed for %d type references", failures);
-        }
-        else
-        {
-            CACE_LOG_INFO("ADM reference binding succeeded");
-        }
-
-        if (refda_agent_start(&agent))
-        {
-            CACE_LOG_ERR("Agent startup failed");
+            CACE_LOG_ERR("Manager startup failed");
             retval = 2;
         }
         else
         {
-            CACE_LOG_INFO("Agent startup completed");
+            CACE_LOG_INFO("Manager startup completed");
         }
     }
 
@@ -178,25 +148,11 @@ int main(int argc, char *argv[])
 #endif
     CACE_LOG_INFO("READY");
 
-    if (!retval && !m_string_empty_p(hello_eid))
-    {
-        if (refda_agent_send_hello(&agent, m_string_get_cstr(hello_eid)))
-        {
-            CACE_LOG_ERR("Agent hello failed");
-            retval = 3;
-        }
-        else
-        {
-            CACE_LOG_INFO("Sent hello report");
-        }
-    }
-    m_string_clear(hello_eid);
-
     if (!retval)
     {
         // Block until stopped
-        cace_daemon_run_wait(&agent.running);
-        CACE_LOG_INFO("Agent is shutting down");
+        cace_daemon_run_wait(&mgr.running);
+        CACE_LOG_INFO("Manager is shutting down");
     }
 
 #if defined(HAVE_LIBSYSTEMD)
@@ -206,23 +162,24 @@ int main(int argc, char *argv[])
     /* Join threads and wait for them to complete. */
     if (!retval)
     {
-        if (refda_agent_stop(&agent))
+        if (refdm_mgr_stop(&mgr))
         {
-            CACE_LOG_ERR("Agent stop failed");
+            CACE_LOG_ERR("Manager stop failed");
             retval = 4;
         }
         else
         {
-            CACE_LOG_INFO("Agent stopped");
+            CACE_LOG_INFO("Manager stopped");
         }
     }
 
     /* Cleanup. */
-    CACE_LOG_DEBUG("Cleaning Agent Resources");
-    refda_agent_deinit(&agent);
-    cace_amp_socket_state_deinit(&sock);
+    CACE_LOG_DEBUG("Cleaning manager resources");
+    refdm_mgr_deinit(&mgr);
+    cace_amp_ion_bp_state_deinit(&app);
+    bp_detach();
 
-    CACE_LOG_DEBUG("Agent shutdown completed");
+    CACE_LOG_DEBUG("Manager shutdown completed");
     cace_closelog();
     return retval;
 }

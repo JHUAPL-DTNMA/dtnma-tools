@@ -108,6 +108,7 @@ RUN ls -lt /usr/src/nm/
 RUN cd /usr/src/nm && \
     cmake -S . -B build/default \
       -DCMAKE_BUILD_TYPE=Debug \
+      -DTRANSPORT_ION_BP=OFF \
       -DBUILD_TESTING=OFF \
       -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF \
       -G Ninja && \
@@ -117,5 +118,6 @@ RUN cd /usr/src/nm && \
 # keep build artifacts for debuginfo
 
 # Systemd services
-COPY --chmod=644 systemd/refdm-socket.service systemd/refda-socket.service /usr/local/lib/systemd/system/
+COPY --chmod=644 systemd/refdm-socket.service systemd/refda-socket.service \
+    /usr/local/lib/systemd/system/
 RUN systemctl enable refdm-socket refda-socket

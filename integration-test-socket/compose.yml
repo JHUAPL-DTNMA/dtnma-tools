@@ -15,5 +15,6 @@ services:
     environment:
       container: docker
       DTNMA_LOGLEVEL: debug
+      REFDA_EID: file:/var/run/refda.sock
       REFDA_SOCKET: /var/run/refda.sock
       REFDM_SOCKET: /var/run/refdm.sock

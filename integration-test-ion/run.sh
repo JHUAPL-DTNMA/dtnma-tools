@@ -37,14 +37,15 @@ elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
 
-    DEXEC="${DOCKER} compose exec -T combined"
+    DEXEC="${DOCKER} compose exec -T -e REFDA_EID=ipn:2.6 manager"
 
+    # Wait a few seconds for ION to start
     for IX in $(seq 10)
     do
         sleep 1
 
         WAITING=0
-        for SVC in refdm-socket refda-socket
+        for SVC in ion refdm-ion refda-ion
         do
               echo
               if ! ${DEXEC} service_is_running ${SVC}
@@ -68,7 +69,7 @@ then
 
     CURLOPTS="-svf --variable '%REFDA_EID'"
     # All manager actions operate with this base
-    URIBASE="http://combined:8089/nm/api"
+    URIBASE="http://manager:8089/nm/api"
 
     CMD="curl ${CURLOPTS} -XPOST ${URIBASE}/agents -H 'Content-Type: text/plain' --expand-data '{{REFDA_EID}}'"
     echo $CMD | ${DEXEC} bash
