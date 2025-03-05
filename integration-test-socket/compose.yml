@@ -1,11 +1,30 @@
+volumes:
+  postgres-data:
+    # temporary storage
+
 services:
+  postgres:
+    build:
+      context: ../refdb-sql
+      dockerfile: Dockerfile
+    hostname: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - "postgres-data:/var/lib/postgresql/data"
+
   combined:
     build:
       context: ..
       dockerfile: integration-test-socket/Containerfile
     ports:
       - "8089:8089/tcp"
-    depends_on: {}
+    depends_on:
+      postgres:
+        condition: service_healthy
     privileged: true
     tty: true
     cap_add:
@@ -18,3 +37,7 @@ services:
       REFDA_EID: file:/var/run/refda.sock
       REFDA_SOCKET: /var/run/refda.sock
       REFDM_SOCKET: /var/run/refdm.sock
+      DB_HOST: postgres
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}

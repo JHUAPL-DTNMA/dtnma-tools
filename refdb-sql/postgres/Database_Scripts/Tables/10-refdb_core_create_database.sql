@@ -919,8 +919,8 @@ create table if not exists variable_formal_definition (
     obj_formal_definition_id INT not null,
     fp_spec_id INT ,
     data_type_id INT not null,
-    expression decode ,
-    init_value decode ,
+    expression VARCHAR,
+    init_value VARCHAR,
     primary key (obj_formal_definition_id),
     foreign key (obj_formal_definition_id)
         references obj_formal_definition (obj_formal_definition_id)

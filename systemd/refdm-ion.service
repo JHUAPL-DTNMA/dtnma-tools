@@ -6,7 +6,8 @@ Requires=ion.service
 
 [Service]
 Type=notify
-PassEnvironment=DTNMA_LOGLEVEL ION_NODE_NUM
+PassEnvironment=DTNMA_LOGLEVEL ION_NODE_NUM \
+    DB_HOST DB_USER DB_PASSWORD DB_NAME
 EnvironmentFile=-/etc/environment
 ExecStart=refdm-ion -l ${DTNMA_LOGLEVEL} -a ipn:${ION_NODE_NUM}.7
 
