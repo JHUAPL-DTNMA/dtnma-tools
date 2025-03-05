@@ -31,55 +31,36 @@ extern "C" {
  */
 typedef struct
 {
-/** action in the form of a Macro (MAC). When triggered, the action execution
- * SHALL be executed in accordance with Section 6.6 in an execution context with no parameters.
-*/
+    /** Action in the form of a Macro (MAC). When triggered, the action execution
+     * SHALL be executed in accordance with Section 6.6 in an execution context with no parameters.
+     */
+    cace_ari_t action;
 
-TBD action;
+    /** Start time in the form of a TIME (TP or TD) value.
+     * A relative start time SHALL be interpreted relative to the absolute time at which the
+     * Agent is initialized (for ADM rules) or the rule is created (for ODM rules).
+     * The start time MAY be the relative time zero to indicate that the TBR is always active.
+     * This is not a limit on the interval of evaluations of the condition.
+     */
 
-/** Start time in the form of a TIME (Section 4.2.2) value.
- * A relative start time SHALL be interpreted relative to the absolute time at which the 
- * Agent is initialized (for ADM rules) or the rule is created (for ODM rules). 
- * The start time MAY be the relative time zero to indicate that the TBR is always active.
- * This is not a limit on the interval of evaluations of the condition.
-*/
+    cace_ari_t start_time;
 
-cace_ari_t start_time;
+    /** Time period in the form of a positive TD value.
+     * The period SHALL NOT be zero but any non-zero small period is valid.
+     */
 
-/** Time period in the form of a positive TD value. 
- * The period SHALL NOT be zero but any non-zero small period is valid.
-*/
+    cace_ari_t period;
 
-cace_ari_t period;
+    /** Maximum execution count in the form of a non-negative UVAST value.
+     * The count sentinel value zero SHALL be interpreted as having no maximum.
+     * This is not a limit on the number of evaluations of the condition.
+     */
+    cace_ari_t max_exec_count;
 
-/** Maximum execution count in the form of a non-negative UVAST value.
- * The count sentinel value zero SHALL be interpreted as having no maximum.
- * This is not a limit on the number of evaluations of the condition.
-*/
-cace_ari_t max_exec_count;
-
-     /** Enabled state of the rule
-      */
+    /** Initial value for rule's enabled state. If not provided, the initial enabled state SHALL be true.
+     */
     cace_ari_t enabled;
 
-//    /** The required type for the stored value and result value.
-//     * This type will not change during the lifetime of the TBR.
-//     * All type references are fully recursively resolved.
-//     * The type object is owned by this descriptor.
-//     */
-//    cace_amm_type_t val_type;
-//
-//    /** Storage for the value.
-//     * This is initialized as undefined and must be set to any other value
-//     * to indicate successful production.
-//     */
-//    cace_ari_t value;
-//
-//    /** Optional initializer value.
-//     * This initializer will not change during the lifetime of the TBR.
-//     * This is set to the undefined value if not used.
-//     */
-//    cace_ari_t init_val;
 } refda_amm_tbr_desc_t;
 
 void refda_amm_tbr_desc_init(refda_amm_tbr_desc_t *obj);
