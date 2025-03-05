@@ -105,14 +105,14 @@ COPY --chmod=755 systemd/service_is_running.sh /usr/local/bin/service_is_running
 
 # Test tools
 RUN apt-get update && apt-get install -y \
-    curl git tshark
+    curl git tshark postgresql-client
 RUN pip3 install --break-system-packages git+https://github.com/JHUAPL-DTNMA/dtnma-ace.git@apl-fy24
 RUN git clone --branch apl-fy24 https://github.com/JHUAPL-DTNMA/dtnma-adms.git /usr/local/share/ace/adms
 
 # REFDA and REFDM to test
 RUN apt-get update && apt-get install -y \
     cmake ninja-build ruby pkg-config \
-    flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev
+    flex libfl-dev bison libpcre2-dev libpq-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev
 COPY deps /usr/src/nm/deps
 COPY cmake /usr/src/nm/cmake
 COPY src /usr/src/nm/src
@@ -121,6 +121,7 @@ RUN ls -lt /usr/src/nm/
 RUN cd /usr/src/nm && \
     cmake -S . -B build/default \
       -DCMAKE_BUILD_TYPE=Debug \
+      -DTRANSPORT_UNIX_SOCKET=OFF \
       -DTRANSPORT_ION_BP=ON \
       -DBUILD_TESTING=OFF \
       -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF \

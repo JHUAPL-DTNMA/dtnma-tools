@@ -23,16 +23,20 @@ cd "${SELFDIR}"
 
 DOCKER=${DOCKER:-docker}
 
+export DB_NAME=refdb
+export DB_USER=refdm
+export DB_PASSWORD=notsecret
+
 if [ "$1" = "start" ]
 then
     export DOCKER_BUILDKIT=1
     
     ${DOCKER} compose build
-    ${DOCKER} compose up -d --force-recreate --remove-orphans
+    ${DOCKER} compose up --detach --force-recreate --remove-orphans
 elif [ "$1" = "stop" ]
 then
-    ${DOCKER} compose stop
-    ${DOCKER} compose rm -fv
+    ${DOCKER} compose down --rmi local --volumes
+    ${DOCKER} compose rm --force --volumes
 elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
