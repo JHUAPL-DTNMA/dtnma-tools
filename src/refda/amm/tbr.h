@@ -59,7 +59,7 @@ typedef struct
 
     /** Initial value for rule's enabled state. If not provided, the initial enabled state SHALL be true.
      */
-    cace_ari_t enabled;
+    cace_ari_t init_enabled;
 
 } refda_amm_tbr_desc_t;
 
