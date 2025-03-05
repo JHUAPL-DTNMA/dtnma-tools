@@ -27,13 +27,13 @@
 --
 
 CREATE TABLE IF NOT EXISTS adm_data (
-    adm_enum integer NOT NULL,
+    enumeration integer NOT NULL,
     data bytea NOT NULL,
     created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone,
-    PRIMARY KEY (adm_enum),
+    PRIMARY KEY (enumeration),
     CONSTRAINT fk1 
-        FOREIGN KEY (adm_enum) 
-        REFERENCES adm(adm_enum) 
+        FOREIGN KEY (enumeration) 
+        REFERENCES data_model(enumeration) 
         ON UPDATE CASCADE ON DELETE CASCADE
 );

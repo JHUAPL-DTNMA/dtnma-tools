@@ -349,7 +349,8 @@ create table if not exists data_model (
     enumeration int not null, 
     version_name varchar default '0.0.0',
     use_desc varchar,
-    primary key (data_model_id)
+    primary key (data_model_id),
+    UNIQUE (enumeration)
 -- Below UNIQUE key not valid. Explicit check in SP instead instead.  TODO: Add appropriate indexes
 -- UNIQUE (namespace_type, issuing_org , name_string , version_name)
 );

@@ -6,7 +6,7 @@ services:
   postgres:
     build:
       context: ../refdb-sql
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     hostname: postgres
     restart: unless-stopped
     environment:
