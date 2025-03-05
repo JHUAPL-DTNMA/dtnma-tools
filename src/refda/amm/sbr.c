@@ -19,13 +19,13 @@
 
 void refda_amm_sbr_desc_init(refda_amm_sbr_desc_t *obj)
 {
-    obj->action     = CACE_ARI_INIT_UNDEFINED;
+    obj->action    = CACE_ARI_INIT_UNDEFINED;
     obj->condition = CACE_ARI_INIT_UNDEFINED;
 
-    obj->min_interval     = CACE_ARI_INIT_UNDEFINED;
+    obj->min_interval = CACE_ARI_INIT_UNDEFINED;
     struct timespec interval;
     interval.tv_nsec = 0;
-    interval.tv_sec = 0;
+    interval.tv_sec  = 0;
     cace_ari_set_td(&(obj->min_interval), interval);
 
     obj->max_exec_count = CACE_ARI_INIT_UNDEFINED;

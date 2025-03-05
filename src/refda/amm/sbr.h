@@ -43,7 +43,7 @@ typedef struct
      */
     cace_ari_t condition;
 
-    /** An SBR definition SHALL include a minimum execution interval in the form of a non-negative TD value. 
+    /** An SBR definition SHALL include a minimum execution interval in the form of a non-negative TD value.
      * The interval MAY be zero to indicate that there is no minimum. This is not a limit on the interval of
      * evaluations of the condition. This value can be used to limit potentially high processing loads on an Agent.
      */
