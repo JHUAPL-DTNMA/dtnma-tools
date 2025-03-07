@@ -460,12 +460,12 @@ END$$;
 
 
 -- =================
--- for adding idnet into the database 
+-- for adding ident into the database 
 -- SP__insert_ident_formal_definition 
 -- IN 
 -- 		p_obj_id integer - metadata id of this ident
 -- 		p_use_desc varchar - human readable description
--- 		p_data_type_id - data type for the idnet 
+-- 		p_data_type_id - data type for the ident 
 -- OUT 
 -- 		r_definition_id integer - id of the start 
 -- ====================================
@@ -479,12 +479,12 @@ end$$;
 
 
 -- =================
--- for adding idnet into the database 
+-- for adding ident into the database 
 -- SP__insert_ident_actual_definition 
 -- IN 
 -- 		p_obj_id integer - metadata id of this ident
 -- 		p_use_desc varchar - human readable description
--- 		p_data_type_id - data type for the idnet 
+-- 		p_data_type_id - data type for the ident 
 -- OUT 
 -- 		r_definition_id integer - id of the start 
 -- ====================================
