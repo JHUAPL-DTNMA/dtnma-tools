@@ -458,44 +458,64 @@ END$$;
 
 
 
- 
+
+-- =================
+-- for adding idnet into the database 
+-- SP__insert_ident_formal_definition 
+-- IN 
+-- 		p_obj_id integer - metadata id of this ident
+-- 		p_use_desc varchar - human readable description
+-- 		p_data_type_id - data type for the idnet 
+-- OUT 
+-- 		r_definition_id integer - id of the start 
+-- ====================================
+
+CREATE OR REPLACE PROCEDURE SP__insert_ident_formal_definition(IN p_obj_id integer, p_use_desc varchar,  p_fp_spec_id integer, INOUT r_definition_id integer)
+LANGUAGE plpgsql
+AS $$ BEGIN
+	CALL SP__insert_obj_formal_definition(p_obj_id, p_use_desc, r_definition_id); 
+    INSERT INTO ident_formal_definition(obj_formal_definition_id, fp_spec_id) VALUES(r_definition_id, p_fp_spec_id);
+end$$;
+
+
+-- =================
+-- for adding idnet into the database 
+-- SP__insert_ident_actual_definition 
+-- IN 
+-- 		p_obj_id integer - metadata id of this ident
+-- 		p_use_desc varchar - human readable description
+-- 		p_data_type_id - data type for the idnet 
+-- OUT 
+-- 		r_definition_id integer - id of the start 
+-- ====================================
+
+CREATE OR REPLACE PROCEDURE SP__insert_ident_actual_definition(IN p_obj_id integer, p_use_desc varchar,  p_ap_spec_id integer, INOUT r_definition_id integer)
+LANGUAGE plpgsql
+AS $$ BEGIN
+	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id); 
+    INSERT INTO ident_actual_definition(obj_actual_definition_id, ap_spec_id) VALUES(r_definition_id, p_ap_spec_id);
+end$$;
+
+
 
 -- =================
 -- for adding typdef into the database 
 -- SP__insert_typdef_actual_definition 
 -- IN 
--- 		p_obj_id integer - metadata id of this SBR
+-- 		p_obj_id integer - metadata id of this typdef
 -- 		p_use_desc varchar - human readable description
 -- 		p_data_type_id - data type for the typdef 
 -- OUT 
--- 		r_definition_id integer - id of the start 
+-- 		r_definition_id integer - id of the typdef 
 -- ====================================
-
 
 CREATE OR REPLACE PROCEDURE SP__insert_typdef_actual_definition(IN p_obj_id integer, p_use_desc varchar,  p_data_type_id integer, INOUT r_definition_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
 	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id); 
-    INSERT INTO ident_actual_definition(obj_actual_definition_id, data_type_id) VALUES(r_definition_id, p_data_type_id);
+    INSERT INTO typedef_actual_definition(obj_actual_definition_id, data_type_id) VALUES(r_definition_id, p_data_type_id);
 end$$;
 
--- STORED PROCEDURE(S)
-
--- 
--- 
--- CREATE OR REPLACE PROCEDURE SP__insert_data_value(IN p_value_converted varchar, p_value_string varchar, INOUT r_value_id integer)
-
--- 	INSERT INTO data_value(value_converted, value_string) VALUES(p_value_converted, p_value_string) RETURNING  INTO_id INTO ;
--- end$$;
--- 
-
--- ==================================================================
--- Author: David Linko	
--- 
--- Description:  inserting, updating and removing EDD formal and actual definitions
--- using the obj routines
--- 
--- ==================================================================
 
 -- ==================================================================
 -- SP__insert_edd_formal_definition;
@@ -1210,6 +1230,54 @@ end$$;
 
 
 
+
+
+
+
+-- STORED PROCEDURE(S) for the creating updating and deleting reports and report templates
+
+
+-- auto adds ac which can be troublesome 
+-- user has to make ac first 
+/*
+
+CREATE OR REPLACE PROCEDURE SP__insert_report_template_metadata_format(IN p_metadata_count integer, p_metadata_types_list varchar, p_metadata_names_list varchar, p_metadata_desc varchar, INOUT r_tnvc_id integer)
+LANGUAGE plpgsql
+AS $$ BEGIN
+	INSERT INTO type_name_value_collection(num_entries, use_desc) VALUES(p_metadata_count, p_metadata_desc) RETURNING  type_name_value_collection_id INTO r_tnvc_id;
+	@s := 'INSERT INTO type_name_value(tnvc_id, data_type, data_name, order_num) VALUES'; 
+    @loops := 1; 
+    WHILE @loops < p_metadata_count DO 
+		LANGUAGE plpgsql
+AS $$ BEGIN
+			-- @metadata_type
+				@metadata_type := TRIM(SUBSTRING_INDEX(p_metadata_types_list, ',', 1));
+				SELECT REPLACE(p_metadata_types_list, CONCAT(@metadata_type, ','), '') into p_metadata_types_list 
+    
+ 			-- @metadata_name
+				@metadata_name := TRIM(SUBSTRING_INDEX(p_metadata_names_list, ',', 1)); 
+				SELECT REPLACE(p_metadata_names_list, CONCAT(@metadata_name, ','), '') into p_metadata_names_list;
+                
+				@s = CONCAT(@s, '(', r_tnvc_id, ',', (SELECT enum_id FROM data_type where type_name = metadata_type), ',', '\'', @metadata_name, '\'', ',', @loops, '),');
+                @loops := loops + 1; 
+        END; 
+    END WHILE; 
+ 
+    -- @metadata_type
+	@metadata_type := TRIM((SUBSTRING_INDEX(p_metadata_types_list, ',', 1)));
+    
+	-- @metadata_name
+	@metadata_name := TRIM(SUBSTRING_INDEX(p_metadata_names_list, ',', 1)); 
+
+	@s = CONCAT(@s, '(', r_tnvc_id, ',', (SELECT enum_id FROM data_type where type_name = metadata_type), ',', '\'', @metadata_name, '\'', ',', @loops, ');');
+	PREPARE stmt FROM @s; 
+    EXECUTE stmt; 
+	
+end$$;
+ 
+*/
+
+
 -- ==================================================================
 -- create a report template formal def
 -- SP__insert_report_template_metadata_format 
@@ -1403,6 +1471,21 @@ end$$;
 
 
 
+
+-- 
+-- 
+-- -- table_definition_id,  use_desc, 
+-- CREATE OR REPLACE PROCEDURE SP__insert_table_instance(IN p_obj_definition_id integer,  p_use_desc varchar, p_row_values_list varchar(10000), INOUT r_instance_id integer)
+
+-- 	
+--     -- have to visit how to store multiple rows is is just one long value collection splitting at every num_colmns?
+-- 	CALL SP__insert_obj_instance(p_obj_definition_id, p_use_desc, r_instance_id); 
+--     @n_rows = (select num_entries from type_name_value_collection where tnvc_id =(select columns_list from table_template_definition where definition_id = p_obj_definition_id));
+--     CALL  SP__insert_tnv_collection(@num_rows, null, null, p_row_values_list , @tnvc_id);  
+--     INSERT INTO table_instance(instance_id, ap_spec_id) VALUES(r_instance_id, p_ap_spec_id);   
+-- end$$;
+-- 
+
 -- STORED PROCEDURE(S) for adding updating and deleting time base rule defintions and instances 
 -- need type checking for actions, they need to be Macros or controls
 
@@ -1459,6 +1542,8 @@ BEGIN
 	
     CALL SP__delete_obj_atual_defintion(p_obj_id, p_obj_name);
 end$$;
+
+
 
 
 
@@ -1540,3 +1625,43 @@ exp_id int;
     CALL SP__delete_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id);
 	
 end$$;
+
+
+CREATE OR REPLACE PROCEDURE SP__add_agent_parameter_received(IN p_manager_id INTEGER, p_registered_agents_id INTEGER, p_agent_parameter_id int, p_command_parameters VARCHAR )
+LANGUAGE plpgsql
+as $$ BEGIN
+    INSERT INTO agent_parameter_received(manager_id, registered_agents_id, agent_parameter_id, command_parameters) VALUES(p_manager_id, p_registered_agents_id, p_agent_parameter_id, p_command_parameters);
+END$$;
+
+
+CREATE OR REPLACE PROCEDURE SP__add_agent_parameter(IN  p_command_name VARCHAR, p_command_parameters VARCHAR )
+LANGUAGE plpgsql
+as $$ BEGIN
+    INSERT INTO agent_parameter(command_name, command_parameters) VALUES(p_command_name, p_command_parameters);
+END$$;
+
+
+--# for testing the delete function 
+
+
+-- p_obj_name := 'bundles_by_priority';
+-- select * from obj_definition join obj_identifier on obj_definition.obj_id = obj_identifier.obj_id;
+-- -- select definition_id from obj_definition where obj_id = (SELECT obj_id FROM obj_identifier WHERE obj_name = p_obj_name);
+
+-- -- set  @fp_spec_id_control_definitionobj_definitionformal_parmspecedd1 = (select fp_spec_id from edd_definition where definition_id = (select definition_id from obj_definition where obj_id = (SELECT obj_id FROM obj_identifier WHERE obj_name = p_obj_name)));
+-- -- CALL SP__insert_actual_parms_set(1, @fp_spec_id_edd1, 'UINT', '1', @ap_spec_id); 
+-- -- CALL SP__insert_edd_instance(@edd_definition_id_9, @ap_spec_id,NULL, @edd_inst_id_1);
+
+
+-- -- Select * from obj_definition;
+-- -- SELECT obj_id FROM obj_identifier WHERE obj_name = p_obj_name;
+-- -- SELECT * from obj_definition where obj_id = (SELECT obj_id FROM obj_identifier WHERE obj_name = p_obj_name);
+
+-- SELECT * FROM vw_edd_instance;
+-- -- CALL SP__delete_obj_definition(0, null, @p_obj_name);
+-- call SP__delete_edd_instance(null, 'bundles_by_priority');
+-- -- CALL SP__delete_edd_instance(null, @p_o-- bj_name);
+
+-- SELECT * FROM vw_edd_instance;
+
+
