@@ -5,9 +5,11 @@ Wants=network-online.target
 
 [Service]
 Type=notify
-PassEnvironment=DTNMA_LOGLEVEL REFDM_SOCKET
+PassEnvironment=DTNMA_LOGLEVEL REFDM_SOCKET \
+    DB_HOST DB_USER DB_PASSWORD DB_NAME
 EnvironmentFile=-/etc/environment
 ExecStart=refdm-socket -l ${DTNMA_LOGLEVEL} -a ${REFDM_SOCKET}
 
 [Install]
 WantedBy=multi-user.target
+

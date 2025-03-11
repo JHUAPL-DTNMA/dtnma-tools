@@ -36,6 +36,9 @@ extern "C" {
 /* Use the PCRE2 library. */
 #cmakedefine PCRE_FOUND
 
+/* Use the ION BP library. */
+#cmakedefine ION_FOUND
+
 /* Always use UTF-8 encodings */
 #define PCRE2_CODE_UNIT_WIDTH 8
 
