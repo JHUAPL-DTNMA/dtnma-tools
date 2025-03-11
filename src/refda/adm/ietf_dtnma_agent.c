@@ -958,9 +958,79 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sbr_list BODY
      * +-------------------------------------------------------------------------+
      */
+    bool include_adm = true;
+    // TODO: presume we want to add this parameter -
+    // TODO:    if (cace_ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    // TODO:    {
+    // TODO:        CACE_LOG_ERR("no parameter");
+    // TODO:        return;
+    // TODO:    }
 
-     // TODO:
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
 
+    cace_ari_tbl_t table;
+    cace_ari_tbl_init(&table, 2, 0);
+    const cace_ari_type_t obj_type = CACE_ARI_TYPE_SBR;
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        cace_amm_obj_ns_ptr_t *const *ns_ptr = cace_amm_obj_ns_list_cref(ns_it);
+        if (!ns_ptr)
+        {
+            continue;
+        }
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_ptr_ref(*ns_ptr);
+        if ((ns->model_id.intenum >= 0) && !include_adm)
+        {
+            // ignore ADMs
+            continue;
+        }
+
+        cace_amm_obj_ns_ctr_ptr_t *const *ctr_ptr = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
+        if (!ctr_ptr)
+        {
+            continue;
+        }
+        const cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_ptr_ref(*ctr_ptr);
+
+        cace_amm_obj_desc_list_it_t obj_it;
+        for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+             cace_amm_obj_desc_list_next(obj_it))
+        {
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
+
+            cace_ari_array_t row;
+            cace_ari_array_init(row);
+            cace_ari_array_resize(row, 5);
+
+            {
+                cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
+                refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
+            }
+
+            const refda_amm_sbr_desc_t *sbr = obj->app_data.ptr;
+            if (sbr)
+            {
+                cace_ari_set_copy(cace_ari_array_get(row, 1), &(sbr->action));
+                cace_ari_set_copy(cace_ari_array_get(row, 2), &(sbr->condition));
+                cace_ari_set_copy(cace_ari_array_get(row, 3), &(sbr->min_interval));
+                cace_ari_set_copy(cace_ari_array_get(row, 4), &(sbr->max_exec_count));
+            }
+
+            // append the row
+            cace_ari_tbl_move_row_array(&table, row);
+            cace_ari_array_clear(row);
+        }
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sbr_list BODY
@@ -984,8 +1054,79 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_tbr_list BODY
      * +-------------------------------------------------------------------------+
      */
+    bool include_adm = true;
+    // TODO: presume we want to add this parameter -
+    // TODO:    if (cace_ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    // TODO:    {
+    // TODO:        CACE_LOG_ERR("no parameter");
+    // TODO:        return;
+    // TODO:    }
 
-     // TODO:
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_ari_tbl_t table;
+    cace_ari_tbl_init(&table, 2, 0);
+    const cace_ari_type_t obj_type = CACE_ARI_TYPE_TBR;
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        cace_amm_obj_ns_ptr_t *const *ns_ptr = cace_amm_obj_ns_list_cref(ns_it);
+        if (!ns_ptr)
+        {
+            continue;
+        }
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_ptr_ref(*ns_ptr);
+        if ((ns->model_id.intenum >= 0) && !include_adm)
+        {
+            // ignore ADMs
+            continue;
+        }
+
+        cace_amm_obj_ns_ctr_ptr_t *const *ctr_ptr = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
+        if (!ctr_ptr)
+        {
+            continue;
+        }
+        const cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_ptr_ref(*ctr_ptr);
+
+        cace_amm_obj_desc_list_it_t obj_it;
+        for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+             cace_amm_obj_desc_list_next(obj_it))
+        {
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
+
+            cace_ari_array_t row;
+            cace_ari_array_init(row);
+            cace_ari_array_resize(row, 5);
+
+            {
+                cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
+                refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
+            }
+
+            const refda_amm_tbr_desc_t *tbr = obj->app_data.ptr;
+            if (tbr)
+            {
+                cace_ari_set_copy(cace_ari_array_get(row, 1), &(tbr->action));
+                cace_ari_set_copy(cace_ari_array_get(row, 2), &(tbr->start_time));
+                cace_ari_set_copy(cace_ari_array_get(row, 3), &(tbr->period));
+                cace_ari_set_copy(cace_ari_array_get(row, 4), &(tbr->max_exec_count));
+            }
+
+            // append the row
+            cace_ari_tbl_move_row_array(&table, row);
+            cace_ari_array_clear(row);
+        }
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    REFDA_AGENT_UNLOCK(agent, );
 
     /*
      * +-------------------------------------------------------------------------+
