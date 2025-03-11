@@ -8,7 +8,7 @@ services:
       context: ../refdb-sql
       dockerfile: Containerfile
     hostname: postgres
-    restart: unless-stopped
+    restart: no
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
