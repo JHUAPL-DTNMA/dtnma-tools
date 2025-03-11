@@ -25,6 +25,8 @@
 #include "amm/edd.h"
 #include "amm/ctrl.h"
 #include "amm/oper.h"
+#include "amm/sbr.h"
+#include "amm/tbr.h"
 #include "cace/amm/idseg_ref.h"
 #include "cace/amm/obj_ns.h"
 
