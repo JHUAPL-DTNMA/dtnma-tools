@@ -946,7 +946,8 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
  * Description:
  *   A table of SBR within the agent.
  *
- * Parameters: none
+ * Parameters list:
+ *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
  * Produced type: TBLT with 6 columns (use of ari:/ARITYPE/SBR, use of ari://ietf/amm/TYPEDEF/MAC, use of
  * ari://ietf/amm/TYPEDEF/TIME, use of ari://ietf/amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
@@ -959,12 +960,11 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
      * +-------------------------------------------------------------------------+
      */
     bool include_adm = true;
-    // TODO: presume we want to add this parameter -
-    // TODO:    if (cace_ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
-    // TODO:    {
-    // TODO:        CACE_LOG_ERR("no parameter");
-    // TODO:        return;
-    // TODO:    }
+    if (cace_ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
 
     refda_agent_t *agent = ctx->prodctx->parent->agent;
     REFDA_AGENT_LOCK(agent, );
@@ -1042,7 +1042,8 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
  * Description:
  *   A table of TBR within the agent.
  *
- * Parameters: none
+ * Parameters list:
+ *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
  * Produced type: TBLT with 5 columns (use of ari:/ARITYPE/TBR, use of ari://ietf/amm/TYPEDEF/MAC, use of
  * ari://ietf/amm/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
@@ -1055,12 +1056,11 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
      * +-------------------------------------------------------------------------+
      */
     bool include_adm = true;
-    // TODO: presume we want to add this parameter -
-    // TODO:    if (cace_ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
-    // TODO:    {
-    // TODO:        CACE_LOG_ERR("no parameter");
-    // TODO:        return;
-    // TODO:    }
+    if (cace_ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
 
     refda_agent_t *agent = ctx->prodctx->parent->agent;
     REFDA_AGENT_LOCK(agent, );
@@ -2781,7 +2781,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // produced type
             {
                 // table template
-                cace_amm_semtype_tblt_t *semtype = cace_amm_type_set_tblt_size(&(objdata->prod_type), 6);
+                cace_amm_semtype_tblt_t *semtype = cace_amm_type_set_tblt_size(&(objdata->prod_type), 5);
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
@@ -2803,16 +2803,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
-                    m_string_set_cstr(col->name, "start-time");
-                    {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm/TYPEDEF/TIME
-                        cace_ari_set_objref_path_intid(&name, 1, 0, CACE_ARI_TYPE_TYPEDEF, 5);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
-                    }
-                }
-                {
-                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "condition");
                     {
                         cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
@@ -2822,7 +2812,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "min-interval");
                     {
                         cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
@@ -2831,7 +2821,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 5);
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
                     m_string_set_cstr(col->name, "max-count");
                     {
                         cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
@@ -2846,7 +2836,16 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             obj = refda_register_edd(
                 adm, cace_amm_idseg_ref_withenum("sbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SBR_LIST),
                 objdata);
-            // no parameters
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
+                {
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+                cace_ari_set_bool(&(fparam->defval), false);
+            }
         }
         { // For ./EDD/tbr-list
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -2909,7 +2908,16 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             obj = refda_register_edd(
                 adm, cace_amm_idseg_ref_withenum("tbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TBR_LIST),
                 objdata);
-            // no parameters
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
+                {
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+                cace_ari_set_bool(&(fparam->defval), false);
+            }
         }
 
         /**
