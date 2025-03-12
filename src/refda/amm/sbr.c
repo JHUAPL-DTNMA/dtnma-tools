@@ -28,11 +28,9 @@ void refda_amm_sbr_desc_init(refda_amm_sbr_desc_t *obj)
     interval.tv_sec  = 0;
     cace_ari_set_td(&(obj->min_interval), interval);
 
-    obj->max_exec_count = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_uvast(&(obj->max_exec_count), 0);
-
-    obj->init_enabled = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_bool(&(obj->max_exec_count), true);
+    obj->max_exec_count = 0;
+    obj->init_enabled   = true;
+    obj->enabled        = true;
 }
 
 void refda_amm_sbr_desc_deinit(refda_amm_sbr_desc_t *obj)
@@ -40,7 +38,5 @@ void refda_amm_sbr_desc_deinit(refda_amm_sbr_desc_t *obj)
     cace_ari_deinit(&(obj->action));
     cace_ari_deinit(&(obj->condition));
     cace_ari_deinit(&(obj->min_interval));
-    cace_ari_deinit(&(obj->max_exec_count));
-    cace_ari_deinit(&(obj->init_enabled));
     memset(obj, 0, sizeof(*obj));
 }

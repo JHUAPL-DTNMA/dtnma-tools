@@ -55,11 +55,15 @@ typedef struct
      * The count sentinel value zero SHALL be interpreted as having no maximum.
      * This is not a limit on the number of evaluations of the condition.
      */
-    cace_ari_t max_exec_count;
+    cace_ari_uvast max_exec_count;
 
     /** Initial value for rule's enabled state. If not provided, the initial enabled state SHALL be true.
      */
-    cace_ari_t init_enabled;
+    bool init_enabled;
+
+    /** Current enabled state of the rule.
+     */
+    bool enabled;
 
 } refda_amm_tbr_desc_t;
 

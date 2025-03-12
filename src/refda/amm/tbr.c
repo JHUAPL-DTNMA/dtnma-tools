@@ -19,15 +19,12 @@
 
 void refda_amm_tbr_desc_init(refda_amm_tbr_desc_t *obj)
 {
-    obj->action     = CACE_ARI_INIT_UNDEFINED;
-    obj->start_time = CACE_ARI_INIT_UNDEFINED;
-    obj->period     = CACE_ARI_INIT_UNDEFINED;
-
-    obj->max_exec_count = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_uvast(&(obj->max_exec_count), 0);
-
-    obj->init_enabled = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_bool(&(obj->max_exec_count), true);
+    obj->action         = CACE_ARI_INIT_UNDEFINED;
+    obj->start_time     = CACE_ARI_INIT_UNDEFINED;
+    obj->period         = CACE_ARI_INIT_UNDEFINED;
+    obj->max_exec_count = 0;
+    obj->init_enabled   = true;
+    obj->enabled        = true;
 }
 
 void refda_amm_tbr_desc_deinit(refda_amm_tbr_desc_t *obj)
@@ -35,7 +32,5 @@ void refda_amm_tbr_desc_deinit(refda_amm_tbr_desc_t *obj)
     cace_ari_deinit(&(obj->action));
     cace_ari_deinit(&(obj->start_time));
     cace_ari_deinit(&(obj->period));
-    cace_ari_deinit(&(obj->max_exec_count));
-    cace_ari_deinit(&(obj->init_enabled));
     memset(obj, 0, sizeof(*obj));
 }
