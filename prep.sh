@@ -19,9 +19,11 @@ then
   patch -p1 <${SELFDIR}/deps/ion-4.1.2-local-deliver.patch
   patch -p1 <${SELFDIR}/deps/ion-4.1.2-private-headers.patch
   autoreconf -vif
+  export CFLAGS="-std=gnu99"
   ./configure --prefix=/usr
   make -j$(nproc) clean
   make -j$(nproc)
+  export -n CFLAGS
   make install DESTDIR=${SELFDIR}/testroot
   make -j$(nproc) clean
   popd
