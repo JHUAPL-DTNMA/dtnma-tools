@@ -950,7 +950,7 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
  *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
  * Produced type: TBLT with 5 columns (use of ari:/ARITYPE/SBR, use of ari://ietf/amm/TYPEDEF/MAC, use of
- * ari://ietf/amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
+ * ari://ietf/amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST, use of ari:/ARITYPE/BOOL)
  */
 static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -970,7 +970,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_tbl_t table;
-    cace_ari_tbl_init(&table, 5, 0);
+    cace_ari_tbl_init(&table, 6, 0);
     const cace_ari_type_t obj_type = CACE_ARI_TYPE_SBR;
 
     cace_amm_obj_ns_list_it_t ns_it;
@@ -1004,7 +1004,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 
             cace_ari_array_t row;
             cace_ari_array_init(row);
-            cace_ari_array_resize(row, 5);
+            cace_ari_array_resize(row, 6);
 
             {
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
@@ -1018,6 +1018,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
                 cace_ari_set_copy(cace_ari_array_get(row, 2), &(sbr->condition));
                 cace_ari_set_copy(cace_ari_array_get(row, 3), &(sbr->min_interval));
                 cace_ari_set_uvast(cace_ari_array_get(row, 4), sbr->max_exec_count);
+                cace_ari_set_bool(cace_ari_array_get(row, 5), sbr->enabled);
             }
 
             // append the row
@@ -1046,7 +1047,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
  *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
  * Produced type: TBLT with 5 columns (use of ari:/ARITYPE/TBR, use of ari://ietf/amm/TYPEDEF/MAC, use of
- * ari://ietf/amm/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
+ * ari://ietf/amm/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST, use of ari:/ARITYPE/BOOL)
  */
 static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1066,7 +1067,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_tbl_t table;
-    cace_ari_tbl_init(&table, 5, 0);
+    cace_ari_tbl_init(&table, 6, 0);
     const cace_ari_type_t obj_type = CACE_ARI_TYPE_TBR;
 
     cace_amm_obj_ns_list_it_t ns_it;
@@ -1100,7 +1101,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
 
             cace_ari_array_t row;
             cace_ari_array_init(row);
-            cace_ari_array_resize(row, 5);
+            cace_ari_array_resize(row, 6);
 
             {
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
@@ -1114,6 +1115,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
                 cace_ari_set_copy(cace_ari_array_get(row, 2), &(tbr->start_time));
                 cace_ari_set_copy(cace_ari_array_get(row, 3), &(tbr->period));
                 cace_ari_set_uvast(cace_ari_array_get(row, 4), tbr->max_exec_count);
+                cace_ari_set_bool(cace_ari_array_get(row, 5), tbr->enabled);
             }
 
             // append the row
