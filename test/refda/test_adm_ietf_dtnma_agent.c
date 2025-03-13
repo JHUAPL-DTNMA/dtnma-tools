@@ -116,6 +116,14 @@ TEST_CASE("850101230B81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
 TEST_CASE("840101230E", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
 // ari://1/1/EDD/const-list(true) -> ari:/TBL/c=2;
 TEST_CASE("850101230E81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/sbr-list -> ari:/TBL/c=6;
+TEST_CASE("840101230C", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/sbr-list(true) -> ari:/TBL/c=6;
+TEST_CASE("850101230C81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/tbr-list -> ari:/TBL/c=6;
+TEST_CASE("840101230D", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
+// ari://1/1/EDD/tbr-list(true) -> ari:/TBL/c=6;
+TEST_CASE("850101230D81F5", 0, CACE_ARI_PRIM_OTHER, CACE_ARI_TYPE_TBL)
 // clang-format on
 void test_refda_adm_ietf_dtnma_agent_edd_produce(const char *targethex, int expect_res,
                                                  enum cace_ari_prim_type_e expect_prim, cace_ari_type_t expect_type)
