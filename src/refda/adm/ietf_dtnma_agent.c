@@ -942,6 +942,12 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
      */
 }
 
+/* TODO:
+potential new CTRL's:
+ ensure-sbr, discard-sbr, ensure-tbr, discard-tbr
+
+*/
+
 /* Name: sbr-list
  * Description:
  *   A table of SBR within the agent.
