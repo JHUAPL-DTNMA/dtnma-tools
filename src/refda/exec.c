@@ -566,9 +566,8 @@ static int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const 
             }
             else
             {
-                // TODO:
-                // A relative start time SHALL be interpreted relative to the absolute time at which the
-                // Agent is initialized (for ADM rules) or the rule is created (for ODM rules).
+                // Start relative to rule's absolute reference time
+                *schedtime = timespec_add(tbr->absolute_start_time, *schedtime);
             }
         }
         else

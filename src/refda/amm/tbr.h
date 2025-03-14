@@ -65,9 +65,16 @@ typedef struct
      */
     bool enabled;
 
-    /** Current number of executions since the rule was enabled.
+    /** Track state of current number of executions since the rule was enabled.
      */
     cace_ari_uvast exec_count;
+
+
+    /** State field to track the absolute time used as reference for a relative start time.
+     * For ADM rules this is when the Agent is initialized  
+     * For ODM rules this is when the rule was created 
+     */
+    struct timespec absolute_start_time;
 
 } refda_amm_tbr_desc_t;
 
