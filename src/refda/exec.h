@@ -21,6 +21,8 @@
 
 #include "agent.h"
 #include "runctx.h"
+#include "amm/sbr.h"
+#include "amm/tbr.h"
 #include <cace/ari.h>
 
 #ifdef __cplusplus
@@ -57,6 +59,14 @@ int refda_exec_run_seq(refda_exec_seq_t *seq);
  * @return Always NULL pointer.
  */
 void *refda_exec_worker(void *arg);
+
+/**
+ * Begin periodic execution of a time based rule
+ * @param[in] The agent context pointer
+ * @param[in] The rule to execute
+ * @return Non-zero if the rule could not be started
+ */
+int refda_exec_tbr_start(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr);
 
 #ifdef __cplusplus
 } // extern C
