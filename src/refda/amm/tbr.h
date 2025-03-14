@@ -65,6 +65,10 @@ typedef struct
      */
     bool enabled;
 
+    /** Current number of executions
+     */
+    cace_ari_uvast exec_count;
+
 } refda_amm_tbr_desc_t;
 
 void refda_amm_tbr_desc_init(refda_amm_tbr_desc_t *obj);

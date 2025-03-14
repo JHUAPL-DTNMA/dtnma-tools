@@ -20,6 +20,8 @@
 #include "valprod.h"
 #include "reporting.h"
 #include "amm/ctrl.h"
+#include "amm/sbr.h"
+#include "amm/tbr.h"
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
 #include <cace/amm/lookup.h>
@@ -324,6 +326,134 @@ static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *m
     }
 
     cace_ari_list_t *targets = &(msg->value.as_lit.value.as_execset->targets);
+
+    cace_ari_list_it_t tgtit;
+    for (cace_ari_list_it(tgtit, *targets); !cace_ari_list_end_p(tgtit); cace_ari_list_next(tgtit))
+    {
+        const cace_ari_t *tgt = cace_ari_list_cref(tgtit);
+
+        if (pthread_mutex_lock(&(agent->exec_state_mutex)))
+        {
+            CACE_LOG_ERR("failed to lock exec_state_mutex");
+            continue;
+        }
+
+        refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+
+        seq->pid = agent->exec_next_pid++;
+        // Even if an individual execution fails, continue on with others
+        int res = refda_exec_exp_target(seq, ctxptr, tgt);
+        if (res)
+        {
+            // clean up useless sequence
+            refda_exec_seq_list_pop_back(NULL, agent->exec_state);
+        }
+
+        if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
+        {
+            CACE_LOG_ERR("failed to unlock exec_state_mutex");
+        }
+    }
+
+    return 0;
+}
+
+int refda_enable_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+{
+
+    return 0;
+}
+
+int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const refda_amm_tbr_desc_t *tbr, bool starting)
+{
+    if (starting){
+        if (!tbr->start_time.is_ref && tbr->start_time.as_lit.ari_type == CACE_ARI_TYPE_TP){
+            *schedtime = tbr->start_time.as_lit.value.as_timespec;
+        } else if (!tbr->start_time.is_ref && tbr->start_time.as_lit.ari_type == CACE_ARI_TYPE_TP){
+            struct timespec reltime = tbr->start_time.as_lit.value.as_timespec;
+            if (reltime.tv_nsec == 0 && reltime.tv_sec == 0){
+                // Rule is always active, start it now
+                clock_gettime(CLOCK_REALTIME, schedtime);
+            } else {
+                // TODO:
+                // A relative start time SHALL be interpreted relative to the absolute time at which the
+                // Agent is initialized (for ADM rules) or the rule is created (for ODM rules).
+            }
+        } else{
+            CACE_LOG_ERR("Invalid start time for TBR");
+            return 2;
+        }
+    } else {
+        clock_gettime(CLOCK_REALTIME, schedtime);
+        *schedtime = timespec_add(*schedtime, tbr->period.as_lit.value.as_timespec);
+    }
+
+    return 0;
+}
+
+int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting)
+    
+    // get start, either from start_time (first exec) or period (subsequent)
+    refda_timeline_event_t event = {
+                .ts       = schedtime,
+// TODO:                .item     = ctx->item,
+                .callback = refda_exec_tbr
+            };
+            refda_ctrl_exec_ctx_set_waiting(ctx, &event);
+            atomic_store(&(ctx->item->waiting), true);
+
+            if (event)
+            {
+                refda_timeline_push(ctx->runctx->agent->exec_timeline, *event);
+            }
+}
+
+/** Begin execution of a time based rule
+ */
+int refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+{
+    CHKERR1(agent);
+    CHKERR1(tbr);
+
+    if (!tbr->enabled){
+        CACE_LOG_INFO("TBR is not enabled");
+        return 0;
+    }
+
+    if (tbr->exec_count >= tbr->max_exec_count){
+        CACE_LOG_INFO("TBR reached maximum execution count");
+        return 0;
+    }
+
+    if (tbr->action.is_ref ||
+        tbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC) {
+            CACE_LOG_ERR("Invalid TBR action, unable to continue");
+            return 2;
+    }
+
+    int exec_result = refda_exec_tbr_action(agent, tbr);
+    
+    if (!exec_result){
+        tbr->exec_count++;
+        // TODO: setup callback for TBR in "period" seconds
+    }
+
+    return exec_result;
+}
+
+/** Execute a time-based rule action that has already been verified
+ */
+static int refda_exec_tbr_action(refda_agent_t *agent, const refda_amm_tbr_desc_t *tbr)
+{
+    refda_runctx_ptr_t ctxptr;
+    refda_runctx_ptr_init_new(ctxptr);
+
+    if (refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, NULL))
+    {
+        return 2;
+    }
+
+    cace_ari_list_t *targets = &(tbr->action.as_lit.value.as_ac->items);
 
     cace_ari_list_it_t tgtit;
     for (cace_ari_list_it(tgtit, *targets); !cace_ari_list_end_p(tgtit); cace_ari_list_next(tgtit))

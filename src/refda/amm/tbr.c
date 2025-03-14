@@ -25,6 +25,7 @@ void refda_amm_tbr_desc_init(refda_amm_tbr_desc_t *obj)
     obj->max_exec_count = 0;
     obj->init_enabled   = true;
     obj->enabled        = true;
+    obj->exec_count     = 0;
 }
 
 void refda_amm_tbr_desc_deinit(refda_amm_tbr_desc_t *obj)
