@@ -552,14 +552,14 @@ static int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const 
 {
     if (starting)
     {
-        if (!tbr->start_time.is_ref && tbr->start_time.as_lit.ari_type == CACE_ARI_TYPE_TP)
+        if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TP))
         {
-            *schedtime = tbr->start_time.as_lit.value.as_timespec;
+            cace_ari_get_tp(&(tbr->start_time), schedtime);
         }
-        else if (!tbr->start_time.is_ref && tbr->start_time.as_lit.ari_type == CACE_ARI_TYPE_TP)
+        else if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TD))
         {
-            struct timespec reltime = tbr->start_time.as_lit.value.as_timespec;
-            if (reltime.tv_nsec == 0 && reltime.tv_sec == 0)
+            cace_ari_get_td(&(tbr->start_time), schedtime);
+            if (schedtime->tv_nsec == 0 && schedtime->tv_sec == 0)
             {
                 // Rule is always active, start it now
                 clock_gettime(CLOCK_REALTIME, schedtime);
