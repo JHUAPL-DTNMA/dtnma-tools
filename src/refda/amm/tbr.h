@@ -65,7 +65,7 @@ typedef struct
      */
     bool enabled;
 
-    /** Current number of executions
+    /** Current number of executions since the rule was enabled.
      */
     cace_ari_uvast exec_count;
 
