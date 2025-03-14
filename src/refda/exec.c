@@ -454,6 +454,7 @@ void *refda_exec_worker(void *arg)
 }
 
 /** Execute a time based rule's action that has already been verified
+ * Based on code from refda_exec_exp_execset
  */
 static int refda_exec_tbr_action(refda_agent_t *agent, const refda_amm_tbr_desc_t *tbr)
 {
@@ -498,7 +499,7 @@ static int refda_exec_tbr_action(refda_agent_t *agent, const refda_amm_tbr_desc_
     return 0;
 }
 
-/** Begin execution of a time based rule
+/** Begin a single execution of a time based rule
  */
 static int refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
@@ -596,9 +597,17 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
     int             result = refda_exec_tbr_next_scheduled_time(&schedtime, tbr, starting);
     if (!result)
     {
-        refda_timeline_event_t event = { .ts       = schedtime,
-                                         .item     = (refda_exec_item_t *)tbr, // TODO: this doesn't work, need a container
-                                         .callback = NULL }; // TODO: refda_exec_tbr };
+        /**
+         * TODO: need to do a few things here
+         * - create a new type of item (or modify existing) such that it can hold either a CTRL or a rule
+         * - then, we pass an instance of that item as part of the event.agent
+         *   - TBD: who owns data pointed to by item?? Maybe it is part of TBR and is held there
+         * - need to support a different type signature for callback. could expand existing
+         *   signature to support either a CTRL or a rule
+         */
+        refda_timeline_event_t event = { .ts   = schedtime,
+                                         .item = (refda_exec_item_t *)tbr, // TODO: this doesn't work, need a container
+                                         .callback = NULL };               // TODO: refda_exec_tbr };
         // TODO: needed to skip waiting check when execing timeline: atomic_store(&(ctx->item->waiting), true);
         refda_timeline_push(agent->exec_timeline, event);
     }
