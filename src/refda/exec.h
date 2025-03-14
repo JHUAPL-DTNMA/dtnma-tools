@@ -66,7 +66,7 @@ void *refda_exec_worker(void *arg);
  * @param[in] The rule to execute
  * @return Non-zero if the rule could not be started
  */
-int refda_exec_tbr_start(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr);
+int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr);
 
 #ifdef __cplusplus
 } // extern C

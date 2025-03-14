@@ -614,9 +614,13 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
     return result;
 }
 
-int refda_exec_tbr_start(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
+    // Adjust rule state
+    tbr->enabled = true;
     tbr->exec_count = 0; // Ensure count is reset when rule is enabled
+
+    // Schedule initial rule execution
     int result = refda_exec_schedule_tbr(agent, tbr, true);
     return result;
 }
