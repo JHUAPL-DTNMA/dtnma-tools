@@ -943,9 +943,16 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
 }
 
 /* TODO:
-potential new CTRL's:
- ensure-sbr, discard-sbr, ensure-tbr, discard-tbr
+potential new CTRL's to support rules:
 
+ - ensure-rule
+ - discard-rule
+ - enable-rule
+ - disable-rule
+
+Since rule object references include the object type, there can be a single discard-rule with a parameter union of /aritype/sbr and /aritype/tbr
+Along those same lines there can be enable-rule and disable-rule controls with the same parameter type.
+In support of all three, there can be a TYPEDEF for a "rule" type that is the union of SBR and TBR references.
 */
 
 /* Name: sbr-list
