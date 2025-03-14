@@ -452,3 +452,175 @@ void *refda_exec_worker(void *arg)
     CACE_LOG_INFO("Worker stopped");
     return NULL;
 }
+
+/** Execute a time based rule's action that has already been verified
+ * Based on code from refda_exec_exp_execset
+ */
+static int refda_exec_tbr_action(refda_agent_t *agent, const refda_amm_tbr_desc_t *tbr)
+{
+    refda_runctx_ptr_t ctxptr;
+    refda_runctx_ptr_init_new(ctxptr);
+
+    if (refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, NULL))
+    {
+        return 2;
+    }
+
+    cace_ari_list_t *targets = &(tbr->action.as_lit.value.as_ac->items);
+
+    cace_ari_list_it_t tgtit;
+    for (cace_ari_list_it(tgtit, *targets); !cace_ari_list_end_p(tgtit); cace_ari_list_next(tgtit))
+    {
+        const cace_ari_t *tgt = cace_ari_list_cref(tgtit);
+
+        if (pthread_mutex_lock(&(agent->exec_state_mutex)))
+        {
+            CACE_LOG_ERR("failed to lock exec_state_mutex");
+            continue;
+        }
+
+        refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+
+        seq->pid = agent->exec_next_pid++;
+        // Even if an individual execution fails, continue on with others
+        int res = refda_exec_exp_target(seq, ctxptr, tgt);
+        if (res)
+        {
+            // clean up useless sequence
+            refda_exec_seq_list_pop_back(NULL, agent->exec_state);
+        }
+
+        if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
+        {
+            CACE_LOG_ERR("failed to unlock exec_state_mutex");
+        }
+    }
+
+    return 0;
+}
+
+/** Begin a single execution of a time based rule
+ */
+static int refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+{
+    CHKERR1(agent);
+    CHKERR1(tbr);
+
+    if (!tbr->enabled)
+    {
+        CACE_LOG_INFO("TBR is not enabled");
+        return 0;
+    }
+
+    if (tbr->exec_count >= tbr->max_exec_count)
+    {
+        CACE_LOG_INFO("TBR reached maximum execution count");
+        return 0;
+    }
+
+    if (tbr->action.is_ref || tbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    {
+        CACE_LOG_ERR("Invalid TBR action, unable to continue");
+        return 2;
+    }
+
+    int exec_result = refda_exec_tbr_action(agent, tbr);
+
+    if (!exec_result)
+    {
+        tbr->exec_count++;
+        // TODO: setup callback for TBR in "period" seconds
+        //
+        //  ALTHOUGH, likely makes sense to overload refda_exec_ctrl_finish
+        //  and schedule the next call there, once execution is truly finished
+        //
+        //  That completely avoids a (unlikely?) situation where execution is still ongoing
+        //  when the next iteration is scheduled
+        //
+        // Anyway, the call we want to make is this, to schedule another call using "period" to compute the time offset:
+        //
+        // refda_exec_schedule_tbr(agent, tbr, false)
+    }
+
+    return exec_result;
+}
+
+/** Compute the next scheduled time at which to run the TBR
+ */
+static int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const refda_amm_tbr_desc_t *tbr,
+                                              bool starting)
+{
+    if (starting)
+    {
+        if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TP))
+        {
+            cace_ari_get_tp(&(tbr->start_time), schedtime);
+        }
+        else if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TD))
+        {
+            cace_ari_get_td(&(tbr->start_time), schedtime);
+            if (schedtime->tv_nsec == 0 && schedtime->tv_sec == 0)
+            {
+                // Rule is always active, start it now
+                clock_gettime(CLOCK_REALTIME, schedtime);
+            }
+            else
+            {
+                // Start relative to rule's absolute reference time
+                *schedtime = timespec_add(tbr->absolute_start_time, *schedtime);
+            }
+        }
+        else
+        {
+            CACE_LOG_ERR("Invalid start time for TBR");
+            return 2;
+        }
+    }
+    else
+    {
+        clock_gettime(CLOCK_REALTIME, schedtime);
+        *schedtime = timespec_add(*schedtime, tbr->period.as_lit.value.as_timespec);
+    }
+
+    return 0;
+}
+
+/**
+ * Schedule execution of a time based rule
+ */
+static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting)
+{
+    refda_exec_item_t *item = NULL; // TODO
+
+    struct timespec schedtime;
+    int             result = refda_exec_tbr_next_scheduled_time(&schedtime, tbr, starting);
+    if (!result)
+    {
+        /**
+         * TODO: need to do a few things here
+         * - create a new type of item (or modify existing) such that it can hold either a CTRL or a rule
+         * - then, we pass an instance of that item as part of the event.agent
+         *   - TBD: who owns data pointed to by item?? Maybe it is part of TBR and is held there
+         * - need to support a different type signature for callback. could expand existing
+         *   signature to support either a CTRL or a rule
+         */
+        refda_timeline_event_t event = { .ts   = schedtime,
+                                         .item = (refda_exec_item_t *)tbr, // TODO: this doesn't work, need a container
+                                         .callback = NULL };               // TODO: refda_exec_tbr };
+        // TODO: needed to skip waiting check when execing timeline: atomic_store(&(ctx->item->waiting), true);
+        refda_timeline_push(agent->exec_timeline, event);
+    }
+
+    return result;
+}
+
+int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+{
+    // Adjust rule state
+    tbr->enabled = true;
+    tbr->exec_count = 0; // Ensure count is reset when rule is enabled
+
+    // Schedule initial rule execution
+    int result = refda_exec_schedule_tbr(agent, tbr, true);
+    return result;
+}
