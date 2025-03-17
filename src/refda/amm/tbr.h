@@ -69,10 +69,9 @@ typedef struct
      */
     cace_ari_uvast exec_count;
 
-
     /** State field to track the absolute time used as reference for a relative start time.
-     * For ADM rules this is when the Agent is initialized  
-     * For ODM rules this is when the rule was created 
+     * For ADM rules this is when the Agent is initialized
+     * For ODM rules this is when the rule was created
      */
     struct timespec absolute_start_time;
 

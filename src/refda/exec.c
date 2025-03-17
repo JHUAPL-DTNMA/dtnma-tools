@@ -466,37 +466,11 @@ static int refda_exec_tbr_action(refda_agent_t *agent, const refda_amm_tbr_desc_
         return 2;
     }
 
-    cace_ari_list_t *targets = &(tbr->action.as_lit.value.as_ac->items);
+    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+    seq->pid              = agent->exec_next_pid++;
 
-    cace_ari_list_it_t tgtit;
-    for (cace_ari_list_it(tgtit, *targets); !cace_ari_list_end_p(tgtit); cace_ari_list_next(tgtit))
-    {
-        const cace_ari_t *tgt = cace_ari_list_cref(tgtit);
-
-        if (pthread_mutex_lock(&(agent->exec_state_mutex)))
-        {
-            CACE_LOG_ERR("failed to lock exec_state_mutex");
-            continue;
-        }
-
-        refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
-
-        seq->pid = agent->exec_next_pid++;
-        // Even if an individual execution fails, continue on with others
-        int res = refda_exec_exp_target(seq, ctxptr, tgt);
-        if (res)
-        {
-            // clean up useless sequence
-            refda_exec_seq_list_pop_back(NULL, agent->exec_state);
-        }
-
-        if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
-        {
-            CACE_LOG_ERR("failed to unlock exec_state_mutex");
-        }
-    }
-
-    return 0;
+    int res = refda_exec_exp_mac(ctxptr, seq, &(tbr->action));
+    return res;
 }
 
 /** Begin a single execution of a time based rule
@@ -617,7 +591,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
 int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
     // Adjust rule state
-    tbr->enabled = true;
+    tbr->enabled    = true;
     tbr->exec_count = 0; // Ensure count is reset when rule is enabled
 
     // Schedule initial rule execution

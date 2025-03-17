@@ -950,9 +950,10 @@ potential new CTRL's to support rules:
  - enable-rule
  - disable-rule
 
-Since rule object references include the object type, there can be a single discard-rule with a parameter union of /aritype/sbr and /aritype/tbr
-Along those same lines there can be enable-rule and disable-rule controls with the same parameter type.
-In support of all three, there can be a TYPEDEF for a "rule" type that is the union of SBR and TBR references.
+Since rule object references include the object type, there can be a single discard-rule with a parameter union of
+/aritype/sbr and /aritype/tbr Along those same lines there can be enable-rule and disable-rule controls with the same
+parameter type. In support of all three, there can be a TYPEDEF for a "rule" type that is the union of SBR and TBR
+references.
 */
 
 /* Name: sbr-list
