@@ -469,6 +469,8 @@ void *refda_exec_worker(void *arg)
     return NULL;
 }
 
+static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting);
+
 /** Execute a time based rule's action that has already been verified
  * Based on code from refda_exec_exp_execset
  */
@@ -521,17 +523,14 @@ static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     if (!exec_result)
     {
         tbr->exec_count++;
-        // TODO: setup callback for TBR in "period" seconds
+
+        // Schedule next execution of the rule
         //
-        //  ALTHOUGH, likely makes sense to overload refda_exec_ctrl_finish
-        //  and schedule the next call there, once execution is truly finished
-        //
-        //  That completely avoids a (unlikely?) situation where execution is still ongoing
-        //  when the next iteration is scheduled
-        //
-        // Anyway, the call we want to make is this, to schedule another call using "period" to compute the time offset:
-        //
-        // refda_exec_schedule_tbr(agent, tbr, false)
+        // FUTURE: Consider setup after the TBR's action is fully executed, rather than here.
+        //  Likely is fine either way but if action takes awhile and the period is short
+        //  it could cause problems with overlapping execution. On the other hand if that
+        //  happens the rule is almost certainly too aggressive.
+        refda_exec_schedule_tbr(agent, tbr, false);
     }
 
     return;
