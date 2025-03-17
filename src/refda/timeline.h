@@ -21,6 +21,7 @@
 
 #include "exec_item.h"
 #include "ctrl_exec_ctx.h"
+#include "register.h"
 #include <m-rbtree.h>
 #include <sys/time.h>
 
@@ -32,11 +33,8 @@ extern "C" {
 struct refda_ctrl_exec_ctx_s;
 typedef struct refda_ctrl_exec_ctx_s refda_ctrl_exec_ctx_t;
 
-typedef struct refda_timeline_event_s
+typedef struct refda_timeline_exec_event_s
 {
-    /** Specific time at which the event should occur.
-     */
-    struct timespec ts;
     /// Execution item which created the wait
     refda_exec_item_t *item;
     /** Execution-defined callback, which should not be null.
@@ -45,6 +43,39 @@ typedef struct refda_timeline_event_s
      * A result value is set when the execution has finished.
      */
     void (*callback)(refda_ctrl_exec_ctx_t *ctx);
+} refda_timeline_exec_event_t;
+
+typedef struct refda_timeline_tbr_event_s
+{
+    /// Agent which scheduled the TBR
+    refda_agent_t *agent;
+    /// TBR which was scheduled
+    refda_amm_tbr_desc_t *tbr;
+    /** Execution-defined callback, which should not be null.
+     *
+     * @param[in,out] ctx The associated execution context.
+     * A result value is set when the execution has finished.
+     */
+    void (*callback)(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr);
+} refda_timeline_tbr_event_t;
+
+typedef struct refda_timeline_event_s
+{
+    enum
+    {
+        REFDA_TIMELINE_CTRL = 0,
+        REFDA_TIMELINE_TBR,
+        REFDA_TIMELINE_SBR,
+    } purpose;
+    /** Specific time at which the event should occur.
+     */
+    struct timespec ts;
+
+    union
+    {
+        refda_timeline_exec_event_t exec;
+        refda_timeline_tbr_event_t  tbr;
+    };
 
 } refda_timeline_event_t;
 

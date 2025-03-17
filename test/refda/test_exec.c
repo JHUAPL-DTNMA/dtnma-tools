@@ -237,11 +237,11 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
 
                 refda_ctrl_exec_ctx_t ctx;
-                refda_ctrl_exec_ctx_init(&ctx, next->item);
-                (next->callback)(&ctx);
+                refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                (next->exec.callback)(&ctx);
                 refda_ctrl_exec_ctx_deinit(&ctx);
 
-                if (!atomic_load(&(next->item->waiting)))
+                if (!atomic_load(&(next->exec.item->waiting)))
                 {
                     CACE_LOG_DEBUG("callback finished after %d iterations", ix + 1);
                     success = true;

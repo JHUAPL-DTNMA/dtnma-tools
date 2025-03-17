@@ -401,15 +401,31 @@ void *refda_exec_worker(void *arg)
                 }
 
                 CACE_LOG_DEBUG("running deferred callback");
+                switch (next->purpose)
                 {
-                    refda_ctrl_exec_ctx_t ctx;
-                    refda_ctrl_exec_ctx_init(&ctx, next->item);
-                    (next->callback)(&ctx);
-                    refda_ctrl_exec_ctx_deinit(&ctx);
-                }
-                if (!atomic_load(&(next->item->waiting)))
-                {
-                    refda_exec_ctrl_finish(next->item);
+                    case REFDA_TIMELINE_CTRL:
+                    {
+                        {
+                            refda_ctrl_exec_ctx_t ctx;
+                            refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                            (next->exec.callback)(&ctx);
+                            refda_ctrl_exec_ctx_deinit(&ctx);
+                        }
+                        if (!atomic_load(&(next->exec.item->waiting)))
+                        {
+                            refda_exec_ctrl_finish(next->exec.item);
+                        }
+                        break;
+                    }
+                    case REFDA_TIMELINE_TBR:
+                    {
+                        (next->tbr.callback)(next->tbr.agent, next->tbr.tbr);
+                        break;
+                    }
+                    default:
+                    {
+                        CACE_LOG_ERR("Unknown type of deferred callback %d", next->purpose);
+                    }
                 }
 
                 refda_timeline_remove(agent->exec_timeline, tl_it);
@@ -456,26 +472,25 @@ void *refda_exec_worker(void *arg)
 /** Execute a time based rule's action that has already been verified
  * Based on code from refda_exec_exp_execset
  */
-static int refda_exec_tbr_action(refda_agent_t *agent, const refda_amm_tbr_desc_t *tbr)
+static int refda_exec_tbr_action(refda_agent_t *agent, refda_exec_seq_t *seq, const refda_amm_tbr_desc_t *tbr)
 {
     refda_runctx_ptr_t ctxptr;
     refda_runctx_ptr_init_new(ctxptr);
 
-    if (refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, NULL))
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
+
+    if (refda_runctx_from(runctx, agent, NULL))
     {
         return 2;
     }
 
-    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
-    seq->pid              = agent->exec_next_pid++;
-
-    int res = refda_exec_exp_mac(ctxptr, seq, &(tbr->action));
+    int res = refda_exec_exp_mac(runctx, seq, &(tbr->action));
     return res;
 }
 
 /** Begin a single execution of a time based rule
  */
-static int refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
     CHKERR1(agent);
     CHKERR1(tbr);
@@ -483,22 +498,25 @@ static int refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     if (!tbr->enabled)
     {
         CACE_LOG_INFO("TBR is not enabled");
-        return 0;
+        return;
     }
 
     if (tbr->exec_count >= tbr->max_exec_count)
     {
         CACE_LOG_INFO("TBR reached maximum execution count");
-        return 0;
+        return;
     }
 
     if (tbr->action.is_ref || tbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
     {
         CACE_LOG_ERR("Invalid TBR action, unable to continue");
-        return 2;
+        return;
     }
 
-    int exec_result = refda_exec_tbr_action(agent, tbr);
+    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+    seq->pid              = agent->exec_next_pid++;
+
+    int exec_result = refda_exec_tbr_action(agent, seq, tbr);
 
     if (!exec_result)
     {
@@ -516,7 +534,7 @@ static int refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
         // refda_exec_schedule_tbr(agent, tbr, false)
     }
 
-    return exec_result;
+    return;
 }
 
 /** Compute the next scheduled time at which to run the TBR
@@ -564,24 +582,15 @@ static int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const 
  */
 static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting)
 {
-    refda_exec_item_t *item = NULL; // TODO
-
     struct timespec schedtime;
     int             result = refda_exec_tbr_next_scheduled_time(&schedtime, tbr, starting);
     if (!result)
     {
-        /**
-         * TODO: need to do a few things here
-         * - create a new type of item (or modify existing) such that it can hold either a CTRL or a rule
-         * - then, we pass an instance of that item as part of the event.agent
-         *   - TBD: who owns data pointed to by item?? Maybe it is part of TBR and is held there
-         * - need to support a different type signature for callback. could expand existing
-         *   signature to support either a CTRL or a rule
-         */
-        refda_timeline_event_t event = { .ts   = schedtime,
-                                         .item = (refda_exec_item_t *)tbr, // TODO: this doesn't work, need a container
-                                         .callback = NULL };               // TODO: refda_exec_tbr };
-        // TODO: needed to skip waiting check when execing timeline: atomic_store(&(ctx->item->waiting), true);
+        refda_timeline_event_t event = { .purpose      = REFDA_TIMELINE_TBR,
+                                         .ts           = schedtime,
+                                         .tbr.agent    = agent,
+                                         .tbr.tbr      = tbr,
+                                         .tbr.callback = refda_exec_tbr };
         refda_timeline_push(agent->exec_timeline, event);
     }
 
