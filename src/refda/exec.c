@@ -293,7 +293,7 @@ static int refda_exec_waiting(refda_agent_t *agent)
            && refda_exec_item_list_empty_p(refda_exec_seq_list_front(agent->exec_state)->items))
     {
         refda_exec_seq_list_pop_front(NULL, agent->exec_state);
-        CACE_LOG_DEBUG("Remove completed item from agent exec_state queue");
+        CACE_LOG_DEBUG("Removed completed item from agent exec_state queue");
     }
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
