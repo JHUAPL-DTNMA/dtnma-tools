@@ -421,7 +421,7 @@ void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.action), actionhex));
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.start_time), starthex));
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.period), periodhex));
-        tbr.max_exec_count = max_exec_count;
+        tbr.max_exec_count      = max_exec_count;
         tbr.absolute_start_time = nowtime;
 
         refda_exec_tbr_enable(&agent, &tbr);
