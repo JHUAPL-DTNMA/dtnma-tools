@@ -428,5 +428,6 @@ void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex
     }
 
     refda_exec_worker_iteration(&agent);
+    refda_exec_waiting(&agent); // run cleanup
     refda_amm_tbr_desc_deinit(&tbr);
 }

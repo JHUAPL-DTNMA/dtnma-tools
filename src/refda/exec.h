@@ -65,6 +65,8 @@ void *refda_exec_worker(void *arg);
  */
 void refda_exec_worker_iteration(refda_agent_t *agent);
 
+int refda_exec_waiting(refda_agent_t *agent);
+
 /**
  * Begin periodic execution of a time based rule
  * @param[in] The agent context pointer

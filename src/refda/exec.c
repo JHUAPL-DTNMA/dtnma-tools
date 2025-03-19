@@ -248,7 +248,7 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
     return retval;
 }
 
-static int refda_exec_waiting(refda_agent_t *agent)
+int refda_exec_waiting(refda_agent_t *agent)
 {
 
     refda_exec_seq_ptr_list_t ready;
@@ -353,6 +353,7 @@ static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *m
         }
     }
 
+    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
     return 0;
 }
 
@@ -493,6 +494,8 @@ static int refda_exec_tbr_action(refda_agent_t *agent, refda_exec_seq_t *seq, co
 
     refda_runctx_ptr_set(seq->runctx, ctxptr);
     int res = refda_exec_exp_mac(runctx, seq, &(tbr->action));
+
+    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
     return res;
 }
 
