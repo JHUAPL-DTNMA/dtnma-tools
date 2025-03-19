@@ -509,7 +509,7 @@ static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
         return;
     }
 
-    if (tbr->exec_count >= tbr->max_exec_count)
+    if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
     {
         CACE_LOG_INFO("TBR reached maximum execution count");
         return;
@@ -587,6 +587,13 @@ static int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const 
  */
 static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting)
 {
+    // Do not schedule TBR if it has reached its execution threshold
+    if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
+    {
+        CACE_LOG_INFO("TBR reached maximum execution count");
+        return 0;
+    }
+
     struct timespec schedtime;
     int             result = refda_exec_tbr_next_scheduled_time(&schedtime, tbr, starting);
     if (!result)

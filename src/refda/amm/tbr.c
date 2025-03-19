@@ -37,3 +37,11 @@ void refda_amm_tbr_desc_deinit(refda_amm_tbr_desc_t *obj)
     cace_ari_deinit(&(obj->period));
     memset(obj, 0, sizeof(*obj));
 }
+
+bool refda_amm_tbr_desc_reached_max_exec_count(refda_amm_tbr_desc_t *obj)
+{
+    // Max execution count is only applicable if greater than 0,
+    // so ensure if that is the case, that execution count has
+    // not exceeded the limit.
+    return (obj->exec_count > 0 && obj->max_exec_count > 0 && obj->exec_count >= obj->max_exec_count);
+}
