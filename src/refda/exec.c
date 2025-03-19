@@ -364,109 +364,114 @@ void *refda_exec_worker(void *arg)
     // run until explicitly told to stop via refda_agent_t::execs
     while (true)
     {
-        refda_msgdata_t item;
-
-        refda_timeline_it_t tl_it;
-        refda_timeline_it(tl_it, agent->exec_timeline);
-        if (!refda_timeline_end_p(tl_it))
-        {
-            const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
-            if (cace_log_is_enabled_for(LOG_DEBUG))
-            {
-                struct timespec nowtime;
-                clock_gettime(CLOCK_REALTIME, &nowtime);
-
-                struct timespec diff = timespec_sub(next->ts, nowtime);
-
-                string_t buf;
-                string_init(buf);
-                cace_timeperiod_encode(buf, &diff);
-                CACE_LOG_DEBUG("waiting for exec event or %s", string_get_cstr(buf));
-                string_clear(buf);
-            }
-
-            sem_timedwait(&(agent->execs_sem), &(next->ts));
-
-            struct timespec nowtime;
-            clock_gettime(CLOCK_REALTIME, &nowtime);
-
-            // execute appropriate callbacks (up to and including nowtime)
-            refda_timeline_it(tl_it, agent->exec_timeline);
-            while (!refda_timeline_end_p(tl_it))
-            {
-                const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
-                if (timespec_gt(next->ts, nowtime))
-                {
-                    break;
-                }
-
-                CACE_LOG_DEBUG("running deferred callback");
-                switch (next->purpose)
-                {
-                    case REFDA_TIMELINE_CTRL:
-                    {
-                        {
-                            refda_ctrl_exec_ctx_t ctx;
-                            refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
-                            (next->exec.callback)(&ctx);
-                            refda_ctrl_exec_ctx_deinit(&ctx);
-                        }
-                        if (!atomic_load(&(next->exec.item->waiting)))
-                        {
-                            refda_exec_ctrl_finish(next->exec.item);
-                        }
-                        break;
-                    }
-                    case REFDA_TIMELINE_TBR:
-                    {
-                        (next->tbr.callback)(next->tbr.agent, next->tbr.tbr);
-                        break;
-                    }
-                    default:
-                    {
-                        CACE_LOG_ERR("Unknown type of deferred callback %d", next->purpose);
-                    }
-                }
-
-                refda_timeline_remove(agent->exec_timeline, tl_it);
-            }
-        }
-        else
-        {
-            CACE_LOG_DEBUG("waiting for exec event");
-            sem_wait(&(agent->execs_sem));
-        }
-
-        // execs queue may still be empty if deferred callbacks were run
-        if (refda_msgdata_queue_pop(&item, agent->execs))
-        {
-            // sentinel for end-of-input
-            const bool at_end = cace_ari_is_undefined(&(item.value));
-            if (!at_end)
-            {
-                refda_exec_exp_execset(agent, &item);
-            }
-            refda_msgdata_deinit(&item);
-            if (at_end && refda_timeline_empty_p(agent->exec_timeline))
-            {
-                CACE_LOG_INFO("Got undefined exec, stopping");
-
-                // flush the input queue but keep the daemon running
-                refda_msgdata_t undef;
-                refda_msgdata_init(&undef);
-                refda_msgdata_queue_push_move(agent->rptgs, &undef);
-                sem_post(&(agent->rptgs_sem));
-
-                break;
-            }
-        }
-
-        // execute any waiting sequences
-        refda_exec_waiting(agent);
+        refda_exec_worker_iteration(agent);
     }
 
     CACE_LOG_INFO("Worker stopped");
     return NULL;
+}
+
+void refda_exec_worker_iteration(refda_agent_t *agent)
+{
+    refda_msgdata_t item;
+
+    refda_timeline_it_t tl_it;
+    refda_timeline_it(tl_it, agent->exec_timeline);
+    if (!refda_timeline_end_p(tl_it))
+    {
+        const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            struct timespec nowtime;
+            clock_gettime(CLOCK_REALTIME, &nowtime);
+
+            struct timespec diff = timespec_sub(next->ts, nowtime);
+
+            string_t buf;
+            string_init(buf);
+            cace_timeperiod_encode(buf, &diff);
+            CACE_LOG_DEBUG("waiting for exec event or %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+
+        sem_timedwait(&(agent->execs_sem), &(next->ts));
+
+        struct timespec nowtime;
+        clock_gettime(CLOCK_REALTIME, &nowtime);
+
+        // execute appropriate callbacks (up to and including nowtime)
+        refda_timeline_it(tl_it, agent->exec_timeline);
+        while (!refda_timeline_end_p(tl_it))
+        {
+            const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+            if (timespec_gt(next->ts, nowtime))
+            {
+                break;
+            }
+
+            CACE_LOG_DEBUG("running deferred callback");
+            switch (next->purpose)
+            {
+                case REFDA_TIMELINE_CTRL:
+                {
+                    {
+                        refda_ctrl_exec_ctx_t ctx;
+                        refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                        (next->exec.callback)(&ctx);
+                        refda_ctrl_exec_ctx_deinit(&ctx);
+                    }
+                    if (!atomic_load(&(next->exec.item->waiting)))
+                    {
+                        refda_exec_ctrl_finish(next->exec.item);
+                    }
+                    break;
+                }
+                case REFDA_TIMELINE_TBR:
+                {
+                    (next->tbr.callback)(next->tbr.agent, next->tbr.tbr);
+                    break;
+                }
+                default:
+                {
+                    CACE_LOG_ERR("Unknown type of deferred callback %d", next->purpose);
+                }
+            }
+
+            refda_timeline_remove(agent->exec_timeline, tl_it);
+        }
+    }
+    else
+    {
+        CACE_LOG_DEBUG("waiting for exec event");
+        sem_wait(&(agent->execs_sem));
+    }
+
+    // execs queue may still be empty if deferred callbacks were run
+    if (refda_msgdata_queue_pop(&item, agent->execs))
+    {
+        // sentinel for end-of-input
+        const bool at_end = cace_ari_is_undefined(&(item.value));
+        if (!at_end)
+        {
+            refda_exec_exp_execset(agent, &item);
+        }
+        refda_msgdata_deinit(&item);
+        if (at_end && refda_timeline_empty_p(agent->exec_timeline))
+        {
+            CACE_LOG_INFO("Got undefined exec, stopping");
+
+            // flush the input queue but keep the daemon running
+            refda_msgdata_t undef;
+            refda_msgdata_init(&undef);
+            refda_msgdata_queue_push_move(agent->rptgs, &undef);
+            sem_post(&(agent->rptgs_sem));
+
+            return;
+        }
+    }
+
+    // execute any waiting sequences
+    refda_exec_waiting(agent);
 }
 
 static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting);
@@ -486,6 +491,7 @@ static int refda_exec_tbr_action(refda_agent_t *agent, refda_exec_seq_t *seq, co
         return 2;
     }
 
+    refda_runctx_ptr_set(seq->runctx, ctxptr);
     int res = refda_exec_exp_mac(runctx, seq, &(tbr->action));
     return res;
 }

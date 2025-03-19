@@ -56,9 +56,14 @@ int refda_exec_run_seq(refda_exec_seq_t *seq);
 /** Work thread function for the Agent execution manager.
  *
  * @param[in] arg The context ::refda_agent_t pointer.
- * @return Always NULL pointer.
  */
 void *refda_exec_worker(void *arg);
+
+/** Helper function to run a single iteration of the exec worker thread
+ *
+ * @param[in] arg The context ::refda_agent_t pointer.
+ */
+void refda_exec_worker_iteration(refda_agent_t *agent);
 
 /**
  * Begin periodic execution of a time based rule
