@@ -58,7 +58,7 @@ void *refda_ingress_worker(void *arg)
 
                 refda_msgdata_t exec_item;
                 refda_msgdata_init(&exec_item);
-                m_string_swap(exec_item.ident, meta.src);
+                m_string_init_set(exec_item.ident, meta.src);
                 cace_ari_set_move(&exec_item.value, val);
 
                 refda_msgdata_queue_push_move(agent->execs, &exec_item);
