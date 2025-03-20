@@ -269,8 +269,11 @@ static int refda_exec_waiting(refda_agent_t *agent)
 
         if (refda_exec_item_list_empty_p(seq->items))
         {
-            // no need to keep around
-            refda_exec_seq_list_remove(agent->exec_state, seq_it);
+            // Skip completed exec item
+            //
+            // Do not remove now because it will relocate seq in memory and cause
+            // problems with pointers within items. We clean up after iterating.
+            refda_exec_seq_list_next(seq_it);
             continue;
         }
 
@@ -282,6 +285,14 @@ static int refda_exec_waiting(refda_agent_t *agent)
 
         refda_exec_seq_ptr_list_push_back(ready, seq);
         refda_exec_seq_list_next(seq_it);
+    }
+
+    // Safely clear any completed sequences from the front of the queue
+    while (!refda_exec_seq_list_empty_p(agent->exec_state)
+           && refda_exec_item_list_empty_p(refda_exec_seq_list_front(agent->exec_state)->items))
+    {
+        refda_exec_seq_list_pop_front(NULL, agent->exec_state);
+        CACE_LOG_DEBUG("Removed completed item from agent exec_state queue");
     }
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
