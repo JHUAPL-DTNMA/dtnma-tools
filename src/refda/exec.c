@@ -280,7 +280,6 @@ static int refda_exec_waiting(refda_agent_t *agent)
         if (atomic_load(&(refda_exec_item_list_front(seq->items)->waiting)))
         {
             // still waiting
-            // FUTURE: is there a better way than busy waiting, especially for a long wait?
             continue;
         }
 
