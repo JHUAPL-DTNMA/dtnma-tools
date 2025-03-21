@@ -374,16 +374,14 @@ void *refda_exec_worker(void *arg)
     CACE_LOG_INFO("Worker started");
 
     // run until explicitly told to stop via refda_agent_t::execs
-    while (true)
-    {
-        refda_exec_worker_iteration(agent);
-    }
+    while (refda_exec_worker_iteration(agent))
+    {}
 
     CACE_LOG_INFO("Worker stopped");
     return NULL;
 }
 
-void refda_exec_worker_iteration(refda_agent_t *agent)
+bool refda_exec_worker_iteration(refda_agent_t *agent)
 {
     refda_msgdata_t item;
 
@@ -478,12 +476,13 @@ void refda_exec_worker_iteration(refda_agent_t *agent)
             refda_msgdata_queue_push_move(agent->rptgs, &undef);
             sem_post(&(agent->rptgs_sem));
 
-            return;
+            return false;
         }
     }
 
     // execute any waiting sequences
     refda_exec_waiting(agent);
+    return true;
 }
 
 static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting);
