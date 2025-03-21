@@ -63,6 +63,10 @@ typedef struct
      */
     bool enabled;
 
+    /** Track state of current number of executions since the rule was enabled.
+     */
+    cace_ari_uvast exec_count;
+
 } refda_amm_sbr_desc_t;
 
 void refda_amm_sbr_desc_init(refda_amm_sbr_desc_t *obj);

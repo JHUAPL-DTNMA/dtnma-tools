@@ -436,6 +436,11 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                     }
                     break;
                 }
+                case REFDA_TIMELINE_SBR:
+                {
+                    (next->sbr.callback)(next->sbr.agent, next->sbr.sbr);
+                    break;
+                }
                 case REFDA_TIMELINE_TBR:
                 {
                     (next->tbr.callback)(next->tbr.agent, next->tbr.tbr);
@@ -624,5 +629,149 @@ int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 
     // Schedule initial rule execution
     int result = refda_exec_schedule_tbr(agent, tbr, true);
+    return result;
+}
+
+/******** TODO: convert to SBR below */
+static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
+
+/** Execute a state based rule's action that has already been verified
+ * Based on code from refda_exec_exp_execset
+ */
+static int refda_exec_sbr_action(refda_agent_t *agent, refda_exec_seq_t *seq, const refda_amm_sbr_desc_t *sbr)
+{
+    // TODO: this function is mostly common between SBR / TBR. Could a shared version be used??
+    refda_runctx_ptr_t ctxptr;
+    refda_runctx_ptr_init_new(ctxptr);
+
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
+
+    if (refda_runctx_from(runctx, agent, NULL))
+    {
+        return 2;
+    }
+
+    refda_runctx_ptr_set(seq->runctx, ctxptr);
+    int res = refda_exec_exp_mac(runctx, seq, &(sbr->action));
+
+    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
+    return res;
+}
+
+/** Begin a single execution of a state based rule
+ */
+static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+{
+    CHKERR1(agent);
+    CHKERR1(sbr);
+
+    if (!sbr->enabled)
+    {
+        CACE_LOG_INFO("SBR is not enabled");
+        return;
+    }
+
+    if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
+    {
+        CACE_LOG_INFO("SBR reached maximum execution count");
+        return;
+    }
+
+    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+    seq->pid              = agent->exec_next_pid++;
+
+    // Expand rule and create exec items, CTRLs are run later by exec worker
+    if (!refda_exec_sbr_action(agent, seq, sbr))
+    {
+        sbr->exec_count++;
+
+        // Schedule next execution of the rule now so time period is accurate
+        refda_exec_schedule_sbr(agent, sbr);
+    }
+
+    return;
+}
+
+/** Compute the next scheduled time at which to run the SBR
+ */
+static int refda_exec_sbr_next_scheduled_time(struct timespec *schedtime, const refda_amm_sbr_desc_t *sbr)
+{
+    /* TODO: all has to change for SBR. what interval to use?
+    if (starting)
+    {
+        if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TP))
+        {
+            cace_ari_get_tp(&(tbr->start_time), schedtime);
+        }
+        else if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TD))
+        {
+            cace_ari_get_td(&(tbr->start_time), schedtime);
+            if (schedtime->tv_nsec == 0 && schedtime->tv_sec == 0)
+            {
+                // Rule is always active, start it now
+                clock_gettime(CLOCK_REALTIME, schedtime);
+            }
+            else
+            {
+                // Start relative to rule's absolute reference time
+                *schedtime = timespec_add(tbr->absolute_start_time, *schedtime);
+            }
+        }
+        else
+        {
+            CACE_LOG_ERR("Invalid start time for TBR");
+            return 2;
+        }
+    }
+    else
+    {
+        clock_gettime(CLOCK_REALTIME, schedtime);
+        *schedtime = timespec_add(*schedtime, tbr->period.as_lit.value.as_timespec);
+    }
+*/
+    return 0;
+}
+
+/**
+ * Schedule execution of a state based rule
+ */
+static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+{
+    // Do not schedule SBR if it has reached its execution threshold
+    if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
+    {
+        CACE_LOG_INFO("SBR reached maximum execution count");
+        return 0;
+    }
+
+    struct timespec schedtime;
+    int             result = refda_exec_sbr_next_scheduled_time(&schedtime, sbr);
+    if (!result)
+    {
+        refda_timeline_event_t event = { .purpose      = REFDA_TIMELINE_SBR,
+                                         .ts           = schedtime,
+                                         .sbr.agent    = agent,
+                                         .sbr.sbr      = sbr,
+                                         .sbr.callback = refda_exec_sbr };
+        refda_timeline_push(agent->exec_timeline, event);
+    }
+
+    return result;
+}
+
+int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+{
+    if (sbr->action.is_ref || sbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    {
+        CACE_LOG_ERR("Invalid SBR action, unable to enable the rule");
+        return 1;
+    }
+
+    // Adjust rule state
+    sbr->enabled    = true;
+    sbr->exec_count = 0; // Ensure count is reset when rule is enabled
+
+    // Schedule initial rule execution
+    int result = refda_exec_schedule_sbr(agent, sbr);
     return result;
 }
