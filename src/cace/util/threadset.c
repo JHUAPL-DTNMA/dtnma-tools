@@ -56,11 +56,6 @@ int cace_threadset_join(cace_threadset_t tset)
     {
         pthread_t thr;
         cace_threadset_pop_back(&thr, tset);
-        if (pthread_cancel(thr))
-        {
-            CACE_LOG_ERR("Unable to cancel pthread %s, errno = %s", "name", strerror(errno));
-            return 2;
-        }
 
         if (pthread_join(thr, NULL))
         {
