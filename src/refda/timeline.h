@@ -63,7 +63,7 @@ typedef struct refda_timeline_event_s
 {
     enum
     {
-        REFDA_TIMELINE_CTRL = 0,
+        REFDA_TIMELINE_EXEC = 0,
         REFDA_TIMELINE_TBR,
         REFDA_TIMELINE_SBR,
     } purpose;

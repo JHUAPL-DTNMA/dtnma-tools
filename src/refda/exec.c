@@ -422,7 +422,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
             CACE_LOG_DEBUG("running deferred callback");
             switch (next->purpose)
             {
-                case REFDA_TIMELINE_CTRL:
+                case REFDA_TIMELINE_EXEC:
                 {
                     {
                         refda_ctrl_exec_ctx_t ctx;

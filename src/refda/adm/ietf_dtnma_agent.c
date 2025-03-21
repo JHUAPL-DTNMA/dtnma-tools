@@ -101,7 +101,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         {
             // check again in 1s
             refda_timeline_event_t event = {
-                .purpose       = REFDA_TIMELINE_CTRL,
+                .purpose       = REFDA_TIMELINE_EXEC,
                 .ts            = timespec_add(nowtime, timespec_from_ms(1000)),
                 .exec.item     = ctx->item,
                 .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
@@ -1242,7 +1242,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
     }
 
     refda_timeline_event_t event = {
-        .purpose       = REFDA_TIMELINE_CTRL,
+        .purpose       = REFDA_TIMELINE_EXEC,
         .ts            = timespec_add(nowtime, duration),
         .exec.item     = ctx->item,
         .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
@@ -1284,7 +1284,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
     }
 
     refda_timeline_event_t event = {
-        .purpose       = REFDA_TIMELINE_CTRL,
+        .purpose       = REFDA_TIMELINE_EXEC,
         .ts            = abstime,
         .exec.item     = ctx->item,
         .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
