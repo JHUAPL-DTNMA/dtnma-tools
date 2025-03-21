@@ -237,11 +237,11 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
 
                 refda_ctrl_exec_ctx_t ctx;
-                refda_ctrl_exec_ctx_init(&ctx, next->item);
-                (next->callback)(&ctx);
+                refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                (next->exec.callback)(&ctx);
                 refda_ctrl_exec_ctx_deinit(&ctx);
 
-                if (!atomic_load(&(next->item->waiting)))
+                if (!atomic_load(&(next->exec.item->waiting)))
                 {
                     CACE_LOG_DEBUG("callback finished after %d iterations", ix + 1);
                     success = true;
@@ -405,4 +405,29 @@ void test_refda_exec_wait_cond(int delay_ms)
     check_execute(&target, 0, 1, wait_ms);
 
     cace_ari_deinit(&target);
+}
+
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/60
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", "820D183C", 1, true)
+void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex, const char *periodhex,
+                                     int max_exec_count, bool init_enabled)
+{
+    refda_amm_tbr_desc_t tbr;
+    {
+        struct timespec nowtime;
+        clock_gettime(CLOCK_REALTIME, &nowtime);
+
+        refda_amm_tbr_desc_init(&tbr);
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.action), actionhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.start_time), starthex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.period), periodhex));
+        tbr.max_exec_count      = max_exec_count;
+        tbr.absolute_start_time = nowtime;
+
+        refda_exec_tbr_enable(&agent, &tbr);
+    }
+
+    refda_exec_worker_iteration(&agent);
+    refda_exec_waiting(&agent); // run cleanup
+    refda_amm_tbr_desc_deinit(&tbr);
 }

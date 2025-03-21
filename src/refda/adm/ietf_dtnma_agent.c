@@ -101,9 +101,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         {
             // check again in 1s
             refda_timeline_event_t event = {
-                .ts       = timespec_add(nowtime, timespec_from_ms(1000)),
-                .item     = ctx->item,
-                .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
+                .purpose       = REFDA_TIMELINE_EXEC,
+                .ts            = timespec_add(nowtime, timespec_from_ms(1000)),
+                .exec.item     = ctx->item,
+                .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
             };
             refda_ctrl_exec_ctx_set_waiting(ctx, &event);
         }
@@ -942,6 +943,20 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
      */
 }
 
+/* TODO:
+potential new CTRL's to support rules:
+
+ - ensure-rule
+ - discard-rule
+ - enable-rule
+ - disable-rule
+
+Since rule object references include the object type, there can be a single discard-rule with a parameter union of
+/aritype/sbr and /aritype/tbr Along those same lines there can be enable-rule and disable-rule controls with the same
+parameter type. In support of all three, there can be a TYPEDEF for a "rule" type that is the union of SBR and TBR
+references.
+*/
+
 /* Name: sbr-list
  * Description:
  *   A table of SBR within the agent.
@@ -1227,9 +1242,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
     }
 
     refda_timeline_event_t event = {
-        .ts       = timespec_add(nowtime, duration),
-        .item     = ctx->item,
-        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
+        .purpose       = REFDA_TIMELINE_EXEC,
+        .ts            = timespec_add(nowtime, duration),
+        .exec.item     = ctx->item,
+        .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
     refda_ctrl_exec_ctx_set_waiting(ctx, &event);
     /*
@@ -1268,9 +1284,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
     }
 
     refda_timeline_event_t event = {
-        .ts       = abstime,
-        .item     = ctx->item,
-        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
+        .purpose       = REFDA_TIMELINE_EXEC,
+        .ts            = abstime,
+        .exec.item     = ctx->item,
+        .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
     refda_ctrl_exec_ctx_set_waiting(ctx, &event);
     /*
