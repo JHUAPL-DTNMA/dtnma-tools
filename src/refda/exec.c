@@ -531,18 +531,12 @@ static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
     seq->pid              = agent->exec_next_pid++;
 
-    int exec_result = refda_exec_tbr_action(agent, seq, tbr);
-
-    if (!exec_result)
+    // Expand rule and create exec items, CTRLs are run later by exec worker
+    if (!refda_exec_tbr_action(agent, seq, tbr))
     {
         tbr->exec_count++;
 
-        // Schedule next execution of the rule
-        //
-        // FUTURE: Consider setup after the TBR's action is fully executed, rather than here.
-        //  Likely is fine either way but if action takes awhile and the period is short
-        //  it could cause problems with overlapping execution. On the other hand if that
-        //  happens the rule is almost certainly too aggressive.
+        // Schedule next execution of the rule now so time period is accurate
         refda_exec_schedule_tbr(agent, tbr, false);
     }
 
