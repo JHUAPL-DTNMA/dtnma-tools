@@ -528,12 +528,6 @@ static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
         return;
     }
 
-    if (tbr->action.is_ref || tbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
-    {
-        CACE_LOG_ERR("Invalid TBR action, unable to continue");
-        return;
-    }
-
     refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
     seq->pid              = agent->exec_next_pid++;
 
@@ -624,6 +618,12 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
 
 int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
+    if (tbr->action.is_ref || tbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    {
+        CACE_LOG_ERR("Invalid TBR action, unable to enable the rule");
+        return 1;
+    }
+
     // Adjust rule state
     tbr->enabled    = true;
     tbr->exec_count = 0; // Ensure count is reset when rule is enabled

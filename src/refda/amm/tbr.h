@@ -31,8 +31,8 @@ extern "C" {
  */
 typedef struct
 {
-    /** Action in the form of a Macro (MAC). When triggered, the action execution
-     * SHALL be executed in accordance with Section 6.6 in an execution context with no parameters.
+    /** Action in the form of a Macro (MAC), which must be a valid execution target.
+     * When triggered, the action SHALL be executed in an execution context with no parameters.
      */
     cace_ari_t action;
 
