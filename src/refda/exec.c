@@ -524,13 +524,13 @@ static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 
     if (!tbr->enabled)
     {
-        CACE_LOG_INFO("TBR is not enabled");
+        CACE_LOG_INFO("TBR %p is not enabled", tbr);
         return;
     }
 
     if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
     {
-        CACE_LOG_INFO("TBR reached maximum execution count");
+        CACE_LOG_INFO("TBR %p reached maximum execution count", tbr);
         return;
     }
 
@@ -576,7 +576,7 @@ static int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const 
         }
         else
         {
-            CACE_LOG_ERR("Invalid start time for TBR");
+            CACE_LOG_ERR("Invalid start time for TBR %p", tbr);
             return 2;
         }
     }
@@ -597,7 +597,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
     // Do not schedule TBR if it has reached its execution threshold
     if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
     {
-        CACE_LOG_INFO("TBR reached maximum execution count");
+        CACE_LOG_INFO("TBR %p reached maximum execution count", tbr);
         return 0;
     }
 
@@ -620,7 +620,7 @@ int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
     if (tbr->action.is_ref || tbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
     {
-        CACE_LOG_ERR("Invalid TBR action, unable to enable the rule");
+        CACE_LOG_ERR("Invalid TBR %p action, unable to enable the rule", tbr);
         return 1;
     }
 
@@ -677,13 +677,13 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 
     if (!sbr->enabled)
     {
-        CACE_LOG_INFO("SBR is not enabled");
+        CACE_LOG_INFO("SBR %p is not enabled", sbr);
         return;
     }
 
     if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
     {
-        CACE_LOG_INFO("SBR reached maximum execution count");
+        CACE_LOG_INFO("SBR %p reached maximum execution count", sbr);
         return;
     }
 
@@ -692,8 +692,10 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 
     if (!result)
     {
-        bool bool_result;
+        bool bool_result = false;
         result = cace_ari_get_bool(&ari_result, &bool_result);
+        CACE_LOG_INFO("SBR %p condition is %d", sbr, bool_result);
+
         if (!result && bool_result)
         {
             refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
@@ -725,7 +727,7 @@ static int refda_exec_sbr_next_scheduled_time(struct timespec *schedtime, const 
     }
     else
     {
-        CACE_LOG_ERR("Invalid minimum interval for SBR");
+        CACE_LOG_ERR("Invalid minimum interval for SBR %p", sbr);
         return 2;
     }
     return 0;
@@ -739,7 +741,7 @@ static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *s
     // Do not schedule SBR if it has reached its execution threshold
     if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
     {
-        CACE_LOG_INFO("SBR reached maximum execution count");
+        CACE_LOG_INFO("SBR %p reached maximum execution count", sbr);
         return 0;
     }
 
@@ -762,13 +764,13 @@ int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 {
     if (sbr->action.is_ref || sbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
     {
-        CACE_LOG_ERR("Invalid SBR action, unable to enable the rule");
+        CACE_LOG_ERR("Invalid SBR %p action, unable to enable the rule", sbr);
         return 1;
     }
 
     if (sbr->condition.is_ref || sbr->condition.as_lit.ari_type != CACE_ARI_TYPE_AC)
     {
-        CACE_LOG_ERR("Invalid SBR condition, unable to enable the rule");
+        CACE_LOG_ERR("Invalid SBR %p condition, unable to enable the rule", sbr);
         return 1;
     }
 
