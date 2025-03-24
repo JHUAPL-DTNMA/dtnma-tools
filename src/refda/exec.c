@@ -531,6 +531,7 @@ static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
     {
         CACE_LOG_INFO("TBR %p reached maximum execution count", tbr);
+        tbr->enabled = false;
         return;
     }
 
@@ -541,6 +542,7 @@ static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     if (!refda_exec_rule_action(agent, seq, &(tbr->action)))
     {
         tbr->exec_count++;
+        atomic_fetch_add(&agent->instr.num_tbrs_trig, 1);
 
         // Schedule next execution of the rule now so time period is accurate
         refda_exec_schedule_tbr(agent, tbr, false);
@@ -598,6 +600,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
     if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
     {
         CACE_LOG_INFO("TBR %p reached maximum execution count", tbr);
+        tbr->enabled = false;
         return 0;
     }
 
@@ -684,6 +687,7 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
     {
         CACE_LOG_INFO("SBR %p reached maximum execution count", sbr);
+        sbr->enabled = false;
         return;
     }
 
@@ -693,7 +697,7 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     if (!result)
     {
         bool bool_result = false;
-        result = cace_ari_get_bool(&ari_result, &bool_result);
+        result           = cace_ari_get_bool(&ari_result, &bool_result);
         CACE_LOG_INFO("SBR %p condition is %d", sbr, bool_result);
 
         if (!result && bool_result)
@@ -704,6 +708,7 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
             if (!refda_exec_rule_action(agent, seq, &(sbr->action)))
             {
                 sbr->exec_count++;
+                atomic_fetch_add(&agent->instr.num_sbrs_trig, 1);
             }
         }
     }
