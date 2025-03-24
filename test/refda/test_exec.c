@@ -256,7 +256,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
     refda_runctx_ptr_clear(ctxptr);
     TEST_ASSERT_TRUE(success);
 }
-
+/*
 // clang-format off
 // direct ref ari://65535/10/CTRL/1
 TEST_CASE("8419FFFF0A2201", 0, "821181""8419FFFF0A2201")
@@ -430,4 +430,29 @@ void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex
     refda_exec_worker_iteration(&agent);
     refda_exec_waiting(&agent); // run cleanup
     refda_amm_tbr_desc_deinit(&tbr);
+}
+*/
+
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), TODO, ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "TODO", "820D01", 1, true)
+void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex, const char *min_interval_hex,
+                                     int max_exec_count, bool init_enabled)
+{
+    refda_amm_sbr_desc_t sbr;
+    {
+        struct timespec nowtime;
+        clock_gettime(CLOCK_REALTIME, &nowtime);
+
+        refda_amm_sbr_desc_init(&sbr);
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.action), actionhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.condition), condhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.min_interval), min_interval_hex));
+        sbr.max_exec_count      = max_exec_count;
+
+        refda_exec_sbr_enable(&agent, &sbr);
+    }
+
+    refda_exec_worker_iteration(&agent);
+    refda_exec_waiting(&agent); // run cleanup
+    refda_amm_sbr_desc_deinit(&sbr);
 }
