@@ -73,6 +73,13 @@ void refda_amm_sbr_desc_init(refda_amm_sbr_desc_t *obj);
 
 void refda_amm_sbr_desc_deinit(refda_amm_sbr_desc_t *obj);
 
+/** Determine if a SBR has reached its maximum execution count
+ *
+ * @param[in] obj SBR object to check
+ * @return True if maximum has been reached, false otherwise
+ */
+bool refda_amm_sbr_desc_reached_max_exec_count(refda_amm_sbr_desc_t *obj);
+
 #ifdef __cplusplus
 } // extern C
 #endif

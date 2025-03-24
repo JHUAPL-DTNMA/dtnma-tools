@@ -492,11 +492,12 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
 
 static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting);
 
-/** Execute a time based rule's action that has already been verified
+/** Execute a rule's action that has already been verified
  * Based on code from refda_exec_exp_execset
  */
-static int refda_exec_tbr_action(refda_agent_t *agent, refda_exec_seq_t *seq, const refda_amm_tbr_desc_t *tbr)
+static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *action)
 {
+    // TODO: this function is mostly common between SBR / TBR. Could a shared version be used??
     refda_runctx_ptr_t ctxptr;
     refda_runctx_ptr_init_new(ctxptr);
 
@@ -508,7 +509,7 @@ static int refda_exec_tbr_action(refda_agent_t *agent, refda_exec_seq_t *seq, co
     }
 
     refda_runctx_ptr_set(seq->runctx, ctxptr);
-    int res = refda_exec_exp_mac(runctx, seq, &(tbr->action));
+    int res = refda_exec_exp_mac(runctx, seq, action);
 
     refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
     return res;
@@ -537,7 +538,7 @@ static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     seq->pid              = agent->exec_next_pid++;
 
     // Expand rule and create exec items, CTRLs are run later by exec worker
-    if (!refda_exec_tbr_action(agent, seq, tbr))
+    if (!refda_exec_rule_action(agent, seq, &(tbr->action)))
     {
         tbr->exec_count++;
 
@@ -632,30 +633,11 @@ int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     return result;
 }
 
-/******** TODO: convert to SBR below */
 static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 
-/** Execute a state based rule's action that has already been verified
- * Based on code from refda_exec_exp_execset
- */
-static int refda_exec_sbr_action(refda_agent_t *agent, refda_exec_seq_t *seq, const refda_amm_sbr_desc_t *sbr)
+static bool refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 {
-    // TODO: this function is mostly common between SBR / TBR. Could a shared version be used??
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
-
-    refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
-
-    if (refda_runctx_from(runctx, agent, NULL))
-    {
-        return 2;
-    }
-
-    refda_runctx_ptr_set(seq->runctx, ctxptr);
-    int res = refda_exec_exp_mac(runctx, seq, &(sbr->action));
-
-    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
-    return res;
+    return false; // TODO
 }
 
 /** Begin a single execution of a state based rule
@@ -680,14 +662,15 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
     seq->pid              = agent->exec_next_pid++;
 
-    // Expand rule and create exec items, CTRLs are run later by exec worker
-    if (!refda_exec_sbr_action(agent, seq, sbr))
-    {
-        sbr->exec_count++;
-
-        // Schedule next execution of the rule now so time period is accurate
-        refda_exec_schedule_sbr(agent, sbr);
+    if (refda_exec_check_sbr_condition(agent, sbr)){ // TODO: may change to return int and use a bool out parameter
+        if (!refda_exec_rule_action(agent, seq, &(sbr->action))) 
+        { 
+            sbr->exec_count++;
+        }
     }
+    
+    // Always schedule next execution of the rule
+    refda_exec_schedule_sbr(agent, sbr); // TODO: don't schedule if unable to exec any of above???
 
     return;
 }
@@ -696,39 +679,18 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
  */
 static int refda_exec_sbr_next_scheduled_time(struct timespec *schedtime, const refda_amm_sbr_desc_t *sbr)
 {
-    /* TODO: all has to change for SBR. what interval to use?
-    if (starting)
+    if (cace_ari_is_lit_typed(&(sbr->min_interval), CACE_ARI_TYPE_TD))
     {
-        if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TP))
-        {
-            cace_ari_get_tp(&(tbr->start_time), schedtime);
-        }
-        else if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TD))
-        {
-            cace_ari_get_td(&(tbr->start_time), schedtime);
-            if (schedtime->tv_nsec == 0 && schedtime->tv_sec == 0)
-            {
-                // Rule is always active, start it now
-                clock_gettime(CLOCK_REALTIME, schedtime);
-            }
-            else
-            {
-                // Start relative to rule's absolute reference time
-                *schedtime = timespec_add(tbr->absolute_start_time, *schedtime);
-            }
-        }
-        else
-        {
-            CACE_LOG_ERR("Invalid start time for TBR");
-            return 2;
-        }
+        struct timespec now; 
+        clock_gettime(CLOCK_REALTIME, &now);
+        cace_ari_get_td(&(sbr->min_interval), schedtime);
+        *schedtime = timespec_add(now, *schedtime);
     }
     else
     {
-        clock_gettime(CLOCK_REALTIME, schedtime);
-        *schedtime = timespec_add(*schedtime, tbr->period.as_lit.value.as_timespec);
+        CACE_LOG_ERR("Invalid minimum interval for SBR");
+        return 2;
     }
-*/
     return 0;
 }
 
@@ -766,6 +728,8 @@ int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
         CACE_LOG_ERR("Invalid SBR action, unable to enable the rule");
         return 1;
     }
+
+    // TODO: validate condition ARI as well
 
     // Adjust rule state
     sbr->enabled    = true;
