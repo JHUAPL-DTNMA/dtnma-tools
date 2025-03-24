@@ -435,8 +435,12 @@ void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex
 
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:undefined, ari:/TD/1
 TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "F7", "820D01", 1, true, 1)
-// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(), ari:/TD/1
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "F7", "820D01", 1, true, 1)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/BOOL/true), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818201F5", "820D01", 1, true, 0)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/INT/1), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "821181820401", "820D01", 1, true, 0)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/BOOL/false), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818201F4", "820D01", 1, true, 0)
 void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex, const char *min_interval_hex,
                                       int max_exec_count, bool init_enabled, int expect_result)
 {
