@@ -78,12 +78,28 @@ int refda_exec_waiting(refda_agent_t *agent);
 int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr);
 
 /**
+ * Cease periodic execution of a time based rule
+ * @param[in] The agent context pointer
+ * @param[in] The rule to disable
+ * @return Non-zero if the rule could not be stopped
+ */
+int refda_exec_tbr_disable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr);
+
+/**
  * Begin periodic execution of a state based rule
  * @param[in] The agent context pointer
  * @param[in] The rule to execute
  * @return Non-zero if the rule could not be started
  */
 int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
+
+/**
+ * Cease periodic execution of a state based rule
+ * @param[in] The agent context pointer
+ * @param[in] The rule to disable
+ * @return Non-zero if the rule could not be stopped
+ */
+int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 
 #ifdef __cplusplus
 } // extern C

@@ -531,7 +531,7 @@ static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
     {
         CACE_LOG_INFO("TBR %p reached maximum execution count", tbr);
-        tbr->enabled = false;
+        refda_exec_tbr_disable(agent, tbr);
         return;
     }
 
@@ -600,7 +600,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
     if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
     {
         CACE_LOG_INFO("TBR %p reached maximum execution count", tbr);
-        tbr->enabled = false;
+        refda_exec_tbr_disable(agent, tbr);
         return 0;
     }
 
@@ -621,6 +621,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
 
 int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
+    CHKERR1(tbr);
     if (tbr->action.is_ref || tbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
     {
         CACE_LOG_ERR("Invalid TBR %p action, unable to enable the rule", tbr);
@@ -630,10 +631,19 @@ int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     // Adjust rule state
     tbr->enabled    = true;
     tbr->exec_count = 0; // Ensure count is reset when rule is enabled
+    atomic_fetch_add(&agent->instr.num_tbrs, 1);
 
     // Schedule initial rule execution
     int result = refda_exec_schedule_tbr(agent, tbr, true);
     return result;
+}
+
+int refda_exec_tbr_disable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+{
+    CHKERR1(tbr);
+    tbr->enabled = false;
+    atomic_fetch_sub(&agent->instr.num_tbrs, 1);
+    return 0;
 }
 
 static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
@@ -687,7 +697,7 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
     {
         CACE_LOG_INFO("SBR %p reached maximum execution count", sbr);
-        sbr->enabled = false;
+        refda_exec_sbr_disable(agent, sbr);
         return;
     }
 
@@ -782,8 +792,17 @@ int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     // Adjust rule state
     sbr->enabled    = true;
     sbr->exec_count = 0; // Ensure count is reset when rule is enabled
+    atomic_fetch_add(&agent->instr.num_sbrs, 1);
 
     // Schedule initial rule execution
     int result = refda_exec_schedule_sbr(agent, sbr);
     return result;
+}
+
+int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+{
+    CHKERR1(sbr);
+    sbr->enabled = false;
+    atomic_fetch_sub(&agent->instr.num_sbrs, 1);
+    return 0;
 }
