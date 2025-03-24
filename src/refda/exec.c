@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "exec.h"
+#include "eval.h"
 #include "ctrl_exec_ctx.h"
 #include "valprod.h"
 #include "reporting.h"
@@ -497,7 +498,6 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
  */
 static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *action)
 {
-    // TODO: this function is mostly common between SBR / TBR. Could a shared version be used??
     refda_runctx_ptr_t ctxptr;
     refda_runctx_ptr_init_new(ctxptr);
 
@@ -635,9 +635,34 @@ int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 
 static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 
-static bool refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+static int refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr, cace_ari_t *result)
 {
-    return false; // TODO
+    refda_runctx_t runctx;
+    refda_runctx_init(&runctx);
+
+    if (refda_runctx_from(&runctx, agent, NULL))
+    {
+        return 2;
+    }
+
+    cace_ari_t ari_res = CACE_ARI_INIT_UNDEFINED;
+    int res = refda_eval_target(&runctx, &ari_res, &(sbr->condition));
+
+    if (res){
+        CACE_LOG_ERR("Unable to evaluate SBR condition");
+    } else
+    {
+        const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
+        res                            = cace_amm_type_convert(typeobj, result, &ari_res);
+        if (res){
+            CACE_LOG_ERR("Unable to convert SBR condition result to boolean");
+        }
+    }
+
+    cace_ari_deinit(&ari_res);
+    refda_runctx_deinit(&runctx);
+
+    return res;
 }
 
 /** Begin a single execution of a state based rule
@@ -659,14 +684,21 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
         return;
     }
 
-    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
-    seq->pid              = agent->exec_next_pid++;
+    cace_ari_t ari_result = CACE_ARI_INIT_UNDEFINED;
+    int        result     = refda_exec_check_sbr_condition(agent, sbr, &ari_result);
 
-    if (refda_exec_check_sbr_condition(agent, sbr))
-    { // TODO: may change to return int and use a bool out parameter
-        if (!refda_exec_rule_action(agent, seq, &(sbr->action)))
+    if (!result)  {
+        bool bool_result;
+        result = cace_ari_get_bool(&ari_result, &bool_result);
+        if (!result && bool_result)
         {
-            sbr->exec_count++;
+            refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+            seq->pid              = agent->exec_next_pid++;
+
+            if (!refda_exec_rule_action(agent, seq, &(sbr->action)))
+            {
+                sbr->exec_count++;
+            }
         }
     }
 
