@@ -433,10 +433,10 @@ void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex
 }
 */
 
-// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), TODO, ari:/TD/1
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "TODO", "820D01", 1, true)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:undefined, ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "F7", "820D01", 1, true, 1)
 void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex, const char *min_interval_hex,
-                                     int max_exec_count, bool init_enabled)
+                                      int max_exec_count, bool init_enabled, int expect_result)
 {
     refda_amm_sbr_desc_t sbr;
     {
@@ -447,12 +447,15 @@ void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.action), actionhex));
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.condition), condhex));
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.min_interval), min_interval_hex));
-        sbr.max_exec_count      = max_exec_count;
+        sbr.max_exec_count = max_exec_count;
 
-        refda_exec_sbr_enable(&agent, &sbr);
+        TEST_ASSERT_EQUAL_INT(expect_result, refda_exec_sbr_enable(&agent, &sbr));
     }
 
-    refda_exec_worker_iteration(&agent);
-    refda_exec_waiting(&agent); // run cleanup
+    if (!expect_result)
+    {
+        refda_exec_worker_iteration(&agent);
+        refda_exec_waiting(&agent); // run cleanup
+    }
     refda_amm_sbr_desc_deinit(&sbr);
 }

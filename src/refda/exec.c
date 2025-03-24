@@ -662,13 +662,14 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
     seq->pid              = agent->exec_next_pid++;
 
-    if (refda_exec_check_sbr_condition(agent, sbr)){ // TODO: may change to return int and use a bool out parameter
-        if (!refda_exec_rule_action(agent, seq, &(sbr->action))) 
-        { 
+    if (refda_exec_check_sbr_condition(agent, sbr))
+    { // TODO: may change to return int and use a bool out parameter
+        if (!refda_exec_rule_action(agent, seq, &(sbr->action)))
+        {
             sbr->exec_count++;
         }
     }
-    
+
     // Always schedule next execution of the rule
     refda_exec_schedule_sbr(agent, sbr); // TODO: don't schedule if unable to exec any of above???
 
@@ -681,7 +682,7 @@ static int refda_exec_sbr_next_scheduled_time(struct timespec *schedtime, const 
 {
     if (cace_ari_is_lit_typed(&(sbr->min_interval), CACE_ARI_TYPE_TD))
     {
-        struct timespec now; 
+        struct timespec now;
         clock_gettime(CLOCK_REALTIME, &now);
         cace_ari_get_td(&(sbr->min_interval), schedtime);
         *schedtime = timespec_add(now, *schedtime);
@@ -729,7 +730,11 @@ int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
         return 1;
     }
 
-    // TODO: validate condition ARI as well
+    if (sbr->condition.is_ref || sbr->condition.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    {
+        CACE_LOG_ERR("Invalid SBR condition, unable to enable the rule");
+        return 1;
+    }
 
     // Adjust rule state
     sbr->enabled    = true;
