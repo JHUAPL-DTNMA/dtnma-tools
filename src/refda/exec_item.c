@@ -16,7 +16,17 @@
  * limitations under the License.
  */
 #include "exec_item.h"
+#include "exec_seq.h"
 #include <cace/util/defs.h>
+#include "ctrl_exec_ctx.h"
+#include "agent.h"
+#include "runctx.h"
+
+void refda_exec_item_resume(refda_exec_item_t *obj)
+{
+    atomic_store(&obj->execution_stage, EXEC_COMPLETE);
+    sem_post(&refda_runctx_ptr_ref(obj->seq->runctx)->agent->execs_sem);
+}
 
 void refda_exec_item_init(refda_exec_item_t *obj)
 {
@@ -24,7 +34,7 @@ void refda_exec_item_init(refda_exec_item_t *obj)
     obj->seq = NULL;
     cace_ari_init(&(obj->ref));
     cace_amm_lookup_init(&(obj->deref));
-    atomic_init(&(obj->waiting), false);
+    atomic_init(&(obj->execution_stage), EXEC_PENDING);
     cace_ari_init(&(obj->result));
 }
 
@@ -35,7 +45,7 @@ void refda_exec_item_init_set(refda_exec_item_t *obj, const refda_exec_item_t *s
     obj->seq = NULL;
     cace_ari_init_copy(&(obj->ref), &(src->ref));
     cace_amm_lookup_init_set(&(obj->deref), &(src->deref));
-    atomic_init(&(obj->waiting), atomic_load(&(src->waiting)));
+    atomic_init(&(obj->execution_stage), atomic_load(&(src->execution_stage)));
     cace_ari_init_copy(&(obj->result), &(src->result));
 }
 
@@ -55,6 +65,6 @@ void refda_exec_item_set(refda_exec_item_t *obj, const refda_exec_item_t *src)
     obj->seq = src->seq;
     cace_ari_set_copy(&(obj->ref), &(src->ref));
     cace_amm_lookup_set(&(obj->deref), &(src->deref));
-    atomic_store(&(obj->waiting), atomic_load(&(src->waiting)));
+    atomic_store(&(obj->execution_stage), atomic_load(&(src->execution_stage)));
     cace_ari_set_copy(&(obj->result), &(src->result));
 }

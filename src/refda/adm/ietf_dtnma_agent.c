@@ -47,6 +47,7 @@
 
 static void refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_ctrl_exec_ctx_t *ctx)
 {
+    atomic_store(&(ctx->item->execution_stage), EXEC_COMPLETE);
     refda_ctrl_exec_ctx_set_result_null(ctx);
 }
 
@@ -602,11 +603,6 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_exec_running BODY
      * +-------------------------------------------------------------------------+
      */
-    enum exec_state_e
-    {
-        EXEC_WAITING = 0,
-        EXEC_RUNNING = 1,
-    };
 
     refda_agent_t *agent = ctx->prodctx->parent->agent;
     if (pthread_mutex_lock(&(agent->exec_state_mutex)))
@@ -639,7 +635,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
         cace_ari_set_copy(cace_ari_array_get(row, 1), &(front->ref));
         {
             int state;
-            if (atomic_load(&(front->waiting)))
+            if (atomic_load(&(front->execution_stage)) == EXEC_WAITING)
             {
                 state = EXEC_WAITING;
             }
