@@ -31,9 +31,9 @@ extern "C" {
 // Forward declaration
 typedef struct refda_exec_seq_s refda_exec_seq_t;
 
-#define EXEC_PENDING 0
-#define EXEC_RUNNING 1
-#define EXEC_WAITING 2
+#define EXEC_PENDING  0
+#define EXEC_RUNNING  1
+#define EXEC_WAITING  2
 #define EXEC_COMPLETE 3
 
 /** Each item in an execution sequence, which corresponds to a
@@ -76,9 +76,9 @@ typedef struct
 } refda_exec_item_t;
 
 /**
- * Wake up a "waiting" exec item. This can be called externally in the use case where 
+ * Wake up a "waiting" exec item. This can be called externally in the use case where
  * there is an exec item that has been paused and deferred without blocking or using the timeline.
- * Once this function is called, refda_exec_ctrl_finish will be called in the exec worker. 
+ * Once this function is called, refda_exec_ctrl_finish will be called in the exec worker.
  */
 void refda_exec_item_resume(refda_exec_item_t *obj);
 
