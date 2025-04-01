@@ -233,9 +233,6 @@ if(BUILD_MANAGER)
     ion_if/ion_if.c
     ion_if/nm_mgr.c
   )
-  
-
-  
   add_executable(ion_nm_mgr ${CFILES} ${HFILES})
   target_link_libraries(ion_nm_mgr nmmgr)
   target_link_libraries(ion_nm_mgr ION::BP)
@@ -244,5 +241,35 @@ if(BUILD_MANAGER)
     TARGETS nmmgr ion_nm_mgr
     RUNTIME
   )
-  
+
+  set(HFILES
+    proxy_if/proxy_if.h
+  )
+  set(CFILES
+    proxy_if/proxy_if.c
+    proxy_if/nm_mgr_proxy.c
+  )
+  add_executable(nm_mgr_proxy ${CFILES} ${HFILES})
+  target_link_libraries(nm_mgr_proxy nmmgr)
+
+  set(HFILES
+    ion_if/ion_if.h
+    proxy_if/proxy_if.h
+  )
+  set(CFILES
+    ion_if/ion_if.c
+    proxy_if/proxy_if.c
+    proxy_if/ion_app_proxy.c
+  )
+  add_executable(ion_app_proxy ${CFILES} ${HFILES})
+  target_link_libraries(ion_app_proxy nmcommon)
+  target_link_libraries(ion_app_proxy osal)
+  target_link_libraries(ion_app_proxy MLIB::mlib)
+  target_link_libraries(ion_app_proxy ION::BP)
+
+  install(
+    TARGETS nmmgr ion_nm_mgr nm_mgr_proxy ion_app_proxy
+    RUNTIME
+  )
+
 endif(BUILD_MANAGER)

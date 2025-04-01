@@ -1,0 +1,17 @@
+[Unit]
+Description=Proxied NM Manager
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+PassEnvironment=ION_APP_PROXY_SOCK
+EnvironmentFile=-/etc/ion/environment
+ExecStart=ion_nm_wrap --listen /var/run/nm_mgr_proxy.socket -- \
+    valgrind --tool=memcheck nm_mgr_proxy -c ${ION_APP_PROXY_SOCK}
+# workaround for OSAL blocking SIGTERM
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
+

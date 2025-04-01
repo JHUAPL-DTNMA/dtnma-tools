@@ -83,7 +83,7 @@ bool daemon_run_wait(daemon_run_t *dr)
 {
   if (sem_wait(&(dr->stop)))
   {
-    AMP_DEBUG_ERR("daemon_run_get", "Failed check mutex");
+    AMP_DEBUG_ERR("daemon_run_wait", "Failed check mutex");
     return false;
   }
   return true;

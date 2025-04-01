@@ -46,7 +46,7 @@ RUN apt-get update && apt-get install -y \
     lsof iftop gdb valgrind socat
 
 
-FROM ubuntu:22.04 as deps-local
+FROM ubuntu:22.04 AS deps-local
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -116,8 +116,8 @@ RUN cd /usr/src/nm && \
 
 # Systemd services
 COPY testenv/tmpfiles.conf /etc/tmpfiles.d/ion.conf
-COPY --chmod=644 systemd/ion.service systemd/ion-nm-*.service systemd/bpecho@.service /usr/local/lib/systemd/system/
-RUN systemctl enable ion bpecho@4 ion-nm-mgr ion-nm-agent && \
+COPY --chmod=644 systemd/ion.service systemd/ion-nm-*.service systemd/*-proxy.service systemd/bpecho@.service /usr/local/lib/systemd/system/
+RUN systemctl enable ion bpecho@4 ion-app-proxy nm-mgr-proxy ion-nm-agent && \
     mkdir -p /var/run/ion
 
 # Runtime config for this container

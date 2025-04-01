@@ -1,4 +1,3 @@
-version: '3.9'
 
 services:
   nm-mgr:
@@ -20,5 +19,6 @@ services:
       - SYS_NICE
     environment:
       container: docker
+      ION_APP_PROXY_SOCK: /var/run/ion/nm-mgr.socket
       ION_NODE_NUM: 1
       MGR_NODE_NUM: 1
