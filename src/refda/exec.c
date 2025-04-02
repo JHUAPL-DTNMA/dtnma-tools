@@ -90,14 +90,9 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
     {
         CACE_LOG_INFO("Control is still waiting to finish");
     }
-    else if (atomic_load(&(item->execution_stage)) == EXEC_COMPLETE
-             || atomic_load(&(item->execution_stage)) == EXEC_PENDING)
-    {
-        refda_exec_ctrl_finish(item);
-    }
     else
     {
-        CACE_LOG_INFO("Improper execution_stage value");
+        refda_exec_ctrl_finish(item);
     }
 
     return 0;
