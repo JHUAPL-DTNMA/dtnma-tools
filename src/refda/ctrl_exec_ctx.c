@@ -51,7 +51,7 @@ const cace_ari_t *refda_ctrl_exec_ctx_get_aparam_name(const refda_ctrl_exec_ctx_
 void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_timeline_event_t *event)
 {
     CHKVOID(ctx);
-    atomic_store(&(ctx->item->execution_stage), EXEC_WAITING);
+    atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_WAITING);
 
     if (event)
     {
@@ -103,12 +103,12 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
 
     if (valid)
     {
-        atomic_store(&(ctx->item->execution_stage), EXEC_COMPLETE);
+        atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
         return 0;
     }
     else
     {
-        atomic_store(&(ctx->item->execution_stage), EXEC_COMPLETE);
+        atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
         cace_ari_deinit(&(ctx->item->result));
         return REFDA_CTRL_EXEC_RESULT_TYPE_NOMATCH;
     }

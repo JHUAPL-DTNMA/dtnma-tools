@@ -24,7 +24,7 @@
 
 void refda_exec_item_resume(refda_exec_item_t *obj)
 {
-    atomic_store(&obj->execution_stage, EXEC_COMPLETE);
+    atomic_store(&obj->execution_stage, REFDA_EXEC_COMPLETE);
     sem_post(&refda_runctx_ptr_ref(obj->seq->runctx)->agent->execs_sem);
 }
 
@@ -34,7 +34,7 @@ void refda_exec_item_init(refda_exec_item_t *obj)
     obj->seq = NULL;
     cace_ari_init(&(obj->ref));
     cace_amm_lookup_init(&(obj->deref));
-    atomic_init(&(obj->execution_stage), EXEC_PENDING);
+    atomic_init(&(obj->execution_stage), REFDA_EXEC_PENDING);
     cace_ari_init(&(obj->result));
 }
 

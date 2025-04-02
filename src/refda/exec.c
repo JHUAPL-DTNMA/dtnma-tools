@@ -77,7 +77,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
         CACE_LOG_DEBUG("Execution item %s", string_get_cstr(buf));
         string_clear(buf);
     }
-    if (atomic_load(&(item->execution_stage)) == EXEC_PENDING)
+    if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_PENDING)
     {
         refda_ctrl_exec_ctx_t ctx;
         refda_ctrl_exec_ctx_init(&ctx, item);
@@ -86,7 +86,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
         CACE_LOG_DEBUG("execution callback returned");
     }
 
-    if (atomic_load(&(item->execution_stage)) == EXEC_WAITING)
+    if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_WAITING)
     {
         CACE_LOG_INFO("Control is still waiting to finish");
     }
@@ -103,7 +103,7 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
     int retval = 0;
     while (!refda_exec_item_list_empty_p(seq->items))
     {
-        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == EXEC_WAITING)
+        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == REFDA_EXEC_WAITING)
         {
             // cannot complete at this time
             return 0;
@@ -278,7 +278,7 @@ static int refda_exec_waiting(refda_agent_t *agent)
             continue;
         }
 
-        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == EXEC_WAITING)
+        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == REFDA_EXEC_WAITING)
         {
             // still waiting
             continue;
@@ -420,7 +420,7 @@ void *refda_exec_worker(void *arg)
                     (next->callback)(&ctx);
                     refda_ctrl_exec_ctx_deinit(&ctx);
                 }
-                if (!(atomic_load(&(next->item->execution_stage)) == EXEC_WAITING))
+                if (!(atomic_load(&(next->item->execution_stage)) == REFDA_EXEC_WAITING))
                 {
                     refda_exec_ctrl_finish(next->item);
                 }

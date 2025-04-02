@@ -31,10 +31,10 @@ extern "C" {
 // Forward declaration
 typedef struct refda_exec_seq_s refda_exec_seq_t;
 
-#define EXEC_PENDING  0
-#define EXEC_RUNNING  1
-#define EXEC_WAITING  2
-#define EXEC_COMPLETE 3
+#define REFDA_EXEC_PENDING  0
+#define REFDA_EXEC_RUNNING  1
+#define REFDA_EXEC_WAITING  2
+#define REFDA_EXEC_COMPLETE 3
 
 /** Each item in an execution sequence, which corresponds to a
  * dereferenced control.
@@ -66,10 +66,6 @@ typedef struct
      * While waiting this item cannot be executed and will not yet have a
      * valid #result.
      *
-     * Values are:
-     * EXEC_PENDING 0
-     * EXEC_WAITING 1
-     * EXEC_COMPLETE 2
      */
     atomic_int execution_stage;
 
