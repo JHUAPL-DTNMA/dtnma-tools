@@ -89,7 +89,11 @@ add_subdirectory(deps)
 find_package(ION)
 find_package(QCBOR)
 find_package(MLIB)
-if(BUILD_MANAGER)
+# Optional dependencies
+pkg_search_module(LIBSYSTEMD libsystemd IMPORTED_TARGET)
+message(STATUS "Found libsystemd version ${LIBSYSTEMD_VERSION}")
+
+  if(BUILD_MANAGER)
   # All these are optional
   pkg_search_module(MYSQLCLIENT mysqlclient IMPORTED_TARGET)
   find_package(PostgreSQL)

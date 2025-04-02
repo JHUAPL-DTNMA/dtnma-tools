@@ -5,10 +5,11 @@ Wants=network-online.target
 
 [Service]
 Type=notify
+NotifyAccess=all
 PassEnvironment=ION_APP_PROXY_SOCK
 EnvironmentFile=-/etc/ion/environment
-ExecStart=ion_nm_wrap --listen /var/run/nm_mgr_proxy.socket -- \
-    valgrind --tool=memcheck nm_mgr_proxy -c ${ION_APP_PROXY_SOCK}
+ExecStart=ion_nm_wrap --listen /var/run/nm_mgr_proxy.socket --no-notify -- \
+    nm_mgr_proxy -c ${ION_APP_PROXY_SOCK}
 # workaround for OSAL blocking SIGTERM
 KillSignal=SIGINT
 

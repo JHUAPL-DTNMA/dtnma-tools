@@ -32,7 +32,9 @@
 #include <osapi-bsp.h>
 #include <osapi-error.h>
 #include <bp.h>
-
+#if defined(HAVE_LIBSYSTEMD)
+#include <systemd/sd-daemon.h>
+#endif
 
 static void mgr_parse_args(int argc, char *const argv[]);
 static void mgr_print_usage(void);
@@ -51,12 +53,6 @@ daemon_signal_handler(int signum)
 {
   AMP_DEBUG_INFO("daemon_signal_handler", "Received signal %d", signum);
   daemon_run_stop(&mgr.running);
-
-  // interrupt any reading
-  if (sock_conn >= 0)
-  {
-    shutdown(sock_conn, SHUT_RDWR);
-  }
 }
 
 
@@ -207,9 +203,21 @@ OS_Application_Startup()
 
 void OS_Application_Run()
 {
+#if defined(HAVE_LIBSYSTEMD)
+  sd_notify(0, "READY=1");
+#endif
+
   // Block until stopped
   daemon_run_wait(&mgr.running);
+#if defined(HAVE_LIBSYSTEMD)
+  sd_notify(0, "STOPPING=1");
+#endif
   OS_ApplicationShutdown(true);
+  // interrupt any reading
+  if (sock_conn >= 0)
+  {
+    shutdown(sock_conn, SHUT_RDWR);
+  }
 
   nmmgr_stop(&mgr);
 

@@ -30,6 +30,9 @@
 #include <osapi-bsp.h>
 #include <osapi-error.h>
 #include <bp.h>
+#if defined(HAVE_LIBSYSTEMD)
+#include <systemd/sd-daemon.h>
+#endif
 
 
 static int mgr_parse_args(int argc, char *const argv[]);
@@ -524,19 +527,30 @@ void OS_Application_Run()
     AMP_DEBUG_ERR(__func__, "Failed to start work threads");
     OS_ApplicationExit(EXIT_FAILURE);
   }
+#if defined(HAVE_LIBSYSTEMD)
+  sd_notify(0, "READY=1");
+#endif
 
   // block until stopped
   daemon_run_wait(&running);
-
+#if defined(HAVE_LIBSYSTEMD)
+  sd_notify(0, "STOPPING=1");
+#endif
   OS_ApplicationShutdown(true);
+  bp_close(ion_iif.sap);
+  // interrupt any reading
+  if (sock_conn >= 0)
+  {
+    shutdown(sock_conn, SHUT_RDWR);
+    close(sock_conn);
+  }
+
   AMP_DEBUG_ALWAYS(__func__,"Shutting down proxy");
   if (threadset_join(&threads) != AMP_OK)
   {
     AMP_DEBUG_ERR(__func__, "Failed to join work threads");
   }
-  bp_close(ion_iif.sap);
   iif_deregister_node(&ion_iif);
-  close(sock_listen);
 
   prox_item_queue_clear(outgoing);
   prox_item_queue_clear(incoming);

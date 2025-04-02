@@ -251,6 +251,10 @@ if(BUILD_MANAGER)
   )
   add_executable(nm_mgr_proxy ${CFILES} ${HFILES})
   target_link_libraries(nm_mgr_proxy nmmgr)
+if(LIBSYSTEMD_FOUND)
+    target_compile_definitions(nm_mgr_proxy PRIVATE -DHAVE_LIBSYSTEMD)
+    target_link_libraries(nm_mgr_proxy PkgConfig::LIBSYSTEMD)
+endif(LIBSYSTEMD_FOUND)
 
   set(HFILES
     ion_if/ion_if.h
@@ -266,6 +270,10 @@ if(BUILD_MANAGER)
   target_link_libraries(ion_app_proxy osal)
   target_link_libraries(ion_app_proxy MLIB::mlib)
   target_link_libraries(ion_app_proxy ION::BP)
+if(LIBSYSTEMD_FOUND)
+    target_compile_definitions(ion_app_proxy PRIVATE -DHAVE_LIBSYSTEMD)
+    target_link_libraries(ion_app_proxy PkgConfig::LIBSYSTEMD)
+endif(LIBSYSTEMD_FOUND)
 
   install(
     TARGETS nmmgr ion_nm_mgr nm_mgr_proxy ion_app_proxy

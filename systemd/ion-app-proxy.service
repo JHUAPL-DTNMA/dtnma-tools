@@ -6,10 +6,11 @@ Requires=ion.service
 
 [Service]
 Type=notify
+NotifyAccess=all
 PassEnvironment=ION_APP_PROXY_SOCK ION_NODE_NUM
 EnvironmentFile=-/etc/ion/environment
-ExecStart=ion_nm_wrap --listen /var/run/ion_app_proxy.socket -- \
-    ion_app_proxy -l ${ION_APP_PROXY_SOCK} -e ipn:${ION_NODE_NUM}.7
+ExecStart=ion_nm_wrap --listen /var/run/ion_app_proxy.socket --no-notify -- \
+      ion_app_proxy -l ${ION_APP_PROXY_SOCK} -e ipn:${ION_NODE_NUM}.7
 # workaround for OSAL blocking SIGTERM
 KillSignal=SIGINT
 

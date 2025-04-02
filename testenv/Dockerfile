@@ -99,8 +99,8 @@ RUN apt-get update && apt-get install -y \
 
 # Agent to test
 RUN apt-get update && apt-get install -y \
-    cmake ninja-build ruby \
-    civetweb libcivetweb-dev libssl-dev libcjson-dev
+    cmake ninja-build pkg-config ruby \
+    civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev
 COPY deps /usr/src/nm/deps
 COPY cmake /usr/src/nm/cmake
 COPY src /usr/src/nm/src
