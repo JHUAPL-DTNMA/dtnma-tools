@@ -31,10 +31,13 @@ extern "C" {
 // Forward declaration
 typedef struct refda_exec_seq_s refda_exec_seq_t;
 
-#define REFDA_EXEC_PENDING  0
-#define REFDA_EXEC_RUNNING  1
-#define REFDA_EXEC_WAITING  2
-#define REFDA_EXEC_COMPLETE 3
+typedef enum
+{
+    REFDA_EXEC_PENDING = 0,
+    REFDA_EXEC_RUNNING,
+    REFDA_EXEC_WAITING,
+    REFDA_EXEC_COMPLETE
+} refda_exec_item_status_t;
 
 /** Each item in an execution sequence, which corresponds to a
  * dereferenced control.
