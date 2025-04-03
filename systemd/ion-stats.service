@@ -1,0 +1,8 @@
+[Unit]
+Description=Collect ION resource statistics
+After=ion.service
+Wants=ion.service
+
+[Service]
+Type=oneshot
+ExecStart=sdrwatch ion

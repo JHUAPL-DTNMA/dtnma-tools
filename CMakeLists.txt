@@ -43,6 +43,9 @@ option(BUILD_DOCS "Enable autodoc building" OFF)
 option(BUILD_TESTING "Enable test fixtures and libraries" ON)
 option(BUILD_AGENT "Build the Agent library and executable" ON)
 option(BUILD_MANAGER "Build the Manager library and executable" ON)
+option(BUILD_PROXY "Build the ION BP proxy executable" ON)
+option(TRANSPORT_PROXY_SOCKET "Enable transport bindings for BP-proxy sockets" ON)
+option(TRANSPORT_ION_BP "Enable transport bindings for ION BP" ON)
 
 # Language options
 set(CMAKE_C_STANDARD 11)
@@ -86,14 +89,23 @@ include(FindPkgConfig)
 add_subdirectory(deps)
 
 # Libaries in deps but built separately
-find_package(ION)
 find_package(QCBOR)
 find_package(MLIB)
+# Optional dependencies
+pkg_search_module(LIBSYSTEMD libsystemd IMPORTED_TARGET)
+message(STATUS "Found libsystemd version ${LIBSYSTEMD_VERSION}")
+# Conditional dependencies
+if(TRANSPORT_ION_BP)
+  find_package(ION REQUIRED)
+endif(TRANSPORT_ION_BP)
 if(BUILD_MANAGER)
   # All these are optional
   pkg_search_module(MYSQLCLIENT mysqlclient IMPORTED_TARGET)
+  message(STATUS "Found MySQLClient version ${MYSQLCLIENT_VERSION}")
   find_package(PostgreSQL)
+  message(STATUS "Found PostgreSQL version ${PostgreSQL_VERSION}")
   find_package(civetweb)
+  message(STATUS "Found civetweb version ${civetweb_VERSION}")
   find_package(cJSON)
 endif(BUILD_MANAGER)
 

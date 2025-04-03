@@ -30,6 +30,7 @@ import systemd.journal
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--listen', required=True)
+    parser.add_argument('--no-notify', default=False, action='store_true')
     parser.add_argument('cmd', nargs='+')
     args = parser.parse_args()
 
@@ -52,7 +53,7 @@ def main():
     # master_fd is the pty
     # slave_fd is the tty
     master_fd, slave_fd = pty.openpty()
-    
+
     # use start_new_session=True to make it run in a new process group, or bash job control will not be enabled
     proc = Popen(args.cmd,
                  start_new_session=True,
@@ -60,7 +61,9 @@ def main():
                  stdout=slave_fd,
                  stderr=slave_fd)
 
-    if systemd.daemon.notify("READY=1"):
+    if not args.no_notify:
+        systemd.daemon.notify("READY=1")
+    if systemd.daemon.booted:
         log = systemd.journal.stream(args.cmd[0])
     else:
         log = sys.stdout
@@ -81,7 +84,7 @@ def main():
                 # Strip out prompt from the NM Automator interface
                 from binascii import hexlify
                 buf = buf.replace(b'\r\n#-NM->', b'\n')
-                
+
                 if buf:
                     log.write(buf.decode('utf8'))
                     log.flush()

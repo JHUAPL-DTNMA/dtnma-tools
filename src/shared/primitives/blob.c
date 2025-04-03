@@ -120,7 +120,7 @@ int blob_append(blob_t *blob, uint8_t *buffer, uint32_t length)
  *  08/30/18  E. Birrane     Initial Implementation. (JHU/APL)
  *****************************************************************************/
 
-blob_t * blob_create(uint8_t *value, size_t length, size_t alloc)
+blob_t * blob_create(const uint8_t *value, size_t length, size_t alloc)
 {
 
 	blob_t *result = NULL;
@@ -435,7 +435,7 @@ int blob_grow(blob_t *blob, uint32_t length)
  *  08/30/18  E. Birrane     Support pre-allocated BLOBs. (JHU/APL)
  *****************************************************************************/
 
-int blob_init(blob_t *blob, uint8_t *value, size_t length, size_t alloc)
+int blob_init(blob_t *blob, const uint8_t *value, size_t length, size_t alloc)
 {
 	if((blob == NULL) || (alloc == 0))
 	{

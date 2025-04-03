@@ -26,17 +26,17 @@ docker compose ps
 DEXEC="docker compose exec -T nm-mgr"
 
 # Wait a few seconds for ION to start
-for IX in $(seq 10)
+for IX in $(seq 20)
 do
-  sleep 1
-  if ${DEXEC} service_is_running ion
+  sleep 2
+  if ${DEXEC} service_is_running ion nm-mgr-proxy
   then
     break
   fi
-  echo "Waiting for ion..."
+  echo "Waiting for nm-mgr-proxy..."
 done
 
-for SVC in ion ion-nm-mgr ion-nm-agent
+for SVC in ion nm-mgr-proxy ion-nm-agent
 do
   echo
   if ! ${DEXEC} service_is_running ${SVC}
