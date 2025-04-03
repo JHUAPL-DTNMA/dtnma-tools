@@ -126,37 +126,43 @@ if(BUILD_AGENT)
       ${CMAKE_CURRENT_SOURCE_DIR}/indep_adms
   )
 
-  set(HFILES
-    ion_if/ion_if.h
-  )
-  set(CFILES
-    ion_if/ion_if.c
-    ion_if/nm_agent.c
-    ion_if/agent/adm_ion_admin_agent.c
-    ion_if/agent/adm_ion_admin_impl.c
-    ion_if/agent/adm_ion_ipn_admin_agent.c
-    ion_if/agent/adm_ion_ipn_admin_impl.c
-    ion_if/agent/adm_ion_ltp_admin_agent.c
-    ion_if/agent/adm_ion_ltp_admin_impl.c
-    ion_if/agent/adm_ionsec_admin_agent.c
-    ion_if/agent/adm_ionsec_admin_impl.c
-    ion_if/agent/adm_ltp_agent_agent.c
-    ion_if/agent/adm_ltp_agent_impl.c
-    ion_if/bpv7/adm/adm_bp_agent_agent.c
-    ion_if/bpv7/adm/adm_bp_agent_impl.c
-#    ion_if/bpv7/adm/adm_bpsec_agent.c
-#    ion_if/bpv7/adm/adm_bpsec_impl.c
-    ion_if/bpv7/adm/adm_ion_bp_admin_agent.c
-    ion_if/bpv7/adm/adm_ion_bp_admin_impl.c
-  )
-  add_executable(ion_nm_agent ${CFILES} ${HFILES})
-  target_link_libraries(ion_nm_agent nmagent)
-  target_link_libraries(ion_nm_agent indep_adms)
-  target_link_libraries(ion_nm_agent ION::BP)
-  target_link_libraries(ion_nm_agent ION::LTP)
-  target_include_directories(ion_nm_agent PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/ion_if/shared/adm
-  )
+  if(TRANSPORT_ION_BP)
+    set(HFILES
+      ion_if/ion_if.h
+    )
+    set(CFILES
+      ion_if/ion_if.c
+      ion_if/nm_agent.c
+      ion_if/agent/adm_ion_admin_agent.c
+      ion_if/agent/adm_ion_admin_impl.c
+      ion_if/agent/adm_ion_ipn_admin_agent.c
+      ion_if/agent/adm_ion_ipn_admin_impl.c
+      ion_if/agent/adm_ion_ltp_admin_agent.c
+      ion_if/agent/adm_ion_ltp_admin_impl.c
+      ion_if/agent/adm_ionsec_admin_agent.c
+      ion_if/agent/adm_ionsec_admin_impl.c
+      ion_if/agent/adm_ltp_agent_agent.c
+      ion_if/agent/adm_ltp_agent_impl.c
+      ion_if/bpv7/adm/adm_bp_agent_agent.c
+      ion_if/bpv7/adm/adm_bp_agent_impl.c
+  #    ion_if/bpv7/adm/adm_bpsec_agent.c
+  #    ion_if/bpv7/adm/adm_bpsec_impl.c
+      ion_if/bpv7/adm/adm_ion_bp_admin_agent.c
+      ion_if/bpv7/adm/adm_ion_bp_admin_impl.c
+    )
+    add_executable(ion_nm_agent ${CFILES} ${HFILES})
+    target_link_libraries(ion_nm_agent nmagent)
+    target_link_libraries(ion_nm_agent indep_adms)
+    target_link_libraries(ion_nm_agent ION::BP)
+    target_link_libraries(ion_nm_agent ION::LTP)
+    target_include_directories(ion_nm_agent PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/ion_if/shared/adm
+    )
+    install(
+      TARGETS ion_nm_agent
+      RUNTIME
+    )
+  endif(TRANSPORT_ION_BP)
 
   # Agent that uses hex-strings in stdin/stdout as transport
   set(HFILES
@@ -169,7 +175,7 @@ if(BUILD_AGENT)
   target_link_libraries(stdio_agent indep_adms)
 
   install(
-    TARGETS nmagent ion_nm_agent stdio_agent
+    TARGETS nmagent stdio_agent
     RUNTIME
   )
 endif(BUILD_AGENT)

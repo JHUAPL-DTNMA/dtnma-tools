@@ -75,7 +75,6 @@ bool daemon_run_get(daemon_run_t *dr)
     AMP_DEBUG_ERR("daemon_run_get", "Failed check mutex");
     return false;
   }
-  AMP_DEBUG_INFO("daemon_run_get", "Value for %p: %d", dr, val);
   return val == 0;
 }
 

@@ -329,7 +329,7 @@ int mgr_parse_args(int argc, char *const argv[])
     }
 
     // Check for any remaining unrecognized arguments
-    if ((argc-optind) != 1)
+    if ((argc-optind) != 0)
     {
         fprintf(stderr,"%d unrecognized arguments:\n", (argc-optind));
         for(i = optind; i < argc; i++)
