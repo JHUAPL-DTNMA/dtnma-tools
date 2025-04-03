@@ -22,6 +22,7 @@
 #include <cace/amm/lookup.h>
 #include <cace/ari.h>
 #include <m-atomic.h>
+#include <semaphore.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +30,14 @@ extern "C" {
 
 // Forward declaration
 typedef struct refda_exec_seq_s refda_exec_seq_t;
+
+typedef enum
+{
+    REFDA_EXEC_PENDING = 0,
+    REFDA_EXEC_RUNNING,
+    REFDA_EXEC_WAITING,
+    REFDA_EXEC_COMPLETE
+} refda_exec_item_status_t;
 
 /** Each item in an execution sequence, which corresponds to a
  * dereferenced control.
@@ -46,19 +55,31 @@ typedef struct
      */
     cace_amm_lookup_t deref;
 
-    /** Indicator if this item is waiting on some external event to finish.
-     * While true this item cannot be executed and will not yet have a
-     * valid #result.
-     */
-    atomic_bool waiting;
-
     /** Storage for an optional result value.
      * This is initialized as undefined and may be set to any other value
      * to indicate that a result is produced.
      */
     cace_ari_t result;
 
+    /**
+     * Indicator if this item is
+     * 1) yet to be completed or paused
+     * 2) waiting on some external event to complete
+     * 3) completed execution but not finished
+     * While waiting this item cannot be executed and will not yet have a
+     * valid #result.
+     *
+     */
+    atomic_int execution_stage;
+
 } refda_exec_item_t;
+
+/**
+ * Wake up a "waiting" exec item. This can be called externally in the use case where
+ * there is an exec item that has been paused and deferred without blocking or using the timeline.
+ * Once this function is called, refda_exec_ctrl_finish will be called in the exec worker.
+ */
+void refda_exec_item_resume(refda_exec_item_t *obj);
 
 /** Interface for M*LIB use.
  */
