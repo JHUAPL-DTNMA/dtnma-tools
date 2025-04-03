@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 #include "proxy_if.h"
-#include "ion_if/ion_if.h"
 #include "shared/utils/threadset.h"
 #include "shared/utils/utils.h"
 #include "shared/nm.h"
@@ -25,18 +24,19 @@
 #include "mgr/nmmgr.h"
 #include <signal.h>
 #include <getopt.h>
+#include <errno.h>
 #include <sys/poll.h>
+#include <sys/socket.h>
 #include <sys/un.h>
 #include <pthread.h>
 #include <osapi-common.h>
 #include <osapi-bsp.h>
 #include <osapi-error.h>
-#include <bp.h>
 #if defined(HAVE_LIBSYSTEMD)
 #include <systemd/sd-daemon.h>
 #endif
 
-static void mgr_parse_args(int argc, char *const argv[]);
+static int mgr_parse_args(int argc, char *const argv[]);
 static void mgr_print_usage(void);
 
 /// Local listening socket path
@@ -154,7 +154,10 @@ OS_Application_Startup()
   /* Step 1: Process Command Line Arguments. */
   const int argc = OS_BSP_GetArgC();
   char *const *argv = OS_BSP_GetArgV();
-  mgr_parse_args(argc, argv);
+  if (mgr_parse_args(argc, argv))
+  {
+      OS_ApplicationExit(EXIT_FAILURE);
+  }
 
   if(arg_path_sock == NULL)
   {
@@ -232,7 +235,7 @@ void OS_Application_Run()
 /**
  * Parse optional command line arguments
  */
-void mgr_parse_args(int argc, char *const argv[])
+int mgr_parse_args(int argc, char *const argv[])
 {
     int i;
     int c;
@@ -318,10 +321,10 @@ void mgr_parse_args(int argc, char *const argv[])
             mgr.mgr_ui_mode = MGR_UI_AUTOMATOR;
             break;
         case 'h':
-            return NULL;
+            return 3;
         default:
             fprintf(stderr, "Error parsing arguments\n");
-            return NULL;
+            return 2;
         }
     }
 
@@ -333,13 +336,9 @@ void mgr_parse_args(int argc, char *const argv[])
         {
             printf("\t%s\n", argv[i]);
         }
-        return NULL;
+        return 4;
     }
-    else
-    {
-        return argv[optind];
-    }
-
+    return 0;
 }
 
 void mgr_print_usage(void)

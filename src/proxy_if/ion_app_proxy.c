@@ -24,7 +24,9 @@
 #include <m-buffer.h>
 #include <signal.h>
 #include <getopt.h>
+#include <errno.h>
 #include <sys/poll.h>
+#include <sys/socket.h>
 #include <sys/un.h>
 #include <osapi-common.h>
 #include <osapi-bsp.h>
@@ -435,7 +437,10 @@ OS_Application_Startup()
   /* Step 1: Process Command Line Arguments. */
   const int argc = OS_BSP_GetArgC();
   char *const *argv = OS_BSP_GetArgV();
-  mgr_parse_args(argc, argv);
+  if (mgr_parse_args(argc, argv))
+  {
+      OS_ApplicationExit(EXIT_FAILURE);
+  }
 
   if (arg_path_listen == NULL)
   {
@@ -598,6 +603,7 @@ int mgr_parse_args(int argc, char *const argv[])
         {
             printf("\t%s\n", argv[i]);
         }
+        return 4;
     }
     return 0;
 }

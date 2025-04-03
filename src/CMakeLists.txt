@@ -225,37 +225,53 @@ if(BUILD_MANAGER)
   target_include_directories(nmmgr PUBLIC
       ${CMAKE_CURRENT_SOURCE_DIR}/mgr
   )
-
-  set(HFILES
-    ion_if/ion_if.h
-  )
-  set(CFILES
-    ion_if/ion_if.c
-    ion_if/nm_mgr.c
-  )
-  add_executable(ion_nm_mgr ${CFILES} ${HFILES})
-  target_link_libraries(ion_nm_mgr nmmgr)
-  target_link_libraries(ion_nm_mgr ION::BP)
-
   install(
-    TARGETS nmmgr ion_nm_mgr
+    TARGETS nmmgr
     RUNTIME
   )
 
-  set(HFILES
-    proxy_if/proxy_if.h
-  )
-  set(CFILES
-    proxy_if/proxy_if.c
-    proxy_if/nm_mgr_proxy.c
-  )
-  add_executable(nm_mgr_proxy ${CFILES} ${HFILES})
-  target_link_libraries(nm_mgr_proxy nmmgr)
-if(LIBSYSTEMD_FOUND)
-    target_compile_definitions(nm_mgr_proxy PRIVATE -DHAVE_LIBSYSTEMD)
-    target_link_libraries(nm_mgr_proxy PkgConfig::LIBSYSTEMD)
-endif(LIBSYSTEMD_FOUND)
+  if(TRANSPORT_ION_BP)
+    set(HFILES
+      ion_if/ion_if.h
+    )
+    set(CFILES
+      ion_if/ion_if.c
+      ion_if/nm_mgr.c
+    )
+    add_executable(ion_nm_mgr ${CFILES} ${HFILES})
+    target_link_libraries(ion_nm_mgr nmmgr)
+    target_link_libraries(ion_nm_mgr ION::BP)
+  
+    install(
+      TARGETS ion_nm_mgr
+      RUNTIME
+    )
+  endif(TRANSPORT_ION_BP)
 
+  if(TRANSPORT_PROXY_SOCKET)
+    set(HFILES
+      proxy_if/proxy_if.h
+    )
+    set(CFILES
+      proxy_if/proxy_if.c
+      proxy_if/nm_mgr_proxy.c
+    )
+    add_executable(nm_mgr_proxy ${CFILES} ${HFILES})
+    target_link_libraries(nm_mgr_proxy nmmgr)
+    if(LIBSYSTEMD_FOUND)
+      target_compile_definitions(nm_mgr_proxy PRIVATE -DHAVE_LIBSYSTEMD)
+      target_link_libraries(nm_mgr_proxy PkgConfig::LIBSYSTEMD)
+    endif(LIBSYSTEMD_FOUND)
+
+    install(
+      TARGETS nm_mgr_proxy
+      RUNTIME
+    )
+  endif(TRANSPORT_PROXY_SOCKET)
+endif(BUILD_MANAGER)
+
+# Just the ION BP app proxy
+if(BUILD_PROXY)
   set(HFILES
     ion_if/ion_if.h
     proxy_if/proxy_if.h
@@ -270,14 +286,13 @@ endif(LIBSYSTEMD_FOUND)
   target_link_libraries(ion_app_proxy osal)
   target_link_libraries(ion_app_proxy MLIB::mlib)
   target_link_libraries(ion_app_proxy ION::BP)
-if(LIBSYSTEMD_FOUND)
+  if(LIBSYSTEMD_FOUND)
     target_compile_definitions(ion_app_proxy PRIVATE -DHAVE_LIBSYSTEMD)
     target_link_libraries(ion_app_proxy PkgConfig::LIBSYSTEMD)
-endif(LIBSYSTEMD_FOUND)
+  endif(LIBSYSTEMD_FOUND)
 
   install(
-    TARGETS nmmgr ion_nm_mgr nm_mgr_proxy ion_app_proxy
+    TARGETS ion_app_proxy
     RUNTIME
   )
-
-endif(BUILD_MANAGER)
+endif(BUILD_PROXY)
