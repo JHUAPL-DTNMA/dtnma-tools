@@ -408,9 +408,14 @@ void test_refda_exec_wait_cond(int delay_ms)
 }
 
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/60
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", "820D183C", 1, true)
-void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex, const char *periodhex,
-                                     int max_exec_count, bool init_enabled)
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D183C", 1, true, 1)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D01", 2, true, 2)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/60
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", true, "820D183C", 1, true, 1)
+void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex, bool convert_start_to_tp,
+                                     const char *periodhex, int max_exec_count, bool init_enabled,
+                                     int expect_exec_count)
 {
     refda_amm_tbr_desc_t tbr;
     {
@@ -420,14 +425,40 @@ void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex
         refda_amm_tbr_desc_init(&tbr);
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.action), actionhex));
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.start_time), starthex));
+        if (convert_start_to_tp)
+        {
+            struct timespec reltime;
+            TEST_ASSERT_EQUAL_INT(0, cace_ari_get_td(&(tbr.start_time), &reltime));
+
+            // Set an absolute start time, using now and the given relative start time
+            cace_ari_set_tp_posix(&(tbr.start_time), timespec_add(nowtime, reltime));
+        }
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.period), periodhex));
         tbr.max_exec_count      = max_exec_count;
         tbr.absolute_start_time = nowtime;
 
-        refda_exec_tbr_enable(&agent, &tbr);
+        if (init_enabled)
+        {
+            refda_exec_tbr_enable(&agent, &tbr);
+        }
     }
 
-    refda_exec_worker_iteration(&agent);
-    refda_exec_waiting(&agent); // run cleanup
+    for (int i = 0; i < expect_exec_count; i++)
+    {
+        // Execute the rule
+        refda_exec_worker_iteration(&agent);
+        refda_exec_waiting(&agent); // run cleanup
+
+        // If the are more runs, wait for time period to elapse
+        if (expect_exec_count > 1)
+        {
+            struct timespec waittime;
+            TEST_ASSERT_EQUAL_INT(0, cace_ari_get_td(&(tbr.start_time), &waittime));
+            nanosleep(&waittime, NULL);
+        }
+    }
+
+    TEST_ASSERT_EQUAL_INT(expect_exec_count, tbr.exec_count);
+
     refda_amm_tbr_desc_deinit(&tbr);
 }
