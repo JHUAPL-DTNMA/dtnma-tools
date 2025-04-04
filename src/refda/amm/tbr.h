@@ -20,6 +20,7 @@
 
 #include <cace/amm/typing.h>
 #include <cace/ari.h>
+#include <cace/util/defs.h>
 
 #ifdef __cplusplus
 extern "C" {
