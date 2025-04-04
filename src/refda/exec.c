@@ -517,7 +517,7 @@ static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, c
 
 /** Begin a single execution of a time based rule
  */
-static void refda_exec_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+static void refda_exec_run_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
     CHKERR1(agent);
     CHKERR1(tbr);
@@ -612,7 +612,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
                                          .ts           = schedtime,
                                          .tbr.agent    = agent,
                                          .tbr.tbr      = tbr,
-                                         .tbr.callback = refda_exec_tbr };
+                                         .tbr.callback = refda_exec_run_tbr };
         refda_timeline_push(agent->exec_timeline, event);
     }
 
@@ -681,9 +681,10 @@ static int refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_de
     return res;
 }
 
-/** Begin a single execution of a state based rule
+/** Begin a single run of a state based rule, evaluating its condition and
+ * executing its action if necessary
  */
-static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+static void refda_exec_run_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 {
     CHKERR1(agent);
     CHKERR1(sbr);
@@ -770,7 +771,7 @@ static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *s
                                          .ts           = schedtime,
                                          .sbr.agent    = agent,
                                          .sbr.sbr      = sbr,
-                                         .sbr.callback = refda_exec_sbr };
+                                         .sbr.callback = refda_exec_run_sbr };
         refda_timeline_push(agent->exec_timeline, event);
     }
 
