@@ -443,13 +443,13 @@ void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex
         }
     }
 
-    for (int i = 0; i < expect_exec_count; i++)
+    for (int i = 0; i < expect_exec_count && i < max_exec_count; i++)
     {
         // Execute the rule
         refda_exec_worker_iteration(&agent);
         refda_exec_waiting(&agent); // run cleanup
 
-        // If the are more runs, wait for time period to elapse
+        // Wait for time period to elapse for subsequent runs
         if (expect_exec_count > 1)
         {
             struct timespec waittime;
