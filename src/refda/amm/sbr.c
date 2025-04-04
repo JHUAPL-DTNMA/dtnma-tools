@@ -44,6 +44,7 @@ void refda_amm_sbr_desc_deinit(refda_amm_sbr_desc_t *obj)
 
 bool refda_amm_sbr_desc_reached_max_exec_count(refda_amm_sbr_desc_t *obj)
 {
+    CHKFALSE(obj);
     // Max execution count is only applicable if greater than 0,
     // so ensure if that is the case, that execution count has
     // not exceeded the limit.
