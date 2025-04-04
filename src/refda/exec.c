@@ -701,6 +701,11 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
         return;
     }
 
+    // Schedule next execution of the rule now, to ensure eval interval is
+    // consistent and independent of condition complexity
+    refda_exec_schedule_sbr(agent, sbr);
+
+    // Check condition and execute action if necessary
     cace_ari_t ari_result = CACE_ARI_INIT_UNDEFINED;
     int        result     = refda_exec_check_sbr_condition(agent, sbr, &ari_result);
 
@@ -722,9 +727,6 @@ static void refda_exec_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
             }
         }
     }
-
-    // Always schedule next execution of the rule
-    refda_exec_schedule_sbr(agent, sbr); // TODO: don't schedule if unable to exec any of above???
 
     return;
 }
