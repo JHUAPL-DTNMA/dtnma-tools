@@ -18,6 +18,7 @@
 #include "util/ari.h"
 #include <refda/exec.h>
 #include <refda/register.h>
+#include <refda/edd_prod_ctx.h>
 #include <refda/ctrl_exec_ctx.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_dtnma_agent.h>
@@ -54,6 +55,16 @@ static refda_agent_t agent;
 
 /// Sequence of executions
 static cace_ari_list_t exec_log;
+
+static int edd_backing_value = 0;
+
+static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
+{
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_int(&result, edd_backing_value);
+    refda_edd_prod_ctx_set_result_copy(ctx, &result);
+    cace_ari_deinit(&result);
+}
 
 static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -114,6 +125,22 @@ void setUp(void)
 
             obj = refda_register_const(adm, cace_amm_idseg_ref_withenum("mac1", 1), objdata);
             // no parameters
+        }
+
+        /**
+         * Register EDD objects
+         */
+        {
+            refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_init(objdata);
+            cace_amm_type_set_use_direct(&(objdata->prod_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+            objdata->produce = test_reporting_edd_one_int;
+
+            obj = refda_register_edd(adm, cace_amm_idseg_ref_withenum("edd2", 2), objdata);
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "val");
+                cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+            }
         }
 
         /**
@@ -256,7 +283,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
     refda_runctx_ptr_clear(ctxptr);
     TEST_ASSERT_TRUE(success);
 }
-/*
+
 // clang-format off
 // direct ref ari://65535/10/CTRL/1
 TEST_CASE("8419FFFF0A2201", 0, "821181""8419FFFF0A2201")
@@ -462,18 +489,21 @@ void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex
 
     refda_amm_tbr_desc_deinit(&tbr);
 }
-*/
 
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:undefined, ari:/TD/1
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "F7", "820D01", 1, true, 1)
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "F7", "820D01", 1, true, 1, 0)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(//65535/10/EDD/2(0)), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818519FFFF0A23028100", "820D01", 1, true, 0, 0)
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/BOOL/true), ari:/TD/1
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818201F5", "820D01", 1, true, 0)
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818201F5", "820D01", 1, true, 0, 1)
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/INT/1), ari:/TD/1
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "821181820401", "820D01", 1, true, 0)
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "821181820401", "820D01", 1, true, 0, 1)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/INT/1), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "821181820401", "820D01", 2, true, 0, 2)
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/BOOL/false), ari:/TD/1
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818201F4", "820D01", 1, true, 0)
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818201F4", "820D01", 1, true, 0, 0)
 void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex, const char *min_interval_hex,
-                                      int max_exec_count, bool init_enabled, int expect_result)
+                                      int max_exec_count, bool init_enabled, int expect_result, int expect_exec_count)
 {
     refda_amm_sbr_desc_t sbr;
     {
@@ -491,8 +521,71 @@ void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex
 
     if (!expect_result)
     {
-        refda_exec_worker_iteration(&agent);
-        refda_exec_waiting(&agent); // run cleanup
+        for (int i = 0; i < expect_exec_count && i < max_exec_count; i++)
+        {
+            // Execute the rule
+            refda_exec_worker_iteration(&agent);
+            refda_exec_waiting(&agent); // run cleanup
+
+            // Wait for time period to elapse for subsequent runs
+            if (expect_exec_count > 1)
+            {
+                struct timespec waittime;
+                TEST_ASSERT_EQUAL_INT(0, cace_ari_get_td(&(sbr.min_interval), &waittime));
+                nanosleep(&waittime, NULL);
+            }
+        }
     }
+
+    TEST_ASSERT_EQUAL_INT(expect_exec_count, sbr.exec_count);
+    refda_amm_sbr_desc_deinit(&sbr);
+}
+
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(//65535/10/EDD/2(0)), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818519FFFF0A23028100", "820D01", 1, true, 0, 1)
+void test_refda_exec_state_based_rule_cond_false_then_true(const char *actionhex, const char *condhex,
+                                                           const char *min_interval_hex, int max_exec_count,
+                                                           bool init_enabled, int expect_result, int expect_exec_count)
+{
+    refda_amm_sbr_desc_t sbr;
+    {
+        struct timespec nowtime;
+        clock_gettime(CLOCK_REALTIME, &nowtime);
+
+        refda_amm_sbr_desc_init(&sbr);
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.action), actionhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.condition), condhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.min_interval), min_interval_hex));
+        sbr.max_exec_count = max_exec_count;
+
+        TEST_ASSERT_EQUAL_INT(expect_result, refda_exec_sbr_enable(&agent, &sbr));
+    }
+
+    // Execute the rule
+    refda_exec_worker_iteration(&agent);
+    refda_exec_waiting(&agent); // run cleanup
+
+    // Verify SBR did not run
+    TEST_ASSERT_EQUAL_INT(0, sbr.exec_count);
+
+    // Update our EDD to succeed next time
+    edd_backing_value = 1;
+
+    // Wait for SBR interval to elapse
+    if (expect_exec_count > 1)
+    {
+        struct timespec waittime;
+        TEST_ASSERT_EQUAL_INT(0, cace_ari_get_td(&(sbr.min_interval), &waittime));
+        nanosleep(&waittime, NULL);
+    }
+
+    // Execute the rule again
+    refda_exec_worker_iteration(&agent);
+    refda_exec_waiting(&agent); // run cleanup
+
+    // Verify SBR executed this time around
+    TEST_ASSERT_EQUAL_INT(expect_exec_count, sbr.exec_count);
+
+    // TEST_ASSERT_EQUAL_INT(expect_exec_count, sbr.exec_count);
     refda_amm_sbr_desc_deinit(&sbr);
 }
