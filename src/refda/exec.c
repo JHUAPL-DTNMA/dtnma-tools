@@ -538,14 +538,14 @@ static void refda_exec_run_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
     seq->pid              = agent->exec_next_pid++;
 
+    // Schedule next exec of rule now so time period is independent of macro expansion
+    refda_exec_schedule_tbr(agent, tbr, false);
+
     // Expand rule and create exec items, CTRLs are run later by exec worker
     if (!refda_exec_rule_action(agent, seq, &(tbr->action)))
     {
         tbr->exec_count++;
         atomic_fetch_add(&agent->instr.num_tbrs_trig, 1);
-
-        // Schedule next execution of the rule now so time period is accurate
-        refda_exec_schedule_tbr(agent, tbr, false);
     }
 
     return;
