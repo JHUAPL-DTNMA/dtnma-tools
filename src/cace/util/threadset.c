@@ -56,6 +56,7 @@ int cace_threadset_join(cace_threadset_t tset)
     {
         pthread_t thr;
         cace_threadset_pop_back(&thr, tset);
+
         if (pthread_join(thr, NULL))
         {
             CACE_LOG_ERR("Unable to join pthread %s, errno = %s", "name", strerror(errno));
