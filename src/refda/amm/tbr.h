@@ -31,8 +31,8 @@ extern "C" {
  */
 typedef struct
 {
-    /** Action in the form of a Macro (MAC). When triggered, the action execution
-     * SHALL be executed in accordance with Section 6.6 in an execution context with no parameters.
+    /** Action in the form of a Macro (MAC), which must be a valid execution target.
+     * When triggered, the action SHALL be executed in an execution context with no parameters.
      */
     cace_ari_t action;
 
@@ -65,11 +65,28 @@ typedef struct
      */
     bool enabled;
 
+    /** Track state of current number of executions since the rule was enabled.
+     */
+    cace_ari_uvast exec_count;
+
+    /** State field to track the absolute time used as reference for a relative start time.
+     * For ADM rules this is when the Agent is initialized
+     * For ODM rules this is when the rule was created
+     */
+    struct timespec absolute_start_time;
+
 } refda_amm_tbr_desc_t;
 
 void refda_amm_tbr_desc_init(refda_amm_tbr_desc_t *obj);
 
 void refda_amm_tbr_desc_deinit(refda_amm_tbr_desc_t *obj);
+
+/** Determine if a TBR has reached its maximum execution count
+ *
+ * @param[in] obj TBR object to check
+ * @return True if maximum has been reached, false otherwise
+ */
+bool refda_amm_tbr_desc_reached_max_exec_count(refda_amm_tbr_desc_t *obj);
 
 #ifdef __cplusplus
 } // extern C
