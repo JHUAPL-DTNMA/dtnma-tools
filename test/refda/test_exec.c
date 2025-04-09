@@ -36,9 +36,12 @@
 // Allow this macro
 #define TEST_CASE(...)
 
+static atomic_int edd_backing_value;
+
 void suiteSetUp(void)
 {
     cace_openlog();
+    atomic_init(&edd_backing_value, 0);
 }
 
 int suiteTearDown(int failures)
@@ -56,12 +59,11 @@ static refda_agent_t agent;
 /// Sequence of executions
 static cace_ari_list_t exec_log;
 
-static int edd_backing_value = 0;
-
 static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
 {
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_int(&result, edd_backing_value);
+    atomic_int val    = atomic_load(&edd_backing_value);
+    cace_ari_set_int(&result, val);
     refda_edd_prod_ctx_set_result_copy(ctx, &result);
     cace_ari_deinit(&result);
 }
@@ -547,6 +549,9 @@ void test_refda_exec_state_based_rule_cond_false_then_true(const char *actionhex
                                                            const char *min_interval_hex, int max_exec_count,
                                                            bool init_enabled, int expect_result, int expect_exec_count)
 {
+    // Reset EDD value
+    atomic_store(&edd_backing_value, 0);
+
     refda_amm_sbr_desc_t sbr;
     {
         struct timespec nowtime;
@@ -569,7 +574,7 @@ void test_refda_exec_state_based_rule_cond_false_then_true(const char *actionhex
     TEST_ASSERT_EQUAL_INT(0, sbr.exec_count);
 
     // Update our EDD to succeed next time
-    edd_backing_value = 1;
+    atomic_fetch_add(&edd_backing_value, 1);
 
     // Wait for SBR interval to elapse
     if (expect_exec_count > 1)
