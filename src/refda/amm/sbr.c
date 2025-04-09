@@ -31,6 +31,7 @@ void refda_amm_sbr_desc_init(refda_amm_sbr_desc_t *obj)
     obj->max_exec_count = 0;
     obj->init_enabled   = true;
     obj->enabled        = true;
+    obj->exec_count     = 0;
 }
 
 void refda_amm_sbr_desc_deinit(refda_amm_sbr_desc_t *obj)
@@ -39,4 +40,13 @@ void refda_amm_sbr_desc_deinit(refda_amm_sbr_desc_t *obj)
     cace_ari_deinit(&(obj->condition));
     cace_ari_deinit(&(obj->min_interval));
     memset(obj, 0, sizeof(*obj));
+}
+
+bool refda_amm_sbr_desc_reached_max_exec_count(refda_amm_sbr_desc_t *obj)
+{
+    CHKFALSE(obj);
+    // Max execution count is only applicable if greater than 0,
+    // so ensure if that is the case, that execution count has
+    // not exceeded the limit.
+    return ((obj->exec_count > 0) && (obj->max_exec_count > 0) && (obj->exec_count >= obj->max_exec_count));
 }

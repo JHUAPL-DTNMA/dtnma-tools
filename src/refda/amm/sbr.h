@@ -20,6 +20,7 @@
 
 #include <cace/amm/typing.h>
 #include <cace/ari.h>
+#include <cace/util/defs.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,11 +64,22 @@ typedef struct
      */
     bool enabled;
 
+    /** Track state of current number of executions since the rule was enabled.
+     */
+    cace_ari_uvast exec_count;
+
 } refda_amm_sbr_desc_t;
 
 void refda_amm_sbr_desc_init(refda_amm_sbr_desc_t *obj);
 
 void refda_amm_sbr_desc_deinit(refda_amm_sbr_desc_t *obj);
+
+/** Determine if a SBR has reached its maximum execution count
+ *
+ * @param[in] obj SBR object to check
+ * @return True if maximum has been reached, false otherwise
+ */
+bool refda_amm_sbr_desc_reached_max_exec_count(refda_amm_sbr_desc_t *obj);
 
 #ifdef __cplusplus
 } // extern C

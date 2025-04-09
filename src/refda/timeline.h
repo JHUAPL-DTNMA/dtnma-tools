@@ -45,6 +45,20 @@ typedef struct refda_timeline_exec_event_s
     void (*callback)(refda_ctrl_exec_ctx_t *ctx);
 } refda_timeline_exec_event_t;
 
+typedef struct refda_timeline_sbr_event_s
+{
+    /// Agent which scheduled the SBR
+    refda_agent_t *agent;
+    /// SBR which was scheduled
+    refda_amm_sbr_desc_t *sbr;
+    /** Execution-defined callback, which should not be null.
+     *
+     * @param[in,out] ctx The associated execution context.
+     * A result value is set when the execution has finished.
+     */
+    void (*callback)(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
+} refda_timeline_sbr_event_t;
+
 typedef struct refda_timeline_tbr_event_s
 {
     /// Agent which scheduled the TBR
@@ -74,6 +88,7 @@ typedef struct refda_timeline_event_s
     union
     {
         refda_timeline_exec_event_t exec;
+        refda_timeline_sbr_event_t  sbr;
         refda_timeline_tbr_event_t  tbr;
     };
 
