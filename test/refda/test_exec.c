@@ -62,7 +62,7 @@ static cace_ari_list_t exec_log;
 static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
 {
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    atomic_int val    = atomic_load(&edd_backing_value);
+    int        val    = atomic_load(&edd_backing_value);
     cace_ari_set_int(&result, val);
     refda_edd_prod_ctx_set_result_copy(ctx, &result);
     cace_ari_deinit(&result);
