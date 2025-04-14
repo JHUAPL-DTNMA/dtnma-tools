@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "exec.h"
+#include "eval.h"
 #include "ctrl_exec_ctx.h"
 #include "valprod.h"
 #include "reporting.h"
@@ -249,7 +250,7 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
     return retval;
 }
 
-static int refda_exec_waiting(refda_agent_t *agent)
+int refda_exec_waiting(refda_agent_t *agent)
 {
 
     refda_exec_seq_ptr_list_t ready;
@@ -366,6 +367,7 @@ static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *m
         }
     }
 
+    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
     return 0;
 }
 
@@ -375,93 +377,437 @@ void *refda_exec_worker(void *arg)
     CACE_LOG_INFO("Worker started");
 
     // run until explicitly told to stop via refda_agent_t::execs
-    while (true)
+    while (refda_exec_worker_iteration(agent))
+    {}
+
+    CACE_LOG_INFO("Worker stopped");
+    return NULL;
+}
+
+bool refda_exec_worker_iteration(refda_agent_t *agent)
+{
+    refda_msgdata_t item;
+
+    refda_timeline_it_t tl_it;
+    refda_timeline_it(tl_it, agent->exec_timeline);
+    if (!refda_timeline_end_p(tl_it))
     {
-        refda_msgdata_t item;
-
-        refda_timeline_it_t tl_it;
-        refda_timeline_it(tl_it, agent->exec_timeline);
-        if (!refda_timeline_end_p(tl_it))
+        const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+        if (cace_log_is_enabled_for(LOG_DEBUG))
         {
-            const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
-            if (cace_log_is_enabled_for(LOG_DEBUG))
-            {
-                struct timespec nowtime;
-                clock_gettime(CLOCK_REALTIME, &nowtime);
-
-                struct timespec diff = timespec_sub(next->ts, nowtime);
-
-                string_t buf;
-                string_init(buf);
-                cace_timeperiod_encode(buf, &diff);
-                CACE_LOG_DEBUG("waiting for exec event or %s", string_get_cstr(buf));
-                string_clear(buf);
-            }
-
-            sem_timedwait(&(agent->execs_sem), &(next->ts));
-
             struct timespec nowtime;
             clock_gettime(CLOCK_REALTIME, &nowtime);
 
-            // execute appropriate callbacks (up to and including nowtime)
-            refda_timeline_it(tl_it, agent->exec_timeline);
-            while (!refda_timeline_end_p(tl_it))
+            struct timespec diff = timespec_sub(next->ts, nowtime);
+
+            string_t buf;
+            string_init(buf);
+            cace_timeperiod_encode(buf, &diff);
+            CACE_LOG_DEBUG("waiting for exec event or %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+
+        sem_timedwait(&(agent->execs_sem), &(next->ts));
+
+        struct timespec nowtime;
+        clock_gettime(CLOCK_REALTIME, &nowtime);
+
+        // execute appropriate callbacks (up to and including nowtime)
+        refda_timeline_it(tl_it, agent->exec_timeline);
+        while (!refda_timeline_end_p(tl_it))
+        {
+            const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+            if (timespec_gt(next->ts, nowtime))
             {
-                const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
-                if (timespec_gt(next->ts, nowtime))
+                break;
+            }
+
+            CACE_LOG_DEBUG("running deferred callback");
+            switch (next->purpose)
+            {
+                case REFDA_TIMELINE_EXEC:
                 {
+                    {
+                        refda_ctrl_exec_ctx_t ctx;
+                        refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                        (next->exec.callback)(&ctx);
+                        refda_ctrl_exec_ctx_deinit(&ctx);
+                    }
+                    if (!(atomic_load(&(next->item->execution_stage)) == REFDA_EXEC_WAITING))
+                    {
+                        refda_exec_ctrl_finish(next->exec.item);
+                    }
                     break;
                 }
-
-                CACE_LOG_DEBUG("running deferred callback");
+                case REFDA_TIMELINE_SBR:
                 {
-                    refda_ctrl_exec_ctx_t ctx;
-                    refda_ctrl_exec_ctx_init(&ctx, next->item);
-                    (next->callback)(&ctx);
-                    refda_ctrl_exec_ctx_deinit(&ctx);
+                    (next->sbr.callback)(next->sbr.agent, next->sbr.sbr);
+                    break;
                 }
-                if (!(atomic_load(&(next->item->execution_stage)) == REFDA_EXEC_WAITING))
+                case REFDA_TIMELINE_TBR:
                 {
-                    refda_exec_ctrl_finish(next->item);
+                    (next->tbr.callback)(next->tbr.agent, next->tbr.tbr);
+                    break;
                 }
+                default:
+                {
+                    CACE_LOG_ERR("Unknown type of deferred callback %d", next->purpose);
+                }
+            }
 
-                refda_timeline_remove(agent->exec_timeline, tl_it);
+            refda_timeline_remove(agent->exec_timeline, tl_it);
+        }
+    }
+    else
+    {
+        CACE_LOG_DEBUG("waiting for exec event");
+        sem_wait(&(agent->execs_sem));
+    }
+
+    // execs queue may still be empty if deferred callbacks were run
+    if (refda_msgdata_queue_pop(&item, agent->execs))
+    {
+        // sentinel for end-of-input
+        const bool at_end = cace_ari_is_undefined(&(item.value));
+        if (!at_end)
+        {
+            refda_exec_exp_execset(agent, &item);
+        }
+        refda_msgdata_deinit(&item);
+        if (at_end && refda_timeline_empty_p(agent->exec_timeline))
+        {
+            CACE_LOG_INFO("Got undefined exec, stopping");
+
+            // flush the input queue but keep the daemon running
+            refda_msgdata_t undef;
+            refda_msgdata_init(&undef);
+            refda_msgdata_queue_push_move(agent->rptgs, &undef);
+            sem_post(&(agent->rptgs_sem));
+
+            return false;
+        }
+    }
+
+    // execute any waiting sequences
+    refda_exec_waiting(agent);
+    return true;
+}
+
+static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting);
+
+/** Execute a rule's action that has already been verified
+ * Based on code from refda_exec_exp_execset
+ */
+static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *action)
+{
+    refda_runctx_ptr_t ctxptr;
+    refda_runctx_ptr_init_new(ctxptr);
+
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
+
+    if (refda_runctx_from(runctx, agent, NULL))
+    {
+        return 2;
+    }
+
+    refda_runctx_ptr_set(seq->runctx, ctxptr);
+    int res = refda_exec_exp_mac(runctx, seq, action);
+
+    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
+    return res;
+}
+
+/** Begin a single execution of a time based rule
+ */
+static void refda_exec_run_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+{
+    CHKERR1(agent);
+    CHKERR1(tbr);
+
+    if (!tbr->enabled)
+    {
+        CACE_LOG_INFO("TBR %p is not enabled", tbr);
+        return;
+    }
+
+    if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
+    {
+        CACE_LOG_INFO("TBR %p reached maximum execution count", tbr);
+        refda_exec_tbr_disable(agent, tbr);
+        return;
+    }
+
+    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+    seq->pid              = agent->exec_next_pid++;
+
+    // Schedule next exec of rule now so time period is independent of macro expansion
+    refda_exec_schedule_tbr(agent, tbr, false);
+
+    // Expand rule and create exec items, CTRLs are run later by exec worker
+    if (!refda_exec_rule_action(agent, seq, &(tbr->action)))
+    {
+        tbr->exec_count++;
+        atomic_fetch_add(&agent->instr.num_tbrs_trig, 1);
+    }
+
+    return;
+}
+
+/** Compute the next scheduled time at which to run the TBR
+ */
+static int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const refda_amm_tbr_desc_t *tbr,
+                                              bool starting)
+{
+    if (starting)
+    {
+        if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TP))
+        {
+            cace_ari_get_tp(&(tbr->start_time), schedtime);
+        }
+        else if (cace_ari_is_lit_typed(&(tbr->start_time), CACE_ARI_TYPE_TD))
+        {
+            cace_ari_get_td(&(tbr->start_time), schedtime);
+            if (schedtime->tv_nsec == 0 && schedtime->tv_sec == 0)
+            {
+                // Rule is always active, start it now
+                clock_gettime(CLOCK_REALTIME, schedtime);
+            }
+            else
+            {
+                // Start relative to rule's absolute reference time
+                *schedtime = timespec_add(tbr->absolute_start_time, *schedtime);
             }
         }
         else
         {
-            CACE_LOG_DEBUG("waiting for exec event");
-            sem_wait(&(agent->execs_sem));
+            CACE_LOG_ERR("Invalid start time for TBR %p", tbr);
+            return 2;
         }
-
-        // execs queue may still be empty if deferred callbacks were run
-        if (refda_msgdata_queue_pop(&item, agent->execs))
-        {
-            // sentinel for end-of-input
-            const bool at_end = cace_ari_is_undefined(&(item.value));
-            if (!at_end)
-            {
-                refda_exec_exp_execset(agent, &item);
-            }
-            refda_msgdata_deinit(&item);
-            if (at_end && refda_timeline_empty_p(agent->exec_timeline))
-            {
-                CACE_LOG_INFO("Got undefined exec, stopping");
-
-                // flush the input queue but keep the daemon running
-                refda_msgdata_t undef;
-                refda_msgdata_init(&undef);
-                refda_msgdata_queue_push_move(agent->rptgs, &undef);
-                sem_post(&(agent->rptgs_sem));
-
-                break;
-            }
-        }
-
-        // execute any waiting sequences
-        refda_exec_waiting(agent);
+    }
+    else
+    {
+        clock_gettime(CLOCK_REALTIME, schedtime);
+        *schedtime = timespec_add(*schedtime, tbr->period.as_lit.value.as_timespec);
     }
 
-    CACE_LOG_INFO("Worker stopped");
-    return NULL;
+    return 0;
+}
+
+/**
+ * Schedule execution of a time based rule
+ */
+static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting)
+{
+    // Do not schedule TBR if it has reached its execution threshold
+    if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
+    {
+        CACE_LOG_INFO("TBR %p reached maximum execution count", tbr);
+        refda_exec_tbr_disable(agent, tbr);
+        return 0;
+    }
+
+    struct timespec schedtime;
+    int             result = refda_exec_tbr_next_scheduled_time(&schedtime, tbr, starting);
+    if (!result)
+    {
+        refda_timeline_event_t event = { .purpose      = REFDA_TIMELINE_TBR,
+                                         .ts           = schedtime,
+                                         .tbr.agent    = agent,
+                                         .tbr.tbr      = tbr,
+                                         .tbr.callback = refda_exec_run_tbr };
+        refda_timeline_push(agent->exec_timeline, event);
+    }
+
+    return result;
+}
+
+int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+{
+    CHKERR1(tbr);
+    if (tbr->action.is_ref || tbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    {
+        CACE_LOG_ERR("Invalid TBR %p action, unable to enable the rule", tbr);
+        return 1;
+    }
+
+    // Adjust rule state
+    tbr->enabled    = true;
+    tbr->exec_count = 0; // Ensure count is reset when rule is enabled
+    atomic_fetch_add(&agent->instr.num_tbrs, 1);
+
+    // Schedule initial rule execution
+    int result = refda_exec_schedule_tbr(agent, tbr, true);
+    return result;
+}
+
+int refda_exec_tbr_disable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
+{
+    CHKERR1(tbr);
+    tbr->enabled = false;
+    atomic_fetch_sub(&agent->instr.num_tbrs, 1);
+    return 0;
+}
+
+static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
+
+static int refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr, cace_ari_t *result)
+{
+    refda_runctx_t runctx;
+    refda_runctx_init(&runctx);
+
+    if (refda_runctx_from(&runctx, agent, NULL))
+    {
+        return 2;
+    }
+
+    cace_ari_t ari_res = CACE_ARI_INIT_UNDEFINED;
+    int        res     = refda_eval_target(&runctx, &ari_res, &(sbr->condition));
+
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to evaluate SBR condition");
+    }
+    else
+    {
+        const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
+        res                            = cace_amm_type_convert(typeobj, result, &ari_res);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to convert SBR condition result to boolean");
+        }
+    }
+
+    cace_ari_deinit(&ari_res);
+    refda_runctx_deinit(&runctx);
+
+    return res;
+}
+
+/** Begin a single run of a state based rule, evaluating its condition and
+ * executing its action if necessary
+ */
+static void refda_exec_run_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+{
+    CHKERR1(agent);
+    CHKERR1(sbr);
+
+    if (!sbr->enabled)
+    {
+        CACE_LOG_INFO("SBR %p is not enabled", sbr);
+        return;
+    }
+
+    if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
+    {
+        CACE_LOG_INFO("SBR %p reached maximum execution count", sbr);
+        refda_exec_sbr_disable(agent, sbr);
+        return;
+    }
+
+    // Schedule next execution of the rule now, to ensure eval interval is
+    // consistent and independent of condition complexity
+    refda_exec_schedule_sbr(agent, sbr);
+
+    // Check condition and execute action if necessary
+    cace_ari_t ari_result = CACE_ARI_INIT_UNDEFINED;
+    int        result     = refda_exec_check_sbr_condition(agent, sbr, &ari_result);
+
+    if (!result)
+    {
+        bool bool_result = false;
+        result           = cace_ari_get_bool(&ari_result, &bool_result);
+        CACE_LOG_INFO("SBR %p condition is %d", sbr, bool_result);
+
+        if (!result && bool_result)
+        {
+            refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+            seq->pid              = agent->exec_next_pid++;
+
+            if (!refda_exec_rule_action(agent, seq, &(sbr->action)))
+            {
+                sbr->exec_count++;
+                atomic_fetch_add(&agent->instr.num_sbrs_trig, 1);
+            }
+        }
+    }
+
+    return;
+}
+
+/** Compute the next scheduled time at which to run the SBR
+ */
+static int refda_exec_sbr_next_scheduled_time(struct timespec *schedtime, const refda_amm_sbr_desc_t *sbr)
+{
+    if (cace_ari_is_lit_typed(&(sbr->min_interval), CACE_ARI_TYPE_TD))
+    {
+        struct timespec now;
+        clock_gettime(CLOCK_REALTIME, &now);
+        cace_ari_get_td(&(sbr->min_interval), schedtime);
+        *schedtime = timespec_add(now, *schedtime);
+    }
+    else
+    {
+        CACE_LOG_ERR("Invalid minimum interval for SBR %p", sbr);
+        return 2;
+    }
+    return 0;
+}
+
+/**
+ * Schedule execution of a state based rule
+ */
+static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+{
+    // Do not schedule SBR if it has reached its execution threshold
+    if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
+    {
+        CACE_LOG_INFO("SBR %p reached maximum execution count", sbr);
+        return 0;
+    }
+
+    struct timespec schedtime;
+    int             result = refda_exec_sbr_next_scheduled_time(&schedtime, sbr);
+    if (!result)
+    {
+        refda_timeline_event_t event = { .purpose      = REFDA_TIMELINE_SBR,
+                                         .ts           = schedtime,
+                                         .sbr.agent    = agent,
+                                         .sbr.sbr      = sbr,
+                                         .sbr.callback = refda_exec_run_sbr };
+        refda_timeline_push(agent->exec_timeline, event);
+    }
+
+    return result;
+}
+
+int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+{
+    if (sbr->action.is_ref || sbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    {
+        CACE_LOG_ERR("Invalid SBR %p action, unable to enable the rule", sbr);
+        return 1;
+    }
+
+    if (sbr->condition.is_ref || sbr->condition.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    {
+        CACE_LOG_ERR("Invalid SBR %p condition, unable to enable the rule", sbr);
+        return 1;
+    }
+
+    // Adjust rule state
+    sbr->enabled    = true;
+    sbr->exec_count = 0; // Ensure count is reset when rule is enabled
+    atomic_fetch_add(&agent->instr.num_sbrs, 1);
+
+    // Schedule initial rule execution
+    int result = refda_exec_schedule_sbr(agent, sbr);
+    return result;
+}
+
+int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
+{
+    CHKERR1(sbr);
+    sbr->enabled = false;
+    atomic_fetch_sub(&agent->instr.num_sbrs, 1);
+    return 0;
 }

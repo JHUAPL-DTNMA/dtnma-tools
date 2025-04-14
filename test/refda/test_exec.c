@@ -18,6 +18,7 @@
 #include "util/ari.h"
 #include <refda/exec.h>
 #include <refda/register.h>
+#include <refda/edd_prod_ctx.h>
 #include <refda/ctrl_exec_ctx.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_dtnma_agent.h>
@@ -35,9 +36,12 @@
 // Allow this macro
 #define TEST_CASE(...)
 
+static atomic_int edd_backing_value;
+
 void suiteSetUp(void)
 {
     cace_openlog();
+    atomic_init(&edd_backing_value, 0);
 }
 
 int suiteTearDown(int failures)
@@ -54,6 +58,15 @@ static refda_agent_t agent;
 
 /// Sequence of executions
 static cace_ari_list_t exec_log;
+
+static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
+{
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    int        val    = atomic_load(&edd_backing_value);
+    cace_ari_set_int(&result, val);
+    refda_edd_prod_ctx_set_result_copy(ctx, &result);
+    cace_ari_deinit(&result);
+}
 
 static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -114,6 +127,22 @@ void setUp(void)
 
             obj = refda_register_const(adm, cace_amm_idseg_ref_withenum("mac1", 1), objdata);
             // no parameters
+        }
+
+        /**
+         * Register EDD objects
+         */
+        {
+            refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_init(objdata);
+            cace_amm_type_set_use_direct(&(objdata->prod_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+            objdata->produce = test_reporting_edd_one_int;
+
+            obj = refda_register_edd(adm, cace_amm_idseg_ref_withenum("edd2", 2), objdata);
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "val");
+                cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+            }
         }
 
         /**
@@ -237,8 +266,8 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
 
                 refda_ctrl_exec_ctx_t ctx;
-                refda_ctrl_exec_ctx_init(&ctx, next->item);
-                (next->callback)(&ctx);
+                refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                (next->exec.callback)(&ctx);
                 refda_ctrl_exec_ctx_deinit(&ctx);
 
                 if (!(atomic_load(&(next->item->execution_stage)) == REFDA_EXEC_WAITING))
@@ -405,4 +434,163 @@ void test_refda_exec_wait_cond(int delay_ms)
     check_execute(&target, 0, 1, wait_ms);
 
     cace_ari_deinit(&target);
+}
+
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/60
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D183C", 1, true, 1)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D01", 2, true, 2)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/60
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", true, "820D183C", 1, true, 1)
+void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex, bool convert_start_to_tp,
+                                     const char *periodhex, int max_exec_count, bool init_enabled,
+                                     int expect_exec_count)
+{
+    refda_amm_tbr_desc_t tbr;
+    {
+        struct timespec nowtime;
+        clock_gettime(CLOCK_REALTIME, &nowtime);
+
+        refda_amm_tbr_desc_init(&tbr);
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.action), actionhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.start_time), starthex));
+        if (convert_start_to_tp)
+        {
+            struct timespec reltime;
+            TEST_ASSERT_EQUAL_INT(0, cace_ari_get_td(&(tbr.start_time), &reltime));
+
+            // Set an absolute start time, using now and the given relative start time
+            cace_ari_set_tp_posix(&(tbr.start_time), timespec_add(nowtime, reltime));
+        }
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(tbr.period), periodhex));
+        tbr.max_exec_count      = max_exec_count;
+        tbr.absolute_start_time = nowtime;
+
+        if (init_enabled)
+        {
+            refda_exec_tbr_enable(&agent, &tbr);
+        }
+    }
+
+    for (int i = 0; i < expect_exec_count && i < max_exec_count; i++)
+    {
+        // Execute the rule
+        refda_exec_worker_iteration(&agent);
+        refda_exec_waiting(&agent); // run cleanup
+
+        // Wait for time period to elapse for subsequent runs
+        if (expect_exec_count > 1)
+        {
+            struct timespec waittime;
+            TEST_ASSERT_EQUAL_INT(0, cace_ari_get_td(&(tbr.start_time), &waittime));
+            nanosleep(&waittime, NULL);
+        }
+    }
+
+    TEST_ASSERT_EQUAL_INT(expect_exec_count, tbr.exec_count);
+
+    refda_amm_tbr_desc_deinit(&tbr);
+}
+
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:undefined, ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "F7", "820D01", 1, true, 1, 0)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(//65535/10/EDD/2(0)), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818519FFFF0A23028100", "820D01", 1, true, 0, 0)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/BOOL/true), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818201F5", "820D01", 1, true, 0, 1)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/INT/1), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "821181820401", "820D01", 1, true, 0, 1)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/INT/1), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "821181820401", "820D01", 2, true, 0, 2)
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/BOOL/false), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818201F4", "820D01", 1, true, 0, 0)
+void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex, const char *min_interval_hex,
+                                      int max_exec_count, bool init_enabled, int expect_result, int expect_exec_count)
+{
+    refda_amm_sbr_desc_t sbr;
+    {
+        struct timespec nowtime;
+        clock_gettime(CLOCK_REALTIME, &nowtime);
+
+        refda_amm_sbr_desc_init(&sbr);
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.action), actionhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.condition), condhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.min_interval), min_interval_hex));
+        sbr.max_exec_count = max_exec_count;
+
+        TEST_ASSERT_EQUAL_INT(expect_result, refda_exec_sbr_enable(&agent, &sbr));
+    }
+
+    if (!expect_result)
+    {
+        for (int i = 0; i < expect_exec_count && i < max_exec_count; i++)
+        {
+            // Execute the rule
+            refda_exec_worker_iteration(&agent);
+            refda_exec_waiting(&agent); // run cleanup
+
+            // Wait for time period to elapse for subsequent runs
+            if (expect_exec_count > 1)
+            {
+                struct timespec waittime;
+                TEST_ASSERT_EQUAL_INT(0, cace_ari_get_td(&(sbr.min_interval), &waittime));
+                nanosleep(&waittime, NULL);
+            }
+        }
+    }
+
+    TEST_ASSERT_EQUAL_INT(expect_exec_count, sbr.exec_count);
+    refda_amm_sbr_desc_deinit(&sbr);
+}
+
+// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(//65535/10/EDD/2(0)), ari:/TD/1
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818519FFFF0A23028100", "820D01", 1, true, 0, 1)
+void test_refda_exec_state_based_rule_cond_false_then_true(const char *actionhex, const char *condhex,
+                                                           const char *min_interval_hex, int max_exec_count,
+                                                           bool init_enabled, int expect_result, int expect_exec_count)
+{
+    // Reset EDD value
+    atomic_store(&edd_backing_value, 0);
+
+    refda_amm_sbr_desc_t sbr;
+    {
+        struct timespec nowtime;
+        clock_gettime(CLOCK_REALTIME, &nowtime);
+
+        refda_amm_sbr_desc_init(&sbr);
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.action), actionhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.condition), condhex));
+        TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.min_interval), min_interval_hex));
+        sbr.max_exec_count = max_exec_count;
+
+        TEST_ASSERT_EQUAL_INT(expect_result, refda_exec_sbr_enable(&agent, &sbr));
+    }
+
+    // Execute the rule
+    refda_exec_worker_iteration(&agent);
+    refda_exec_waiting(&agent); // run cleanup
+
+    // Verify SBR did not run
+    TEST_ASSERT_EQUAL_INT(0, sbr.exec_count);
+
+    // Update our EDD to succeed next time
+    atomic_fetch_add(&edd_backing_value, 1);
+
+    // Wait for SBR interval to elapse
+    if (expect_exec_count > 1)
+    {
+        struct timespec waittime;
+        TEST_ASSERT_EQUAL_INT(0, cace_ari_get_td(&(sbr.min_interval), &waittime));
+        nanosleep(&waittime, NULL);
+    }
+
+    // Execute the rule again
+    refda_exec_worker_iteration(&agent);
+    refda_exec_waiting(&agent); // run cleanup
+
+    // Verify SBR executed this time around
+    TEST_ASSERT_EQUAL_INT(expect_exec_count, sbr.exec_count);
+
+    // TEST_ASSERT_EQUAL_INT(expect_exec_count, sbr.exec_count);
+    refda_amm_sbr_desc_deinit(&sbr);
 }
