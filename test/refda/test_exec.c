@@ -270,7 +270,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 (next->exec.callback)(&ctx);
                 refda_ctrl_exec_ctx_deinit(&ctx);
 
-                if (!(atomic_load(&(next->item->execution_stage)) == REFDA_EXEC_WAITING))
+                if (!(atomic_load(&(next->exec.item->execution_stage)) == REFDA_EXEC_WAITING))
                 {
                     CACE_LOG_DEBUG("callback finished after %d iterations", ix + 1);
                     success = true;

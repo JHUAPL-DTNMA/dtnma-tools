@@ -36,19 +36,19 @@ typedef enum
     /**
      * Indicator that this item is yet to be completed or paused
      */
-     REFDA_EXEC_PENDING = 0,
+    REFDA_EXEC_PENDING = 0,
     /**
      * Indicator that this item is running
      */
-     REFDA_EXEC_RUNNING,
+    REFDA_EXEC_RUNNING,
     /**
      * Indicator that this item is waiting on an external event to complete
      */
-     REFDA_EXEC_WAITING,
+    REFDA_EXEC_WAITING,
     /**
      * Indicator that this item completed execution but is not finished
      */
-     REFDA_EXEC_COMPLETE
+    REFDA_EXEC_COMPLETE
 } refda_exec_item_status_t;
 
 /** Each item in an execution sequence, which corresponds to a
