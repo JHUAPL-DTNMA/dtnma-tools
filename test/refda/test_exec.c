@@ -228,7 +228,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
         {
             // if there are more items the first must be waiting
             const refda_exec_item_t *item = refda_exec_item_list_front(eseq.items);
-            TEST_ASSERT_TRUE(atomic_load(&(item->waiting)));
+            TEST_ASSERT_TRUE(atomic_load(&(item->execution_stage)) == REFDA_EXEC_WAITING);
         }
 
         TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
@@ -270,7 +270,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 (next->exec.callback)(&ctx);
                 refda_ctrl_exec_ctx_deinit(&ctx);
 
-                if (!atomic_load(&(next->exec.item->waiting)))
+                if (!(atomic_load(&(next->exec.item->execution_stage)) == REFDA_EXEC_WAITING))
                 {
                     CACE_LOG_DEBUG("callback finished after %d iterations", ix + 1);
                     success = true;

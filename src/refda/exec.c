@@ -78,6 +78,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
         CACE_LOG_DEBUG("Execution item %s", string_get_cstr(buf));
         string_clear(buf);
     }
+    if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_PENDING)
     {
         refda_ctrl_exec_ctx_t ctx;
         refda_ctrl_exec_ctx_init(&ctx, item);
@@ -86,7 +87,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
         CACE_LOG_DEBUG("execution callback returned");
     }
 
-    if (atomic_load(&(item->waiting)))
+    if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_WAITING)
     {
         CACE_LOG_INFO("Control is still waiting to finish");
     }
@@ -103,7 +104,7 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
     int retval = 0;
     while (!refda_exec_item_list_empty_p(seq->items))
     {
-        if (atomic_load(&(refda_exec_item_list_front(seq->items)->waiting)))
+        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == REFDA_EXEC_WAITING)
         {
             // cannot complete at this time
             return 0;
@@ -278,12 +279,13 @@ int refda_exec_waiting(refda_agent_t *agent)
             continue;
         }
 
-        if (atomic_load(&(refda_exec_item_list_front(seq->items)->waiting)))
+        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == REFDA_EXEC_WAITING)
         {
             // still waiting
             continue;
         }
 
+        CACE_LOG_DEBUG("pushing to ready");
         refda_exec_seq_ptr_list_push_back(ready, seq);
         refda_exec_seq_list_next(seq_it);
     }
@@ -431,7 +433,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                         (next->exec.callback)(&ctx);
                         refda_ctrl_exec_ctx_deinit(&ctx);
                     }
-                    if (!atomic_load(&(next->exec.item->waiting)))
+                    if (!((atomic_load(&(next->exec.item->execution_stage))) == REFDA_EXEC_WAITING))
                     {
                         refda_exec_ctrl_finish(next->exec.item);
                     }
