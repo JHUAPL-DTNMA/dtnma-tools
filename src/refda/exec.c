@@ -433,7 +433,6 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                         (next->exec.callback)(&ctx);
                         refda_ctrl_exec_ctx_deinit(&ctx);
                     }
-
                     if (!((atomic_load(&(next->exec.item->execution_stage))) == REFDA_EXEC_WAITING))
                     {
                         refda_exec_ctrl_finish(next->exec.item);
