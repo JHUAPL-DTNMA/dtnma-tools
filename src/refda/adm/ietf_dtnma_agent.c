@@ -47,6 +47,7 @@
 
 static void refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_ctrl_exec_ctx_t *ctx)
 {
+    atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
     refda_ctrl_exec_ctx_set_result_null(ctx);
 }
 
@@ -101,9 +102,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         {
             // check again in 1s
             refda_timeline_event_t event = {
-                .ts       = timespec_add(nowtime, timespec_from_ms(1000)),
-                .item     = ctx->item,
-                .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
+                .purpose       = REFDA_TIMELINE_EXEC,
+                .ts            = timespec_add(nowtime, timespec_from_ms(1000)),
+                .exec.item     = ctx->item,
+                .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
             };
             refda_ctrl_exec_ctx_set_waiting(ctx, &event);
         }
@@ -602,11 +604,6 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_exec_running BODY
      * +-------------------------------------------------------------------------+
      */
-    enum exec_state_e
-    {
-        EXEC_WAITING = 0,
-        EXEC_RUNNING = 1,
-    };
 
     refda_agent_t *agent = ctx->prodctx->parent->agent;
     if (pthread_mutex_lock(&(agent->exec_state_mutex)))
@@ -639,13 +636,13 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
         cace_ari_set_copy(cace_ari_array_get(row, 1), &(front->ref));
         {
             int state;
-            if (atomic_load(&(front->waiting)))
+            if (atomic_load(&(front->execution_stage)) == REFDA_EXEC_WAITING)
             {
-                state = EXEC_WAITING;
+                state = REFDA_EXEC_WAITING;
             }
             else
             {
-                state = EXEC_RUNNING;
+                state = REFDA_EXEC_RUNNING;
             }
             cace_ari_set_int(cace_ari_array_get(row, 2), state);
         }
@@ -942,14 +939,29 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
      */
 }
 
+/* TODO:
+potential new CTRL's to support rules:
+
+ - ensure-rule
+ - discard-rule
+ - enable-rule
+ - disable-rule
+
+Since rule object references include the object type, there can be a single discard-rule with a parameter union of
+/aritype/sbr and /aritype/tbr Along those same lines there can be enable-rule and disable-rule controls with the same
+parameter type. In support of all three, there can be a TYPEDEF for a "rule" type that is the union of SBR and TBR
+references.
+*/
+
 /* Name: sbr-list
  * Description:
  *   A table of SBR within the agent.
  *
- * Parameters: none
+ * Parameters list:
+ *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 6 columns (use of ari:/ARITYPE/SBR, use of ari://ietf/amm/TYPEDEF/MAC, use of
- * ari://ietf/amm/TYPEDEF/TIME, use of ari://ietf/amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
+ * Produced type: TBLT with 5 columns (use of ari:/ARITYPE/SBR, use of ari://ietf/amm/TYPEDEF/MAC, use of
+ * ari://ietf/amm/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST, use of ari:/ARITYPE/BOOL)
  */
 static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -958,6 +970,79 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sbr_list BODY
      * +-------------------------------------------------------------------------+
      */
+    bool include_adm = true;
+    if (cace_ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_ari_tbl_t table;
+    cace_ari_tbl_init(&table, 6, 0);
+    const cace_ari_type_t obj_type = CACE_ARI_TYPE_SBR;
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        cace_amm_obj_ns_ptr_t *const *ns_ptr = cace_amm_obj_ns_list_cref(ns_it);
+        if (!ns_ptr)
+        {
+            continue;
+        }
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_ptr_ref(*ns_ptr);
+        if ((ns->model_id.intenum >= 0) && !include_adm)
+        {
+            // ignore ADMs
+            continue;
+        }
+
+        cace_amm_obj_ns_ctr_ptr_t *const *ctr_ptr = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
+        if (!ctr_ptr)
+        {
+            continue;
+        }
+        const cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_ptr_ref(*ctr_ptr);
+
+        cace_amm_obj_desc_list_it_t obj_it;
+        for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+             cace_amm_obj_desc_list_next(obj_it))
+        {
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
+
+            cace_ari_array_t row;
+            cace_ari_array_init(row);
+            cace_ari_array_resize(row, 6);
+
+            {
+                cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
+                refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
+            }
+
+            const refda_amm_sbr_desc_t *sbr = obj->app_data.ptr;
+            if (sbr)
+            {
+                cace_ari_set_copy(cace_ari_array_get(row, 1), &(sbr->action));
+                cace_ari_set_copy(cace_ari_array_get(row, 2), &(sbr->condition));
+                cace_ari_set_copy(cace_ari_array_get(row, 3), &(sbr->min_interval));
+                cace_ari_set_uvast(cace_ari_array_get(row, 4), sbr->max_exec_count);
+                cace_ari_set_bool(cace_ari_array_get(row, 5), sbr->enabled);
+            }
+
+            // append the row
+            cace_ari_tbl_move_row_array(&table, row);
+            cace_ari_array_clear(row);
+        }
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sbr_list BODY
@@ -969,10 +1054,11 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
  * Description:
  *   A table of TBR within the agent.
  *
- * Parameters: none
+ * Parameters list:
+ *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
  *
  * Produced type: TBLT with 5 columns (use of ari:/ARITYPE/TBR, use of ari://ietf/amm/TYPEDEF/MAC, use of
- * ari://ietf/amm/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST)
+ * ari://ietf/amm/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST, use of ari:/ARITYPE/BOOL)
  */
 static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -981,6 +1067,80 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_tbr_list BODY
      * +-------------------------------------------------------------------------+
      */
+    bool include_adm = true;
+    if (cace_ari_get_bool(refda_edd_prod_ctx_get_aparam_index(ctx, 0), &include_adm))
+    {
+        CACE_LOG_ERR("no parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_ari_tbl_t table;
+    cace_ari_tbl_init(&table, 6, 0);
+    const cace_ari_type_t obj_type = CACE_ARI_TYPE_TBR;
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+        cace_amm_obj_ns_ptr_t *const *ns_ptr = cace_amm_obj_ns_list_cref(ns_it);
+        if (!ns_ptr)
+        {
+            continue;
+        }
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_ptr_ref(*ns_ptr);
+        if ((ns->model_id.intenum >= 0) && !include_adm)
+        {
+            // ignore ADMs
+            continue;
+        }
+
+        cace_amm_obj_ns_ctr_ptr_t *const *ctr_ptr = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
+        if (!ctr_ptr)
+        {
+            continue;
+        }
+        const cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_ptr_ref(*ctr_ptr);
+
+        cace_amm_obj_desc_list_it_t obj_it;
+        for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+             cace_amm_obj_desc_list_next(obj_it))
+        {
+            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
+
+            cace_ari_array_t row;
+            cace_ari_array_init(row);
+            cace_ari_array_resize(row, 6);
+
+            {
+                cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
+                refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
+            }
+
+            const refda_amm_tbr_desc_t *tbr = obj->app_data.ptr;
+            if (tbr)
+            {
+                cace_ari_set_copy(cace_ari_array_get(row, 1), &(tbr->action));
+                cace_ari_set_copy(cace_ari_array_get(row, 2), &(tbr->start_time));
+                cace_ari_set_copy(cace_ari_array_get(row, 3), &(tbr->period));
+                cace_ari_set_uvast(cace_ari_array_get(row, 4), tbr->max_exec_count);
+                cace_ari_set_bool(cace_ari_array_get(row, 5), tbr->enabled);
+            }
+
+            // append the row
+            cace_ari_tbl_move_row_array(&table, row);
+            cace_ari_array_clear(row);
+        }
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    REFDA_AGENT_UNLOCK(agent, );
+
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_tbr_list BODY
@@ -1078,9 +1238,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
     }
 
     refda_timeline_event_t event = {
-        .ts       = timespec_add(nowtime, duration),
-        .item     = ctx->item,
-        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
+        .purpose       = REFDA_TIMELINE_EXEC,
+        .ts            = timespec_add(nowtime, duration),
+        .exec.item     = ctx->item,
+        .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
     refda_ctrl_exec_ctx_set_waiting(ctx, &event);
     /*
@@ -1119,9 +1280,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
     }
 
     refda_timeline_event_t event = {
-        .ts       = abstime,
-        .item     = ctx->item,
-        .callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
+        .purpose       = REFDA_TIMELINE_EXEC,
+        .ts            = abstime,
+        .exec.item     = ctx->item,
+        .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
     refda_ctrl_exec_ctx_set_waiting(ctx, &event);
     /*
@@ -2634,7 +2796,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // produced type
             {
                 // table template
-                cace_amm_semtype_tblt_t *semtype = cace_amm_type_set_tblt_size(&(objdata->prod_type), 6);
+                cace_amm_semtype_tblt_t *semtype = cace_amm_type_set_tblt_size(&(objdata->prod_type), 5);
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
@@ -2656,16 +2818,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
-                    m_string_set_cstr(col->name, "start-time");
-                    {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm/TYPEDEF/TIME
-                        cace_ari_set_objref_path_intid(&name, 1, 0, CACE_ARI_TYPE_TYPEDEF, 5);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
-                    }
-                }
-                {
-                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "condition");
                     {
                         cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
@@ -2675,7 +2827,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "min-interval");
                     {
                         cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
@@ -2684,7 +2836,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 5);
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
                     m_string_set_cstr(col->name, "max-count");
                     {
                         cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
@@ -2699,7 +2851,16 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             obj = refda_register_edd(
                 adm, cace_amm_idseg_ref_withenum("sbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SBR_LIST),
                 objdata);
-            // no parameters
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
+                {
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+                cace_ari_set_bool(&(fparam->defval), false);
+            }
         }
         { // For ./EDD/tbr-list
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
@@ -2762,7 +2923,16 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             obj = refda_register_edd(
                 adm, cace_amm_idseg_ref_withenum("tbr-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TBR_LIST),
                 objdata);
-            // no parameters
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
+                {
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+                cace_ari_set_bool(&(fparam->defval), false);
+            }
         }
 
         /**

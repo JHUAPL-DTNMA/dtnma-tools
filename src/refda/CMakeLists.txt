@@ -75,6 +75,8 @@ set(CFILES
     "amm/edd.c"
     "amm/ctrl.c"
     "amm/oper.c"
+    "amm/sbr.c"
+    "amm/tbr.c"
     "adm/ietf_amm.c"
     "adm/ietf_dtnma_agent.c"
 )
