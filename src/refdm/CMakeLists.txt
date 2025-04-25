@@ -24,14 +24,12 @@ set(HFILES
   agents.h
   ingress.h
   instr.h
-#  nm_mgr_sql.h
   mgr.h
 )
 set(CFILES
   agents.c
   ingress.c
   instr.c
-#  nm_mgr_sql.c
   mgr.c
 )
 if(REFDM_UI_CLI)
@@ -51,7 +49,25 @@ if(civetweb_FOUND)
   list(APPEND CFILES nm_rest.c)
 endif(civetweb_FOUND)
 
+
 add_library(refdm)
+
+
+if(MYSQLCLIENT_FOUND)
+  message(STATUS "Manager using MySQL client")
+#FIXME  target_compile_definitions(refdm PUBLIC HAVE_MYSQL)
+  target_link_libraries(refdm PUBLIC PkgConfig::MYSQLCLIENT)
+  list(APPEND HFILES nm_sql.h)
+  list(APPEND CFILES nm_sql.c)
+elseif(PostgreSQL_FOUND)
+  message(STATUS "Manager using POSTGRES client")
+  target_compile_definitions(refdm PUBLIC HAVE_POSTGRESQL)
+  target_link_libraries(refdm PUBLIC PostgreSQL::PostgreSQL)
+  list(APPEND HFILES nm_sql.h)
+  list(APPEND CFILES nm_sql.c)
+else()
+  message(WARNING "Manager not using any database client")
+endif()
 
 target_sources(refdm PRIVATE ${HFILES})
 target_sources(refdm PRIVATE ${CFILES})
@@ -61,17 +77,7 @@ target_include_directories(
 )
 target_link_libraries(refdm PUBLIC cace)
 
-if(MYSQLCLIENT_FOUND)
-  message(STATUS "Manager using MySQL client")
-#FIXME  target_compile_definitions(refdm PUBLIC HAVE_MYSQL)
-  target_link_libraries(refdm PUBLIC PkgConfig::MYSQLCLIENT)
-elseif(PostgreSQL_FOUND)
-  message(STATUS "Manager using POSTGRES client")
-#FIXME  target_compile_definitions(refdm PUBLIC HAVE_POSTGRESQL)
-  target_link_libraries(refdm PUBLIC PostgreSQL::PostgreSQL)
-else()
-  message(WARNING "Manager not using any database client")
-endif()
+
 
 if(cJSON_FOUND)
   message(STATUS "Manager using cJSON")

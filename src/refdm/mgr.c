@@ -42,14 +42,15 @@
 #include "mgr.h"
 
 #include "ingress.h"
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-#include "nm_mgr_sql.h"
-#endif
 #ifdef USE_CIVETWEB
 #include "nm_rest.h"
 #endif
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
+
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#include "nm_sql.h"
+#endif
 
 void refdm_mgr_init(refdm_mgr_t *mgr)
 {
@@ -73,12 +74,14 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     refdm_agent_dict_init(mgr->agent_dict);
     pthread_mutex_init(&(mgr->agent_mutex), NULL);
 
+
 #if defined(CIVETWEB_FOUND)
     mgr->rest_listen_port = 8089;
     mgr->rest             = NULL;
 #endif
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    mgr->sql_info = NULL;
+    db_mgr_sql_init(mgr);
+	db_mgt_init(mgr->sql_info, 0, 1);
 #endif
 }
 
@@ -114,7 +117,7 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
         { NULL, NULL },
     };
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    threadinfo[2] = (threadinfo_t) { &db_mgt_daemon, "nm_mgr_db" };
+    threadinfo[2] = (cace_threadinfo_t) { &db_mgt_daemon, "nm_mgr_db" };
 #endif
     if (cace_threadset_start(mgr->threads, threadinfo, sizeof(threadinfo) / sizeof(cace_threadinfo_t), mgr))
     {

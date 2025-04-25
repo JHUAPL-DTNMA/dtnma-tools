@@ -460,12 +460,12 @@ END$$;
 
 
 -- =================
--- for adding ident into the database 
+-- for adding idnet into the database 
 -- SP__insert_ident_formal_definition 
 -- IN 
 -- 		p_obj_id integer - metadata id of this ident
 -- 		p_use_desc varchar - human readable description
--- 		p_data_type_id - data type for the ident 
+-- 		p_data_type_id - data type for the idnet 
 -- OUT 
 -- 		r_definition_id integer - id of the start 
 -- ====================================
@@ -479,12 +479,12 @@ end$$;
 
 
 -- =================
--- for adding ident into the database 
+-- for adding idnet into the database 
 -- SP__insert_ident_actual_definition 
 -- IN 
 -- 		p_obj_id integer - metadata id of this ident
 -- 		p_use_desc varchar - human readable description
--- 		p_data_type_id - data type for the ident 
+-- 		p_data_type_id - data type for the idnet 
 -- OUT 
 -- 		r_definition_id integer - id of the start 
 -- ====================================
@@ -1641,9 +1641,16 @@ as $$ BEGIN
 END$$;
 
 
+create or replace procedure SP__insert_ari_rpt_set(in p_correlator_nonce INT, p_reference_time INT not null, p_report_list varchar, p_agent_id varchar, INOUT r_ari_rptset_id integer)
+language plpgsql
+as $$ BEGIN 
+	INSERT INTO ari_rptset(correlator_nonce, reference_time, report_list, agent_id)
+VALUES(p_correlator_nonce, p_reference_time, p_report_list, p_agent_id) RETURNING  ari_rptset_id INTO r_ari_rptset_id;
+End$$;
+
+
+
 --# for testing the delete function 
-
-
 -- p_obj_name := 'bundles_by_priority';
 -- select * from obj_definition join obj_identifier on obj_definition.obj_id = obj_identifier.obj_id;
 -- -- select definition_id from obj_definition where obj_id = (SELECT obj_id FROM obj_identifier WHERE obj_name = p_obj_name);

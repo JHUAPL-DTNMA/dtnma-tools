@@ -45,7 +45,7 @@
 #include "mgr.h"
 #include "agents.h"
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-#include "nm_mgr_sql.h"
+#include "nm_sql.h"
 #endif
 #include <cace/ari/text.h>
 #include <cace/util/daemon_run.h>
@@ -59,18 +59,17 @@
  */
 static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 {
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+   
+    // 
+    #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+
     /* Copy the message group to the database tables */
-    uint32_t incoming_idx = db_incoming_initialize(grp->timestamp, src);
+    uint32_t incoming_idx = db_incoming_initialize(mgr);
     int      db_status    = 0;
-#endif
-
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    db_insert_msg_rpt_set(incoming_idx, rpt_msg, &db_status);
-#endif
-
-    cace_ari_set_move(cace_ari_list_push_back_new(agent->rptsets), val);
-
+     
+    db_insert_msg_rpt_set(incoming_idx, val, agent, &db_status);
+  
+    #endif
     {
         bool wrote = false;
         pthread_mutex_lock(&agent->log_mutex);
@@ -85,6 +84,7 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 
             agent->log_fd_cnt++;
             wrote = true;
+         
         }
 #if defined(USE_JSON) && 0 // FIXME
         if (agent->log_fd && mgr->agent_log_cfg.rx_rpt)
@@ -106,9 +106,17 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
     // And check for file rotation (we won't break up a set between files)
     refdm_agent_rotate_log(agent, &mgr->agent_log_cfg, false);
 
+    
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     // Commit transaction and log as applicable
-    db_incoming_finalize(incoming_idx, db_status, meta.source.name, tmp);
+    // if (agent->log_fd && mgr->agent_log_cfg.rx_rpt)
+    {
+    // string_t buf;
+    // string_init(buf);
+    // cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    // db_incoming_finalize(incoming_idx, db_status, mgr->own_eid, string_get_cstr(buf));
+
+    }
 #endif
 }
 

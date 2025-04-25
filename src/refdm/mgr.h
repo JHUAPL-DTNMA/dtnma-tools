@@ -56,7 +56,28 @@ extern "C" {
 
 // Forward declarations
 struct mg_context;
-struct refdm_db_s;
+
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#define UI_SQL_SERVERLEN (80)
+#define UI_SQL_ACCTLEN   (20)
+#define UI_SQL_DBLEN     (20)
+#define UI_SQL_TOTLEN    (UI_SQL_SERVERLEN + UI_SQL_ACCTLEN + UI_SQL_ACCTLEN + UI_SQL_DBLEN)
+/*
+ * This structure holds the constants needed to store SQL database
+ * information.
+ */
+typedef struct
+{
+    pthread_mutex_t lock;
+
+    char server[UI_SQL_SERVERLEN];
+    char username[UI_SQL_ACCTLEN];
+    char password[UI_SQL_ACCTLEN];
+    char database[UI_SQL_DBLEN];
+
+    //    db_desc_t desc;
+} refdm_db_s;
+#endif
 
 typedef enum mgr_ui_mode_enum
 {
@@ -110,7 +131,7 @@ typedef struct refdm_mgr_s
 #endif
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /// SQL client state, managed by a background thread
-    struct refdm_db_s *sql_info;
+    refdm_db_s *sql_info;
 #endif
 
 } refdm_mgr_t;

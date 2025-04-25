@@ -28,62 +28,48 @@ Uses entity relationship design pattern and has been normalized.
 
 |Table Name|	Table Type|
 |----------|--------------|
-|actual_parmspec|	Collection|
-|actual_parm|	Collection entry|
-|actual_parm_name|	Collection entry|
-|actual_parm_object|	Collection entry|
-|actual_parm_ac|	Collection entry|
-|actual_parm_tnvc|	Collection entry|
-|adm|	support|
-|ADM_Type_Enumeration|	Supporting Info|
-|ari_collection|	Collection|
-|ari_collection_formal_entry|	Collection entry|
-|ari_collection_actual_entry|	Collection entry|
-|const_actual_definition|	Actual definition|
-|control_actual_definition|	Actual definition|
-|control_formal_definition|	Formal definition|
-|data_type|	Supporting info|
-|edd_actual_definition|	Actual definition|
-|edd_formal_definition|	Formal definition|
-|expression|	collection|
-|formal_parm|	Collection entry |
-|formal_parmspec|	Collection|
-|incoming_message_entry|	Support|
-|incoming_message_set|	Support |
-|incoming_state|	Support|
-|literal_actual_definition|	Actual definition|
-|macro_actual_definition|	Actual definition|
-|macro_formal_definition|	Formal definition|
-|namespace|	Support |
-|network_config|	Support|
-|obj_actual_definition|	Parent actual definition|
-|obj_formal_definition|	parent formal definition|
-|obj_metadata|	parent definition |
-|operator_actual_definition|	Actual definition|
-|outgoing_message_entry|	Support|
-|outgoing_message_set|	support|
-|outgoing_state|	Support|
-|registered_agents|	Support|
-|report_instance|	Evaluated|
-|report_template_actual_definition|	Actual definition|
-|report_template_formal_definition|	Formal definition|
-|sbr_actual_definition|	Actual definition|
-|table_instance|	Evaluated|
-|table_template_actual_definition|	Actual definition|
-|tbr_actual_definition|	Actual definition|
-|type_name_value_collection|	collection|
-|type_name_value_entry|	Collection entry|
-|type_name_value_obj_entry| Collection entry|
-|type_name_value_int_entry| Collection entry|
-|type_name_value_uint_entry| Collection entry|
-|type_name_value_vast_entry| Collection entry|
-|type_name_value_uvast_entry| Collection entry|
-|type_name_value_real32_entry| Collection entry|
-|type_name_value_real64_entry| Collection entry|
-|type_name_value_string_entry| Collection entry|
-|type_name_value_bool_entry| Collection entry|
-|type_name_value_byte_entry| Collection entry|
-|variable_actual_definition|	Actual definition|
+| actual_parmspec | Collection |
+| ari_collection | Collection  |
+| ari_map | Collection |
+| ari_rptset |  Collection |
+| ari_rptt |  Collection Template|
+| ari_tbl |  Collection |
+| ari_tblt | Collection Template |
+| const_actual_definition | Actual Definition |
+| control_actual_definition | Actual Definition |
+| control_formal_definition | Formal Definition |
+| data_model | Support |
+| data_type |  Support |
+| edd_actual_definition | Actual Definition |
+| edd_formal_definition | Formal Definition |
+| enum_message_group_states | Support |
+| enum_message_group_types | Support |
+| execution_set |  collection |
+| expression | collection |
+| formal_parmspec |Collection  |
+| ident_actual_definition | Actual Definition |
+| ident_formal_definition | Formal Definition |
+| macro_actual_definition | Actual Definition |
+| macro_formal_definition | Formal Definition |
+| message_agents | Support  |
+| message_group | Support |
+| message_group_agents | Support |
+| message_group_entry | Support |
+| message_perform_control | Support |
+| message_report_set_entry | Support |
+| network_config | Support |
+| nm_mgr_log | Support |
+| obj_actual_definition | parent Actual Definition |
+| obj_formal_definition | parent Formal Definition |
+| obj_metadata | parent definition  |
+| operator_actual_definition | Actual Definition |
+| operator_formal_definition | Formal Definition |
+| registered_agents | Support |
+| sbr_actual_definition | Actual Definition |
+| tbr_actual_definition | Actual Definition |
+| typedef_actual_definition | Actual Definition |
+| variable_actual_definition | Actual Definition|
+| variable_formal_definition | Formal Definition|
 
 	
 
@@ -360,83 +346,6 @@ Network_config
 
 ## Collections
 
-		 
-		
-type_name_value_collection  
- the main table of the type name value collection stores the number entries and a human readable description. the type_name_value reference this table and store the entries for this collection 
-- tnvc_id int unsigned  
-  the primary key of the tnv collection  
-- num_entries int unsigned   
-  number of the entries in the collection  
-- use_desc  varchar  
-  human readable descriptor of the spec  
-
-type_name_value_entry  
-a type name value collection entry. Has its own unique id that is reference by the lower tnv entries tables that actually store the values. For efficiency each primitive type has its own table so that we can store them as their actual value instead of a string representation. 
-- tnv_id int unsigned 
-  unique id  
-- tnvc_id int unsigned   
-  points to the collection it belongs to, foreign key into tnv_collection(tnvc_id)  
-- order_num int unsigned  
-  the order this entry is in the collection  
-- date_type_id int unsigned    
-  type of the data object foreign key into data_type(enum_id)  
-- date_name varchar   
-  human readable name for the object   
-
-These tables can be used to store the values for the type name value entries. Either they are an actual object so store the id of that actual object, or a primitive type.
-type_name_value_obj_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- obj_actual_definition_id int unsigned  
-  id of this actual object referenes obj_actual_definition   
-type_name_value_int_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- entry_value int   
-  value of this int_entry  
-type_name_value_uint_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- entry_value  int unsigned
-  value of this uint_entry  
-type_name_value_vast_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- entry_value BIGINT  
-  value of this vast_entry  
-type_name_value_uvast_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- entry_value BIGINT unsigned  
-  value of this uvast_entry  
-type_name_value_real32_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- entry_value FLOAT
-  value of this real32_entry  
-type_name_value_real64_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- entry_value DOUBLE  
-  value of this real64_entry  
-type_name_value_string_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- entry_value  varchar  
-  value of this string_entry  
-type_name_value_bool_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- entry_value BOOL   
-  value of this bool_entry  
-type_name_value_byte_entry  
-- tnv_id int unsigned 
-  id of the this tnv entry references type_name_value_entry  
-- entry_value  TINYINT    
-  value of this byte_entry  
-
-		
 ARI Collections  
 used with the ac_entries table to represent ari Collections. this table is referenced by ac_entries to create a collection  
 - ac_id int unsigned   
@@ -446,27 +355,7 @@ used with the ac_entries table to represent ari Collections. this table is refer
 - use_desc varchar    
   human readable descriptor of the spec. 	  
 
-ARI_collection_entry   
-entries into an ARI collection    
-- ac_entry_id int unsigned  
-  unique id, primary key 
-- ac_id int unsigned  
-  the identifier of the ARI collection, foreign key into ari_collection(ac_id)  
 
-ARI_collection_actual_entry  
-    table to store the actual definition entries in the ari_collection  
-- ac_entry_id int unsigned  
-    unique id, primary key , forign key into ARI_collection_entry  
-- obj_actual_definition_id  int unsigned  
-  id of the actual definition for this entry, FK into obj_actual_definition   
-
-ARI_collection_formal_entry  
-  table to store the formal definition entries in the ari_collection  
-- ac_entry_id   
-  unique id, primary key , forign key into ARI_collection_entry  
-- obj_formal_definition_id  
-  id of the formal definition for this entry, FK into obj_actual_definition  
- 	
 Formal_Parmspec  
 the main collection for formal parms defined the number of parameters and is refenced by formal_parm   
 - fp_spec_id int unsigned    
@@ -476,20 +365,6 @@ the main collection for formal parms defined the number of parameters and is ref
 - use_desc varchar  
   human readable descriptor of the spec. 	
 
-Formal_Parm  
-formal paramaters that populate a formal parmspec. They have their own unique key alongside the fp_spec_id of the formal_parmspec collection they belong too. They can have an optional default value. They are also referenced by actual_parm_name when that actual parameter value is what the formal parameters value will be.  
-- fp_id int unsigned  
-        unique id, primary key 
-- fp_spec_id int unsigned  
-        identifies the parmspec it is a part of, foreign key into formal_parmspec id 
-- order_num int unsigned  
-        order of the this parm
-- data_type_id int unsigned  
-        type of the data object foreign key into data_type  
-- parm_name varchar  
-  name of this parameter 
-- default_value int unsigned  
-  fk into obj_actual_definition, optional default value for this parameter. 
 
 actual_parmspec
 Points to a formal parameter specification, actual parameters will point to an actual parmspec allowing for variable length parameters.  	
@@ -499,49 +374,6 @@ Points to a formal parameter specification, actual parameters will point to an a
   id of the formal parm spec, this actual parmspec uses, foreign key into formal_parmspec
 - parm_count int unsigned  
   number of parameters.
-
-actual_parm
-an actual parameter that populates an actual parameter specification. need to agree with a formal parameter. 
-- ap_id int unsigned  
-	primary id 
-- ap_spec_id int unsigned  
-  fk into actual parmspec
-- order_num int unsigned  
-  the order the comes in	
-		 
-actual_parm_name  
-parm by refrence   
-- ap_id int unsigned  
-  id of the actual parm
-- data_type_id int unsigned   
-  data type enumeration
-- fp_id int unsigned  
-  formal parameter this parameter gets its value from  
-	
-actual_parm_object  
-  parm for objects   
--  ap_id int unsigned  
-  id of the actual parm  
-- data_type_id  int unsigned  
-  what type of data this object is   
-- actual_obj_id  int unsigned    
-  id of the acutal object this parameter references  
-	
-actual_parm_ac  
-  parameters that are ari collections  
-- ap_id int unsigned   
-  id of the actual parameter
-- ac_id int unsigned   
-  id of the ari collection this parameter references  
-
-actual_parm_tnvc  
-  parameters that are type name value collection  
-- ap_id  int unsigned  
-  id of the actual parm  
-- tnvc_id int unsigned  
-  id of the type name value collection this parameter references  
-
-
 
 
 ## views
