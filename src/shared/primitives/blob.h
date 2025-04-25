@@ -95,7 +95,7 @@ typedef struct {
  */
 
 int       blob_append(blob_t *blob, uint8_t *buffer, uint32_t length);
-blob_t*   blob_create(uint8_t *value, size_t length, size_t alloc);
+blob_t*   blob_create(const uint8_t *value, size_t length, size_t alloc);
 int       blob_compare(blob_t* v1, blob_t *v2);
 int       blob_copy(blob_t src, blob_t *dest);
 blob_t*   blob_copy_ptr(blob_t *src);
@@ -108,7 +108,7 @@ int       blob_serialize(QCBOREncodeContext *encoder, blob_t *item);
 int       blob_serialize_as_bytes(QCBOREncodeContext *it, blob_t *blob);
 
 int       blob_grow(blob_t *blob, uint32_t length);
-int       blob_init(blob_t *blob, uint8_t *value, size_t length, size_t alloc);
+int       blob_init(blob_t *blob, const uint8_t *value, size_t length, size_t alloc);
 void      blob_release(blob_t *blob, int destroy);
 
 blob_t*   blob_serialize_wrapper(blob_t *blob);
