@@ -784,29 +784,6 @@ where
 	
 
 create or replace
-view vw_rpt_set as 
-select
-	rpt_join.*,
-	vw_rptt.entries "template"  
-from
-	vw_rptt,
-	(select
-		ari_rptset.*,
-		ari_collection.num_entries as ac_num_entries , 
-		ari_collection.entries
-	from
-		ari_collection,
-		ari_rptset
-	where 
-		ari_rptset.ac_id = ari_collection.ac_id ) as rpt_join
-	where vw_rptt.ari_rptt_id = rpt_join.ari_rptt_id;
-
-	
-	
-
-
-
-create or replace
 	view vw_ari_union as 
 select
 	union_join.*,

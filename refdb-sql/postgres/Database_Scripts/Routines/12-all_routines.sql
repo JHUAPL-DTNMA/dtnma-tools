@@ -648,19 +648,6 @@ p_obj_name);
 end$$;
 
 
--- STORED PROCEDURE(S) for creating expresions that are used in rules and variables 
-
---
--- 
--- CREATE OR REPLACE PROCEDURE sp_insert_postfix_operations(IN p_num_operators integer, p_operator_ids_list varchar(1000), p_operands_values_list varchar(10000), INOUT r_postfix_operations integer)
- -- we get a list of operators and a list of operands need to create an ari collection for both 
---    -- need to finish
---    -- generate an ari collection
---    -- add in the airs
---    -- call sp_insert_ari_collection(IN p_num_entries integer, p_definition_ids_list varchar(10000), p_instance_ids_list varchar(10000), p_use_desc varchar, INOUT r_ac_id integer)
---    
--- end$$;
--- 
 
 
 -- ==================================================================
@@ -674,8 +661,6 @@ end$$;
 -- OUT 
 -- 		r_expr_id integer - id of the expr in the database
 -- =================================================================
-
-
 CREATE OR REPLACE PROCEDURE SP__insert_expression(IN p_out_type integer,   
 p_postfix_operations integer, INOUT r_expr_id integer)
 LANGUAGE plpgsql
@@ -1641,34 +1626,19 @@ as $$ BEGIN
 END$$;
 
 
-create or replace procedure SP__insert_ari_rpt_set(in p_correlator_nonce INT, p_reference_time INT not null, p_report_list varchar, p_agent_id varchar, INOUT r_ari_rptset_id integer)
+create or replace procedure SP__insert_ari_rpt_set(in p_correlator_nonce INT, p_reference_time varchar, p_report_list varchar, p_report_list_cbor bytea, p_agent_id varchar)
 language plpgsql
-as $$ BEGIN 
-	INSERT INTO ari_rptset(correlator_nonce, reference_time, report_list, agent_id)
-VALUES(p_correlator_nonce, p_reference_time, p_report_list, p_agent_id) RETURNING  ari_rptset_id INTO r_ari_rptset_id;
-End$$;
+	as $$ BEGIN 
+		INSERT INTO ari_rptset(correlator_nonce, reference_time, report_list, report_list_cbor, agent_id)
+	VALUES(p_correlator_nonce, p_reference_time, p_report_list, p_report_list_cbor, p_agent_id);
+	End$$;
 
 
 
---# for testing the delete function 
--- p_obj_name := 'bundles_by_priority';
--- select * from obj_definition join obj_identifier on obj_definition.obj_id = obj_identifier.obj_id;
--- -- select definition_id from obj_definition where obj_id = (SELECT obj_id FROM obj_identifier WHERE obj_name = p_obj_name);
-
--- -- set  @fp_spec_id_control_definitionobj_definitionformal_parmspecedd1 = (select fp_spec_id from edd_definition where definition_id = (select definition_id from obj_definition where obj_id = (SELECT obj_id FROM obj_identifier WHERE obj_name = p_obj_name)));
--- -- CALL SP__insert_actual_parms_set(1, @fp_spec_id_edd1, 'UINT', '1', @ap_spec_id); 
--- -- CALL SP__insert_edd_instance(@edd_definition_id_9, @ap_spec_id,NULL, @edd_inst_id_1);
-
-
--- -- Select * from obj_definition;
--- -- SELECT obj_id FROM obj_identifier WHERE obj_name = p_obj_name;
--- -- SELECT * from obj_definition where obj_id = (SELECT obj_id FROM obj_identifier WHERE obj_name = p_obj_name);
-
--- SELECT * FROM vw_edd_instance;
--- -- CALL SP__delete_obj_definition(0, null, @p_obj_name);
--- call SP__delete_edd_instance(null, 'bundles_by_priority');
--- -- CALL SP__delete_edd_instance(null, @p_o-- bj_name);
-
--- SELECT * FROM vw_edd_instance;
-
+create or replace procedure SP__insert_ari_tbl(in p_ari_tblt_id INT, p_num_entries INTEGER, p_table_entry varchar, p_table_entry_cbor bytea,  p_agent_id varchar)
+language plpgsql
+	as $$ BEGIN 
+		INSERT INTO ari_tbl(ari_tblt_id, num_entries , table_entry, table_entry_cbor, agent_id)
+	VALUES(p_ari_tblt_id, p_num_entries , p_table_entry, p_table_entry_cbor, p_agent_id);
+	End$$;
 

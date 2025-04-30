@@ -491,9 +491,11 @@ use_desc varchar,
 
 create table if not exists ari_tbl (
     ari_tbl_id serial not null ,
-    ari_tblt_id INT not null,
+    ari_tblt_id INT,
     num_entries INT not null default 0,
     table_entry varchar,
+    table_entry_cbor bytea,
+    agent_id varchar,
     primary key (ari_tbl_id),
     foreign key (ari_tblt_id)
         references ari_tblt (ari_tblt_id)
@@ -503,7 +505,7 @@ create table if not exists ari_tbl (
 -- exec-set
 create table if not exists execution_set(
     execution_set_id serial not null ,
-    correlator_nonc bytea,
+    correlator_nonce bytea,
     ac_id INT,
 --exec-targets
 use_desc varchar,
@@ -511,23 +513,25 @@ use_desc varchar,
     foreign key (ac_id)
         references ari_collection (ac_id)
 );
--- rpt-sets
+
 -- ari-tbl template 
 create table if not exists ari_rptt (
     ari_rptt_id serial not null ,
     ac_id INT not null,
--- AC used as the row  templates 
+    -- AC used as the row  templates 
 use_desc varchar,
     primary key (ari_rptt_id),
     foreign key (ac_id)
         references ari_collection (ac_id)
 );
 
+-- rpt-sets
 create table if not exists ari_rptset (
     ari_rptset_id serial not null,
-    correlator_nonce INT, 
+    correlator_nonce BIGINT, 
     reference_time varchar not null,
     report_list varchar,
+    report_list_cbor bytea,
     agent_id varchar,
     primary key (ari_rptset_id)
 );
@@ -872,7 +876,7 @@ drop table if exists enum_message_group_states;
 
 drop table if exists enum_message_group_types;
 
-drop table if exists nm_mgr_log;*/
+drop table if exists DB_LOG_INFO;*/
 
 
 

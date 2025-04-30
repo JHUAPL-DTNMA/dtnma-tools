@@ -124,8 +124,6 @@ void    *db_mgt_daemon(void *arg);
 uint32_t db_mgt_init(refdm_db_s *parms, uint32_t clear, uint32_t log);
 uint32_t db_mgt_init_con(size_t idx, refdm_db_s *parms);
 
-int  db_mgt_clear();
-int  db_mgt_clear_table(char *table);
 void db_mgt_close();
 void db_mgt_close_conn(size_t i);
 int  db_mgt_connected(size_t i);
@@ -140,10 +138,8 @@ void    db_mgt_txn_start();
 // void     db_mgt_txn_commit();
 void db_mgt_txn_rollback();
 
-int     db_mgr_sql_persist();
 void    db_mgr_sql_info_deserialize(string_t *data);
 string_t *db_mgr_sql_info_serialize();
-int     db_mgr_sql_init();
 void  db_process_outgoing(refdm_mgr_t *mgr);
 
 /* Functions to process outgoing message tables. */
@@ -153,9 +149,9 @@ void  db_process_outgoing(refdm_mgr_t *mgr);
 /* Functions to process incoming messages. */
 uint32_t db_incoming_initialize(refdm_mgr_t* mgr);
 int32_t  db_incoming_finalize(uint32_t id, uint32_t grp_status, m_string_t src_eid, const char *raw_input);
-// uint32_t db_insert_msg_reg_agent(uint32_t grp_id, msg_agent_t *msg, int *status);
-uint32_t db_insert_msg_rpt_set(uint32_t grp_id, cace_ari_t *rpt, refdm_agent_t *agent, int *status);
-uint32_t db_insert_msg_tbl_set(uint32_t grp_id, cace_ari_t *rpt, int *status);
+
+uint32_t db_insert_msg_rpt_set(cace_ari_t *val, refdm_agent_t *agent, int *status);
+uint32_t db_insert_msg_tbl(cace_ari_t *val, refdm_agent_t *agent, int *status);
 
 refdm_agent_t *db_fetch_agent(int32_t id);
 int32_t  db_fetch_agent_idx(string_t *sender);

@@ -80,8 +80,16 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     mgr->rest             = NULL;
 #endif
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    db_mgr_sql_init(mgr);
-	db_mgt_init(mgr->sql_info, 0, 1);
+    
+    //setting sql info
+    mgr->sql_info.server = strdup(getenv("DB_HOST"));
+    mgr->sql_info.username = strdup(getenv("DB_USER"));
+    mgr->sql_info.password = strdup(getenv("DB_PASSWORD"));
+    mgr->sql_info.database = strdup(getenv("DB_NAME"));
+    
+    pthread_mutex_init(&(mgr->sql_lock), NULL);
+
+	db_mgt_init(&(mgr->sql_info), 0, 1);
 #endif
 }
 
@@ -91,6 +99,7 @@ void refdm_mgr_deinit(refdm_mgr_t *mgr)
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     db_mgt_close();
+    pthread_mutex_destroy(&(mgr->sql_lock));
 #endif
 
     pthread_mutex_destroy(&(mgr->agent_mutex));
@@ -117,7 +126,7 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
         { NULL, NULL },
     };
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    threadinfo[2] = (cace_threadinfo_t) { &db_mgt_daemon, "nm_mgr_db" };
+    // threadinfo[2] = (cace_threadinfo_t) { &db_mgt_daemon, "nm_mgr_db" };
 #endif
     if (cace_threadset_start(mgr->threads, threadinfo, sizeof(threadinfo) / sizeof(cace_threadinfo_t), mgr))
     {

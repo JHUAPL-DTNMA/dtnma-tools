@@ -49,6 +49,7 @@
 #include <cace/util/threadset.h>
 #include <m-dict.h>
 #include <m-string.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,13 +69,13 @@ struct mg_context;
  */
 typedef struct
 {
-    pthread_mutex_t lock;
+    
 
-    char server[UI_SQL_SERVERLEN];
-    char username[UI_SQL_ACCTLEN];
-    char password[UI_SQL_ACCTLEN];
-    char database[UI_SQL_DBLEN];
-
+    char *server;
+    char *username;
+    char *password;
+    char *database;
+    
     //    db_desc_t desc;
 } refdm_db_s;
 #endif
@@ -131,7 +132,8 @@ typedef struct refdm_mgr_s
 #endif
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /// SQL client state, managed by a background thread
-    refdm_db_s *sql_info;
+    refdm_db_s sql_info;
+    pthread_mutex_t sql_lock;
 #endif
 
 } refdm_mgr_t;
