@@ -49,6 +49,7 @@
 #include <cace/util/threadset.h>
 #include <m-dict.h>
 #include <m-string.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,7 +57,28 @@ extern "C" {
 
 // Forward declarations
 struct mg_context;
-struct refdm_db_s;
+
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#define UI_SQL_SERVERLEN (80)
+#define UI_SQL_ACCTLEN   (20)
+#define UI_SQL_DBLEN     (20)
+#define UI_SQL_TOTLEN    (UI_SQL_SERVERLEN + UI_SQL_ACCTLEN + UI_SQL_ACCTLEN + UI_SQL_DBLEN)
+/*
+ * This structure holds the constants needed to store SQL database
+ * information.
+ */
+typedef struct 
+{
+    
+
+    char *server;
+    char *username;
+    char *password;
+    char *database;
+    
+    //    db_desc_t desc;
+} refdm_db_t;
+#endif
 
 typedef enum mgr_ui_mode_enum
 {
@@ -110,7 +132,8 @@ typedef struct refdm_mgr_s
 #endif
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /// SQL client state, managed by a background thread
-    struct refdm_db_s *sql_info;
+    refdm_db_t sql_info;
+    pthread_mutex_t sql_lock;
 #endif
 
 } refdm_mgr_t;

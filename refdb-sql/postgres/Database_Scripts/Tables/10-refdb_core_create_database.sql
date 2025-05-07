@@ -349,48 +349,11 @@ create table if not exists data_model (
     enumeration int not null, 
     version_name varchar default '0.0.0',
     use_desc varchar,
-    primary key (data_model_id),
-    UNIQUE (enumeration)
+    primary key (data_model_id)
 -- Below UNIQUE key not valid. Explicit check in SP instead instead.  TODO: Add appropriate indexes
 -- UNIQUE (namespace_type, issuing_org , name_string , version_name)
 );
 
-/*CREATE TABLE IF NOT EXISTS adm (
-    namespace_id INT  NOT NULL,
-    enumeration INT  NOT NULL,
-    adm_name varchar,
-    adm_enum INT ,
-    adm_enum_label varchar,
-    use_desc varchar DEFAULT NULL,
-    PRIMARY KEY (namespace_id),
-    FOREIGN KEY (namespace_id)
-        REFERENCES namespace (namespace_id),
-    UNIQUE (adm_enum)
-);
-
---  Operational Data Models (ODMs)
---  An ODM is a logical entity for containing AMM objects, similar to an
---    ADM (Section 4) but in an ODM the objects are not static.  An ODM's
---    objects can be added, removed, and (with some restrictions) modified
---    during the runtime of an Agent.  Like an ADM, each ODM exists as a
---    separate namespace for its contained objects and an Agent can contain
---    any number of ODMs.
-
---    Some object types, those which require implementation outside of the
---    Agent proper, are not available to be created in an ODM.  These
---    include the CTRL, EDD, and OPER.
-CREATE TABLE IF NOT EXISTS odm (
-    namespace_id INT  NOT NULL,
-    enumeration INT  NOT NULL,
-    odm_name varchar,
-    odm_enum INT ,
-    odm_enum_label varchar,
-    use_desc varchar DEFAULT NULL,
-    PRIMARY KEY (namespace_id),
-    FOREIGN KEY (namespace_id)
-        REFERENCES namespace (namespace_id),
-    UNIQUE (odm_enum)
-);*/
 
 
 CREATE TABLE if not exists registered_agents (
@@ -503,49 +466,7 @@ create table if not exists ari_collection (
     use_desc varchar,
     primary key (ac_id)
 );
--- CREATE TABLE IF NOT EXISTS ari_collection_entry (
---     ac_entry_id serial  NOT NULL ,
---     ac_id INT  NOT NULL,
---     order_num INT  NOT NULL,
---     PRIMARY KEY (ac_entry_id),
---     FOREIGN KEY (ac_id)
---         REFERENCES ari_collection (ac_id)
---         ON DELETE CASCADE,
---     UNIQUE (ac_id , order_num)
--- );
--- CREATE TABLE IF NOT EXISTS ari_collection_formal_entry (
---     ac_entry_id INT  NOT NULL,
---     obj_formal_definition_id INT  NOT NULL,
---     PRIMARY KEY (ac_entry_id),
---     FOREIGN KEY (ac_entry_id)
---         REFERENCES ari_collection_entry (ac_entry_id)
---         ON DELETE CASCADE,
---     FOREIGN KEY (obj_formal_definition_id)
---         REFERENCES obj_formal_definition (obj_formal_definition_id)
---         ON DELETE CASCADE
--- );
--- CREATE TABLE IF NOT EXISTS ari_collection_literal_entry (
---     ac_entry_id INT  NOT NULL,
---     literal_ari_id INT  NOT NULL,
---     PRIMARY KEY (ac_entry_id),
---     FOREIGN KEY (ac_entry_id)
---         REFERENCES ari_collection_entry (ac_entry_id)
---         ON DELETE CASCADE,
---     FOREIGN KEY (literal_ari_id)
---         REFERENCES literal_ari_id (literal_ari_id)
---         ON DELETE CASCADE
--- );
--- CREATE TABLE IF NOT EXISTS ari_collection_object_entry (
---     ac_entry_id serial  NOT NULL ,
---     obj_actual_definition_id INT  NOT NULL,
---     PRIMARY KEY (ac_entry_id),
---     FOREIGN KEY (ac_entry_id)
---         REFERENCES ari_collection_entry (ac_entry_id)
---         ON DELETE CASCADE,
---     FOREIGN KEY (obj_actual_definition_id)
---         REFERENCES obj_actual_definition (obj_actual_definition_id)
---         ON DELETE CASCADE
--- );
+
 -- ari-map
 
 create table if not exists ari_map (
@@ -555,16 +476,7 @@ create table if not exists ari_map (
     use_desc varchar,
     primary key (am_id)
 );
--- CREATE TABLE IF NOT EXISTS ari_map_entry (
---     am_entry_id serial  NOT NULL ,
---     am_id INT  NOT NULL,
---     order_num INT  NOT NULL,
---     PRIMARY KEY (am_entry_id),
---     FOREIGN KEY (am_id)
---         REFERENCES ari_map (am_id)
---         ON DELETE CASCADE,
---     UNIQUE (am_id , order_num)
--- );
+
 -- ari-tbl template 
 create table if not exists ari_tblt (
     ari_tblt_id serial not null ,
@@ -579,33 +491,21 @@ use_desc varchar,
 
 create table if not exists ari_tbl (
     ari_tbl_id serial not null ,
-    ari_tblt_id INT not null,
+    ari_tblt_id INT,
     num_entries INT not null default 0,
-    use_desc varchar,
-    ac_id INT,
+    table_entry varchar,
+    table_entry_cbor bytea,
+    agent_id varchar,
     primary key (ari_tbl_id),
-    foreign key (ac_id)
-        references ari_collection (ac_id),
     foreign key (ari_tblt_id)
         references ari_tblt (ari_tblt_id)
 );
--- CREATE TABLE IF NOT EXISTS ari_tbl_entry (
---     ari_tbl_entry_id serial  NOT NULL ,
---     ari_tbl_id INT  NOT NULL,
---     order_num INT  NOT NULL,
---     ac_id INT NOT NULL,
---     PRIMARY KEY (ari_tbl_entry_id),
---     FOREIGN KEY (ari_tbl_id)
---         REFERENCES ari_tbl (ari_tbl_id)
---         ON DELETE CASCADE,
---     FOREIGN KEY (ac_id)
---         REFERENCES ari_collection (ac_id),
---     UNIQUE (ari_tbl_id , order_num)
--- );
+
+
 -- exec-set
 create table if not exists execution_set(
     execution_set_id serial not null ,
-    correlator_nonc bytea,
+    correlator_nonce bytea,
     ac_id INT,
 --exec-targets
 use_desc varchar,
@@ -613,27 +513,27 @@ use_desc varchar,
     foreign key (ac_id)
         references ari_collection (ac_id)
 );
--- rpt-sets
+
 -- ari-tbl template 
 create table if not exists ari_rptt (
     ari_rptt_id serial not null ,
     ac_id INT not null,
--- AC used as the row  templates 
+    -- AC used as the row  templates 
 use_desc varchar,
     primary key (ari_rptt_id),
     foreign key (ac_id)
         references ari_collection (ac_id)
 );
 
+-- rpt-sets
 create table if not exists ari_rptset (
     ari_rptset_id serial not null,
-    ari_rptt_id INT not null,
-    num_entries INT not null default 0,
-    ac_id INT,
-    use_desc varchar,
-    primary key (ari_rptset_id),
-    foreign key (ac_id)
-        references ari_collection (ac_id)
+    correlator_nonce BIGINT, 
+    reference_time varchar not null,
+    report_list varchar,
+    report_list_cbor bytea,
+    agent_id varchar,
+    primary key (ari_rptset_id)
 );
 
 create table if not exists formal_parmspec (
@@ -920,8 +820,8 @@ create table if not exists variable_formal_definition (
     obj_formal_definition_id INT not null,
     fp_spec_id INT ,
     data_type_id INT not null,
-    expression VARCHAR,
-    init_value VARCHAR,
+    expression varchar ,
+    init_value varchar ,
     primary key (obj_formal_definition_id),
     foreign key (obj_formal_definition_id)
         references obj_formal_definition (obj_formal_definition_id)
@@ -976,7 +876,7 @@ drop table if exists enum_message_group_states;
 
 drop table if exists enum_message_group_types;
 
-drop table if exists nm_mgr_log;*/
+drop table if exists DB_LOG_INFO;*/
 
 
 
@@ -1154,11 +1054,10 @@ comment on
 table message_report_set_entry is 'A set of received reports'
   ;
 
-create table if not exists nm_mgr_log (
+create table if not exists DB_LOG_INFO (
   id SERIAL not null ,
   time TIMESTAMP not null default NOW(),
   msg varchar not null,
-  details text null,
   level INT null,
   source VARCHAR(32) null,
   file VARCHAR(64) null,
@@ -1167,5 +1066,5 @@ create table if not exists nm_mgr_log (
   );
 
 comment on
-table nm_mgr_log is 'AMP_DEBUG logging table for ION NM Manager Application. Primarily intended for debug purposes.'
+table DB_LOG_INFO is 'logging table for  NM Manager Application. Primarily intended for debug purposes.'
 ;

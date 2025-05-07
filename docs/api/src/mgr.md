@@ -45,7 +45,6 @@ The following pages contain additional information on the Manager:
 
 - [mgr_rx_thread](@ref mgr_rx_thread) - Process all inbound messages from registered agents.
 - [ui_thread](@ref ui_thread) - Runs the console-based user interface
-- [db_mgt_daemon](@ref db_mgt_daemon) - If SQL support is enabled, this thread handles all database access.
 - [civetweb](https://github.com/civetweb/civetweb) - If REST support is enabled, this thread handles requests.
 
 ## RX Thread

@@ -26,7 +26,7 @@ jobs:
           sudo apt-get install -y \
               cmake ninja-build \
               ruby pkg-config build-essential patch autoconf libtool \
-              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev' || ''}} \
+              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev postgresql' || ''}} \
               valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -37,7 +37,7 @@ jobs:
               git rsync \
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
-              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel' || ''}} \
+              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel ' || ''}} \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
@@ -92,7 +92,7 @@ jobs:
           sudo apt-get install -y \
               cmake ninja-build \
               ruby pkg-config build-essential patch autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev \
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev postgresql\
               binutils \
               valgrind gcovr xmlstarlet python3-venv
       - name: Set up OS
@@ -104,7 +104,7 @@ jobs:
               git rsync \
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
-              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel \
+              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               binutils \
               valgrind xmlstarlet python3-pip \
               python3.11
