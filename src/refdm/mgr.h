@@ -67,7 +67,7 @@ struct mg_context;
  * This structure holds the constants needed to store SQL database
  * information.
  */
-typedef struct
+typedef struct 
 {
     
 
@@ -77,7 +77,7 @@ typedef struct
     char *database;
     
     //    db_desc_t desc;
-} refdm_db_s;
+} refdm_db_t;
 #endif
 
 typedef enum mgr_ui_mode_enum
@@ -132,7 +132,7 @@ typedef struct refdm_mgr_s
 #endif
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /// SQL client state, managed by a background thread
-    refdm_db_s sql_info;
+    refdm_db_t sql_info;
     pthread_mutex_t sql_lock;
 #endif
 

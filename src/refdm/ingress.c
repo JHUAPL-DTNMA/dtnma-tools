@@ -101,19 +101,6 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 
     // And check for file rotation (we won't break up a set between files)
     refdm_agent_rotate_log(agent, &mgr->agent_log_cfg, false);
-
-    
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    // Commit transaction and log as applicable
-    // if (agent->log_fd && mgr->agent_log_cfg.rx_rpt)
-    {
-    // string_t buf;
-    // string_init(buf);
-    // cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-    // db_incoming_finalize(incoming_idx, db_status, mgr->own_eid, string_get_cstr(buf));
-
-    }
-#endif
 }
 
 void *refdm_ingress_worker(void *arg)

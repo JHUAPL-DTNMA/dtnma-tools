@@ -52,7 +52,7 @@ static MYSQL *gConn[MGR_NUM_SQL_CONNECTIONS];
 #ifdef HAVE_POSTGRESQL
 static PGconn *gConn[MGR_NUM_SQL_CONNECTIONS];
 #endif // HAVE_POSTGRESQL
-static refdm_db_s *gParms;
+static refdm_db_t *gParms;
 static uint8_t  gInTxn;
 int db_log_always = 1; // If set, always log raw CBOR of incoming messages for debug purposes, otherwise log errors
                        // only. TODO: Add UI or command-line option to change setting at runtime
@@ -398,134 +398,7 @@ static inline void db_mgt_txn_commit(int dbidx)
     }
 }
 
-/******************************************************************************
- *
- * \par Function Name: db_incoming_initialize
- *
- * \par Returns the id of the last insert into dbtIncoming.
- *
- * \return -1 - System Error
- *         0   - Non-fatal issue.
- *         >0         - The index of the inserted item.
- *
- * \param[in] sender_eid - Who sent the messages.
- *
- * Modification History:
- *  MM/DD/YY  AUTHOR         DESCRIPTION
- *  --------  ------------   ---------------------------------------------
- *  08/07/13  S. Jacobs      Initial implementation,
- *  08/29/15  E. Birrane     Added sender EID.
- *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
- *            D Linko        Updated for dtnma tools
- *****************************************************************************/
-// uint32_t db_incoming_initialize(eid_t sender_eid)
-uint32_t db_incoming_initialize(refdm_mgr_t *mg)
-{
-    uint32_t rtv = 0; // Note: An ID of 0 is reserved as an error condition. MySQL will never create a new entry for
-                      // this table with a value of 0. // TODO postgresql is that true for postgresql too?
-    // char* name;
-    // string_set_str(mg->own_eid, name);
-//     // int64 time_stamp_seconds = OS_TimeGetTotalSeconds(timestamp.secs);
-//     int64_t time_stamp_seconds = 0;
-    CHKERRVAL(!db_mgt_connected(DB_RPT_CON));
 
-//     // dbprep_declare(DB_RPT_CON, MSGS_INCOMING_CREATE, 2, 1);
-//     // dbprep_bind_param_int(0, time_stamp_seconds);
-//     // dbprep_bind_param_str(1, name);
-// #ifdef HAVE_MYSQL
-//     mysql_stmt_bind_param(stmt, bind_param);
-
-//     dbprep_bind_res_int(0, rtv);
-//     mysql_stmt_execute(stmt);
-//     mysql_stmt_bind_result(stmt, bind_res);
-
-//     // Fetch results (Note: Because we are using a stored procedure, we can't depend on LAST_INSERT_ID)
-//     // We fetch the (single) row, which will automatically populate our rtv.
-//     // In the case of an error, it will remain at the default error value of 0
-//     mysql_stmt_fetch(stmt);
-
-//     mysql_stmt_free_result(stmt);
-// #endif // HAVE_MYSQL
-// #ifdef HAVE_POSTGRESQL
-//     dbexec_prepared;
-//     DB_CHKINT(dbtest_result(PGRES_TUPLES_OK))
-//     char *iptr = PQgetvalue(res, 0, 0);
-//     rtv        = ntohl(*((uint32_t *)iptr));
-//     PQclear(res);
-// #endif // HAVE_POSTGRESQL
-
-    return rtv;
-}
-
-/******************************************************************************
- *
- * \par Function Name: db_incoming_finalize
- *
- * \par Finalize processing of the incoming messages.
- *
- * \return -1 - System Error
- *         0   - Non-fatal issue.
- *         >0         - The index of the inserted item.
- *
- * \param[in] id - The incoming message group ID.
- *
- * Modification History:
- *  MM/DD/YY  AUTHOR         DESCRIPTION
- *  --------  ------------   ---------------------------------------------
- *  08/07/13  S. Jacobs      Initial implementation,
- *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
- *****************************************************************************/
-
-int32_t db_incoming_finalize(uint32_t id, uint32_t grp_status, m_string_t src_eid, const char *raw_input)
-{
-    db_mgt_txn_commit(DB_RPT_CON);
-    CACE_LOG_INFO("db_incoming_finalize --> 1");
-    return 1;
-}
-
-/******************************************************************************
- *
- * \par Function Name: db_mgt_daemon
- *
- * \par Thread to poll database for controls pending transmission.
- *
- * \par Note: In the future, alternate DB engines, such as PostgreSQL, may allow
- *   this thread to be replaced with a LISTEN/NOTIFY type push approach.
- *
- *
- * \param[in] running - Pointer to system flag to allow for clean exit.
- *
- *
- * Modification History:
- *  MM/DD/YY  AUTHOR         DESCRIPTION
- *  --------  ------------   ---------------------------------------------
- *  07/13/13  S. Jacobs      Initial implementation,
- *  08/29/15  E. Birrane     Only query DB if we have an active connection.
- *  04/24/16  E. Birrane     Accept global "running" flag.
- *  01/26/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
- *****************************************************************************/
-
-void *db_mgt_daemon(void *arg)
-{
-    refdm_mgr_t  *mgr = arg;
-    // OS_time_t start_time, now_time;
-    // OS_time_t delta, remain;
-
-    CACE_LOG_DEBUG("db_mgt_daemon", "Starting Manager Database Daemon", NULL);
-
-    while (cace_daemon_run_get(&mgr->running))
-    {
-        // currently database management runs as needed
-        sleep(200);
-    }
-
-    CACE_LOG_DEBUG("Cleaning up Manager Database Daemon");
-
-    db_mgt_close();
-
-    CACE_LOG_DEBUG("Manager Database Daemon Finished.");
-    pthread_exit(NULL);
-}
 
 /******************************************************************************
  *
@@ -547,7 +420,7 @@ void *db_mgt_daemon(void *arg)
  *  07/12/13  S. Jacobs      Initial implementation,
  *  01/26/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
  *****************************************************************************/
-uint32_t db_mgt_init(refdm_db_s* parms, uint32_t clear, uint32_t log)
+uint32_t db_mgt_init(refdm_db_t* parms, uint32_t clear, uint32_t log)
 {
     CACE_LOG_INFO("setting up db connect for ctrl");
 
@@ -577,7 +450,7 @@ uint32_t db_mgt_init(refdm_db_s* parms, uint32_t clear, uint32_t log)
  *  Prepared queries are connection specific.  While we may not use all prepared statements for all connections,
  *initializing the same sets everywhere simplifies management.
  **/
-uint32_t db_mgt_init_con(size_t idx, refdm_db_s* parms)
+uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
 {
     
     if (gConn[idx] == NULL)
@@ -764,7 +637,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_s* parms)
                         return 0;
                     }
 
-                // OS_TaskDelay(SQL_RECONN_TIME_MSEC);
+                
                 num_tries++;
             }
         }
@@ -1015,72 +888,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_s* parms)
 
                 CACE_LOG_INFO("-->%d", 1);
                 return 1;
-            }
-
-/******************************************************************************
- *
- * \par Function Name: db_mgt_txn_start
- *
- * \par Starts a transaction in the database, if we are not already in a txn.
- *
- * \par Notes:
- *   - This function is not multi-threaded. We assume that we are the only
- *     input into the database and that there is only one "active" transaction
- *     at a time.
- *   - This function does not support nested transactions.
- *   - If a transaction is already open, this function assumes that is the
- *     transaction to use.
- *
- * Modification History:
- *  MM/DD/YY  AUTHOR         DESCRIPTION
- *  --------  ------------   ---------------------------------------------
- *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
- *****************************************************************************/
-
-void db_mgt_txn_start() // DEPRECATED in favor of disabling autocommit for RPT_CON, while CTRL_CON does not
-                        // need transactions. If a third connection is added in the future for the UI, that
-                        // version may require explicitly starting transactions
-{
-    if (gInTxn == 0)
-    {
-        if (db_mgt_query_insert(NULL, "START TRANSACTION", NULL) == 1)
-        {
-            gInTxn = 1;
-        }
-    }
-}
-
-/******************************************************************************
- *
- * \par Function Name: db_mgt_txn_rollback
- *
- * \par Rolls back a transaction in the database, if we are in a txn.
- *
- * \par Notes:
- *   - This function is not multi-threaded. We assume that we are the only
- *     input into the database and that there is only one "active" transaction
- *     at a time.
- *   - This function does not support nested transactions.
- *
- * Modification History:
- *  MM/DD/YY  AUTHOR         DESCRIPTION
- *  --------  ------------   ---------------------------------------------
- *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
- *****************************************************************************/
-
-void db_mgt_txn_rollback()
-{
-    if (gInTxn == 1)
-    {
-        if (db_mgt_query_insert(NULL, "ROLLBACK", NULL) == 1)
-        {
-            gInTxn = 0;
-        }
-    }
-}
-
-            
-                                
+            }                           
 
 /******************************************************************************
  *
@@ -1292,8 +1100,8 @@ int32_t db_fetch_agent_idx(string_t *eid)
     
         #ifdef HAVE_POSTGRESQL
         dbexec_prepared;
-
         #endif // HAVE_POSTGRESQL
+        
         //cleaning up vars
         string_clear(tp);
         string_clear(rpt);
@@ -1360,4 +1168,3 @@ int32_t db_fetch_agent_idx(string_t *eid)
 
         return rtv;
     }
-

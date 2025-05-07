@@ -86,9 +86,8 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     mgr->sql_info.username = strdup(getenv("DB_USER"));
     mgr->sql_info.password = strdup(getenv("DB_PASSWORD"));
     mgr->sql_info.database = strdup(getenv("DB_NAME"));
-    
-    pthread_mutex_init(&(mgr->sql_lock), NULL);
 
+    pthread_mutex_init(&(mgr->sql_lock), NULL);
 	db_mgt_init(&(mgr->sql_info), 0, 1);
 #endif
 }
@@ -99,6 +98,10 @@ void refdm_mgr_deinit(refdm_mgr_t *mgr)
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     db_mgt_close();
+    free(mgr->sql_info.server);
+    free(mgr->sql_info.username);
+    free(mgr->sql_info.password);
+    free(mgr->sql_info.database);
     pthread_mutex_destroy(&(mgr->sql_lock));
 #endif
 
@@ -125,9 +128,7 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
         //        { &ui_thread, "nm_mgr_ui" },
         { NULL, NULL },
     };
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    // threadinfo[2] = (cace_threadinfo_t) { &db_mgt_daemon, "nm_mgr_db" };
-#endif
+
     if (cace_threadset_start(mgr->threads, threadinfo, sizeof(threadinfo) / sizeof(cace_threadinfo_t), mgr))
     {
         return 2;
