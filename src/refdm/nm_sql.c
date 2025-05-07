@@ -18,6 +18,7 @@
 
 
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 #include <string.h>
 #include <arpa/inet.h>
 #include <m-bstring.h>
@@ -1168,3 +1169,4 @@ int32_t db_fetch_agent_idx(string_t *eid)
 
         return rtv;
     }
+#endif /* ifdef HAVE_MYSQL  or HAVE_POSTGRESQL*/

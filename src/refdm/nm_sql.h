@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
  
 #ifndef NM_MGR_SQL_H
 #define NM_MGR_SQL_H
@@ -134,4 +135,5 @@ void db_log_msg(const char *filename, int lineno, const char *funcname, int leve
 
 #endif /* NM_MGR_SQL_H */
 
+#endif // HAVE_MYSQL
 
