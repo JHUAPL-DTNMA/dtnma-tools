@@ -16,6 +16,16 @@ services:
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
 
+  adminer:
+    hostname: adminer
+    image: docker.io/library/adminer:latest
+    restart: unless-stopped
+    security_opt:
+      - "label=type:adminer.process"
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+
+
   manager:
     hostname: manager
     build:

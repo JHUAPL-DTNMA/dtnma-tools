@@ -24,14 +24,14 @@ set(HFILES
   agents.h
   ingress.h
   instr.h
-#  nm_mgr_sql.h
+  nm_sql.h
   mgr.h
 )
 set(CFILES
   agents.c
   ingress.c
   instr.c
-#  nm_mgr_sql.c
+  nm_sql.c
   mgr.c
 )
 if(REFDM_UI_CLI)
@@ -51,6 +51,7 @@ if(civetweb_FOUND)
   list(APPEND CFILES nm_rest.c)
 endif(civetweb_FOUND)
 
+
 add_library(refdm)
 
 target_sources(refdm PRIVATE ${HFILES})
@@ -67,7 +68,7 @@ if(MYSQLCLIENT_FOUND)
   target_link_libraries(refdm PUBLIC PkgConfig::MYSQLCLIENT)
 elseif(PostgreSQL_FOUND)
   message(STATUS "Manager using POSTGRES client")
-#FIXME  target_compile_definitions(refdm PUBLIC HAVE_POSTGRESQL)
+  target_compile_definitions(refdm PUBLIC HAVE_POSTGRESQL)
   target_link_libraries(refdm PUBLIC PostgreSQL::PostgreSQL)
 else()
   message(WARNING "Manager not using any database client")

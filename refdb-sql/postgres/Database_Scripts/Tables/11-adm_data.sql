@@ -34,6 +34,6 @@ CREATE TABLE IF NOT EXISTS adm_data (
     PRIMARY KEY (enumeration),
     CONSTRAINT fk1 
         FOREIGN KEY (enumeration) 
-        REFERENCES data_model(enumeration) 
+        REFERENCES data_model(data_model_id) 
         ON UPDATE CASCADE ON DELETE CASCADE
 );

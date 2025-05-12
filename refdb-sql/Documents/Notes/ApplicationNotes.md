@@ -21,7 +21,7 @@ subcontract 1658085.
 -->
 
 ## Manager Logging
-The table "nm_mgr_log" is provided for logging of debug messages normally output to stderr by the ION NM Manager application.  The types of messages generated are determined by the AMP_DEBUG_LVL that the application was configured with.
+The table "DB_LOG_INFO" is provided for logging of debug messages normally output to stderr by the ION NM Manager application.  The types of messages generated are determined by the AMP_DEBUG_LVL that the application was configured with.
 
 This table is not a required part of the AMP database, but is an example of additional implementation-specific information that may be logged with it.  Future implementations may choose to add other companion tables.
 

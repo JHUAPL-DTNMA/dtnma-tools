@@ -42,14 +42,15 @@
 #include "mgr.h"
 
 #include "ingress.h"
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-#include "nm_mgr_sql.h"
-#endif
 #ifdef USE_CIVETWEB
 #include "nm_rest.h"
 #endif
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
+
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#include "nm_sql.h"
+#endif
 
 void refdm_mgr_init(refdm_mgr_t *mgr)
 {
@@ -73,12 +74,21 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     refdm_agent_dict_init(mgr->agent_dict);
     pthread_mutex_init(&(mgr->agent_mutex), NULL);
 
+
 #if defined(CIVETWEB_FOUND)
     mgr->rest_listen_port = 8089;
     mgr->rest             = NULL;
 #endif
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    mgr->sql_info = NULL;
+    
+    //setting sql info
+    mgr->sql_info.server = strdup(getenv("DB_HOST"));
+    mgr->sql_info.username = strdup(getenv("DB_USER"));
+    mgr->sql_info.password = strdup(getenv("DB_PASSWORD"));
+    mgr->sql_info.database = strdup(getenv("DB_NAME"));
+
+    pthread_mutex_init(&(mgr->sql_lock), NULL);
+	db_mgt_init(&(mgr->sql_info), 0, 1);
 #endif
 }
 
@@ -88,6 +98,11 @@ void refdm_mgr_deinit(refdm_mgr_t *mgr)
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     db_mgt_close();
+    free(mgr->sql_info.server);
+    free(mgr->sql_info.username);
+    free(mgr->sql_info.password);
+    free(mgr->sql_info.database);
+    pthread_mutex_destroy(&(mgr->sql_lock));
 #endif
 
     pthread_mutex_destroy(&(mgr->agent_mutex));
@@ -113,9 +128,7 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
         //        { &ui_thread, "nm_mgr_ui" },
         { NULL, NULL },
     };
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    threadinfo[2] = (threadinfo_t) { &db_mgt_daemon, "nm_mgr_db" };
-#endif
+
     if (cace_threadset_start(mgr->threads, threadinfo, sizeof(threadinfo) / sizeof(cace_threadinfo_t), mgr))
     {
         return 2;
