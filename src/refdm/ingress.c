@@ -59,13 +59,13 @@
  */
 static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 {
-   
-    // 
-    #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+
+//
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
-    int      db_status    = 0;
-    db_insert_msg_rpt_set( val, agent, &db_status);
-    #endif
+    int db_status = 0;
+    db_insert_msg_rpt_set(val, agent, &db_status);
+#endif
     {
         bool wrote = false;
         pthread_mutex_lock(&agent->log_mutex);
@@ -80,7 +80,6 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 
             agent->log_fd_cnt++;
             wrote = true;
-         
         }
 #if defined(USE_JSON) && 0 // FIXME
         if (agent->log_fd && mgr->agent_log_cfg.rx_rpt)
