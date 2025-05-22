@@ -54,7 +54,10 @@ typedef struct cace_data_s
 /** Static initializer for a data store.
  * @sa cace_data_init()
  */
-#define CACE_DATA_INIT_NULL { .owned = false, .ptr = NULL, .len = 0 }
+#define CACE_DATA_INIT_NULL                    \
+     {                                         \
+         .owned = false, .ptr = NULL, .len = 0 \
+     }
 
 /** Initialize an empty data struct.
  *
