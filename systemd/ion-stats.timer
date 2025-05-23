@@ -1,0 +1,9 @@
+[Unit]
+Description=Collect ION statistics at regular intervals
+
+[Timer]
+Unit=ion-stats.service
+OnCalendar=*-*-* *:*:00,20,40
+
+[Install]
+WantedBy=multi-user.target

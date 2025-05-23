@@ -55,6 +55,8 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/amp/msg.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amp/socket.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amp/ion_bp.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/proxy_cli.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/proxy_msg.h"
 )
 set(CFILES
     "cace_data.c"
@@ -88,6 +90,8 @@ set(CFILES
     "amp/msg.c"
     "amp/socket.c"
     "amp/ion_bp.c"
+    "amp/proxy_cli.c"
+    "amp/proxy_msg.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(

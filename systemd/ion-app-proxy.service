@@ -1,0 +1,16 @@
+[Unit]
+Description=ION Application Proxy Daemon
+After=network-online.target ion.service
+Wants=network-online.target
+Requires=ion.service
+
+[Service]
+Type=notify
+NotifyAccess=all
+PassEnvironment=DTNMA_LOGLEVEL AMP_PROXY_SOCKET ION_NODE_NUM
+EnvironmentFile=-/etc/ion/environment
+ExecStart=ion-app-proxy -l ${DTNMA_LOGLEVEL} -b ${AMP_PROXY_SOCKET} -e ipn:${ION_NODE_NUM}.7
+
+[Install]
+WantedBy=multi-user.target
+

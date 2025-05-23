@@ -57,6 +57,7 @@ jobs:
         run: |
           ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON \
               -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
+              -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
               -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
       - name: Build
         run: ./build.sh

@@ -1,14 +1,14 @@
 [Unit]
-Description=REFDM with unix datagram socket transport
+Description=REFDM with proxy SEQPACKET socket transport
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=notify
-PassEnvironment=DTNMA_LOGLEVEL REFDM_SOCKET \
+PassEnvironment=DTNMA_LOGLEVEL AMP_PROXY_SOCKET \
     DB_HOST DB_USER DB_PASSWORD DB_NAME
 EnvironmentFile=-/etc/environment
-ExecStart=refdm-socket -l ${DTNMA_LOGLEVEL} -a ${REFDM_SOCKET}
+ExecStart=refdm-proxy -l ${DTNMA_LOGLEVEL} -a ${AMP_PROXY_SOCKET}
 
 [Install]
 WantedBy=multi-user.target

@@ -74,21 +74,20 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     refdm_agent_dict_init(mgr->agent_dict);
     pthread_mutex_init(&(mgr->agent_mutex), NULL);
 
-
 #if defined(CIVETWEB_FOUND)
     mgr->rest_listen_port = 8089;
     mgr->rest             = NULL;
 #endif
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    
-    //setting sql info
-    mgr->sql_info.server = strdup(getenv("DB_HOST"));
+
+    // setting sql info
+    mgr->sql_info.server   = strdup(getenv("DB_HOST"));
     mgr->sql_info.username = strdup(getenv("DB_USER"));
     mgr->sql_info.password = strdup(getenv("DB_PASSWORD"));
     mgr->sql_info.database = strdup(getenv("DB_NAME"));
 
     pthread_mutex_init(&(mgr->sql_lock), NULL);
-	db_mgt_init(&(mgr->sql_info), 0, 1);
+    db_mgt_init(&(mgr->sql_info), 0, 1);
 #endif
 }
 

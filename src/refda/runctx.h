@@ -68,11 +68,10 @@ typedef struct
      */
     refda_agent_t *agent;
 
-    /** During execution, a reference to the manager identity which caused
-     * the execution.
-     * When triggered by the agent itself this will be empty.
+    /** During execution, the manager identity which caused the execution.
+     * When triggered by the agent itself this will be the undefined value.
      */
-    m_string_t mgr_ident;
+    cace_ari_t mgr_ident;
 
     /** During execution, a reference to a context nonce value.
      * Otherwise this will be the undefined value.

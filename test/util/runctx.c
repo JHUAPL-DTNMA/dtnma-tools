@@ -26,7 +26,7 @@ int test_util_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent)
     // no nonce for test
     refda_runctx_from(ctx, agent, NULL);
 
-    m_string_set_cstr(ctx->mgr_ident, mgr_ident);
+    cace_ari_set_tstr(&ctx->mgr_ident, mgr_ident, false);
 
     return 0;
 }

@@ -247,7 +247,7 @@ int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
     // dummy message source
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
-    m_string_set_cstr(msg.ident, dest);
+    cace_ari_set_tstr(&msg.ident, dest, true);
 
     refda_runctx_t runctx;
     refda_runctx_init(&runctx);

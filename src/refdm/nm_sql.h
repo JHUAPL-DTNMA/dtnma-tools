@@ -17,7 +17,7 @@
  */
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
- 
+
 #ifndef NM_MGR_SQL_H
 #define NM_MGR_SQL_H
 
@@ -33,20 +33,15 @@
 #include <libpq-fe.h>
 #endif // HAVE_POSTGRESQL
 
-
 #include <cace/util/defs.h>
 #include <cace/ari.h>
 #include <cace/amm/msg_if.h>
 #include "agents.h"
 #include "mgr.h"
 
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
 
 /*
  * +--------------------------------------------------------------------------+
@@ -63,8 +58,6 @@ extern "C" {
 #define SQL_CONN_TRIES       10
 #define SQL_MAX_QUERY        8192
 
-
-
 /*
  * +--------------------------------------------------------------------------+
  * |							  	MACROS
@@ -79,8 +72,6 @@ extern "C" {
  * |							  DATA TYPES +
  * +--------------------------------------------------------------------------+
  */
-
-
 
 /*
  * +--------------------------------------------------------------------------+
@@ -111,9 +102,8 @@ uint32_t db_insert_msg_rpt_set(cace_ari_t *val, refdm_agent_t *agent, int *statu
 uint32_t db_insert_msg_tbl(cace_ari_t *val, refdm_agent_t *agent, int *status);
 
 refdm_agent_t *db_fetch_agent(int32_t id);
-int32_t  db_fetch_agent_idx(string_t *sender);
-string_t    *db_fetch_ari_col(int idx);
-
+int32_t        db_fetch_agent_idx(string_t *sender);
+string_t      *db_fetch_ari_col(int idx);
 
 // If set, always log CBOR-encoded inputs and outputs to DB for debug purposes.  Received reports shall always be logged
 // in the event of an error.
@@ -122,12 +112,12 @@ string_t    *db_fetch_ari_col(int idx);
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.
  **/
-void db_log_msg(const char *filename, int lineno, const char *funcname, int level, size_t dbidx, const char *format, ...);
+void db_log_msg(const char *filename, int lineno, const char *funcname, int level, size_t dbidx, const char *format,
+                ...);
 
-
-#define DB_LOG_INFO( ...) db_log_msg(__FILE__, __LINE__, __func__, LOG_INFO, __VA_ARGS__)
-#define DB_LOG_WARN( ...) db_log_msg(__FILE__, __LINE__, __func__, LOG_WARNING, __VA_ARGS__)
-#define DB_LOG_ERR( ...)  db_log_msg(__FILE__, __LINE__, __func__,  LOG_ERR ,__VA_ARGS__)
+#define DB_LOG_INFO(...) db_log_msg(__FILE__, __LINE__, __func__, LOG_INFO, __VA_ARGS__)
+#define DB_LOG_WARN(...) db_log_msg(__FILE__, __LINE__, __func__, LOG_WARNING, __VA_ARGS__)
+#define DB_LOG_ERR(...)  db_log_msg(__FILE__, __LINE__, __func__, LOG_ERR, __VA_ARGS__)
 
 #ifdef __cplusplus
 }
@@ -136,4 +126,3 @@ void db_log_msg(const char *filename, int lineno, const char *funcname, int leve
 #endif /* NM_MGR_SQL_H */
 
 #endif // HAVE_MYSQL
-

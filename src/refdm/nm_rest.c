@@ -428,7 +428,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 
         cace_amm_msg_if_metadata_t meta;
         cace_amm_msg_if_metadata_init(&meta);
-        m_string_set(meta.dest, agent->eid);
+        cace_ari_set_tstr(&meta.dest, m_string_get_cstr(agent->eid), true);
 
         int res = (mgr->mif.send)(tosend, &meta, mgr->mif.ctx);
         cace_amm_msg_if_metadata_deinit(&meta);
@@ -457,6 +457,12 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
+
+    if (cace_ari_list_empty_p(agent->rptsets))
+    {
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        return 204;
+    }
     int retval = 0;
 
     m_string_t body;
@@ -497,6 +503,12 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
+
+    if (cace_ari_list_empty_p(agent->rptsets))
+    {
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        return 204;
+    }
     int retval = 0;
 
     m_string_t body;

@@ -1,6 +1,8 @@
 volumes:
   postgres-data:
     # temporary storage
+  sockdir:
+    # shared sockets
 
 networks:
   default:
@@ -23,26 +25,43 @@ services:
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
 
-  adminer:
-    hostname: adminer
-    image: docker.io/library/adminer:latest
-    restart: unless-stopped
-    security_opt:
-      - "label=type:adminer.process"
-    ports:
-      - "${ADMINER_PORT:-8080}:8080"
-
-  manager:
-    hostname: manager
+  amp-manager:
+    hostname: amp-manager
     build:
       context: ..
-      dockerfile: integration-test-ion/Containerfile
-      target: manager
+      dockerfile: integration-test-proxy/Containerfile
+      target: amp-manager
     ports:
       - "8089:8089/tcp"
     depends_on:
       postgres:
         condition: service_healthy
+      ion-manager:
+        condition: service_started
+    privileged: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_NICE
+    volumes:
+      - "sockdir:${SOCKDIR}"
+    environment:
+      container: docker
+      DTNMA_LOGLEVEL: debug
+      AMP_PROXY_SOCKET: "${SOCKDIR}/proxy.sock"
+      DB_HOST: postgres
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+
+  ion-manager:
+    hostname: ion-manager
+    build:
+      context: ..
+      dockerfile: integration-test-proxy/Containerfile
+      target: ion-manager
+    depends_on: {}
     privileged: true
     tty: true
     cap_add:
@@ -51,13 +70,11 @@ services:
       - SYS_NICE
     volumes:
       - "/var/tmp/pcap:/var/log/pcap"
+      - "sockdir:${SOCKDIR}"
     environment:
       container: docker
       DTNMA_LOGLEVEL: debug
-      DB_HOST: postgres
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
+      AMP_PROXY_SOCKET: "${SOCKDIR}/proxy.sock"
       ION_NODE_NUM: 1
       MGR_NODE_NUM: 1
       DUMPCAP_OUTFILE: /var/log/pcap/manager.pcap
@@ -70,10 +87,10 @@ services:
     hostname: agent1
     build:
       context: ..
-      dockerfile: integration-test-ion/Containerfile
+      dockerfile: integration-test-proxy/Containerfile
       target: agent
     depends_on:
-      manager:
+      ion-manager:
         condition: service_started
     privileged: true
     tty: true
