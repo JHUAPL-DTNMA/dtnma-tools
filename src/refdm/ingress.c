@@ -65,7 +65,7 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     int db_status = 0;
-    // refdm_db_insert_msg_rpt_set(val, agent, &db_status);
+    refdm_db_insert_msg_rpt_set(val, agent, &db_status);
 #endif
     {
         bool wrote = false;
