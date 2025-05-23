@@ -72,6 +72,14 @@ cace_amm_obj_desc_t *refda_register_ctrl(cace_amm_obj_ns_t *ns, const cace_amm_i
 cace_amm_obj_desc_t *refda_register_oper(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
                                          refda_amm_oper_desc_t *desc);
 
+/// @overload
+cace_amm_obj_desc_t *refda_register_sbr(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
+                                        refda_amm_sbr_desc_t *desc);
+
+/// @overload
+cace_amm_obj_desc_t *refda_register_tbr(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
+                                        refda_amm_tbr_desc_t *desc);
+
 /** Helper function to append a named parameter to an object descriptor.
  *
  * @param[in,out] obj The object to add a parameter onto.
