@@ -4,6 +4,13 @@ volumes:
   sockdir:
     # shared sockets
 
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
+
 services:
   postgres:
     build:
@@ -70,12 +77,11 @@ services:
       AMP_PROXY_SOCKET: "${SOCKDIR}/proxy.sock"
       ION_NODE_NUM: 1
       MGR_NODE_NUM: 1
-      DB_HOST: postgres
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
       DUMPCAP_OUTFILE: /var/log/pcap/manager.pcap
       DUMPCAP_OPTS: -i lo -i eth0
+    networks:
+      default:
+        ipv4_address: 10.5.0.101
 
   agent1:
     hostname: agent1
@@ -101,3 +107,6 @@ services:
       MGR_NODE_NUM: 1
       DUMPCAP_OUTFILE: /var/log/pcap/agent1.pcap
       DUMPCAP_OPTS: -i lo -i eth0
+    networks:
+      default:
+        ipv4_address: 10.5.0.102
