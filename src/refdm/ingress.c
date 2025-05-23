@@ -59,8 +59,9 @@
  */
 static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 {
+    // local daemon storage
+    cace_ari_set_copy(cace_ari_list_push_back_new(agent->rptsets), val);
 
-//
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     int db_status = 0;
