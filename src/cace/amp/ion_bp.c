@@ -251,7 +251,7 @@ int cace_amp_ion_bp_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta,
 
     if (!retval)
     {
-        const size_t msgbuf_len = m_bstring_size(msgbuf);
+        const size_t   msgbuf_len = m_bstring_size(msgbuf);
         const uint8_t *msgbuf_ptr = m_bstring_view(msgbuf, 0, msgbuf_len);
         if (cace_amp_msg_decode(data, msgbuf_ptr, msgbuf_len))
         {

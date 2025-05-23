@@ -57,7 +57,8 @@ int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target);
  * @param[in] mgr_ident The identity of the manager to send to.
  * @param[in,out] items The item list for the new report, which is moved out of.
  */
-int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const cace_ari_t *src, cace_ari_list_t items);
+int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const cace_ari_t *src,
+                        cace_ari_list_t items);
 
 #ifdef __cplusplus
 } // extern C

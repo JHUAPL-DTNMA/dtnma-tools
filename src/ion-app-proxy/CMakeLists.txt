@@ -25,7 +25,8 @@ set(CFILES
 )
 add_executable(ion-app-proxy)
 target_sources(ion-app-proxy PRIVATE ${HFILES} ${CFILES})
-target_link_libraries(ion-app-proxy PUBLIC refdm)
+target_link_libraries(ion-app-proxy PUBLIC cace)
+target_link_libraries(ion-app-proxy PUBLIC ION::BP)
 
 if(LIBSYSTEMD_FOUND)
     target_compile_definitions(ion-app-proxy PRIVATE -DHAVE_LIBSYSTEMD)

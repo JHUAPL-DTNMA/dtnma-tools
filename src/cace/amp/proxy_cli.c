@@ -218,10 +218,18 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
         flags = 0;
         got   = recv(sock_fd, msg_begin, msg_size, flags);
         m_bstring_release_access(msgbuf);
-        if (got <= 0)
+        if (got < 0)
         {
             CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
             result = CACE_AMM_MSG_IF_RECV_END;
+        }
+        else if (got == 0)
+        {
+            if (!cace_daemon_run_get(running))
+            {
+                CACE_LOG_DEBUG("returning due to running state change");
+                result = CACE_AMM_MSG_IF_RECV_END;
+            }
         }
     }
     CACE_LOG_INFO("Received socket datagram with %zd octets", got);
@@ -243,7 +251,7 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
     if (!result)
     {
         // view past the proxy header
-        const size_t msgbuf_len = got - head_len;
+        const size_t   msgbuf_len = got - head_len;
         const uint8_t *msgbuf_ptr = m_bstring_view(msgbuf, head_len, msgbuf_len);
         if (cace_amp_msg_decode(data, msgbuf_ptr, msgbuf_len))
         {

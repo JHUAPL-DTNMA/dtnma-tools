@@ -121,7 +121,8 @@ void *refdm_ingress_worker(void *arg)
         int recv_res = mgr->mif.recv(values, &meta, &mgr->running, mgr->mif.ctx);
         // process received items even if failed status
 
-        if (cace_log_is_enabled_for(LOG_INFO)){
+        if (cace_log_is_enabled_for(LOG_INFO))
+        {
             string_t buf;
             string_init(buf);
             cace_ari_text_encode(buf, &meta.src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
@@ -132,11 +133,11 @@ void *refdm_ingress_worker(void *arg)
         if (!cace_ari_list_empty_p(values))
         {
             // might be unknown and NULL
-            refdm_agent_t *agent = NULL;//FIXME refdm_mgr_agent_get_eid(mgr, m_string_get_cstr(meta.src));
+            refdm_agent_t *agent = NULL; // FIXME refdm_mgr_agent_get_eid(mgr, m_string_get_cstr(meta.src));
             // FIXME handle from unknown?
             if (!agent)
             {
-                //agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(meta.src));
+                // agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(meta.src));
             }
 
             cace_ari_list_it_t val_it;

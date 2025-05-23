@@ -26,6 +26,7 @@ set(CFILES
 add_executable(refda-ion)
 target_sources(refda-ion PRIVATE ${HFILES} ${CFILES})
 target_link_libraries(refda-ion PUBLIC refda)
+target_link_libraries(refda-ion PUBLIC ION::BP)
 
 if(LIBSYSTEMD_FOUND)
     target_compile_definitions(refda-ion PRIVATE -DHAVE_LIBSYSTEMD)
