@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-
-
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 #include <string.h>
 #include <arpa/inet.h>
@@ -31,7 +29,6 @@
 #include <cace/util/logging.h>
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
-
 
 /* Number of threads interacting with the database.
  - DB Polling Thread - Check for reports pending transmission
@@ -54,7 +51,7 @@ static MYSQL *gConn[MGR_NUM_SQL_CONNECTIONS];
 static PGconn *gConn[MGR_NUM_SQL_CONNECTIONS];
 #endif // HAVE_POSTGRESQL
 static refdm_db_t *gParms;
-static uint8_t  gInTxn;
+static uint8_t     gInTxn;
 int db_log_always = 1; // If set, always log raw CBOR of incoming messages for debug purposes, otherwise log errors
                        // only. TODO: Add UI or command-line option to change setting at runtime
 
@@ -81,20 +78,17 @@ enum queries
     AC_CREATE = 0,
     AC_INSERT,
     AC_GET,
-    
+
     ARI_GET,
     ARI_GET_META,
-    ARI_INSERT_CTRL, // TODO: Additional variants may be needed for other ARI typess    
-    
+    ARI_INSERT_CTRL, // TODO: Additional variants may be needed for other ARI typess
+
     ARI_MAPS_INSERT,
-    
 
     ARI_RPTSET_INSERT,
 
-
     ARI_TBL_INSERT,
-    
-    
+
     DB_LOG_MSG,
     MGR_NUM_QUERIES
 };
@@ -124,7 +118,8 @@ static char *queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
 #endif // HAVE_MYSQL
 
 #ifdef HAVE_POSTGRESQL
-static void double_to_nbo(double in, double *out){
+static void double_to_nbo(double in, double *out)
+{
     uint64_t *i = (uint64_t *)&in;
     uint32_t *r = (uint32_t *)out;
 
@@ -133,7 +128,8 @@ static void double_to_nbo(double in, double *out){
     r[1] = htonl((uint32_t)*i);
 }
 
-static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out){
+static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out)
+{
     uint64_t *i = (uint64_t *)&in;
     uint32_t *r = (uint32_t *)out;
 
@@ -190,7 +186,7 @@ static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out){
     bind_param[idx].buffer_length = len_##var;                       \
     bind_param[idx].length        = &len_##var;                      \
     bind_param[idx].buffer_type   = MYSQL_TYPE_STRING;               \
-    bind_param[idx].buffer        = (m_string_t *)var;                     \
+    bind_param[idx].buffer        = (m_string_t *)var;               \
     bind_param[idx].is_null       = 0;                               \
     bind_param[idx].error         = 0;
 
@@ -209,10 +205,10 @@ static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out){
     paramValues[idx]  = NULL;       \
     paramLengths[idx] = 0;          \
     paramFormats[idx] = 1;
-#define dbprep_bind_param_byte(idx, var, length)   \
-    paramValues[idx]  = (const char *)var;                       \
-    paramLengths[idx] = length;                    \
-    paramFormats[idx] = 1; 
+#define dbprep_bind_param_byte(idx, var, length) \
+    paramValues[idx]  = (const char *)var;       \
+    paramLengths[idx] = length;                  \
+    paramFormats[idx] = 1;
 #endif // HAVE_POSTGRESQL
 
 #ifdef HAVE_MYSQL
@@ -276,7 +272,7 @@ static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out){
     if (status != 0)           \
     {                          \
         query_log_err(status); \
-        return 0;       \
+        return 0;              \
     }
 #define DB_CHKNULL(status)     \
     if (status != 0)           \
@@ -304,7 +300,7 @@ static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out){
     {                          \
         query_log_err(status); \
         PQclear(res);          \
-        return 0;       \
+        return 0;              \
     }
 #define DB_CHKNULL(status)     \
     if (status != 0)           \
@@ -332,9 +328,7 @@ static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out){
     CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__, __LINE__, PQresultErrorMessage(res), status);
 #endif // HAVE_POSTGRESQL
 
-
-
-void db_log_msg( const char *file, int line, const char *fun, int level, size_t dbidx, const char *format, ...)
+void db_log_msg(const char *file, int line, const char *fun, int level, size_t dbidx, const char *format, ...)
 {
     ;
     if (dbidx >= MGR_NUM_SQL_CONNECTIONS || gConn[dbidx] == NULL)
@@ -343,10 +337,10 @@ void db_log_msg( const char *file, int line, const char *fun, int level, size_t 
         return;
     }
 
-    va_list val;
+    va_list    val;
     m_string_t msg;
     m_string_init(msg);
-    va_start(val, format);   
+    va_start(val, format);
     m_string_vprintf(msg, format, val);
     va_end(val);
     dbprep_declare(dbidx, DB_LOG_MSG, 5, 0);
@@ -355,7 +349,7 @@ void db_log_msg( const char *file, int line, const char *fun, int level, size_t 
     dbprep_bind_param_str(2, fun);
     dbprep_bind_param_str(3, file);
     dbprep_bind_param_int(4, line);
-  ;
+    ;
 #ifdef HAVE_MYSQL
     DB_CHKVOID(mysql_stmt_bind_param(stmt, bind_param));
     DB_CHKVOID(mysql_stmt_execute(stmt));
@@ -399,8 +393,6 @@ static inline void db_mgt_txn_commit(int dbidx)
     }
 }
 
-
-
 /******************************************************************************
  *
  * \par Function Name: db_mgt_init
@@ -421,7 +413,7 @@ static inline void db_mgt_txn_commit(int dbidx)
  *  07/12/13  S. Jacobs      Initial implementation,
  *  01/26/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
  *****************************************************************************/
-uint32_t db_mgt_init(refdm_db_t* parms, uint32_t clear, uint32_t log)
+uint32_t db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log)
 {
     CACE_LOG_INFO("setting up db connect for ctrl");
 
@@ -440,7 +432,7 @@ uint32_t db_mgt_init(refdm_db_t* parms, uint32_t clear, uint32_t log)
 #ifdef HAVE_POSTGRESQL
 // TODO postgresql : turn off autocommit
 #endif // HAVE_POSTGRESQL
-        // DB_LOG_INFO(DB_CTRL_CON, "NM Manager Connections Initialized");
+       // DB_LOG_INFO(DB_CTRL_CON, "NM Manager Connections Initialized");
     }
 
     CACE_LOG_INFO("-->0");
@@ -451,9 +443,9 @@ uint32_t db_mgt_init(refdm_db_t* parms, uint32_t clear, uint32_t log)
  *  Prepared queries are connection specific.  While we may not use all prepared statements for all connections,
  *initializing the same sets everywhere simplifies management.
  **/
-uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
+uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
 {
-    
+
     if (gConn[idx] == NULL)
     {
 #ifdef HAVE_MYSQL
@@ -463,7 +455,8 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
         gInTxn = 0;
 
 #ifdef HAVE_MYSQL
-        if (!mysql_real_connect(gConn[idx], parms->server, parms->username, parms->password, parms->database, 0, NULL, 0))
+        if (!mysql_real_connect(gConn[idx], parms->server, parms->username, parms->password, parms->database, 0, NULL,
+                                0))
         {
             if (gConn[idx] != NULL)
             {
@@ -472,40 +465,40 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
 
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-        gConn[idx] = PQsetdbLogin(parms->server, NULL, NULL, NULL, parms->database, parms->username, parms->password);
-        if (gConn[idx] == NULL)
+            gConn[idx] =
+                PQsetdbLogin(parms->server, NULL, NULL, NULL, parms->database, parms->username, parms->password);
+            if (gConn[idx] == NULL)
             {
                 CACE_LOG_WARNING("SQL Error: Null connection object returned");
             }
             else if (PQstatus(gConn[idx]) != CONNECTION_OK)
             {
-               CACE_LOG_WARNING("SQL Error: %s", PQerrorMessage(gConn[idx]));   
+                CACE_LOG_WARNING("SQL Error: %s", PQerrorMessage(gConn[idx]));
                 PQfinish(gConn[idx]);
-#endif // HAVE_POSTGRESQL
+#endif                             // HAVE_POSTGRESQL
                 gConn[idx] = NULL; // This was previously before the log entry which is likely a mistake
                 CACE_LOG_INFO("--> 0");
                 return 0;
             }
 
-
 // Initialize prepared queries
 #ifdef HAVE_MYSQL
-        
+
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-  
-            // rptt sets                        
-            queries[idx][ARI_RPTSET_INSERT] =
-                    db_mgr_sql_prepare(idx, "call sp__insert_ari_rpt_set($1::int4, $2::varchar, $3::varchar, $4::bytea, $5::varchar)", "ARI_RPTSET_INSERT", 5,
-                    NULL); 
-                    //correlator_nonce, reference_time, entries , agent_id, ari_rptt_id
 
-            // tables                      
-            //in p_ari_tblt_id INT, p_num_entries INT, p_table_entry varchar,  p_agent_id varchar)
-            queries[idx][ARI_TBL_INSERT] =
-                db_mgr_sql_prepare(idx, "call SP__insert_ari_tbl($1::int4, $2::int4, $3::varchar, $4::bytea, $5::varchar)", "ARI_TBL_INSERT", 5,
-                NULL); // rpt_id, entries 
+            // rptt sets
+            queries[idx][ARI_RPTSET_INSERT] = db_mgr_sql_prepare(
+                idx, "call sp__insert_ari_rpt_set($1::int4, $2::varchar, $3::varchar, $4::bytea, $5::varchar)",
+                "ARI_RPTSET_INSERT", 5, NULL);
+            // correlator_nonce, reference_time, entries , agent_id, ari_rptt_id
 
+            // tables
+            // in p_ari_tblt_id INT, p_num_entries INT, p_table_entry varchar,  p_agent_id varchar)
+            queries[idx][ARI_TBL_INSERT] = db_mgr_sql_prepare(
+                idx, "call SP__insert_ari_tbl($1::int4, $2::int4, $3::varchar, $4::bytea, $5::varchar)",
+                "ARI_TBL_INSERT", 5,
+                NULL); // rpt_id, entries
 
             queries[idx][DB_LOG_MSG] =
                 db_mgr_sql_prepare(idx,
@@ -518,7 +511,6 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
         CACE_LOG_INFO("db_mgt_init -->1");
         return 1;
     }
-
 
     /******************************************************************************
      *
@@ -604,7 +596,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
 #ifdef HAVE_MYSQL
         result = mysql_ping(gConn[idx]);
 #endif // HAVE_MYSQL
-#if defined( HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
         result = (PQstatus(gConn[idx]) == CONNECTION_OK) ? 0 : 1;
 #endif // HAVE_POSTGRESQL
         if (result != 0)
@@ -620,9 +612,10 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
                 if ((result = mysql_ping(gConn[idx])) == 0)
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                    if ((result = (PQstatus(gConn[idx]) == CONNECTION_OK) ? 0 : 1) == 0){
+                    if ((result = (PQstatus(gConn[idx]) == CONNECTION_OK) ? 0 : 1) == 0)
+                    {
 #endif // HAVE_POSTGRESQL
-                    
+
                         if (idx == DB_RPT_CON)
                         {
 // Disable autocommit to ensure all queries are executed within a transaction to ensure consistency
@@ -634,11 +627,10 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
 // TODO postgresql : turn off autocommit
 #endif // HAVE_POSTGRESQL
                         }
-                        DB_LOG_INFO(idx,  "NM DB Connection Restored", NULL, NULL);
+                        DB_LOG_INFO(idx, "NM DB Connection Restored", NULL, NULL);
                         return 0;
                     }
 
-                
                 num_tries++;
             }
         }
@@ -646,7 +638,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
         return result;
     }
 
-    #ifdef HAVE_MYSQL
+#ifdef HAVE_MYSQL
     static MYSQL_STMT *db_mgr_sql_prepare(size_t idx, const char *query)
     {
         MYSQL_STMT *rtv = mysql_stmt_init(gConn[idx]);
@@ -665,8 +657,8 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
         }
         return rtv;
     }
-    #endif // HAVE_MYSQL
-    #ifdef HAVE_POSTGRESQL
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
     static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, int nParams, const Oid *paramTypes)
     {
         PGresult *pgresult = PQprepare(gConn[idx], stmtName, query, nParams, paramTypes);
@@ -689,8 +681,6 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
         return stmtName;
     }
 #endif // HAVE_POSTGRESQL
-
-
 
     /******************************************************************************
      *
@@ -722,12 +712,13 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
     int32_t db_mgt_query_fetch(MYSQL_RES * *res, char *format, ...)
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-        int32_t db_mgt_query_fetch(PGresult * *res, char *format, ...)
+        int32_t
+        db_mgt_query_fetch(PGresult * *res, char *format, ...)
 #endif // HAVE_POSTGRESQL
     {
         char   query[1024];
         size_t idx = DB_RPT_CON; // TODO
-        
+
         DB_LOG_INFO(idx, "(%p,%p)", res, format);
 
         /* Step 0: Sanity check. */
@@ -819,13 +810,13 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
          *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
          *****************************************************************************/
 
-        int32_t db_mgt_query_insert(uint32_t *idx, char *format, ...)
+        int32_t db_mgt_query_insert(uint32_t * idx, char *format, ...)
         {
             char   query[SQL_MAX_QUERY];
             size_t db_idx = DB_RPT_CON; // TODO
 
-            DB_LOG_INFO(db_idx,"db_mgt_query_insert", "(%p,%p)", idx, format);
-           
+            DB_LOG_INFO(db_idx, "db_mgt_query_insert", "(%p,%p)", idx, format);
+
             if (db_mgt_connected(db_idx) == 0)
             {
                 va_list args;
@@ -889,284 +880,275 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t* parms)
 
                 CACE_LOG_INFO("-->%d", 1);
                 return 1;
-            }                           
+            }
 
-/******************************************************************************
- *
- * \par Function Name: db_fetch_reg_agent
- *
- * \par Creates an adm_reg_agent_t structure from the database.
- *
- * \retval NULL Failure
- *        !NULL The built adm_reg_agent_t  structure.
- *
- * \param[in] id - The Primary Key of the desired registered agent.
- *
- * Modification History:
- *  MM/DD/YY  AUTHOR         DESCRIPTION
- *  --------  ------------   ---------------------------------------------
- *  07/12/13  S. Jacobs      Initial implementation,
- *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
- *****************************************************************************/
-refdm_agent_t *db_fetch_agent(int32_t id)
-{
-                                    refdm_agent_t *result = NULL;
+            /******************************************************************************
+             *
+             * \par Function Name: db_fetch_reg_agent
+             *
+             * \par Creates an adm_reg_agent_t structure from the database.
+             *
+             * \retval NULL Failure
+             *        !NULL The built adm_reg_agent_t  structure.
+             *
+             * \param[in] id - The Primary Key of the desired registered agent.
+             *
+             * Modification History:
+             *  MM/DD/YY  AUTHOR         DESCRIPTION
+             *  --------  ------------   ---------------------------------------------
+             *  07/12/13  S. Jacobs      Initial implementation,
+             *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
+             *****************************************************************************/
+            refdm_agent_t *db_fetch_agent(int32_t id)
+            {
+                refdm_agent_t *result = NULL;
 #ifdef HAVE_MYSQL
-                                    MYSQL_RES *res = NULL;
-                                    MYSQL_ROW  row;
+                MYSQL_RES *res = NULL;
+                MYSQL_ROW  row;
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                                    PGresult *res = NULL;
+                PGresult *res = NULL;
 #endif // HAVE_POSTGRESQL
 
                 CACE_LOG_INFO("(%d)", id);
 
-                                    /* Step 1: Grab the OID row. */
-                                    if (db_mgt_query_fetch(
-                                            &res, "SELECT * FROM registered_agents WHERE registered_agents_id=%d", id)
-                                        != 1)
-                                    {
-                                        CACE_LOG_ERR("Cant fetch agent %d", id);
-                                        return NULL;
-                                    }
+                /* Step 1: Grab the OID row. */
+                if (db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE registered_agents_id=%d", id) != 1)
+                {
+                    CACE_LOG_ERR("Cant fetch agent %d", id);
+                    return NULL;
+                }
 
 #ifdef HAVE_MYSQL
-                                    if ((row = mysql_fetch_row(res)) != NULL)
+                if ((row = mysql_fetch_row(res)) != NULL)
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                                    int name_fnum = PQfnumber(res, "agent_id_string");
-                                    if (PQntuples(res) != 0)
+                    int name_fnum = PQfnumber(res, "agent_id_string");
+                if (PQntuples(res) != 0)
 #endif // HAVE_POSTGRESQL
-                                    {
-                                        m_string_t eid;
-                                        m_string_init(eid);
+                {
+                    m_string_t eid;
+                    m_string_init(eid);
 #ifdef HAVE_MYSQL
-                        m_string_set_cstr(eid,row[1]);                
-#endif                                                                // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-m_string_set_cstr(eid,PQgetvalue(res, 0, name_fnum));                
-#endif                                                                // HAVE POSTGRESQL
-
-                                        
-                                        /* Step 3: Create structure for agent */
-                                        refdm_agent_init(result);
-                                        m_string_set(result->eid,eid);
-                                    }
-
-#ifdef HAVE_MYSQL
-                                    mysql_free_result(res);
+                    m_string_set_cstr(eid, row[1]);
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                                    PQclear(res);
-#endif // HAVE_POSTGRESQL
+                    m_string_set_cstr(eid, PQgetvalue(res, 0, name_fnum));
+#endif // HAVE POSTGRESQL
 
-                                    CACE_LOG_INFO("-->%p", result);
-                                    return result;
-                                }
+                    /* Step 3: Create structure for agent */
+                    refdm_agent_init(result);
+                    m_string_set(result->eid, eid);
+                }
 
-/******************************************************************************
- *
- * \par Function Name: db_fetch_reg_agent_idx
- *
- * \par Retrieves the index associated with an agent's EID.
- *
- * \retval 0 Failure
- *        !0 The index of the agent.
- *
- * \param[in] eid - The EID of the agent being queried.
- *
- * Modification History:
- *  MM/DD/YY  AUTHOR         DESCRIPTION
- *  --------  ------------   ---------------------------------------------
- *  08/29/15  E. Birrane     Initial implementation,
- *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
- *****************************************************************************/
-
-int32_t db_fetch_agent_idx(string_t *eid)
-{
-                                    int32_t result = 0;
 #ifdef HAVE_MYSQL
-                                    MYSQL_RES *res = NULL;
-                                    MYSQL_ROW  row;
+                mysql_free_result(res);
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                                    PGresult *res = NULL;
+                PQclear(res);
 #endif // HAVE_POSTGRESQL
 
-                                    CACE_LOG_INFO("(%p)", eid);
+                CACE_LOG_INFO("-->%p", result);
+                return result;
+            }
 
-                                    /* Step 0: Sanity Check.*/
-                                    if (eid == NULL)
-                                    {
-                                        CACE_LOG_ERR("Bad Args.", NULL);
-                                        CACE_LOG_INFO("-->%d", 0);
-                                        return 0;
-                                    }
+            /******************************************************************************
+             *
+             * \par Function Name: db_fetch_reg_agent_idx
+             *
+             * \par Retrieves the index associated with an agent's EID.
+             *
+             * \retval 0 Failure
+             *        !0 The index of the agent.
+             *
+             * \param[in] eid - The EID of the agent being queried.
+             *
+             * Modification History:
+             *  MM/DD/YY  AUTHOR         DESCRIPTION
+             *  --------  ------------   ---------------------------------------------
+             *  08/29/15  E. Birrane     Initial implementation,
+             *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
+             *****************************************************************************/
 
-                                    /* Step 1: Grab the OID row. */
-                                    if (db_mgt_query_fetch(&res,
-                                                           "SELECT * FROM registered_agents WHERE agent_id_string='%s'",
-                                                           m_string_get_cstr(*eid))
-                                        != 1)
-                                    {
-                                        CACE_LOG_ERR("Can't fetch", NULL);
-                                        CACE_LOG_INFO("-->%d", 0);
-                                        return 0;
-                                    }
+            int32_t db_fetch_agent_idx(string_t * eid)
+            {
+                int32_t result = 0;
+#ifdef HAVE_MYSQL
+                MYSQL_RES *res = NULL;
+                MYSQL_ROW  row;
+#endif // HAVE_MYSQL
+#ifdef HAVE_POSTGRESQL
+                PGresult *res = NULL;
+#endif // HAVE_POSTGRESQL
+
+                CACE_LOG_INFO("(%p)", eid);
+
+                /* Step 0: Sanity Check.*/
+                if (eid == NULL)
+                {
+                    CACE_LOG_ERR("Bad Args.", NULL);
+                    CACE_LOG_INFO("-->%d", 0);
+                    return 0;
+                }
+
+                /* Step 1: Grab the OID row. */
+                if (db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE agent_id_string='%s'",
+                                       m_string_get_cstr(*eid))
+                    != 1)
+                {
+                    CACE_LOG_ERR("Can't fetch", NULL);
+                    CACE_LOG_INFO("-->%d", 0);
+                    return 0;
+                }
 
 /* Step 2: Parse information out of the returned row. */
 #ifdef HAVE_MYSQL
-                                    if ((row = mysql_fetch_row(res)) != NULL)
-                                    {
-                                        result = atoi(row[0]);
+                if ((row = mysql_fetch_row(res)) != NULL)
+                {
+                    result = atoi(row[0]);
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                                        int agent_id_fnum = PQfnumber(res, "registered_agents_id");
-                                        if (PQntuples(res) != 0)
-                                        {
-                                            result = atoi(PQgetvalue(res, 0, agent_id_fnum));
+                    int agent_id_fnum = PQfnumber(res, "registered_agents_id");
+                    if (PQntuples(res) != 0)
+                    {
+                        result = atoi(PQgetvalue(res, 0, agent_id_fnum));
 #endif // HAVE_POSTGRESQL
-                                        }
-                                        else
-                                        {
-                                            CACE_LOG_ERR("Did not find EID with ID of %s\n",
-                                                m_string_get_cstr(*eid));
-                                        }
+                    }
+                    else
+                    {
+                        CACE_LOG_ERR("Did not find EID with ID of %s\n", m_string_get_cstr(*eid));
+                    }
 
 /* Step 3: Free database resources. */
 #ifdef HAVE_MYSQL
-                                        mysql_free_result(res);
+                    mysql_free_result(res);
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                                        PQclear(res);
+                    PQclear(res);
 #endif // HAVE_POSTGRESQL
 
-                                        CACE_LOG_INFO( "-->%d", result);
-                                        return result;
-     }
+                    CACE_LOG_INFO("-->%d", result);
+                    return result;
+                }
 
-                                   
-                                                        
- /**
-     * @param val - Report
-     * @param agent - agent table set being inserted in
-     * @param status - Set to 0 if
-     * parsing fails, but not modified on
-     * success
-     * @returns  Set ID, or 0 on error
-     */
-    uint32_t db_insert_msg_rpt_set(cace_ari_t *val, refdm_agent_t *agent, int *status){
-        CACE_LOG_INFO("logging report set in db started");
-        uint32_t rtv = 0;
-        
-        int      dbstatus;
-        
-        cace_ari_rptset_t  *rpt_set = cace_ari_get_rptset(val);
+                /**
+                 * @param val - Report
+                 * @param agent - agent table set being inserted in
+                 * @param status - Set to 0 if
+                 * parsing fails, but not modified on
+                 * success
+                 * @returns  Set ID, or 0 on error
+                 */
+                uint32_t db_insert_msg_rpt_set(cace_ari_t * val, refdm_agent_t * agent, int *status)
+                {
+                    CACE_LOG_INFO("logging report set in db started");
+                    uint32_t rtv = 0;
 
-        // correlator_nonce INT, 
-        int64_t nonce_id = rpt_set->nonce.as_lit.value.as_int64;
-        
-        // reference_time INT not null,
-        struct timespec ref_time = rpt_set->reftime.as_lit.value.as_timespec;
-        string_t tp;
-        string_init(tp);
-        cace_utctime_encode(tp, &(rpt_set->reftime.as_lit.value.as_timespec), true);
-        
-        // report_list varchar as string ,
-        string_t rpt;
-        string_init(rpt);
-        cace_ari_text_encode(rpt, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        
-        // report_list varchar as cbor,
-        cace_data_t cbordata;
-        cace_data_init(&cbordata);
-        cace_ari_cbor_encode(&cbordata, val);
-       
+                    int dbstatus;
 
-        dbprep_declare(DB_RPT_CON, ARI_RPTSET_INSERT, 5, 1);
+                    cace_ari_rptset_t *rpt_set = cace_ari_get_rptset(val);
 
-        // correlator_nonce, reference_time, entries ,
-        dbprep_bind_param_int(0, nonce_id);
-        dbprep_bind_param_str(1, string_get_cstr(tp));
-        dbprep_bind_param_str(2, string_get_cstr(rpt));
-        dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);        
-        dbprep_bind_param_str(4, string_get_cstr( agent->eid));
+                    // correlator_nonce INT,
+                    int64_t nonce_id = rpt_set->nonce.as_lit.value.as_int64;
 
-        #ifdef HAVE_MYSQL
-        mysql_stmt_bind_param(stmt, bind_param);
-        dbprep_bind_res_int(0, rtv);
-        mysql_stmt_execute(stmt);
-        mysql_stmt_bind_result(stmt, bind_res);
-        #endif // HAVE_MYSQL
-    
-        #ifdef HAVE_POSTGRESQL
-        dbexec_prepared;
-        #endif // HAVE_POSTGRESQL
-        
-        //cleaning up vars
-        string_clear(tp);
-        string_clear(rpt);
-        cace_data_deinit(&cbordata);
-        return rtv;
-    }
+                    // reference_time INT not null,
+                    struct timespec ref_time = rpt_set->reftime.as_lit.value.as_timespec;
+                    string_t        tp;
+                    string_init(tp);
+                    cace_utctime_encode(tp, &(rpt_set->reftime.as_lit.value.as_timespec), true);
 
+                    // report_list varchar as string ,
+                    string_t rpt;
+                    string_init(rpt);
+                    cace_ari_text_encode(rpt, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
-    /**
-     * @param val - table set
-     * @param agent - agent table set being inserted in
-     * @param status - Set to 0 if
-     * parsing fails, but not modified on
-     * success
-     * @returns Report Set ID, or 0 on error
-     */
-    uint32_t db_insert_msg_tbl(cace_ari_t *val, refdm_agent_t *agent, int *status){
-        CACE_LOG_INFO("logging table set in db started");
-        uint32_t rtv = 0;
-        
-        int      dbstatus;
-        
-        /// Row-major array of values
-        // cace_ari_array_t items;
-        cace_ari_tbl_t  *tbl = cace_ari_get_tbl(val);
+                    // report_list varchar as cbor,
+                    cace_data_t cbordata;
+                    cace_data_init(&cbordata);
+                    cace_ari_cbor_encode(&cbordata, val);
 
-        // num columns INT, 
-        int64_t num_cols = tbl->ncols;
-        
-        
-        // table items varchar,
-        string_t items;
-        string_init(items);
-        cace_ari_text_encode(items, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        
-        // table items varchar as cbor,
-        cace_data_t cbordata;
-        cace_data_init(&cbordata);
-        cace_ari_cbor_encode(&cbordata, val);
+                    dbprep_declare(DB_RPT_CON, ARI_RPTSET_INSERT, 5, 1);
 
+                    // correlator_nonce, reference_time, entries ,
+                    dbprep_bind_param_int(0, nonce_id);
+                    dbprep_bind_param_str(1, string_get_cstr(tp));
+                    dbprep_bind_param_str(2, string_get_cstr(rpt));
+                    dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
+                    dbprep_bind_param_str(4, string_get_cstr(agent->eid));
 
-        dbprep_declare(DB_RPT_CON, ARI_TBL_INSERT, 5, 1);
-        // num cols, tblt,  entries , agent_id
-        dbprep_bind_param_int(0, num_cols);
-        dbprep_bind_param_int(1, -1); //todo handle table templates 
-        dbprep_bind_param_str(2, string_get_cstr(items));
-        dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);        
-        dbprep_bind_param_str(4, string_get_cstr( agent->eid));
+#ifdef HAVE_MYSQL
+                    mysql_stmt_bind_param(stmt, bind_param);
+                    dbprep_bind_res_int(0, rtv);
+                    mysql_stmt_execute(stmt);
+                    mysql_stmt_bind_result(stmt, bind_res);
+#endif // HAVE_MYSQL
 
-        #ifdef HAVE_MYSQL
-        mysql_stmt_bind_param(stmt, bind_param);
-        dbprep_bind_res_int(0, rtv);
-        mysql_stmt_execute(stmt);
-        mysql_stmt_bind_result(stmt, bind_res);
-        #endif // HAVE_MYSQL
-    
-        #ifdef HAVE_POSTGRESQL
-        dbexec_prepared;
+#ifdef HAVE_POSTGRESQL
+                    dbexec_prepared;
+#endif // HAVE_POSTGRESQL
 
-        #endif // HAVE_POSTGRESQL
-        //cleaning up vars
-        string_clear(items);
-        cace_data_deinit(&cbordata);
+                    // cleaning up vars
+                    string_clear(tp);
+                    string_clear(rpt);
+                    cace_data_deinit(&cbordata);
+                    return rtv;
+                }
 
-        return rtv;
-    }
+                /**
+                 * @param val - table set
+                 * @param agent - agent table set being inserted in
+                 * @param status - Set to 0 if
+                 * parsing fails, but not modified on
+                 * success
+                 * @returns Report Set ID, or 0 on error
+                 */
+                uint32_t db_insert_msg_tbl(cace_ari_t * val, refdm_agent_t * agent, int *status)
+                {
+                    CACE_LOG_INFO("logging table set in db started");
+                    uint32_t rtv = 0;
+
+                    int dbstatus;
+
+                    /// Row-major array of values
+                    // cace_ari_array_t items;
+                    cace_ari_tbl_t *tbl = cace_ari_get_tbl(val);
+
+                    // num columns INT,
+                    int64_t num_cols = tbl->ncols;
+
+                    // table items varchar,
+                    string_t items;
+                    string_init(items);
+                    cace_ari_text_encode(items, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+
+                    // table items varchar as cbor,
+                    cace_data_t cbordata;
+                    cace_data_init(&cbordata);
+                    cace_ari_cbor_encode(&cbordata, val);
+
+                    dbprep_declare(DB_RPT_CON, ARI_TBL_INSERT, 5, 1);
+                    // num cols, tblt,  entries , agent_id
+                    dbprep_bind_param_int(0, num_cols);
+                    dbprep_bind_param_int(1, -1); // todo handle table templates
+                    dbprep_bind_param_str(2, string_get_cstr(items));
+                    dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
+                    dbprep_bind_param_str(4, string_get_cstr(agent->eid));
+
+#ifdef HAVE_MYSQL
+                    mysql_stmt_bind_param(stmt, bind_param);
+                    dbprep_bind_res_int(0, rtv);
+                    mysql_stmt_execute(stmt);
+                    mysql_stmt_bind_result(stmt, bind_res);
+#endif // HAVE_MYSQL
+
+#ifdef HAVE_POSTGRESQL
+                    dbexec_prepared;
+
+#endif // HAVE_POSTGRESQL
+                    // cleaning up vars
+                    string_clear(items);
+                    cace_data_deinit(&cbordata);
+
+                    return rtv;
+                }
 #endif /* ifdef HAVE_MYSQL  or HAVE_POSTGRESQL*/
