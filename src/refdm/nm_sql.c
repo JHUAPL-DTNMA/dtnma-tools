@@ -809,7 +809,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
          *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
          *****************************************************************************/
 
-        int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...)
+        int32_t refdm_db_mgt_query_insert(uint32_t * idx, char *format, ...)
         {
             char   query[SQL_MAX_QUERY];
             size_t db_idx = DB_RPT_CON; // TODO
