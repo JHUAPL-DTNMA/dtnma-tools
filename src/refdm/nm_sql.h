@@ -112,8 +112,8 @@ string_t      *db_fetch_ari_col(int idx);
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.
  **/
-void refdm_db_log_msg(const char *filename, int lineno, const char *funcname, int level, size_t dbidx, const char *format,
-                ...);
+void refdm_db_log_msg(const char *filename, int lineno, const char *funcname, int level, size_t dbidx,
+                      const char *format, ...);
 
 #define DB_LOG_INFO(...) refdm_db_log_msg(__FILE__, __LINE__, __func__, LOG_INFO, __VA_ARGS__)
 #define DB_LOG_WARN(...) refdm_db_log_msg(__FILE__, __LINE__, __func__, LOG_WARNING, __VA_ARGS__)

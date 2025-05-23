@@ -809,7 +809,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
          *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
          *****************************************************************************/
 
-        int32_t refdm_db_mgt_query_insert(uint32_t * idx, char *format, ...)
+        int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...)
         {
             char   query[SQL_MAX_QUERY];
             size_t db_idx = DB_RPT_CON; // TODO
@@ -912,7 +912,8 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                 CACE_LOG_INFO("(%d)", id);
 
                 /* Step 1: Grab the OID row. */
-                if (refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE registered_agents_id=%d", id) != 1)
+                if (refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE registered_agents_id=%d", id)
+                    != 1)
                 {
                     CACE_LOG_ERR("Cant fetch agent %d", id);
                     return NULL;
@@ -992,7 +993,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
                 /* Step 1: Grab the OID row. */
                 if (refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE agent_id_string='%s'",
-                                       m_string_get_cstr(*eid))
+                                             m_string_get_cstr(*eid))
                     != 1)
                 {
                     CACE_LOG_ERR("Can't fetch", NULL);
