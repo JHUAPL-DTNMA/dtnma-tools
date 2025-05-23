@@ -60,17 +60,17 @@ int cace_amp_msg_encode(m_bstring_t msgbuf, const cace_ari_list_t items)
     return retval;
 }
 
-int cace_amp_msg_decode(cace_ari_list_t items, const m_bstring_t msgbuf)
+int cace_amp_msg_decode(cace_ari_list_t items, const uint8_t *msgbuf_ptr, size_t msgbuf_len)
 {
     int retval = 0;
 
-    size_t remain = m_bstring_size(msgbuf);
+    size_t remain = msgbuf_len;
     size_t offset = 0;
 
     // ensure version number is present and correct
     {
         QCBORDecodeContext dec;
-        UsefulBufC         indata = { .ptr = m_bstring_view(msgbuf, offset, remain), .len = remain };
+        UsefulBufC         indata = { .ptr = msgbuf_ptr, .len = remain };
         QCBORDecode_Init(&dec, indata, QCBOR_DECODE_MODE_MAP_AS_ARRAY);
 
         uint64_t versnum;
@@ -104,7 +104,7 @@ int cace_amp_msg_decode(cace_ari_list_t items, const m_bstring_t msgbuf)
     {
         cace_data_t view;
         // not really mutable, but needed for the view interface
-        cace_data_init_view(&view, remain, (uint8_t *)m_bstring_view(msgbuf, offset, remain));
+        cace_data_init_view(&view, remain, (uint8_t *)msgbuf_ptr + offset);
 
         cace_ari_t item;
         cace_ari_init(&item);

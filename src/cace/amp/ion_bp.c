@@ -69,6 +69,20 @@ int cace_amp_ion_bp_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
     cace_amp_ion_bp_state_t *state = ctx;
     CHKERR1(state);
 
+    char *dest_eid = NULL;
+    {
+        const cace_data_t *dest_data = cace_ari_cget_tstr(&meta->dest);
+        if (dest_data)
+        {
+            dest_eid = (char *)(dest_data->ptr);
+        }
+        else
+        {
+            CACE_LOG_ERR("This proxy can only send to text URI destinations");
+            return 6;
+        }
+    }
+
     Sdr sdr = bp_get_sdr();
     if (sdr_begin_xn(sdr) < 0)
     {
@@ -121,25 +135,25 @@ int cace_amp_ion_bp_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
 
     if (!retval)
     {
+        CACE_LOG_DEBUG("sending datagram with %zd octets to %s", msg_size, dest_eid);
         Object newBundle = 0;
 
-        CACE_LOG_DEBUG("sending datagram with %zd octets to %s", msg_size, m_string_get_cstr(meta->dest));
         int res = bp_send(state->sap,
-                          (char *)m_string_get_cstr(meta->dest), // recipient
-                          NULL,                                  // report-to
-                          300,                                   // lifetime in seconds
-                          BP_STD_PRIORITY,                       // Class-of-Service / Priority
-                          NoCustodyRequested,                    // Custody Switch
-                          0,                                     // SRR Flags
-                          0,                                     // ACK Requested
-                          NULL,                                  // Extended COS
-                          content,                               // ADU
-                          &newBundle                             // New Bundle
+                          dest_eid,           // recipient
+                          NULL,               // report-to
+                          300,                // lifetime in seconds
+                          BP_STD_PRIORITY,    // Class-of-Service / Priority
+                          NoCustodyRequested, // Custody Switch
+                          0,                  // SRR Flags
+                          0,                  // ACK Requested
+                          NULL,               // Extended COS
+                          content,            // ADU
+                          &newBundle          // New Bundle
         );
         if (res != 1)
         {
-            CACE_LOG_ERR("Send failed (%d) to %s", res, m_string_get_cstr(meta->dest));
-            retval = 6;
+            CACE_LOG_ERR("Send failed (%d) to %s", res, dest_eid);
+            retval = 7;
         }
     }
     return retval;
@@ -208,7 +222,7 @@ int cace_amp_ion_bp_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta,
     m_bstring_init(msgbuf);
     if (!retval)
     {
-        m_string_set_cstr(meta->src, dlv.bundleSourceEid);
+        cace_ari_set_tstr(&meta->src, dlv.bundleSourceEid, true);
 
         const vast adu_len = zco_source_data_length(sdr, dlv.adu);
         if (adu_len)
@@ -225,7 +239,7 @@ int cace_amp_ion_bp_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta,
                 CACE_LOG_ERR("zco_receive_source() wanted %ll but got %ll", adu_len, got);
                 // continue on
             }
-            CACE_LOG_DEBUG("read ADU with %zd octets from %s", got, m_string_get_cstr(meta->src));
+            CACE_LOG_DEBUG("read ADU with %zd octets from %s", got, dlv.bundleSourceEid);
         }
 
         if (sdr_end_xn(sdr) < 0)
@@ -237,7 +251,9 @@ int cace_amp_ion_bp_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta,
 
     if (!retval)
     {
-        if (cace_amp_msg_decode(data, msgbuf))
+        const size_t msgbuf_len = m_bstring_size(msgbuf);
+        const uint8_t *msgbuf_ptr = m_bstring_view(msgbuf, 0, msgbuf_len);
+        if (cace_amp_msg_decode(data, msgbuf_ptr, msgbuf_len))
         {
             retval = 6;
         }

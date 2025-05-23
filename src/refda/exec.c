@@ -232,8 +232,14 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
         string_t buf;
         string_init(buf);
         cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Expanding PID %" PRIu64 " target %s from source %s", seq->pid, m_string_get_cstr(buf),
-                       m_string_get_cstr(runctx->mgr_ident));
+
+        string_t mgr_buf;
+        string_init(mgr_buf);
+        cace_ari_text_encode(mgr_buf, &runctx->mgr_ident, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+
+        CACE_LOG_DEBUG("Expanding PID %" PRIu64 " target %s from manager %s", seq->pid, m_string_get_cstr(buf),
+                       m_string_get_cstr(mgr_buf));
+        string_clear(mgr_buf);
         string_clear(buf);
     }
 
@@ -521,8 +527,8 @@ static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, c
  */
 static void refda_exec_run_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
-    CHKERR1(agent);
-    CHKERR1(tbr);
+    CHKVOID(agent);
+    CHKVOID(tbr);
 
     if (!tbr->enabled)
     {
@@ -688,8 +694,8 @@ static int refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_de
  */
 static void refda_exec_run_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 {
-    CHKERR1(agent);
-    CHKERR1(sbr);
+    CHKVOID(agent);
+    CHKVOID(sbr);
 
     if (!sbr->enabled)
     {

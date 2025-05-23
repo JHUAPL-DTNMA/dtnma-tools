@@ -35,7 +35,8 @@ extern "C" {
 typedef struct
 {
     m_string_t path;
-    int        sock_fd;
+    /// Actual socket FD
+    int sock_fd;
 } cace_amp_socket_state_t;
 
 /** Initialize an empty state.

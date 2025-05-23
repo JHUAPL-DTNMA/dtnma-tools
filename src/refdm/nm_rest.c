@@ -428,7 +428,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 
         cace_amm_msg_if_metadata_t meta;
         cace_amm_msg_if_metadata_init(&meta);
-        m_string_set(meta.dest, agent->eid);
+        cace_ari_set_tstr(&meta.dest, m_string_get_cstr(agent->eid), true);
 
         int res = (mgr->mif.send)(tosend, &meta, mgr->mif.ctx);
         cace_amm_msg_if_metadata_deinit(&meta);

@@ -15,11 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PROXY_IF_PROXY_IF_H_
-#define PROXY_IF_PROXY_IF_H_
+/** @file
+ * This header is associated with proxied messaging from the provider side,
+ * where the peer identity is accessed and the rest of the message is treated
+ * as opaque data.
+ */
+#ifndef CACE_AMP_PROXY_MSG_H_
+#define CACE_AMP_PROXY_MSG_H_
 
-#include "shared/utils/nm_types.h"
-#include "shared/primitives/blob.h"
+#include "cace/ari.h"
 #include <m-bstring.h>
 
 #ifdef __cplusplus
@@ -31,23 +35,24 @@ extern "C" {
  * @param sock_fd The socket file descriptor.
  * The socket must be ready for writing (e.g. determined via poll() and
  * POLLOUT event) before this call.
- * @return AMP_OK if successful.
+ * @param[in] dst The ultimate destination endpoint to send to.
+ * @return Zero if successful.
  */
-int proxy_if_send(int sock_fd, const eid_t *dst, const uint8_t *data_ptr, size_t data_len);
+int cace_amp_proxy_msg_send(int sock_fd, const cace_ari_t *dst, const uint8_t *data_ptr, size_t data_len);
 
 /** Receive a message via datagram socket proxy from an ultimate source.
  *
  * @param sock_fd The socket file descriptor.
  * The socket must be ready for reading (e.g. determined via poll() and
  * POLLIN event) before this call.
- * @param[out] src The source EID to write into.
+ * @param[out] src The ultimate source endpoint being received from.
  * @param[out] data The data to populate, which must already be initialized.
- * @return AMP_OK if successful.
+ * @return Zero if successful.
  */
-int proxy_if_recv(int sock_fd, eid_t *src, m_bstring_t data);
+int cace_amp_proxy_msg_recv(int sock_fd, cace_ari_t *src, m_bstring_t data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PROXY_IF_PROXY_IF_H_ */
+#endif /* CACE_AMP_PROXY_MSG_H_ */
