@@ -1042,6 +1042,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                 uint32_t refdm_db_insert_msg_rpt_set(cace_ari_t * val, refdm_agent_t * agent, int *status)
                 {
                     CACE_LOG_INFO("logging report set in db started");
+                    
                     uint32_t rtv = 0;
 
                     int dbstatus;
