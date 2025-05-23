@@ -36,7 +36,7 @@
 #endif
 
 static int  mgr_parse_args(int argc, char *const argv[]);
-static void mgr_print_usage(void);
+static void show_usage(const char *argv0);
 
 typedef struct
 {
@@ -67,6 +67,8 @@ SHARED_WEAK_PTR_DEF(prox_item_ptr, prox_item_t)
 
 /// thread safe running state
 static cace_daemon_run_t running;
+/// logging filter
+static int        log_limit = LOG_WARNING;
 /// Local listening socket path
 static char *arg_path_listen = NULL;
 /// Socket FD for listening
@@ -289,12 +291,6 @@ static void *bp_send_worker(void *ctx _U_)
             char *dest_eid = NULL;
             if (result == 0)
             {
-                string_t buf;
-                string_init(buf);
-                cace_ari_text_encode(buf, &item->peer, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_INFO("Sending bundle ADU to %s with %zd octets", m_string_get_cstr(buf), msg_size);
-                string_clear(buf);
-
                 const cace_data_t *dest_data = cace_ari_cget_tstr(&item->peer);
                 if (dest_data)
                 {
@@ -302,13 +298,20 @@ static void *bp_send_worker(void *ctx _U_)
                 }
                 else
                 {
-                    CACE_LOG_ERR("This proxy can only send to text URI destinations");
+                    string_t buf;
+                    string_init(buf);
+                    cace_ari_text_encode(buf, &item->peer, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                    CACE_LOG_ERR("This transport can only send to text URI destinations, not %s", m_string_get_cstr(buf));
+                    string_clear(buf);
+
                     result = 4;
                 }
             }
 
             if (result == 0)
             {
+                CACE_LOG_INFO("Sending bundle ADU to %s with %zd octets", dest_eid, msg_size);
+
                 const int             lifetime_s    = 500;
                 const int             priority      = BP_STD_PRIORITY;
                 const BpCustodySwitch custodySwitch = NoCustodyRequested;
@@ -450,6 +453,7 @@ int main(int argc, char *argv[])
     // keep track of failure state
     int retval = 0;
 
+    cace_openlog();
     prox_item_queue_init(outgoing, PROX_ITEM_QUEUE_DEPTH);
     prox_item_queue_init(incoming, PROX_ITEM_QUEUE_DEPTH);
 
@@ -458,10 +462,12 @@ int main(int argc, char *argv[])
     {
         retval = 1;
     }
+    cace_log_set_least_severity(log_limit);
+    CACE_LOG_DEBUG("Proxy starting up with log limit %d", log_limit);
 
     if (retval || (arg_path_listen == NULL))
     {
-        mgr_print_usage();
+        show_usage(argv[0]);
     }
 
     if (!retval)
@@ -603,6 +609,7 @@ int main(int argc, char *argv[])
     prox_item_queue_clear(incoming);
 
     CACE_LOG_INFO("Exiting after cleanup");
+    return retval;
 }
 
 /**
@@ -614,18 +621,26 @@ int mgr_parse_args(int argc, char *const argv[])
     int                  c;
     int                  option_index   = 0;
     static struct option long_options[] = {
-        { "listen", required_argument, 0, 'l' },
+        { "log-level", required_argument, 0, 'l' },
+        { "bind", required_argument, 0, 'b' },
         { "eid", required_argument, 0, 'e' },
         { "help", no_argument, 0, 'h' },
     };
-    while ((c = getopt_long(argc, argv, ":l:e:h", long_options, &option_index)) != -1)
+    while ((c = getopt_long(argc, argv, ":hl:b:e:", long_options, &option_index)) != -1)
     {
         switch (c)
         {
+            case 'l':
+                if (cace_log_get_severity(&log_limit, optarg))
+                {
+                    show_usage(argv[0]);
+                    return 1;
+                }
+                break;
             case 'e':
                 arg_eid = optarg;
                 break;
-            case 'l':
+            case 'b':
                 arg_path_listen = optarg;
                 break;
             case 'h':
@@ -649,10 +664,10 @@ int mgr_parse_args(int argc, char *const argv[])
     return 0;
 }
 
-void mgr_print_usage(void)
+static void show_usage(const char *argv0)
 {
-    printf("Usage: ion_app_proxy [options]\n");
-    printf("Supported Options:\n");
-    printf("-l <path> The path to open a listening socket on.\n");
-    printf("-e <EID> The EID to register the manager endpoint on.\n");
+    fprintf(stderr, "Usage: %s [options]\n", argv0);
+    fprintf(stderr, "Supported Options:\n");
+    fprintf(stderr, " -b <path> The path to open a listening socket on.\n");
+    fprintf(stderr, " -e <EID> The EID to register the manager endpoint on.\n");
 }

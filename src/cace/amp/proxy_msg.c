@@ -28,7 +28,7 @@ int cace_amp_proxy_msg_send(int sock_fd, const cace_ari_t *dst, const uint8_t *d
 {
     int result = 0;
 
-    // message header is just the ultimate destination EID
+    // message header is just the ultimate peer EID
     m_bstring_t msgbuf;
     m_bstring_init(msgbuf);
     {
@@ -103,26 +103,15 @@ int cace_amp_proxy_msg_recv(int sock_fd, cace_ari_t *src, m_bstring_t data)
     size_t         head_len;
     if (!result)
     {
-        QCBORDecodeContext dec;
-        QCBORDecode_Init(&dec, (UsefulBufC) { .ptr = msg_begin, .len = got }, QCBOR_DECODE_MODE_NORMAL);
+        cace_data_t view;
+        cace_data_init_view(&view, got, (uint8_t *)msg_begin);
 
-        int ret = cace_ari_cbor_decode_stream(&dec, src);
+        int ret = cace_ari_cbor_decode(src, &view, &head_len, NULL);
         if (ret)
         {
             CACE_LOG_ERR("Source EID decoding error code %d", ret);
             result = 5;
         }
-        else
-        {
-            // source is not valid type
-            if (!cace_ari_cget_tstr(src) || !(src->is_ref))
-            {
-                CACE_LOG_ERR("Source EID is not the right type");
-                result = 6;
-            }
-        }
-
-        head_len = QCBORDecode_Tell(&dec);
     }
 
     if (!result)
@@ -134,7 +123,7 @@ int cace_amp_proxy_msg_recv(int sock_fd, cace_ari_t *src, m_bstring_t data)
         string_t buf;
         string_init(buf);
         cace_ari_text_encode(buf, src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_ERR("Received message with source %s data length %zd", m_string_get_cstr(buf), data_size);
+        CACE_LOG_INFO("Received message with peer %s data length %zd", m_string_get_cstr(buf), data_size);
         string_clear(buf);
     }
 

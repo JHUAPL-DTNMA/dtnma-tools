@@ -54,8 +54,8 @@ RUN apt-get update && apt-get install -y \
     cmake autoconf libtool && \
     echo "/usr/local/lib" >/etc/ld.so.conf.d/local.conf
 
-COPY deps/QCBOR /usr/src/nm/deps/QCBOR
-RUN cd /usr/src/nm/deps/QCBOR && \
+COPY deps/QCBOR /usr/local/src/nm/deps/QCBOR
+RUN cd /usr/local/src/nm/deps/QCBOR && \
     cmake -S . -B build \
       -DCMAKE_BUILD_TYPE=Debug \
       -DBUILD_SHARED_LIBS=YES && \
@@ -64,16 +64,16 @@ RUN cd /usr/src/nm/deps/QCBOR && \
     ldconfig && \
     rm -rf build
 
-COPY deps/mlib /usr/src/nm/deps/mlib
-RUN cd /usr/src/nm/deps/mlib && \
+COPY deps/mlib /usr/local/src/nm/deps/mlib
+RUN cd /usr/local/src/nm/deps/mlib && \
     make -j$(nproc) && \
     make install && \
     ldconfig && \
     make -j$(nproc) clean
 
-COPY deps/timespec /usr/src/nm/deps/timespec
-COPY deps/timespec-CMakeLists.txt /usr/src/nm/deps/timespec/CMakeLists.txt
-RUN cd /usr/src/nm/deps/timespec && \
+COPY deps/timespec /usr/local/src/nm/deps/timespec
+COPY deps/timespec-CMakeLists.txt /usr/local/src/nm/deps/timespec/CMakeLists.txt
+RUN cd /usr/local/src/nm/deps/timespec && \
     cmake -S . -B build \
       -DCMAKE_BUILD_TYPE=Debug && \
     cmake --build build && \
@@ -100,15 +100,17 @@ RUN git clone --branch apl-fy24 https://github.com/JHUAPL-DTNMA/dtnma-adms.git /
 RUN apt-get update && apt-get install -y \
     cmake ninja-build ruby pkg-config \
     flex libfl-dev bison libpcre2-dev libpq-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev
-COPY deps /usr/src/nm/deps
-COPY cmake /usr/src/nm/cmake
-COPY src /usr/src/nm/src
-COPY CMakeLists.txt /usr/src/nm/
-RUN ls -lt /usr/src/nm/
-RUN cd /usr/src/nm && \
+COPY deps /usr/local/src/nm/deps
+COPY cmake /usr/local/src/nm/cmake
+COPY src /usr/local/src/nm/src
+COPY CMakeLists.txt /usr/local/src/nm/
+RUN ls -lt /usr/local/src/nm/
+RUN cd /usr/local/src/nm && \
     cmake -S . -B build/default \
       -DCMAKE_BUILD_TYPE=Debug \
+      -DBUILD_ION_PROXY=OFF \
       -DTRANSPORT_UNIX_SOCKET=ON \
+      -DTRANSPORT_PROXY_SOCKET=OFF \
       -DTRANSPORT_ION_BP=OFF \
       -DBUILD_TESTING=OFF \
       -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF \
@@ -118,7 +120,20 @@ RUN cd /usr/src/nm && \
     ldconfig
 # keep build artifacts for debuginfo
 
+
+FROM testenv AS manager
+
 # Systemd services
-COPY --chmod=644 systemd/refdm-socket.service systemd/refda-socket.service \
+COPY --chmod=644 systemd/refdm-socket.service \
     /usr/local/lib/systemd/system/
-RUN systemctl enable refdm-socket refda-socket
+RUN systemctl enable refdm-socket
+
+EXPOSE 8089/tcp
+
+
+FROM testenv AS agent
+
+# Systemd services
+COPY --chmod=644 systemd/refda-socket.service \
+    /usr/local/lib/systemd/system/
+RUN systemctl enable refda-socket

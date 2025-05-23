@@ -457,6 +457,12 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
+
+    if (cace_ari_list_empty_p(agent->rptsets))
+    {
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        return 204;
+    }
     int retval = 0;
 
     m_string_t body;
@@ -497,6 +503,12 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
+
+    if (cace_ari_list_empty_p(agent->rptsets))
+    {
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        return 204;
+    }
     int retval = 0;
 
     m_string_t body;

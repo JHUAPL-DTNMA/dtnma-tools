@@ -25,7 +25,6 @@ services:
     ports:
       - "${ADMINER_PORT:-8080}:8080"
 
-
   manager:
     hostname: manager
     build:
@@ -44,7 +43,7 @@ services:
       - NET_RAW
       - SYS_NICE
     volumes:
-      - /var/tmp/pcap:/var/log/pcap
+      - "/var/tmp/pcap:/var/log/pcap"
     environment:
       container: docker
       DTNMA_LOGLEVEL: debug
@@ -73,7 +72,7 @@ services:
       - NET_RAW
       - SYS_NICE
     volumes:
-      - /var/tmp/pcap:/var/log/pcap
+      - "/var/tmp/pcap:/var/log/pcap"
     environment:
       container: docker
       DTNMA_LOGLEVEL: debug

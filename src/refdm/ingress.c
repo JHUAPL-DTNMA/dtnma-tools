@@ -59,12 +59,15 @@
  */
 static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 {
+    // local daemon storage
+    cace_ari_set_copy(cace_ari_list_push_back_new(agent->rptsets), val);
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     int db_status = 0;
     db_insert_msg_rpt_set(val, agent, &db_status);
 #endif
+
     {
         bool wrote = false;
         pthread_mutex_lock(&agent->log_mutex);
@@ -130,14 +133,19 @@ void *refdm_ingress_worker(void *arg)
             string_clear(buf);
         }
 
-        if (!cace_ari_list_empty_p(values))
+        // Only handle text form endpoints
+        const cace_data_t *tstr = cace_ari_cget_tstr(&meta.src);
+
+        if (!cace_ari_list_empty_p(values) && tstr)
         {
+            const char *eid = (const char *)tstr->ptr;
+            CACE_LOG_DEBUG("Recording reports from agent at %s", eid);
+
             // might be unknown and NULL
-            refdm_agent_t *agent = NULL; // FIXME refdm_mgr_agent_get_eid(mgr, m_string_get_cstr(meta.src));
-            // FIXME handle from unknown?
+            refdm_agent_t *agent = refdm_mgr_agent_get_eid(mgr, eid);
             if (!agent)
             {
-                // agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(meta.src));
+                 agent = refdm_mgr_agent_add(mgr, eid);
             }
 
             cace_ari_list_it_t val_it;

@@ -1,6 +1,8 @@
 volumes:
   postgres-data:
     # temporary storage
+  sockdir:
+    # shared sockets
 
 services:
   postgres:
@@ -16,28 +18,86 @@ services:
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
 
-  combined:
+  amp-manager:
+    hostname: amp-manager
     build:
       context: ..
-      dockerfile: integration-test-socket/Containerfile
+      dockerfile: integration-test-proxy/Containerfile
+      target: amp-manager
     ports:
       - "8089:8089/tcp"
     depends_on:
       postgres:
         condition: service_healthy
+      ion-manager:
+        condition: service_started
     privileged: true
     tty: true
     cap_add:
       - NET_ADMIN
       - NET_RAW
       - SYS_NICE
+    volumes:
+      - "sockdir:${SOCKDIR}"
     environment:
       container: docker
       DTNMA_LOGLEVEL: debug
-      REFDA_EID: file:/var/run/refda.sock
-      REFDA_SOCKET: /var/run/refda.sock
-      REFDM_SOCKET: /var/run/refdm.sock
+      AMP_PROXY_SOCKET: "${SOCKDIR}/proxy.sock"
       DB_HOST: postgres
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+
+  ion-manager:
+    hostname: ion-manager
+    build:
+      context: ..
+      dockerfile: integration-test-proxy/Containerfile
+      target: ion-manager
+    depends_on: {}
+    privileged: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_NICE
+    volumes:
+      - "/var/tmp/pcap:/var/log/pcap"
+      - "sockdir:${SOCKDIR}"
+    environment:
+      container: docker
+      DTNMA_LOGLEVEL: debug
+      AMP_PROXY_SOCKET: "${SOCKDIR}/proxy.sock"
+      ION_NODE_NUM: 1
+      MGR_NODE_NUM: 1
+      DB_HOST: postgres
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DUMPCAP_OUTFILE: /var/log/pcap/manager.pcap
+      DUMPCAP_OPTS: -i lo -i eth0
+
+  agent1:
+    hostname: agent1
+    build:
+      context: ..
+      dockerfile: integration-test-proxy/Containerfile
+      target: agent
+    depends_on:
+      ion-manager:
+        condition: service_started
+    privileged: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_NICE
+    volumes:
+      - "/var/tmp/pcap:/var/log/pcap"
+    environment:
+      container: docker
+      DTNMA_LOGLEVEL: debug
+      ION_NODE_NUM: 2
+      MGR_NODE_NUM: 1
+      DUMPCAP_OUTFILE: /var/log/pcap/agent1.pcap
+      DUMPCAP_OPTS: -i lo -i eth0
