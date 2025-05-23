@@ -1145,7 +1145,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     dbexec_prepared;
 
 #endif // HAVE_POSTGRESQL
-                    // cleaning up vars
+       // cleaning up vars
                     string_clear(items);
                     cace_data_deinit(&cbordata);
 
