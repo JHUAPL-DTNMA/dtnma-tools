@@ -68,7 +68,7 @@ SHARED_WEAK_PTR_DEF(prox_item_ptr, prox_item_t)
 /// thread safe running state
 static cace_daemon_run_t running;
 /// logging filter
-static int        log_limit = LOG_WARNING;
+static int log_limit = LOG_WARNING;
 /// Local listening socket path
 static char *arg_path_listen = NULL;
 /// Socket FD for listening
@@ -301,7 +301,8 @@ static void *bp_send_worker(void *ctx _U_)
                     string_t buf;
                     string_init(buf);
                     cace_ari_text_encode(buf, &item->peer, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                    CACE_LOG_ERR("This transport can only send to text URI destinations, not %s", m_string_get_cstr(buf));
+                    CACE_LOG_ERR("This transport can only send to text URI destinations, not %s",
+                                 m_string_get_cstr(buf));
                     string_clear(buf);
 
                     result = 4;
