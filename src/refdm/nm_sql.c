@@ -89,7 +89,7 @@ enum queries
 
     ARI_TBL_INSERT,
 
-    DB_LOG_MSG,
+    REFDM_DB_LOG_MSG,
     MGR_NUM_QUERIES
 };
 
@@ -328,7 +328,7 @@ static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out)
     CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__, __LINE__, PQresultErrorMessage(res), status);
 #endif // HAVE_POSTGRESQL
 
-void db_log_msg(const char *file, int line, const char *fun, int level, size_t dbidx, const char *format, ...)
+void refdm_db_log_msg(const char *file, int line, const char *fun, int level, size_t dbidx, const char *format, ...)
 {
     ;
     if (dbidx >= MGR_NUM_SQL_CONNECTIONS || gConn[dbidx] == NULL)
@@ -343,7 +343,7 @@ void db_log_msg(const char *file, int line, const char *fun, int level, size_t d
     va_start(val, format);
     m_string_vprintf(msg, format, val);
     va_end(val);
-    dbprep_declare(dbidx, DB_LOG_MSG, 5, 0);
+    dbprep_declare(dbidx, REFDM_DB_LOG_MSG, 5, 0);
     dbprep_bind_param_str(0, m_string_get_cstr(msg));
     dbprep_bind_param_int(1, level);
     dbprep_bind_param_str(2, fun);
@@ -395,7 +395,7 @@ static inline void db_mgt_txn_commit(int dbidx)
 
 /******************************************************************************
  *
- * \par Function Name: db_mgt_init
+ * \par Function Name: refdm_db_mgt_init
  *
  * \par Initializes the gConnection to the database.
  *
@@ -413,15 +413,15 @@ static inline void db_mgt_txn_commit(int dbidx)
  *  07/12/13  S. Jacobs      Initial implementation,
  *  01/26/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
  *****************************************************************************/
-uint32_t db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log)
+uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log)
 {
     CACE_LOG_INFO("setting up db connect for ctrl");
 
-    db_mgt_init_con(DB_CTRL_CON, parms);
+    refdm_db_mgt_init_con(DB_CTRL_CON, parms);
 
     CACE_LOG_INFO("setting up db connect for rpts");
 
-    db_mgt_init_con(DB_RPT_CON, parms);
+    refdm_db_mgt_init_con(DB_RPT_CON, parms);
 
     // A mysql_commit or mysql_rollback will automatically start a new transaction as the old one is closed
     if (gConn[DB_RPT_CON] != NULL)
@@ -443,7 +443,7 @@ uint32_t db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log)
  *  Prepared queries are connection specific.  While we may not use all prepared statements for all connections,
  *initializing the same sets everywhere simplifies management.
  **/
-uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
+uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 {
 
     if (gConn[idx] == NULL)
@@ -500,21 +500,21 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
                 "ARI_TBL_INSERT", 5,
                 NULL); // rpt_id, entries
 
-            queries[idx][DB_LOG_MSG] =
+            queries[idx][REFDM_DB_LOG_MSG] =
                 db_mgr_sql_prepare(idx,
                                    "INSERT INTO DB_LOG_INFO (msg,level,source,file,line) "
                                    "VALUES($1::varchar,$2::int4,$3::varchar,$4::varchar,$5::int4)",
-                                   "DB_LOG_MSG", 5, NULL);
+                                   "REFDM_DB_LOG_MSG", 5, NULL);
 #endif // HAVE_POSTGRESQL
         }
 
-        CACE_LOG_INFO("db_mgt_init -->1");
+        CACE_LOG_INFO("refdm_db_mgt_init -->1");
         return 1;
     }
 
     /******************************************************************************
      *
-     * \par Function Name: db_mgt_close
+     * \par Function Name: refdm_db_mgt_close
      *
      * \par Close the database gConnection.
      *
@@ -524,17 +524,17 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
      *  07/12/13  S. Jacobs      Initial implementation,
      *****************************************************************************/
 
-    void db_mgt_close()
+    void refdm_db_mgt_close()
     {
-        CACE_LOG_INFO("db_mgt_close", "()");
+        CACE_LOG_INFO("refdm_db_mgt_close", "()");
 
         for (int i = 0; i < MGR_NUM_SQL_CONNECTIONS; i++)
         {
-            db_mgt_close_conn(i);
+            refdm__db_mgt_close_conn(i);
         }
-        CACE_LOG_INFO("db_mgt_close", "-->.");
+        CACE_LOG_INFO("refdm_db_mgt_close", "-->.");
     }
-    void db_mgt_close_conn(size_t idx)
+    void refdm__db_mgt_close_conn(size_t idx)
     {
         if (gConn[idx] != NULL)
         {
@@ -567,7 +567,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
     /******************************************************************************
      *
-     * \par Function Name: db_mgt_connected
+     * \par Function Name: refdm_db_mgt_connected
      *
      * \par Checks to see if the database connection is still active and, if not,
      *      try to reconnect up to some configured number of times.
@@ -583,7 +583,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
      *  08/27/15  E. Birrane     Updated to try and reconnect to DB.
      *****************************************************************************/
 
-    int db_mgt_connected(size_t idx)
+    int refdm_db_mgt_connected(size_t idx)
     {
         int     result    = -1;
         uint8_t num_tries = 0;
@@ -605,9 +605,9 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
             {
                 // FIXME: Passing in gParms to a fn that assigns gParms
                 /* NOTES/FIXME: Does this relate to gMbrDB.sql_info? If not, we have a disconnect in parameters
-                 * nm_mgr.c HAVE_MYSQL passes gMgrDB.sql_info to db_mgt_init which does the connection
+                 * nm_mgr.c HAVE_MYSQL passes gMgrDB.sql_info to refdm_db_mgt_init which does the connection
                  */
-                db_mgt_init_con(idx, gParms);
+                refdm_db_mgt_init_con(idx, gParms);
 #ifdef HAVE_MYSQL
                 if ((result = mysql_ping(gConn[idx])) == 0)
 #endif // HAVE_MYSQL
@@ -684,7 +684,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
     /******************************************************************************
      *
-     * \par Function Name: db_mgt_query_fetch
+     * \par Function Name: refdm_db_mgt_query_fetch
      *
      * \par Runs a fetch in the database given a query and returns the result, if
      *      a result field is provided..
@@ -709,10 +709,10 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
      *****************************************************************************/
 
 #ifdef HAVE_MYSQL
-    int32_t db_mgt_query_fetch(MYSQL_RES * *res, char *format, ...)
+    int32_t refdm_db_mgt_query_fetch(MYSQL_RES * *res, char *format, ...)
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-        int32_t db_mgt_query_fetch(PGresult * *res, char *format, ...)
+        int32_t refdm_db_mgt_query_fetch(PGresult * *res, char *format, ...)
 #endif // HAVE_POSTGRESQL
     {
         char   query[1024];
@@ -732,7 +732,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
          * Step 1: Assert the DB connection. This should not only check
          *         the connection as well as try and re-establish it.
          */
-        if (db_mgt_connected(idx) == 0)
+        if (refdm_db_mgt_connected(idx) == 0)
         {
             va_list args;
 
@@ -787,7 +787,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
         /******************************************************************************
          *
-         * \par Function Name: db_mgt_query_insert
+         * \par Function Name: refdm_db_mgt_query_insert
          *
          * \par Runs an insert in the database given a query and returns the
          *      index of the inserted item.
@@ -809,14 +809,14 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
          *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
          *****************************************************************************/
 
-        int32_t db_mgt_query_insert(uint32_t * idx, char *format, ...)
+        int32_t refdm_db_mgt_query_insert(uint32_t * idx, char *format, ...)
         {
             char   query[SQL_MAX_QUERY];
             size_t db_idx = DB_RPT_CON; // TODO
 
-            DB_LOG_INFO(db_idx, "db_mgt_query_insert", "(%p,%p)", idx, format);
+            DB_LOG_INFO(db_idx, "refdm_db_mgt_query_insert", "(%p,%p)", idx, format);
 
-            if (db_mgt_connected(db_idx) == 0)
+            if (refdm_db_mgt_connected(db_idx) == 0)
             {
                 va_list args;
 
@@ -898,7 +898,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
              *  07/12/13  S. Jacobs      Initial implementation,
              *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
              *****************************************************************************/
-            refdm_agent_t *db_fetch_agent(int32_t id)
+            refdm_agent_t *refdm_db_fetch_agent(int32_t id)
             {
                 refdm_agent_t *result = NULL;
 #ifdef HAVE_MYSQL
@@ -912,7 +912,8 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
                 CACE_LOG_INFO("(%d)", id);
 
                 /* Step 1: Grab the OID row. */
-                if (db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE registered_agents_id=%d", id) != 1)
+                if (refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE registered_agents_id=%d", id)
+                    != 1)
                 {
                     CACE_LOG_ERR("Cant fetch agent %d", id);
                     return NULL;
@@ -969,7 +970,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
              *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
              *****************************************************************************/
 
-            int32_t db_fetch_agent_idx(string_t * eid)
+            int32_t refdm_db_fetch_agent_idx(string_t * eid)
             {
                 int32_t result = 0;
 #ifdef HAVE_MYSQL
@@ -991,8 +992,8 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
                 }
 
                 /* Step 1: Grab the OID row. */
-                if (db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE agent_id_string='%s'",
-                                       m_string_get_cstr(*eid))
+                if (refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE agent_id_string='%s'",
+                                             m_string_get_cstr(*eid))
                     != 1)
                 {
                     CACE_LOG_ERR("Can't fetch", NULL);
@@ -1038,9 +1039,10 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
                  * success
                  * @returns  Set ID, or 0 on error
                  */
-                uint32_t db_insert_msg_rpt_set(cace_ari_t * val, refdm_agent_t * agent, int *status)
+                uint32_t refdm_db_insert_msg_rpt_set(cace_ari_t * val, refdm_agent_t * agent, int *status)
                 {
                     CACE_LOG_INFO("logging report set in db started");
+
                     uint32_t rtv = 0;
 
                     int dbstatus;
@@ -1101,7 +1103,7 @@ uint32_t db_mgt_init_con(size_t idx, refdm_db_t *parms)
                  * success
                  * @returns Report Set ID, or 0 on error
                  */
-                uint32_t db_insert_msg_tbl(cace_ari_t * val, refdm_agent_t * agent, int *status)
+                uint32_t refdm_db_insert_msg_tbl(cace_ari_t * val, refdm_agent_t * agent, int *status)
                 {
                     CACE_LOG_INFO("logging table set in db started");
                     uint32_t rtv = 0;

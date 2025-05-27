@@ -87,7 +87,7 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     mgr->sql_info.database = strdup(getenv("DB_NAME"));
 
     pthread_mutex_init(&(mgr->sql_lock), NULL);
-    db_mgt_init(&(mgr->sql_info), 0, 1);
+    refdm_db_mgt_init(&(mgr->sql_info), 0, 1);
 #endif
 }
 
@@ -96,7 +96,7 @@ void refdm_mgr_deinit(refdm_mgr_t *mgr)
     CHKVOID(mgr);
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    db_mgt_close();
+    refdm_db_mgt_close();
     free(mgr->sql_info.server);
     free(mgr->sql_info.username);
     free(mgr->sql_info.password);
