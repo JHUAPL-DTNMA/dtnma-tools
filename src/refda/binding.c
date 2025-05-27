@@ -374,7 +374,6 @@ int refda_binding_sbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *stor
     CHKERR1(desc);
 
     int failcnt = 0;
-    failcnt += refda_binding_fparams(obj->fparams, store);
     return failcnt;
 }
 
@@ -386,7 +385,6 @@ int refda_binding_tbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *stor
     CHKERR1(desc);
 
     int failcnt = 0;
-    failcnt += refda_binding_fparams(obj->fparams, store);
     return failcnt;
 }
 
