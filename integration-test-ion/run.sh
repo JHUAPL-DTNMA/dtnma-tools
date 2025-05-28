@@ -83,7 +83,7 @@ then
     URIBASE="http://manager:8089/nm/api"
 
     CMD="curl ${CURLOPTS} -XPOST ${URIBASE}/agents -H 'Content-Type: text/plain' --expand-data '{{REFDA_EID}}'"
-    echo $CMD | ${DEXEC} bash
+    echo $CMD | ${DEXEC} bash || true
     echo
 
     CMD="curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/clear_reports"
@@ -98,12 +98,16 @@ then
         exit 4
     fi
 
+    ${DEXEC} bping -c1 -q1 ipn:1.1 ipn:2.4
+
     # send an inspect execution with a nonce, expecting a report back
     CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version))' | \
         ace_ari --inform text --outform cborhex --must-nickname | \
         curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/send?form=hex -H 'Content-Type: text/plain' --data-binary @-; echo"
     echo $CMD | ${DEXEC} bash
     echo
+
+    ${DEXEC} bping -c1 -q1 ipn:1.1 ipn:2.4
 
     RPTOBJ=""
     for IX in $(seq 10)

@@ -25,6 +25,7 @@
 
 #include "ietf_dtnma_agent.h"
 #include "refda/agent.h"
+#include "refda/exec.h"
 #include "refda/register.h"
 #include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"

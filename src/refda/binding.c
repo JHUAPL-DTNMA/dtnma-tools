@@ -23,6 +23,8 @@
 #include "amm/edd.h"
 #include "amm/ctrl.h"
 #include "amm/oper.h"
+#include "amm/sbr.h"
+#include "amm/tbr.h"
 #include <cace/amm/parameters.h>
 #include <cace/amm/lookup.h>
 #include <cace/amm/semtype.h>
@@ -316,11 +318,11 @@ int refda_binding_edd(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *stor
 {
     CHKERR1(obj);
     CHKERR1(store);
-    refda_amm_var_desc_t *desc = obj->app_data.ptr;
+    refda_amm_edd_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
     int failcnt = 0;
-    failcnt += refda_binding_typeobj(&(desc->val_type), store);
+    failcnt += refda_binding_typeobj(&(desc->prod_type), store);
     failcnt += refda_binding_fparams(obj->fparams, store);
     return failcnt;
 }
@@ -364,6 +366,28 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
     return failcnt;
 }
 
+int refda_binding_sbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+{
+    CHKERR1(obj);
+    CHKERR1(store);
+    refda_amm_sbr_desc_t *desc = obj->app_data.ptr;
+    CHKERR1(desc);
+
+    int failcnt = 0;
+    return failcnt;
+}
+
+int refda_binding_tbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+{
+    CHKERR1(obj);
+    CHKERR1(store);
+    refda_amm_tbr_desc_t *desc = obj->app_data.ptr;
+    CHKERR1(desc);
+
+    int failcnt = 0;
+    return failcnt;
+}
+
 int refda_binding_obj(cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
 {
     CACE_LOG_DEBUG("Binding object ./%s/%s", cace_ari_type_to_name(obj_type), string_get_cstr(obj->obj_id.name));
@@ -383,6 +407,10 @@ int refda_binding_obj(cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj, const 
             return refda_binding_ctrl(obj, store);
         case CACE_ARI_TYPE_OPER:
             return refda_binding_oper(obj, store);
+        case CACE_ARI_TYPE_SBR:
+            return refda_binding_sbr(obj, store);
+        case CACE_ARI_TYPE_TBR:
+            return refda_binding_tbr(obj, store);
         default:
             CACE_LOG_WARNING("Binding failed due to invalid obj-type %d", obj_type);
             return 1;
