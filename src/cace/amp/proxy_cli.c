@@ -131,10 +131,10 @@ void cace_amp_proxy_cli_state_disconnect(cace_amp_proxy_cli_state_t *state)
 int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
 {
     CHKERR1(meta);
-    cace_amp_proxy_cli_state_t *state   = ctx;
+    cace_amp_proxy_cli_state_t *state = ctx;
     CHKERR1(state);
 
-    int                         sock_fd = cace_amp_proxy_cli_real_connect(state);
+    int sock_fd = cace_amp_proxy_cli_real_connect(state);
 
     int result = 0;
 
@@ -197,10 +197,10 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
 {
     CHKERR1(meta);
     CHKERR1(running);
-    cace_amp_proxy_cli_state_t *state   = ctx;
+    cace_amp_proxy_cli_state_t *state = ctx;
     CHKERR1(state);
 
-    int                         sock_fd = cace_amp_proxy_cli_real_connect(state);
+    int sock_fd = cace_amp_proxy_cli_real_connect(state);
 
     // first peek at message size
     int     flags = MSG_PEEK | MSG_TRUNC;
