@@ -26,16 +26,25 @@
 
 int cace_amp_proxy_msg_send(int sock_fd, const cace_ari_t *dst, const uint8_t *data_ptr, size_t data_len)
 {
+    CHKERR1(sock_fd >= 0);
+    CHKERR1(dst);
+    CHKERR1(data_ptr);
     int result = 0;
 
-    // message header is just the ultimate peer EID
+    // message header is just the ultimate peer EID as an ARI
     m_bstring_t msgbuf;
     m_bstring_init(msgbuf);
     {
-        QCBOREncodeContext enc;
-        if (cace_ari_cbor_encode_stream(&enc, dst))
+        cace_data_t outbin;
+        cace_data_init(&outbin);
+        if (cace_ari_cbor_encode(&outbin, dst))
         {
             result = 2;
+        }
+        else
+        {
+            m_bstring_push_back_bytes(msgbuf, outbin.len, outbin.ptr);
+            cace_data_deinit(&outbin);
         }
     }
 
@@ -50,20 +59,23 @@ int cace_amp_proxy_msg_send(int sock_fd, const cace_ari_t *dst, const uint8_t *d
         int flags = 0;
         CACE_LOG_INFO("Sending socket datagram with %zd octets", msg_size);
         ssize_t got = send(sock_fd, msg_begin, msg_size, flags);
-        m_bstring_clear(msgbuf);
 
         if (got != (ssize_t)msg_size)
         {
             CACE_LOG_ERR("failed send()");
-            result = 1;
+            result = 3;
         }
     }
+    m_bstring_clear(msgbuf);
 
     return result;
 }
 
 int cace_amp_proxy_msg_recv(int sock_fd, cace_ari_t *src, m_bstring_t data)
 {
+    CHKERR1(sock_fd >= 0);
+    CHKERR1(src);
+
     // first peek at message size
     int     flags = MSG_PEEK | MSG_TRUNC;
     ssize_t got   = recv(sock_fd, NULL, 0, flags);

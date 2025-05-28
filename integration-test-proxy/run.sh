@@ -109,7 +109,7 @@ then
         exit 4
     fi
 
-    echo "begin" | ${MEXEC} bpchat ipn:1.1 ipn:2.4
+    ${MEXEC} bping -c1 -q1 ipn:1.1 ipn:2.4
 
     # send an inspect execution with a nonce, expecting a report back
     CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version))' | \
@@ -118,7 +118,7 @@ then
     echo $CMD | ${DEXEC} bash
     echo
 
-    echo "end" | ${MEXEC} bpchat ipn:1.1 ipn:2.4
+    ${MEXEC} bping -c1 -q1 ipn:1.1 ipn:2.4
 
     RPTOBJ=""
     for IX in $(seq 10)

@@ -12,6 +12,7 @@ m horizon +0
 ## begin bpadmin
 1
 e 1
+w 1
 a scheme ipn 'ipnfw' 'ipnadminep'
 a endpoint ipn:1.0 x
 a endpoint ipn:1.1 x

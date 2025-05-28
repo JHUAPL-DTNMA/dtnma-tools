@@ -317,18 +317,20 @@ static void *bp_send_worker(void *ctx _U_)
                 const int             priority      = BP_STD_PRIORITY;
                 const BpCustodySwitch custodySwitch = NoCustodyRequested;
                 const int             rrFlags       = 0;
+                const int             ackRequested  = 0;
                 BpAncillaryData       ancData       = { 0 };
-                ancData.flags                       = BP_RELIABLE;
+                ancData.flags                       = BP_RELIABLE | BP_BEST_EFFORT;
 
-                int result = bp_send(ion_sap, dest_eid, /* destEid */
-                                     NULL,              /* reportToEid */
-                                     lifetime_s,        /* lifespan */
-                                     priority,          /* classOfService */
-                                     custodySwitch,     /* custodySwitch */
-                                     rrFlags, 0,        /* ackRequested */
-                                     &ancData,          /* ancillaryData */
-                                     bundleZco,         /* adu */
-                                     NULL               /* bundleObj */
+                int result = bp_send(ion_sap, dest_eid, // destination
+                                     NULL,              // report-to
+                                     lifetime_s,        // lifetime in seconds
+                                     priority,          // Class-of-Service / Priority
+                                     custodySwitch,     // Custody Switch
+                                     rrFlags,           // SRR Flags
+                                     ackRequested,      // ACK Requested
+                                     &ancData,          // ancillary data
+                                     bundleZco,         // ADU
+                                     NULL               // bundleObj
                 );
                 if (result <= 0)
                 {
@@ -603,11 +605,12 @@ int main(int argc, char *argv[])
     {
         CACE_LOG_ERR("Failed to join work threads");
     }
-    bp_close(ion_sap);
     bp_detach();
+    ionDetach();
 
     prox_item_queue_clear(outgoing);
     prox_item_queue_clear(incoming);
+    cace_closelog();
 
     CACE_LOG_INFO("Exiting after cleanup");
     return retval;

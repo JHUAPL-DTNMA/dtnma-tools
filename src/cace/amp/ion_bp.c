@@ -142,19 +142,25 @@ int cace_amp_ion_bp_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
     if (!retval)
     {
         CACE_LOG_DEBUG("sending datagram with %zd octets to %s", msg_size, dest_eid);
-        Object newBundle = 0;
+        const int             lifetime_s    = 500;
+        const int             priority      = BP_STD_PRIORITY;
+        const BpCustodySwitch custodySwitch = NoCustodyRequested;
+        const int             rrFlags       = 0;
+        const int             ackRequested  = 0;
+        BpAncillaryData       ancData       = { 0 };
+        ancData.flags                       = BP_RELIABLE | BP_BEST_EFFORT;
 
         int res = bp_send(state->sap,
-                          dest_eid,           // recipient
-                          NULL,               // report-to
-                          300,                // lifetime in seconds
-                          BP_STD_PRIORITY,    // Class-of-Service / Priority
-                          NoCustodyRequested, // Custody Switch
-                          0,                  // SRR Flags
-                          0,                  // ACK Requested
-                          NULL,               // Extended COS
-                          content,            // ADU
-                          &newBundle          // New Bundle
+                          dest_eid,      // destination
+                          NULL,          // report-to
+                          300,           // lifetime in seconds
+                          priority,      // Class-of-Service / Priority
+                          custodySwitch, // Custody Switch
+                          rrFlags,       // SRR Flags
+                          ackRequested,  // ACK Requested
+                          &ancData,      // ancillary data
+                          content,       // ADU
+                          NULL           // bundleObj
         );
         if (res != 1)
         {

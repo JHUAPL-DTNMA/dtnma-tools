@@ -30,6 +30,7 @@
 
 void cace_amp_proxy_cli_state_init(cace_amp_proxy_cli_state_t *state)
 {
+    CHKVOID(state);
     m_string_init(state->path);
     pthread_mutex_init(&state->sock_mutex, NULL);
     state->sock_fd = -1;
@@ -37,6 +38,7 @@ void cace_amp_proxy_cli_state_init(cace_amp_proxy_cli_state_t *state)
 
 void cace_amp_proxy_cli_state_deinit(cace_amp_proxy_cli_state_t *state)
 {
+    CHKVOID(state);
     pthread_mutex_destroy(&state->sock_mutex);
     m_string_clear(state->path);
 }
@@ -47,7 +49,6 @@ void cace_amp_proxy_cli_state_deinit(cace_amp_proxy_cli_state_t *state)
  */
 static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state)
 {
-
     int ret = -1;
     pthread_mutex_lock(&state->sock_mutex);
     if (state->sock_fd >= 0)
@@ -99,6 +100,7 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state)
 
 int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path)
 {
+    CHKVOID(state);
     pthread_mutex_lock(&state->sock_mutex);
     m_string_set(state->path, sock_path);
     pthread_mutex_unlock(&state->sock_mutex);
@@ -110,6 +112,7 @@ int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_
 
 void cace_amp_proxy_cli_state_disconnect(cace_amp_proxy_cli_state_t *state)
 {
+    CHKVOID(state);
     pthread_mutex_lock(&state->sock_mutex);
     const char *path = m_string_get_cstr(state->path);
 
@@ -127,7 +130,10 @@ void cace_amp_proxy_cli_state_disconnect(cace_amp_proxy_cli_state_t *state)
 
 int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
 {
+    CHKERR1(meta);
     cace_amp_proxy_cli_state_t *state   = ctx;
+    CHKERR1(state);
+
     int                         sock_fd = cace_amp_proxy_cli_real_connect(state);
 
     int result = 0;
@@ -178,6 +184,7 @@ int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_me
         if (got != (ssize_t)msg_size)
         {
             CACE_LOG_ERR("failed send()");
+            cace_amp_proxy_cli_state_disconnect(state);
             result = 4;
         }
     }
@@ -188,7 +195,11 @@ int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_me
 int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, cace_daemon_run_t *running,
                             void *ctx)
 {
+    CHKERR1(meta);
+    CHKERR1(running);
     cace_amp_proxy_cli_state_t *state   = ctx;
+    CHKERR1(state);
+
     int                         sock_fd = cace_amp_proxy_cli_real_connect(state);
 
     // first peek at message size
@@ -202,6 +213,7 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
     else if (got < 0)
     {
         CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
+        cace_amp_proxy_cli_state_disconnect(state);
         return CACE_AMM_MSG_IF_RECV_END;
     }
     CACE_LOG_INFO("Peeked socket datagram with %zd octets", got);
