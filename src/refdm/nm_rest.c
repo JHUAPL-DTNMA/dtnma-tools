@@ -390,7 +390,7 @@ static int agentParseText(struct mg_connection *conn, cace_ari_list_t tosend)
 
             cace_ari_t *eset = cace_ari_list_push_back_new(tosend);
 
-            #if defined(ARI_TEXT_PARSE)
+#if defined(ARI_TEXT_PARSE)
             res = cace_ari_text_decode(eset, linebuf, &errm);
             if (res)
             {
@@ -400,7 +400,7 @@ static int agentParseText(struct mg_connection *conn, cace_ari_list_t tosend)
                 CACE_FREE((char *)errm);
                 errm = NULL;
             }
-            #endif
+#endif
             if (!cace_ari_is_lit_typed(eset, CACE_ARI_TYPE_EXECSET))
             {
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "One value is not an EXECSET");
