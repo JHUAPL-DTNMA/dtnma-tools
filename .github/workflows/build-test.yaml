@@ -57,6 +57,7 @@ jobs:
         run: |
           ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON \
               -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
+              -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
               -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
       - name: Build
         run: ./build.sh
@@ -138,7 +139,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        transport: ['socket', 'ion']
+        transport: ['socket', 'ion', 'proxy']
     name: Integration Test (${{matrix.transport}})
     runs-on: ubuntu-24.04
     steps:

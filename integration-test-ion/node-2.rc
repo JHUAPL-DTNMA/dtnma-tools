@@ -12,6 +12,7 @@ m horizon +0
 ## begin bpadmin
 1
 e 1
+w 1
 a scheme ipn 'ipnfw' 'ipnadminep'
 a endpoint ipn:2.0 x
 a endpoint ipn:2.1 x
@@ -28,15 +29,15 @@ a protocol tcp 1400 100
 a induct udp 0.0.0.0:4556 udpcli
 
 # Outducts
-a outduct udp manager:4556 udpclo
-a outduct udp agent1:4556 udpclo
+a outduct udp 10.5.0.101:4556 udpclo
+a outduct udp 10.5.0.102:4556 udpclo
 
 s
 ## end bpadmin
 
 ## begin ipnadmin
-a plan 1 udp/manager:4556
-a plan 2 udp/agent1:4556
+a plan 1 udp/10.5.0.101:4556
+a plan 2 udp/10.5.0.102:4556
 
 ## end ipnadmin
 

@@ -42,10 +42,11 @@ int cace_amp_msg_encode(m_bstring_t msgbuf, const cace_ari_list_t items);
  *
  * @param[out] items The items list to decode into.
  * This must be already initialized.
- * @param[in] msgbuf The message buffer to decode from.
+ * @param[in] msgbuf_ptr The message buffer to decode from.
+ * @param msgbuf_len The length of valid data at @c msgbuf_ptr.
  * @return Zero if successful.
  */
-int cace_amp_msg_decode(cace_ari_list_t items, const m_bstring_t msgbuf);
+int cace_amp_msg_decode(cace_ari_list_t items, const uint8_t *msgbuf_ptr, size_t msgbuf_len);
 
 #ifdef __cplusplus
 } // extern C

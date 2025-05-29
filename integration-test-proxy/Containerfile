@@ -121,9 +121,9 @@ RUN ls -lt /usr/local/src/nm/
 RUN cd /usr/local/src/nm && \
     cmake -S . -B build/default \
       -DCMAKE_BUILD_TYPE=Debug \
-      -DBUILD_ION_PROXY=OFF \
+      -DBUILD_ION_PROXY=ON \
       -DTRANSPORT_UNIX_SOCKET=OFF \
-      -DTRANSPORT_PROXY_SOCKET=OFF \
+      -DTRANSPORT_PROXY_SOCKET=ON \
       -DTRANSPORT_ION_BP=ON \
       -DBUILD_TESTING=OFF \
       -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF \
@@ -134,19 +134,28 @@ RUN cd /usr/local/src/nm && \
 # keep build artifacts for debuginfo
 
 
-FROM testenv AS manager
+FROM testenv AS amp-manager
+
+# Systemd services
+COPY --chmod=644 systemd/refdm-proxy.service \
+    /usr/local/lib/systemd/system/
+RUN systemctl enable refdm-proxy
+
+EXPOSE 8089/tcp
+
+
+FROM testenv AS ion-manager
 
 # Systemd services
 COPY integration-test-ion/tmpfiles.conf /etc/tmpfiles.d/ion.conf
-COPY --chmod=644 systemd/ion.service systemd/refdm-ion.service systemd/bpecho@.service systemd/dumpcap.service \
+COPY --chmod=644 systemd/ion.service systemd/ion-app-proxy.service systemd/bpecho@.service systemd/dumpcap.service \
     /usr/local/lib/systemd/system/
-RUN systemctl enable ion bpecho@4 refdm-ion dumpcap && \
+RUN systemctl enable ion bpecho@4 ion-app-proxy dumpcap && \
     mkdir -p /var/run/ion
 
 # Runtime config for this container
 COPY integration-test-ion/node-*.rc /etc/ion/
 
-EXPOSE 8089/tcp
 EXPOSE 4556/udp
 
 

@@ -23,14 +23,14 @@ set(HFILES
 set(CFILES
     "main.c"
 )
-add_executable(refda-ion)
-target_sources(refda-ion PRIVATE ${HFILES} ${CFILES})
-target_link_libraries(refda-ion PUBLIC refda)
-target_link_libraries(refda-ion PUBLIC ION::BP)
+add_executable(ion-app-proxy)
+target_sources(ion-app-proxy PRIVATE ${HFILES} ${CFILES})
+target_link_libraries(ion-app-proxy PUBLIC cace)
+target_link_libraries(ion-app-proxy PUBLIC ION::BP)
 
 if(LIBSYSTEMD_FOUND)
-    target_compile_definitions(refda-ion PRIVATE -DHAVE_LIBSYSTEMD)
-    target_link_libraries(refda-ion PRIVATE PkgConfig::LIBSYSTEMD)
+    target_compile_definitions(ion-app-proxy PRIVATE -DHAVE_LIBSYSTEMD)
+    target_link_libraries(ion-app-proxy PRIVATE PkgConfig::LIBSYSTEMD)
 endif(LIBSYSTEMD_FOUND)
 
-install(TARGETS refda-ion)
+install(TARGETS ion-app-proxy)

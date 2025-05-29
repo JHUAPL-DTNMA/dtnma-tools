@@ -21,6 +21,7 @@
  */
 #include "socket.h"
 #include "msg.h"
+#include "cace/ari/text.h"
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 #include <m-bstring.h>
@@ -116,25 +117,43 @@ int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
 
     int retval = 0;
 
-    const char *dst_ptr = m_string_get_cstr(meta->dest);
-    if (!dst_ptr || m_string_empty_p(meta->dest))
+    const char *dest_eid = NULL;
     {
-        CACE_LOG_ERR("given null or empty dest");
+        const cace_data_t *dest_data = cace_ari_cget_tstr(&meta->dest);
+        if (dest_data)
+        {
+            dest_eid = (char *)(dest_data->ptr);
+        }
+        else
+        {
+            string_t buf;
+            string_init(buf);
+            cace_ari_text_encode(buf, &meta->dest, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_ERR("This transport can only send to text URI destinations, not %s", m_string_get_cstr(buf));
+            string_clear(buf);
+
+            return 6;
+        }
+    }
+
+    if (!dest_eid)
+    {
+        CACE_LOG_ERR("given non-text destination");
         return 1;
     }
     const size_t prefix_len = strlen(URI_PREFIX);
-    size_t       dst_len    = strlen(dst_ptr);
-    if ((dst_len < prefix_len) || (strncasecmp(dst_ptr, URI_PREFIX, prefix_len) != 0))
+    size_t       dst_len    = strlen(dest_eid);
+    if ((dst_len < prefix_len) || (strncasecmp(dest_eid, URI_PREFIX, prefix_len) != 0))
     {
-        CACE_LOG_ERR("given dest that is not a \"file\" scheme: %s", dst_ptr);
+        CACE_LOG_ERR("given dest that is not a \"file\" scheme: %s", dest_eid);
         return 1;
     }
-    dst_ptr += strlen(URI_PREFIX);
+    dest_eid += strlen(URI_PREFIX);
     dst_len -= prefix_len;
 
     struct sockaddr_un daddr;
     daddr.sun_family = AF_UNIX;
-    char *sun_end    = stpncpy(daddr.sun_path, dst_ptr, sizeof(daddr.sun_path));
+    char *sun_end    = stpncpy(daddr.sun_path, dest_eid, sizeof(daddr.sun_path));
     if (sun_end - daddr.sun_path >= (ssize_t)sizeof(daddr.sun_path))
     {
         CACE_LOG_ERR("given dest that is too long to fit in sockaddr_un");
@@ -243,8 +262,13 @@ int cace_amp_socket_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta,
                 CACE_LOG_WARNING("ignoring failed recvfrom() with errno %d", errno);
                 continue;
             }
-            m_string_printf(meta->src, URI_PREFIX "%s", saddr.sun_path);
-            CACE_LOG_DEBUG("read datagram with %zd octets from %s", got, m_string_get_cstr(meta->src));
+
+            m_string_t srcbuf;
+            m_string_init(srcbuf);
+            m_string_printf(srcbuf, URI_PREFIX "%s", saddr.sun_path);
+            CACE_LOG_DEBUG("read datagram with %zd octets from %s", got, m_string_get_cstr(srcbuf));
+            cace_ari_set_tstr(&meta->src, m_string_get_cstr(srcbuf), true);
+            m_string_clear(srcbuf);
 
             // stop when something received
             break;
@@ -259,7 +283,9 @@ int cace_amp_socket_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta,
 
     if (!retval)
     {
-        if (cace_amp_msg_decode(data, msgbuf))
+        const size_t   msgbuf_len = m_bstring_size(msgbuf);
+        const uint8_t *msgbuf_ptr = m_bstring_view(msgbuf, 0, msgbuf_len);
+        if (cace_amp_msg_decode(data, msgbuf_ptr, msgbuf_len))
         {
             retval = 5;
         }

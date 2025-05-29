@@ -19,12 +19,12 @@
 
 void cace_amm_msg_if_metadata_init(cace_amm_msg_if_metadata_t *meta)
 {
-    m_string_init(meta->src);
-    m_string_init(meta->dest);
+    cace_ari_init(&meta->src);
+    cace_ari_init(&meta->dest);
 }
 
 void cace_amm_msg_if_metadata_deinit(cace_amm_msg_if_metadata_t *meta)
 {
-    m_string_clear(meta->dest);
-    m_string_clear(meta->src);
+    cace_ari_deinit(&meta->dest);
+    cace_ari_deinit(&meta->src);
 }

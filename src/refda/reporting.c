@@ -25,7 +25,7 @@
 
 int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_ari_t *result)
 {
-    if (m_string_empty_p(runctx->mgr_ident))
+    if (cace_ari_is_undefined(&runctx->mgr_ident))
     {
         // nothing to do
         return 0;
@@ -33,7 +33,7 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_
 
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
-    m_string_set(msg.ident, runctx->mgr_ident);
+    cace_ari_set_copy(&msg.ident, &runctx->mgr_ident);
 
     cace_ari_rptset_t *rpts = cace_ari_set_rptset(&msg.value);
     cace_ari_set_copy(&(rpts->nonce), &(runctx->nonce));
@@ -260,19 +260,19 @@ int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target)
 
     if (!retval)
     {
-        refda_reporting_gen(runctx->agent, runctx->mgr_ident, target, rptctx.items);
+        refda_reporting_gen(runctx->agent, &runctx->mgr_ident, target, rptctx.items);
     }
 
     refda_reporting_ctx_deinit(&rptctx);
     return retval;
 }
 
-int refda_reporting_gen(refda_agent_t *agent, const m_string_t mgr_ident, const cace_ari_t *src, cace_ari_list_t items)
+int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const cace_ari_t *src, cace_ari_list_t items)
 {
-    if (!mgr_ident || m_string_empty_p(mgr_ident))
+    if (!mgr_ident || cace_ari_is_undefined(mgr_ident))
     {
         // nothing to do
-        CACE_LOG_WARNING("attempted to report to empty manager");
+        CACE_LOG_WARNING("attempted to report to undefined manager");
         return 0;
     }
 

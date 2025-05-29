@@ -67,6 +67,7 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
     int db_status = 0;
     refdm_db_insert_msg_rpt_set(val, agent, &db_status);
 #endif
+
     {
         bool wrote = false;
         pthread_mutex_lock(&agent->log_mutex);
@@ -122,16 +123,29 @@ void *refdm_ingress_worker(void *arg)
         cace_ari_list_reset(values);
         int recv_res = mgr->mif.recv(values, &meta, &mgr->running, mgr->mif.ctx);
         // process received items even if failed status
-        CACE_LOG_INFO("Message from %s has %zd ARIs", m_string_get_cstr(meta.src), cace_ari_list_size(values));
 
-        if (!cace_ari_list_empty_p(values))
+        if (cace_log_is_enabled_for(LOG_INFO))
         {
+            string_t buf;
+            string_init(buf);
+            cace_ari_text_encode(buf, &meta.src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_INFO("Message from %s has %zd ARIs", m_string_get_cstr(buf), cace_ari_list_size(values));
+            string_clear(buf);
+        }
+
+        // Only handle text form endpoints
+        const cace_data_t *tstr = cace_ari_cget_tstr(&meta.src);
+
+        if (!cace_ari_list_empty_p(values) && tstr)
+        {
+            const char *eid = (const char *)tstr->ptr;
+            CACE_LOG_DEBUG("Recording reports from agent at %s", eid);
+
             // might be unknown and NULL
-            refdm_agent_t *agent = refdm_mgr_agent_get_eid(mgr, m_string_get_cstr(meta.src));
-            // FIXME handle from unknown?
+            refdm_agent_t *agent = refdm_mgr_agent_get_eid(mgr, eid);
             if (!agent)
             {
-                agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(meta.src));
+                agent = refdm_mgr_agent_add(mgr, eid);
             }
 
             cace_ari_list_it_t val_it;

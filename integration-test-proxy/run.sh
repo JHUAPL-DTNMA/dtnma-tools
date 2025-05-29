@@ -37,8 +37,9 @@ elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
 
-    DEXEC="${DOCKER} compose exec -T manager"
-    AEXEC="${DOCKER} compose exec -T agent"
+    DEXEC="${DOCKER} compose exec -T -e REFDA_EID=ipn:2.6 amp-manager"
+    MEXEC="${DOCKER} compose exec -T ion-manager"
+    AEXEC="${DOCKER} compose exec -T agent1"
 
     # Wait for necessary daemons to start
     for IX in $(seq 10)
@@ -46,7 +47,7 @@ then
         sleep 1
 
         WAITING=0
-        for SVC in refdm-socket
+        for SVC in refdm-proxy
         do
               echo
               if ! ${DEXEC} service_is_running ${SVC}
@@ -56,7 +57,17 @@ then
                 ${DEXEC} journalctl --unit ${SVC}
               fi
         done
-        for SVC in refda-socket
+        for SVC in ion ion-app-proxy
+        do
+              echo
+              if ! ${MEXEC} service_is_running ${SVC}
+              then
+                WAITING=$((WAITING + 1))
+                echo "Logs for ${SVC}:"
+                ${MEXEC} journalctl --unit ${SVC}
+              fi
+        done
+        for SVC in refda-ion
         do
               echo
               if ! ${AEXEC} service_is_running ${SVC}
@@ -80,10 +91,10 @@ then
 
     CURLOPTS="-svf --variable '%REFDA_EID'"
     # All manager actions operate with this base
-    URIBASE="http://manager:8089/nm/api"
+    URIBASE="http://amp-manager:8089/nm/api"
 
     CMD="curl ${CURLOPTS} -XPOST ${URIBASE}/agents -H 'Content-Type: text/plain' --expand-data '{{REFDA_EID}}'"
-    echo $CMD | ${DEXEC} bash
+    echo $CMD | ${DEXEC} bash || true
     echo
 
     CMD="curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/clear_reports"
@@ -98,12 +109,16 @@ then
         exit 4
     fi
 
+    ${MEXEC} bping -c1 -q1 ipn:1.1 ipn:2.4
+
     # send an inspect execution with a nonce, expecting a report back
     CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version))' | \
         ace_ari --inform text --outform cborhex --must-nickname | \
         curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/send?form=hex -H 'Content-Type: text/plain' --data-binary @-; echo"
     echo $CMD | ${DEXEC} bash
     echo
+
+    ${MEXEC} bping -c1 -q1 ipn:1.1 ipn:2.4
 
     RPTOBJ=""
     for IX in $(seq 10)

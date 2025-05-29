@@ -23,10 +23,6 @@ cd "${SELFDIR}"
 
 DOCKER=${DOCKER:-docker}
 
-export DB_NAME=refdm
-export DB_USER=refdm
-export DB_PASSWORD=notsecret
-
 if [ "$1" = "start" ]
 then
     export DOCKER_BUILDKIT=1
@@ -42,14 +38,15 @@ then
     ${DOCKER} compose ps
 
     DEXEC="${DOCKER} compose exec -T -e REFDA_EID=ipn:2.6 manager"
+    AEXEC="${DOCKER} compose exec -T agent1"
 
-    # Wait a few seconds for ION to start
+    # Wait for necessary daemons to start
     for IX in $(seq 10)
     do
         sleep 1
 
         WAITING=0
-        for SVC in ion refdm-ion refda-ion
+        for SVC in ion refdm-ion
         do
               echo
               if ! ${DEXEC} service_is_running ${SVC}
@@ -57,6 +54,16 @@ then
                 WAITING=$((WAITING + 1))
                 echo "Logs for ${SVC}:"
                 ${DEXEC} journalctl --unit ${SVC}
+              fi
+        done
+        for SVC in refda-ion
+        do
+              echo
+              if ! ${AEXEC} service_is_running ${SVC}
+              then
+                WAITING=$((WAITING + 1))
+                echo "Logs for ${SVC}:"
+                ${AEXEC} journalctl --unit ${SVC}
               fi
         done
         echo "Waiting on ${WAITING} services"
@@ -76,12 +83,22 @@ then
     URIBASE="http://manager:8089/nm/api"
 
     CMD="curl ${CURLOPTS} -XPOST ${URIBASE}/agents -H 'Content-Type: text/plain' --expand-data '{{REFDA_EID}}'"
-    echo $CMD | ${DEXEC} bash
+    echo $CMD | ${DEXEC} bash || true
     echo
 
     CMD="curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/clear_reports"
     echo $CMD | ${DEXEC} bash
     echo
+
+    # Verify empty listing
+    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=text"
+    RPTLINES=$(echo $CMD | ${DEXEC} bash)
+    if [ -n "$RPTLINES" ]
+    then
+        exit 4
+    fi
+
+    ${DEXEC} bping -c1 -q1 ipn:1.1 ipn:2.4
 
     # send an inspect execution with a nonce, expecting a report back
     CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version))' | \
@@ -89,6 +106,8 @@ then
         curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/send?form=hex -H 'Content-Type: text/plain' --data-binary @-; echo"
     echo $CMD | ${DEXEC} bash
     echo
+
+    ${DEXEC} bping -c1 -q1 ipn:1.1 ipn:2.4
 
     RPTOBJ=""
     for IX in $(seq 10)

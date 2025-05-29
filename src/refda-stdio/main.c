@@ -101,7 +101,7 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
     static const char *arisep = " \f\n\r\t\v"; // Identical to isspace()
 
     static const char *src = "stdin";
-    m_string_set_cstr(meta->src, src);
+    cace_ari_set_tstr(&meta->src, src, false);
 
     // Watch stdin (fd 0) for input, assuming whole-lines are given
     struct pollfd pfds[] = {
