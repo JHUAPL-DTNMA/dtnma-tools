@@ -146,6 +146,13 @@ cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t
  */
 int refda_agent_bindrefs(refda_agent_t *agent);
 
+/** After all ADMs are registered, finish object initialization.
+ *
+ * @param[in,out] agent The agent state to update.
+ * @return The number of failed inits, or zero if successful.
+ */
+int refda_agent_init_objs(refda_agent_t *agent);
+
 int refda_agent_start(refda_agent_t *agent);
 
 int refda_agent_stop(refda_agent_t *agent);
