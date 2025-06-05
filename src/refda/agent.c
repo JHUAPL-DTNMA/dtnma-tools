@@ -196,9 +196,66 @@ int refda_agent_bindrefs(refda_agent_t *agent)
     return failcnt;
 }
 
+int refda_agent_init_sbr(refda_agent_t *agent, const cace_amm_obj_ns_t *ns)
+{
+    const cace_ari_type_t             obj_type = CACE_ARI_TYPE_SBR;
+    cace_amm_obj_ns_ctr_ptr_t *const *ctr_ptr  = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
+    if (!ctr_ptr)
+    {
+        return 1;
+    }
+    const cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_ptr_ref(*ctr_ptr);
+
+    cace_amm_obj_desc_list_it_t obj_it;
+    for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+         cace_amm_obj_desc_list_next(obj_it))
+    {
+        const cace_amm_obj_desc_t  *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
+        refda_amm_sbr_desc_t *sbr = obj->app_data.ptr;
+        if (sbr)
+        {
+            if (sbr->init_enabled)
+            {
+                CACE_LOG_INFO("Initializing SBR");
+                refda_exec_sbr_enable(agent, sbr);
+            }
+        }
+    }
+
+    return 0;
+}
+
+int refda_agent_init_tbr(refda_agent_t *agent, const cace_amm_obj_ns_t *ns)
+{
+    const cace_ari_type_t             obj_type = CACE_ARI_TYPE_TBR;
+    cace_amm_obj_ns_ctr_ptr_t *const *ctr_ptr  = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
+    if (!ctr_ptr)
+    {
+        return 1;
+    }
+    const cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_ptr_ref(*ctr_ptr);
+
+    cace_amm_obj_desc_list_it_t obj_it;
+    for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
+         cace_amm_obj_desc_list_next(obj_it))
+    {
+        const cace_amm_obj_desc_t  *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
+        refda_amm_tbr_desc_t *tbr = obj->app_data.ptr;
+        if (tbr)
+        {
+            if (tbr->init_enabled)
+            {
+                CACE_LOG_INFO("Initializing TBR");
+                refda_exec_tbr_enable(agent, tbr);
+            }
+        }
+    }
+
+    return 0;
+}
+
 int refda_agent_init_objs(refda_agent_t *agent)
 {
-    const cace_ari_type_t obj_type = CACE_ARI_TYPE_SBR;
     cace_amm_obj_ns_list_it_t ns_it;
     for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
          cace_amm_obj_ns_list_next(ns_it))
@@ -210,40 +267,8 @@ int refda_agent_init_objs(refda_agent_t *agent)
         }
         const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_ptr_ref(*ns_ptr);
 
-        cace_amm_obj_ns_ctr_ptr_t *const *ctr_ptr = cace_amm_obj_ns_ctr_dict_get(ns->object_types, obj_type);
-        if (!ctr_ptr)
-        {
-            continue;
-        }
-        const cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_ptr_ref(*ctr_ptr);
-
-        cace_amm_obj_desc_list_it_t obj_it;
-        for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
-             cace_amm_obj_desc_list_next(obj_it))
-        {
-            const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
-
-            //cace_ari_array_t row;
-            //cace_ari_array_init(row);
-            //cace_ari_array_resize(row, 6);
-
-            //{
-            //    cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
-            //    refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
-            //}
-
-            const refda_amm_sbr_desc_t *sbr = obj->app_data.ptr;
-            if (sbr)
-            {
-    CACE_LOG_INFO("found SBR");
-                //cace_ari_set_copy(cace_ari_array_get(row, 1), &(sbr->action));
-                //cace_ari_set_copy(cace_ari_array_get(row, 2), &(sbr->condition));
-                //cace_ari_set_copy(cace_ari_array_get(row, 3), &(sbr->min_interval));
-                //cace_ari_set_uvast(cace_ari_array_get(row, 4), sbr->max_exec_count);
-                //cace_ari_set_bool(cace_ari_array_get(row, 5), sbr->enabled);
-            }
-
-        }
+        refda_agent_init_sbr(agent, ns);
+        refda_agent_init_tbr(agent, ns);
     }
 
     return 0;
