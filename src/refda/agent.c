@@ -210,8 +210,8 @@ int refda_agent_init_sbr(refda_agent_t *agent, const cace_amm_obj_ns_t *ns)
     for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
          cace_amm_obj_desc_list_next(obj_it))
     {
-        const cace_amm_obj_desc_t  *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
-        refda_amm_sbr_desc_t *sbr = obj->app_data.ptr;
+        const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
+        refda_amm_sbr_desc_t      *sbr = obj->app_data.ptr;
         if (sbr)
         {
             if (sbr->init_enabled)
@@ -239,8 +239,8 @@ int refda_agent_init_tbr(refda_agent_t *agent, const cace_amm_obj_ns_t *ns)
     for (cace_amm_obj_desc_list_it(obj_it, ctr->obj_list); !cace_amm_obj_desc_list_end_p(obj_it);
          cace_amm_obj_desc_list_next(obj_it))
     {
-        const cace_amm_obj_desc_t  *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
-        refda_amm_tbr_desc_t *tbr = obj->app_data.ptr;
+        const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
+        refda_amm_tbr_desc_t      *tbr = obj->app_data.ptr;
         if (tbr)
         {
             if (tbr->init_enabled)
