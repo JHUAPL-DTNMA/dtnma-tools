@@ -89,6 +89,16 @@ int main(int argc _U_, char *argv[] _U_)
         {
             CACE_LOG_INFO("Agent startup completed");
         }
+
+        if (refda_agent_init_objs(&agent))
+        {
+            CACE_LOG_ERR("Agent object initialization failed");
+            retval = 2;
+        }
+        else
+        {
+            CACE_LOG_INFO("Agent object initialization completed");
+        }
     }
     CACE_LOG_INFO("READY");
 
