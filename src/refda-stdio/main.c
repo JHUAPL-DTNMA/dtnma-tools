@@ -344,12 +344,12 @@ int main(int argc, char *argv[])
 
         if (refda_agent_init_objs(&agent))
         {
-            CACE_LOG_ERR("Agent init objects failed");
+            CACE_LOG_ERR("Agent object initialization failed");
             retval = 2;
         }
         else
         {
-            CACE_LOG_INFO("Agent init objects completed");
+            CACE_LOG_INFO("Agent object initialization completed");
         }
     }
     CACE_LOG_INFO("READY");
