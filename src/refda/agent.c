@@ -256,7 +256,9 @@ int refda_agent_init_tbr(refda_agent_t *agent, const cace_amm_obj_ns_t *ns)
 
 int refda_agent_init_objs(refda_agent_t *agent)
 {
+    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     cace_amm_obj_ns_list_it_t ns_it;
+
     for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
          cace_amm_obj_ns_list_next(ns_it))
     {
@@ -271,6 +273,7 @@ int refda_agent_init_objs(refda_agent_t *agent)
         refda_agent_init_tbr(agent, ns);
     }
 
+    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     return 0;
 }
 
