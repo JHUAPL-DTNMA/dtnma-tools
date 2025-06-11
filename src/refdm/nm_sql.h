@@ -98,9 +98,10 @@ int32_t refdm_db_mgt_query_fetch(PGresult **res, char *format, ...);
 int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...);
 
 /* Functions to process outgoing  tables and reprots. */
-uint32_t refdm_db_insert_msg_rpt_set(cace_ari_t *val, refdm_agent_t *agent, int *status);
-uint32_t refdm_db_insert_msg_tbl(cace_ari_t *val, refdm_agent_t *agent, int *status);
-
+uint32_t       refdm_db_insert_msg_rpt_set(cace_ari_t *val, refdm_agent_t *agent, int *status);
+uint32_t       refdm_db_insert_msg_tbl(cace_ari_t *val, refdm_agent_t *agent, int *status);
+uint32_t       refdm_db_insert_agent(m_string_t eid, int *status);
+uint32_t       refdm_db_insert_execset(cace_ari_t *val, refdm_agent_t *agent, int *status);
 refdm_agent_t *refdm_db_fetch_agent(int32_t id);
 int32_t        refdm_db_fetch_agent_idx(string_t *sender);
 string_t      *db_fetch_ari_col(int idx);

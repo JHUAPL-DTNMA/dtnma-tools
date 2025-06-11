@@ -89,7 +89,7 @@ left join DATA_TYPE DT on
 
 -- ctrl view 
 create or replace
-view vw_ctrl_definition as
+view vw_ctrl_formal as
 	select
 		join3.obj_metadata_id,
 		join3.name,
@@ -166,7 +166,12 @@ join
 -- const view
 create or replace 
 view vw_const_actual as 
-SELECT const_actual_definition.obj_actual_definition_id, data_type, data_value, obj_actual_definition.use_desc, obj_metadata.*
+SELECT 
+const_actual_definition.obj_actual_definition_id, 
+data_type, 
+data_value, 
+obj_actual_definition.use_desc, 
+obj_metadata.*
 FROM const_actual_definition, obj_actual_definition, obj_metadata
 WHERE 
 	const_actual_definition.obj_actual_definition_id = obj_actual_definition.obj_actual_definition_id
@@ -324,7 +329,7 @@ inner join
 
 -- mac views 
 create or replace
-view vw_mac_definition as
+view vw_mac_formal as
     select
 	obj_metadata.obj_metadata_id,
 	name,
@@ -449,20 +454,6 @@ join(
 -- sbr view 
 create or replace
 view vw_sbr_actual as
-    select
-	obj_formal_definition.obj_metadata_id,
-	name,
-	data_model_id,
-	obj_actual_definition_id,
-	obj_formal_definition.obj_formal_definition_id,
-	condition,
-	run_count,
-	min_interval,
-	action,
-	join3.use_desc
-from 
-		obj_formal_definition
-join (
 	select
 		obj_metadata.obj_metadata_id,
 		name,
@@ -489,26 +480,12 @@ join (
 			obj_actual_definition
 		join sbr_actual_definition on
 			sbr_actual_definition.obj_actual_definition_id = obj_actual_definition.obj_actual_definition_id) join2 on
-		join2.obj_metadata_id = obj_metadata.obj_metadata_id ) join3 on
-	obj_formal_definition.obj_metadata_id = join3.obj_metadata_id;
+		join2.obj_metadata_id = obj_metadata.obj_metadata_id;
         
 -- tbr view 
 create or replace
 view vw_tbr_actual as
-select
-	obj_formal_definition.obj_metadata_id,
-	name,
-	data_model_id,
-	obj_actual_definition_id,
-	obj_formal_definition_id,
-	wait_period,
-	run_count,
-	start_time,
-	action,
-	join3.use_desc
-from 
-obj_formal_definition
-join (
+
 select
 	obj_metadata.obj_metadata_id,
 	name,
@@ -535,8 +512,7 @@ join
 		obj_actual_definition
 	join tbr_actual_definition on
 		tbr_actual_definition.obj_actual_definition_id = obj_actual_definition.obj_actual_definition_id) join2 on
-	join2.obj_metadata_id = obj_metadata.obj_metadata_id) join3 on
-	obj_formal_definition.obj_metadata_id = join3.obj_metadata_id;
+	join2.obj_metadata_id = obj_metadata.obj_metadata_id ;
 
 
 	-- var view 
@@ -724,24 +700,6 @@ inner join ari_collection
 	ari_tblt.ac_id = ari_collection.ac_id;
 
 
-
-/*
--- namespace view 
-create or replace
-view vw_namespace as 
-select
-	data_model.data_model_enum,
-	data_model.name,
-	namespace.name_string,
-	namespace.version_name,
-	data_model.use_desc
-from
-	data_model
-join namespace 
-   on
-	data_model.data_model_id = namespace.data_model_id;	
-*/
-		
 						
 -- views for parameters
 
@@ -784,10 +742,22 @@ where
 	
 
 create or replace
-	view vw_ari_union as 
-select
+	view vw_ari_actual_union as 
+select 
+	meta_join.obj_metadata_id,
+	meta_join.name,
+	data_model.namespace,
+	data_model.name as "data_model_name",
+	meta_join.data_type_id,
+	meta_join.data_model_id,
+    meta_join.obj_actual_definition_id as "obj_id",
+	meta_join.parm_id,
+	meta_join.actual
+from 
+(select
 	union_join.*,
-	obj_metadata.data_type_id
+	obj_metadata.data_type_id,
+	true as "actual"
 from
 	(
 	select
@@ -796,6 +766,7 @@ from
 		data_model_id,
 		obj_formal_definition_id,
 		obj_actual_definition_id,
+		ap_spec_id as "parm_id",
 		use_desc
 	from
 		vw_ctrl_actual
@@ -804,8 +775,9 @@ union all
 		obj_metadata_id,
 		name,
 		data_model_id,
-		NULL as obj_formal_definition_id,
+		null as obj_formal_definition_id,
 		obj_actual_definition_id,
+		NULL as "parm_id",
 		use_desc
 	from
 		vw_const_actual
@@ -816,6 +788,7 @@ union all
 		data_model_id,
 		obj_formal_definition_id,
 		obj_actual_definition_id,
+		ap_spec_id as "parm_id",
 		use_desc
 	from
 		vw_edd_actual
@@ -826,6 +799,7 @@ union all
 		data_model_id,
 		obj_formal_definition_id,
 		obj_actual_definition_id,
+		ap_spec_id as "parm_id",
 		use_desc
 	from
 		vw_mac_actual
@@ -836,6 +810,7 @@ union all
 		data_model_id,
 		obj_formal_definition_id,
 		obj_actual_definition_id,
+		ap_spec_id as "parm_id",
 		use_desc
 	from
 		vw_oper_actual
@@ -844,8 +819,9 @@ union all
 		obj_metadata_id,
 		name,
 		data_model_id,
-		obj_formal_definition_id,
+		null as obj_formal_definition_id,
 		obj_actual_definition_id,
+		null as "parm_id",
 		use_desc
 	from
 		vw_sbr_actual
@@ -854,8 +830,9 @@ union all
 		obj_metadata_id,
 		name,
 		data_model_id,
-		obj_formal_definition_id,
+		null as obj_formal_definition_id,
 		obj_actual_definition_id,
+		null as "parm_id",
 		use_desc
 	from
 		vw_tbr_actual
@@ -866,6 +843,7 @@ union all
 		data_model_id,
 		null as obj_formal_definition_id,
 		obj_actual_definition_id,
+		null as "parm_id",
 		use_desc
 	from
 		vw_typedef_actual
@@ -875,12 +853,124 @@ union all
 		name,
 		data_model_id,
 		obj_formal_definition_id,
-		ap_spec_id,
+		obj_actual_definition_id,
+		ap_spec_id as "parm_id",
 		use_desc
 	from
 		vw_ident_actual) as union_join
 join obj_metadata on
-	union_join.obj_metadata_id = obj_metadata.obj_metadata_id ;
+	union_join.obj_metadata_id = obj_metadata.obj_metadata_id) as meta_join join data_model on meta_join.data_model_id = data_model.data_model_id;
+
+create or replace
+	view vw_ari_formal_union as 
+select 
+	meta_join.obj_metadata_id,
+	meta_join.name,
+	data_model.namespace,
+	data_model.name as "data_model_name",
+	meta_join.data_type_id,
+	meta_join.data_model_id,
+    meta_join.obj_formal_definition_id as "obj_id",
+	meta_join.parm_id,
+	meta_join.actual
+from 
+(select
+	union_join.*,
+	obj_metadata.data_type_id,
+	false as "actual"
+from
+	(
+	select
+		obj_metadata_id,
+		name,
+		data_model_id,
+		obj_formal_definition_id,
+		fp_spec_id as "parm_id",
+		use_desc
+	from
+		vw_ctrl_formal
+union all
+	select
+		obj_metadata_id,
+		name,
+		data_model_id,
+		obj_formal_definition_id,
+		fp_spec_id as "parm_id",
+		use_desc
+	from
+		vw_edd_formal
+union all
+	select
+		obj_metadata_id,
+		name,
+		data_model_id,
+		obj_formal_definition_id,
+		fp_spec_id as "parm_id",
+		use_desc
+	from
+		vw_mac_formal
+union all
+	select
+		obj_metadata_id,
+		name,
+		data_model_id,
+		obj_formal_definition_id,
+		fp_spec_id as "parm_id",
+		use_desc
+	from
+		vw_oper_formal
+union all
+	select
+		obj_metadata_id,
+		name,
+		data_model_id,
+		obj_formal_definition_id,
+		fp_spec_id as "parm_id",
+		use_desc
+	from
+		vw_ident_formal) as union_join
+join obj_metadata on
+	union_join.obj_metadata_id = obj_metadata.obj_metadata_id) as meta_join join data_model on meta_join.data_model_id = data_model.data_model_id;
+
+create or replace
+	view vw_ari_union as 
+select
+	ari_union.obj_metadata_id,
+	ari_union.name,
+	ari_union.namespace,
+	ari_union."data_model_name",
+	data_type.type_name,
+	ari_union.data_model_id,
+    ari_union."obj_id",
+	ari_union.parm_id,
+	ari_union.actual
+from 
+(select 
+	obj_metadata_id,
+	name,
+	namespace,
+	"data_model_name",
+	data_type_id,
+	data_model_id,
+    "obj_id",
+	parm_id,
+	actual
+from 
+	vw_ari_actual_union
+union all
+select 
+	obj_metadata_id,
+	name,
+	namespace,
+	"data_model_name",
+	data_type_id,
+	data_model_id,
+    "obj_id",
+	parm_id,
+	actual 
+	from 
+	vw_ari_formal_union) as ari_union join data_type on ari_union.data_type_id = data_type.data_type_id;
+
 	
 create or replace
 view vw_ari as
@@ -940,4 +1030,17 @@ left join vw_ident_actual iad on
 	iad.obj_actual_definition_id = o.obj_actual_definition_id
 left join vw_typedef_actual tad on 
 	tad.obj_actual_definition_id = o.obj_actual_definition_id
+;
+
+
+create or replace
+view vw_execution_set as
+select 
+execution_set.execution_set_id ,
+execution_set.correlator_nonce,
+execution_set.use_desc,
+execution_set.agent_id,
+ari_collection.num_entries,
+ari_collection.entries
+from execution_set join ari_collection on execution_set.ac_id = ari_collection.ac_id
 ;

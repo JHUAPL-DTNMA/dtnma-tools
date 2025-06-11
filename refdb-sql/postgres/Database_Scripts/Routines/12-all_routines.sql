@@ -30,12 +30,12 @@
 
 
 
-create or replace procedure SP__insert_data_model(in p_namespace_type varchar, p_name varchar, p_enumeration integer, p_version_name varchar, p_use_desc varchar, out r_data_model_id integer)
+create or replace procedure SP__insert_data_model(in p_namespace_type varchar, p_name varchar, p_enumeration integer, p_namespace varchar, p_version_name varchar, p_use_desc varchar, out r_data_model_id integer)
 LANGUAGE plpgsql
 AS $$ BEGIN
 	INSERT INTO data_model
-	(namespace_type, "name", enumeration, version_name, use_desc)
-	VALUES(p_namespace_type, p_name, p_enumeration, p_version_name, p_use_desc) RETURNING data_model_id into r_data_model_id;
+	(namespace_type, "name", enumeration, namespace, version_name, use_desc)
+	VALUES(p_namespace_type, p_name, p_enumeration, p_namespace, p_version_name, p_use_desc) RETURNING data_model_id into r_data_model_id;
 end$$;
 
 
@@ -1218,89 +1218,6 @@ end$$;
 
 
 
-
--- STORED PROCEDURE(S) for the creating updating and deleting reports and report templates
-
-
--- auto adds ac which can be troublesome 
--- user has to make ac first 
-/*
-
-CREATE OR REPLACE PROCEDURE SP__insert_report_template_metadata_format(IN p_metadata_count integer, p_metadata_types_list varchar, p_metadata_names_list varchar, p_metadata_desc varchar, INOUT r_tnvc_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-	INSERT INTO type_name_value_collection(num_entries, use_desc) VALUES(p_metadata_count, p_metadata_desc) RETURNING  type_name_value_collection_id INTO r_tnvc_id;
-	@s := 'INSERT INTO type_name_value(tnvc_id, data_type, data_name, order_num) VALUES'; 
-    @loops := 1; 
-    WHILE @loops < p_metadata_count DO 
-		LANGUAGE plpgsql
-AS $$ BEGIN
-			-- @metadata_type
-				@metadata_type := TRIM(SUBSTRING_INDEX(p_metadata_types_list, ',', 1));
-				SELECT REPLACE(p_metadata_types_list, CONCAT(@metadata_type, ','), '') into p_metadata_types_list 
-    
- 			-- @metadata_name
-				@metadata_name := TRIM(SUBSTRING_INDEX(p_metadata_names_list, ',', 1)); 
-				SELECT REPLACE(p_metadata_names_list, CONCAT(@metadata_name, ','), '') into p_metadata_names_list;
-                
-				@s = CONCAT(@s, '(', r_tnvc_id, ',', (SELECT enum_id FROM data_type where type_name = metadata_type), ',', '\'', @metadata_name, '\'', ',', @loops, '),');
-                @loops := loops + 1; 
-        END; 
-    END WHILE; 
- 
-    -- @metadata_type
-	@metadata_type := TRIM((SUBSTRING_INDEX(p_metadata_types_list, ',', 1)));
-    
-	-- @metadata_name
-	@metadata_name := TRIM(SUBSTRING_INDEX(p_metadata_names_list, ',', 1)); 
-
-	@s = CONCAT(@s, '(', r_tnvc_id, ',', (SELECT enum_id FROM data_type where type_name = metadata_type), ',', '\'', @metadata_name, '\'', ',', @loops, ');');
-	PREPARE stmt FROM @s; 
-    EXECUTE stmt; 
-	
-end$$;
- 
-*/
-
-
--- ==================================================================
--- create a report template formal def
--- SP__insert_report_template_metadata_format 
--- IN 
--- 		p_obj_id integer - metadata id for this report
--- 		p_use_desc varchar - human readable use description
--- 		p_formal_parmspec_id integer - formal parameter spec id 
--- 		p_ac_id integer - ac for the report definition
--- 		 
--- OUT 
--- 		r_definition_id integer - id of this formal report 
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_report_template_formal_definition(IN p_obj_id integer, p_use_desc varchar, p_formal_parmspec_id integer, p_ac_id integer, INOUT r_definition_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-	CALL SP__insert_obj_formal_definition(p_obj_id, p_use_desc, r_definition_id); 
-    INSERT INTO report_template_formal_definition(obj_formal_definition_id, fp_spec_id, ac_id) VALUES(r_definition_id, p_formal_parmspec_id, p_ac_id); 
-end$$;
-
-
-
--- ==================================================================
--- SP__insert_report_actual_definition 
--- IN 
--- 		p_obj_definition_id integer - metadata id for this report
--- 		p_ap_spec_id integer - id for the actual parmspec for this report 
--- 		p_use_desc varchar - human readable use description
--- 	OUT 
--- 		r_obj_actual_id integer - id of this actual report definition
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_report_actual_definition(IN p_obj_definition_id integer, p_ap_spec_id integer, p_ts TIMESTAMP, p_use_desc varchar, INOUT r_obj_actual_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-	CALL SP__insert_obj_actual_definition(p_obj_definition_id, p_use_desc, r_obj_actual_id); 
-    INSERT INTO report_template_actual_definition(obj_actual_definition_id, ap_spec_id, ts ) VALUES(r_obj_actual_id, p_ap_spec_id, p_ts);
-end$$; 
- 
-
 -- STORED PROCEDURE(S) for adding updating and deleting time base rule defintions and instances 
 
 -- =================
@@ -1415,47 +1332,6 @@ AS $$ BEGIN
     END IF; 
 end$$;
 
--- STORED PROCEDURE(S) for adding deleting and updating Table template defintions and instances 
-
-
--- ==================================================================
--- SP__insert_table_template_actual_definition
--- IN
--- 		p_obj_id integer - obj_metadata id
--- 		p_use_desc varchar - human readble use desc
--- 		p_num_columns integer -  number of columns in the table
--- 		p_column_names_list varchar(10000) -  list of column names 
--- 		p_column_types_list varchar(10000) - list of column type
--- OUT 
--- 		r_definition_id integer - id of the the new table
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_table_template_actual_definition(IN p_obj_id integer, p_use_desc varchar, p_columns_id integer, INOUT r_definition_id integer)
-LANGUAGE plpgsql
-AS $$ BEGIN
-	CALL SP__insert_obj_actual_definition(p_obj_id, p_use_desc, r_definition_id);
-    INSERT INTO table_template_actual_definition(obj_actual_definition_id, tnvc_id) VALUES(r_definition_id, p_columns_id); 
-end$$;
-
-
--- ==================================================================
--- SP__insert_table_template_actual_definition 
--- IN 
--- 		p_obj_id integer - id of the table to delete 
--- 		p_obj_name varchar -- name of the object to delete 
--- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__delete_table_template_actual_definition(IN p_obj_id integer)
-LANGUAGE plpgsql
-AS $$ 
-DECLARE
-tnvc_id integer; 
-BEGIN
-
-   CALL SP__delete_obj_actual_definition(p_obj_id, null);
-   
-end$$;
-
-
-
 
 -- 
 -- 
@@ -1528,12 +1404,6 @@ BEGIN
     CALL SP__delete_obj_atual_defintion(p_obj_id, p_obj_name);
 end$$;
 
-
-
-
-
-
--- 
 
 
 -- STORED PROCEDURE(S) for adding updating and removing variables 
@@ -1642,3 +1512,19 @@ language plpgsql
 	VALUES(p_ari_tblt_id, p_num_entries , p_table_entry, p_table_entry_cbor, p_agent_id);
 	End$$;
 
+create or replace procedure SP__insert_execset(in p_correlator_nonce INT,  p_use_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries INT)
+language plpgsql
+	as $$ 
+	DECLARE
+	r_ac_id INTEGER;
+	BEGIN 
+	SELECT ac_id INTO r_ac_id
+		FROM  ari_collection where num_entries = p_num_entries and entries = p_exec_set;
+		
+	IF (r_ac_id IS NULL) THEN
+		insert INTO ari_collection(num_entries,entries) 
+		VALUES(p_num_entries,p_exec_set) RETURNING ac_id into r_ac_id;
+    END IF ;	
+		INSERT INTO execution_set(correlator_nonce, ac_id , use_desc, agent_id)
+	VALUES(p_correlator_nonce, r_ac_id , p_use_desc, p_agent_id);
+	End$$;
