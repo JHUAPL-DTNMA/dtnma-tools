@@ -41,7 +41,8 @@ ruby
 build-essential
 autoconf
 libtool
-flex libfl-dev
+flex 
+libfl-dev
 bison
 libpcre2-dev
 civetweb
@@ -50,6 +51,8 @@ libssl-dev
 libcjson-dev
 libsystemd-dev
 gcovr
+doxygen
+valgrind
 ```
 
 In addition to the above, this project also has dependencies provided as git submodules. These may be retrieved and built using the following commands:
@@ -64,6 +67,8 @@ Once dependencies are installed, the following scripts can be run to build and t
 ```
 ./deps.sh
 ./prep.sh
+./build.sh
+./build.sh docs
 ./build.sh check
 ```
 After the build is successful, the following will install to a local prefix path (`$PWD/testroot/usr`):
