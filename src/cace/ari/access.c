@@ -184,6 +184,42 @@ int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out)
     return 0;
 }
 
+int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out)
+{
+    CHKERR1(ari);
+    CHKERR1(out);
+    if (ari->is_ref)
+    {
+        return 1;
+    }
+    switch (ari->as_lit.prim_type)
+    {
+        case CACE_ARI_PRIM_UINT64:
+        {
+            const uint64_t *val = &(ari->as_lit.value.as_uint64);
+            if (*val > UINT8_MAX)
+            {
+                return 3;
+            }
+            *out = *val;
+            break;
+        }
+        case CACE_ARI_PRIM_INT64:
+        {
+            const int64_t *val = &(ari->as_lit.value.as_int64);
+            if ((*val < 0) || (*val > UINT8_MAX))
+            {
+                return 3;
+            }
+            *out = *val;
+            break;
+        }
+        default:
+            return 2;
+    }
+    return 0;
+}
+
 int cace_ari_get_vast(const cace_ari_t *ari, cace_ari_vast *out)
 {
     CHKERR1(ari);
