@@ -138,6 +138,20 @@ Checking that the report was received with:
 curl -qv http://localhost:8089/nm/api/agents/eid/file%3A%2Ftmp%2Fagent.sock/reports/hex | json_reformat
 ```
 
+## Updating ADM Implementations
+
+To update and synchronize the REFDA implementations of ADMs, a separate tool `camp` (hosted in the [dtnma-camp repo](https://github.com/JHUAPL-DTNMA/dtnma-camp)) can be used to generate C source files compatible with the REFDA object registration APIs.
+The `camp` tool can be installed as described in its source repository.
+
+To generate and format new ADM-supporting sources, the following procedure can be used.
+```
+for MODPATH in $(ls -1 item-test/deps/adms/ietf-*.yang); do camp -s --only-ch --out src/refda/adm/ $MODPATH; done
+./apply_format.sh src/refda/adm/*.h src/refda/adm/*.c
+./apply_license.sh src/refda/adm/
+```
+
+After updating the sources the changes can be reviewed, tweaked manually if needed, and committed to a branch of the source tree.
+
 ## Support
 The wiki for this project contains additional details outside of the source and API documentation, and the issue tracker for this project is used for defect reports and enhancement requests.
 Additional details are in the [Contributing](CONTRIBUTING.md) document.
