@@ -347,9 +347,11 @@ create table if not exists data_model (
     namespace_type varchar not null,
     name varchar not null,
     enumeration int not null, 
+    namespace varchar,
     version_name varchar default '0.0.0',
     use_desc varchar,
-    primary key (data_model_id)
+    primary key (data_model_id),
+    unique(name, namespace ,version_name)
 -- Below UNIQUE key not valid. Explicit check in SP instead instead.  TODO: Add appropriate indexes
 -- UNIQUE (namespace_type, issuing_org , name_string , version_name)
 );
@@ -505,13 +507,14 @@ create table if not exists ari_tbl (
 -- exec-set
 create table if not exists execution_set(
     execution_set_id serial not null ,
-    correlator_nonce bytea,
+    correlator_nonce int,
     ac_id INT,
---exec-targets
-use_desc varchar,
+    use_desc varchar,
+    agent_id varchar,
     primary key (execution_set_id),
     foreign key (ac_id)
-        references ari_collection (ac_id)
+        references ari_collection (ac_id),
+    unique(correlator_nonce,ac_id,agent_id) --AC would be unique for entry and one nonce per agent
 );
 
 -- ari-tbl template 

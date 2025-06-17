@@ -89,6 +89,10 @@ enum queries
 
     ARI_TBL_INSERT,
 
+    ARI_AGENT_INSERT,
+
+    ARI_EXECSET_INSERT,
+
     REFDM_DB_LOG_MSG,
     MGR_NUM_QUERIES
 };
@@ -505,6 +509,16 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                                    "INSERT INTO DB_LOG_INFO (msg,level,source,file,line) "
                                    "VALUES($1::varchar,$2::int4,$3::varchar,$4::varchar,$5::int4)",
                                    "REFDM_DB_LOG_MSG", 5, NULL);
+
+            queries[idx][ARI_AGENT_INSERT] =
+                db_mgr_sql_prepare(idx, "call SP__insert_agent($1::varchar,null)", "SP__insert_agent", 2, NULL);
+
+            // (in p_correlator_nonce INT,  p_user_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries
+            // INT)
+            queries[idx][ARI_EXECSET_INSERT] = db_mgr_sql_prepare(
+                idx, "call SP__insert_execset($1::int4, $2::varchar, $3::varchar, $4::bytea, $5::int4)",
+                "SP__insert_execset", 5, NULL);
+
 #endif // HAVE_POSTGRESQL
         }
 
@@ -1152,4 +1166,84 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
                     return rtv;
                 }
+
+                /**
+
+                 * @param eid - agent eid being added
+                 * @param status - Set to 0 if
+                 * parsing fails, but not modified on
+                 * success
+                 * @returns Report Set ID, or 0 on error
+                 */
+                uint32_t refdm_db_insert_agent(m_string_t eid, int *status)
+                {
+                    CACE_LOG_INFO("logging agent in db started");
+                    uint32_t rtv = 0;
+                    int64_t  id;
+                    int      dbstatus;
+
+                    dbprep_declare(DB_RPT_CON, ARI_AGENT_INSERT, 1, 1);
+                    dbprep_bind_param_str(0, m_string_get_cstr(eid));
+
+#ifdef HAVE_MYSQL
+                    mysql_stmt_bind_param(stmt, bind_param);
+                    dbprep_bind_res_int(0, rtv);
+                    mysql_stmt_execute(stmt);
+                    mysql_stmt_bind_result(stmt, bind_res);
+#endif // HAVE_MYSQL
+
+#ifdef HAVE_POSTGRESQL
+                    dbexec_prepared;
+
+#endif // HAVE_POSTGRESQL
+       // cleaning up vars
+                    return rtv;
+                }
+                // cace_ari_execset_t
+                uint32_t refdm_db_insert_execset(cace_ari_t * val, refdm_agent_t * agent, int *status)
+                {
+                    uint32_t rtv = 0;
+
+                    int dbstatus;
+
+                    cace_ari_execset_t *execset = cace_ari_get_execset(val);
+
+                    // correlator_nonce INT,
+                    int64_t nonce_id = execset->nonce.as_lit.value.as_int64;
+
+                    CACE_LOG_INFO("inserting EXECSET with nonce %d", nonce_id);
+
+                    // report_list varchar as cbor,xw
+                    cace_data_t cbordata;
+                    cace_data_init(&cbordata);
+                    cace_ari_cbor_encode(&cbordata, val);
+
+                    dbprep_declare(DB_RPT_CON, ARI_EXECSET_INSERT, 5, 1);
+
+                    // p_correlator_nonce INT,  p_user_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries
+                    // INT
+                    dbprep_bind_param_int(0, nonce_id);
+                    dbprep_bind_param_str(1, "");
+                    dbprep_bind_param_str(2, string_get_cstr(agent->eid));
+                    dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
+                    dbprep_bind_param_int(4, cace_ari_list_size(execset->targets));
+
+#ifdef HAVE_MYSQL
+                    mysql_stmt_bind_param(stmt, bind_param);
+                    dbprep_bind_res_int(0, rtv);
+                    mysql_stmt_execute(stmt);
+                    mysql_stmt_bind_result(stmt, bind_res);
+#endif // HAVE_MYSQL
+
+#ifdef HAVE_POSTGRESQL
+                    dbexec_prepared;
+#endif // HAVE_POSTGRESQL
+
+                    // cleaning up vars
+                    cace_data_deinit(&cbordata);
+                    CACE_LOG_INFO("done inserting EXECSET with nonce %d", nonce_id);
+
+                    return rtv;
+                }
+
 #endif /* ifdef HAVE_MYSQL  or HAVE_POSTGRESQL*/
