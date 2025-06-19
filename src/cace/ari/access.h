@@ -86,6 +86,9 @@ int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out);
 int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out);
 
 /// @overload
+int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out);
+
+/// @overload
 int cace_ari_get_vast(const cace_ari_t *ari, cace_ari_vast *out);
 
 /// @overload

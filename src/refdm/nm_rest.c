@@ -30,6 +30,10 @@
 #include <string.h>
 #include <strings.h>
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#include "nm_sql.h"
+#endif
+
 /// Chunking size for receiving request bodies
 #define REQUEST_BODY_CHUNK 4096
 
@@ -443,16 +447,35 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 
         // FIXME ui_log_transmit_msg(agent, &esetari);
     }
+// add EXECSETs to Database
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    /* Copy the message group to the database tables */
+    CACE_LOG_INFO("logging EXECSETs in db started");
+    int db_status = 0;
+    int i;
+    // add all execset
+    for (i = 0; i < cace_ari_list_size(tosend); i++)
+    {
+        cace_ari_t *curr_set = cace_ari_list_get(tosend, i);
+        refdm_db_insert_execset(curr_set, agent, &db_status);
+    }
+
+    // m_string_clear(eid);
+    CACE_LOG_INFO("logging EXECSETs in db finished");
+#endif
 
     if (!retval)
     {
         const char *resp = "Successfully sent EXECSETs";
         cace_ari_list_clear(tosend);
 
+        CACE_LOG_INFO("Successfully sent EXECSETs");
         mg_send_http_ok(conn, "text/plain", strlen(resp));
         mg_printf(conn, "%s", resp);
+
         retval = HTTP_OK;
     }
+
     return retval;
 }
 
