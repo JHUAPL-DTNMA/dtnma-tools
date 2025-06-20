@@ -357,7 +357,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         # first check behavior with one report
         sock_path = self._send_rptset(
-            'ari:/RPTSET/n=null;r=20240102T030405Z;(t=PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=null;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
@@ -396,10 +396,10 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
 
         self._send_rptset(
-            'ari:/RPTSET/n=null;r=20240102T030406Z;(t=PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=null;r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         sock_path = self._send_rptset(
-            'ari:/RPTSET/n=null;r=20240102T030405Z;(t=PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=null;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")

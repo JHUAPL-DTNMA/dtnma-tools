@@ -17,6 +17,8 @@
  */
 #include "refda/agent.h"
 #include "refda/adm/ietf_amm.h"
+#include "refda/adm/ietf_amm_base.h"
+#include "refda/adm/ietf_amm_semtype.h"
 #include "refda/adm/ietf_dtnma_agent.h"
 #include <cace/amp/ion_bp.h>
 #include <cace/util/logging.h>
@@ -132,6 +134,8 @@ int main(int argc, char *argv[])
     {
         // ADM initialization
         refda_adm_ietf_amm_init(&agent);
+        refda_adm_ietf_amm_base_init(&agent);
+        refda_adm_ietf_amm_semtype_init(&agent);
         refda_adm_ietf_dtnma_agent_init(&agent);
 #if 0
   dtn_bp_agent_init();
