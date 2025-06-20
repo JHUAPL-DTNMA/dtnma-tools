@@ -19,10 +19,22 @@
 #include <cace/amm/typing.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
+#include <cace/util/logging.h>
 #include <unity.h>
 
 // Allow this macro
 #define TEST_CASE(...)
+
+void suiteSetUp(void)
+{
+    cace_openlog();
+}
+
+int suiteTearDown(int failures)
+{
+    cace_closelog();
+    return failures;
+}
 
 static void check_match(const cace_amm_type_t *type, const char *inhex, cace_amm_type_match_res_t expect)
 {
@@ -112,6 +124,7 @@ TEST_CASE(CACE_ARI_TYPE_TBL)
 TEST_CASE(CACE_ARI_TYPE_EXECSET)
 TEST_CASE(CACE_ARI_TYPE_RPTSET)
 TEST_CASE(CACE_ARI_TYPE_OBJECT)
+TEST_CASE(CACE_ARI_TYPE_NAMESPACE)
 TEST_CASE(CACE_ARI_TYPE_IDENT)
 TEST_CASE(CACE_ARI_TYPE_TYPEDEF)
 TEST_CASE(CACE_ARI_TYPE_CONST)
@@ -175,9 +188,42 @@ TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/INT/10
 TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/VAST/100
 TEST_CASE("FA49864700", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:1.1e+06
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_POSITIVE) // ari://65535/2/-1/4(hi)
+TEST_CASE("8419FFFF02220C", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-3/12
+TEST_CASE("8419FFFF02F6F6", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/
+TEST_CASE("84F6F6F6F6", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari:./
 void test_amm_type_match_ident(const char *inhex, cace_amm_type_match_res_t expect)
 {
     const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_IDENT);
+    check_match(type, inhex, expect);
+}
+
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("0A", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:10
+TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_POSITIVE) // ari://65535/2/-1/4(hi)
+TEST_CASE("8419FFFF02220C", CACE_AMM_TYPE_MATCH_POSITIVE) // ari://65535/2/-3/12
+TEST_CASE("8419FFFF02F6F6", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/
+TEST_CASE("84F6F6F6F6", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari:./
+void test_amm_type_match_object(const char *inhex, cace_amm_type_match_res_t expect)
+{
+    const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_OBJECT);
+    check_match(type, inhex, expect);
+}
+
+TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
+TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
+TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
+TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
+TEST_CASE("0A", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:10
+TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
+TEST_CASE("8419FFFF02220C", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-3/12
+TEST_CASE("8419FFFF02F6F6", CACE_AMM_TYPE_MATCH_POSITIVE) // ari://65535/2/
+TEST_CASE("84F6F6F6F6", CACE_AMM_TYPE_MATCH_POSITIVE) // ari:./
+void test_amm_type_match_namespace(const char *inhex, cace_amm_type_match_res_t expect)
+{
+    const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_NAMESPACE);
     check_match(type, inhex, expect);
 }
 
@@ -497,9 +543,45 @@ TEST_CASE("FA49864700", NULL)                                 // ari:1.1e+06
 TEST_CASE("8208FA49864700", NULL)                             // ari:/REAL32/1.1e+06
 TEST_CASE("821181F6", NULL)                                   // ari:/AC/(undefined)
 TEST_CASE("8519FFFF02200481626869", "8519FFFF02200481626869") // ari://65535/2/-1/4(hi)
+TEST_CASE("8419FFFF02220C", NULL) // ari://65535/2/-3/12
+TEST_CASE("8419FFFF02F6F6", NULL) // ari://65535/2/
 void test_amm_type_convert_ident(const char *inhex, const char *expecthex)
 {
     const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_IDENT);
+    check_convert(type, inhex, expecthex);
+}
+
+TEST_CASE("F7", "F7")                                         // ari:undefined
+TEST_CASE("F6", NULL)                                         // ari:null
+TEST_CASE("F5", NULL)                                         // ari:true
+TEST_CASE("F4", NULL)                                         // ari:false
+TEST_CASE("00", NULL)                                         // ari:0
+TEST_CASE("0A", NULL)                                         // ari:10
+TEST_CASE("821181F6", NULL)                                   // ari:/AC/(undefined)
+TEST_CASE("8519FFFF02200481626869", "8519FFFF02200481626869") // ari://65535/2/-1/4(hi)
+TEST_CASE("8419FFFF02220C", "8419FFFF02220C") // ari://65535/2/-3/12
+TEST_CASE("8419FFFF02F6F6", NULL) // ari://65535/2/
+TEST_CASE("84F6F6F6F6", NULL) // ari:./
+void test_amm_type_convert_object(const char *inhex, const char *expecthex)
+{
+    const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_OBJECT);
+    check_convert(type, inhex, expecthex);
+}
+
+TEST_CASE("F7", "F7")                                         // ari:undefined
+TEST_CASE("F6", NULL)                                         // ari:null
+TEST_CASE("F5", NULL)                                         // ari:true
+TEST_CASE("F4", NULL)                                         // ari:false
+TEST_CASE("00", NULL)                                         // ari:0
+TEST_CASE("0A", NULL)                                         // ari:10
+TEST_CASE("821181F6", NULL)                                   // ari:/AC/(undefined)
+TEST_CASE("8519FFFF02200481626869", NULL) // ari://65535/2/-1/4(hi)
+TEST_CASE("8419FFFF02220C", NULL) // ari://65535/2/-3/12
+TEST_CASE("8419FFFF02F6F6", "8419FFFF02F6F6") // ari://65535/2/
+TEST_CASE("84F6F6F6F6", "84F6F6F6F6") // ari:./
+void test_amm_type_convert_namespace(const char *inhex, const char *expecthex)
+{
+    const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_NAMESPACE);
     check_convert(type, inhex, expecthex);
 }
 

@@ -153,7 +153,7 @@ int cace_amp_ion_bp_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
         int res = bp_send(state->sap,
                           dest_eid,      // destination
                           NULL,          // report-to
-                          300,           // lifetime in seconds
+                          lifetime_s,    // lifetime in seconds
                           priority,      // Class-of-Service / Priority
                           custodySwitch, // Custody Switch
                           rrFlags,       // SRR Flags
