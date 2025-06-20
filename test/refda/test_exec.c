@@ -21,6 +21,9 @@
 #include <refda/edd_prod_ctx.h>
 #include <refda/ctrl_exec_ctx.h>
 #include <refda/adm/ietf_amm.h>
+#include <refda/adm/ietf_amm_base.h>
+#include <refda/adm/ietf_amm_semtype.h>
+#include <refda/adm/ietf_network_base.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/amm/const.h>
 #include <refda/amm/ctrl.h>
@@ -91,6 +94,9 @@ void setUp(void)
     refda_agent_init(&agent);
     // ADM initialization
     TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(&agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_base_init(&agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_semtype_init(&agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_network_base_init(&agent));
     TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(&agent));
 
     cace_ari_list_init(exec_log);

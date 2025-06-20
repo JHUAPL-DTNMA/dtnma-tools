@@ -99,8 +99,8 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "name");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-semtype/TYPEDEF/type-ref
-                    // FIXME reference to unknown object
+                    // ari://ietf/amm-base/TYPEDEF/type-ref
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 0);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
