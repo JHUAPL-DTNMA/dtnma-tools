@@ -18,13 +18,13 @@
 
 /** @file
  * This is the header for the implementation of the
- * ADM module "ietf-amm" for the C-language reference DA.
+ * ADM module "ietf-network-base" for the C-language reference DA.
  * This contains defines for each enumeration in the ADM and
  * declarations of module-level initialization functions.
  */
 
-#ifndef REFDA_ADM_IETF_AMM_H_
-#define REFDA_ADM_IETF_AMM_H_
+#ifndef REFDA_ADM_IETF_NETWORK_BASE_H_
+#define REFDA_ADM_IETF_NETWORK_BASE_H_
 
 #include "refda/agent.h"
 #include <cace/util/defs.h>
@@ -38,17 +38,37 @@ extern "C" {
 #endif
 
 /// Enumeration of the ADM itself
-#define REFDA_ADM_IETF_AMM_ENUM_ADM 0
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_ADM 26
 
-/** Initializer for the ADM module ietf-amm.
+/*
+ * Enumerations for IDENT objects
+ */
+/// For ./IDENT/abstract-endpoint
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_ABSTRACT_ENDPOINT 0
+/// For ./IDENT/abstract-endpoint-pattern
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_ABSTRACT_ENDPOINT_PATTERN 1
+
+/*
+ * Enumerations for TYPEDEF objects
+ */
+/// For ./TYPEDEF/uri
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_URI 0
+/// For ./TYPEDEF/endpoint
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_ENDPOINT 1
+/// For ./TYPEDEF/endpoint-or-uri
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_ENDPOINT_OR_URI 3
+/// For ./TYPEDEF/endpoint-pattern
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_ENDPOINT_PATTERN 2
+
+/** Initializer for the ADM module ietf-network-base.
  * @param[in,out] agent The agent to register this namespace and its
  * objects within.
  * @return Zero upon success.
  */
-int refda_adm_ietf_amm_init(refda_agent_t *agent);
+int refda_adm_ietf_network_base_init(refda_agent_t *agent);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* REFDA_ADM_IETF_AMM_H_ */
+#endif /* REFDA_ADM_IETF_NETWORK_BASE_H_ */

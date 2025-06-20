@@ -48,20 +48,20 @@ static cace_amm_idseg_ref_t cace_amm_idseg_ref_noenum(const char *name);
 
 static inline cace_amm_idseg_ref_t cace_amm_idseg_ref_withenum(const char *name, cace_ari_int_id_t intenum)
 {
-    return (cace_amm_idseg_ref_t) {
-        .name        = name,
-        .has_intenum = true,
-        .intenum     = intenum,
-    };
+    cace_amm_idseg_ref_t ref;
+    ref.name        = name;
+    ref.has_intenum = true;
+    ref.intenum     = intenum;
+    return ref;
 }
 
 static inline cace_amm_idseg_ref_t cace_amm_idseg_ref_noenum(const char *name)
 {
-    return (cace_amm_idseg_ref_t) {
-        .name        = name,
-        .has_intenum = false,
-        .intenum     = 0,
-    };
+    cace_amm_idseg_ref_t ref;
+    ref.name        = name;
+    ref.has_intenum = false;
+    ref.intenum     = 0;
+    return ref;
 }
 
 #ifdef __cplusplus

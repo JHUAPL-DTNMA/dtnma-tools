@@ -22,7 +22,7 @@
 #include "reporting.h"
 #include "amm/typedef.h"
 #include "adm/ietf.h"
-#include "adm/ietf_amm.h"
+#include "adm/ietf_amm_base.h"
 #include "adm/ietf_dtnma_agent.h"
 #include "binding.h"
 #include "cace/amm/lookup.h"
@@ -128,22 +128,22 @@ int refda_agent_bindrefs(refda_agent_t *agent)
     REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     int failcnt = 0;
 
-    agent->mac_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_ENUM_ADM,
-                                              REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_MAC);
+    agent->mac_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_BASE_ENUM_ADM,
+                                              REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_MAC);
     if (!agent->mac_type)
     {
         ++failcnt;
     }
 
-    agent->expr_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_ENUM_ADM,
-                                               REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_EXPR);
+    agent->expr_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_BASE_ENUM_ADM,
+                                               REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_EXPR);
     if (!agent->expr_type)
     {
         ++failcnt;
     }
 
-    agent->rptt_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_ENUM_ADM,
-                                               REFDA_ADM_IETF_AMM_ENUM_OBJID_TYPEDEF_RPTT);
+    agent->rptt_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_BASE_ENUM_ADM,
+                                               REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_RPTT);
     if (!agent->rptt_type)
     {
         ++failcnt;
