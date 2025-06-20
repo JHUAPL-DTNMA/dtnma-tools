@@ -65,8 +65,10 @@ typedef enum
     CACE_ARI_TYPE_EXECSET = 20,
     CACE_ARI_TYPE_RPTSET  = 21,
 
-    // Catch-all object reference type ID
+    /// Catch-all object reference type ID
     CACE_ARI_TYPE_OBJECT = -256,
+    /// Catch-all namespace reference type ID
+    CACE_ARI_TYPE_NAMESPACE = -255,
 
     // AMM object types
     CACE_ARI_TYPE_IDENT   = -1,

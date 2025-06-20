@@ -58,6 +58,7 @@ static _ari_type_name_pair_t _ari_type_names[] = {
     {CACE_ARI_TYPE_RPTSET, "RPTSET"},
 
     {CACE_ARI_TYPE_OBJECT, "OBJECT"},
+    {CACE_ARI_TYPE_NAMESPACE, "NAMESPACE"},
     {CACE_ARI_TYPE_IDENT, "IDENT"},
     {CACE_ARI_TYPE_TYPEDEF, "TYPEDEF"},
     {CACE_ARI_TYPE_CONST, "CONST"},
