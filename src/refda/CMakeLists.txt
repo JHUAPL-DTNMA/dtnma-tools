@@ -45,6 +45,9 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/ctrl.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/oper.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_amm.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_amm_base.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_amm_semtype.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_network_base.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_dtnma_agent.h"
 )
 set(CFILES
@@ -78,6 +81,9 @@ set(CFILES
     "amm/sbr.c"
     "amm/tbr.c"
     "adm/ietf_amm.c"
+    "adm/ietf_amm_base.c"
+    "adm/ietf_amm_semtype.c"
+    "adm/ietf_network_base.c"
     "adm/ietf_dtnma_agent.c"
 )
 add_library(refda)
