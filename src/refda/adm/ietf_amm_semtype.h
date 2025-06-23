@@ -43,8 +43,6 @@ extern "C" {
 /*
  * Enumerations for IDENT objects
  */
-/// For ./IDENT/display-hint
-#define REFDA_ADM_IETF_AMM_SEMTYPE_ENUM_OBJID_IDENT_DISPLAY_HINT 0
 /// For ./IDENT/semtype
 #define REFDA_ADM_IETF_AMM_SEMTYPE_ENUM_OBJID_IDENT_SEMTYPE 1
 /// For ./IDENT/type-use
