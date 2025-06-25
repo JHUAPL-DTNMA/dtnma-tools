@@ -174,7 +174,18 @@ int cace_base16_encode(m_string_t out, const cace_data_t *in, bool uppercase);
  */
 int cace_base16_decode(cace_data_t *out, const m_string_t in);
 
-int cace_base64_encode(m_string_t out, const cace_data_t *in, bool useurl);
+/** Encode base64 and base64url text forms.
+ * These is defined in Section 4 and 5 of RFC 4648 @cite rfc4648.
+ *
+ * @param[out] out The output buffer, which will be appended to.
+ * @param[in] in The input buffer to read.
+ * @param useurl True to use the base64url alphabet, false to use the base64
+ * alphabet.
+ * @param usepad True to include padding characters (=), false to not
+ * use padding.
+ * @return Zero upon success.
+ */
+int cace_base64_encode(m_string_t out, const cace_data_t *in, bool useurl, bool usepad);
 
 /** Decode base64 and base64url text forms.
  * These is defined in Section 4 and 5 of RFC 4648 @cite rfc4648.

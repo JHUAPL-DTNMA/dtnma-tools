@@ -94,7 +94,7 @@ TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/PT0S;s=//example/tes
 TEST_CASE("ari://example/test/CTRL/that")
 TEST_CASE("ari://example/test/CTRL/that(34)")
 TEST_CASE("ari://65535/2/IDENT/4(hi)")
-void test_ari_text_loopback(const char *intext)
+void test_ari_roundtrip_text_cbor(const char *intext)
 {
     cace_ari_text_enc_opts_t opts = CACE_ARI_TEXT_ENC_OPTS_DEFAULT;
 
@@ -122,9 +122,9 @@ void test_ari_text_loopback(const char *intext)
         if (true)
         {
             string_t msg;
-            string_init_printf(msg, "Encoded hex: ");
+            string_init(msg);
             cace_base16_encode(msg, &buf, true);
-            TEST_MESSAGE(string_get_cstr(msg));
+            TEST_PRINTF("Encoded hex: %s", string_get_cstr(msg));
             string_clear(msg);
         }
 
@@ -156,6 +156,85 @@ void test_ari_text_loopback(const char *intext)
 
     cace_ari_deinit(&ari_up);
     cace_ari_deinit(&ari_dn);
+}
+
+// Values from draft-ietf-dtn-ari
+TEST_CASE("8214841904d28519ffff01220c8af7f6f5f40a29fa497424006268696a24"
+          "2e3f21272009402b3a4268698519ffff0122187b981a8200f68201f58201"
+          "f482020a82043903e782051903e882063a000f423f82071a000f42408208"
+          "fa501502f98209fb4415af1d78b58c40820a626869820a6a242e3f212720"
+          "09402b3a820b426869820b426869820b426869820c82201b00000001df45"
+          "1d83820c82201b00000001df451d83820d82211a00057e45820d82211a00"
+          "057e45820e646e616d65820e1904d2820f42187b82100582118202048212"
+          "a20102030482138502010203048519ffff01221904d2a2008419ffff0220"
+          "0c018419ffff022b15")
+void test_ari_roundtrip_cbor_text(const char *inhex)
+{
+    cace_ari_text_enc_opts_t opts = CACE_ARI_TEXT_ENC_OPTS_DEFAULT;
+
+    cace_data_t indata;
+    cace_data_init(&indata);
+    {
+        string_t inbuf;
+        string_init_set_str(inbuf, inhex);
+        TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, inbuf));
+        string_clear(inbuf);
+    }
+
+    cace_ari_t ari_dn;
+    cace_ari_init(&ari_dn);
+    {
+        int res = cace_ari_cbor_decode(&ari_dn, &indata, NULL, &errm);
+        if (res && errm)
+        {
+            TEST_FAIL_MESSAGE(errm);
+        }
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
+    }
+
+    cace_ari_t ari_up;
+    cace_ari_init(&ari_up);
+    {
+        string_t text;
+        string_init(text);
+        int res = cace_ari_text_encode(text, &ari_dn, opts);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_encode() failed");
+
+        TEST_ASSERT_GREATER_THAN(0, m_string_size(text));
+        if (true)
+        {
+            TEST_PRINTF("Encoded text: %s", string_get_cstr(text));
+        }
+
+        res = cace_ari_text_decode(&ari_up, text, &errm);
+        string_clear(text);
+        if (res && errm)
+        {
+            TEST_FAIL_MESSAGE(errm);
+        }
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_decode() failed");
+    }
+
+    cace_data_t outdata;
+    cace_data_init(&outdata);
+    {
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_ari_cbor_encode(&outdata, &ari_up), "cace_ari_cbor_encode() failed");
+
+        TEST_ASSERT_EQUAL_INT(indata.len, outdata.len);
+        TEST_ASSERT_EQUAL_MEMORY(indata.ptr, outdata.ptr, indata.len);
+    }
+
+    if (true)
+    {
+        // optional checks
+        TEST_ASSERT_EQUAL_INT_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "ari_hash() mismatch");
+        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "ari_equal() mismatch");
+    }
+
+    cace_ari_deinit(&ari_up);
+    cace_ari_deinit(&ari_dn);
+    cace_data_deinit(&outdata);
+    cace_data_deinit(&indata);
 }
 
 #endif /* ARI_TEXT_PARSE */
