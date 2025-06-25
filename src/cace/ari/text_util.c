@@ -296,7 +296,10 @@ int cace_ari_float64_encode(m_string_t out, double value, char form)
     }
     else if (isinf(value))
     {
-        m_string_push_back(out, (value < 0) ? '-' : '+');
+        if (value < 0)
+        {
+            m_string_push_back(out, '-');
+        }
         m_string_cat_cstr(out, "Infinity");
     }
     else if (form == 'f')

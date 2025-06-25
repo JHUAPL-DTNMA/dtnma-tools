@@ -732,7 +732,7 @@ TEST_CASE("8208F94900")                                       // ari:/REAL32/10
 TEST_CASE("8208FB4024333333333333")                           // ari:/REAL32/10.1
 TEST_CASE("8208FB3FB999999999999A")                           // ari:/REAL32/0.1
 TEST_CASE("8208F97E00")                                       // ari:/REAL32/NaN
-TEST_CASE("8209F97C00")                                       // ari:/REAL64/+Infinity
+TEST_CASE("8209F97C00")                                       // ari:/REAL64/Infinity
 TEST_CASE("8209F9FC00")                                       // ari:/REAL64/-Infinity
 TEST_CASE("820B426869")                                       // ari:/BYTESTR/h'6869'
 TEST_CASE("820A626869")                                       // ari:/TEXTSTR/hi
