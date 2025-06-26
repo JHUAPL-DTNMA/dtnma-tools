@@ -26,8 +26,8 @@ target_link_libraries(test_ari_text PUBLIC cace)
 add_unity_test(SOURCE "test_ari_text_util.c")
 target_link_libraries(test_ari_text_util PUBLIC cace)
 
-add_unity_test(SOURCE "test_ari_text_cbor_loopback.c")
-target_link_libraries(test_ari_text_cbor_loopback PUBLIC cace)
+add_unity_test(SOURCE "test_ari_roundtrip.c")
+target_link_libraries(test_ari_roundtrip PUBLIC cace)
 endif(ARI_TEXT_PARSE)
 
 add_unity_test(SOURCE "test_ari_algo.c")

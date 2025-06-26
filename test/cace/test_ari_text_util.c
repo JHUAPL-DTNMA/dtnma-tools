@@ -226,32 +226,38 @@ void test_cace_base16_decode_invalid(const char *text)
 }
 
 // vectors from Section 10 of RFC 4648
-TEST_CASE("", 0, false, "")
-TEST_CASE("f", 1, false, "Zg==")
-TEST_CASE("fo", 2, false, "Zm8=")
-TEST_CASE("foo", 3, false, "Zm9v")
-TEST_CASE("foob", 4, false, "Zm9vYg==")
-TEST_CASE("fooba", 5, false, "Zm9vYmE=")
-TEST_CASE("foobar", 6, false, "Zm9vYmFy")
+TEST_CASE("", 0, false, true, "")
+TEST_CASE("f", 1, false, true, "Zg==")
+TEST_CASE("fo", 2, false, true, "Zm8=")
+TEST_CASE("foo", 3, false, true, "Zm9v")
+TEST_CASE("foob", 4, false, true, "Zm9vYg==")
+TEST_CASE("fooba", 5, false, true, "Zm9vYmE=")
+TEST_CASE("foobar", 6, false, true, "Zm9vYmFy")
 // example from Section 9 of RFC 4648
-TEST_CASE("\x14\xfb\x9c\x03\xd9\x7e", 6, false, "FPucA9l+")
+TEST_CASE("\x14\xfb\x9c\x03\xd9\x7e", 6, false, true, "FPucA9l+")
 // random cases to use last two characters of alphabet
-TEST_CASE("\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16, false, "wQTEz7d3D/C+uqLpX7wsGA==")
-TEST_CASE("\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16, true, "wQTEz7d3D_C-uqLpX7wsGA==")
-void test_cace_base64_encode(const char *data, size_t data_len, bool useurl, const char *expect)
+TEST_CASE("\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16, false, true,
+          "wQTEz7d3D/C+uqLpX7wsGA==")
+TEST_CASE("\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16, false, false,
+          "wQTEz7d3D/C+uqLpX7wsGA")
+TEST_CASE("\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16, true, true,
+          "wQTEz7d3D_C-uqLpX7wsGA==")
+TEST_CASE("\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16, true, false, "wQTEz7d3D_C-uqLpX7wsGA")
+void test_cace_base64_encode(const char *data, size_t data_len, bool useurl, bool usepad, const char *expect)
 {
     cace_data_t src;
     cace_data_init_view(&src, data_len, (cace_data_ptr_t)data);
 
     string_t out;
     string_init(out);
-    TEST_ASSERT_EQUAL_INT(0, cace_base64_encode(out, &src, useurl));
+    TEST_ASSERT_EQUAL_INT(0, cace_base64_encode(out, &src, useurl, usepad));
 
     TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out));
     string_clear(out);
     cace_data_deinit(&src);
 }
 
+// vectors from Section 10 of RFC 4648
 TEST_CASE("", NULL, 0)
 TEST_CASE("Zg==", "f", 1)
 TEST_CASE("Zm8=", "fo", 2)
@@ -259,12 +265,17 @@ TEST_CASE("Zm9v", "foo", 3)
 TEST_CASE("Zm9vYg==", "foob", 4)
 TEST_CASE("Zm9vYmE=", "fooba", 5)
 TEST_CASE("Zm9vYmFy", "foobar", 6)
-// excess padding
+// removed padding
+TEST_CASE("Zg", "f", 1)
+TEST_CASE("Zm8", "fo", 2)
+// excess padding is okay
 TEST_CASE("Zm9vYmFy====", "foobar", 6)
 TEST_CASE("====", NULL, 0)
 // random cases to use last two characters of alphabet
 TEST_CASE("wQTEz7d3D/C+uqLpX7wsGA==", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16)
+TEST_CASE("wQTEz7d3D/C+uqLpX7wsGA", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16)
 TEST_CASE("wQTEz7d3D_C-uqLpX7wsGA==", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16)
+TEST_CASE("wQTEz7d3D_C-uqLpX7wsGA", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16)
 void test_cace_base64_decode_valid(const char *text, const char *expect, size_t expect_len)
 {
     string_t in_text;
@@ -292,7 +303,10 @@ void test_cace_base64_decode_valid(const char *text, const char *expect, size_t 
     string_clear(in_text);
 }
 
-TEST_CASE("AB")
+TEST_CASE(".")
+TEST_CASE("A.")
+TEST_CASE("AB.")
+TEST_CASE("ABC.")
 void test_cace_base64_decode_invalid(const char *text)
 {
     string_t in_text;
