@@ -697,7 +697,36 @@ static cace_amm_type_match_res_t builtin_object_match(const cace_amm_type_t *sel
     {
         return CACE_AMM_TYPE_MATCH_UNDEFINED;
     }
-    return cace_amm_type_match_pos_neg(ari->is_ref);
+    if (!(ari->is_ref))
+    {
+        return CACE_AMM_TYPE_MATCH_NEGATIVE;
+    }
+    const cace_ari_objpath_t *path = &(ari->as_ref.objpath);
+    // must have object parts
+    if ((path->type_id.form == CACE_ARI_IDSEG_NULL) || (path->obj_id.form == CACE_ARI_IDSEG_NULL))
+    {
+        return CACE_AMM_TYPE_MATCH_NEGATIVE;
+    }
+    return CACE_AMM_TYPE_MATCH_POSITIVE;
+}
+
+static cace_amm_type_match_res_t builtin_namespace_match(const cace_amm_type_t *self _U_, const cace_ari_t *ari)
+{
+    if (cace_ari_is_undefined(ari))
+    {
+        return CACE_AMM_TYPE_MATCH_UNDEFINED;
+    }
+    if (!(ari->is_ref))
+    {
+        return CACE_AMM_TYPE_MATCH_NEGATIVE;
+    }
+    const cace_ari_objpath_t *path = &(ari->as_ref.objpath);
+    // must not have object parts
+    if ((path->type_id.form != CACE_ARI_IDSEG_NULL) || (path->obj_id.form != CACE_ARI_IDSEG_NULL))
+    {
+        return CACE_AMM_TYPE_MATCH_NEGATIVE;
+    }
+    return CACE_AMM_TYPE_MATCH_POSITIVE;
 }
 
 static cace_amm_type_match_res_t builtin_common_objref_match(const cace_amm_type_t *self, const cace_ari_t *ari)
@@ -874,12 +903,19 @@ static cace_amm_type_t cace_amm_builtins[] = {
         .match               = builtin_default_match,
         .convert             = builtin_default_convert,
     },
-    // object types below
+    // reference types below
     {
         .type_class          = CACE_AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = CACE_ARI_TYPE_OBJECT,
         .ari_name            = builtin_ari_name,
         .match               = builtin_object_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = CACE_AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = CACE_ARI_TYPE_NAMESPACE,
+        .ari_name            = builtin_ari_name,
+        .match               = builtin_namespace_match,
         .convert             = builtin_default_convert,
     },
     {
