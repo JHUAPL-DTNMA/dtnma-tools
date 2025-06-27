@@ -66,8 +66,8 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-bstr
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
             obj =
@@ -75,6 +75,23 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
                                      cace_amm_idseg_ref_withenum(
                                          "display-bstr-eid", REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_IDENT_DISPLAY_BSTR_EID),
                                      objdata);
+            // no parameters
+        }
+        { // For ./IDENT/display-bstr-eid-pattern
+            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
+            refda_amm_ident_desc_init(objdata);
+            // IDENT bases:
+            {
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
+            }
+
+            obj = refda_register_ident(
+                adm,
+                cace_amm_idseg_ref_withenum("display-bstr-eid-pattern",
+                                            REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_IDENT_DISPLAY_BSTR_EID_PATTERN),
+                objdata);
             // no parameters
         }
         { // For ./IDENT/bp-endpoint
@@ -121,7 +138,7 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
                     // ari://ietf/bp-base/TYPEDEF/eid-pattern-cbor
-                    // FIXME reference to unknown object
+                    cace_ari_set_objref_path_intid(&name, 1, 5, CACE_ARI_TYPE_TYPEDEF, 2);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
@@ -158,6 +175,23 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
 
             obj = refda_register_typedef(
                 adm, cace_amm_idseg_ref_withenum("eid-cbor", REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_TYPEDEF_EID_CBOR),
+                objdata);
+            // no parameters possible
+        }
+        { // For ./TYPEDEF/eid-pattern-cbor
+            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named type:
+            {
+                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                cace_ari_set_aritype(&name, CACE_ARI_TYPE_CBOR);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+            }
+
+            obj = refda_register_typedef(
+                adm,
+                cace_amm_idseg_ref_withenum("eid-pattern-cbor",
+                                            REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_TYPEDEF_EID_PATTERN_CBOR),
                 objdata);
             // no parameters possible
         }

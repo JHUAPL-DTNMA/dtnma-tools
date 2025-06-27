@@ -60,6 +60,40 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
         /**
          * Register IDENT objects
          */
+        { // For ./IDENT/display-bstr-uuid
+            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
+            refda_amm_ident_desc_init(objdata);
+            // IDENT bases:
+            {
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
+            }
+
+            obj = refda_register_ident(
+                adm,
+                cace_amm_idseg_ref_withenum("display-bstr-uuid",
+                                            REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_DISPLAY_BSTR_UUID),
+                objdata);
+            // no parameters
+        }
+        { // For ./IDENT/display-bstr-oid
+            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
+            refda_amm_ident_desc_init(objdata);
+            // IDENT bases:
+            {
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
+            }
+
+            obj = refda_register_ident(
+                adm,
+                cace_amm_idseg_ref_withenum("display-bstr-oid",
+                                            REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_DISPLAY_BSTR_OID),
+                objdata);
+            // no parameters
+        }
         { // For ./IDENT/abstract-endpoint
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
@@ -100,6 +134,34 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
 
             obj = refda_register_typedef(
                 adm, cace_amm_idseg_ref_withenum("uri", REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_URI), objdata);
+            // no parameters possible
+        }
+        { // For ./TYPEDEF/uuid
+            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named type:
+            {
+                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BYTESTR);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+            }
+
+            obj = refda_register_typedef(
+                adm, cace_amm_idseg_ref_withenum("uuid", REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_UUID), objdata);
+            // no parameters possible
+        }
+        { // For ./TYPEDEF/oid
+            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named type:
+            {
+                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BYTESTR);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+            }
+
+            obj = refda_register_typedef(
+                adm, cace_amm_idseg_ref_withenum("oid", REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_OID), objdata);
             // no parameters possible
         }
         { // For ./TYPEDEF/endpoint
