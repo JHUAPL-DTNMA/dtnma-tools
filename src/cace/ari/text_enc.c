@@ -30,10 +30,10 @@ typedef struct
     cace_ari_text_enc_opts_t *opts;
 } cace_ari_text_enc_state_t;
 
-/** Additional safe characters for ARI as defined in
+/** Additional safe characters for ARI text and byte strings as defined in
  * Section 4.1 of @cite ietf-dtn-ari-00.
  */
-static const char uri_safe[] = "!'+:@";
+static const char uri_safe[] = "'";
 
 /** Perform percent encoding from a temporary buffer.
  *
@@ -524,13 +524,15 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
 
                     if (cace_data_is_utf8(&terminated))
                     {
+                        // leave outer quotes non-percent-encoded
+                        string_push_back(state->out, '\'');
+
                         string_t buf;
                         string_init(buf);
-                        string_push_back(buf, '\'');
                         cace_slash_escape(buf, &terminated, '\'');
-                        string_push_back(buf, '\'');
-
                         cace_ari_text_percent_helper(state->out, buf);
+
+                        string_push_back(state->out, '\'');
                     }
                     else
                     {
@@ -552,7 +554,7 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
                 case CACE_ARI_TEXT_BSTR_BASE64URL:
                     // no need to percent encode
                     string_cat_str(state->out, "b64'");
-                    cace_base64_encode(state->out, &(obj->value.as_data), true);
+                    cace_base64_encode(state->out, &(obj->value.as_data), true, false);
                     string_push_back(state->out, '\'');
                     break;
             }

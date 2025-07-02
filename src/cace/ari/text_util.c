@@ -296,7 +296,10 @@ int cace_ari_float64_encode(m_string_t out, double value, char form)
     }
     else if (isinf(value))
     {
-        m_string_push_back(out, (value < 0) ? '-' : '+');
+        if (value < 0)
+        {
+            m_string_push_back(out, '-');
+        }
         m_string_cat_cstr(out, "Infinity");
     }
     else if (form == 'f')
@@ -783,7 +786,7 @@ static const char *base64url_alphabet =
         "0123456789-_";
 // clang-format on
 
-int cace_base64_encode(m_string_t out, const cace_data_t *in, bool useurl)
+int cace_base64_encode(m_string_t out, const cace_data_t *in, bool useurl, bool usepad)
 {
     size_t         in_len = in->len;
     const uint8_t *curs   = (const uint8_t *)(in->ptr);
@@ -824,7 +827,10 @@ int cace_base64_encode(m_string_t out, const cace_data_t *in, bool useurl)
         {
             chr = '=';
         }
-        m_string_push_back(out, chr);
+        if (usepad || (chr != '='))
+        {
+            m_string_push_back(out, chr);
+        }
         if (--out_len == 0)
         {
             break;
@@ -840,7 +846,10 @@ int cace_base64_encode(m_string_t out, const cace_data_t *in, bool useurl)
         {
             chr = '=';
         }
-        m_string_push_back(out, chr);
+        if (usepad || (chr != '='))
+        {
+            m_string_push_back(out, chr);
+        }
         if (--out_len == 0)
         {
             break;
@@ -896,7 +905,7 @@ int cace_base64_decode(cace_data_t *out, const m_string_t in)
     }
     uint8_t *out_curs = out->ptr;
 
-    for (; in_len > 2; curs += 4, in_len -= 4)
+    for (; in_len >= 2; curs += 4, in_len -= 4)
     {
         // ignoring excess padding
         if (curs[0] == '=')
@@ -920,9 +929,11 @@ int cace_base64_decode(cace_data_t *out, const m_string_t in)
 
         if (in_len == 2)
         {
+            // allow omitted padding
+            in_len = 0;
             break;
         }
-        if (curs[2] == '=')
+        else if (curs[2] == '=')
         {
             if (in_len != 4)
             {
@@ -950,9 +961,11 @@ int cace_base64_decode(cace_data_t *out, const m_string_t in)
 
             if (in_len == 3)
             {
+                // allow omitted padding
+                in_len = 0;
                 break;
             }
-            if (curs[3] == '=')
+            else if (curs[3] == '=')
             {
                 if (in_len != 4)
                 {
@@ -981,7 +994,7 @@ int cace_base64_decode(cace_data_t *out, const m_string_t in)
     cace_data_extend_back(out, -(ssize_t)out_len);
 
     // Per Section 3.3 of RFC 4648, ignoring excess padding
-    while (*curs == '=')
+    while ((in_len > 0) && (*curs == '='))
     {
         ++curs;
         --in_len;
