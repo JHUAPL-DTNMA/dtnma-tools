@@ -150,8 +150,8 @@ The `camp` tool can be installed as described in its source repository.
 
 To generate and format new ADM-supporting sources, the following procedure can be used.
 ```
-for MODPATH in $(ls -1 item-test/deps/adms/ietf-*.yang); do camp -s --only-ch --out src/refda/adm/ $MODPATH; done
-./apply_format.sh src/refda/adm/*.h src/refda/adm/*.c
+for MODPATH in $(ls -1 item-test/deps/adms/ietf-*.yang item-test/deps/adms/iana-*.yang); do camp -s --only-ch --out src/refda/adm/ $MODPATH; done && \
+./apply_format.sh src/refda/adm/*.h src/refda/adm/*.c && \
 ./apply_license.sh src/refda/adm/
 ```
 

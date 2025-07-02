@@ -81,6 +81,10 @@ extern "C" {
 #define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_VALUE_OBJ 9
 /// For ./TYPEDEF/nonce
 #define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_NONCE 10
+/// For ./TYPEDEF/id-text
+#define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_ID_TEXT 25
+/// For ./TYPEDEF/id-int
+#define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_ID_INT 26
 /// For ./TYPEDEF/counter32
 #define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_COUNTER32 11
 /// For ./TYPEDEF/counter64
@@ -110,7 +114,7 @@ extern "C" {
 /// For ./TYPEDEF/rptt
 #define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_RPTT 24
 /// For ./TYPEDEF/ari-pattern
-#define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_ARI_PATTERN 25
+#define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_ARI_PATTERN 27
 
 /** Initializer for the ADM module ietf-amm-base.
  * @param[in,out] agent The agent to register this namespace and its
