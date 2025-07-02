@@ -100,7 +100,7 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state)
 
 int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path)
 {
-    CHKVOID(state);
+    CHKERR1(state);
     pthread_mutex_lock(&state->sock_mutex);
     m_string_set(state->path, sock_path);
     pthread_mutex_unlock(&state->sock_mutex);

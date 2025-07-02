@@ -689,6 +689,30 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
      */
 }
 
+/* Name: odm-list
+ * Description:
+ *   A table of ODM within the agent.
+ *
+ * Parameters: none
+ *
+ * Produced type: TBLT with 5 columns (use of ari://ietf/amm-base/TYPEDEF/id-text, use of
+ * ari://ietf/amm-base/TYPEDEF/id-int, use of ari://ietf/amm-base/TYPEDEF/id-text, use of
+ * ari://ietf/amm-base/TYPEDEF/id-int, use of ari:/ARITYPE/TEXTSTR)
+ */
+static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_odm_list BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_odm_list BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: typedef-list
  * Description:
  *   A table of TYPEDEF within the agent.
@@ -1438,6 +1462,55 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: ensure-odm
+ * Description:
+ *   Ensure a specific ODM is present.
+ *
+ * Parameters list:
+ *  * Index 0, name "org-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
+ *  * Index 1, name "org-id", type: use of ari://ietf/amm-base/TYPEDEF/id-int
+ *  * Index 2, name "model-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
+ *  * Index 3, name "model-id", type: use of ari://ietf/amm-base/TYPEDEF/id-int
+ *
+ * Result: none
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_odm BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_odm BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: obsolete-odm
+ * Description:
+ *   Mark a specific ODM as obsolete if it is present.
+ *
+ * Parameters list:
+ *  * Index 0, name "odm-ns", type: use of ari:/ARITYPE/NAMESPACE
+ *
+ * Result: none
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm BODY
+     * +-------------------------------------------------------------------------+
+     */
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -2835,6 +2908,71 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
+        { // For ./EDD/odm-list
+            refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_init(objdata);
+            // produced type
+            {
+                // table template
+                cace_amm_semtype_tblt_t *semtype = cace_amm_type_set_tblt_size(&(objdata->prod_type), 5);
+                {
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
+                    m_string_set_cstr(col->name, "org-name");
+                    {
+                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                        // ari://ietf/amm-base/TYPEDEF/id-text
+                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                    }
+                }
+                {
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
+                    m_string_set_cstr(col->name, "org-enum");
+                    {
+                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                        // ari://ietf/amm-base/TYPEDEF/id-int
+                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                    }
+                }
+                {
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
+                    m_string_set_cstr(col->name, "model-name");
+                    {
+                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                        // ari://ietf/amm-base/TYPEDEF/id-text
+                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                    }
+                }
+                {
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
+                    m_string_set_cstr(col->name, "model-enum");
+                    {
+                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                        // ari://ietf/amm-base/TYPEDEF/id-int
+                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                    }
+                }
+                {
+                    cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
+                    m_string_set_cstr(col->name, "revision");
+                    {
+                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                    }
+                }
+            }
+            // callback:
+            objdata->produce = refda_adm_ietf_dtnma_agent_edd_odm_list;
+
+            obj = refda_register_edd(
+                adm, cace_amm_idseg_ref_withenum("odm-list", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_ODM_LIST),
+                objdata);
+            // no parameters
+        }
         { // For ./EDD/typedef-list
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
@@ -3399,6 +3537,75 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                             cace_amm_type_set_use_ref_move(choice, &name);
                         }
                     }
+                }
+            }
+        }
+        { // For ./CTRL/ensure-odm
+            refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
+            refda_amm_ctrl_desc_init(objdata);
+            // no result type
+            // callback:
+            objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_ensure_odm;
+
+            obj = refda_register_ctrl(
+                adm, cace_amm_idseg_ref_withenum("ensure-odm", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_ODM),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "org-name");
+                {
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    // ari://ietf/amm-base/TYPEDEF/id-text
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "org-id");
+                {
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    // ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "model-name");
+                {
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    // ari://ietf/amm-base/TYPEDEF/id-text
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "model-id");
+                {
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    // ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                }
+            }
+        }
+        { // For ./CTRL/obsolete-odm
+            refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
+            refda_amm_ctrl_desc_init(objdata);
+            // no result type
+            // callback:
+            objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm;
+
+            obj = refda_register_ctrl(
+                adm,
+                cace_amm_idseg_ref_withenum("obsolete-odm", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_OBSOLETE_ODM),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "odm-ns");
+                {
+                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_NAMESPACE);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
         }
