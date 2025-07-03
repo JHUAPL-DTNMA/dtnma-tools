@@ -1541,6 +1541,36 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_odm BODY
      * +-------------------------------------------------------------------------+
      */
+
+    const cace_ari_t *ari_org_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_org_id = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_model_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+    const cace_ari_t *ari_model_id = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+
+    int res;
+
+    cace_ari_int org_id, model_id;
+    char *org_name, *model_name;
+
+// TODO: get int values
+int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out);
+    cace_ari_get_int()
+    // TODO: get names
+//const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari);
+
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+// TODO: check if ODM already exists
+
+// TODO: add ODM, use ADM code as example
+    /* TODO: 
+        cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
+        &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
+        cace_amm_idseg_ref_withenum("dtnma-agent", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM), "2025-07-03");
+*/
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_odm BODY
