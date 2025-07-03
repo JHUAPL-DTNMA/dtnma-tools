@@ -52,7 +52,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
         &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("amm-semtype", REFDA_ADM_IETF_AMM_SEMTYPE_ENUM_ADM), "2025-05-28");
+        cace_amm_idseg_ref_withenum("amm-semtype", REFDA_ADM_IETF_AMM_SEMTYPE_ENUM_ADM), "2025-07-03");
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -60,17 +60,6 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         /**
          * Register IDENT objects
          */
-        { // For ./IDENT/display-hint
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            // no IDENT bases
-
-            obj = refda_register_ident(
-                adm,
-                cace_amm_idseg_ref_withenum("display-hint", REFDA_ADM_IETF_AMM_SEMTYPE_ENUM_OBJID_IDENT_DISPLAY_HINT),
-                objdata);
-            // no parameters
-        }
         { // For ./IDENT/semtype
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);

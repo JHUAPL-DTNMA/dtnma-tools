@@ -52,7 +52,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
         &(agent->objs), cace_amm_idseg_ref_withenum("iana", 2),
-        cace_amm_idseg_ref_withenum("display-hints", REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_ADM), "2024-07-20");
+        cace_amm_idseg_ref_withenum("display-hints", REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_ADM), "2025-07-03");
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -60,30 +60,14 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         /**
          * Register IDENT objects
          */
-        { // For ./IDENT/base-integer
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            // IDENT bases:
-            {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/display-hint
-                cace_ari_set_objref_path_intid(&(base->name), 1, 0, CACE_ARI_TYPE_IDENT, 0);
-            }
-
-            obj = refda_register_ident(
-                adm,
-                cace_amm_idseg_ref_withenum("base-integer", REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_BASE_INTEGER),
-                objdata);
-            // no parameters
-        }
         { // For ./IDENT/display-int-dec
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-integer
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-integer
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 1);
             }
 
             obj = refda_register_ident(
@@ -99,8 +83,8 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-integer
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-integer
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 1);
             }
 
             obj = refda_register_ident(
@@ -116,8 +100,8 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-integer
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-integer
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 1);
             }
 
             obj = refda_register_ident(
@@ -127,30 +111,14 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/base-float
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            // IDENT bases:
-            {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/display-hint
-                cace_ari_set_objref_path_intid(&(base->name), 1, 0, CACE_ARI_TYPE_IDENT, 0);
-            }
-
-            obj = refda_register_ident(
-                adm,
-                cace_amm_idseg_ref_withenum("base-float", REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_BASE_FLOAT),
-                objdata);
-            // no parameters
-        }
         { // For ./IDENT/display-float-dec
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-float
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-float
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 2);
             }
 
             obj = refda_register_ident(
@@ -166,8 +134,8 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-float
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-float
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 2);
             }
 
             obj = refda_register_ident(
@@ -183,8 +151,8 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-float
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-float
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 2);
             }
 
             obj = refda_register_ident(
@@ -194,29 +162,14 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/base-bstr
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            // IDENT bases:
-            {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/display-hint
-                cace_ari_set_objref_path_intid(&(base->name), 1, 0, CACE_ARI_TYPE_IDENT, 0);
-            }
-
-            obj = refda_register_ident(
-                adm, cace_amm_idseg_ref_withenum("base-bstr", REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_BASE_BSTR),
-                objdata);
-            // no parameters
-        }
         { // For ./IDENT/display-bstr-text
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-bstr
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
             obj = refda_register_ident(
@@ -232,8 +185,8 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-bstr
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
             obj = refda_register_ident(
@@ -249,8 +202,8 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-bstr
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
             obj = refda_register_ident(
@@ -260,63 +213,14 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/display-bstr-ipaddress
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            // IDENT bases:
-            {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-bstr
-                // FIXME reference to unknown object
-            }
-
-            obj = refda_register_ident(
-                adm,
-                cace_amm_idseg_ref_withenum("display-bstr-ipaddress",
-                                            REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_DISPLAY_BSTR_IPADDRESS),
-                objdata);
-            // no parameters
-        }
-        { // For ./IDENT/display-bstr-uuid
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            // IDENT bases:
-            {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-bstr
-                // FIXME reference to unknown object
-            }
-
-            obj = refda_register_ident(
-                adm,
-                cace_amm_idseg_ref_withenum("display-bstr-uuid",
-                                            REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_DISPLAY_BSTR_UUID),
-                objdata);
-            // no parameters
-        }
-        { // For ./IDENT/base-time
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            // IDENT bases:
-            {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/display-hint
-                cace_ari_set_objref_path_intid(&(base->name), 1, 0, CACE_ARI_TYPE_IDENT, 0);
-            }
-
-            obj = refda_register_ident(
-                adm, cace_amm_idseg_ref_withenum("base-time", REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_OBJID_IDENT_BASE_TIME),
-                objdata);
-            // no parameters
-        }
         { // For ./IDENT/display-time-text
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-time
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-time
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 4);
             }
 
             obj = refda_register_ident(
@@ -332,8 +236,8 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-time
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-time
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 4);
             }
 
             obj = refda_register_ident(

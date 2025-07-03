@@ -52,7 +52,7 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
         &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("inet-base", REFDA_ADM_IETF_INET_BASE_ENUM_ADM), "2025-05-28");
+        cace_amm_idseg_ref_withenum("inet-base", REFDA_ADM_IETF_INET_BASE_ENUM_ADM), "2025-07-03");
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -66,8 +66,8 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
-                // ari://ietf/amm/IDENT/base-bstr
-                // FIXME reference to unknown object
+                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
             obj = refda_register_ident(

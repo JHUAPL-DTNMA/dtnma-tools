@@ -43,6 +43,10 @@ extern "C" {
 /*
  * Enumerations for IDENT objects
  */
+/// For ./IDENT/display-bstr-uuid
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_DISPLAY_BSTR_UUID 17
+/// For ./IDENT/display-bstr-oid
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_DISPLAY_BSTR_OID 18
 /// For ./IDENT/abstract-endpoint
 #define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_ABSTRACT_ENDPOINT 0
 /// For ./IDENT/abstract-endpoint-pattern
@@ -53,6 +57,10 @@ extern "C" {
  */
 /// For ./TYPEDEF/uri
 #define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_URI 0
+/// For ./TYPEDEF/uuid
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_UUID 5
+/// For ./TYPEDEF/oid
+#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_OID 4
 /// For ./TYPEDEF/endpoint
 #define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_ENDPOINT 1
 /// For ./TYPEDEF/endpoint-or-uri
