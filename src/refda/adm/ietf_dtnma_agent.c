@@ -2546,7 +2546,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
         &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("dtnma-agent", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM), "2025-05-28");
+        cace_amm_idseg_ref_withenum("dtnma-agent", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM), "2025-07-03");
     if (adm)
     {
         cace_amm_obj_desc_t *obj;

@@ -52,7 +52,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
         &(agent->objs), cace_amm_idseg_ref_withenum("iana", 2),
-        cace_amm_idseg_ref_withenum("display-hints", REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_ADM), "2025-05-28");
+        cace_amm_idseg_ref_withenum("display-hints", REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_ADM), "2025-07-03");
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
