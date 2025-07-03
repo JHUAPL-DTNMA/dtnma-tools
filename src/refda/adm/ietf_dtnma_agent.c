@@ -706,11 +706,67 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_odm_list BODY
      * +-------------------------------------------------------------------------+
      */
-    /*
-     * +-------------------------------------------------------------------------+
-     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_odm_list BODY
-     * +-------------------------------------------------------------------------+
-     */
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_ari_tbl_t table;
+    cace_ari_tbl_init(&table, 5, 0);
+    const cace_ari_type_t obj_type = CACE_ARI_TYPE_TYPEDEF;
+
+    cace_amm_obj_ns_list_it_t ns_it;
+    for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
+         cace_amm_obj_ns_list_next(ns_it))
+    {
+
+        cace_amm_obj_ns_ptr_t *const *ns_ptr = cace_amm_obj_ns_list_cref(ns_it);
+        if (!ns_ptr)
+        {
+            continue;
+        }
+        const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_ptr_ref(*ns_ptr);
+        if (false) // TODO: (ns->model_id.intenum >= 0)) // && !include_adm)
+        {
+            // ignore ADMs
+            continue;
+        }
+
+        if (!ns->org_id.has_intenum || !ns->model_id.has_intenum || !ns->model_rev.valid)
+        {
+            continue;
+        }
+
+        cace_ari_array_t row;
+        cace_ari_array_init(row);
+        cace_ari_array_resize(row, 5);
+
+        cace_ari_set_tstr(cace_ari_array_get(row, 0), m_string_get_cstr(ns->org_id.name), true);
+        cace_ari_set_int(cace_ari_array_get(row, 1), ns->org_id.intenum);
+        cace_ari_set_tstr(cace_ari_array_get(row, 2), m_string_get_cstr(ns->model_id.name), true);
+        cace_ari_set_int(cace_ari_array_get(row, 3), ns->model_id.intenum);
+        {
+            m_string_t buf;
+            m_string_init(buf);
+            cace_date_encode(buf, &(ns->model_rev.parts), true);
+            cace_ari_set_tstr(cace_ari_array_get(row, 4), m_string_get_cstr(buf), true);
+            m_string_clear(buf);
+        }
+    }
+
+    // append the row
+    cace_ari_tbl_move_row_array(&table, row);
+    cace_ari_array_clear(row);
+}
+
+cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+cace_ari_set_tbl(&result, &table);
+refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+REFDA_AGENT_UNLOCK(agent, );
+/*
+ * +-------------------------------------------------------------------------+
+ * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_odm_list BODY
+ * +-------------------------------------------------------------------------+
+ */
 }
 
 /* Name: typedef-list
