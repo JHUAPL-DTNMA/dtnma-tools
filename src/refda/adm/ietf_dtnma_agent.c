@@ -1554,6 +1554,9 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("test-org", 100, "test-mo
 ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("another-test-org", 101, "another-test-model", -1))
 821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8470616E6F746865722D746573742D6F7267186572616E6F746865722D746573742D6D6F64656C20
 
+ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1))
+821482187B8564696574666B64746E6D612D6167656E74226C6F62736F6C6574652D6F646D818468746573742D6F72676C746573742D6D6F64656C2D31F6F6
+
    */
     const cace_ari_t *ari_org_name   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *ari_org_id     = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
@@ -1599,12 +1602,16 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("another-test-org", 101, 
         return;
     }
 
+// TODO: build rev date using
+// int cace_date_encode(m_string_t out, const struct tm *in, bool usesep)
+
     refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
+
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum(org_name, org_id),
                                                        cace_amm_idseg_ref_withenum(model_name, model_id),
-                                                       "2025-07-03"); // TODO
+                                                       "2025-07-03"); // TODO: submit current time here
 
     if (odm)
     {
@@ -1642,6 +1649,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *odm_ns   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    /* TODO:
+- check if we received an odm namespace
+- check if namespace exists
+- if so, mark as obsolete
+
+    */
+
+    cace_ari_t result = CACE_ARI_INIT_NULL;
+    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm BODY

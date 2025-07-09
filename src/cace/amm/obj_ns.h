@@ -91,6 +91,9 @@ typedef struct
 
     /// AMM object descriptors organized by object type
     cace_amm_obj_ns_ctr_dict_t object_types;
+
+    /// Flag to determine whether ns has been marked obsolete
+    cace_ari_bool obsolete;
 } cace_amm_obj_ns_t;
 
 void cace_amm_obj_ns_init(cace_amm_obj_ns_t *ns);
