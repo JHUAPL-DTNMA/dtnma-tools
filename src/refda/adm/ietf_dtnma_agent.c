@@ -724,7 +724,7 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
             continue;
         }
         const cace_amm_obj_ns_t *ns = cace_amm_obj_ns_ptr_ref(*ns_ptr);
-        if (false) // TODO: (ns->model_id.intenum >= 0)) // && !include_adm)
+        if ((ns->model_id.intenum >= 0))
         {
             // ignore ADMs
             continue;
@@ -756,16 +756,16 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
         cace_ari_array_clear(row);
     }
 
-cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-cace_ari_set_tbl(&result, &table);
-refda_edd_prod_ctx_set_result_move(ctx, &result);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-REFDA_AGENT_UNLOCK(agent, );
-/*
- * +-------------------------------------------------------------------------+
- * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_odm_list BODY
- * +-------------------------------------------------------------------------+
- */
+    REFDA_AGENT_UNLOCK(agent, );
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_odm_list BODY
+     * +-------------------------------------------------------------------------+
+     */
 }
 
 /* Name: typedef-list
@@ -1541,41 +1541,60 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
      * +-------------------------------------------------------------------------+
      */
 
-    const cace_ari_t *ari_org_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
-    const cace_ari_t *ari_org_id = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    /*
+ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/odm-list))
+821482187B8564696574666B64746E6D612D6167656E742267696E7370656374818464696574666B64746E6D612D6167656E7423686F646D2D6C697374
+
+ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("test-org", 100, "test-model-1", -1))
+821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8468746573742D6F726718646C746573742D6D6F64656C2D3120
+
+ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("test-org", 100, "test-model-2", -2))
+821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8468746573742D6F726718646C746573742D6D6F64656C2D3221
+
+ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("another-test-org", 101, "another-test-model", -1))
+821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8470616E6F746865722D746573742D6F7267186572616E6F746865722D746573742D6D6F64656C20
+
+   */
+    const cace_ari_t *ari_org_name   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_org_id     = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
     const cace_ari_t *ari_model_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
-    const cace_ari_t *ari_model_id = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+    const cace_ari_t *ari_model_id   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
 
     int res;
 
     cace_ari_int org_id, model_id;
-    char *org_name, *model_name;
+    char        *org_name, *model_name;
 
-    if (cace_ari_get_int(ari_org_id, &org_id)){
+    if (cace_ari_get_int(ari_org_id, &org_id))
+    {
         CACE_LOG_ERR("Unable to retrieve org ID");
         return;
     }
 
-    if (cace_ari_get_int(ari_model_id, &model_id)){
+    if (cace_ari_get_int(ari_model_id, &model_id))
+    {
         CACE_LOG_ERR("Unable to retrieve model ID");
         return;
     }
 
     const cace_data_t *org = cace_ari_cget_tstr(ari_org_name);
-    if (org == NULL || org->ptr == NULL){
+    if (org == NULL || org->ptr == NULL)
+    {
         CACE_LOG_ERR("Unable to retrieve org name");
         return;
     }
     org_name = (char *)org->ptr;
 
     const cace_data_t *model = cace_ari_cget_tstr(ari_model_name);
-    if (model == NULL || model->ptr == NULL){
+    if (model == NULL || model->ptr == NULL)
+    {
         CACE_LOG_ERR("Unable to retrieve model name");
         return;
     }
     model_name = (char *)model->ptr;
 
-    if (model_id >= 0){
+    if (model_id >= 0)
+    {
         CACE_LOG_ERR("Invalid ODM ID %d", model_id);
         return;
     }
@@ -1583,24 +1602,17 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
     refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
-// TODO: check if ODM already exists
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum(org_name, org_id),
+                                                       cace_amm_idseg_ref_withenum(model_name, model_id),
+                                                       "2025-07-03"); // TODO
 
-//        agent = CACE_MALLOC(sizeof(refdm_agent_t));
-//        refdm_agent_init(agent);
-//        string_set_str(agent->eid, agent_eid);
-
-// TODO: add ODM, use ADM code as example
-    cace_amm_obj_ns_t *odm = cace_amm_obj_store_add_ns(
-        &(agent->objs), 
-         // TODO: who owns these strings? do fresh ones need to be allocated??
-        cace_amm_idseg_ref_withenum(org_name, org_id),
-        cace_amm_idseg_ref_withenum(model_name, model_id), 
-        "2025-07-03");
-        
-    if (odm){
-        CACE_LOG_ERR("ensure-odm found existing ODM");
-    } else {
+    if (odm)
+    {
         CACE_LOG_ERR("ensure-odm ODM created");
+    }
+    else
+    {
+        CACE_LOG_ERR("ensure-odm found existing ODM");
     }
 
     cace_ari_t result = CACE_ARI_INIT_NULL;
