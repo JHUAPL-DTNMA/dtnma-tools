@@ -750,12 +750,11 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
             cace_ari_set_tstr(cace_ari_array_get(row, 4), m_string_get_cstr(buf), true);
             m_string_clear(buf);
         }
-    }
 
-    // append the row
-    cace_ari_tbl_move_row_array(&table, row);
-    cace_ari_array_clear(row);
-}
+        // append the row
+        cace_ari_tbl_move_row_array(&table, row);
+        cace_ari_array_clear(row);
+    }
 
 cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
 cace_ari_set_tbl(&result, &table);
@@ -1552,23 +1551,60 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
     cace_ari_int org_id, model_id;
     char *org_name, *model_name;
 
-// TODO: get int values
-int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out);
-    cace_ari_get_int()
-    // TODO: get names
-//const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari);
+    if (cace_ari_get_int(ari_org_id, &org_id)){
+        CACE_LOG_ERR("Unable to retrieve org ID");
+        return;
+    }
 
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    if (cace_ari_get_int(ari_model_id, &model_id)){
+        CACE_LOG_ERR("Unable to retrieve model ID");
+        return;
+    }
+
+    const cace_data_t *org = cace_ari_cget_tstr(ari_org_name);
+    if (org == NULL || org->ptr == NULL){
+        CACE_LOG_ERR("Unable to retrieve org name");
+        return;
+    }
+    org_name = (char *)org->ptr;
+
+    const cace_data_t *model = cace_ari_cget_tstr(ari_model_name);
+    if (model == NULL || model->ptr == NULL){
+        CACE_LOG_ERR("Unable to retrieve model name");
+        return;
+    }
+    model_name = (char *)model->ptr;
+
+    if (model_id >= 0){
+        CACE_LOG_ERR("Invalid ODM ID %d", model_id);
+        return;
+    }
+
+    refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
 // TODO: check if ODM already exists
 
+//        agent = CACE_MALLOC(sizeof(refdm_agent_t));
+//        refdm_agent_init(agent);
+//        string_set_str(agent->eid, agent_eid);
+
 // TODO: add ODM, use ADM code as example
-    /* TODO: 
-        cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
-        &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("dtnma-agent", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM), "2025-07-03");
-*/
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_add_ns(
+        &(agent->objs), 
+         // TODO: who owns these strings? do fresh ones need to be allocated??
+        cace_amm_idseg_ref_withenum(org_name, org_id),
+        cace_amm_idseg_ref_withenum(model_name, model_id), 
+        "2025-07-03");
+        
+    if (odm){
+        CACE_LOG_ERR("ensure-odm found existing ODM");
+    } else {
+        CACE_LOG_ERR("ensure-odm ODM created");
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_NULL;
+    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
 
     REFDA_AGENT_UNLOCK(agent, );
     /*
