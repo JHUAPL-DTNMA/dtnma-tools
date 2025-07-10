@@ -93,19 +93,21 @@ add_compile_options(
     -Wpedantic
     $<$<COMPILE_LANGUAGE:C>:-Werror=implicit-function-declaration>
     $<$<COMPILE_LANGUAGE:C>:-Werror=incompatible-pointer-types>
-    $<$<COMPILE_LANGUAGE:C>:-Werror=discarded-qualifiers>
 )
 add_compile_options(
     -ffunction-sections
     -fdata-sections
     -fno-omit-frame-pointer
     $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-enforce-eh-specs>
-    $<$<COMPILE_LANGUAGE:CXX>:-fnothrow-opt>
 )
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C>:-Werror=discarded-qualifiers>
+        $<$<COMPILE_LANGUAGE:CXX>:-fno-enforce-eh-specs>
+        $<$<COMPILE_LANGUAGE:CXX>:-fnothrow-opt>
+    )
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gdwarf-4")
 endif()
