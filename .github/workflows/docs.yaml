@@ -44,9 +44,11 @@ jobs:
           flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev \
           doxygen graphviz plantuml dblatex texlive texlive-latex-extra texlive-font-utils
       - name: Dependency build
+        env:
+          DEPS_BUILD_ION: '0'
         run: ./deps.sh
       - name: Prep
-        run: ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
+        run: ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_ION_PROXY=OFF -DTRANSPORT_ION_BP=OFF -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
       - name: Build
         run: |
           ./build.sh --target docs-api-html docs-api-pdf
