@@ -457,3 +457,128 @@ void test_refda_eval_target_failure(const char *targethex, int expect_res)
     cace_ari_deinit(&result);
     cace_ari_deinit(&target);
 }
+
+
+
+// Test difference of 2 TP values
+//
+// --- Difference of 2 TP values ---
+// ari:/AC/(/TP/20000101T001640Z,/TP/20000101T001640Z,//1/1/OPER/sub) -> /TD/0
+TEST_CASE("821183820C1903E8820C1903E88401012563737562", "820D00")
+// ari:/AC/(/TP/20000101T001640Z,/TP/20000101T001600Z,//1/1/OPER/sub) -> /TD/40
+TEST_CASE("821183820C1903E8820C1903C08401012563737562", "820D1828")
+// ari:/AC/(/TP/20000101T001600Z,/TP/20000101T001640Z,//1/1/OPER/sub) -> /TD/-40
+TEST_CASE("821183820C1903C0820C1903E88401012563737562", "820D3827")
+
+// Test addition (in either order) of TP and TD value:
+//
+// --- Difference of 2 TP values ---
+// ari:/AC/(/TD/1000,/TP/20000101T001640Z,//1/1/OPER/add) -> /TP/20000101T003320Z
+TEST_CASE("821183820D1903E8820C1903E88401012563616464", "820C1907D0")
+// ari:/AC/(/TP/20000101T001640Z,/TD/1000,//1/1/OPER/add) -> /TP/20000101T003320Z
+TEST_CASE("821183820C1903E8820D1903E88401012563616464", "820C1907D0")
+
+// TODO: Based on ticket #132, this should be an error...
+///////////////  ari:/AC/(/TP/20000101T001640Z,/TD/1000,//1/1/OPER/sub) -> /TP/20000101T000000Z
+
+// Test addition or subtraction of 2 TD values:
+//
+// --- Addition of 2 TD values ---
+// ari:/AC/(/TD/7000,/TD/5000,//1/1/OPER/add) -> /TD/12000
+TEST_CASE("821183820D191B58820D1913888401012563616464", "820D192EE0")
+// ari:/AC/(/TD/5000,/TD/7000,//1/1/OPER/add) -> /TD/12000
+TEST_CASE("821183820D191388820D191B588401012563616464", "820D192EE0")
+//
+// --- Subtraction of 2 TD values ---
+// ari:/AC/(/TD/7000,/TD/4000,//1/1/OPER/sub) -> /TD/3000
+TEST_CASE("821183820D191B58820D190FA08401012563737562", "820D190BB8")
+// ari:/AC/(/TD/4000,/TD/7000,//1/1/OPER/sub) -> /TD/-3000
+TEST_CASE("821183820D190FA0820D191B588401012563737562", "820D390BB7")
+
+// Test scaling (multiplication / division) of TD with a primitive (int or float):
+//
+// --- Multiply of TD value with primitive (int or float) ---
+// ari:/AC/(/TD/7000,/INT/0,//1/1/OPER/multiply) -> /TD/0
+TEST_CASE("821183820D191B5882040084010125686D756C7469706C79", "820D00")
+// ari:/AC/(/TD/7000,/INT/1,//1/1/OPER/multiply) -> /TD/7000
+TEST_CASE("821183820D191B5882040184010125686D756C7469706C79", "820D191B58")
+// ari:/AC/(/TD/7000,/INT/7,//1/1/OPER/multiply) -> /TD/49000
+TEST_CASE("821183820D191B5882040784010125686D756C7469706C79", "820D19BF68")
+// ari:/AC/(/TD/7000,/REAL32/3.5,//1/1/OPER/multiply) -> /TD/24500
+TEST_CASE("821183820D191B588208F9430084010125686D756C7469706C79", "820D195FB4")
+// ari:/AC/(/TD/7000,/REAL32/INFINITY,//1/1/OPER/multiply) -> undefined
+TEST_CASE("821183820D191B588208F97C0084010125686D756C7469706C79", "F7")                        // Undefined Behavoir
+//
+// --- Division of TD value with primitive (int or float) ---
+// ari:/AC/(/TD/7000,/INT/1,//1/1/OPER/divide) -> /TD/7000
+TEST_CASE("821183820D191B588204018401012566646976696465", "820D191B58")
+// ari:/AC/(/TD/49000,/INT/7000,//1/1/OPER/divide) -> /TD/7000
+TEST_CASE("821183820D19BF688204191B588401012566646976696465", "820D191B58")
+// ari:/AC/(/TD/7000,/REAL32/3.5,//1/1/OPER/divide) -> /TD/2000
+TEST_CASE("821183820D191B588208F943008401012566646976696465", "820D1907D0")
+// ari:/AC/(/TD/7000,/REAL32/0.0,//1/1/OPER/divide) -> undefined
+TEST_CASE("821183820D191B588208F900008401012566646976696465", "F7")                            // Undefined Behavoir
+// ari:/AC/(/TD/7000,/REAL32/-INFINITY,//1/1/OPER/divide) -> /TD/0
+TEST_CASE("821183820D191B588208F9FC008401012566646976696465", "820D00")
+
+// Test various undefined behavoir involving TD and/or TP values
+//
+// --- Multiplication of primitive (int or float) with a TD value ---
+// ari:/AC/(/INT/1,/TD/7000,//1/1/OPER/multiply) -> undefined
+TEST_CASE("821183820401820D191B5884010125686D756C7469706C79", "F7")
+// ari:/AC/(/REAL32/3.5,/TD/7000,//1/1/OPER/multiply) -> undefined
+TEST_CASE("8211838208F94300820D191B5884010125686D756C7469706C79", "F7")
+//
+// --- Division of primitive (int or float) with a TD value ---
+// ari:/AC/(/INT/1,/TD/7000,//1/1/OPER/divide) -> undefined
+TEST_CASE("821183820401820D191B588401012566646976696465", "F7")
+// ari:/AC/(/REAL32/3.5,/TD/7000,//1/1/OPER/divide) -> undefined
+TEST_CASE("8211838208F94300820D191B588401012566646976696465", "F7")
+//
+// --- Addition,Subtraction,Multiplication,Division of TP value with a primitive (int) (in either order) ---
+// ari:/AC/(/TP/20000101T001640Z,/INT/1000,//1/1/OPER/add) -> undefined
+TEST_CASE("821183820C1903E882041903E88401012563616464", "F7")
+// ari:/AC/(/INT/1000,/TP/20000101T001640Z,//1/1/OPER/add) -> undefined
+TEST_CASE("82118382041903E8820C1903E88401012563616464", "F7")
+// ari:/AC/(/TP/20000101T001640Z,/INT/1000,//1/1/OPER/sub) -> undefined
+TEST_CASE("821183820C1903E882041903E88401012563737562", "F7")
+// ari:/AC/(/INT/1000,/TP/20000101T001640Z,//1/1/OPER/sub) -> undefined
+TEST_CASE("82118382041903E8820C1903E88401012563737562", "F7")
+// ari:/AC/(/TP/20000101T001640Z,/INT/1000,//1/1/OPER/multiply) -> undefined
+TEST_CASE("821183820C1903E882041903E884010125686D756C7469706C79", "F7")
+// ari:/AC/(/INT/1000,/TP/20000101T001640Z,//1/1/OPER/multiply) -> undefined
+TEST_CASE("82118382041903E8820C1903E884010125686D756C7469706C79", "F7")
+// ari:/AC/(/TP/20000101T001640Z,/INT/1000,//1/1/OPER/divide) -> undefined
+TEST_CASE("821183820C1903E882041903E88401012566646976696465", "F7")
+// ari:/AC/(/INT/1000,/TP/20000101T001640Z,//1/1/OPER/divide) -> undefined
+TEST_CASE("82118382041903E8820C1903E88401012566646976696465", "F7")
+void test_refda_eval_target_check(const char *targethex, const char *expectloghex)
+{
+    // TODO: This method is mostly duplicate from: test_refda_eval_target_valid()
+    // TODO: Do we have to define the test method here or can we "import" from elsewhere and just use declaration here(?)
+    // TODO: Thoughts on organization of test cases
+    // TODO: Later, post version 2.0 release, can we pass in ARI text instead of hex
+
+    cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
+
+    cace_ari_t expect_result = CACE_ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_result, expectloghex));
+//    TEST_ASSERT_FALSE(cace_ari_is_undefined(&expect_result));
+
+    refda_runctx_t runctx;
+    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    int        res    = refda_eval_target(&runctx, &result, &target);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_eval_target() disagrees");
+
+    // verify result value
+    const bool equal = cace_ari_equal(&expect_result, &result);
+    TEST_ASSERT_TRUE_MESSAGE(equal, "result ARI is different");
+
+    cace_ari_deinit(&result);
+    refda_runctx_deinit(&runctx);
+    cace_ari_deinit(&expect_result);
+    cace_ari_deinit(&target);
+}
