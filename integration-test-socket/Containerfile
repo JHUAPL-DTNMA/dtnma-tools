@@ -93,8 +93,8 @@ COPY --chmod=755 systemd/service_is_running.sh /usr/local/bin/service_is_running
 # Test tools
 RUN apt-get update && apt-get install -y \
     curl git tshark postgresql-client
-RUN pip3 install --break-system-packages git+https://github.com/JHUAPL-DTNMA/dtnma-ace.git@apl-fy24
-RUN git clone --branch apl-fy24 https://github.com/JHUAPL-DTNMA/dtnma-adms.git /usr/local/share/ace/adms
+RUN pip3 install --break-system-packages git+https://github.com/JHUAPL-DTNMA/dtnma-ace.git@main
+RUN git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-adms.git /usr/local/share/ace/adms
 
 # REFDA and REFDM to test
 RUN apt-get update && apt-get install -y \
