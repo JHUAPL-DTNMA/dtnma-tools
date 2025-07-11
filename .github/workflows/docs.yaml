@@ -25,21 +25,11 @@ on:
       - 'apl-fy[0-9][0-9]'
   pull_request: {} # any target
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   apidoc:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -47,14 +37,16 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          cmake ninja-build
-          ruby build-essential autoconf libtool
-          flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          cmake ninja-build \
+          ruby build-essential autoconf libtool \
+          flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev \
           doxygen graphviz plantuml dblatex texlive texlive-latex-extra texlive-font-utils
+      - name: Dependency build
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
+        run: ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
       - name: Build
         run: |
           ./build.sh --target docs-api-html docs-api-pdf
@@ -69,18 +61,30 @@ jobs:
           path: testroot/usr/share/doc/dtnma-tools/api.tar
 
   deploy:
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+    # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: apidoc
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dtnma-tools-api
+          path: testroot/usr/share/doc/dtnma-tools/
       - name: Decompress
-        run: tar -xf api.tar
+        working-directory: testroot/usr/share/doc/dtnma-tools
+        run: tar -xf api.tar && rm api.tar
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
