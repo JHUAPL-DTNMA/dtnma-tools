@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -76,28 +76,28 @@ After the build is successful, the following will install to a local prefix path
 ./build.sh install
 ```
 
-For further details, see the example in [testenv/Dockerfile](testenv/Dockerfile), which builds a stand-alone test environment container image, along with the other files in `testenv`.
+For further details, see the example in [integration-test-socket/Dockerfile](integration-test-socket/Dockerfile), which builds a stand-alone test environment container image, along with the other files in `integration-test-socket`.
 
 
 ## Usage
 
 The example agent and manager both rely on ION for message transport, so a prerequisite for both is a running ION BPA instance.
-An example of all of this, including the use of `systemd` scripts, is under the [testenv](testenv) directory.
+An example of all of this, including the use of `systemd` scripts, is under the [integration-test-ion](integration-test-ion) directory.
 
 To run the integrated test environment, the docker engine and compose must be installed per the [Docker installation instructions](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) and typically the user will need to be added to the `docker` system group for access.
 The installation can be validated by the ability to run simple introspection commands like `docker ps` and see a successful result.
 
 Once that is done, the images can be built and containers started with:
 ```
-./testenv/start.sh
+./integration-test-ion/start.sh
 ```
 A checkout test can be run to ensure services are running and round-trip AMP control-to-report loop is closed with:
 ```
-./testenv/check.sh
+./integration-test-ion/check.sh
 ```
 Finally, after test anything in the containers is finished they can be stopped and cleaned up with:
 ```
-./testenv/stop.sh
+./integration-test-ion/stop.sh
 ```
 
 ## Stand-Alone Agent
