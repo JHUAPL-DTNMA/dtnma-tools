@@ -130,7 +130,6 @@ target_include_directories(
   cace PUBLIC
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
-#target_link_libraries(cace PUBLIC ${FLEX_LIBRARIES})
 target_link_libraries(cace PUBLIC MLIB::mlib)
 target_link_libraries(cace PUBLIC qcbor)
 target_link_libraries(cace PUBLIC timespec::timespec)
