@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2023 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -16,14 +16,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-find_package(Doxygen)
-
-configure_file(doxygen/Doxyfile.in doxygen/Doxyfile @ONLY)
-
-add_custom_target(
-    docs
-    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doxygen
-    COMMENT "Generating API documentation with Doxygen"
-    USES_TERMINAL
-)
+if(BUILD_DOCS_API)
+    add_subdirectory(api)
+endif(BUILD_DOCS_API)
+if(BUILD_DOCS_MAN)
+    add_subdirectory(man)
+endif(BUILD_DOCS_MAN)

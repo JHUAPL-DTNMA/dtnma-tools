@@ -13,7 +13,6 @@
 	path = deps/QCBOR
 	url = https://github.com/laurencelundblade/QCBOR.git
 	branch = master
-[submodule "deps/osal"]
-	path = deps/osal
-	url = https://github.com/nasa/osal.git
-	branch = main
+[submodule "deps/timespec"]
+	path = deps/timespec
+	url = https://github.com/solemnwarning/timespec.git

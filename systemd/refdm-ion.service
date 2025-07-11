@@ -1,0 +1,15 @@
+[Unit]
+Description=REFDM with ION BP transport
+After=network-online.target ion.service
+Wants=network-online.target
+Requires=ion.service
+
+[Service]
+Type=notify
+PassEnvironment=DTNMA_LOGLEVEL ION_NODE_NUM \
+    DB_HOST DB_USER DB_PASSWORD DB_NAME
+EnvironmentFile=-/etc/environment
+ExecStart=refdm-ion -l ${DTNMA_LOGLEVEL} -a ipn:${ION_NODE_NUM}.7
+
+[Install]
+WantedBy=multi-user.target

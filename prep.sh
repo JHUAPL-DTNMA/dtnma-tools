@@ -1,90 +1,39 @@
 #!/bin/bash
+##
+## Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+## Laboratory LLC.
+##
+## This file is part of the Delay-Tolerant Networking Management
+## Architecture (DTNMA) Tools package.
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##     http://www.apache.org/licenses/LICENSE-2.0
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+
 #
-# From a fresh checkout perform pre-build steps
+# From a fresh checkout perform pre-build steps on this project.
 #
 set -e
 
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
-source setenv.sh
-
-mkdir -p ${SELFDIR}/deps/build
-
-if [ ! -e ${SELFDIR}/testroot/usr/include/ion.h ]
-then
-#   rm -rf ${SELFDIR}/deps/build/ion
-  rsync --recursive ${SELFDIR}/deps/ion/ ${SELFDIR}/deps/build/ion/
-  pushd ${SELFDIR}/deps/build/ion
-
-  patch -p1 <${SELFDIR}/deps/ion-4.1.2-remove-nm.patch
-  patch -p1 <${SELFDIR}/deps/ion-4.1.2-local-deliver.patch
-  patch -p1 <${SELFDIR}/deps/ion-4.1.2-private-headers.patch
-  autoreconf -vif
-  export CFLAGS="-std=gnu99"
-  ./configure --prefix=/usr
-  make -j$(nproc) clean
-  make -j$(nproc)
-  export -n CFLAGS
-  make install DESTDIR=${SELFDIR}/testroot
-  make -j$(nproc) clean
-  popd
-fi
-
-if [ ! -e ${SELFDIR}/testroot/usr/include/qcbor/qcbor.h ]
-then
-  rsync --recursive ${SELFDIR}/deps/QCBOR/ ${SELFDIR}/deps/build/QCBOR/
-  pushd ${SELFDIR}/deps/build/QCBOR
-
-  patch -p1 <${SELFDIR}/deps/qcbor-install.patch
-  patch -p2 <${SELFDIR}/deps/qcbor-expose-private.patch
-  make -j$(nproc)
-  make install PREFIX=/usr DESTDIR=${SELFDIR}/testroot
-  make -j$(nproc) clean
-  popd
-fi
-
-# if [ ! -e ${SELFDIR}/testroot/usr/include/civetweb.h ]
-# then
-#   rsync --recursive ${SELFDIR}/deps/civetweb/ ${SELFDIR}/deps/build/civetweb/
-#   pushd ${SELFDIR}/deps/build/civetweb
-# 
-#   cmake -S . -B builddir \
-#     -DCMAKE_INSTALL_PREFIX=${SELFDIR}/testroot/usr \
-#     -DBUILD_SHARED_LIBS=YES \
-#     -DCIVETWEB_ENABLE_SERVER_EXECUTABLE=NO \
-#     -DCIVETWEB_BUILD_TESTING=NO \
-#     -DCMAKE_BUILD_TYPE=Release \
-#     -G Ninja
-#   cmake --build builddir
-#   cmake --install builddir
-#   cmake --build builddir --target clean
-#   popd
-# fi
-
-if [ ! -e ${SELFDIR}/testroot/usr/include/m-lib ]
-then
-  rsync --recursive ${SELFDIR}/deps/mlib/ ${SELFDIR}/deps/build/mlib/
-  pushd ${SELFDIR}/deps/build/mlib
-  
-  make -j$(nproc)
-  make install PREFIX=/usr DESTDIR=${SELFDIR}/testroot
-  make -j$(nproc) clean
-  popd
-fi
-
-#if [ ! -e ${SELFDIR}/testroot/usr/include/unity ]
-#then
-#  pushd ${SELFDIR}/deps/unity
-#  cmake -S . -B build \
-#    -DCMAKE_INSTALL_PREFIX=${SELFDIR}/testroot/usr
-#  cmake --build build
-#  cmake --install build
-#  popd
-#fi
+source ${SELFDIR}/setenv.sh
 
 cmake -S ${SELFDIR} -B ${SELFDIR}/build/default \
-  -DCMAKE_PREFIX_PATH=${SELFDIR}/testroot/usr \
-  -DCMAKE_INSTALL_PREFIX=${SELFDIR}/testroot/usr \
+  -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
+  -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+  -DBUILD_SHARED_LIBS=YES \
+  -DBUILD_DOCS_API=YES \
+  -DBUILD_TESTING=YES \
   -DBUILD_MANAGER=YES \
+  -DTEST_COVERAGE=YES \
+  -DTEST_MEMCHECK=YES \
   -DCMAKE_BUILD_TYPE=Debug \
   -G Ninja \
   $@

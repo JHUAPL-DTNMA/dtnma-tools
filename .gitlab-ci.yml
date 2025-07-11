@@ -9,7 +9,7 @@ include:
 #  - template: Code-Quality.gitlab-ci.yml
 
 variables:
-  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_STRATEGY: none
   DOCKER_BUILDKIT: 1
   DEBIAN_FRONTEND: "noninteractive"
   # for Python/PIP
@@ -28,12 +28,17 @@ stages:
   mkdir -p /usr/local/share/ca-certificates
   curl -svL http://apllinuxdepot.jhuapl.edu/linux/APL-root-cert/JHUAPL-MS-Root-CA-05-21-2038-B64-text.cer -o /usr/local/share/ca-certificates/JHUAPL-MS-Root-CA-05-21-2038-B64-text.crt
   update-ca-certificates
+  # Use in-container submodule update
+  apt-get install -y git
+  git submodule sync --recursive
+  git submodule update --init --recursive
 
 .prep-install-ext: &prep-install-ext |
     apt-get update && apt-get install -y \
         build-essential rsync autoconf libtool \
         cmake ninja-build ruby \
-        libmysqlclient-dev libcivetweb-dev civetweb libcjson-dev
+        flex bison libmysqlclient-dev libcivetweb-dev civetweb libcjson-dev \
+        valgrind gcovr
 
 .prep-install-docs: &prep-install-docs |
     apt-get update && apt-get install -y \
@@ -58,6 +63,7 @@ build:
   before_script:
     - *prep-install-ca
     - *prep-install-ext
+    - ./deps.sh
   script:
     - ./prep.sh
     - ./build.sh
@@ -74,6 +80,7 @@ docs:
     - *prep-install-ca
     - *prep-install-ext
     - *prep-install-docs
+    - ./deps.sh
   script:
     - ./prep.sh -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF -DBUILD_DOCS=ON
     - ./build.sh docs

@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2023 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -18,5 +18,13 @@ limitations under the License.
 set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
 find_package(unitytools)
 
-add_unity_test(SOURCE "test_rda.c" thunk.c)
-target_link_libraries(test_rda PUBLIC nmagent)
+include_directories(
+  BEFORE
+  ${CMAKE_BINARY_DIR}/src
+  ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/test
+)
+
+add_subdirectory(util)
+add_subdirectory(cace)
+add_subdirectory(refda)

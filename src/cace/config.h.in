@@ -1,0 +1,92 @@
+/*
+ * Copyright (c) 2011-2023 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Delay-Tolerant Networking Management
+ * Architecture (DTNMA) Tools package.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/** @file
+ * @ingroup ari
+ * Configuration items driven by CMake options and user tailoring.
+ */
+#ifndef CACE_CONFIG_H_
+#define CACE_CONFIG_H_
+
+#ifdef __cplusplus
+#include <cstdlib>
+extern "C" {
+#endif
+
+/* Enable text-form parsing based on lex+yacc configuration. */
+#cmakedefine ARI_TEXT_PARSE
+
+/* Enable look-up table (LUT) caching at runtime. */
+#cmakedefine ENABLE_LUT_CACHE
+
+/* Use the PCRE2 library. */
+#cmakedefine PCRE_FOUND
+
+/* Use the ION BP library. */
+#cmakedefine ION_FOUND
+
+/* Always use UTF-8 encodings */
+#define PCRE2_CODE_UNIT_WIDTH 8
+
+/* Able to use GNU Getopt extensions. */
+#cmakedefine HAVE_GETOPT_LONG
+
+#ifndef CACE_MALLOC
+/** Uses the same function signature as C99 malloc().
+ */
+#define CACE_MALLOC malloc
+#endif /* CACE_MALLOC */
+
+#ifndef CACE_REALLOC
+/** Uses the same function signature as C99 realloc().
+ */
+#define CACE_REALLOC realloc
+#endif /* CACE_REALLOC */
+
+#ifndef CACE_FREE
+/** Uses the same function signature as C99 free().
+ */
+#define CACE_FREE free
+#endif /* CACE_FREE */
+
+/** Force the use of M_ prefixed macros for M*LIB
+ */
+//#define M_USE_SMALL_NAME 0
+
+/** Define to override value/struct allocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_ALLOC(type) ((type *) CACE_MALLOC(sizeof(type)))
+/** Define to override value/struct deallocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_DEL(ptr) CACE_FREE(ptr)
+
+/** Define to override array allocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? (type *) NULL : (type *) CACE_REALLOC((ptr), (n)*sizeof (type)))
+/** Define to override array deallocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_FREE(ptr) CACE_FREE(ptr)
+
+#ifdef __cplusplus
+} // extern C
+#endif
+
+#endif  /* CACE_CONFIG_H_ */
