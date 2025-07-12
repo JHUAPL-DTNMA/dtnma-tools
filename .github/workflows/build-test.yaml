@@ -31,8 +31,9 @@ jobs:
       fail-fast: false
       matrix:
         os: ['ubuntu-22.04', 'ubuntu-24.04', 'centos-9']
+        compiler: ['gcc', 'clang']
         deps: ['full', 'minimal']
-    name: Unit Test (${{matrix.os}} deps=${{matrix.deps}})
+    name: Unit Test (${{matrix.os}} ${{matrix.compiler}} deps=${{matrix.deps}})
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     steps:
@@ -42,7 +43,8 @@ jobs:
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
-              ruby pkg-config build-essential patch autoconf libtool \
+              ruby pkg-config gcc g++ ccache patch autoconf libtool \
+              ${{matrix.compiler=='clang' && 'clang'}} \
               ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev postgresql' || ''}} \
               valgrind gcovr xmlstarlet
       - name: Set up OS
@@ -54,7 +56,8 @@ jobs:
               git rsync \
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
-              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel ' || ''}} \
+              ${{matrix.compiler=='clang' && 'clang'}} \
+              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel' || ''}} \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
@@ -72,7 +75,9 @@ jobs:
         run: ./deps.sh
       - name: Prep
         run: |
-          ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON \
+          ./prep.sh \
+              ${{matrix.compiler=='clang' && '-DCMAKE_C_COMPILER=clang'}} \
+              -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON \
               -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
               -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
               -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
@@ -110,7 +115,7 @@ jobs:
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
-              ruby pkg-config build-essential patch autoconf libtool \
+              ruby pkg-config gcc g++ ccache patch autoconf libtool \
               flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev postgresql\
               binutils \
               valgrind gcovr xmlstarlet python3-venv
