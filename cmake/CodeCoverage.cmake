@@ -182,6 +182,12 @@ if(CMAKE_C_COMPILER_ID MATCHES "(GNU|Clang)")
     endif()
 endif()
 
+if(CMAKE_C_COMPILER_ID MATCHES "GNU")
+    set(GCOV_EXEC "--gcov-executable" "gcov")
+elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set(GCOV_EXEC "--gcov-executable" "llvm-cov gcov")
+endif()
+
 set(CMAKE_Fortran_FLAGS_COVERAGE
     ${COVERAGE_COMPILER_FLAGS}
     CACHE STRING "Flags used by the Fortran compiler during coverage builds."
@@ -309,7 +315,7 @@ function(setup_target_for_coverage_lcov)
     if(${Coverage_SONARQUBE})
         # Generate SonarQube output
         set(GCOVR_XML_CMD
-            ${GCOVR_PATH} --sonarqube ${Coverage_NAME}_sonarqube.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
+            ${GCOVR_PATH} ${GCOV_EXEC} --sonarqube ${Coverage_NAME}_sonarqube.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
             ${GCOVR_EXCLUDE_ARGS} --object-directory=${PROJECT_BINARY_DIR}
         )
         set(GCOVR_XML_CMD_COMMAND
@@ -460,7 +466,7 @@ function(setup_target_for_coverage_gcovr_xml)
     )
     # Running gcovr
     set(GCOVR_XML_CMD
-        ${GCOVR_PATH} --xml ${Coverage_NAME}.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
+        ${GCOVR_PATH} ${GCOV_EXEC} --xml ${Coverage_NAME}.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
         ${GCOVR_EXCLUDE_ARGS} --object-directory=${BINARYDIR}
     )
 
@@ -561,7 +567,7 @@ function(setup_target_for_coverage_gcovr_html)
     )
     # Running gcovr
     set(GCOVR_HTML_CMD
-        ${GCOVR_PATH} --html ${Coverage_NAME}/index.html --html-details -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
+        ${GCOVR_PATH} ${GCOV_EXEC} --html ${Coverage_NAME}/index.html --html-details -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
         ${GCOVR_EXCLUDE_ARGS} --object-directory=${BINARYDIR}
     )
 
