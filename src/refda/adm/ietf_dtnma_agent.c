@@ -63,7 +63,7 @@ static cace_ari_type_t eqiv_ari_type(const cace_ari_lit_t *lit)
  *
  * @param[inout] target The timespec that is to be normalized.
  */
-void timespec_normalize(struct timespec *target)
+static void timespec_normalize(struct timespec *target)
 {
     // Turns out there is already timespec library code which performs this normalization. The timespec
     // normalization code may be slower due to looping (perhaps when multiplied by large scalars).
@@ -339,7 +339,7 @@ static cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right)
     return left ^ right;
 }
 
-int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
+static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
 {
     CHKERR1(result);
     CHKERR1(valueA);
