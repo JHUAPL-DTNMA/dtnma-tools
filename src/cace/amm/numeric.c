@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
@@ -189,7 +188,8 @@ int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *l
 }
 
 int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
-                                 cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64)
+                                 cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64,
+                                 cace_binop_timespec op_timespec)
 {
     CHKERR1(result);
     CHKERR1(lt_val);
@@ -197,6 +197,19 @@ int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, c
     CHKERR1(op_uvast);
     CHKERR1(op_vast);
     CHKERR1(op_real64);
+    CHKERR1(op_timespec);
+
+    // Is this a timespec operation?, if so delegate to: op_timespec()
+    cace_ari_type_t lt_typ = eqiv_ari_type(&(lt_val->as_lit));
+    cace_ari_type_t rt_typ = eqiv_ari_type(&(rt_val->as_lit));
+
+    bool is_oper_TS = false;
+    is_oper_TS |= lt_typ == CACE_ARI_TYPE_TD || lt_typ == CACE_ARI_TYPE_TP;
+    is_oper_TS |= rt_typ == CACE_ARI_TYPE_TD || rt_typ == CACE_ARI_TYPE_TP;
+    if (is_oper_TS == true)
+        return op_timespec(result, lt_val, rt_val);
+
+    // Logic for non timespec operations
     cace_ari_type_t promote;
     if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
     {
