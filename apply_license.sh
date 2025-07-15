@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+## Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Delay-Tolerant Networking Management
@@ -29,9 +29,9 @@ set -e
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 
 LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/apply_license.tmpl"
-LICENSEOPTS="${LICENSEOPTS} --years 2011-2024"
+LICENSEOPTS="${LICENSEOPTS} --years 2011-2025"
 # Excludes only apply to directory (--dir) mode and not file mode
-LICENSEOPTS="${LICENSEOPTS} --exclude *.yml *.yaml"
+#LICENSEOPTS="${LICENSEOPTS} --exclude *.yml *.yaml"
 
 
 # Specific paths

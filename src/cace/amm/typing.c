@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -604,7 +604,7 @@ static bool builtin_time_constraints(struct timespec *out, const cace_ari_t *ari
         case CACE_ARI_PRIM_FLOAT64:
         {
             double v = obj->value.as_float64;
-            if (isnan(v) || isinf(v) || v > INT64_MAX || v < INT64_MIN)
+            if (isnan(v) || isinf(v) || v > (double)INT64_MAX || v < (double)INT64_MIN)
             {
                 return false;
             }
