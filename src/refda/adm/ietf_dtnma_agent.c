@@ -45,6 +45,15 @@
 
 #define NANOS_IN_SEC 1000000000
 
+/** Return code that indicates normal completion. */
+#define RET_PASS 0
+
+/** Return code that indicates the input resolves to an undefined result. */
+#define RET_FAIL_UNDEFINED 1
+
+/** Return code that indicates the input resolves to an unexpected/abnormal state. */
+#define RET_FAIL_UNEXPECTED 2
+
 /*   START CUSTOM FUNCTIONS HERE */
 
 static cace_ari_type_t eqiv_ari_type(const cace_ari_lit_t *lit)
@@ -66,22 +75,28 @@ static cace_ari_type_t eqiv_ari_type(const cace_ari_lit_t *lit)
 static void timespec_normalize(struct timespec *target)
 {
     // Turns out there is already timespec library code which performs this normalization. The timespec
-    // normalization code may be slower due to looping (perhaps when multiplied by large scalars).
+    // normalization code may be slower due to looping (for example when multiplied by large scalars).
+    //
+    // TODO: The 2 lines below allow for a comparison against certain high CPU edge cases
+    // *target = timespec_normalise(*target);
+    // return;
 
-    // Normalization: Ensure that the absolute value of nanos is less than 1 billion
-    if (target->tv_nsec >= NANOS_IN_SEC)
+    // Bail if there is no need for normalization
+    long nanos = target->tv_nsec;
+    if (nanos > -NANOS_IN_SEC && nanos < NANOS_IN_SEC)
+        return;
+
+    // Adjust the seconds and nanos such that the absolute value of the nanos field is < 1 billion
+    long adj_sec = target->tv_nsec / NANOS_IN_SEC;
+    target->tv_sec += adj_sec;
+
+    target->tv_nsec -= (adj_sec * NANOS_IN_SEC);
+
+    // Negative nanoseconds isn't valid according to POSIX. Decrement tv_sec and roll tv_nsec over.
+    if (target->tv_nsec < 0)
     {
-        long adj_sec = target->tv_nsec / NANOS_IN_SEC;
-        target->tv_sec += adj_sec;
-
-        target->tv_nsec -= (adj_sec * NANOS_IN_SEC);
-    }
-    else if (target->tv_nsec <= -NANOS_IN_SEC)
-    {
-        long adj_sec = abs(target->tv_nsec / NANOS_IN_SEC);
-        target->tv_sec -= adj_sec;
-
-        target->tv_nsec += (adj_sec * NANOS_IN_SEC);
+        --(target->tv_sec);
+        target->tv_nsec = (NANOS_IN_SEC + target->tv_nsec);
     }
 }
 
@@ -365,7 +380,7 @@ static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, co
         ari_type = CACE_ARI_TYPE_TP;
     else
         // Bail if the result will not be a TD or TP
-        return 1;
+        return RET_FAIL_UNDEFINED;
 
     // Delegate the addition
     struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
@@ -382,7 +397,7 @@ static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, co
     res_lit->value.as_timespec = result_TS;
 
     // Success
-    return 0;
+    return RET_PASS;
 }
 
 static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
@@ -402,21 +417,15 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
     if (is_result_TD == false)
         // Bail if the result will not be a TD
-        return 1;
+        return RET_FAIL_UNDEFINED;
 
+    // Delegate the subtraction
     struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
     struct timespec valueB_TS = valueB->as_lit.value.as_timespec;
-
-    //    fprintf(stdout, "\nDEBUG--->   [A]: (%ld sec, %ld nano)   ", valueA_TS.tv_sec, valueA_TS.tv_nsec);
-    //    fprintf(stdout, "|   [B]: (%ld sec, %ld nano)", valueB_TS.tv_sec, valueB_TS.tv_nsec);
-
-    // Since we are subtracting invert valueTS_B (so we can do addition instead)
-    valueB_TS.tv_sec  = -valueB_TS.tv_sec;
-    valueB_TS.tv_nsec = -valueB_TS.tv_nsec;
-
-    // Delegate the addition
-    struct timespec result_TS = timespec_add(valueA_TS, valueB_TS);
-    //    fprintf(stdout, "   ---ANSWER: (%ld sec, %ld nano)\n", result_TS.tv_sec, result_TS.tv_nsec);
+    // fprintf(stdout, "\nDEBUG--->   [A]: (%ld sec, %ld nano)   ", valueA_TS.tv_sec, valueA_TS.tv_nsec);
+    // fprintf(stdout, "|   [B]: (%ld sec, %ld nano)", valueB_TS.tv_sec, valueB_TS.tv_nsec);
+    struct timespec result_TS = timespec_sub(valueA_TS, valueB_TS);
+    // fprintf(stdout, "   ---ANSWER: (%ld sec, %ld nano)\n", result_TS.tv_sec, result_TS.tv_nsec);
 
     // Store the result
     cace_ari_deinit(result);
@@ -428,7 +437,7 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     res_lit->value.as_timespec = result_TS;
 
     // Success
-    return 0;
+    return RET_PASS;
 }
 
 static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
@@ -446,32 +455,39 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
     if (is_result_TD == false)
         // Bail if the result will not be a TD
-        return 1;
+        return RET_FAIL_UNDEFINED;
 
     time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
     long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
 
     struct timespec result_TS;
-    double          scalar_double;
     switch (valueB->as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
+        {
             uint64_t scalar_uint64 = valueB->as_lit.value.as_uint64;
-            scalar_double          = scalar_uint64;
             result_TS.tv_sec       = valueA_sec * scalar_uint64;
             result_TS.tv_nsec      = valueA_nano * scalar_uint64;
             break;
+        }
         case CACE_ARI_PRIM_INT64:
+        {
             int64_t scalar_int64 = valueB->as_lit.value.as_int64;
-            scalar_double        = scalar_int64;
             result_TS.tv_sec     = valueA_sec * scalar_int64;
             result_TS.tv_nsec    = valueA_nano * scalar_int64;
             break;
+        }
         case CACE_ARI_PRIM_FLOAT64:
-            scalar_double = valueB->as_lit.value.as_float64;
+        {
+            // Bail if scalar is infinite or NaN
+            double scalar_double = valueB->as_lit.value.as_float64;
+            int    scalar_class  = fpclassify(scalar_double);
+            if (scalar_class == FP_INFINITE || scalar_class == FP_NAN)
+                return RET_FAIL_UNDEFINED;
 
             // Calculate the seconds (as a double) and extract the integral and the fraction parts out.
-            // Note we assign the integral part to result.tv_sec, and the fractional part is sent to resulltTS.tv_nsec
+            // Note we assign the integral part to result_TS.tv_sec, and the fractional part is sent to
+            // result_TS.tv_nsec
             double sec_double = valueA_sec * scalar_double;
             double sec_int;
             double sec_frac  = modf(sec_double, &sec_int);
@@ -481,14 +497,11 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
             // Adjust nanos to take into account the factional second component
             result_TS.tv_nsec += (sec_frac * NANOS_IN_SEC);
             break;
+        }
         default:
             // This should never happen - perhaps throw an exception instead
-            return 1;
+            return RET_FAIL_UNEXPECTED;
     }
-
-    // Return undefined value, if scalar is infinite
-    if (fpclassify(scalar_double) == FP_INFINITE)
-        return 1;
 
     // Normalize the result_TS
     timespec_normalize(&result_TS);
@@ -503,7 +516,7 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
     res_lit->value.as_timespec = result_TS;
 
     // Success
-    return 0;
+    return RET_PASS;
 }
 
 static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
@@ -521,52 +534,59 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
     if (is_result_TD == false)
         // Bail if the result will not be a TD
-        return 1;
+        return RET_FAIL_UNDEFINED;
 
     time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
     long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
 
     struct timespec result_TS;
-    double          scalar_double;
     switch (valueB->as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
+        {
+            // Bail if scalar is 0
             uint64_t scalar_uint64 = valueB->as_lit.value.as_uint64;
-            scalar_double          = scalar_uint64;
-            result_TS.tv_sec       = valueA_sec / scalar_uint64;
-            result_TS.tv_nsec      = valueA_nano / scalar_uint64;
+            if (scalar_uint64 == 0)
+                return RET_FAIL_UNDEFINED;
+
+            result_TS.tv_sec  = valueA_sec / scalar_uint64;
+            result_TS.tv_nsec = valueA_nano / scalar_uint64;
             // Adjust nanos to take into account the factional second component
             result_TS.tv_nsec += ((valueA_sec % scalar_uint64) * NANOS_IN_SEC) / scalar_uint64;
             break;
+        }
         case CACE_ARI_PRIM_INT64:
+        {
+            // Bail if scalar is 0
             int64_t scalar_int64 = valueB->as_lit.value.as_int64;
-            scalar_double        = scalar_int64;
-            result_TS.tv_sec     = valueA_sec / scalar_int64;
-            result_TS.tv_nsec    = valueA_nano / scalar_int64;
+            if (scalar_int64 == 0)
+                return RET_FAIL_UNDEFINED;
+
+            result_TS.tv_sec  = valueA_sec / scalar_int64;
+            result_TS.tv_nsec = valueA_nano / scalar_int64;
             // Adjust nanos to take into account the factional second component
             result_TS.tv_nsec += ((valueA_sec % scalar_int64) * NANOS_IN_SEC) / scalar_int64;
             break;
+        }
         case CACE_ARI_PRIM_FLOAT64:
-            scalar_double     = valueB->as_lit.value.as_float64;
+        {
+            // Bail if scalar is 0 or NaN
+            double scalar_double = valueB->as_lit.value.as_float64;
+            int    scalar_class  = fpclassify(scalar_double);
+            if (scalar_class == FP_ZERO || scalar_class == FP_NAN)
+                return RET_FAIL_UNDEFINED;
+
             result_TS.tv_sec  = valueA_sec / scalar_double;
             result_TS.tv_nsec = valueA_nano / scalar_double;
-            // Adjust nanos to take into account the factional second component
-            result_TS.tv_nsec += ((valueA_sec - (result_TS.tv_sec * scalar_double)) * NANOS_IN_SEC) / scalar_double;
+            // Adjust nanos to take into account the factional second component. Note do not adjust if the
+            // scalar is infinite (since the above 2 lines will resolve to 0) but the line below may not.
+            if (scalar_class != FP_INFINITE)
+                result_TS.tv_nsec += ((valueA_sec - (result_TS.tv_sec * scalar_double)) * NANOS_IN_SEC) / scalar_double;
             break;
+        }
         default:
             // This should never happen - perhaps throw an exception instead
-            return 1;
-    }
-
-    // Return undefined value, if scalar == 0
-    if (scalar_double == 0.0)
-        return 0;
-
-    // Return TimeSpec == 0, if scalar is infinite
-    if (fpclassify(scalar_double) == FP_INFINITE)
-    {
-        result_TS.tv_sec  = 0;
-        result_TS.tv_nsec = 0;
+            return RET_FAIL_UNEXPECTED;
     }
 
     // Normalize the result_TS
@@ -582,13 +602,13 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     res_lit->value.as_timespec = result_TS;
 
     // Success
-    return 0;
+    return RET_PASS;
 }
 
 static int timespec_numeric_mod(cace_ari_t *_U_, const cace_ari_t *_U_, const cace_ari_t *_U_)
 {
     // Calculating the remainder associated with timespec objects is unsupported
-    return 1;
+    return RET_FAIL_UNDEFINED;
 }
 
 /*   STOP CUSTOM FUNCTIONS HERE  */

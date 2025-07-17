@@ -455,6 +455,20 @@ TEST_CASE("82118382040F820D8221181984010125686D756C7469706C79", "820D8221190177"
 TEST_CASE("8211838208F94100820D8220181984010125686D756C7469706C79", "820D8221190271")
 // ari:/AC/(/REAL32/0.75,/TD/1.00,//1/1/OPER/multiply) -> /TD/0.75
 TEST_CASE("8211838208F93A00820D0184010125686D756C7469706C79", "820D8221184B")
+// ari:/AC/(/REAL32/9e6,/TD/1.99,//1/1/OPER/multiply) -> /TD/17910000
+TEST_CASE("8211838208FA4B095440820D822118C784010125686D756C7469706C79", "820D1A011148F0")
+//
+//-----------------------------------------------------------------------------------------------------------
+// TODO: The test cases below result in very high CPU usage if timespec_normalise() method is used over the
+// TODO: custom timespec_normalize() method. Both test cases below will also fail (unrelated to performance)
+// TODO: and it appears to be due to:
+// TODO: - bad hex-timespec transformation of very large TD values
+// TODO: - integer/long overflow
+// ari:/AC/(/VAST/1234567890,/TD/0.9999,//1/1/OPER/multiply) -> /TD/1234444433211000000
+// TEST_CASE("82118382061A499602D2820D822319270F84010125686D756C7469706C79", "820D1B1121A0ABF08004C0")
+// ari:/AC/(/VAST/12345678909,/TD/0.9999,//1/1/OPER/multiply) -> /TD/12344444341109100000
+// TEST_CASE("82118382061B00000002DFDC1C3D820D822319270F84010125686D756C7469706C79", "820D1B7FFFFFFFFFFFFFFF")
+
 //
 // --- Division of TD value with primitive (int or float) ---
 // ari:/AC/(/INT/1,/TD/7000,//1/1/OPER/divide) -> /TD/7000
