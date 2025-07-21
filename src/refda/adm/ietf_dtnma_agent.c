@@ -56,16 +56,6 @@
 
 /*   START CUSTOM FUNCTIONS HERE */
 
-static cace_ari_type_t eqiv_ari_type(const cace_ari_lit_t *lit)
-{
-    // TODO: This is a simplification of a method with the same name in the file: numeric.c
-    // TODO: Should we increase the visibility of the copy in numeric.c so we can use it here?
-    if (lit->has_ari_type)
-        return lit->ari_type;
-
-    return CACE_ARI_TYPE_NULL;
-}
-
 /**
  * Ensure that the specified timespec is normalized. Normalization consists of the absolute value of the timespec nano
  * field being less than 1 billion.
@@ -80,11 +70,6 @@ static void timespec_normalize(struct timespec *target)
     // TODO: The 2 lines below allow for a comparison against certain high CPU edge cases
     // *target = timespec_normalise(*target);
     // return;
-
-    // Bail if there is no need for normalization
-    long nanos = target->tv_nsec;
-    if (nanos > -NANOS_IN_SEC && nanos < NANOS_IN_SEC)
-        return;
 
     // Adjust the seconds and nanos such that the absolute value of the nanos field is < 1 billion
     long adj_sec = target->tv_nsec / NANOS_IN_SEC;
@@ -360,8 +345,8 @@ static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, co
     CHKERR1(valueA);
     CHKERR1(valueB);
 
-    cace_ari_type_t typeA = eqiv_ari_type(&(valueA->as_lit));
-    cace_ari_type_t typeB = eqiv_ari_type(&(valueB->as_lit));
+    cace_ari_type_t typeA = cace_eqiv_ari_type(&(valueA->as_lit));
+    cace_ari_type_t typeB = cace_eqiv_ari_type(&(valueB->as_lit));
 
     // Addition of TD and TD results in a TD value
     bool is_result_TD = false;
@@ -406,8 +391,8 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     CHKERR1(valueA);
     CHKERR1(valueB);
 
-    cace_ari_type_t typeA = eqiv_ari_type(&(valueA->as_lit));
-    cace_ari_type_t typeB = eqiv_ari_type(&(valueB->as_lit));
+    cace_ari_type_t typeA = cace_eqiv_ari_type(&(valueA->as_lit));
+    cace_ari_type_t typeB = cace_eqiv_ari_type(&(valueB->as_lit));
 
     // Note the following will result in TD:
     // - Subtraction of TP from TP
@@ -446,7 +431,7 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
     CHKERR1(valueA);
     CHKERR1(valueB);
 
-    cace_ari_type_t typeA              = eqiv_ari_type(&(valueA->as_lit));
+    cace_ari_type_t typeA              = cace_eqiv_ari_type(&(valueA->as_lit));
     bool            typeB_is_primitive = cace_has_numeric_prim_type(valueB);
 
     // Note the following will (typically) result in TD:
@@ -525,7 +510,7 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     CHKERR1(valueA);
     CHKERR1(valueB);
 
-    cace_ari_type_t typeA              = eqiv_ari_type(&(valueA->as_lit));
+    cace_ari_type_t typeA              = cace_eqiv_ari_type(&(valueA->as_lit));
     bool            typeB_is_primitive = cace_has_numeric_prim_type(valueB);
 
     // Note the following will (typically) result in TD:

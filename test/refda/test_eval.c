@@ -460,14 +460,12 @@ TEST_CASE("8211838208FA4B095440820D822118C784010125686D756C7469706C79", "820D1A0
 //
 //-----------------------------------------------------------------------------------------------------------
 // TODO: The test cases below result in very high CPU usage if timespec_normalise() method is used over the
-// TODO: custom timespec_normalize() method. Both test cases below will also fail (unrelated to performance)
-// TODO: and it appears to be due to:
-// TODO: - bad hex-timespec transformation of very large TD values
-// TODO: - integer/long overflow
-// ari:/AC/(/VAST/1234567890,/TD/0.9999,//1/1/OPER/multiply) -> /TD/1234444433211000000
-// TEST_CASE("82118382061A499602D2820D822319270F84010125686D756C7469706C79", "820D1B1121A0ABF08004C0")
-// ari:/AC/(/VAST/12345678909,/TD/0.9999,//1/1/OPER/multiply) -> /TD/12344444341109100000
-// TEST_CASE("82118382061B00000002DFDC1C3D820D822319270F84010125686D756C7469706C79", "820D1B7FFFFFFFFFFFFFFF")
+// TODO: custom timespec_normalize() method. The 2nd test cases below will also fail (unrelated to performance)
+// TODO: and it appears to be due to integer/long overflow.
+// ari:/AC/(/VAST/1234567890,/TD/0.9999,//1/1/OPER/multiply) -> /TD/1234444433.211
+TEST_CASE("82118382061A499602D2820D822319270F84010125686D756C7469706C79", "820D82221B0000011F6A9F373B")
+// ari:/AC/(/VAST/12345678909,/TD/0.9999,//1/1/OPER/multiply) -> /TD/12344444341.1091
+// TEST_CASE("82118382061B00000002DFDC1C3D820D822319270F84010125686D756C7469706C79", "820D82283B54AFB946829C721F")
 
 //
 // --- Division of TD value with primitive (int or float) ---

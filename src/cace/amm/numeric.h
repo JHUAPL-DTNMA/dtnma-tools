@@ -39,6 +39,14 @@ typedef int (*cace_binop_timespec)(cace_ari_t *, const cace_ari_t *, const cace_
  */
 int cace_amm_numeric_promote_type(cace_ari_type_t *result, const cace_ari_t *left, const cace_ari_t *right);
 
+/**
+ * Determine the equivalent ari type of the provided literal-value ARI.
+ *
+ * @param[in] The input value.
+ * @return The equivalent ari type. Returns CACE_ARI_TYPE_NULL if there is no equivalent.
+ */
+cace_ari_type_t cace_eqiv_ari_type(const cace_ari_lit_t *lit);
+
 /** Execute a numeric operation accepting two integers
  *
  * @param[out] result Output value.

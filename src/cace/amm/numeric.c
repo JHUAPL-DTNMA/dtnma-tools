@@ -19,7 +19,7 @@
 #include "cace/util/defs.h"
 #include "cace/amm/typing.h"
 
-static cace_ari_type_t eqiv_ari_type(const cace_ari_lit_t *lit)
+cace_ari_type_t cace_eqiv_ari_type(const cace_ari_lit_t *lit)
 {
     if (lit->has_ari_type)
     {
@@ -121,8 +121,8 @@ int cace_amm_numeric_promote_type(cace_ari_type_t *result, const cace_ari_t *lef
     CHKERR1(!(left->is_ref));
     CHKERR1(!(right->is_ref));
 
-    cace_ari_type_t lt_typ = eqiv_ari_type(&(left->as_lit));
-    cace_ari_type_t rt_typ = eqiv_ari_type(&(right->as_lit));
+    cace_ari_type_t lt_typ = cace_eqiv_ari_type(&(left->as_lit));
+    cace_ari_type_t rt_typ = cace_eqiv_ari_type(&(right->as_lit));
 
     // promotion is symmetric, so swap to make logic more simple
     if (numeric_rank(lt_typ) > numeric_rank(rt_typ))
@@ -200,8 +200,8 @@ int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, c
     CHKERR1(op_timespec);
 
     // Is this a timespec operation?, if so delegate to: op_timespec()
-    cace_ari_type_t lt_typ = eqiv_ari_type(&(lt_val->as_lit));
-    cace_ari_type_t rt_typ = eqiv_ari_type(&(rt_val->as_lit));
+    cace_ari_type_t lt_typ = cace_eqiv_ari_type(&(lt_val->as_lit));
+    cace_ari_type_t rt_typ = cace_eqiv_ari_type(&(rt_val->as_lit));
 
     bool is_oper_TS = false;
     is_oper_TS |= lt_typ == CACE_ARI_TYPE_TD || lt_typ == CACE_ARI_TYPE_TP;
