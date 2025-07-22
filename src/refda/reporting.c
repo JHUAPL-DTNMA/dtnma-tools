@@ -126,8 +126,11 @@ static int refda_reporting_item_ref(refda_runctx_t *parent, cace_ari_t *rpt_item
  */
 static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const cace_ari_t *value)
 {
+    const cace_ari_ac_t *tgt_ac = cace_ari_cget_ac(value);
+    CHKERR1(tgt_ac);
+
     cace_ari_list_it_t rptt_it;
-    for (cace_ari_list_it(rptt_it, value->as_lit.value.as_ac->items); !cace_ari_list_end_p(rptt_it);
+    for (cace_ari_list_it(rptt_it, tgt_ac->items); !cace_ari_list_end_p(rptt_it);
          cace_ari_list_next(rptt_it))
     {
         const cace_ari_t *rptt_item = cace_ari_list_cref(rptt_it);
