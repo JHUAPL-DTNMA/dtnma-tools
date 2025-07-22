@@ -29,6 +29,16 @@ bool cace_ari_is_undefined(const cace_ari_t *ari)
     return ari->as_lit.prim_type == CACE_ARI_PRIM_UNDEFINED;
 }
 
+bool cace_ari_not_undefined(const cace_ari_t *ari)
+{
+    CHKFALSE(ari);
+    if (ari->is_ref)
+    {
+        return true;
+    }
+    return ari->as_lit.prim_type != CACE_ARI_PRIM_UNDEFINED;
+}
+
 void cace_ari_set_undefined(cace_ari_t *ari)
 {
     cace_ari_deinit(ari);

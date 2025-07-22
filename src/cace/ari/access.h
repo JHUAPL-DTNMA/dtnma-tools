@@ -30,16 +30,26 @@
 extern "C" {
 #endif
 
-/** Determine if this is the @c undefined value.
+/** Determine if a value is the @c undefined value.
  *
- * @param[in] ari The value to check.
+ * @param[in] ari The value to check, or a NULL pointer.
+ * @return True if the ARI is valid and is the undefined value.
  * @sa ARI_UNDEFINED cace_ari_init()
  */
 bool cace_ari_is_undefined(const cace_ari_t *ari);
 
+/** Determine if a value is not the @c undefined value.
+ * This can be useful as a CTRL or OPER precondition.
+ *
+ * @param[in] ari The value to check, or a NULL pointer.
+ * @return True if the ARI is valid and is not the undefined value.
+ * @sa ARI_UNDEFINED cace_ari_init()
+ */
+bool cace_ari_not_undefined(const cace_ari_t *ari);
+
 /** Set the ARI value to be undefined.
  *
- * @param[in,out] ari The value to set.
+ * @param[in,out] ari The value to set, which should not be NULL pointer.
  */
 void cace_ari_set_undefined(cace_ari_t *ari);
 

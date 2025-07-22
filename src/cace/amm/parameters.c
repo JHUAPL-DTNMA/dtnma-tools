@@ -86,6 +86,7 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
     {
         case CACE_ARI_PARAMS_NONE:
         {
+            CACE_LOG_DEBUG("given parameters absent");
             cace_ari_array_resize(obj->ordered, cace_amm_formal_param_list_size(fparams));
             size_t pix = 0;
 
@@ -97,7 +98,7 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                 cace_ari_t *aparam = cace_ari_array_get(obj->ordered, pix);
                 cace_named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
 
-                // FIXME don't care if it's undefined or not
+                // No given parameter, don't care if default is undefined or not
                 cace_ari_set_copy(aparam, &(fparam->defval));
             }
             break;
@@ -135,6 +136,7 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                 if (cace_ari_list_end_p(gparam_it))
                 {
                     // no given parameter
+                    CACE_LOG_DEBUG("  given parameter absent");
                     cace_ari_set_copy(aparam, &(fparam->defval));
                 }
                 else
