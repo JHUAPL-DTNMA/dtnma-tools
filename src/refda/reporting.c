@@ -130,8 +130,7 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const cace_ar
     CHKERR1(tgt_ac);
 
     cace_ari_list_it_t rptt_it;
-    for (cace_ari_list_it(rptt_it, tgt_ac->items); !cace_ari_list_end_p(rptt_it);
-         cace_ari_list_next(rptt_it))
+    for (cace_ari_list_it(rptt_it, tgt_ac->items); !cace_ari_list_end_p(rptt_it); cace_ari_list_next(rptt_it))
     {
         const cace_ari_t *rptt_item = cace_ari_list_cref(rptt_it);
         cace_ari_t        rpt_item  = CACE_ARI_INIT_UNDEFINED;

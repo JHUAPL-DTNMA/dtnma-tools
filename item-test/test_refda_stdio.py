@@ -39,9 +39,14 @@ HEXPAT = r'^[0-9a-fA-F]+'
 class TestStdioAgent(unittest.TestCase):
     ''' Verify whole-agent behavior with the stdio_agent '''
 
-    def setUp(self):
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+        logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
+
+    def setUp(self):
         path = os.path.abspath(os.path.join(OWNPATH, '..'))
         os.chdir(path)
         LOGGER.info('Working in %s', path)
