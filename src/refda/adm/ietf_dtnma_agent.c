@@ -1650,17 +1650,21 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
      * +-------------------------------------------------------------------------+
      */
     const cace_ari_t *odm_ns   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
 
-    /* TODO:
-- check if we received an odm namespace
-- check if namespace exists
-- if so, mark as obsolete
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
 
-    */
+    if (odm){
+        CACE_LOG_ERR("ODM found - TODO: obsolete it");
+    } else {
+        CACE_LOG_DEBUG("ODM not found");
+    }
 
     cace_ari_t result = CACE_ARI_INIT_NULL;
     refda_ctrl_exec_ctx_set_result_move(ctx, &result);
 
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm BODY

@@ -126,7 +126,7 @@ cace_amm_obj_ns_t *cace_amm_obj_store_find_ns(cace_amm_obj_store_t *store, const
         cace_amm_obj_org_t **org_found = NULL;
 
         if (ref->as_ref.objpath.org_id.form == CACE_ARI_IDSEG_INT){
-           org_found = cace_amm_obj_org_by_enum_get(store->org_by_name, ref->as_ref.objpath.org_id.as_int);
+           org_found = cace_amm_obj_org_by_enum_get(store->org_by_enum, ref->as_ref.objpath.org_id.as_int);
         } else if (ref->as_ref.objpath.org_id.form == CACE_ARI_IDSEG_TEXT){
             const char *org_name = m_string_get_cstr(ref->as_ref.objpath.org_id.as_text);
             org_found = cace_amm_obj_org_by_name_get(store->org_by_name, org_name);
