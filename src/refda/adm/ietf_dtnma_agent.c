@@ -735,6 +735,12 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
             continue;
         }
 
+        if (ns->obsolete)
+        {
+            CACE_LOG_DEBUG("ODM %s %d / %s %d marked as obsolete, skipping", ns->org_id.name, ns->org_id.intenum, ns->model_id.name, ns->model_id.intenum);
+            continue;
+        }
+
         cace_ari_array_t row;
         cace_ari_array_init(row);
         cace_ari_array_resize(row, 5);
@@ -1587,6 +1593,7 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
         return;
     }
     //org_name = (char *)org->ptr;
+    // TODO: there is likely a better/proper way to do this here and below, perhaps via mlib???
     org_name = CACE_MALLOC(strlen(org->ptr) + 1);
     strcpy(org_name, org->ptr);
 
@@ -1660,13 +1667,14 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
 
     if (odm){
-        CACE_LOG_ERR("ODM found - TODO: obsolete it");
-    } else {
-        CACE_LOG_DEBUG("ODM not found");
-    }
+        CACE_LOG_DEBUG("ODM found, marking as obsolete");
+        odm->obsolete = true;
 
-    cace_ari_t result = CACE_ARI_INIT_NULL;
-    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+        cace_ari_t result = CACE_ARI_INIT_NULL; // Indicate successful result
+        refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+    } else {
+        CACE_LOG_ERR("ODM not found");
+    }
 
     REFDA_AGENT_UNLOCK(agent, );
     /*
