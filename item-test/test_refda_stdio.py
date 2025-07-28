@@ -166,7 +166,7 @@ class TestStdioAgent(unittest.TestCase):
         self._start()
 
         self._send_execset(
-            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("test-org", 100, "test-model-1", -1))'
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("example", 100, "!test-model-1", -1))'
         )
 
         rptset = self._wait_rptset().value
@@ -175,21 +175,24 @@ class TestStdioAgent(unittest.TestCase):
         rpt = rptset.reports[0]
         LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm("test-org", 100, "test-model-1", -1)'), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm("example", 100, "!test-model-1", -1)'), rpt.source)
         # items of the report
         self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
-#ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/odm-list))
-#821482187B8564696574666B64746E6D612D6167656E742267696E7370656374818464696574666B64746E6D612D6167656E7423686F646D2D6C697374
-#
-#ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("test-org", 100, "test-model-1", -1))
-#821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8468746573742D6F726718646C746573742D6D6F64656C2D3120
-#
-#ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("test-org", 100, "test-model-2", -2))
-#821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8468746573742D6F726718646C746573742D6D6F64656C2D3221
-#
-#ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("another-test-org", 101, "another-test-model", -1))
-#821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8470616E6F746865722D746573742D6F7267186572616E6F746865722D746573742D6D6F64656C20
-#
-#ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1))
-#821482187B8564696574666B64746E6D612D6167656E74226C6F62736F6C6574652D6F646D818468746573742D6F72676C746573742D6D6F64656C2D31F6F6
+        # FIXME: Add following test. Currently fails due to ACE error reading ODM
+        #ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//example/!test-model-1))
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/odm-list))'
+        )
+
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/odm-list)'), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+
