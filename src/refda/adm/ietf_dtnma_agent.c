@@ -36,14 +36,54 @@
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
-#include "math.h"
-#include "cace/amm/numeric.h"
 #include "refda/eval.h"
+#include "cace/amm/numeric.h"
 #include "cace/ari/text_util.h"
 #include <timespec.h>
+#include <math.h>
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
+
+#define NANOS_IN_SEC 1000000000
+
+/** Return code that indicates normal completion. */
+#define RET_PASS 0
+
+/** Return code that indicates the input resolves to an undefined result. */
+#define RET_FAIL_UNDEFINED 1
+
+/** Return code that indicates the input resolves to an unexpected/abnormal state. */
+#define RET_FAIL_UNEXPECTED 2
+
+/**
+ * Ensure that the specified timespec is normalized. Normalization consists of the absolute value of the timespec nano
+ * field being less than 1 billion.
+ *
+ * @param[inout] target The timespec that is to be normalized.
+ */
+static void timespec_normalize(struct timespec *target)
+{
+    // Turns out there is already timespec library code which performs this normalization. The timespec
+    // normalization code may be slower due to looping (for example when multiplied by large scalars).
+    //
+    // TODO: The 2 lines below allow for a comparison against certain high CPU edge cases
+    // *target = timespec_normalise(*target);
+    // return;
+
+    // Adjust the seconds and nanos such that the absolute value of the nanos field is < 1 billion
+    long adj_sec = target->tv_nsec / NANOS_IN_SEC;
+    target->tv_sec += adj_sec;
+
+    target->tv_nsec -= (adj_sec * NANOS_IN_SEC);
+
+    // Negative nanoseconds isn't valid according to POSIX. Decrement tv_sec and roll tv_nsec over.
+    if (target->tv_nsec < 0)
+    {
+        --(target->tv_sec);
+        target->tv_nsec = (NANOS_IN_SEC + target->tv_nsec);
+    }
+}
 
 static void refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -297,6 +337,263 @@ static cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast righ
 static cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right)
 {
     return left ^ right;
+}
+
+static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
+{
+    CHKERR1(result);
+    CHKERR1(valueA);
+    CHKERR1(valueB);
+
+    cace_ari_type_t typeA = cace_eqiv_ari_type(&(valueA->as_lit));
+    cace_ari_type_t typeB = cace_eqiv_ari_type(&(valueB->as_lit));
+
+    // Addition of TD and TD results in a TD value
+    bool is_result_TD = false;
+    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
+
+    // Addition of TP and TD results in a TP value
+    bool is_result_TP = false;
+    is_result_TP |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TP;
+    is_result_TP |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TD;
+
+    // Determine the cace_ari_type_t of the result
+    cace_ari_type_t ari_type;
+    if (is_result_TD == true)
+        ari_type = CACE_ARI_TYPE_TD;
+    else if (is_result_TP == true)
+        ari_type = CACE_ARI_TYPE_TP;
+    else
+        // Bail if the result will not be a TD or TP
+        return RET_FAIL_UNDEFINED;
+
+    // Delegate the addition
+    struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
+    struct timespec valueB_TS = valueB->as_lit.value.as_timespec;
+    struct timespec result_TS = timespec_add(valueA_TS, valueB_TS);
+
+    // Store the result
+    cace_ari_deinit(result);
+    cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
+
+    res_lit->has_ari_type      = true;
+    res_lit->ari_type          = ari_type;
+    res_lit->prim_type         = CACE_ARI_PRIM_TIMESPEC;
+    res_lit->value.as_timespec = result_TS;
+
+    // Success
+    return RET_PASS;
+}
+
+static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
+{
+    CHKERR1(result);
+    CHKERR1(valueA);
+    CHKERR1(valueB);
+
+    cace_ari_type_t typeA = cace_eqiv_ari_type(&(valueA->as_lit));
+    cace_ari_type_t typeB = cace_eqiv_ari_type(&(valueB->as_lit));
+
+    // Note the following will result in TD:
+    // - Subtraction of TP from TP
+    // - Subtraction of TD from TD
+    bool is_result_TD = false;
+    is_result_TD |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TP;
+    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
+    if (is_result_TD == false)
+        // Bail if the result will not be a TD
+        return RET_FAIL_UNDEFINED;
+
+    // Delegate the subtraction
+    struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
+    struct timespec valueB_TS = valueB->as_lit.value.as_timespec;
+    // fprintf(stdout, "\nDEBUG--->   [A]: (%ld sec, %ld nano)   ", valueA_TS.tv_sec, valueA_TS.tv_nsec);
+    // fprintf(stdout, "|   [B]: (%ld sec, %ld nano)", valueB_TS.tv_sec, valueB_TS.tv_nsec);
+    struct timespec result_TS = timespec_sub(valueA_TS, valueB_TS);
+    // fprintf(stdout, "   ---ANSWER: (%ld sec, %ld nano)\n", result_TS.tv_sec, result_TS.tv_nsec);
+
+    // Store the result
+    cace_ari_deinit(result);
+    cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
+
+    res_lit->has_ari_type      = true;
+    res_lit->ari_type          = CACE_ARI_TYPE_TD;
+    res_lit->prim_type         = CACE_ARI_PRIM_TIMESPEC;
+    res_lit->value.as_timespec = result_TS;
+
+    // Success
+    return RET_PASS;
+}
+
+static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
+{
+    CHKERR1(result);
+    CHKERR1(valueA);
+    CHKERR1(valueB);
+
+    cace_ari_type_t typeA              = cace_eqiv_ari_type(&(valueA->as_lit));
+    bool            typeB_is_primitive = cace_has_numeric_prim_type(valueB);
+
+    // Note the following will (typically) result in TD:
+    // - Multiplication of TD with a scalar (numeric primitive)
+    bool is_result_TD = false;
+    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
+    if (is_result_TD == false)
+        // Bail if the result will not be a TD
+        return RET_FAIL_UNDEFINED;
+
+    time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
+    long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
+
+    struct timespec result_TS;
+    switch (valueB->as_lit.prim_type)
+    {
+        case CACE_ARI_PRIM_UINT64:
+        {
+            uint64_t scalar_uint64 = valueB->as_lit.value.as_uint64;
+            result_TS.tv_sec       = valueA_sec * scalar_uint64;
+            result_TS.tv_nsec      = valueA_nano * scalar_uint64;
+            break;
+        }
+        case CACE_ARI_PRIM_INT64:
+        {
+            int64_t scalar_int64 = valueB->as_lit.value.as_int64;
+            result_TS.tv_sec     = valueA_sec * scalar_int64;
+            result_TS.tv_nsec    = valueA_nano * scalar_int64;
+            break;
+        }
+        case CACE_ARI_PRIM_FLOAT64:
+        {
+            // Bail if scalar is infinite or NaN
+            double scalar_double = valueB->as_lit.value.as_float64;
+            int    scalar_class  = fpclassify(scalar_double);
+            if (scalar_class == FP_INFINITE || scalar_class == FP_NAN)
+                return RET_FAIL_UNDEFINED;
+
+            // Calculate the seconds (as a double) and extract the integral and the fraction parts out.
+            // Note we assign the integral part to result_TS.tv_sec, and the fractional part is sent to
+            // result_TS.tv_nsec
+            double sec_double = valueA_sec * scalar_double;
+            double sec_int;
+            double sec_frac  = modf(sec_double, &sec_int);
+            result_TS.tv_sec = sec_int;
+
+            result_TS.tv_nsec = valueA_nano * scalar_double;
+            // Adjust nanos to take into account the factional second component
+            result_TS.tv_nsec += (sec_frac * NANOS_IN_SEC);
+            break;
+        }
+        default:
+            // This should never happen - perhaps throw an exception instead
+            return RET_FAIL_UNEXPECTED;
+    }
+
+    // Normalize the result_TS
+    timespec_normalize(&result_TS);
+
+    // Store the result
+    cace_ari_deinit(result);
+    cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
+
+    res_lit->has_ari_type      = true;
+    res_lit->ari_type          = CACE_ARI_TYPE_TD;
+    res_lit->prim_type         = CACE_ARI_PRIM_TIMESPEC;
+    res_lit->value.as_timespec = result_TS;
+
+    // Success
+    return RET_PASS;
+}
+
+static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
+{
+    CHKERR1(result);
+    CHKERR1(valueA);
+    CHKERR1(valueB);
+
+    cace_ari_type_t typeA              = cace_eqiv_ari_type(&(valueA->as_lit));
+    bool            typeB_is_primitive = cace_has_numeric_prim_type(valueB);
+
+    // Note the following will (typically) result in TD:
+    // - Division of TD with a scalar (numeric primitive)
+    bool is_result_TD = false;
+    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
+    if (is_result_TD == false)
+        // Bail if the result will not be a TD
+        return RET_FAIL_UNDEFINED;
+
+    time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
+    long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
+
+    struct timespec result_TS;
+    switch (valueB->as_lit.prim_type)
+    {
+        case CACE_ARI_PRIM_UINT64:
+        {
+            // Bail if scalar is 0
+            uint64_t scalar_uint64 = valueB->as_lit.value.as_uint64;
+            if (scalar_uint64 == 0)
+                return RET_FAIL_UNDEFINED;
+
+            result_TS.tv_sec  = valueA_sec / scalar_uint64;
+            result_TS.tv_nsec = valueA_nano / scalar_uint64;
+            // Adjust nanos to take into account the factional second component
+            result_TS.tv_nsec += ((valueA_sec % scalar_uint64) * NANOS_IN_SEC) / scalar_uint64;
+            break;
+        }
+        case CACE_ARI_PRIM_INT64:
+        {
+            // Bail if scalar is 0
+            int64_t scalar_int64 = valueB->as_lit.value.as_int64;
+            if (scalar_int64 == 0)
+                return RET_FAIL_UNDEFINED;
+
+            result_TS.tv_sec  = valueA_sec / scalar_int64;
+            result_TS.tv_nsec = valueA_nano / scalar_int64;
+            // Adjust nanos to take into account the factional second component
+            result_TS.tv_nsec += ((valueA_sec % scalar_int64) * NANOS_IN_SEC) / scalar_int64;
+            break;
+        }
+        case CACE_ARI_PRIM_FLOAT64:
+        {
+            // Bail if scalar is 0 or NaN
+            double scalar_double = valueB->as_lit.value.as_float64;
+            int    scalar_class  = fpclassify(scalar_double);
+            if (scalar_class == FP_ZERO || scalar_class == FP_NAN)
+                return RET_FAIL_UNDEFINED;
+
+            result_TS.tv_sec  = valueA_sec / scalar_double;
+            result_TS.tv_nsec = valueA_nano / scalar_double;
+            // Adjust nanos to take into account the factional second component. Note do not adjust if the
+            // scalar is infinite (since the above 2 lines will resolve to 0) but the line below may not.
+            if (scalar_class != FP_INFINITE)
+                result_TS.tv_nsec += ((valueA_sec - (result_TS.tv_sec * scalar_double)) * NANOS_IN_SEC) / scalar_double;
+            break;
+        }
+        default:
+            // This should never happen - perhaps throw an exception instead
+            return RET_FAIL_UNEXPECTED;
+    }
+
+    // Normalize the result_TS
+    timespec_normalize(&result_TS);
+
+    // Store the result
+    cace_ari_deinit(result);
+    cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
+
+    res_lit->has_ari_type      = true;
+    res_lit->ari_type          = CACE_ARI_TYPE_TD;
+    res_lit->prim_type         = CACE_ARI_PRIM_TIMESPEC;
+    res_lit->value.as_timespec = result_TS;
+
+    // Success
+    return RET_PASS;
+}
+
+static int timespec_numeric_mod(cace_ari_t *_U_, const cace_ari_t *_U_, const cace_ari_t *_U_)
+{
+    // Calculating the remainder associated with timespec objects is unsupported
+    return RET_FAIL_UNDEFINED;
 }
 
 /*   STOP CUSTOM FUNCTIONS HERE  */
@@ -1937,7 +2234,8 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_add_uvast, numeric_add_vast, numeric_add_real64))
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_add_uvast, numeric_add_vast, numeric_add_real64,
+                                      timespec_numeric_add))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -1965,7 +2263,8 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_sub_uvast, numeric_sub_vast, numeric_sub_real64))
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_sub_uvast, numeric_sub_vast, numeric_sub_real64,
+                                      timespec_numeric_sub))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -1993,7 +2292,8 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mul_uvast, numeric_mul_vast, numeric_mul_real64))
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mul_uvast, numeric_mul_vast, numeric_mul_real64,
+                                      timespec_numeric_mul))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -2024,7 +2324,7 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
 
     if (!cace_numeric_is_zero(rt_val)
         && !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_div_uvast, numeric_div_vast,
-                                         numeric_div_real64))
+                                         numeric_div_real64, timespec_numeric_div))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -2055,7 +2355,7 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
 
     if (!cace_numeric_is_zero(rt_val)
         && !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mod_uvast, numeric_mod_vast,
-                                         numeric_mod_real64))
+                                         numeric_mod_real64, timespec_numeric_mod))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4192,8 +4492,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
                 }
             }
@@ -4202,16 +4502,16 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
                 }
             }
             // result type:
             {
                 cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                // ari://ietf/amm-base/TYPEDEF/ANY
+                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
             }
             // callback:
@@ -4231,8 +4531,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
                 }
             }
@@ -4241,16 +4541,16 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
                 }
             }
             // result type:
             {
                 cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                // ari://ietf/amm-base/TYPEDEF/ANY
+                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
             }
             // callback:
@@ -4270,8 +4570,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
                 }
             }
@@ -4280,16 +4580,16 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
                 }
             }
             // result type:
             {
                 cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                // ari://ietf/amm-base/TYPEDEF/ANY
+                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
             }
             // callback:
@@ -4310,8 +4610,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
                 }
             }
@@ -4320,16 +4620,16 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
                 }
             }
             // result type:
             {
                 cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                // ari://ietf/amm-base/TYPEDEF/ANY
+                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
             }
             // callback:
