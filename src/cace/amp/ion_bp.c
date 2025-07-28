@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -44,7 +44,7 @@ void cace_amp_ion_bp_state_deinit(cace_amp_ion_bp_state_t *state)
 
 int cace_amp_ion_bp_state_bind(cace_amp_ion_bp_state_t *state, const m_string_t eid)
 {
-    CHKVOID(state);
+    CHKERR1(state);
     int res = bp_open((char *)m_string_get_cstr(eid), &(state->sap));
     if (!res)
     {

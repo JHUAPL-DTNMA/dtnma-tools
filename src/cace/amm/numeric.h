@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -27,6 +27,7 @@ extern "C" {
 typedef cace_ari_uvast (*cace_binop_uvast)(cace_ari_uvast, cace_ari_uvast);
 typedef cace_ari_vast (*cace_binop_vast)(cace_ari_vast, cace_ari_vast);
 typedef cace_ari_real64 (*cace_binop_real64)(cace_ari_real64, cace_ari_real64);
+typedef int (*cace_binop_timespec)(cace_ari_t *, const cace_ari_t *, const cace_ari_t *);
 
 /** Determine the numeric type which is the least common promotion type.
  * This is done in accordance with Section 6.11.2.1 of @cite amm.
@@ -37,6 +38,14 @@ typedef cace_ari_real64 (*cace_binop_real64)(cace_ari_real64, cace_ari_real64);
  * @return Zero if successful.
  */
 int cace_amm_numeric_promote_type(cace_ari_type_t *result, const cace_ari_t *left, const cace_ari_t *right);
+
+/**
+ * Determine the equivalent ari type of the provided literal-value ARI.
+ *
+ * @param[in] The input value.
+ * @return The equivalent ari type. Returns CACE_ARI_TYPE_NULL if there is no equivalent.
+ */
+cace_ari_type_t cace_eqiv_ari_type(const cace_ari_lit_t *lit);
 
 /** Execute a numeric operation accepting two integers
  *
@@ -56,10 +65,12 @@ int cace_numeric_integer_binary_operator(cace_ari_t *result, const cace_ari_t *l
  * @param[in] op_uvast Operator function for uvast types.
  * @param[in] op_vast Operator function for vast types.
  * @param[in] op_real64 Operator function for real64 types.
+ * @param[in] op_timespec Operator function for timespec related types.
  * @return Zero if successful.
  */
 int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val,
-                                 cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64);
+                                 cace_binop_uvast op_uvast, cace_binop_vast op_vast, cace_binop_real64 op_real64,
+                                 cace_binop_timespec op_timespec);
 
 /** Compare two numeric values.
  *
