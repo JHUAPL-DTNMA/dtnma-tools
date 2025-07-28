@@ -1845,23 +1845,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
      * +-------------------------------------------------------------------------+
      */
 
-    /*
-ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/odm-list))
-821482187B8564696574666B64746E6D612D6167656E742267696E7370656374818464696574666B64746E6D612D6167656E7423686F646D2D6C697374
-
-ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("test-org", 100, "test-model-1", -1))
-821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8468746573742D6F726718646C746573742D6D6F64656C2D3120
-
-ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("test-org", 100, "test-model-2", -2))
-821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8468746573742D6F726718646C746573742D6D6F64656C2D3221
-
-ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("another-test-org", 101, "another-test-model", -1))
-821482187B8564696574666B64746E6D612D6167656E74226A656E737572652D6F646D8470616E6F746865722D746573742D6F7267186572616E6F746865722D746573742D6D6F64656C20
-
-ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1))
-821482187B8564696574666B64746E6D612D6167656E74226C6F62736F6C6574652D6F646D818468746573742D6F72676C746573742D6D6F64656C2D31F6F6
-
-   */
     const cace_ari_t *ari_org_name   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *ari_org_id     = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
     const cace_ari_t *ari_model_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
