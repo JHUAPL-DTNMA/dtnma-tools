@@ -36,12 +36,14 @@
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
-#include "math.h"
-#include "cace/amm/numeric.h"
 #include "refda/eval.h"
+#include "cace/amm/numeric.h"
 #include "cace/ari/text_util.h"
 #include <timespec.h>
+#include <math.h>
 /*   STOP CUSTOM INCLUDES HERE  */
+
+/*   START CUSTOM FUNCTIONS HERE */
 
 #define NANOS_IN_SEC 1000000000
 
@@ -53,8 +55,6 @@
 
 /** Return code that indicates the input resolves to an unexpected/abnormal state. */
 #define RET_FAIL_UNEXPECTED 2
-
-/*   START CUSTOM FUNCTIONS HERE */
 
 /**
  * Ensure that the specified timespec is normalized. Normalization consists of the absolute value of the timespec nano
