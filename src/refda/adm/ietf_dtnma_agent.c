@@ -1586,7 +1586,9 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
         CACE_LOG_ERR("Unable to retrieve org name");
         return;
     }
-    org_name = (char *)org->ptr;
+    //org_name = (char *)org->ptr;
+    org_name = CACE_MALLOC(strlen(org->ptr) + 1);
+    strcpy(org_name, org->ptr);
 
     const cace_data_t *model = cace_ari_cget_tstr(ari_model_name);
     if (model == NULL || model->ptr == NULL)
@@ -1594,7 +1596,9 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
         CACE_LOG_ERR("Unable to retrieve model name");
         return;
     }
-    model_name = (char *)model->ptr;
+    //model_name = (char *)model->ptr;
+    model_name = CACE_MALLOC(strlen(model->ptr) + 1);
+    strcpy(model_name, model->ptr);
 
     if (model_id >= 0)
     {
