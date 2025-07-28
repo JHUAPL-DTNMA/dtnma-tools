@@ -2250,6 +2250,87 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *odm_ns = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_org_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_obj_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+    const cace_ari_t *ari_obj_enum = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+    const cace_ari_t *ari_action = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
+    const cace_ari_t *ari_start_time = refda_ctrl_exec_ctx_get_aparam_index(ctx, 5);
+    const cace_ari_t *ari_period = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
+    const cace_ari_t *ari_max_count = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
+    const cace_ari_t *ari_max_count = refda_ctrl_exec_ctx_get_aparam_index(ctx, 8);
+    const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 9);
+
+    refda_agent_t    *agent  = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
+
+    if (!odm) {
+        CACE_LOG_INFO("ODM not found");
+        return;
+    }
+
+    if (odm->model_id.intenum >= 0){
+        CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        return;
+    }
+
+    /*
+    TODO:
+    - check if tbr already exists
+      - if so, update it (??) or do nothing/bail??
+    - add TBR, see below
+
+     */
+/*
+            { // For ./TBR/tbr_rule
+            refda_amm_tbr_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_tbr_desc_t));
+            refda_amm_tbr_desc_init(objdata);
+            // action
+            {
+                cace_ari_ac_t acinit0;
+                cace_ari_ac_init(&acinit0);
+                {
+                    cace_ari_t *item0 = cace_ari_list_push_back_new(acinit0.items);
+                    // ari://example/test/CTRL/first
+                    // FIXME reference to unknown object
+                }
+                {
+                    cace_ari_t *item0 = cace_ari_list_push_back_new(acinit0.items);
+                    // ari://example/test/CTRL/other
+                    // FIXME reference to unknown object
+                }
+                cace_ari_set_ac(&(objdata->action), &acinit0);
+            }
+            // period
+            {
+              struct timespec ts = {30, 0};
+              cace_ari_set_td(&(objdata->period), ts);
+            }
+            // start_time
+            {
+              struct timespec ts = {20, 500000000};
+              cace_ari_set_tp(&(objdata->start_time), ts);
+            }
+            // init_enabled
+            objdata->init_enabled = true;
+            // max_exec_count
+            objdata->max_exec_count = 0;
+
+            obj = refda_register_tbr(adm, cace_amm_idseg_ref_withenum("tbr_rule", REFDA_ADM_EXAMPLE_TEST_ENUM_OBJID_TBR_TBR__RULE), objdata);
+
+            if (obj && obj->app_data.ptr)
+            {
+                refda_amm_tbr_desc_t *desc = obj->app_data.ptr;
+                if (desc->init_enabled)
+                {
+                    refda_exec_tbr_enable(agent, desc);
+                }
+            }
+        }
+*/
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr BODY
