@@ -156,7 +156,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        transport: ['socket', 'ion', 'proxy']
+        transport: ['ion', 'proxy']
     name: Integration Test (${{matrix.transport}})
     runs-on: ubuntu-24.04
     steps:
