@@ -1592,8 +1592,7 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
         CACE_LOG_ERR("Unable to retrieve org name");
         return;
     }
-    //org_name = (char *)org->ptr;
-    // TODO: there is likely a better/proper way to do this here and below, perhaps via mlib???
+    
     org_name = CACE_MALLOC(strlen(org->ptr) + 1);
     strcpy(org_name, org->ptr);
 
@@ -1603,7 +1602,7 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
         CACE_LOG_ERR("Unable to retrieve model name");
         return;
     }
-    //model_name = (char *)model->ptr;
+    
     model_name = CACE_MALLOC(strlen(model->ptr) + 1);
     strcpy(model_name, model->ptr);
 
@@ -1613,8 +1612,18 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
         return;
     }
 
-// TODO: build rev date using
-// int cace_date_encode(m_string_t out, const struct tm *in, bool usesep)
+    char *rev_date_cstr = NULL;
+    {
+        m_string_t rev_date;
+        m_string_init(rev_date);
+        time_t now = time(NULL); // Get current time as time_t
+        struct tm *currentTime = localtime(&now); // Convert to local time as struct tm
+        cace_date_encode(rev_date, currentTime, false);
+        rev_date_cstr = CACE_MALLOC(m_string_size(rev_date) + 1);
+        strncpy(rev_date_cstr, m_string_get_cstr(rev_date), 12);
+        m_string_clear(rev_date);
+    }
+
 
     refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
@@ -1622,7 +1631,7 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
 
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum(org_name, org_id),
                                                        cace_amm_idseg_ref_withenum(model_name, model_id),
-                                                       "2025-07-03"); // TODO: submit current time here
+                                                       rev_date_cstr);
 
     if (odm)
     {
