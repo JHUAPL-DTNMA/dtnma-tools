@@ -737,7 +737,8 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
 
         if (ns->obsolete)
         {
-            CACE_LOG_DEBUG("ODM %s %d / %s %d marked as obsolete, skipping", ns->org_id.name, ns->org_id.intenum, ns->model_id.name, ns->model_id.intenum);
+            CACE_LOG_DEBUG("ODM %s %d / %s %d marked as obsolete, skipping", ns->org_id.name, ns->org_id.intenum,
+                           ns->model_id.name, ns->model_id.intenum);
             continue;
         }
 
@@ -1592,7 +1593,7 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
         CACE_LOG_ERR("Unable to retrieve org name");
         return;
     }
-    
+
     org_name = CACE_MALLOC(strlen(org->ptr) + 1);
     strcpy(org_name, org->ptr);
 
@@ -1602,7 +1603,7 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
         CACE_LOG_ERR("Unable to retrieve model name");
         return;
     }
-    
+
     model_name = CACE_MALLOC(strlen(model->ptr) + 1);
     strcpy(model_name, model->ptr);
 
@@ -1616,7 +1617,7 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
     {
         m_string_t rev_date;
         m_string_init(rev_date);
-        time_t now = time(NULL); // Get current time as time_t
+        time_t     now         = time(NULL);      // Get current time as time_t
         struct tm *currentTime = localtime(&now); // Convert to local time as struct tm
         cace_date_encode(rev_date, currentTime, false);
         rev_date_cstr = CACE_MALLOC(m_string_size(rev_date) + 1);
@@ -1624,14 +1625,12 @@ ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//test-org/test-model-1
         m_string_clear(rev_date);
     }
 
-
     refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
-
-    cace_amm_obj_ns_t *odm = cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum(org_name, org_id),
-                                                       cace_amm_idseg_ref_withenum(model_name, model_id),
-                                                       rev_date_cstr);
+    cace_amm_obj_ns_t *odm =
+        cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum(org_name, org_id),
+                                  cace_amm_idseg_ref_withenum(model_name, model_id), rev_date_cstr);
 
     if (odm)
     {
@@ -1669,19 +1668,22 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm BODY
      * +-------------------------------------------------------------------------+
      */
-    const cace_ari_t *odm_ns   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
-    refda_agent_t *agent = ctx->runctx->agent;
+    const cace_ari_t *odm_ns = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    refda_agent_t    *agent  = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
 
-    if (odm){
+    if (odm)
+    {
         CACE_LOG_DEBUG("ODM found, marking as obsolete");
         odm->obsolete = true;
 
         cace_ari_t result = CACE_ARI_INIT_NULL; // Indicate successful result
         refda_ctrl_exec_ctx_set_result_move(ctx, &result);
-    } else {
+    }
+    else
+    {
         CACE_LOG_ERR("ODM not found");
     }
 
