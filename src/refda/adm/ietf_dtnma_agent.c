@@ -2613,9 +2613,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
     {
         CACE_LOG_WARNING("lookup failed with status %d", res);
     }
-
-    // TODO: verify rule is part of an ODM
-
+    else if (!cace_amm_obj_ns_is_odm(deref.ns))
+    {
+        CACE_LOG_WARNING("unable to obsolete an ADM object");
+    }
     else if (deref.obj_type == CACE_ARI_TYPE_SBR)
     {
         refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
