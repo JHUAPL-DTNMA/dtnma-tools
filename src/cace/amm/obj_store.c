@@ -115,6 +115,54 @@ cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const 
     return ns;
 }
 
+cace_amm_obj_ns_t *cace_amm_obj_store_find_ns(cace_amm_obj_store_t *store, const cace_ari_t *ref)
+{
+    CHKNULL(ref);
+    CHKNULL(ref->is_ref);
+
+    // Get or organization container
+    cace_amm_obj_org_t *org = NULL;
+    {
+        cace_amm_obj_org_t **org_found = NULL;
+
+        if (ref->as_ref.objpath.org_id.form == CACE_ARI_IDSEG_INT)
+        {
+            org_found = cace_amm_obj_org_by_enum_get(store->org_by_enum, ref->as_ref.objpath.org_id.as_int);
+        }
+        else if (ref->as_ref.objpath.org_id.form == CACE_ARI_IDSEG_TEXT)
+        {
+            const char *org_name = m_string_get_cstr(ref->as_ref.objpath.org_id.as_text);
+            org_found            = cace_amm_obj_org_by_name_get(store->org_by_name, org_name);
+        }
+
+        if (org_found)
+        {
+            org = *org_found;
+        }
+    }
+
+    if (org)
+    {
+        cace_amm_obj_ns_t **ns_found = NULL;
+        if (ref->as_ref.objpath.model_id.form == CACE_ARI_IDSEG_INT)
+        {
+            ns_found = cace_amm_obj_ns_by_enum_get(org->ns_by_enum, ref->as_ref.objpath.model_id.as_int);
+        }
+        else if (ref->as_ref.objpath.model_id.form == CACE_ARI_IDSEG_TEXT)
+        {
+            const char *model_name = m_string_get_cstr(ref->as_ref.objpath.model_id.as_text);
+            ns_found               = cace_amm_obj_ns_by_name_get(org->ns_by_name, model_name);
+        }
+
+        if (ns_found)
+        {
+            return *ns_found;
+        }
+    }
+
+    return NULL;
+}
+
 cace_amm_obj_org_t *cace_amm_obj_store_find_org_name(const cace_amm_obj_store_t *store, const char *name)
 {
     cace_amm_obj_org_t **found = cace_amm_obj_org_by_name_get(store->org_by_name, name);

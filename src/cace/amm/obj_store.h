@@ -70,11 +70,16 @@ void cace_amm_obj_store_deinit(cace_amm_obj_store_t *store);
  * @param[in] org_id The organization ID.
  * @param[in] model_id The model ID within the organization.
  * @param[in] revision Optional specific revision of an ADM.
- * @param has_enum True if this NS has an enumeration.
- * @param intenum The optional enumeration.
  */
 cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const cace_amm_idseg_ref_t org_id,
                                              const cace_amm_idseg_ref_t model_id, const char *revision);
+
+/** Find existing namespace in the object store.
+ *
+ * @param[in] store The store to search.
+ * @param[in] ref Reference to the org/model to search for.
+ */
+cace_amm_obj_ns_t *cace_amm_obj_store_find_ns(cace_amm_obj_store_t *store, const cace_ari_t *ref);
 
 cace_amm_obj_org_t *cace_amm_obj_store_find_org_name(const cace_amm_obj_store_t *store, const char *name);
 
