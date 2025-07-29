@@ -143,3 +143,15 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, 
     }
     return *found;
 }
+
+bool cace_amm_obj_ns_is_odm(const cace_amm_obj_ns_t *ns)
+{
+    CHKFALSE(ns);
+
+    if (ns->model_id.has_intenum && ns->model_id.intenum < 0) // FIXME: check if name starts with !
+    {
+        return true;
+    }
+
+    return false;
+}
