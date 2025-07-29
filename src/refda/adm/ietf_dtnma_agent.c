@@ -2260,6 +2260,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
     const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 9);
 
+    cace_ari_t ari_result;
+    cace_ari_init(&ari_result);
+    cace_ari_set_uint(&ari_result, 0);
+
     refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
@@ -2296,8 +2300,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         {
             // FIXME: update fields on existing TBR in this case, instead of just returning??
             CACE_LOG_INFO("TBR already exists");
-            cace_ari_t result = CACE_ARI_INIT_NULL;
-            refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+            refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
             return;
         }
 
@@ -2305,8 +2308,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         {
             // FIXME: same comment as above
             CACE_LOG_INFO("TBR already exists");
-            cace_ari_t result = CACE_ARI_INIT_NULL;
-            refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+            refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
             return;
         }
     }
@@ -2387,6 +2389,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         }
     }
 
+    refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
     REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
@@ -2414,6 +2417,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
      */
     const cace_ari_t *target      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *ari_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+
+    cace_ari_t ari_result;
+    cace_ari_init(&ari_result);
+    cace_ari_set_uint(&ari_result, 0);
 
     cace_ari_bool enabled;
     if (cace_ari_get_bool(ari_enabled, &enabled))
@@ -2453,6 +2460,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
                 refda_exec_sbr_disable(agent, sbr);
             }
         }
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
     }
     else if (deref.obj_type == CACE_ARI_TYPE_TBR)
     {
@@ -2473,6 +2481,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
                 refda_exec_tbr_disable(agent, tbr);
             }
         }
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
     }
     cace_amm_lookup_deinit(&deref);
 
@@ -2501,6 +2510,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
      * +-------------------------------------------------------------------------+
      */
     const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    cace_ari_t ari_result;
+    cace_ari_init(&ari_result);
+    cace_ari_set_uint(&ari_result, 0);
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
@@ -2533,6 +2546,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
                 refda_exec_sbr_disable(agent, sbr);
             }
         }
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
     }
     else if (deref.obj_type == CACE_ARI_TYPE_TBR)
     {
@@ -2553,6 +2567,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
                 refda_exec_tbr_disable(agent, tbr);
             }
         }
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
     }
     cace_amm_lookup_deinit(&deref);
 
@@ -2580,6 +2595,67 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    cace_ari_t ari_result;
+    cace_ari_init(&ari_result);
+    cace_ari_set_bool(&ari_result, true);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+
+    // TODO: verify rule is part of an ODM
+
+    else if (deref.obj_type == CACE_ARI_TYPE_SBR)
+    {
+        refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (sbr)
+        {
+            CACE_LOG_DEBUG("Marking SBR as obsolete");
+            sbr->obsolete = true;
+
+            if (sbr->enabled)
+            {
+                CACE_LOG_INFO("Disabling obsolete SBR");
+                refda_exec_sbr_disable(agent, sbr);
+            }
+        }
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_TBR)
+    {
+        refda_amm_tbr_desc_t *tbr = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (tbr)
+        {
+            CACE_LOG_DEBUG("Marking TBR as obsolete");
+            tbr->obsolete = true;
+
+            if (tbr->enabled)
+            {
+                CACE_LOG_INFO("Disabling obsolete TBR");
+                refda_exec_tbr_disable(agent, tbr);
+            }
+        }
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    }
+
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule BODY
