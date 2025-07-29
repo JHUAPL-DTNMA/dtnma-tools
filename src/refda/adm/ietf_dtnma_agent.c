@@ -29,6 +29,7 @@
 #include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"
 #include "refda/oper_eval_ctx.h"
+#include "refda/exec.h"
 #include "refda/reporting.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
@@ -2250,29 +2251,29 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr BODY
      * +-------------------------------------------------------------------------+
      */
-    const cace_ari_t *odm_ns = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
-    const cace_ari_t *ari_org_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
-    const cace_ari_t *ari_obj_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
-    const cace_ari_t *ari_obj_enum = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
-    const cace_ari_t *ari_action = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
-    const cace_ari_t *ari_start_time = refda_ctrl_exec_ctx_get_aparam_index(ctx, 5);
-    const cace_ari_t *ari_period = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
-    const cace_ari_t *ari_max_count = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
-    // TODO: copy&paste error with this one, need to fix in ADM
-    //const cace_ari_t *ari_max_count = refda_ctrl_exec_ctx_get_aparam_index(ctx, 8);
+    const cace_ari_t *odm_ns           = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_org_name     = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_obj_name     = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+    const cace_ari_t *ari_obj_enum     = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+    const cace_ari_t *ari_action       = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
+    const cace_ari_t *ari_start_time   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 5);
+    const cace_ari_t *ari_period       = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
+    const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
     const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 9);
 
-    refda_agent_t    *agent  = ctx->runctx->agent;
+    refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
 
-    if (!odm) {
+    if (!odm)
+    {
         CACE_LOG_INFO("ODM not found");
         return;
     }
 
-    if (odm->model_id.intenum >= 0){
+    if (odm->model_id.intenum >= 0)
+    {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
         return;
     }
@@ -2292,63 +2293,101 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     }
 
     {
-        //cace_amm_obj_desc_t *tbr = NULL;
-
-        if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_TBR, obj_name->ptr)) 
+        if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_TBR, (const char *)obj_name->ptr))
         {
-            // TODO: return null. and maybe update fields???
-            //   might be best to return tbr obj, and combine with updates below
+            // FIXME: update fields on existing TBR in this case, instead of just returning??
             CACE_LOG_INFO("TBR already exists");
+            cace_ari_t result = CACE_ARI_INIT_NULL;
+            refda_ctrl_exec_ctx_set_result_move(ctx, &result);
             return;
         }
 
         if (NULL != cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_TBR, obj_id))
         {
-            // TODO: same issues as above
+            // FIXME: same comment as above
             CACE_LOG_INFO("TBR already exists");
+            cace_ari_t result = CACE_ARI_INIT_NULL;
+            refda_ctrl_exec_ctx_set_result_move(ctx, &result);
             return;
         }
     }
 
     { // For ./TBR/tbr_rule
-    cace_amm_obj_desc_t *obj;
-    refda_amm_tbr_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_tbr_desc_t));
-    refda_amm_tbr_desc_init(objdata);
-    // action
-    {
-        // TODO: ensure action is an ac (and other types below)
-        cace_ari_set_ac(&(objdata->action), ari_action->as_lit.value.as_ac);
-    }
-    // period
-    {
-      //struct timespec ts = {30, 0};
-      cace_ari_set_td(&(objdata->period), ari_period->as_lit.value.as_timespec);
-    }
-    // start_time
-    {
-      // TODO: copy ari_start_time (TP or TD) into objdata
-      //struct timespec ts = {20, 500000000};
-      cace_ari_set_tp(&(objdata->start_time), ts);
-    }
-    
-//TODO: set next 2
-//    // init_enabled
-//    objdata->init_enabled = true;
-//    // max_exec_count
-//    objdata->max_exec_count = 0;
-
-    obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum(obj_name->ptr, obj_id), objdata);
-
-    if (obj && obj->app_data.ptr)
-    {
-        refda_amm_tbr_desc_t *desc = obj->app_data.ptr;
-        if (desc->init_enabled)
+        cace_amm_obj_desc_t  *obj;
+        refda_amm_tbr_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_tbr_desc_t));
+        refda_amm_tbr_desc_init(objdata);
+        // action
         {
-            refda_exec_tbr_enable(agent, desc);
+            struct cace_ari_ac_s *action_ac = cace_ari_get_ac((cace_ari_t *)ari_action);
+            if (action_ac == NULL)
+            {
+                CACE_LOG_ERR("Invalid ARI received for action");
+                return;
+            }
+            cace_ari_set_ac(&(objdata->action), action_ac);
+        }
+        // period
+        {
+            struct timespec ts;
+            if (cace_ari_get_td(ari_period, &ts))
+            {
+                CACE_LOG_ERR("Invalid ARI received for period");
+                return;
+            }
+            cace_ari_set_td(&(objdata->period), ts);
+        }
+        // start_time
+        {
+            struct timespec ts;
+            int             rv;
+
+            rv = cace_ari_get_td(ari_start_time, &ts);
+            if (rv)
+            {
+                rv = cace_ari_get_tp(ari_start_time, &ts);
+            }
+
+            if (rv)
+            {
+                CACE_LOG_ERR("Invalid ARI received for start time");
+                return;
+            }
+
+            cace_ari_set_tp(&(objdata->start_time), ts);
+        }
+        //  init_enabled
+        {
+            cace_ari_bool init_enabled;
+            if (cace_ari_get_bool(ari_init_enabled, &init_enabled))
+            {
+                CACE_LOG_ERR("Invalid ARI received for init enabled");
+                return;
+            }
+            objdata->init_enabled = init_enabled;
+        }
+        // max_exec_count
+        {
+            cace_ari_uvast max_exec_count;
+            if (cace_ari_get_uvast(ari_max_count, &max_exec_count))
+            {
+                CACE_LOG_ERR("Invalid ARI received for max exec count");
+                return;
+            }
+            objdata->max_exec_count = max_exec_count;
+        }
+
+        obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum((char *)obj_name->ptr, obj_id), objdata);
+
+        if (obj && obj->app_data.ptr)
+        {
+            refda_amm_tbr_desc_t *desc = obj->app_data.ptr;
+            if (desc->init_enabled)
+            {
+                refda_exec_tbr_enable(agent, desc);
+            }
         }
     }
-    }
-        
+
     REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
