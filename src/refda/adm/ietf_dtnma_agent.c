@@ -1009,7 +1009,6 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
 
     cace_ari_tbl_t table;
     cace_ari_tbl_init(&table, 5, 0);
-    const cace_ari_type_t obj_type = CACE_ARI_TYPE_TYPEDEF;
 
     cace_amm_obj_ns_list_it_t ns_it;
     for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
@@ -1875,8 +1874,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    org_name = CACE_MALLOC(strlen(org->ptr) + 1);
-    strcpy(org_name, org->ptr);
+    org_name = CACE_MALLOC(strlen((char *)org->ptr) + 1);
+    strcpy(org_name, (char *)org->ptr);
 
     const cace_data_t *model = cace_ari_cget_tstr(ari_model_name);
     if (model == NULL || model->ptr == NULL)
@@ -1885,8 +1884,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    model_name = CACE_MALLOC(strlen(model->ptr) + 1);
-    strcpy(model_name, model->ptr);
+    model_name = CACE_MALLOC(strlen((char *)model->ptr) + 1);
+    strcpy(model_name, (char *)model->ptr);
 
     if (model_id >= 0)
     {
@@ -2413,6 +2412,71 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *target      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+
+    cace_ari_bool enabled;
+    if (cace_ari_get_bool(ari_enabled, &enabled))
+    {
+        CACE_LOG_ERR("Invalid ARI for enabled");
+        return;
+    }
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_SBR)
+    {
+        refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (sbr && sbr->enabled != enabled)
+        {
+            CACE_LOG_DEBUG("setting enabled state of %d", enabled);
+            sbr->enabled = enabled;
+
+            if (enabled)
+            {
+                refda_exec_sbr_enable(agent, sbr);
+            }
+            else
+            {
+                refda_exec_sbr_disable(agent, sbr);
+            }
+        }
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_TBR)
+    {
+        refda_amm_tbr_desc_t *tbr = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (tbr && tbr->enabled != enabled)
+        {
+            CACE_LOG_DEBUG("setting enabled state of %d", enabled);
+            tbr->enabled = enabled;
+
+            if (enabled)
+            {
+                refda_exec_tbr_enable(agent, tbr);
+            }
+            else
+            {
+                refda_exec_tbr_disable(agent, tbr);
+            }
+        }
+    }
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled BODY
@@ -2436,6 +2500,63 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_SBR)
+    {
+        refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (sbr && sbr->enabled != sbr->init_enabled)
+        {
+            CACE_LOG_DEBUG("setting back to init_enabled state of %d", sbr->init_enabled);
+            sbr->enabled = sbr->init_enabled;
+
+            if (sbr->enabled)
+            {
+                refda_exec_sbr_enable(agent, sbr);
+            }
+            else
+            {
+                refda_exec_sbr_disable(agent, sbr);
+            }
+        }
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_TBR)
+    {
+        refda_amm_tbr_desc_t *tbr = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (tbr && tbr->enabled != tbr->init_enabled)
+        {
+            CACE_LOG_DEBUG("setting back to init_enabled state of %d", tbr->init_enabled);
+            tbr->enabled = tbr->init_enabled;
+
+            if (tbr->enabled)
+            {
+                refda_exec_tbr_enable(agent, tbr);
+            }
+            else
+            {
+                refda_exec_tbr_disable(agent, tbr);
+            }
+        }
+    }
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled BODY
