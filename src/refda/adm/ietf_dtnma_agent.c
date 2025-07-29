@@ -1009,10 +1009,6 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
 
     cace_ari_tbl_t table;
     cace_ari_tbl_init(&table, 5, 0);
-<<<<<<< HEAD
-=======
-    const cace_ari_type_t obj_type = CACE_ARI_TYPE_TYPEDEF;
->>>>>>> origin/main
 
     cace_amm_obj_ns_list_it_t ns_it;
     for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
@@ -1878,13 +1874,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-<<<<<<< HEAD
     org_name = CACE_MALLOC(strlen((char *)org->ptr) + 1);
     strcpy(org_name, (char *)org->ptr);
-=======
-    org_name = CACE_MALLOC(strlen(org->ptr) + 1);
-    strcpy(org_name, org->ptr);
->>>>>>> origin/main
 
     const cace_data_t *model = cace_ari_cget_tstr(ari_model_name);
     if (model == NULL || model->ptr == NULL)
@@ -1893,13 +1884,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-<<<<<<< HEAD
     model_name = CACE_MALLOC(strlen((char *)model->ptr) + 1);
     strcpy(model_name, (char *)model->ptr);
-=======
-    model_name = CACE_MALLOC(strlen(model->ptr) + 1);
-    strcpy(model_name, model->ptr);
->>>>>>> origin/main
 
     if (model_id >= 0)
     {
