@@ -146,6 +146,7 @@ if(BUILD_TESTING)
       "${CMAKE_CURRENT_BINARY_DIR}/test/*"
     )
     set(GCOVR_ADDITIONAL_ARGS
+      "--gcov-ignore-errors=no_working_dir_found"
     )
     setup_target_for_coverage_gcovr_xml(
       NAME coverage-cace-xml
