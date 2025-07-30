@@ -64,6 +64,7 @@ void test_fparam_empty(const char *inhex, int expect_res)
     cace_ari_itemized_t aparams;
     cace_ari_itemized_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
+    TEST_ASSERT_EQUAL(false, aparams.any_undefined);
 
     cace_ari_itemized_deinit(&aparams);
     cace_amm_formal_param_list_clear(fparams);
@@ -82,13 +83,14 @@ void test_fparam_one_bool(const char *inhex, int expect_res)
 
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
-
         cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL));
+        cace_ari_set_bool(&(fparam->defval), false);
     }
 
     cace_ari_itemized_t aparams;
     cace_ari_itemized_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
+    TEST_ASSERT_EQUAL(false, aparams.any_undefined);
 
     cace_ari_itemized_deinit(&aparams);
     cace_amm_formal_param_list_clear(fparams);
@@ -112,13 +114,14 @@ void test_fparam_one_int(const char *inhex, int expect_res)
 
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
-
         cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+        cace_ari_set_int(&(fparam->defval), 10);
     }
 
     cace_ari_itemized_t aparams;
     cace_ari_itemized_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
+    TEST_ASSERT_EQUAL(false, aparams.any_undefined);
 
     cace_ari_itemized_deinit(&aparams);
     cace_amm_formal_param_list_clear(fparams);
@@ -135,13 +138,13 @@ void test_fparam_one_object(const char *inhex, int expect_res)
 
         fparam->index = 0;
         string_set_str(fparam->name, "ref");
-
         cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_OBJECT));
     }
 
     cace_ari_itemized_t aparams;
     cace_ari_itemized_init(&aparams);
     check_normalize(&aparams, fparams, inhex, expect_res);
+    TEST_ASSERT_EQUAL(false, aparams.any_undefined);
 
     cace_ari_itemized_deinit(&aparams);
     cace_amm_formal_param_list_clear(fparams);

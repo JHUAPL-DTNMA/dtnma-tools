@@ -81,6 +81,8 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
     CHKERR1(gparams);
     int retval = 0;
 
+    obj->any_undefined = false;
+
     cace_amm_formal_param_list_it_t fit;
     switch (gparams->state)
     {
@@ -97,8 +99,11 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                 cace_ari_t *aparam = cace_ari_array_get(obj->ordered, pix);
                 cace_named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
 
-                // FIXME don't care if it's undefined or not
                 cace_ari_set_copy(aparam, &(fparam->defval));
+                if (cace_ari_is_undefined(aparam))
+                {
+                    obj->any_undefined = true;
+                }
             }
             break;
         }
@@ -164,6 +169,11 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                     }
 
                     cace_ari_list_next(gparam_it);
+                }
+
+                if (cace_ari_is_undefined(aparam))
+                {
+                    obj->any_undefined = true;
                 }
             }
 
@@ -245,6 +255,11 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                         {
                             retval = 2;
                         }
+                    }
+
+                    if (cace_ari_is_undefined(aparam))
+                    {
+                        obj->any_undefined = true;
                     }
                 }
 
