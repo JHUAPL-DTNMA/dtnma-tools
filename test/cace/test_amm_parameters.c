@@ -113,7 +113,7 @@ TEST_CASE("8419FFFF022004", 0, true)          // ari://65535/2/-1/4
 TEST_CASE("8519FFFF02200480", 0, true)        // ari://65535/2/-1/4() special case empty params
 TEST_CASE("8519FFFF02200481F5", 0, false)     // ari://65535/2/-1/4(true)
 TEST_CASE("8519FFFF02200481626869", 0, false) // ari://65535/2/-1/4(hi) implicit cast to bool
-TEST_CASE("8519FFFF02200481F6", 0, false)      // ari://65535/2/-1/4(null) implicit cast to bool
+TEST_CASE("8519FFFF02200481F6", 0, false)     // ari://65535/2/-1/4(null) implicit cast to bool
 void test_fparam_one_bool_nodefault(const char *inhex, int expect_res, bool expect_undefined)
 {
     cace_amm_formal_param_list_t fparams;

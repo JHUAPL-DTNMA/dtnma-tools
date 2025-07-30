@@ -148,7 +148,7 @@ int cace_amm_type_set_use_builtin(cace_amm_type_t *type, cace_ari_type_t ari_typ
     }
 
     cace_amm_semtype_use_t *semtype = type->as_semtype;
-    semtype->base = cace_amm_type_get_builtin(ari_type);
+    semtype->base                   = cace_amm_type_get_builtin(ari_type);
 
     return semtype->base ? 0 : 3;
 }

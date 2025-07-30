@@ -124,7 +124,7 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                 if (cace_log_is_enabled_for(LOG_DEBUG))
                 {
                     cace_ari_t ariname = CACE_ARI_INIT_UNDEFINED;
-                    const bool valid = cace_amm_type_get_name(&(fparam->typeobj), &ariname);
+                    const bool valid   = cace_amm_type_get_name(&(fparam->typeobj), &ariname);
 
                     if (valid)
                     {
