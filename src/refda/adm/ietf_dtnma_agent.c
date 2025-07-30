@@ -2297,7 +2297,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for action");
                 return;
             }
-            cace_ari_set_copy(&(objdata->action), (const cace_ari_t*) action_ac);
+            cace_ari_set_copy(&(objdata->action), ari_action);
         }
         // condition
         {
@@ -2307,7 +2307,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for condition");
                 return;
             }
-            cace_ari_set_copy(&(objdata->condition), (const cace_ari_t*) condition_ac);
+            cace_ari_set_copy(&(objdata->condition), ari_condition);
         }
         //  min-interval
         {
@@ -2459,7 +2459,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for action");
                 return;
             }
-            cace_ari_set_copy(&(objdata->action), (const cace_ari_t*) action_ac);
+            cace_ari_set_copy(&(objdata->action), ari_action);
         }
         // period
         {
