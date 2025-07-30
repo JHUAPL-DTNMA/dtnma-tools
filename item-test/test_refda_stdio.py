@@ -196,3 +196,46 @@ class TestStdioAgent(unittest.TestCase):
         # items of the report
         self.assertEqual(1, len(rpt.items))
 
+# FIXME: add ODM rule test cases
+#        ## ODM Rules
+#        self._send_execset(
+#            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//example/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false))'
+#        )
+#
+#        rptset = self._wait_rptset().value
+#        self.assertIsInstance(rptset, ari.ReportSet)
+#        self.assertEqual(1, len(rptset.reports))
+#        rpt = rptset.reports[0]
+#        LOGGER.info('Got rpt %s', rpt)
+#        self.assertIsInstance(rpt, ari.Report)
+#        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-tbr(//example/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false)'), rpt.source)
+#        # items of the report
+#        self.assertEqual(1, len(rpt.items))
+#
+#        self._send_execset(
+#            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))'
+#        )
+#
+#        rptset = self._wait_rptset().value
+#        self.assertIsInstance(rptset, ari.ReportSet)
+#        self.assertEqual(1, len(rptset.reports))
+#        rpt = rptset.reports[0]
+#        LOGGER.info('Got rpt %s', rpt)
+#        self.assertIsInstance(rpt, ari.Report)
+#        self.assertEqual(self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))'), rpt.source)
+#        # items of the report
+#        self.assertEqual(1, len(rpt.items))
+#
+# ensure-sbr
+#
+#ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))
+#821482187B8564696574666B64746E6D612D6167656E742267696E7370656374818564696574666B64746E6D612D6167656E7423687462722D6C69737481F4
+#
+#ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//example/!test-model-1/TBR/test-tbr,true))
+#821482187B8564696574666B64746E6D612D6167656E742273656E737572652D72756C652D656E61626C65648284676578616D706C656D21746573742D6D6F64656C2D312968746573742D746272F5
+#
+#ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/reset-rule-enabled(//example/!test-model-1/TBR/test-tbr))
+#821482187B8564696574666B64746E6D612D6167656E74227272657365742D72756C652D656E61626C65648184676578616D706C656D21746573742D6D6F64656C2D312968746573742D746272
+#
+#ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-rule(//example/!test-model-1/TBR/test-tbr))
+#821482187B8564696574666B64746E6D612D6167656E74226D6F62736F6C6574652D72756C658184676578616D706C656D21746573742D6D6F64656C2D312968746573742D746272
