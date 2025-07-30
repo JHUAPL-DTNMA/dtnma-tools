@@ -1920,11 +1920,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
 
     if (odm)
     {
-        CACE_LOG_ERR("ensure-odm ODM created");
+        CACE_LOG_INFO("ensure-odm ODM created");
     }
     else
     {
-        CACE_LOG_ERR("ensure-odm found existing ODM");
+        CACE_LOG_INFO("ensure-odm found existing ODM");
     }
 
     cace_ari_t result = CACE_ARI_INIT_NULL;
@@ -1962,7 +1962,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
 
     if (odm)
     {
-        CACE_LOG_DEBUG("ODM found, marking as obsolete");
+        CACE_LOG_INFO("ODM found, marking as obsolete");
         odm->obsolete = true;
 
         cace_ari_t result = CACE_ARI_INIT_NULL; // Indicate successful result
@@ -2459,7 +2459,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for action");
                 return;
             }
-            cace_ari_set_ac(&(objdata->action), action_ac);
+            cace_ari_set_copy(&(objdata->action), (const cace_ari_t*) action_ac);
         }
         // period
         {
