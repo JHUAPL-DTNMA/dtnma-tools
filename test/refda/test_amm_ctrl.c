@@ -142,7 +142,7 @@ void test_ctrl_execute_param_none(cace_ari_type_t restype, const char *refhex, c
     refda_amm_ctrl_desc_t obj;
     refda_amm_ctrl_desc_init(&obj);
     // leave formal parameter list empty
-    cace_amm_type_set_use_direct(&obj.res_type, cace_amm_type_get_builtin(restype));
+    TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&obj.res_type, restype));
     obj.execute = mock_ctrl_exec_none;
 
     cace_amm_formal_param_list_t fparams;
@@ -167,7 +167,7 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex)
     refda_amm_ctrl_desc_t obj;
     refda_amm_ctrl_desc_init(&obj);
     // result is same type as parameter
-    cace_amm_type_set_use_direct(&obj.res_type, cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+    TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&obj.res_type, CACE_ARI_TYPE_INT));
     obj.execute = mock_ctrl_exec_one_int;
 
     cace_amm_formal_param_list_t fparams;
@@ -178,7 +178,7 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex)
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
 
-        cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+        TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
         cace_ari_set_int(&(fparam->defval), 3); // arbitrary default
     }
 
