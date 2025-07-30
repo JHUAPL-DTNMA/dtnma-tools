@@ -2209,11 +2209,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
  *  * Index 1, name "obj-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
  *  * Index 2, name "obj-enum", type: use of ari://ietf/amm-base/TYPEDEF/id-int
  *  * Index 3, name "action", type: use of ari://ietf/amm-base/TYPEDEF/MAC
- *  * Index 4, name "start-time", type: use of ari://ietf/amm-base/TYPEDEF/TIME
- *  * Index 5, name "condition", type: use of ari://ietf/amm-base/TYPEDEF/EXPR
- *  * Index 6, name "min-interval", type: use of ari:/ARITYPE/TD
- *  * Index 7, name "max-count", type: use of ari:/ARITYPE/UVAST
- *  * Index 8, name "init-enabled", type: use of ari:/ARITYPE/BOOL
+ *  * Index 4, name "condition", type: use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *  * Index 5, name "min-interval", type: use of ari:/ARITYPE/TD
+ *  * Index 6, name "max-count", type: use of ari:/ARITYPE/UVAST
+ *  * Index 7, name "init-enabled", type: use of ari:/ARITYPE/BOOL
  *
  * Result name "res", type: use of ari:/ARITYPE/UINT
  */
@@ -2228,11 +2227,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     const cace_ari_t *ari_obj_name     = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
     const cace_ari_t *ari_obj_enum     = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
     const cace_ari_t *ari_action       = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
-    const cace_ari_t *ari_start_time   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
-    const cace_ari_t *ari_condition    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 5);
-    const cace_ari_t *ari_min_interval = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
-    const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
-    const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 8);
+    const cace_ari_t *ari_condition    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
+    const cace_ari_t *ari_min_interval = refda_ctrl_exec_ctx_get_aparam_index(ctx, 5);
+    const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
+    const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
 
     cace_ari_t ari_result;
     cace_ari_init(&ari_result);
@@ -2376,8 +2374,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
  *  * Index 4, name "start-time", type: use of ari://ietf/amm-base/TYPEDEF/TIME
  *  * Index 5, name "period", type: use of ari:/ARITYPE/TD
  *  * Index 6, name "max-count", type: use of ari:/ARITYPE/UVAST
- *  * Index 7, name "max-count", type: use of ari:/ARITYPE/UVAST
- *  * Index 8, name "init-enabled", type: use of ari:/ARITYPE/BOOL
+ *  * Index 7, name "init-enabled", type: use of ari:/ARITYPE/BOOL
  *
  * Result name "res", type: use of ari:/ARITYPE/UINT
  */
@@ -2395,7 +2392,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     const cace_ari_t *ari_start_time   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
     const cace_ari_t *ari_period       = refda_ctrl_exec_ctx_get_aparam_index(ctx, 5);
     const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
-    const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 8);
+    const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
 
     cace_ari_t ari_result;
     cace_ari_init(&ari_result);
@@ -4823,15 +4820,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
             }
             {
-                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "start-time");
-                {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/TIME
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 5);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
-                }
-            }
-            {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "condition");
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
@@ -4930,14 +4918,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 {
                     cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
                     cace_ari_set_aritype(&name, CACE_ARI_TYPE_TD);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
-                }
-            }
-            {
-                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "max-count");
-                {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_UVAST);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
                 }
             }
