@@ -1880,18 +1880,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    org_name = CACE_MALLOC(strlen((char *)org->ptr) + 1);
-    strcpy(org_name, (char *)org->ptr);
-
     const cace_data_t *model = cace_ari_cget_tstr(ari_model_name);
     if (model == NULL || model->ptr == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve model name");
         return;
     }
-
-    model_name = CACE_MALLOC(strlen((char *)model->ptr) + 1);
-    strcpy(model_name, (char *)model->ptr);
 
     if (model_id >= 0)
     {
@@ -1911,6 +1905,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         m_string_clear(rev_date);
     }
 
+    org_name = CACE_MALLOC(strlen((char *)org->ptr) + 1);
+    strcpy(org_name, (char *)org->ptr);
+
+    model_name = CACE_MALLOC(strlen((char *)model->ptr) + 1);
+    strcpy(model_name, (char *)model->ptr);
+
     refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
@@ -1925,6 +1925,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
     else
     {
         CACE_LOG_INFO("ensure-odm found existing ODM");
+        CACE_FREE(org_name);
+        CACE_FREE(model_name);
     }
 
     cace_ari_t result = CACE_ARI_INIT_NULL;
@@ -2232,7 +2234,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
     const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
 
-    cace_ari_t ari_result;
+    cace_ari_t     ari_result;
     refda_agent_t *agent = ctx->runctx->agent;
 
     REFDA_AGENT_LOCK(agent, );
