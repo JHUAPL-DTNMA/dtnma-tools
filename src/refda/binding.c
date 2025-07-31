@@ -209,21 +209,20 @@ static int refda_binding_fparams(cace_amm_formal_param_list_t fparams, const cac
     return failcnt;
 }
 
-static int refda_binding_ident_bases(refda_amm_ident_base_list_t bases, const cace_amm_obj_store_t *store)
+static int refda_binding_ident_bases(cace_amm_obj_desc_t *obj, refda_amm_ident_desc_t *ident, const cace_amm_obj_store_t *store)
 {
     int failcnt = 0;
 
-    refda_amm_ident_base_list_it_t it;
-    for (refda_amm_ident_base_list_it(it, bases); !refda_amm_ident_base_list_end_p(it);
-         refda_amm_ident_base_list_next(it))
+    cace_amm_obj_ref_list_it_t it;
+    for (cace_amm_obj_ref_list_it(it, ident->bases); !cace_amm_obj_ref_list_end_p(it); cace_amm_obj_ref_list_next(it))
     {
-        refda_amm_ident_base_t *base = refda_amm_ident_base_list_ref(it);
+        cace_amm_obj_ref_t *base = cace_amm_obj_ref_list_ref(it);
 
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
             string_t buf;
             string_init(buf);
-            cace_ari_text_encode(buf, &(base->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            cace_ari_text_encode(buf, &(base->ref), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
             CACE_LOG_DEBUG("Binding IDENT base of %s", string_get_cstr(buf));
             string_clear(buf);
         }
@@ -231,14 +230,18 @@ static int refda_binding_ident_bases(refda_amm_ident_base_list_t bases, const ca
         cace_amm_lookup_t deref;
         cace_amm_lookup_init(&deref);
 
-        if (!cace_amm_lookup_deref(&deref, store, &(base->name)))
+        if (!cace_amm_lookup_deref(&deref, store, &(base->ref)))
         {
             if (deref.obj_type == CACE_ARI_TYPE_IDENT)
             {
                 refda_amm_ident_desc_t *desc = deref.obj->app_data.ptr;
                 if (desc)
                 {
-                    base->ident = desc;
+                    // Forward reference
+                    base->obj = deref.obj;
+
+                    // Reverse reference
+                    cace_amm_obj_desc_ptr_list_push_back(desc->derived, obj);
                 }
                 else
                 {
@@ -273,7 +276,7 @@ int refda_binding_ident(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *st
 
     int failcnt = 0;
     failcnt += refda_binding_fparams(obj->fparams, store);
-    failcnt += refda_binding_ident_bases(desc->bases, store);
+    failcnt += refda_binding_ident_bases(obj, desc, store);
     return failcnt;
 }
 

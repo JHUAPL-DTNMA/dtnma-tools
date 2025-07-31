@@ -75,9 +75,9 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                cace_amm_obj_ref_t *base = cace_amm_obj_ref_list_push_back_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint
-                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 0);
+                cace_ari_set_objref_path_intid(&(base->ref), 1, 25, CACE_ARI_TYPE_IDENT, 0);
             }
 
             obj = refda_register_ident(
@@ -92,9 +92,9 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                cace_amm_obj_ref_t *base = cace_amm_obj_ref_list_push_back_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint
-                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 0);
+                cace_ari_set_objref_path_intid(&(base->ref), 1, 25, CACE_ARI_TYPE_IDENT, 0);
             }
 
             obj = refda_register_ident(
@@ -109,9 +109,9 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                cace_amm_obj_ref_t *base = cace_amm_obj_ref_list_push_back_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint
-                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 0);
+                cace_ari_set_objref_path_intid(&(base->ref), 1, 25, CACE_ARI_TYPE_IDENT, 0);
             }
 
             obj = refda_register_ident(
@@ -126,9 +126,9 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                cace_amm_obj_ref_t *base = cace_amm_obj_ref_list_push_back_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint
-                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 0);
+                cace_ari_set_objref_path_intid(&(base->ref), 1, 25, CACE_ARI_TYPE_IDENT, 0);
             }
 
             obj = refda_register_ident(
@@ -143,9 +143,9 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                cace_amm_obj_ref_t *base = cace_amm_obj_ref_list_push_back_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-bstr
-                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
+                cace_ari_set_objref_path_intid(&(base->ref), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
             obj =

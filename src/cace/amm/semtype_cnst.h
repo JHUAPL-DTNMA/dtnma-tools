@@ -23,6 +23,7 @@
 #define CACE_AMM_SEMTYPE_CNST_H_
 
 #include "range.h"
+#include "obj_ref.h"
 #include "cace/config.h"
 #include "cace/ari.h"
 #if defined(PCRE_FOUND)
@@ -43,17 +44,17 @@ extern "C" {
 enum cace_amm_semtype_cnst_type_e
 {
     /// An initial invalid type with no associated value
-    AMM_SEMTYPE_CNST_INVALID,
+    CACE_AMM_SEMTYPE_CNST_INVALID,
     /// Text- or byte-string length range
-    AMM_SEMTYPE_CNST_STRLEN,
+    CACE_AMM_SEMTYPE_CNST_STRLEN,
 #if defined(PCRE_FOUND)
     /// Text-string pattern expression
-    AMM_SEMTYPE_CNST_TEXTPAT,
+    CACE_AMM_SEMTYPE_CNST_TEXTPAT,
 #endif /* PCRE_FOUND */
     /// A signed 64-bit integer multi-interval range
-    AMM_SEMTYPE_CNST_RANGE_INT64,
-    /// A required IDENT base object
-    AMM_SEMTYPE_CNST_IDENT_BASE,
+    CACE_AMM_SEMTYPE_CNST_RANGE_INT64,
+    /// A required single IDENT base object
+    CACE_AMM_SEMTYPE_CNST_IDENT_BASE,
 };
 
 /** A single constraint on a cace_amm_semtype_use_t
@@ -65,20 +66,16 @@ typedef struct cace_amm_semtype_cnst_s
 
     union
     {
-        /// Used when #type is ::AMM_SEMTYPE_CNST_STRLEN
+        /// Used when #type is ::CACE_AMM_SEMTYPE_CNST_STRLEN
         cace_amm_range_size_t as_strlen;
 #if defined(PCRE_FOUND)
-        /// Used when #type is ::AMM_SEMTYPE_CNST_TEXTPAT
+        /// Used when #type is ::CACE_AMM_SEMTYPE_CNST_TEXTPAT
         pcre2_code *as_textpat;
 #endif /* PCRE_FOUND */
-        /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
+        /// Used when #type is ::CACE_AMM_SEMTYPE_CNST_RANGE_INT64
         cace_amm_range_int64_t as_range_int64;
-        /// Used when #type is ::AMM_SEMTYPE_CNST_IDENT_BASE
-        struct
-        {
-            ari_t                             ref;
-            const struct cace_amm_obj_desc_s *obj;
-        } as_ident_base;
+        /// Used when #type is ::CACE_AMM_SEMTYPE_CNST_IDENT_BASE
+        cace_amm_obj_ref_t as_ident_base;
     };
 } cace_amm_semtype_cnst_t;
 
@@ -127,7 +124,7 @@ cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_c
  * @param[in,out] obj The struct to set the state of.
  * @return The specific parameters for this constraint type.
  */
-cace_amm_range_int64_t *amm_semtype_cnst_set_range_int64(amm_semtype_cnst_t *obj);
+cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj);
 
 /** Determine if a specific value is valid according to a constraint.
  *

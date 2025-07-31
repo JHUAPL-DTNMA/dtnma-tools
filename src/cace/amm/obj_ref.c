@@ -15,18 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ident.h"
+#include "obj_ref.h"
 
-void refda_amm_ident_desc_init(refda_amm_ident_desc_t *obj)
+void cace_amm_obj_ref_init(cace_amm_obj_ref_t *obj)
 {
-    cace_amm_obj_ref_list_init(obj->bases);
-    cace_amm_obj_desc_ptr_list_init(obj->derived);
-    cace_amm_user_data_init(&(obj->user_data));
+    cace_ari_init(&(obj->ref));
+    obj->obj = NULL;
 }
 
-void refda_amm_ident_desc_deinit(refda_amm_ident_desc_t *obj)
+void cace_amm_obj_ref_deinit(cace_amm_obj_ref_t *obj)
 {
-    cace_amm_user_data_deinit(&(obj->user_data));
-    cace_amm_obj_desc_ptr_list_clear(obj->derived);
-    cace_amm_obj_ref_list_clear(obj->bases);
+    obj->obj = NULL;
+    cace_ari_deinit(&(obj->ref));
+}
+
+void cace_amm_obj_ref_init_set(cace_amm_obj_ref_t *obj, const cace_amm_obj_ref_t *src)
+{
+    cace_ari_init(&(obj->ref));
+    cace_ari_set_copy(&(obj->ref), &(src->ref));
+    obj->obj = NULL;
+}
+
+void cace_amm_obj_ref_set(cace_amm_obj_ref_t *obj, const cace_amm_obj_ref_t *src)
+{
+    cace_ari_set_copy(&(obj->ref),&(src->ref));
+    obj->obj = src->obj;
 }

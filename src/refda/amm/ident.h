@@ -18,49 +18,33 @@
 #ifndef REFDA_AMM_IDENT_H_
 #define REFDA_AMM_IDENT_H_
 
+#include "cace/amm/obj_ref.h"
+#include "cace/amm/obj_ns.h"
 #include "cace/amm/user_data.h"
-#include <m-deque.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** Each base IDENT object of an intermediate or leaf object.
- */
-typedef struct
-{
-    /// Reference to the object
-    cace_ari_t name;
-    /** The bound object being used, which is bound based on #name.
-     * This is always a reference to an externally-owned object.
-     */
-    const struct refda_amm_ident_desc_s *ident;
-} refda_amm_ident_base_t;
-
-void refda_amm_ident_base_init(refda_amm_ident_base_t *obj);
-
-void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj);
-
-/// M*LIB OPLIST for refda_amm_ident_base_t
-#define M_OPL_refda_amm_ident_base_t() \
-    (INIT(API_2(refda_amm_ident_base_init)), CLEAR(API_2(refda_amm_ident_base_deinit)))
-
-/** @struct refda_amm_ident_base_list
- * A list of possible base objects.
- */
-/// @cond Doxygen_Suppress
-M_DEQUE_DEF(refda_amm_ident_base_list, refda_amm_ident_base_t)
-/// @endcond
+M_DEQUE_DEF(cace_amm_obj_desc_ptr_list, cace_amm_obj_desc_t *, M_PTR_OPLIST)
 
 /** An IDENT descriptor.
  * This defines the properties of an IDENT in an Agent.
  */
 typedef struct refda_amm_ident_desc_s
 {
-    /** All base IDENT objects for this object.
-     * This list will not change during the lifetime of the IDENT.
+    /** All base IDENT objects for this object, not including transitive bases.
+     * This list will not change during the lifetime of the IDENT,
+     * but the object descriptor pointers will be NULL until the
+     * binding activity in the Agent.
      */
-    refda_amm_ident_base_list_t bases;
+    cace_amm_obj_ref_list_t bases;
+
+    /** All derived IDENT objects from this object, not including transitive derivations.
+     * This list will start out empty from the model registration
+     * and be populated during binding activity in the Agent.
+     */
+    cace_amm_obj_desc_ptr_list_t derived;
 
     /** Optional ADM data associated with this object.
      */

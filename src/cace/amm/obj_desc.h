@@ -22,7 +22,6 @@
 #include "user_data.h"
 #include "parameters.h"
 #include "cace/ari.h"
-#include "cace/util/nocase.h"
 
 #ifdef __cplusplus
 extern "C" {
