@@ -78,6 +78,10 @@ jobs:
               -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
       - name: Build
         run: ./build.sh
+      - name: Install
+        run: ./build.sh install
+      - name: Check symbols
+        run: ./check_symbols.py cace refda refdm
       - name: Test
         run: ./build.sh check
       - name: Collect coverage
@@ -138,6 +142,8 @@ jobs:
         with:
           create-symlink: true
       - name: Dependencies
+        env:
+          DEPS_BUILD_ION: '0'
         run: ./deps.sh
       - name: Prep
         run: ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=OFF
@@ -145,8 +151,6 @@ jobs:
         run: ./build.sh
       - name: Install
         run: ./build.sh install
-      - name: Check symbols
-        run: ./check_symbols.py cace refda refdm
       - name: Test
         env:
           PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
