@@ -1804,20 +1804,28 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY
      * +-------------------------------------------------------------------------+
      */
-    const cace_ari_t *tgt = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
-    if (!tgt)
+    const cace_ari_t *template = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    if (!cace_ari_not_undefined(template))
     {
-        CACE_LOG_ERR("no parameter");
+        CACE_LOG_ERR("no template");
+        return;
+    }
+    const cace_ari_t *dests = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    if (!cace_ari_not_undefined(dests))
+    {
+        CACE_LOG_ERR("no destinations");
         return;
     }
 
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
 
     // ignore return code because failure cannot be handled here
-    refda_reporting_target(ctx->runctx, tgt);
+    if (refda_reporting_target(ctx->runctx, template))
+    {
+        return;
+    }
 
-    REFDA_AGENT_UNLOCK(agent, );
+    refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_report_on BODY

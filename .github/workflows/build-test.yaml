@@ -42,7 +42,8 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo apt-get update && \
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build \
               ruby pkg-config build-essential patch autoconf libtool \
@@ -74,13 +75,18 @@ jobs:
           DEPS_BUILD_ION: ${{matrix.deps=='full' && '1' || '0'}}
         run: ./deps.sh
       - name: Prep
-        run: |
-          ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON \
-              -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
-              -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
-              -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
+        run: >
+          ./prep.sh 
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
+          -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}}
+          -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}}
+          -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
       - name: Build
         run: ./build.sh
+      - name: Install
+        run: ./build.sh install
+      - name: Check symbols
+        run: ./check_symbols.py cace refda refdm
       - name: Test
         run: ./build.sh check
       - name: Collect coverage
@@ -113,7 +119,8 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo apt-get update && \
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build \
               ruby pkg-config build-essential patch autoconf libtool \
@@ -144,18 +151,23 @@ jobs:
         with:
           create-symlink: true
       - name: Dependencies
+        env:
+          DEPS_BUILD_ION: '0'
         run: ./deps.sh
       - name: Prep
-        run: ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=OFF
+        run: >
+          ./prep.sh \
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=OFF
+          -DBUILD_ION_PROXY=OFF
+          -DTRANSPORT_ION_BP=OFF
       - name: Build
         run: ./build.sh
       - name: Install
         run: ./build.sh install
-      - name: Check symbols
-        run: ./check_symbols.py cace refda refdm
       - name: Test
         env:
           PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
+          TEST_MEMCHECK: '1'
         run: ./item-test/run.sh
 
   integration-test:
