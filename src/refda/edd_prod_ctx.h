@@ -59,6 +59,13 @@ void refda_edd_prod_ctx_init(refda_edd_prod_ctx_t *obj, const refda_amm_edd_desc
 
 void refda_edd_prod_ctx_deinit(refda_edd_prod_ctx_t *obj);
 
+/** Determine if any actual parameter is undefined.
+ *
+ * @param[in] ctx The production context.
+ * @return True if there are any undefined values.
+ */
+bool refda_edd_prod_ctx_has_aparam_undefined(const refda_edd_prod_ctx_t *ctx);
+
 /** Get an actual parameter for this production.
  *
  * @param[in] ctx The production context.

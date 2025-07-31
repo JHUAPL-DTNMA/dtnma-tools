@@ -35,6 +35,9 @@ jobs:
     name: Unit Test (${{matrix.os}} deps=${{matrix.deps}})
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    permissions:
+      contents: read
+      actions: write
     steps:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
@@ -106,9 +109,12 @@ jobs:
       matrix:
         #os: ['ubuntu-24.04', 'centos-9']
         os: ['ubuntu-24.04']
-    name: Built-Item Test (${{matrix.os}})
+    name: Built-Item Test (${{matrix.os}} gcc)
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    permissions:
+      contents: read
+      actions: write
     steps:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')

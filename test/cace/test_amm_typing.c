@@ -239,10 +239,8 @@ void test_amm_type_match_semtype_use_1(const char *inhex, cace_amm_type_match_re
 {
     cace_amm_type_t mytype;
     cace_amm_type_init(&mytype);
-    {
-        const cace_amm_type_t *base = cace_amm_type_get_builtin(CACE_ARI_TYPE_INT);
-        TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_direct(&mytype, base));
-    }
+
+    TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&mytype, CACE_ARI_TYPE_INT));
 
     check_match(&mytype, inhex, expect);
     cace_amm_type_deinit(&mytype);
@@ -268,7 +266,7 @@ void test_amm_type_match_semtype_ulist_1(const char *inhex, cace_amm_type_match_
         cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&mytype);
         TEST_ASSERT_NOT_NULL(semtype);
 
-        cace_amm_type_set_use_direct(&(semtype->item_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+        TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(semtype->item_type), CACE_ARI_TYPE_INT));
 
         semtype->size.has_min = true;
         semtype->size.i_min   = 2;
@@ -301,12 +299,12 @@ void test_amm_type_match_semtype_dlist_2item(const char *inhex, cace_amm_type_ma
         {
             cace_amm_type_t *typ = cace_amm_type_array_get(semtype->types, 0);
             TEST_ASSERT_NOT_NULL(typ);
-            cace_amm_type_set_use_direct(typ, cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(typ, CACE_ARI_TYPE_INT));
         }
         {
             cace_amm_type_t *typ = cace_amm_type_array_get(semtype->types, 1);
             TEST_ASSERT_NOT_NULL(typ);
-            cace_amm_type_set_use_direct(typ, cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(typ, CACE_ARI_TYPE_BOOL));
         }
     }
 
@@ -339,14 +337,14 @@ void test_amm_type_match_semtype_dlist_seq_minmax(const char *inhex, cace_amm_ty
         {
             cace_amm_type_t *typ = cace_amm_type_array_get(semtype->types, 0);
             TEST_ASSERT_NOT_NULL(typ);
-            cace_amm_type_set_use_direct(typ, cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(typ, CACE_ARI_TYPE_INT));
         }
         {
             cace_amm_type_t *typ = cace_amm_type_array_get(semtype->types, 1);
             TEST_ASSERT_NOT_NULL(typ);
             cace_amm_semtype_seq_t *seq = cace_amm_type_set_seq(typ);
 
-            cace_amm_type_set_use_direct(&(seq->item_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(seq->item_type), CACE_ARI_TYPE_BOOL));
             seq->size.has_min = true;
             seq->size.i_min   = 1;
             seq->size.has_max = true;
@@ -377,8 +375,8 @@ void test_amm_type_match_semtype_umap_1(const char *inhex, cace_amm_type_match_r
         cace_amm_semtype_umap_t *semtype = cace_amm_type_set_umap(&mytype);
         TEST_ASSERT_NOT_NULL(semtype);
 
-        cace_amm_type_set_use_direct(&(semtype->key_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
-        cace_amm_type_set_use_direct(&(semtype->val_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL));
+        TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(semtype->key_type), CACE_ARI_TYPE_INT));
+        TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(semtype->val_type), CACE_ARI_TYPE_BOOL));
     }
 
     check_match(&mytype, inhex, expect);
@@ -401,12 +399,12 @@ void test_amm_type_match_semtype_tblt_1(const char *inhex, cace_amm_type_match_r
         {
             cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
             TEST_ASSERT_NOT_NULL(col);
-            cace_amm_type_set_use_direct(&(col->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(col->typeobj), CACE_ARI_TYPE_INT));
         }
         {
             cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
             TEST_ASSERT_NOT_NULL(col);
-            cace_amm_type_set_use_direct(&(col->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(col->typeobj), CACE_ARI_TYPE_BOOL));
         }
     }
 
@@ -432,12 +430,12 @@ void test_amm_type_match_semtype_union_1(const char *inhex, cace_amm_type_match_
         {
             cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
             TEST_ASSERT_NOT_NULL(choice);
-            cace_amm_type_set_use_direct(choice, cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(choice, CACE_ARI_TYPE_INT));
         }
         {
             cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
             TEST_ASSERT_NOT_NULL(choice);
-            cace_amm_type_set_use_direct(choice, cace_amm_type_get_builtin(CACE_ARI_TYPE_NULL));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(choice, CACE_ARI_TYPE_NULL));
         }
     }
 

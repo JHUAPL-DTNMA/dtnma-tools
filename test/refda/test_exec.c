@@ -141,13 +141,13 @@ void setUp(void)
         {
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
-            cace_amm_type_set_use_direct(&(objdata->prod_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->prod_type), CACE_ARI_TYPE_VAST));
             objdata->produce = test_reporting_edd_one_int;
 
             obj = refda_register_edd(adm, cace_amm_idseg_ref_withenum("edd2", 2), objdata);
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "val");
-                cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+                TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_VAST));
             }
         }
 
@@ -157,27 +157,27 @@ void setUp(void)
         {
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            cace_amm_type_set_use_direct(&(objdata->res_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_VAST));
             objdata->execute = test_exec_ctrl_exec_one_int;
 
             obj = refda_register_ctrl(adm, cace_amm_idseg_ref_withenum("ctrl1", 1), objdata);
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "one");
 
-                cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+                TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
             }
         }
         {
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            cace_amm_type_set_use_direct(&(objdata->res_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_VAST));
             objdata->execute = test_exec_ctrl_exec_one_int;
 
             obj = refda_register_ctrl(adm, cace_amm_idseg_ref_withenum("ctrl2", 2), objdata);
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "one");
 
-                cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+                TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
             }
         }
     }

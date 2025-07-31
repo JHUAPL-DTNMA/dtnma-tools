@@ -42,6 +42,8 @@ typedef struct
     cace_ari_array_t ordered;
     /// Lookup by (case-sensitive) text name
     cace_named_ari_ptr_dict_t named;
+    /// Indication of any item being the undefined value
+    bool any_undefined;
 } cace_ari_itemized_t;
 
 /** Initialize a new empty set.
