@@ -150,6 +150,7 @@ jobs:
       - name: Test
         env:
           PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
+          TEST_MEMCHECK: '1'
         run: ./item-test/run.sh
 
   integration-test:

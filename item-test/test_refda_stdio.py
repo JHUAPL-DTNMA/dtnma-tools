@@ -35,6 +35,11 @@ LOGGER = logging.getLogger(__name__)
 HEXPAT = r'^[0-9a-fA-F]+'
 ''' Generic hexadecimal regex pattern. '''
 
+# ADM handling outside of tests
+ADMS = AdmSet(cache_dir=False)
+logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
+ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
+
 
 class TestStdioAgent(unittest.TestCase):
     ''' Verify whole-agent behavior with the stdio_agent '''
@@ -54,11 +59,6 @@ class TestStdioAgent(unittest.TestCase):
         args = compose_args(['refda-stdio', '-l', 'debug'])
         self._agent = CmdRunner(args)
 
-        # ADM handling
-        adms = AdmSet(cache_dir=False)
-        adms.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
-        self._adms = adms
-
     def tearDown(self):
         self._agent.stop()
 
@@ -68,7 +68,7 @@ class TestStdioAgent(unittest.TestCase):
         self._wait_rptset()
 
     def _ari_text_to_obj(self, text:str) -> ARI:
-        nn_func = nickname.Converter(nickname.Mode.TO_NN, self._adms.db_session(), must_nickname=True)
+        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
 
         with io.StringIO(text) as buf:
             ari = ari_text.Decoder().decode(buf)
@@ -233,7 +233,7 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
         # FIXME: Add following test. Currently fails due to ACE error reading ODM
-        #ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//example/!test-model-1))
+        # ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//example/!test-model-1))
 
         self._send_execset(
             'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/odm-list))'

@@ -34,7 +34,10 @@ from helpers import CmdRunner, Timer, compose_args
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
 
-HEXSTR = r'^[0-9a-fA-F]+'
+# ADM handling outside of tests
+ADMS = AdmSet(cache_dir=False)
+logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
+ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
 
 
 def split_content_type(text):
@@ -81,14 +84,7 @@ class TestRefdmSocket(unittest.TestCase):
         ])
         self._mgr = CmdRunner(args)
 
-        # ADM handling
-        adms = AdmSet(cache_dir=False)
-        adms.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
-        self._adms = adms
-
     def tearDown(self):
-        self._adms = None
-
         self._mgr.stop()
         self._mgr = None
 
@@ -126,7 +122,7 @@ class TestRefdmSocket(unittest.TestCase):
         self.fail(f'Manager did not create socket at {self._mgr_sock_path}')
 
     def _ari_text_to_obj(self, text:str) -> ARI:
-        nn_func = nickname.Converter(nickname.Mode.TO_NN, self._adms.db_session(), must_nickname=True)
+        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
 
         with io.StringIO(text) as buf:
             ari = ari_text.Decoder().decode(buf)
