@@ -219,7 +219,7 @@ class TestStdioAgent(unittest.TestCase):
         self._start()
 
         self._send_execset(
-            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm("example", 100, "!test-model-1", -1))'
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm(example, 100, !test-model-1, -1))'
         )
 
         rptset = self._wait_rptset().value
@@ -228,7 +228,7 @@ class TestStdioAgent(unittest.TestCase):
         rpt = rptset.reports[0]
         LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm("example", 100, "!test-model-1", -1)'), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm(example, 100, !test-model-1, -1)'), rpt.source)
         # items of the report
         self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
