@@ -72,10 +72,11 @@ jobs:
           DEPS_BUILD_ION: ${{matrix.deps=='full' && '1' || '0'}}
         run: ./deps.sh
       - name: Prep
-        run: |
-          ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON \
-              -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
-              -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}} \
+        run: >
+          ./prep.sh 
+              -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
+              -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}}
+              -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}}
               -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
       - name: Build
         run: ./build.sh
@@ -148,7 +149,11 @@ jobs:
           DEPS_BUILD_ION: '0'
         run: ./deps.sh
       - name: Prep
-        run: ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=OFF
+        run: >
+          ./prep.sh \
+              -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=OFF
+              -DBUILD_ION_PROXY=OFF
+              -DTRANSPORT_ION_BP=OFF
       - name: Build
         run: ./build.sh
       - name: Install
