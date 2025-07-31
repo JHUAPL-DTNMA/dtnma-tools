@@ -1856,10 +1856,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
     const cace_ari_t *ari_model_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
     const cace_ari_t *ari_model_id   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
 
-    int res;
-
     cace_ari_int org_id, model_id;
-    char        *org_name, *model_name;
+    m_string_t  *org_name, *model_name;
 
     if (cace_ari_get_int(ari_org_id, &org_id))
     {
@@ -1893,30 +1891,26 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    char *rev_date_cstr = NULL;
-    {
-        m_string_t rev_date;
-        m_string_init(rev_date);
-        time_t     now         = time(NULL);      // Get current time as time_t
-        struct tm *currentTime = localtime(&now); // Convert to local time as struct tm
-        cace_date_encode(rev_date, currentTime, false);
-        rev_date_cstr = CACE_MALLOC(m_string_size(rev_date) + 1);
-        strncpy(rev_date_cstr, m_string_get_cstr(rev_date), 12);
-        m_string_clear(rev_date);
-    }
-
-    org_name = CACE_MALLOC(strlen((char *)org->ptr) + 1);
-    strcpy(org_name, (char *)org->ptr);
-
-    model_name = CACE_MALLOC(strlen((char *)model->ptr) + 1);
-    strcpy(model_name, (char *)model->ptr);
-
     refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
-    cace_amm_obj_ns_t *odm =
-        cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum(org_name, org_id),
-                                  cace_amm_idseg_ref_withenum(model_name, model_id), rev_date_cstr);
+    m_string_t *rev_date = string_list_push_new(agent->odm_names);
+    {
+        time_t     now         = time(NULL); // Get current time as time_t
+        struct tm  parts       = { 0 };
+        struct tm *currentTime = gmtime_r(&now, &parts); // Convert to UTC time as struct tm
+        cace_date_encode(*rev_date, currentTime, false);
+    }
+
+    org_name = string_list_push_new(agent->odm_names);
+    m_string_set_cstr(*org_name, (char *)org->ptr);
+
+    model_name = string_list_push_new(agent->odm_names);
+    m_string_set_cstr(*model_name, (char *)model->ptr);
+
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_add_ns(
+        &(agent->objs), cace_amm_idseg_ref_withenum(m_string_get_cstr(*org_name), org_id),
+        cace_amm_idseg_ref_withenum(m_string_get_cstr(*model_name), model_id), m_string_get_cstr(*rev_date));
 
     if (odm)
     {
