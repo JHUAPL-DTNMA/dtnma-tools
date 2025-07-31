@@ -38,6 +38,6 @@ void cace_amm_obj_ref_init_set(cace_amm_obj_ref_t *obj, const cace_amm_obj_ref_t
 
 void cace_amm_obj_ref_set(cace_amm_obj_ref_t *obj, const cace_amm_obj_ref_t *src)
 {
-    cace_ari_set_copy(&(obj->ref),&(src->ref));
+    cace_ari_set_copy(&(obj->ref), &(src->ref));
     obj->obj = src->obj;
 }

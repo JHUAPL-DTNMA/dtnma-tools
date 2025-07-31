@@ -293,6 +293,20 @@ static inline void cace_ari_set_objref_path_textid(cace_ari_t *ari, const char *
     cace_ari_objpath_set_textid(&(cace_ari_set_objref(ari)->objpath), org_id, model_id, type_id, obj_id);
 }
 
+/** Convenience getter to assure that the value is an object reference of a desired type.
+ *
+ * @param[in] ari The value to get from.
+ * @return An object path, if the ARI is a reference.
+ */
+static inline const cace_ari_objpath_t *cace_ari_cget_objpath_type(const cace_ari_t *ari)
+{
+    if (!(ari->is_ref))
+    {
+        return NULL;
+    }
+    return &(ari->as_ref.objpath);
+}
+
 #ifdef __cplusplus
 }
 #endif

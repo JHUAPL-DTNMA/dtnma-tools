@@ -44,8 +44,9 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
             cace_amm_range_int64_deinit(&(obj->as_range_int64));
             break;
         case CACE_AMM_SEMTYPE_CNST_IDENT_BASE:
-            cace_ari_deinit(&(obj->as_ident_base.ref));
-            obj->as_ident_base.obj = NULL;
+            cace_amm_obj_ref_deinit(&(obj->as_ident_base.base));
+            obj->as_ident_base.check      = NULL;
+            obj->as_ident_base.check_data = NULL;
             break;
     }
     obj->type = CACE_AMM_SEMTYPE_CNST_INVALID;
@@ -97,6 +98,20 @@ cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_c
     obj->type                   = CACE_AMM_SEMTYPE_CNST_RANGE_INT64;
     cace_amm_range_int64_t *cfg = &(obj->as_range_int64);
     cace_amm_range_int64_init(cfg);
+
+    return cfg;
+}
+
+struct cace_amm_semtype_cnst_ident_base_s *cace_amm_semtype_cnst_set_ident_base(cace_amm_semtype_cnst_t *obj)
+{
+    CHKNULL(obj);
+    cace_amm_semtype_cnst_deinit(obj);
+
+    obj->type                                      = CACE_AMM_SEMTYPE_CNST_IDENT_BASE;
+    struct cace_amm_semtype_cnst_ident_base_s *cfg = &(obj->as_ident_base);
+    cace_amm_obj_ref_init(&cfg->base);
+    cfg->check      = NULL;
+    cfg->check_data = NULL;
 
     return cfg;
 }
@@ -173,7 +188,12 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
         }
         case CACE_AMM_SEMTYPE_CNST_IDENT_BASE:
         {
-
+            const struct cace_amm_semtype_cnst_ident_base_s *cfg = &(obj->as_ident_base);
+            if (!(cfg->check))
+            {
+                return false;
+            }
+            return (cfg->check)(&cfg->base, val, cfg->check_data);
             break;
         }
     }

@@ -37,7 +37,8 @@ then
     cmake --install ${BUILDDIR} "$@"
 elif [ "$1" = "check" ]
 then
-    cmake --build ${BUILDDIR} --target test
+    shift
+    cmake --build ${BUILDDIR} --target test "$@"
 elif [ "$1" = "coverage" ]
 then
     cmake --build ${BUILDDIR} -j1 --target \

@@ -228,3 +228,43 @@ void test_amm_semtype_cnst_range_int64_1intvl_finite(const char *inhex, bool exp
     check_cnst(&cnst, inhex, expect);
     cace_amm_semtype_cnst_deinit(&cnst);
 }
+
+/** Mock callback for this test function.
+ *
+ */
+bool test_amm_semtype_cnst_ident_base_callback(const cace_amm_obj_ref_t *req_base, const cace_ari_t *val, void *check_data _U_)
+{
+    const cace_ari_objpath_t *path = cace_ari_cget_objpath_type(val);
+    if (!path)
+    {
+        return false;
+    }
+    if (!(path->has_ari_type) || (path->ari_type != CACE_ARI_TYPE_IDENT))
+    {
+        return false;
+    }
+
+    // Treat any ARI in the same org as valid
+    return cace_ari_idseg_equal(&req_base->ref.as_ref.objpath.org_id, &path->org_id);
+}
+
+TEST_CASE("8419FFFF022004", true)            // ari://65535/2/-1/4
+TEST_CASE("8419FFFF022104", false)           // ari://65535/2/-2/4
+TEST_CASE("84676578616D706C65022004", false) // ari://example/2/-1/4
+void test_amm_semtype_cnst_ident_base(const char *inhex, bool expect)
+{
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    struct cace_amm_semtype_cnst_ident_base_s *cfg = cace_amm_semtype_cnst_set_ident_base(&cnst);
+    TEST_ASSERT_NOT_NULL(cfg);
+
+    // Required base
+    cace_ari_set_objref_path_intid(&(cfg->base.ref), 65535, 1, CACE_ARI_TYPE_IDENT, 40);
+
+    // fake binding
+    cfg->check      = test_amm_semtype_cnst_ident_base_callback;
+    cfg->check_data = NULL;
+
+    check_cnst(&cnst, inhex, expect);
+    cace_amm_semtype_cnst_deinit(&cnst);
+}

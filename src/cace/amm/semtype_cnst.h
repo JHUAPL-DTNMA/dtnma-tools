@@ -57,6 +57,17 @@ enum cace_amm_semtype_cnst_type_e
     CACE_AMM_SEMTYPE_CNST_IDENT_BASE,
 };
 
+/** Callback function for an agent to perform the actual constraint check by
+ * dereferencing and base object comparisons.
+ * @param[in] req_base The required base object for the constraint.
+ * @param[in] val The reference value to check, which is already validated
+ * to be an IDENT reference.
+ * @param[in] check_data Any callback context needed.
+ * @return True if the required base is an actual base object.
+ */
+typedef bool (*cace_amm_semtype_cnst_ident_check_f)(const cace_amm_obj_ref_t *req_base, const cace_ari_t *val,
+                                                    void *check_data);
+
 /** A single constraint on a cace_amm_semtype_use_t
  */
 typedef struct cace_amm_semtype_cnst_s
@@ -75,7 +86,15 @@ typedef struct cace_amm_semtype_cnst_s
         /// Used when #type is ::CACE_AMM_SEMTYPE_CNST_RANGE_INT64
         cace_amm_range_int64_t as_range_int64;
         /// Used when #type is ::CACE_AMM_SEMTYPE_CNST_IDENT_BASE
-        cace_amm_obj_ref_t as_ident_base;
+        struct cace_amm_semtype_cnst_ident_base_s
+        {
+            /// Required base reference and object
+            cace_amm_obj_ref_t base;
+            /// Checking callback
+            cace_amm_semtype_cnst_ident_check_f check;
+            /// Callback context data
+            void *check_data;
+        } as_ident_base;
     };
 } cace_amm_semtype_cnst_t;
 
@@ -84,8 +103,8 @@ void cace_amm_semtype_cnst_init(cace_amm_semtype_cnst_t *obj);
 void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj);
 
 /** Configure a constraint on text-string or byte-string size.
- * This applies to CACE_ARI_TYPE_TEXTSTR and CACE_ARI_TYPE_BYTESTR as well as untyped
- * primitive text- and byte-strings.
+ * This applies to ::CACE_ARI_TYPE_TEXTSTR and ::CACE_ARI_TYPE_BYTESTR
+ * as well as untyped primitive text- and byte-strings.
  *
  * @param[in,out] obj The struct to set the state of.
  * @return The specific parameters for this constraint type.
@@ -93,7 +112,7 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj);
 cace_amm_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t *obj);
 
 /** Configure a constraint on text-string regular expression pattern.
- * This applies to CACE_ARI_TYPE_TEXTSTR as well as untyped
+ * This applies to ::CACE_ARI_TYPE_TEXTSTR as well as untyped
  * primitive text strings.
  *
  * @note The @c pat parameter is the start- and end-anchored PCRE pattern,
@@ -108,8 +127,9 @@ cace_amm_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t 
 int cace_amm_semtype_cnst_set_textpat(cace_amm_semtype_cnst_t *obj, const char *pat);
 
 /** Configure a constraint on integer values based on signed 64-bit ranges.
- * This applies to CACE_ARI_TYPE_BYTE, CACE_ARI_TYPE_INT, CACE_ARI_TYPE_UINT, CACE_ARI_TYPE_VAST,
- * and a limited domain of CACE_ARI_TYPE_UVAST as well as untyped primitive
+ * This applies to ::CACE_ARI_TYPE_BYTE, ::CACE_ARI_TYPE_INT,
+ * ::CACE_ARI_TYPE_UINT, ::CACE_ARI_TYPE_VAST,
+ * and a limited domain of ::CACE_ARI_TYPE_UVAST as well as untyped primitive
  * integer values.
  *
  * @param[in,out] obj The struct to set the state of.
@@ -119,12 +139,12 @@ cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_c
 
 /** Configure a constraint on IDENT reference values based on a required
  * base IDENT.
- * This applies to ARI_TYPE_IDENT only.
+ * This applies to ::CACE_ARI_TYPE_IDENT only.
  *
  * @param[in,out] obj The struct to set the state of.
  * @return The specific parameters for this constraint type.
  */
-cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj);
+struct cace_amm_semtype_cnst_ident_base_s *cace_amm_semtype_cnst_set_ident_base(cace_amm_semtype_cnst_t *obj);
 
 /** Determine if a specific value is valid according to a constraint.
  *

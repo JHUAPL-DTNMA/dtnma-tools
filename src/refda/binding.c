@@ -100,8 +100,34 @@ static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace
             failcnt = 1;
         }
     }
-
     CACE_LOG_DEBUG("bound to %p class %d", semtype->base, (semtype->base ? (int)(semtype->base->type_class) : -1));
+
+    // Bind any constraints
+    cace_amm_semtype_cnst_array_it_t cit;
+    for (cace_amm_semtype_cnst_array_it(cit, semtype->constraints); !cace_amm_semtype_cnst_array_end_p(cit);
+         cace_amm_semtype_cnst_array_next(cit))
+    {
+        cace_amm_semtype_cnst_t *cnst = cace_amm_semtype_cnst_array_ref(cit);
+
+        if (cnst->type == CACE_AMM_SEMTYPE_CNST_IDENT_BASE)
+        {
+            cace_amm_lookup_t deref;
+            cace_amm_lookup_init(&deref);
+
+            if (!cace_amm_lookup_deref(&deref, store, &(cnst->as_ident_base.base.ref)))
+            {
+                cnst->as_ident_base.base.obj = deref.obj;
+            }
+            else
+            {
+                cnst->as_ident_base.base.obj = NULL;
+                CACE_LOG_WARNING("Binding failed because IDENT lookup failed");
+                failcnt += 1;
+            }
+            cace_amm_lookup_deinit(&deref);
+        }
+    }
+
     return failcnt;
 }
 
@@ -209,7 +235,8 @@ static int refda_binding_fparams(cace_amm_formal_param_list_t fparams, const cac
     return failcnt;
 }
 
-static int refda_binding_ident_bases(cace_amm_obj_desc_t *obj, refda_amm_ident_desc_t *ident, const cace_amm_obj_store_t *store)
+static int refda_binding_ident_bases(cace_amm_obj_desc_t *obj, refda_amm_ident_desc_t *ident,
+                                     const cace_amm_obj_store_t *store)
 {
     int failcnt = 0;
 
