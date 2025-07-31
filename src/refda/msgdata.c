@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -21,22 +21,29 @@
 void refda_msgdata_init(refda_msgdata_t *obj)
 {
     CHKVOID(obj);
-    cace_data_init(&(obj->ident));
-    ari_init(&(obj->value));
+    cace_ari_init(&(obj->ident));
+    cace_ari_init(&(obj->value));
 }
 
 void refda_msgdata_init_move(refda_msgdata_t *obj, refda_msgdata_t *src)
 {
     CHKVOID(obj);
     CHKVOID(src);
-    cace_data_init(&(obj->ident));
-    cace_data_move(&(obj->ident), &(src->ident));
-    ari_init_move(&(obj->value), &(src->value));
+    cace_ari_init_move(&(obj->ident), &(src->ident));
+    cace_ari_init_move(&(obj->value), &(src->value));
 }
 
 void refda_msgdata_deinit(refda_msgdata_t *obj)
 {
     CHKVOID(obj);
-    ari_deinit(&(obj->value));
-    cace_data_deinit(&(obj->ident));
+    cace_ari_deinit(&(obj->value));
+    cace_ari_deinit(&(obj->ident));
+}
+
+void refda_msgdata_set(refda_msgdata_t *obj, const refda_msgdata_t *src)
+{
+    CHKVOID(obj);
+    CHKVOID(src);
+    cace_ari_set_copy(&(obj->ident), &(src->ident));
+    cace_ari_set_copy(&(obj->value), &(src->value));
 }

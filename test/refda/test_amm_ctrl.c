@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "util/ari.h"
 #include <refda/ctrl_exec_ctx.h>
+#include <refda/exec_seq.h>
 #include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -38,14 +40,14 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-static ari_t mock_result_store;
+static cace_ari_t mock_result_store;
 
 static void mock_ctrl_exec_none(refda_ctrl_exec_ctx_t *ctx)
 {
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, &mock_result_store, ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, &mock_result_store, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("execution with mock result %s", string_get_cstr(buf));
         string_clear(buf);
     }
@@ -54,36 +56,25 @@ static void mock_ctrl_exec_none(refda_ctrl_exec_ctx_t *ctx)
 
 static void mock_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
 {
-    const ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     CHKVOID(val)
     {
         string_t buf;
         string_init(buf);
-        ari_text_encode(buf, val, ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("execution with parameter %s", string_get_cstr(buf));
         string_clear(buf);
     }
     refda_ctrl_exec_ctx_set_result_copy(ctx, val);
 }
 
-static void ari_convert(ari_t *ari, const char *inhex)
+static void check_execute(cace_ari_t *result, const refda_amm_ctrl_desc_t *ctrl,
+                          const cace_amm_formal_param_list_t fparams, const char *refhex, const char *outhex)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
-    cace_data_t indata;
-    cace_data_init(&indata);
-    int res = base16_decode(&indata, intext);
-    string_clear(intext);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "base16_decode() failed");
+    cace_amm_obj_desc_t obj;
+    cace_amm_obj_desc_init(&obj);
+    cace_amm_user_data_set_from(&(obj.app_data), (void *)ctrl, false, NULL);
 
-    res = ari_cbor_decode(ari, &indata, NULL, NULL);
-    cace_data_deinit(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
-}
-
-static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const cace_amm_formal_param_list_t fparams,
-                          const char *refhex, const char *outhex)
-{
     refda_runctx_ptr_t ctxptr;
     refda_runctx_ptr_init_new(ctxptr);
     // no nonce for test
@@ -97,82 +88,86 @@ static void check_execute(ari_t *result, const refda_amm_ctrl_desc_t *obj, const
     refda_exec_item_init(&eitem);
     eitem.seq = &eseq;
 
-    ari_t inref = ARI_INIT_UNDEFINED;
-    ari_convert(&inref, refhex);
+    // fudge these contents
+    cace_ari_t inref = CACE_ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&inref, refhex));
     TEST_ASSERT_TRUE_MESSAGE(inref.is_ref, "invalid reference");
 
-    ari_t outval = ARI_INIT_UNDEFINED;
-    ari_convert(&outval, outhex);
-    TEST_ASSERT_EQUAL_INT(0, ari_set_copy(&mock_result_store, &outval));
+    cace_ari_t outval = CACE_ARI_INIT_UNDEFINED;
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));
+    TEST_ASSERT_EQUAL_INT(0, cace_ari_set_copy(&mock_result_store, &outval));
 
-    int res = cace_amm_actual_param_set_populate(&(eitem.deref.aparams), fparams, &(inref.as_ref.params));
+    eitem.deref.obj_type = CACE_ARI_TYPE_CTRL;
+    eitem.deref.obj      = &obj;
+    int res              = cace_amm_actual_param_set_populate(&(eitem.deref.aparams), fparams, &(inref.as_ref.params));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
 
     refda_ctrl_exec_ctx_t ctx;
-    refda_ctrl_exec_ctx_init(&ctx, obj, &eitem);
-    (obj->execute)(&ctx);
+    refda_ctrl_exec_ctx_init(&ctx, &eitem);
+    (ctrl->execute)(&ctx);
     refda_ctrl_exec_ctx_deinit(&ctx);
 
-    TEST_ASSERT_TRUE_MESSAGE(ari_equal(&outval, &(eitem.result)), "result value mismatch");
+    TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&outval, &(eitem.result)), "result value mismatch");
 
     if (result)
     {
         // move out result value
-        TEST_ASSERT_EQUAL_INT(0, ari_set_move(result, &(eitem.result)));
+        TEST_ASSERT_EQUAL_INT(0, cace_ari_set_move(result, &(eitem.result)));
     }
 
     refda_exec_item_deinit(&eitem);
     refda_exec_seq_deinit(&eseq);
     refda_runctx_ptr_clear(ctxptr);
+    cace_amm_obj_desc_deinit(&obj);
 
-    ari_deinit(&outval);
-    ari_deinit(&inref);
+    cace_ari_deinit(&outval);
+    cace_ari_deinit(&inref);
 }
 
 void setUp(void)
 {
-    ari_init(&mock_result_store);
+    cace_ari_init(&mock_result_store);
 }
 
 void tearDown(void)
 {
-    ari_deinit(&mock_result_store);
+    cace_ari_deinit(&mock_result_store);
 }
 
-// References are based on ari://2/CONST/4
-TEST_CASE(ARI_TYPE_NULL, "83022104", "8200F6")
-TEST_CASE(ARI_TYPE_INT, "83022104", "82040A")
-void test_ctrl_execute_param_none(ari_type_t restype, const char *refhex, const char *outhex)
+// References are based on ari://2/2/CONST/4
+TEST_CASE(CACE_ARI_TYPE_NULL, "8402022104", "8200F6")
+TEST_CASE(CACE_ARI_TYPE_INT, "8402022104", "82040A")
+void test_ctrl_execute_param_none(cace_ari_type_t restype, const char *refhex, const char *outhex)
 {
     refda_amm_ctrl_desc_t obj;
     refda_amm_ctrl_desc_init(&obj);
     // leave formal parameter list empty
-    amm_type_set_use_direct(&obj.res_type, amm_type_get_builtin(restype));
+    cace_amm_type_set_use_direct(&obj.res_type, cace_amm_type_get_builtin(restype));
     obj.execute = mock_ctrl_exec_none;
 
     cace_amm_formal_param_list_t fparams;
     cace_amm_formal_param_list_init(fparams);
 
-    ari_t result = ARI_INIT_UNDEFINED;
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     check_execute(&result, &obj, fparams, refhex, outhex);
 
-    ari_deinit(&result);
+    cace_ari_deinit(&result);
     cace_amm_formal_param_list_clear(fparams);
     refda_amm_ctrl_desc_deinit(&obj);
 }
 
-// References are based on ari://2/CONST/4
-TEST_CASE("83022104", "820403")           // no parameters, default value
-TEST_CASE("84022104810A", "82040A")       // pass through parameter
-TEST_CASE("84022104A1000A", "82040A")     // pass through parameter by index
-TEST_CASE("84022104A16268690A", "82040A") // pass through parameter by name
-TEST_CASE("8402210481F7", "F7")           // pass through undefined parameter
+// References are based on ari://2/2/CONST/4
+TEST_CASE("8402022104", "820403")           // no parameters, default value
+TEST_CASE("8502022104810A", "82040A")       // pass through parameter
+TEST_CASE("8502022104A1000A", "82040A")     // pass through parameter by index
+TEST_CASE("8502022104A16268690A", "82040A") // pass through parameter by name
+TEST_CASE("850202210481F7", "F7")           // pass through undefined parameter
 void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex)
 {
     refda_amm_ctrl_desc_t obj;
     refda_amm_ctrl_desc_init(&obj);
     // result is same type as parameter
-    amm_type_set_use_direct(&obj.res_type, amm_type_get_builtin(ARI_TYPE_INT));
+    cace_amm_type_set_use_direct(&obj.res_type, cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
     obj.execute = mock_ctrl_exec_one_int;
 
     cace_amm_formal_param_list_t fparams;
@@ -183,14 +178,14 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex)
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
 
-        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
-        ari_set_int(&(fparam->defval), 3); // arbitrary default
+        cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+        cace_ari_set_int(&(fparam->defval), 3); // arbitrary default
     }
 
-    ari_t result = ARI_INIT_UNDEFINED;
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     check_execute(&result, &obj, fparams, refhex, outhex);
 
-    ari_deinit(&result);
+    cace_ari_deinit(&result);
     cace_amm_formal_param_list_clear(fparams);
     refda_amm_ctrl_desc_deinit(&obj);
 }

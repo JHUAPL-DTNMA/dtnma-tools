@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -43,69 +43,96 @@ extern "C" {
 #define CACE_AMM_ERR_CONVERT_FAILED_CONSTRAINT 5
 
 // Forward declaration to allow recursive references
-struct amm_type_s;
+struct cace_amm_type_s;
 
 /// A typedef representing an AMM semantic type.
-typedef struct amm_type_s amm_type_t;
+typedef struct cace_amm_type_s cace_amm_type_t;
 
-#define AMM_TYPE_INIT_INVALID                                          \
-    (amm_type_t)                                                       \
-    {                                                                  \
-        .match = NULL, .convert = NULL, .type_class = AMM_TYPE_INVALID \
+#define CACE_AMM_TYPE_INIT_INVALID                                          \
+    (cace_amm_type_t)                                                       \
+    {                                                                       \
+        .match = NULL, .convert = NULL, .type_class = CACE_AMM_TYPE_INVALID \
     }
 
 /** Initialize a type object to a default, invalid state.
  *
  * @param[out] type The type to initialize.
  */
-void amm_type_init(amm_type_t *type);
+void cace_amm_type_init(cace_amm_type_t *type);
 
 /** Free any resources associated with a semantic type.
  *
  * @param[in,out] type The object to de-initialize.
  */
-void amm_type_deinit(amm_type_t *type);
+void cace_amm_type_deinit(cace_amm_type_t *type);
 
 /** Reset to the default invalid state.
  *
  * @param[in,out] type The object to reset.
  */
-void amm_type_reset(amm_type_t *type);
+void cace_amm_type_reset(cace_amm_type_t *type);
 
-/// M*LIB OPLIST for the amm_type_t
-#define M_OPL_amm_type_t() (INIT(API_2(amm_type_init)), CLEAR(API_2(amm_type_deinit)), RESET(API_2(amm_type_reset)))
+/// M*LIB OPLIST for the cace_amm_type_t
+#define M_OPL_cace_amm_type_t() \
+    (INIT(API_2(cace_amm_type_init)), CLEAR(API_2(cace_amm_type_deinit)), RESET(API_2(cace_amm_type_reset)))
 
 /// Configuration for a built-in type
-struct amm_type_builtin_s
+struct cace_amm_type_builtin_s
 {
     /// The ARI type corresponding to this built-in
-    ari_type_t ari_type;
+    cace_ari_type_t ari_type;
 };
 
 /** De-initializing function for amm_type_s::as_semtype when it is valid.
  * @param[in] semtype The pointer to struct being de-initialized.
  * @post After this call the pointed-to memory can be free'd.
  */
-typedef void (*amm_semtype_deinit_f)(void *semtype);
+typedef void (*cace_amm_semtype_deinit_f)(void *semtype);
+
+/// Result status for type matching
+typedef enum
+{
+    /// The result was not positive or negative
+    CACE_AMM_TYPE_MATCH_NOINFO,
+    /// The result was a negative (non-match)
+    CACE_AMM_TYPE_MATCH_NEGATIVE,
+    /// The result was a positive (match)
+    CACE_AMM_TYPE_MATCH_POSITIVE,
+    CACE_AMM_TYPE_MATCH_UNDEFINED,
+} cace_amm_type_match_res_t;
+
+/** Return either a postive or negative match depending on a condition.
+ */
+static inline cace_amm_type_match_res_t cace_amm_type_match_pos_neg(bool cond)
+{
+    return cond ? CACE_AMM_TYPE_MATCH_POSITIVE : CACE_AMM_TYPE_MATCH_NEGATIVE;
+}
 
 /** Descriptor for each built-in (ARI type) and semantic type within the AMM.
  * Users of this struct must treat it as opaque and not access any individual
- * members directly, instead use amm_type_set_* functions to set its state
+ * members directly, instead use cace_amm_type_set_* functions to set its state
  * and other functions to access its state.
  *
  * Both #match and #convert should be non-null for any type.
- * Details about AMM typing are discussed in the page @ref amm_typing.
+ * Details about AMM typing are discussed in the page @ref cace_amm_typing.
  * This includes the valid possibility of circular references.
  */
-struct amm_type_s
+struct cace_amm_type_s
 {
+    /** Get an ARI representation of a name for this type.
+     *
+     * @param[in] self Pointer to the associated type object.
+     * @param[out] name The already initialized output object.
+     */
+    void (*ari_name)(const cace_amm_type_t *self, cace_ari_t *name);
+
     /** Determine if a specific value matches this type.
      *
      * @param[in] self Pointer to the associated type object.
      * @param[in] ari The value to check.
      * @return True if the value matches this type.
      */
-    bool (*match)(const amm_type_t *self, const ari_t *ari);
+    cace_amm_type_match_res_t (*match)(const cace_amm_type_t *self, const cace_ari_t *ari);
 
     /** Convert a value to this type if possible.
      * It is expected that many input values will not be convertible to any
@@ -116,35 +143,35 @@ struct amm_type_s
      * @param[in] in The value to convert from.
      * @return Zero if the conversion is successful.
      */
-    int (*convert)(const amm_type_t *self, ari_t *out, const ari_t *in);
+    int (*convert)(const cace_amm_type_t *self, cace_ari_t *out, const cace_ari_t *in);
 
     /// Determine which of the following union member is valid
-    enum amm_type_class_e
+    enum cace_amm_type_class_e
     {
         /// An initialized but not valid type
-        AMM_TYPE_INVALID,
+        CACE_AMM_TYPE_INVALID,
         /// A built-in type using the #as_builtin member
-        AMM_TYPE_BUILTIN,
+        CACE_AMM_TYPE_BUILTIN,
         /// An augmented use of another type using the #as_semtype member
-        AMM_TYPE_USE,
+        CACE_AMM_TYPE_USE,
         /// A uniform list using the #as_semtype member
-        AMM_TYPE_ULIST,
+        CACE_AMM_TYPE_ULIST,
         /// A diverse list using the #as_semtype member
-        AMM_TYPE_DLIST,
+        CACE_AMM_TYPE_DLIST,
         /// A uniform map using the #as_semtype member
-        AMM_TYPE_UMAP,
+        CACE_AMM_TYPE_UMAP,
         /// A table template using the #as_semtype member
-        AMM_TYPE_TBLT,
+        CACE_AMM_TYPE_TBLT,
         /// A union type using the #as_semtype member
-        AMM_TYPE_UNION,
+        CACE_AMM_TYPE_UNION,
         /// A sub-sequence using the #as_semtype member
-        AMM_TYPE_SEQ,
+        CACE_AMM_TYPE_SEQ,
     } type_class;
     union
     {
-        /// Valid when #type_class is amm_type_s::AMM_TYPE_BUILTIN
-        struct amm_type_builtin_s as_builtin;
-        /** Non-null for all other amm_type_s values.
+        /// Valid when #type_class is cace_amm_type_s::CACE_AMM_TYPE_BUILTIN
+        struct cace_amm_type_builtin_s as_builtin;
+        /** Non-null for all other cace_amm_type_s values.
          * Cast to specific internal configuration struct for each class of
          * semantic type.
          */
@@ -152,7 +179,7 @@ struct amm_type_s
     };
 
     // De-initializing function for #as_semtype when it is valid
-    amm_semtype_deinit_f as_semtype_deinit;
+    cace_amm_semtype_deinit_f as_semtype_deinit;
 };
 
 /** Get a built-in type object.
@@ -161,29 +188,37 @@ struct amm_type_s
  * @return A stable non-null pointer to a built-in type object or
  * a null pointer if not found.
  */
-const amm_type_t *amm_type_get_builtin(ari_type_t ari_type);
+const cace_amm_type_t *cace_amm_type_get_builtin(cace_ari_type_t ari_type);
 
 /** Determine if a type object is valid.
  *
  * @return True if the object is valid.
  */
-bool amm_type_is_valid(const amm_type_t *type);
+bool cace_amm_type_is_valid(const cace_amm_type_t *type);
 
-/** @struct amm_type_array_t
+/** @struct cace_amm_type_array_t
  * An array of type structs.
  */
 /// @cond Doxygen_Suppress
-ARRAY_DEF(amm_type_array, amm_type_t)
+ARRAY_DEF(cace_amm_type_array, cace_amm_type_t)
 /// @endcond
+
+/** Get a human-friendly name for a type object.
+ *
+ * @param[in] type The type to name.
+ * @param[out] name The generated name.
+ * @return True if a name was set.
+ */
+bool cace_amm_type_get_name(const cace_amm_type_t *type, cace_ari_t *name);
 
 /** Determine if a type (built-in or semantic) matches a specific value.
  *
  * @param[in] type The type to check against.
  * @param[in] ari The value to check.
  * This struct must be initialized.
- * @return True if the type fully matches the value.
+ * @return AMM_TYPE_MATCH_POSITIVE if the type fully matches the value.
  */
-bool amm_type_match(const amm_type_t *type, const ari_t *ari);
+cace_amm_type_match_res_t cace_amm_type_match(const cace_amm_type_t *type, const cace_ari_t *ari);
 
 /** Force a value to be converted to a specific type (built-in or semantic).
  *
@@ -194,13 +229,13 @@ bool amm_type_match(const amm_type_t *type, const ari_t *ari);
  * This struct must be initialized.
  * @return Zero if the conversion is successful.
  */
-int amm_type_convert(const amm_type_t *type, ari_t *out, const ari_t *in);
+int cace_amm_type_convert(const cace_amm_type_t *type, cace_ari_t *out, const cace_ari_t *in);
 
 /** Validate that typed literals agree with their values.
- * This performs comparisons of valid ari_lit_t::prim_type and valid
- * ari_lit_t::value within each ARI type.
+ * This performs comparisons of valid cace_ari_lit_t::prim_type and valid
+ * cace_ari_lit_t::value within each ARI type.
  */
-bool amm_builtin_validate(const ari_t *ari);
+bool cace_amm_builtin_validate(const cace_ari_t *ari);
 
 #ifdef __cplusplus
 }

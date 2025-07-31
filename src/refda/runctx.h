@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -68,16 +68,15 @@ typedef struct
      */
     refda_agent_t *agent;
 
-    /** During execution, a reference to the manager identity which caused
-     * the execution.
-     * When triggered by the agent itself this will be empty.
+    /** During execution, the manager identity which caused the execution.
+     * When triggered by the agent itself this will be the undefined value.
      */
-    cace_data_t mgr_ident;
+    cace_ari_t mgr_ident;
 
     /** During execution, a reference to a context nonce value.
      * Otherwise this will be the undefined value.
      */
-    ari_t nonce;
+    cace_ari_t nonce;
 
 } refda_runctx_t;
 
@@ -95,10 +94,10 @@ void refda_runctx_deinit(refda_runctx_t *ctx);
 int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
 
 /// M*LIB OPLIST for refda_runctx_t
-#define M_OPL_refda_runctx_t() (INIT(API_2(refda_runctx_init)), CLEAR(API_2(refda_runctx_deinit)))
+#define M_OPL_refda_runctx_t() (INIT(API_2(refda_runctx_init)), INIT_SET(0), CLEAR(API_2(refda_runctx_deinit)), SET(0))
 
 /// @cond Doxygen_Suppress
-SHARED_PTR_DEF(refda_runctx_ptr, refda_runctx_t)
+M_SHARED_PTR_DEF(refda_runctx_ptr, refda_runctx_t)
 /// @endcond
 
 #ifdef __cplusplus

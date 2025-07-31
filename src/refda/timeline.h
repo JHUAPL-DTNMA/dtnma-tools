@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -20,6 +20,8 @@
 #define REFDA_TIMELINE_H_
 
 #include "exec_item.h"
+#include "ctrl_exec_ctx.h"
+#include "register.h"
 #include <m-rbtree.h>
 #include <sys/time.h>
 
@@ -27,20 +29,68 @@
 extern "C" {
 #endif
 
-typedef struct
+// forward declaration for callback reference
+struct refda_ctrl_exec_ctx_s;
+typedef struct refda_ctrl_exec_ctx_s refda_ctrl_exec_ctx_t;
+
+typedef struct refda_timeline_exec_event_s
 {
-    /** Specific time at which the event should occur.
-     */
-    struct timespec ts;
     /// Execution item which created the wait
     refda_exec_item_t *item;
     /** Execution-defined callback, which should not be null.
      *
-     * @param[in] item The associated execution item.
-     * @return True if work is done on the item and it should be considered
-     * finished. False to continue waiting.
+     * @param[in,out] ctx The associated execution context.
+     * A result value is set when the execution has finished.
      */
-    bool (*callback)(refda_exec_item_t *item);
+    void (*callback)(refda_ctrl_exec_ctx_t *ctx);
+} refda_timeline_exec_event_t;
+
+typedef struct refda_timeline_sbr_event_s
+{
+    /// Agent which scheduled the SBR
+    refda_agent_t *agent;
+    /// SBR which was scheduled
+    refda_amm_sbr_desc_t *sbr;
+    /** Execution-defined callback, which should not be null.
+     *
+     * @param[in,out] ctx The associated execution context.
+     * A result value is set when the execution has finished.
+     */
+    void (*callback)(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
+} refda_timeline_sbr_event_t;
+
+typedef struct refda_timeline_tbr_event_s
+{
+    /// Agent which scheduled the TBR
+    refda_agent_t *agent;
+    /// TBR which was scheduled
+    refda_amm_tbr_desc_t *tbr;
+    /** Execution-defined callback, which should not be null.
+     *
+     * @param[in,out] ctx The associated execution context.
+     * A result value is set when the execution has finished.
+     */
+    void (*callback)(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr);
+} refda_timeline_tbr_event_t;
+
+typedef struct refda_timeline_event_s
+{
+    enum
+    {
+        REFDA_TIMELINE_EXEC = 0,
+        REFDA_TIMELINE_TBR,
+        REFDA_TIMELINE_SBR,
+    } purpose;
+    /** Specific time at which the event should occur.
+     */
+    struct timespec ts;
+
+    union
+    {
+        refda_timeline_exec_event_t exec;
+        refda_timeline_sbr_event_t  sbr;
+        refda_timeline_tbr_event_t  tbr;
+    };
 
 } refda_timeline_event_t;
 
@@ -54,13 +104,6 @@ int refda_timeline_event_cmp(const refda_timeline_event_t *lt, const refda_timel
 /// @cond Doxygen_Suppress
 RBTREE_DEF(refda_timeline, refda_timeline_event_t)
 /// @endcond
-
-/** Get the earliest absolute time in the timeline.
- *
- * @param[in] The timeline to check.
- * @return Pointer to the earliest item time or NULL if empty.
- */
-// const refda_timeline_event_t *refda_timeline_front(refda_timeline_t line);
 
 #ifdef __cplusplus
 } // extern C

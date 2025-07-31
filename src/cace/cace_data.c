@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -35,7 +35,7 @@ static void cace_data_int_free(cace_data_t *data)
 {
     if (data->owned && data->ptr)
     {
-        ARI_FREE(data->ptr);
+        CACE_FREE(data->ptr);
     }
 }
 
@@ -53,6 +53,13 @@ int cace_data_init_view(cace_data_t *data, size_t len, const cace_data_ptr_t src
     data->ptr   = src;
     data->len   = len;
     return 0;
+}
+
+int cace_data_init_view_cstr(cace_data_t *data, const char *src)
+{
+    CHKERR1(data);
+    CHKERR1(src);
+    return cace_data_init_view(data, strlen(src) + 1, (cace_data_ptr_t)src);
 }
 
 int cace_data_init_set(cace_data_t *data, const cace_data_t *src)
@@ -96,6 +103,13 @@ int cace_data_copy_from(cace_data_t *data, size_t len, cace_data_ptr_t src)
     }
 
     return 0;
+}
+
+int cace_data_copy_from_cstr(cace_data_t *data, const char *src)
+{
+    CHKERR1(data);
+    CHKERR1(src);
+    return cace_data_copy_from(data, strlen(src) + 1, (cace_data_ptr_t)src);
 }
 
 int cace_data_copy(cace_data_t *data, const cace_data_t *src)
@@ -209,7 +223,7 @@ int cace_data_resize(cace_data_t *data, size_t len)
     {
         data->ptr = NULL;
     }
-    cace_data_ptr_t got = ARI_REALLOC(data->ptr, len);
+    cace_data_ptr_t got = CACE_REALLOC(data->ptr, len);
     if (UNLIKELY(!got))
     {
         cace_data_int_reset(data);
@@ -275,7 +289,7 @@ int cace_data_append_byte(cace_data_t *data, uint8_t val)
 
 int cace_data_from_m_string(cace_data_t *data, const struct m_string_s *src)
 {
-    const size_t len = string_size(src) + 1;
-    cace_data_copy_from(data, len, (cace_data_ptr_t)string_get_cstr(src));
+    const size_t len = m_string_size(src) + 1;
+    cace_data_copy_from(data, len, (cace_data_ptr_t)m_string_get_cstr(src));
     return 0;
 }

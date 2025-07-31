@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -24,7 +24,7 @@
  * @param dr The object to initialize.
  * @return Zero if successful, nonzero otherwise.
  */
-int daemon_run_init(daemon_run_t *dr)
+int cace_daemon_run_init(cace_daemon_run_t *dr)
 {
     int ret = sem_init(&(dr->stop), 0, 0);
     if (ret)
@@ -32,7 +32,7 @@ int daemon_run_init(daemon_run_t *dr)
         CACE_LOG_ERR("Failed to create mutex: %d", errno);
         return 1;
     }
-    daemon_run_get(dr);
+    cace_daemon_run_get(dr);
     return 0;
 }
 
@@ -40,7 +40,7 @@ int daemon_run_init(daemon_run_t *dr)
  * @brief daemon_run_cleanup Deinitialize the object.
  * @param dr The object to inspect.
  */
-void daemon_run_cleanup(daemon_run_t *dr)
+void cace_daemon_run_cleanup(cace_daemon_run_t *dr)
 {
     if (sem_destroy(&(dr->stop)))
     {
@@ -52,7 +52,7 @@ void daemon_run_cleanup(daemon_run_t *dr)
  * @brief daemon_run_stop Signal the daemon to stop running.
  * @param dr The object to inspect.
  */
-void daemon_run_stop(daemon_run_t *dr)
+void cace_daemon_run_stop(cace_daemon_run_t *dr)
 {
     CACE_LOG_INFO("Stopping daemon");
     if (sem_post(&(dr->stop)))
@@ -67,7 +67,7 @@ void daemon_run_stop(daemon_run_t *dr)
  * @param dr The object to inspect.
  * @return True if the daemon continues to run.
  */
-bool daemon_run_get(daemon_run_t *dr)
+bool cace_daemon_run_get(cace_daemon_run_t *dr)
 {
     int val;
     if (sem_getvalue(&(dr->stop), &val))
@@ -81,7 +81,7 @@ bool daemon_run_get(daemon_run_t *dr)
     return val == 0;
 }
 
-bool daemon_run_wait(daemon_run_t *dr)
+bool cace_daemon_run_wait(cace_daemon_run_t *dr)
 {
     if (sem_wait(&(dr->stop)))
     {

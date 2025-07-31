@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -29,9 +29,9 @@ extern "C" {
 #endif
 
 /// @cond Doxygen_Suppress
-M_VARIANT_DEF2(refda_eval_item, (value, ari_t), (deref, cace_amm_lookup_t))
+M_VARIANT_DEF2(refda_eval_item, (value, cace_ari_t), (deref, cace_amm_lookup_t))
 /// OPLIST for the refda_eval_item_t
-#define M_OPL_refda_eval_item_t() M_VARIANT_OPLIST(refda_eval_item, M_OPL_ari_t(), M_OPL_cace_amm_lookup_t())
+#define M_OPL_refda_eval_item_t() M_VARIANT_OPLIST(refda_eval_item, M_OPL_cace_ari_t(), M_OPL_cace_amm_lookup_t())
 
 M_DEQUE_DEF(refda_eval_list, refda_eval_item_t)
 /// @endcond
@@ -52,7 +52,7 @@ typedef struct
     /** Storage for the evaluation stack.
      * Top of stack is at the back.
      */
-    ari_list_t stack;
+    cace_ari_list_t stack;
 } refda_eval_ctx_t;
 
 /** Initialize a context based on an object reference ARI and

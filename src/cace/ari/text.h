@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -33,53 +33,53 @@
 extern "C" {
 #endif
 
-enum ari_text_aritype_e
+enum cace_ari_text_aritype_e
 {
     /// Show whatever the original decoding was
-    ARI_TEXT_ARITYPE_ORIG,
+    CACE_ARI_TEXT_ARITYPE_ORIG,
     /// Always show the text name
-    ARI_TEXT_ARITYPE_TEXT,
+    CACE_ARI_TEXT_ARITYPE_TEXT,
     /// Always show the integer enumeration
-    ARI_TEXT_ARITYPE_INT,
+    CACE_ARI_TEXT_ARITYPE_INT,
 };
 
 /** Encode just an object path, which can be useful for debugging output.
  *
  */
-int ari_text_encode_objpath(string_t text, const ari_objpath_t *path, enum ari_text_aritype_e show);
+int cace_ari_text_encode_objpath(string_t text, const cace_ari_objpath_t *path, enum cace_ari_text_aritype_e show);
 
 /** Parameters for ARI text encoding.
- * Use ::ARI_TEXT_ENC_OPTS_DEFAULT to initialize these contents.
+ * Use ::CACE_ARI_TEXT_ENC_OPTS_DEFAULT to initialize these contents.
  */
 typedef struct
 {
     /** True if the scheme is present at the start of the text.
-     * This defaults to ARI_TEXT_SCHEME_FIRST.
+     * This defaults to CACE_ARI_TEXT_SCHEME_FIRST.
      */
     enum
     {
         /// Never prefix with a scheme
-        ARI_TEXT_SCHEME_NONE,
+        CACE_ARI_TEXT_SCHEME_NONE,
         /// Prefix only the outer-most value
-        ARI_TEXT_SCHEME_FIRST,
+        CACE_ARI_TEXT_SCHEME_FIRST,
         /// Prefix all values, including container contents
-        ARI_TEXT_SCHEME_ALL,
+        CACE_ARI_TEXT_SCHEME_ALL,
     } scheme_prefix;
-    /** Determine how to show ari_type_t values.
-     * This defaults to ARI_TEXT_ARITYPE_TEXT.
+    /** Determine how to show cace_ari_type_t values.
+     * This defaults to CACE_ARI_TEXT_ARITYPE_TEXT.
      */
-    enum ari_text_aritype_e show_ari_type;
+    enum cace_ari_text_aritype_e show_ari_type;
     /** Desired base of integer values.
      * This defaults to 10 (decimal).
      */
-    enum ari_int_base_e
+    enum cace_ari_int_base_e
     {
         /// Binary with 0b prefix
-        ARI_TEXT_INT_BASE2 = 2,
+        CACE_ARI_TEXT_INT_BASE2 = 2,
         /// Decimal
-        ARI_TEXT_INT_BASE10 = 10,
+        CACE_ARI_TEXT_INT_BASE10 = 10,
         /// Hexadecimal with 0x prefix
-        ARI_TEXT_INT_BASE16 = 16,
+        CACE_ARI_TEXT_INT_BASE16 = 16,
     } int_base;
     /** One of 'f', 'g', or 'e' for decimal format, or 'a' for hexadecimal.
      */
@@ -87,27 +87,27 @@ typedef struct
     /** True if specific text can be left unquoted.
      */
     bool text_identity;
-    enum ari_bstr_form_e
+    enum cace_ari_bstr_form_e
     {
         /// Attempt to output as text
-        ARI_TEXT_BSTR_RAW,
+        CACE_ARI_TEXT_BSTR_RAW,
         /// Base16 according to Section 8 of RFC 4648 @cite rfc4648
-        ARI_TEXT_BSTR_BASE16,
+        CACE_ARI_TEXT_BSTR_BASE16,
         // Base64 according to Section 5 of RFC 4648 @cite rfc4648
-        ARI_TEXT_BSTR_BASE64URL,
+        CACE_ARI_TEXT_BSTR_BASE64URL,
     } bstr_form;
     /** True if time values should be in text form.
      * False to use decimal fraction form.
      */
     bool time_text;
-} ari_text_enc_opts_t;
+} cace_ari_text_enc_opts_t;
 
-#define ARI_TEXT_ENC_OPTS_DEFAULT                                                                                     \
-    (ari_text_enc_opts_t)                                                                                             \
-    {                                                                                                                 \
-        .scheme_prefix = ARI_TEXT_SCHEME_FIRST, .show_ari_type = ARI_TEXT_ARITYPE_TEXT,                               \
-        .int_base = ARI_TEXT_INT_BASE10, .float_form = 'g', .text_identity = true, .bstr_form = ARI_TEXT_BSTR_BASE16, \
-        .time_text = true,                                                                                            \
+#define CACE_ARI_TEXT_ENC_OPTS_DEFAULT                                                            \
+    (cace_ari_text_enc_opts_t)                                                                    \
+    {                                                                                             \
+        .scheme_prefix = CACE_ARI_TEXT_SCHEME_FIRST, .show_ari_type = CACE_ARI_TEXT_ARITYPE_TEXT, \
+        .int_base = CACE_ARI_TEXT_INT_BASE10, .float_form = 'g', .text_identity = true,           \
+        .bstr_form = CACE_ARI_TEXT_BSTR_BASE16, .time_text = true,                                \
     }
 
 /** Encode an ARI to text form.
@@ -118,7 +118,7 @@ typedef struct
  * @param opts Encoding parameters.
  * @return Zero upon success.
  */
-int ari_text_encode(string_t text, const ari_t *ari, ari_text_enc_opts_t opts);
+int cace_ari_text_encode(string_t text, const cace_ari_t *ari, cace_ari_text_enc_opts_t opts);
 
 #if defined(ARI_TEXT_PARSE)
 
@@ -132,7 +132,7 @@ int ari_text_encode(string_t text, const ari_t *ari, ari_text_enc_opts_t opts);
  * must be freed using M_MEMORY_FREE().
  * @return Zero upon success.
  */
-int ari_text_decode(ari_t *ari, const string_t text, const char **errm);
+int cace_ari_text_decode(cace_ari_t *ari, const string_t text, const char **errm);
 
 #endif /* ARI_TEXT_PARSE */
 

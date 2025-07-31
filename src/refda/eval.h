@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -45,7 +45,7 @@ extern "C" {
  * @param[in] ari The ARI to dereference, if necessary, and evaluate.
  * @return Zero if successful.
  */
-int refda_eval_target(refda_runctx_t *runctx, ari_t *result, const ari_t *ari);
+int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *ari);
 
 #ifdef __cplusplus
 } // extern C

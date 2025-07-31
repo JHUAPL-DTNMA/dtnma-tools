@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -18,7 +18,6 @@
 #ifndef REFDA_AMM_EDD_H_
 #define REFDA_AMM_EDD_H_
 
-#include "refda/valprod.h"
 #include "cace/amm/typing.h"
 
 #ifdef __cplusplus
@@ -36,10 +35,11 @@ typedef struct refda_edd_prod_ctx_s refda_edd_prod_ctx_t;
 typedef struct
 {
     /** The required type for the produced value.
+     * This type will not change during the lifetime of the EDD.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t prod_type;
+    cace_amm_type_t prod_type;
 
     /** Value production callback for an EDD object.
      * @note The success or failure of production is indicated by the result value

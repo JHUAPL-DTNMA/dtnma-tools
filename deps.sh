@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+## Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Delay-Tolerant Networking Management
@@ -19,6 +19,8 @@
 
 #
 # From a fresh checkout install local-sourced dependencies.
+# The environment DEPS_BUILD_ION being set to "0" will disable
+# the ION source from being built and installed.
 #
 set -e
 
@@ -30,7 +32,7 @@ BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"
 echo "Installing to ${DESTDIR}"
 
-if [ -z "false" -a ! -e ${DESTDIR}/usr/include/ion.h ]
+if [ "${DEPS_BUILD_ION:-1}" -ne 0 -a ! -e ${DESTDIR}/usr/include/ion.h ]
 then
   mkdir -p ${BUILDDIR}
   rsync --recursive ${DEPSDIR}/ion/ ${BUILDDIR}/ion/
@@ -40,9 +42,10 @@ then
   patch -p1 <${SELFDIR}/deps/ion-4.1.2-local-deliver.patch
   patch -p1 <${SELFDIR}/deps/ion-4.1.2-private-headers.patch
   autoreconf -vif
+  export CFLAGS="-std=gnu99"
   ./configure --prefix=/usr
-  make -j$(nproc) clean
   make -j$(nproc)
+  export -n CFLAGS
   make install DESTDIR=${DESTDIR}
   make -j$(nproc) clean
   popd
@@ -54,7 +57,8 @@ then
   pushd ${DEPSDIR}/QCBOR
   cmake -S . -B ${BUILDDIR}/QCBOR \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
+    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+    -DBUILD_SHARED_LIBS=YES
   cmake --build ${BUILDDIR}/QCBOR
   cmake --install ${BUILDDIR}/QCBOR
   rm -rf ${BUILDDIR}/QCBOR
@@ -62,27 +66,10 @@ then
   popd
 fi
 
-# if [ ! -e ${SELFDIR}/testroot/usr/include/civetweb.h ]
-# then
-#   rsync --recursive ${SELFDIR}/deps/civetweb/ ${SELFDIR}/deps/build/civetweb/
-#   pushd ${SELFDIR}/deps/build/civetweb
-# 
-#   cmake -S . -B builddir \
-#     -DCMAKE_INSTALL_PREFIX=${SELFDIR}/testroot/usr \
-#     -DBUILD_SHARED_LIBS=YES \
-#     -DCIVETWEB_ENABLE_SERVER_EXECUTABLE=NO \
-#     -DCIVETWEB_BUILD_TESTING=NO \
-#     -DCMAKE_BUILD_TYPE=Release \
-#     -G Ninja
-#   cmake --build builddir
-#   cmake --install builddir
-#   cmake --build builddir --target clean
-#   popd
-# fi
-
 if [ ! -e ${DESTDIR}/usr/include/m-lib ]
 then
   echo "Building MLIB..."
+  mkdir -p ${BUILDDIR}/mlib/
   rsync --recursive ${DEPSDIR}/mlib/ ${BUILDDIR}/mlib/
   pushd ${BUILDDIR}/mlib
   
@@ -101,6 +88,7 @@ then
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
   cmake --build ${BUILDDIR}/unity -v
+  export -n CFLAGS
   cmake --install ${BUILDDIR}/unity
   rm -rf ${BUILDDIR}/unity
   popd

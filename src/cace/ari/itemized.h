@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -31,7 +31,7 @@ extern "C" {
  * Dictionary from case-sensitive name to external ARI pointer
  */
 /// @cond Doxygen_Suppress
-M_DICT_DEF2(named_ari_ptr_dict, const char *, M_CSTR_OPLIST, ari_t *, M_PTR_OPLIST)
+M_DICT_DEF2(cace_named_ari_ptr_dict, const char *, M_CSTR_OPLIST, cace_ari_t *, M_PTR_OPLIST)
 /// @endcond
 
 /** A itemized (indexed and named) set of ARIs.
@@ -39,9 +39,9 @@ M_DICT_DEF2(named_ari_ptr_dict, const char *, M_CSTR_OPLIST, ari_t *, M_PTR_OPLI
 typedef struct
 {
     /// Lookup by ordinal index
-    ari_array_t ordered;
+    cace_ari_array_t ordered;
     /// Lookup by (case-sensitive) text name
-    named_ari_ptr_dict_t named;
+    cace_named_ari_ptr_dict_t named;
 } cace_ari_itemized_t;
 
 /** Initialize a new empty set.
@@ -49,8 +49,16 @@ typedef struct
  */
 void cace_ari_itemized_init(cace_ari_itemized_t *obj);
 
+/** Initializer with copy semantics.
+ */
+void cace_ari_itemized_init_set(cace_ari_itemized_t *obj, const cace_ari_itemized_t *src);
+
+/** Initializer with move semantics.
+ */
 void cace_ari_itemized_init_move(cace_ari_itemized_t *obj, cace_ari_itemized_t *src);
 
+/** State de-initializer.
+ */
 void cace_ari_itemized_deinit(cace_ari_itemized_t *obj);
 
 /** Clear out any parameters present.

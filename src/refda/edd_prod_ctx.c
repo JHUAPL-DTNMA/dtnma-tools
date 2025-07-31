@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -33,22 +33,45 @@ void refda_edd_prod_ctx_deinit(refda_edd_prod_ctx_t *obj)
     CHKVOID(obj);
 }
 
-const ari_t *refda_edd_prod_ctx_get_aparam_index(refda_edd_prod_ctx_t *ctx, size_t index)
+const cace_ari_t *refda_edd_prod_ctx_get_aparam_index(const refda_edd_prod_ctx_t *ctx, size_t index)
 {
-    return ari_array_cget(ctx->prodctx->deref->aparams.ordered, index);
+    return cace_ari_array_cget(ctx->prodctx->deref->aparams.ordered, index);
 }
 
-const ari_t *refda_edd_prod_ctx_get_aparam_name(refda_edd_prod_ctx_t *ctx, const char *name)
+const cace_ari_t *refda_edd_prod_ctx_get_aparam_name(const refda_edd_prod_ctx_t *ctx, const char *name)
 {
-    return *named_ari_ptr_dict_cget(ctx->prodctx->deref->aparams.named, name);
+    return *cace_named_ari_ptr_dict_cget(ctx->prodctx->deref->aparams.named, name);
 }
 
-void refda_edd_prod_ctx_set_result_move(refda_edd_prod_ctx_t *ctx, ari_t *value)
+static int refda_edd_prod_check_result(refda_edd_prod_ctx_t *ctx)
 {
-    ari_set_move(&(ctx->prodctx->value), value);
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, &(ctx->prodctx->value), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("EDD result value %s", string_get_cstr(buf));
+        string_clear(buf);
+    }
+
+    bool valid = cace_amm_type_match(&(ctx->edd->prod_type), &(ctx->prodctx->value));
+    if (!valid)
+    {
+        CACE_LOG_ERR("EDD result type failed to match a produced value");
+        cace_ari_set_undefined(&(ctx->prodctx->value));
+    }
+
+    return valid ? 0 : REFDA_EDD_PROD_RESULT_TYPE_NOMATCH;
 }
 
-void refda_edd_prod_ctx_set_result_copy(refda_edd_prod_ctx_t *ctx, const ari_t *value)
+int refda_edd_prod_ctx_set_result_move(refda_edd_prod_ctx_t *ctx, cace_ari_t *value)
 {
-    ari_set_copy(&(ctx->prodctx->value), value);
+    cace_ari_set_move(&(ctx->prodctx->value), value);
+    return refda_edd_prod_check_result(ctx);
+}
+
+int refda_edd_prod_ctx_set_result_copy(refda_edd_prod_ctx_t *ctx, const cace_ari_t *value)
+{
+    cace_ari_set_copy(&(ctx->prodctx->value), value);
+    return refda_edd_prod_check_result(ctx);
 }

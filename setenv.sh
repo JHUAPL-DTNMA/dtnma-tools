@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+## Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Delay-Tolerant Networking Management
@@ -22,6 +22,6 @@ PREFIX=${PREFIX:-/usr}
 
 if [ -n "${DESTDIR}" -o -n "${PREFIX}" ]
 then
-    export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib
+    export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib:${DESTDIR}${PREFIX}/lib64
     export PATH=${PATH}:${DESTDIR}${PREFIX}/bin
 fi

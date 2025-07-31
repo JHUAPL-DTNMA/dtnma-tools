@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -19,14 +19,16 @@ limitations under the License.
 add_unity_test(SOURCE "test_ari_cbor.c")
 target_link_libraries(test_ari_cbor PUBLIC cace)
 
+if(ARI_TEXT_PARSE)
 add_unity_test(SOURCE "test_ari_text.c")
 target_link_libraries(test_ari_text PUBLIC cace)
 
 add_unity_test(SOURCE "test_ari_text_util.c")
 target_link_libraries(test_ari_text_util PUBLIC cace)
 
-add_unity_test(SOURCE "test_ari_text_cbor_loopback.c")
-target_link_libraries(test_ari_text_cbor_loopback PUBLIC cace)
+add_unity_test(SOURCE "test_ari_roundtrip.c")
+target_link_libraries(test_ari_roundtrip PUBLIC cace)
+endif(ARI_TEXT_PARSE)
 
 add_unity_test(SOURCE "test_ari_algo.c")
 target_link_libraries(test_ari_algo PUBLIC cace)
@@ -45,3 +47,11 @@ target_link_libraries(test_amm_obj_ns PUBLIC cace)
 
 add_unity_test(SOURCE "test_amm_lookup.c")
 target_link_libraries(test_amm_lookup PUBLIC cace)
+
+add_unity_test(SOURCE "test_amp_socket.c")
+target_link_libraries(test_amp_socket PUBLIC cace)
+
+# Test just being able to compile and link a C++ user with the cace library
+add_executable(test_cace_cpp)
+target_sources(test_cace_cpp PRIVATE test_cace_cpp.cpp)
+target_link_libraries(test_cace_cpp PUBLIC cace)

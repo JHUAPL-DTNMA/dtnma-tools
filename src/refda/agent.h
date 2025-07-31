@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -19,6 +19,7 @@
 #ifndef REFDA_AGENT_H_
 #define REFDA_AGENT_H_
 
+#include "instr.h"
 #include "msgdata.h"
 #include "exec_seq.h"
 #include "rpt_agg.h"
@@ -45,15 +46,17 @@ extern "C" {
  */
 typedef struct refda_agent_s
 {
-    /// Agent endpoint ID
+    /// Agent endpoint ID as URI text
     string_t agent_eid;
 
     /// Running state
-    daemon_run_t running;
+    cace_daemon_run_t running;
     /// Messaging configuration
     cace_amm_msg_if_t mif;
+    /// Instrumentation counters
+    refda_instr_t instr;
     /// Threads associated with the agent
-    threadset_t threads;
+    cace_threadset_t threads;
 
     /// Runtime AMM object store
     cace_amm_obj_store_t objs;
@@ -61,11 +64,11 @@ typedef struct refda_agent_s
     pthread_mutex_t objs_mutex;
 
     /// Cached type from //ietf-amm/TYPEDEF/MAC
-    const amm_type_t *mac_type;
+    const cace_amm_type_t *mac_type;
     /// Cached type from //ietf-amm/TYPEDEF/EXPR
-    const amm_type_t *expr_type;
+    const cace_amm_type_t *expr_type;
     /// Cached type from //ietf-amm/TYPEDEF/RPTT
-    const amm_type_t *rptt_type;
+    const cace_amm_type_t *rptt_type;
 
     /// Ingress EXECSET queue
     refda_msgdata_queue_t execs;
@@ -100,17 +103,19 @@ void refda_agent_deinit(refda_agent_t *agent);
 
 /** Lock the object mutex on an agent and return if failed.
  */
-#define REFDA_AGENT_LOCK(agent)                   \
-    if (pthread_mutex_lock(&(agent->objs_mutex))) \
-    {                                             \
-        return REFDA_AGENT_ERR_LOCK_FAILED;       \
+#define REFDA_AGENT_LOCK(agent, err)                  \
+    if (pthread_mutex_lock(&(agent->objs_mutex)))     \
+    {                                                 \
+        CACE_LOG_ERR("failed to lock agent objects"); \
+        return err;                                   \
     }
 /** Unlock the object mutex on an agent and return if failed.
  */
-#define REFDA_AGENT_UNLOCK(agent)                   \
-    if (pthread_mutex_unlock(&(agent->objs_mutex))) \
-    {                                               \
-        return REFDA_AGENT_ERR_LOCK_FAILED;         \
+#define REFDA_AGENT_UNLOCK(agent, err)                  \
+    if (pthread_mutex_unlock(&(agent->objs_mutex)))     \
+    {                                                   \
+        CACE_LOG_ERR("failed to unlock agent objects"); \
+        return err;                                     \
     }
 
 /** Store the current timestamp in an ARI.
@@ -120,17 +125,19 @@ void refda_agent_deinit(refda_agent_t *agent);
  * This ARI must already be initialized.
  * @return Zero if successful, or 2 if the clock is not available.
  */
-int refda_agent_nowtime(refda_agent_t *agent, ari_t *val);
+int refda_agent_nowtime(refda_agent_t *agent, cace_ari_t *val);
 
 /** Lookup a specific known TYPEDEF by reference.
  *
  * @pre The agent object store must already be locked.
  *
  * @param[in] agent The agent to search within.
- * @param ns_id The namespace enumeration.
+ * @param org_id The namespace organization enumeration.
+ * @param model_id The namespace model enumeration.
  * @param obj_id The object enumeration.
  */
-amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, int64_t ns_id, int64_t obj_id);
+cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
+                                         cace_ari_int_id_t obj_id);
 
 /** After all ADMs are registered, bind cross-references between them.
  *
@@ -139,11 +146,24 @@ amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, int64_t ns_id, int64_t
  */
 int refda_agent_bindrefs(refda_agent_t *agent);
 
+/** After all ADMs are registered, finish object initialization.
+ *
+ * @param[in,out] agent The agent state to update.
+ * @return The number of failed inits, or zero if successful.
+ */
+int refda_agent_init_objs(refda_agent_t *agent);
+
 int refda_agent_start(refda_agent_t *agent);
 
 int refda_agent_stop(refda_agent_t *agent);
 
-int refda_agent_send_hello(refda_agent_t *agent);
+/** Send an initial "hello" message RPTSET for a standard agent report.
+ *
+ * @param[in] agent The agent to send from.
+ * @param[in] dest The destination endpoint.
+ * @return Zero if successful.
+ */
+int refda_agent_send_hello(refda_agent_t *agent, const char *dest);
 
 #ifdef __cplusplus
 } // extern C

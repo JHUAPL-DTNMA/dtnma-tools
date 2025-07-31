@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -38,14 +38,18 @@ extern "C" {
  *
  * @param[out] buf The data buffer to modify and write the result into.
  * It will contain a well-formed CBOR item if successful.
- * @param ari The ARI to encode from.
+ * @param[in] ari The ARI to encode from.
  * @return Zero upon success.
  */
-int ari_cbor_encode(cace_data_t *buf, const ari_t *ari);
+int cace_ari_cbor_encode(cace_data_t *buf, const cace_ari_t *ari);
 
 /** Lower-level stream encoding interface.
+ *
+ * @param[in] encoder The existing encoder to write with.
+ * @param[in] ari The ARI to encode from.
+ * @return Zero upon success.
  */
-int ari_cbor_encode_stream(QCBOREncodeContext *encoder, const ari_t *ari);
+int cace_ari_cbor_encode_stream(QCBOREncodeContext *encoder, const cace_ari_t *ari);
 
 /** Decode an ARI from binary form.
  *
@@ -63,12 +67,19 @@ int ari_cbor_encode_stream(QCBOREncodeContext *encoder, const ari_t *ari);
  * @param[out] errm If non-null, this will be set to a specific error message
  * associated with any failure.
  * Regardless of the return code, if the pointed-to pointer is non-null it
- * must be freed using ARI_FREE().
+ * must be freed using CACE_FREE().
  * @return Zero upon success.
  */
-int ari_cbor_decode(ari_t *ari, const cace_data_t *buf, size_t *used, const char **errm);
+int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, const char **errm);
 
-int ari_cbor_decode_stream(QCBORDecodeContext *decoder, ari_t *ari);
+/** Lower-level stream decoding interface.
+ *
+ * @param[in] decoder The existing decoder to write with.
+ * @param[out] ari The ARI to decode into.
+ * The struct must already be initialized.
+ * @return Zero upon success.
+ */
+int cace_ari_cbor_decode_stream(QCBORDecodeContext *decoder, cace_ari_t *ari);
 
 #ifdef __cplusplus
 }

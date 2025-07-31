@@ -1,4 +1,0 @@
-dtnma-ace ~= 2.0
-cbor2 ~= 5.6
-setuptools
-pytest

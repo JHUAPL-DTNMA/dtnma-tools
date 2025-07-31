@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -18,7 +18,7 @@
 
 /** @file
  * This is the header for the implementation of the
- * ADM "ietf-dtnma-agent" for the C-language reference DA.
+ * ADM module "ietf-dtnma-agent" for the C-language reference DA.
  * This contains defines for each enumeration in the ADM and
  * declarations of module-level initialization functions.
  */
@@ -43,8 +43,6 @@ extern "C" {
 /*
  * Enumerations for TYPEDEF objects
  */
-/// For ./TYPEDEF/hellotyp
-#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_HELLOTYP 0
 /// For ./TYPEDEF/column-id
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_COLUMN_ID 1
 
@@ -69,6 +67,8 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_RX_FAILED 4
 /// For ./EDD/num-msg-tx
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX 5
+/// For ./EDD/num-msg-tx-failed
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX_FAILED 15
 /// For ./EDD/num-exec-started
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_STARTED 6
 /// For ./EDD/num-exec-succeeded
@@ -77,8 +77,12 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_FAILED 8
 /// For ./EDD/exec-running
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_EXEC_RUNNING 9
+/// For ./EDD/odm-list
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_ODM_LIST 16
 /// For ./EDD/typedef-list
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TYPEDEF_LIST 10
+/// For ./EDD/const-list
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_CONST_LIST 14
 /// For ./EDD/var-list
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_VAR_LIST 11
 /// For ./EDD/sbr-list
@@ -103,14 +107,32 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_INSPECT 5
 /// For ./CTRL/report-on
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_REPORT_ON 6
+/// For ./CTRL/ensure-odm
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_ODM 18
+/// For ./CTRL/obsolete-odm
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_OBSOLETE_ODM 19
 /// For ./CTRL/var-reset
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_RESET 7
 /// For ./CTRL/var-store
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_STORE 8
+/// For ./CTRL/ensure-const
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_CONST 11
+/// For ./CTRL/obsolete-const
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_OBSOLETE_CONST 12
 /// For ./CTRL/ensure-var
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_VAR 9
-/// For ./CTRL/discard-var
-#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_DISCARD_VAR 10
+/// For ./CTRL/obsolete-var
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_OBSOLETE_VAR 10
+/// For ./CTRL/ensure-sbr
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_SBR 13
+/// For ./CTRL/ensure-tbr
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_TBR 14
+/// For ./CTRL/ensure-rule-enabled
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_RULE_ENABLED 15
+/// For ./CTRL/reset-rule-enabled
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_RESET_RULE_ENABLED 16
+/// For ./CTRL/obsolete-rule
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_OBSOLETE_RULE 17
 
 /*
  * Enumerations for OPER objects
@@ -158,7 +180,7 @@ extern "C" {
 /// For ./OPER/tbl-filter
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_TBL_FILTER 20
 
-/** Initializer for the ADM ietf-dtnma-agent.
+/** Initializer for the ADM module ietf-dtnma-agent.
  * @param[in,out] agent The agent to register this namespace and its
  * objects within.
  * @return Zero upon success.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -17,6 +17,8 @@
  */
 #include "refda/agent.h"
 #include "refda/adm/ietf_amm.h"
+#include "refda/adm/ietf_amm_base.h"
+#include "refda/adm/ietf_amm_semtype.h"
 #include "refda/adm/ietf_dtnma_agent.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
@@ -27,28 +29,27 @@
 #include <signal.h>
 #include <unistd.h>
 
-#define MAX_HEXMSG_SIZE 10240
-
+/// Per-process state
 static refda_agent_t agent;
 
 static void daemon_signal_handler(int signum)
 {
     CACE_LOG_DEBUG("Received signal %d", signum);
     CACE_LOG_INFO("Signaling shutdown");
-    daemon_run_stop(&agent.running);
+    cace_daemon_run_stop(&agent.running);
 }
 
-static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *meta _U_, void *ctx _U_)
+static int stdout_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta _U_, void *ctx _U_)
 {
     int retval = 0;
-    CACE_LOG_DEBUG("Sending message with %d ARIs", ari_list_size(data));
+    CACE_LOG_DEBUG("Sending message with %d ARIs", cace_ari_list_size(data));
 
-    ari_list_it_t ait;
-    for (ari_list_it(ait, data); !ari_list_end_p(ait); ari_list_next(ait))
+    cace_ari_list_it_t ait;
+    for (cace_ari_list_it(ait, data); !cace_ari_list_end_p(ait); cace_ari_list_next(ait))
     {
         cace_data_t outbin;
         cace_data_init(&outbin);
-        if (ari_cbor_encode(&outbin, ari_list_cref(ait)))
+        if (cace_ari_cbor_encode(&outbin, cace_ari_list_cref(ait)))
         {
             CACE_LOG_ERR("Failed to binary encode ARI");
             retval = 3;
@@ -56,7 +57,7 @@ static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *
 
         string_t outhex;
         string_init(outhex);
-        if (base16_encode(outhex, &outbin, true))
+        if (cace_base16_encode(outhex, &outbin, true))
         {
             CACE_LOG_ERR("Failed to base-16 encode ARI");
             retval = 4;
@@ -80,7 +81,7 @@ static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *
         cace_data_deinit(&outbin);
     }
 
-    if (!ari_list_empty_p(data))
+    if (!cace_ari_list_empty_p(data))
     {
         if (fputs("\n", stdout) <= 0)
         {
@@ -93,7 +94,7 @@ static int stdout_send(const ari_list_t data, const cace_amm_msg_if_metadata_t *
     return retval;
 }
 
-static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_run_t *running, void *ctx _U_)
+static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, cace_daemon_run_t *running, void *ctx _U_)
 {
     CHKERR1(data);
     CHKERR1(meta);
@@ -102,7 +103,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
     static const char *arisep = " \f\n\r\t\v"; // Identical to isspace()
 
     static const char *src = "stdin";
-    cace_data_copy_from(&(meta->src), strlen(src) - 1, (cace_data_ptr_t)src);
+    cace_ari_set_tstr(&meta->src, src, false);
 
     // Watch stdin (fd 0) for input, assuming whole-lines are given
     struct pollfd pfds[] = {
@@ -116,16 +117,15 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
         int res = poll(pfds, sizeof(pfds) / sizeof(struct pollfd), 1000);
         if (res < 0)
         {
-            return 2;
-            break;
+            return CACE_AMM_MSG_IF_RECV_END;
         }
         else if (res == 0)
         {
             // nothing ready, but maybe daemon is shutting down
-            if (!daemon_run_get(running))
+            if (!cace_daemon_run_get(running))
             {
                 CACE_LOG_DEBUG("returning due to running state change");
-                return 2;
+                return CACE_AMM_MSG_IF_RECV_END;
             }
             continue;
         }
@@ -140,7 +140,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
             {
                 CACE_LOG_DEBUG("returning due to end of input %d", res);
                 free(lineptr);
-                return 2;
+                return CACE_AMM_MSG_IF_RECV_END;
             }
             else
             {
@@ -158,31 +158,32 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
                         break;
                     }
                     // skip over optional prefix
-                    if (strncmp("0x", curs, 2) == 0)
+                    if (strncasecmp(curs, "0x", 2) == 0)
                     {
                         curs += 2;
+                        plen -= 2;
                     }
 
-                    curs[plen] = '\0'; // clobber separator
-                    CACE_LOG_DEBUG("decoding ARI item from base-16: %s", curs);
-
                     string_t inhex;
-                    string_init_set_str(inhex, curs);
+                    string_init(inhex);
+                    m_string_set_cstrn(inhex, curs, plen);
+                    CACE_LOG_DEBUG("decoding ARI item from base-16: %s", m_string_get_cstr(inhex));
+
                     cace_data_t inbin;
                     cace_data_init(&inbin);
-                    if (base16_decode(&inbin, inhex))
+                    if (cace_base16_decode(&inbin, inhex))
                     {
                         CACE_LOG_ERR("Failed to base-16 decode input %s", curs);
                         lineret = 1;
                     }
 
-                    ari_t item;
-                    ari_init(&item);
+                    cace_ari_t item;
+                    cace_ari_init(&item);
                     if (!lineret)
                     {
                         size_t      used;
                         const char *errm;
-                        res = ari_cbor_decode(&item, &inbin, &used, &errm);
+                        res = cace_ari_cbor_decode(&item, &inbin, &used, &errm);
                         if (res)
                         {
                             CACE_LOG_ERR("Failed to binary decode ARI: %s", errm);
@@ -191,7 +192,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
                         }
                         if (errm)
                         {
-                            ARI_FREE((char *)errm);
+                            CACE_FREE((char *)errm);
                         }
                     }
 
@@ -201,16 +202,16 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
                         {
                             string_t buf;
                             string_init(buf);
-                            ari_text_encode(buf, &item, ARI_TEXT_ENC_OPTS_DEFAULT);
+                            cace_ari_text_encode(buf, &item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                             CACE_LOG_DEBUG("decoded ARI item: %s", string_get_cstr(buf));
                             string_clear(buf);
                         }
 
-                        ari_list_push_back_move(data, &item);
+                        cace_ari_list_push_back_move(data, &item);
                     }
                     else
                     {
-                        ari_deinit(&item);
+                        cace_ari_deinit(&item);
                     }
 
                     cace_data_deinit(&inbin);
@@ -221,8 +222,8 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
 
                 free(lineptr);
 
-                CACE_LOG_DEBUG("decoded %d ARI items in the line", ari_list_size(data));
-                if (!ari_list_empty_p(data))
+                CACE_LOG_DEBUG("decoded %d ARI items in the line", cace_ari_list_size(data));
+                if (!cace_ari_list_empty_p(data))
                 {
                     // stop when something received
                     break;
@@ -233,7 +234,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
         {
             // input has closed
             CACE_LOG_DEBUG("returning due to hangup");
-            return 2;
+            return CACE_AMM_MSG_IF_RECV_END;
         }
     }
 
@@ -242,7 +243,7 @@ static int stdin_recv(ari_list_t data, cace_amm_msg_if_metadata_t *meta, daemon_
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} -a <agent EID>\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <agent EID>\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -258,7 +259,7 @@ int main(int argc, char *argv[])
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, "hl:a:")) != -1)
+            while ((opt = getopt(argc, argv, ":hl:a:")) != -1)
             {
                 switch (opt)
                 {
@@ -293,6 +294,8 @@ int main(int argc, char *argv[])
 
     // ADM initialization
     refda_adm_ietf_amm_init(&agent);
+    refda_adm_ietf_amm_base_init(&agent);
+    refda_adm_ietf_amm_semtype_init(&agent);
     refda_adm_ietf_dtnma_agent_init(&agent);
 #if 0
   dtn_bp_agent_init();
@@ -342,12 +345,23 @@ int main(int argc, char *argv[])
         {
             CACE_LOG_INFO("Agent startup completed");
         }
+
+        if (refda_agent_init_objs(&agent))
+        {
+            CACE_LOG_ERR("Agent object initialization failed");
+            retval = 2;
+        }
+        else
+        {
+            CACE_LOG_INFO("Agent object initialization completed");
+        }
     }
     CACE_LOG_INFO("READY");
 
     if (!retval)
     {
-        if (refda_agent_send_hello(&agent))
+        // stdio uses non-specific EIDs
+        if (refda_agent_send_hello(&agent, "any"))
         {
             CACE_LOG_ERR("Agent hello failed");
             retval = 3;
@@ -361,7 +375,7 @@ int main(int argc, char *argv[])
     if (!retval)
     {
         // Block until stopped
-        daemon_run_wait(&agent.running);
+        cace_daemon_run_wait(&agent.running);
         CACE_LOG_INFO("Agent is shutting down");
     }
 

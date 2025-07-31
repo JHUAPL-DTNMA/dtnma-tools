@@ -46,7 +46,6 @@
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:realloc
-   fun:_ari_type_by_id_array_list_pair_resize
    fun:m_d1ct__ari_type_by_id_resize_up
    fun:_ari_type_by_id_set_at
    fun:_ari_type_dict_init
@@ -56,8 +55,7 @@
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:realloc
-   fun:_ari_type_by_name_array_list_pair_resize
-   fun:m_d1ct__ari_type_by_name_resize_up
+   fun:*_resize_up
    fun:_ari_type_by_name_set_at
    fun:_ari_type_dict_init
 }
@@ -76,28 +74,35 @@
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:malloc
-   fun:m_l1st__ari_type_by_name_list_pair_new
+   fun:*_pair_new
    fun:_ari_type_by_name_list_pair_push_raw
    fun:_ari_type_by_name_set_at
    fun:_ari_type_dict_init
 }
 {
-   amm_builtin_dict_init1
+   cace_amm_builtin_dict_init1
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:realloc
-   fun:amm_type_lookup_array_list_pair_resize
-   fun:m_d1ct_amm_type_lookup_resize_up
-   fun:amm_type_lookup_set_at
-   fun:amm_builtin_dict_init
+   fun:*_resize_up
+   fun:cace_amm_type_lookup_set_at
+   fun:cace_amm_builtin_dict_init
 }
 {
-   amm_builtin_dict_init2
+   cace_amm_builtin_dict_init2
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:malloc
-   fun:m_l1st_amm_type_lookup_list_pair_new
-   fun:amm_type_lookup_list_pair_push_raw
-   fun:amm_type_lookup_set_at
-   fun:amm_builtin_dict_init
+   fun:*_pair_new
+   fun:cace_amm_type_lookup_list_pair_push_raw
+   fun:cace_amm_type_lookup_set_at
+   fun:cace_amm_builtin_dict_init
+}
+{
+   readline
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:getdelim
+   fun:read_auto
 }

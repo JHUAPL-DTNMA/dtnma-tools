@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -59,10 +59,14 @@ extern "C" {
     {                     \
         return val;       \
     }
+#ifndef CHKVOID
 /// Return from void functions if condition fails.
 #define CHKVOID(cond) CHKRET(cond, )
+#endif /* CHKVOID */
+#ifndef CHKNULL
 /// Return a null pointer if condition fails.
 #define CHKNULL(cond) CHKRET(cond, NULL)
+#endif /* CHKNULL */
 /// Return false if condition fails.
 #define CHKFALSE(cond) CHKRET(cond, false)
 /// Return the error value 1 if condition fails.

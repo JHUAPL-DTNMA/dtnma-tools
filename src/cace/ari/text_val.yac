@@ -14,8 +14,8 @@
 #include <m-string.h>
 #include <stdio.h>
 
-#define YYMALLOC(size) ARI_MALLOC(size)
-#define YYFREE(ptr) ARI_FREE(ptr)
+#define YYMALLOC(size) CACE_MALLOC(size)
+#define YYFREE(ptr) CACE_FREE(ptr)
 
 int yydebug = 0;
 %}
@@ -28,7 +28,7 @@ typedef struct {
     /// The input stream
     FILE *src;
     /// The final result literal
-    ari_lit_t *lit;
+    cace_ari_lit_t *lit;
     /// Optional error text storage
     const char **errm;
 } cace_ari_text_val_t;
@@ -42,7 +42,7 @@ typedef struct {
  * return value is non-zero.
  * @return Zero upon success.
  */
-int cace_ari_text_valseg_decode(ari_lit_t *lit, const char *text, const char **errm);
+int cace_ari_text_valseg_decode(cace_ari_lit_t *lit, const char *text, const char **errm);
 
 // Match the definition in generated C file
 typedef void * yyscan_t;
@@ -53,7 +53,7 @@ void cace_ari_text_val_error(yyscan_t *scanner, const cace_ari_text_val_t *input
 
 /* Generate YYSTYPE from these types: */
 %union {
-  ari_lit_t lit;
+  cace_ari_lit_t lit;
 }
 
 %token <lit> T_UNDEFINED
@@ -70,7 +70,7 @@ void cace_ari_text_val_error(yyscan_t *scanner, const cace_ari_text_val_t *input
 %token <lit> T_DECFRAC
 %type <lit> litval
 
-%destructor { ari_lit_deinit(&$$); } <lit>
+%destructor { cace_ari_lit_deinit(&$$); } <lit>
 
 %start setinput
 
@@ -99,7 +99,7 @@ litval:
 
 %%
 
-int cace_ari_text_valseg_decode(ari_lit_t *lit, const char *text, const char **errm)
+int cace_ari_text_valseg_decode(cace_ari_lit_t *lit, const char *text, const char **errm)
 {
     if (!lit || !text)
     {

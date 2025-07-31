@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -16,9 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-include(GNUInstallDirs)
-
-# ARI handling library
+# AMM and ARI handling library
 configure_file("config.h.in" "config.h")
 set(HFILES
     "${CMAKE_CURRENT_BINARY_DIR}/config.h"
@@ -29,6 +27,8 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/util/daemon_run.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/type.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ari/lit.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ari/ref.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/base.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/algo.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ari/containers.h"
@@ -44,11 +44,19 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/semtype.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/numeric.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/parameters.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amm/idseg_ref.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amm/idseg_val.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/obj_desc.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/obj_ns.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amm/obj_org.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/obj_store.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/lookup.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/msg_if.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/msg.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/socket.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/ion_bp.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/proxy_cli.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/amp/proxy_msg.h"
 )
 set(CFILES
     "cace_data.c"
@@ -56,6 +64,8 @@ set(CFILES
     "util/threadset.c"
     "util/daemon_run.c"
     "ari/type.c"
+    "ari/lit.c"
+    "ari/ref.c"
     "ari/base.c"
     "ari/algo.c"
     "ari/containers.c"
@@ -73,9 +83,15 @@ set(CFILES
     "amm/parameters.c"
     "amm/obj_desc.c"
     "amm/obj_ns.c"
+    "amm/obj_org.c"
     "amm/obj_store.c"
     "amm/lookup.c"
     "amm/msg_if.c"
+    "amp/msg.c"
+    "amp/socket.c"
+    "amp/ion_bp.c"
+    "amp/proxy_cli.c"
+    "amp/proxy_msg.c"
 )
 if(ARI_TEXT_PARSE)
     BISON_TARGET(
@@ -114,14 +130,16 @@ target_include_directories(
   cace PUBLIC
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
-target_link_libraries(cace PUBLIC ${FLEX_LIBRARIES})
 target_link_libraries(cace PUBLIC MLIB::mlib)
 target_link_libraries(cace PUBLIC qcbor)
+target_link_libraries(cace PUBLIC timespec::timespec)
 target_link_libraries(cace PUBLIC m)
 if(PCRE_FOUND)
     target_link_libraries(cace PUBLIC PkgConfig::PCRE)
 endif(PCRE_FOUND)
-
+if(ION_FOUND)
+    target_link_libraries(cace PUBLIC ION::BP)
+endif(ION_FOUND)
 
 # Stand-alone ARI manipulation tool
 add_executable(cace_ari)
@@ -129,6 +147,7 @@ target_sources(cace_ari PRIVATE cace_ari.c)
 target_link_libraries(cace_ari PUBLIC cace)
 
 
+include(GNUInstallDirs)
 install(
     TARGETS cace cace_ari
 )
@@ -139,8 +158,7 @@ install(
     FILES_MATCHING PATTERN "*.h"
 )
 install(
-    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    FILES_MATCHING PATTERN "*.h"
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/cace"
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
 )

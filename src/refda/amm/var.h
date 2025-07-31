@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -32,17 +32,23 @@ extern "C" {
 typedef struct
 {
     /** The required type for the stored value and result value.
+     * This type will not change during the lifetime of the VAR.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t val_type;
+    cace_amm_type_t val_type;
 
     /** Storage for the value.
      * This is initialized as undefined and must be set to any other value
      * to indicate successful production.
      */
-    ari_t value;
+    cace_ari_t value;
 
+    /** Optional initializer value.
+     * This initializer will not change during the lifetime of the VAR.
+     * This is set to the undefined value if not used.
+     */
+    cace_ari_t init_val;
 } refda_amm_var_desc_t;
 
 void refda_amm_var_desc_init(refda_amm_var_desc_t *obj);

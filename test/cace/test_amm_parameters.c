@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -31,31 +31,31 @@ static void check_normalize(cace_ari_itemized_t *aparams, const cace_amm_formal_
     string_init_set_str(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
-    int res = base16_decode(&indata, intext);
+    int res = cace_base16_decode(&indata, intext);
     string_clear(intext);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "base16_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_decode() failed");
 
-    ari_t inval = ARI_INIT_UNDEFINED;
-    res         = ari_cbor_decode(&inval, &indata, NULL, NULL);
+    cace_ari_t inval = CACE_ARI_INIT_UNDEFINED;
+    res              = cace_ari_cbor_decode(&inval, &indata, NULL, NULL);
     cace_data_deinit(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
     TEST_ASSERT_TRUE(inval.is_ref);
 
     res = cace_amm_actual_param_set_populate(aparams, fparams, &(inval.as_ref.params));
-    ari_deinit(&inval);
+    cace_ari_deinit(&inval);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "cace_amm_actual_param_set_populate() disagrees");
 
     // all formal parameters accounted for
     const size_t formal_size = cace_amm_formal_param_list_size(fparams);
-    TEST_ASSERT_EQUAL_INT(formal_size, ari_array_size(aparams->ordered));
-    TEST_ASSERT_EQUAL_INT(formal_size, named_ari_ptr_dict_size(aparams->named));
+    TEST_ASSERT_EQUAL_INT(formal_size, cace_ari_array_size(aparams->ordered));
+    TEST_ASSERT_EQUAL_INT(formal_size, cace_named_ari_ptr_dict_size(aparams->named));
 }
 
-TEST_CASE("83022004", 0)           // ari://2/-1/4
-TEST_CASE("8402200480", 0)         // ari://2/-1/4() special case empty params
-TEST_CASE("8402200481626869", 3)   // ari://2/-1/4(hi) too many params
-TEST_CASE("84022004A1010A", 3)     // ari://2/-1/4(1=10) too many params
-TEST_CASE("84022004A16268690A", 3) // ari://2/-1/4(hi=10) too many params
+TEST_CASE("8419FFFF022004", 0)           // ari://65535/2/-1/4
+TEST_CASE("8519FFFF02200480", 0)         // ari://65535/2/-1/4() special case empty params
+TEST_CASE("8519FFFF02200481626869", 3)   // ari://65535/2/-1/4(hi) too many params
+TEST_CASE("8519FFFF022004A1010A", 3)     // ari://65535/2/-1/4(1=10) too many params
+TEST_CASE("8519FFFF022004A16268690A", 3) // ari://65535/2/-1/4(hi=10) too many params
 void test_fparam_empty(const char *inhex, int expect_res)
 {
     cace_amm_formal_param_list_t fparams;
@@ -69,10 +69,10 @@ void test_fparam_empty(const char *inhex, int expect_res)
     cace_amm_formal_param_list_clear(fparams);
 }
 
-TEST_CASE("83022004", 0)         // ari://2/-1/4
-TEST_CASE("8402200480", 0)       // ari://2/-1/4() special case empty params
-TEST_CASE("8402200481F5", 0)     // ari://2/-1/4(true)
-TEST_CASE("8402200481626869", 0) // ari://2/-1/4(hi) implicit cast to bool
+TEST_CASE("8419FFFF022004", 0)         // ari://65535/2/-1/4
+TEST_CASE("8519FFFF02200480", 0)       // ari://65535/2/-1/4() special case empty params
+TEST_CASE("8519FFFF02200481F5", 0)     // ari://65535/2/-1/4(true)
+TEST_CASE("8519FFFF02200481626869", 0) // ari://65535/2/-1/4(hi) implicit cast to bool
 void test_fparam_one_bool(const char *inhex, int expect_res)
 {
     cace_amm_formal_param_list_t fparams;
@@ -83,7 +83,7 @@ void test_fparam_one_bool(const char *inhex, int expect_res)
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
 
-        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_BOOL));
+        cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL));
     }
 
     cace_ari_itemized_t aparams;
@@ -94,15 +94,15 @@ void test_fparam_one_bool(const char *inhex, int expect_res)
     cace_amm_formal_param_list_clear(fparams);
 }
 
-TEST_CASE("83022004", 0)           // ari://2/-1/4
-TEST_CASE("8402200480", 0)         // ari://2/-1/4() special case empty params
-TEST_CASE("840220048101", 0)       // ari://2/-1/4(1)
-TEST_CASE("840220048120", 0)       // ari://2/-1/4(-1)
-TEST_CASE("84022004A1000A", 0)     // ari://2/-1/4(0=10) by index
-TEST_CASE("84022004A16268690A", 0) // ari://2/-1/4(hi=10) by name
-TEST_CASE("8402200481626869", 2)   // ari://2/-1/4(hi) implicit cast failure
-TEST_CASE("84022004820102", 3)     // ari://2/-1/4(1,2) too many params
-TEST_CASE("84022004A1020A", 3)     // ari://2/-1/4(2=10) too many params
+TEST_CASE("8419FFFF022004", 0)           // ari://65535/2/-1/4
+TEST_CASE("8519FFFF02200480", 0)         // ari://65535/2/-1/4() special case empty params
+TEST_CASE("8519FFFF0220048101", 0)       // ari://65535/2/-1/4(1)
+TEST_CASE("8519FFFF0220048120", 0)       // ari://65535/2/-1/4(-1)
+TEST_CASE("8519FFFF022004A1000A", 0)     // ari://65535/2/-1/4(0=10) by index
+TEST_CASE("8519FFFF022004A16268690A", 0) // ari://65535/2/-1/4(hi=10) by name
+TEST_CASE("8519FFFF02200481626869", 2)   // ari://65535/2/-1/4(hi) implicit cast failure
+TEST_CASE("8519FFFF022004820102", 3)     // ari://65535/2/-1/4(1,2) too many params
+TEST_CASE("8519FFFF022004A1020A", 3)     // ari://65535/2/-1/4(2=10) too many params
 void test_fparam_one_int(const char *inhex, int expect_res)
 {
     cace_amm_formal_param_list_t fparams;
@@ -113,7 +113,7 @@ void test_fparam_one_int(const char *inhex, int expect_res)
         fparam->index = 0;
         string_set_str(fparam->name, "hi");
 
-        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_INT));
+        cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
     }
 
     cace_ari_itemized_t aparams;
@@ -124,8 +124,8 @@ void test_fparam_one_int(const char *inhex, int expect_res)
     cace_amm_formal_param_list_clear(fparams);
 }
 
-TEST_CASE("840122058183012301", 0)                     // ari://2/-1/4(//1/EDD/1)
-TEST_CASE("84012205818301236A73775F76657273696F6E", 0) // ari://2/-1/4(//1/EDD/sw_version)
+TEST_CASE("8519FFFF012205818419FFFF012301", 0)                     // ari://65535/2/-1/4(//65535/1/EDD/1)
+TEST_CASE("8519FFFF012205818419FFFF01236A73775F76657273696F6E", 0) // ari://65535/2/-1/4(//65535/1/EDD/sw_version)
 void test_fparam_one_object(const char *inhex, int expect_res)
 {
     cace_amm_formal_param_list_t fparams;
@@ -136,7 +136,7 @@ void test_fparam_one_object(const char *inhex, int expect_res)
         fparam->index = 0;
         string_set_str(fparam->name, "ref");
 
-        amm_type_set_use_direct(&(fparam->typeobj), amm_type_get_builtin(ARI_TYPE_OBJECT));
+        cace_amm_type_set_use_direct(&(fparam->typeobj), cace_amm_type_get_builtin(CACE_ARI_TYPE_OBJECT));
     }
 
     cace_ari_itemized_t aparams;

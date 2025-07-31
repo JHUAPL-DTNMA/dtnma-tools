@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -25,6 +25,9 @@
 #include "amm/edd.h"
 #include "amm/ctrl.h"
 #include "amm/oper.h"
+#include "amm/sbr.h"
+#include "amm/tbr.h"
+#include "cace/amm/idseg_ref.h"
 #include "cace/amm/obj_ns.h"
 
 #ifdef __cplusplus
@@ -36,37 +39,46 @@ extern "C" {
  * @param[in] ns The namespace (ADM or ODM) to register into.
  * The pointer must be non-null.
  * @param obj_id The identifiers for the registered object.
+ * The values are copied so these are pure references.
  * @param[in,out] desc The IDENT descriptor to move from.
  * If this pointer is null, a default IDENT descriptor is allocated.
  * @return A non-null pointer to the created object descriptor if successful
  * or NULL if failed.
  */
-cace_amm_obj_desc_t *refda_register_ident(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+cace_amm_obj_desc_t *refda_register_ident(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
                                           refda_amm_ident_desc_t *desc);
 
 /// @overload
-cace_amm_obj_desc_t *refda_register_typedef(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+cace_amm_obj_desc_t *refda_register_typedef(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
                                             refda_amm_typedef_desc_t *desc);
 
 /// @overload
-cace_amm_obj_desc_t *refda_register_const(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+cace_amm_obj_desc_t *refda_register_const(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
                                           refda_amm_const_desc_t *desc);
 
 /// @overload
-cace_amm_obj_desc_t *refda_register_var(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+cace_amm_obj_desc_t *refda_register_var(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
                                         refda_amm_var_desc_t *desc);
 
 /// @overload
-cace_amm_obj_desc_t *refda_register_edd(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+cace_amm_obj_desc_t *refda_register_edd(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
                                         refda_amm_edd_desc_t *desc);
 
 /// @overload
-cace_amm_obj_desc_t *refda_register_ctrl(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+cace_amm_obj_desc_t *refda_register_ctrl(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
                                          refda_amm_ctrl_desc_t *desc);
 
 /// @overload
-cace_amm_obj_desc_t *refda_register_oper(cace_amm_obj_ns_t *ns, const cace_amm_obj_id_t obj_id,
+cace_amm_obj_desc_t *refda_register_oper(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
                                          refda_amm_oper_desc_t *desc);
+
+/// @overload
+cace_amm_obj_desc_t *refda_register_sbr(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
+                                        refda_amm_sbr_desc_t *desc);
+
+/// @overload
+cace_amm_obj_desc_t *refda_register_tbr(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,
+                                        refda_amm_tbr_desc_t *desc);
 
 /** Helper function to append a named parameter to an object descriptor.
  *

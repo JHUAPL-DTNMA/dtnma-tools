@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -29,10 +29,11 @@ extern "C" {
 typedef struct
 {
     /** The type being named by this TYPEDEF.
+     * This type will not change during the lifetime of the TYPEDEF.
      * All type references are fully recursively resolved.
      * The type object is owned by this descriptor.
      */
-    amm_type_t typeobj;
+    cace_amm_type_t typeobj;
 
 } refda_amm_typedef_desc_t;
 

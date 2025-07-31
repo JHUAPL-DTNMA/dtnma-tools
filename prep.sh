@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+## Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Delay-Tolerant Networking Management
@@ -29,8 +29,9 @@ cmake -S ${SELFDIR} -B ${SELFDIR}/build/default \
   -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
   -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
   -DBUILD_SHARED_LIBS=YES \
-  -DBUILD_DOCS=YES \
+  -DBUILD_DOCS_API=YES \
   -DBUILD_TESTING=YES \
+  -DBUILD_MANAGER=YES \
   -DTEST_COVERAGE=YES \
   -DTEST_MEMCHECK=YES \
   -DCMAKE_BUILD_TYPE=Debug \

@@ -1,3 +1,4 @@
+# Sets ION_FOUND based on finding all libraries
 # Imports targets for using ION libraries:
 #  ION::ICI for libici
 #  ION::BP for libbp
@@ -64,6 +65,8 @@ if(LTP_HEADER AND LTP_LIB)
     target_link_libraries(ION::LTP INTERFACE ION::ICI)
 endif()
 
-if (NOT ICI_HEADER OR NOT BP_HEADER OR NOT LTP_HEADER)
+if (ICI_HEADER AND BP_HEADER AND LTP_HEADER)
+    set(ION_FOUND true)
+else()
     set(ION_FOUND false)
 endif()

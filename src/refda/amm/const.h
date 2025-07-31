@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -31,12 +31,19 @@ extern "C" {
  */
 typedef struct
 {
+    /** The required type for the stored value and result value.
+     * This type will not change during the lifetime of the CONST.
+     * All type references are fully recursively resolved.
+     * The type object is owned by this descriptor.
+     */
+    cace_amm_type_t val_type;
+
     /** Storage for the constant value.
      * This is type-converted at initialization time so the parent
-     * struct has no explicit ::amm_type_t because it is assumed that the
+     * struct has no explicit ::cace_amm_type_t because it is assumed that the
      * value has been converted externally.
      */
-    ari_t value;
+    cace_ari_t value;
 
 } refda_amm_const_desc_t;
 

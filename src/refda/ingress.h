@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -19,13 +19,11 @@
 #ifndef REFDA_INGRESS_H_
 #define REFDA_INGRESS_H_
 
-#include <cace/util/daemon_run.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** Work thread function for the Agent ingress.
+/** Work thread function for the Agent transport ingress.
  *
  * @param[in] arg The context ::refda_agent_t pointer.
  * @return Always NULL pointer.

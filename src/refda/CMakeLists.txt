@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -16,11 +16,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-include(GNUInstallDirs)
-
-
 set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/instr.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/binding.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/msgdata.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ingress.h"
@@ -47,10 +45,14 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/ctrl.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/amm/oper.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_amm.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_amm_base.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_amm_semtype.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_network_base.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_dtnma_agent.h"
 )
 set(CFILES
     "agent.c"
+    "instr.c"
     "binding.c"
     "msgdata.c"
     "ingress.c"
@@ -76,7 +78,12 @@ set(CFILES
     "amm/edd.c"
     "amm/ctrl.c"
     "amm/oper.c"
+    "amm/sbr.c"
+    "amm/tbr.c"
     "adm/ietf_amm.c"
+    "adm/ietf_amm_base.c"
+    "adm/ietf_amm_semtype.c"
+    "adm/ietf_network_base.c"
     "adm/ietf_dtnma_agent.c"
 )
 add_library(refda)
@@ -87,8 +94,9 @@ target_include_directories(
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
 target_link_libraries(refda PUBLIC cace)
-target_link_libraries(refda PUBLIC timespec::timespec)
 
+
+include(GNUInstallDirs)
 install(TARGETS refda)
 install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"

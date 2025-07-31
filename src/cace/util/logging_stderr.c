@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -51,9 +51,9 @@ typedef struct
     /// Event severity enumeration
     int severity;
     /// File and function context
-    string_t context;
+    m_string_t context;
     /// Fully formatted message
-    string_t message;
+    m_string_t message;
 } cace_log_event_t;
 
 void cace_log_event_init(cace_log_event_t *obj)
@@ -61,14 +61,14 @@ void cace_log_event_init(cace_log_event_t *obj)
     obj->thread = pthread_self();
     gettimeofday(&(obj->timestamp), NULL);
     obj->severity = LOG_DEBUG;
-    string_init(obj->context);
-    string_init(obj->message);
+    m_string_init(obj->context);
+    m_string_init(obj->message);
 }
 
 void cace_log_event_deinit(cace_log_event_t *obj)
 {
-    string_clear(obj->message);
-    string_clear(obj->context);
+    m_string_clear(obj->message);
+    m_string_clear(obj->context);
 }
 
 /// OPLIST for cace_log_event_t
@@ -121,8 +121,8 @@ static void write_log(const cace_log_event_t *event)
         }
         *out = '\0';
     }
-    fprintf(stderr, "%s T:%s <%s> [%s] %s\n", tmbuf, thrbuf, prioname, string_get_cstr(event->context),
-            string_get_cstr(event->message));
+    fprintf(stderr, "%s T:%s <%s> [%s] %s\n", tmbuf, thrbuf, prioname, m_string_get_cstr(event->context),
+            m_string_get_cstr(event->message));
     fflush(stderr);
 }
 
@@ -132,7 +132,7 @@ static void *work_sink(void *arg _U_)
     {
         cace_log_event_t event;
         cace_log_queue_pop(&event, event_queue);
-        if (string_empty_p(event.message))
+        if (m_string_empty_p(event.message))
         {
             cace_log_event_deinit(&event);
             break;
@@ -154,7 +154,7 @@ void cace_openlog(void)
         cace_log_event_t manual;
         cace_log_event_init(&manual);
         manual.severity = LOG_CRIT;
-        string_set_str(manual.message, "cace_openlog() failed");
+        m_string_set_cstr(manual.message, "cace_openlog() failed");
         write_log(&manual);
         cace_log_event_deinit(&manual);
     }
@@ -178,7 +178,7 @@ void cace_closelog(void)
         cace_log_event_t manual;
         cace_log_event_init(&manual);
         manual.severity = LOG_CRIT;
-        string_set_str(manual.message, "cace_closelog() failed");
+        m_string_set_cstr(manual.message, "cace_closelog() failed");
         write_log(&manual);
         cace_log_event_deinit(&manual);
     }
@@ -264,16 +264,16 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
         {
             pos = filename;
         }
-        string_printf(event.context, "%s:%d:%s", pos, lineno, funcname);
+        m_string_printf(event.context, "%s:%d:%s", pos, lineno, funcname);
     }
 
     {
         va_list val;
         va_start(val, format);
-        string_vprintf(event.message, format, val);
+        m_string_vprintf(event.message, format, val);
         va_end(val);
     }
-    if (string_empty_p(event.message))
+    if (m_string_empty_p(event.message))
     {
         // ignore empty messages
         cace_log_event_deinit(&event);
@@ -289,7 +289,7 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
         cace_log_event_t manual;
         cace_log_event_init(&manual);
         manual.severity = LOG_CRIT;
-        string_set_str(manual.message, "cace_log() called before cace_openlog()");
+        m_string_set_cstr(manual.message, "cace_log() called before cace_openlog()");
         write_log(&manual);
         cace_log_event_deinit(&manual);
 

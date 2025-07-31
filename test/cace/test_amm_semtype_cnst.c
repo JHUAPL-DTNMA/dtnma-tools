@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -35,25 +35,25 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-static void check_cnst(const amm_semtype_cnst_t *cnst, const char *inhex, bool expect)
+static void check_cnst(const cace_amm_semtype_cnst_t *cnst, const char *inhex, bool expect)
 {
     string_t intext;
     string_init_set_str(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
-    int res = base16_decode(&indata, intext);
+    int res = cace_base16_decode(&indata, intext);
     string_clear(intext);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "base16_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_decode() failed");
 
-    ari_t val = ARI_INIT_UNDEFINED;
-    res       = ari_cbor_decode(&val, &indata, NULL, NULL);
+    cace_ari_t val = CACE_ARI_INIT_UNDEFINED;
+    res            = cace_ari_cbor_decode(&val, &indata, NULL, NULL);
     cace_data_deinit(&indata);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "ari_cbor_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
 
-    res = amm_semtype_cnst_is_valid(cnst, &val);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect, res, "amm_semtype_cnst_is_valid() failed");
+    res = cace_amm_semtype_cnst_is_valid(cnst, &val);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect, res, "cace_amm_semtype_cnst_is_valid() failed");
 
-    ari_deinit(&val);
+    cace_ari_deinit(&val);
 }
 
 TEST_CASE("F7", false)             // ari:undefined
@@ -68,9 +68,10 @@ TEST_CASE("4474657374", true)      // ari:'test'
 TEST_CASE("46746F6F626967", false) // ari:'toobig'
 void test_amm_semtype_cnst_strlen_1intvl_finite(const char *inhex, bool expect)
 {
-    amm_semtype_cnst_t cnst;
-    amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_finite(&intvl, 3, 5);
@@ -78,20 +79,20 @@ void test_amm_semtype_cnst_strlen_1intvl_finite(const char *inhex, bool expect)
     }
 
     check_cnst(&cnst, inhex, expect);
-    amm_semtype_cnst_deinit(&cnst);
+    cace_amm_semtype_cnst_deinit(&cnst);
 }
 
 TEST_CASE("626869", false)     // ari:"hi"
 TEST_CASE("6474657374", false) // ari:"test"
 void test_amm_semtype_cnst_strlen_empty(const char *inhex, bool expect)
 {
-    amm_semtype_cnst_t cnst;
-    amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
-    // leave empty
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
 
     check_cnst(&cnst, inhex, expect);
-    amm_semtype_cnst_deinit(&cnst);
+    cace_amm_semtype_cnst_deinit(&cnst);
 }
 
 TEST_CASE("626869", true)         // ari:"hi"
@@ -99,9 +100,10 @@ TEST_CASE("6474657374", true)     // ari:"test"
 TEST_CASE("66746F6F626967", true) // ari:"toobig"
 void test_amm_semtype_cnst_strlen_1intvl_infinite(const char *inhex, bool expect)
 {
-    amm_semtype_cnst_t cnst;
-    amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_infinite(&intvl);
@@ -109,7 +111,7 @@ void test_amm_semtype_cnst_strlen_1intvl_infinite(const char *inhex, bool expect
     }
 
     check_cnst(&cnst, inhex, expect);
-    amm_semtype_cnst_deinit(&cnst);
+    cace_amm_semtype_cnst_deinit(&cnst);
 }
 
 TEST_CASE("626869", true)          // ari:"hi"
@@ -117,9 +119,10 @@ TEST_CASE("6474657374", true)      // ari:"test"
 TEST_CASE("66746F6F626967", false) // ari:"toobig"
 void test_amm_semtype_cnst_strlen_1intvl_lowindef(const char *inhex, bool expect)
 {
-    amm_semtype_cnst_t cnst;
-    amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_infinite(&intvl);
@@ -129,7 +132,7 @@ void test_amm_semtype_cnst_strlen_1intvl_lowindef(const char *inhex, bool expect
     }
 
     check_cnst(&cnst, inhex, expect);
-    amm_semtype_cnst_deinit(&cnst);
+    cace_amm_semtype_cnst_deinit(&cnst);
 }
 
 TEST_CASE("626869", false)        // ari:"hi"
@@ -137,9 +140,10 @@ TEST_CASE("6474657374", true)     // ari:"test"
 TEST_CASE("66746F6F626967", true) // ari:"toobig"
 void test_amm_semtype_cnst_strlen_1intvl_highindef(const char *inhex, bool expect)
 {
-    amm_semtype_cnst_t cnst;
-    amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_infinite(&intvl);
@@ -149,7 +153,7 @@ void test_amm_semtype_cnst_strlen_1intvl_highindef(const char *inhex, bool expec
     }
 
     check_cnst(&cnst, inhex, expect);
-    amm_semtype_cnst_deinit(&cnst);
+    cace_amm_semtype_cnst_deinit(&cnst);
 }
 
 TEST_CASE("626869", true)         // ari:"hi"
@@ -157,9 +161,10 @@ TEST_CASE("6474657374", false)    // ari:"test"
 TEST_CASE("66746F6F626967", true) // ari:"toobig"
 void test_amm_semtype_cnst_strlen_2intvl_finite(const char *inhex, bool expect)
 {
-    amm_semtype_cnst_t cnst;
-    amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = amm_semtype_cnst_set_strlen(&cnst);
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_size_t intvl;
         cace_amm_range_intvl_size_set_finite(&intvl, 0, 3);
@@ -169,7 +174,7 @@ void test_amm_semtype_cnst_strlen_2intvl_finite(const char *inhex, bool expect)
     }
 
     check_cnst(&cnst, inhex, expect);
-    amm_semtype_cnst_deinit(&cnst);
+    cace_amm_semtype_cnst_deinit(&cnst);
 }
 
 TEST_CASE("[a-z]+", "F7", false)           // ari:undefined
@@ -183,12 +188,17 @@ TEST_CASE("[a-z]+", "626869", true)        // ari:"hi"
 TEST_CASE("[a-z]+", "6568654C4C6F", false) // ari:"heLLo"
 void test_amm_semtype_cnst_textpat(const char *pat, const char *inhex, bool expect)
 {
-    amm_semtype_cnst_t cnst;
-    amm_semtype_cnst_init(&cnst);
-    amm_semtype_cnst_set_textpat(&cnst, pat);
-
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    int res = cace_amm_semtype_cnst_set_textpat(&cnst, pat);
+#if defined(PCRE_FOUND)
+    TEST_ASSERT_EQUAL_INT(0, res);
     check_cnst(&cnst, inhex, expect);
-    amm_semtype_cnst_deinit(&cnst);
+#else  /* PCRE_FOUND */
+    TEST_ASSERT_EQUAL_INT(100, res);
+#endif /* PCRE_FOUND */
+
+    cace_amm_semtype_cnst_deinit(&cnst);
 }
 
 TEST_CASE("F7", false)     // ari:undefined
@@ -205,9 +215,10 @@ TEST_CASE("06", false)     // ari:6
 TEST_CASE("0A", false)     // ari:10
 void test_amm_semtype_cnst_range_int64_1intvl_finite(const char *inhex, bool expect)
 {
-    amm_semtype_cnst_t cnst;
-    amm_semtype_cnst_init(&cnst);
-    cace_amm_range_int64_t *range = amm_semtype_cnst_set_range_int64(&cnst);
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    cace_amm_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
     {
         cace_amm_range_intvl_int64_t intvl;
         cace_amm_range_intvl_int64_set_finite(&intvl, -5, 5);
@@ -215,5 +226,5 @@ void test_amm_semtype_cnst_range_int64_1intvl_finite(const char *inhex, bool exp
     }
 
     check_cnst(&cnst, inhex, expect);
-    amm_semtype_cnst_deinit(&cnst);
+    cace_amm_semtype_cnst_deinit(&cnst);
 }

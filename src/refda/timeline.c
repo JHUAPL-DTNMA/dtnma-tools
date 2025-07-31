@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -29,15 +29,4 @@ int refda_timeline_event_cmp(const refda_timeline_event_t *lt, const refda_timel
         return -1;
     }
     return timespec_cmp(lt->ts, rt->ts);
-}
-
-const refda_timeline_event_t *refda_timeline_front(refda_timeline_t line)
-{
-    refda_timeline_it_t it;
-    refda_timeline_it(it, line);
-    if (refda_timeline_end_p(it))
-    {
-        return NULL;
-    }
-    return refda_timeline_cref(it);
 }

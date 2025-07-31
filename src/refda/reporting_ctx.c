@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -22,12 +22,12 @@ void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *parent
 {
     CHKVOID(obj);
     obj->parent = parent;
-    ari_list_init(obj->items);
+    cace_ari_list_init(obj->items);
 }
 
 void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj)
 {
     CHKVOID(obj);
-    ari_list_clear(obj->items);
+    cace_ari_list_clear(obj->items);
     obj->parent = NULL;
 }

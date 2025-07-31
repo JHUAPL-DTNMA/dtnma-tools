@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -53,6 +53,12 @@ int refda_binding_ctrl(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
 /// @overload
 int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
 
+/// @overload
+int refda_binding_sbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+
+/// @overload
+int refda_binding_tbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+
 /** Perform a type binding into an object store.
  *
  * @param obj_type The object type being bound.
@@ -61,7 +67,7 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
  * @return Zero if successful.
  * Otherwise, the number of individual bindings which have failed.
  */
-int refda_binding_obj(ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_obj(cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
 
 #ifdef __cplusplus
 } // extern C

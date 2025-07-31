@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -21,6 +21,8 @@
 
 #include "agent.h"
 #include "runctx.h"
+#include "amm/sbr.h"
+#include "amm/tbr.h"
 #include <cace/ari.h>
 
 #ifdef __cplusplus
@@ -41,7 +43,7 @@ extern "C" {
  * @param[in] ari The ARI to dereference, if necessary, and execute.
  * @return Zero if successful.
  */
-int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const ari_t *ari);
+int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const cace_ari_t *ari);
 
 /** Implement the running procedure from Section TBD of @cite ietf-dtn-amm-01.
  * This executes items in a sequence until the first deferred completion.
@@ -57,6 +59,47 @@ int refda_exec_run_seq(refda_exec_seq_t *seq);
  * @return Always NULL pointer.
  */
 void *refda_exec_worker(void *arg);
+
+/** Helper function to run a single iteration of the exec worker thread
+ *
+ * @param[in] arg The context ::refda_agent_t pointer.
+ * @return True to continue the loop, false to stop
+ */
+bool refda_exec_worker_iteration(refda_agent_t *agent);
+
+int refda_exec_waiting(refda_agent_t *agent);
+
+/**
+ * Begin periodic execution of a time based rule
+ * @param[in] The agent context pointer
+ * @param[in] The rule to execute
+ * @return Non-zero if the rule could not be started
+ */
+int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr);
+
+/**
+ * Cease periodic execution of a time based rule
+ * @param[in] The agent context pointer
+ * @param[in] The rule to disable
+ * @return Non-zero if the rule could not be stopped
+ */
+int refda_exec_tbr_disable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr);
+
+/**
+ * Begin periodic execution of a state based rule
+ * @param[in] The agent context pointer
+ * @param[in] The rule to execute
+ * @return Non-zero if the rule could not be started
+ */
+int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
+
+/**
+ * Cease periodic execution of a state based rule
+ * @param[in] The agent context pointer
+ * @param[in] The rule to disable
+ * @return Non-zero if the rule could not be stopped
+ */
+int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 
 #ifdef __cplusplus
 } // extern C

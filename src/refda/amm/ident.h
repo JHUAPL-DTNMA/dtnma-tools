@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -30,7 +30,7 @@ extern "C" {
 typedef struct
 {
     /// Reference to the object
-    ari_t name;
+    cace_ari_t name;
     /** The bound object being used, which is bound based on #name.
      * This is always a reference to an externally-owned object.
      */
@@ -58,6 +58,7 @@ M_DEQUE_DEF(refda_amm_ident_base_list, refda_amm_ident_base_t)
 typedef struct refda_amm_ident_desc_s
 {
     /** All base IDENT objects for this object.
+     * This list will not change during the lifetime of the IDENT.
      */
     refda_amm_ident_base_list_t bases;
 

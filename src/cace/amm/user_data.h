@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -32,16 +32,22 @@ extern "C" {
  */
 typedef void (*cace_amm_user_data_deinit_f)(void *ptr);
 
-typedef struct
+typedef struct cace_amm_user_data_s
 {
     /// Pointer to the opaque user data being managed
     void *ptr;
     /** Set to true if the pointed-to data is owned by this struct and
-     * must be freed (using ARI_FREE) by this deinit.
+     * must be freed (using CACE_FREE) by this deinit.
      */
     bool owned;
     /// An optional cleanup function for the #ptr.
     cace_amm_user_data_deinit_f deinit;
+
+#ifdef __cplusplus
+    cace_amm_user_data_s(const cace_amm_user_data_s &)            = delete;
+    cace_amm_user_data_s &operator=(const cace_amm_user_data_s &) = delete;
+#endif
+
 } cace_amm_user_data_t;
 
 void cace_amm_user_data_init(cace_amm_user_data_t *obj);

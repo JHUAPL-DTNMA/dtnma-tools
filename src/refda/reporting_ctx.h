@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -37,7 +37,7 @@ typedef struct
     /** Storage for the items of a report layer.
      * This is initialized as empty and is pushed back as items are added.
      */
-    ari_list_t items;
+    cace_ari_list_t items;
 } refda_reporting_ctx_t;
 
 /** Initialize a context based on an object reference ARI and

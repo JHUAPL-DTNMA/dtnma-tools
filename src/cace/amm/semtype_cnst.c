@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -18,13 +18,13 @@
 #include "semtype_cnst.h"
 #include "cace/util/logging.h"
 
-void amm_semtype_cnst_init(amm_semtype_cnst_t *obj)
+void cace_amm_semtype_cnst_init(cace_amm_semtype_cnst_t *obj)
 {
     CHKVOID(obj);
     obj->type = AMM_SEMTYPE_CNST_INVALID;
 }
 
-void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj)
+void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
 {
     CHKVOID(obj);
     switch (obj->type)
@@ -51,10 +51,10 @@ void amm_semtype_cnst_deinit(amm_semtype_cnst_t *obj)
     obj->type = AMM_SEMTYPE_CNST_INVALID;
 }
 
-cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj)
+cace_amm_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t *obj)
 {
     CHKNULL(obj);
-    amm_semtype_cnst_deinit(obj);
+    cace_amm_semtype_cnst_deinit(obj);
 
     obj->type                  = AMM_SEMTYPE_CNST_STRLEN;
     cace_amm_range_size_t *cfg = &(obj->as_strlen);
@@ -63,12 +63,12 @@ cace_amm_range_size_t *amm_semtype_cnst_set_strlen(amm_semtype_cnst_t *obj)
     return cfg;
 }
 
-#if defined(PCRE_FOUND)
-
-pcre2_code *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pat)
+int cace_amm_semtype_cnst_set_textpat(cace_amm_semtype_cnst_t *obj, const char *pat)
 {
-    CHKNULL(obj);
-    amm_semtype_cnst_deinit(obj);
+    CHKERR1(obj);
+    CHKERR1(pat);
+#if defined(PCRE_FOUND)
+    cace_amm_semtype_cnst_deinit(obj);
 
     const int   opts        = PCRE2_ANCHORED | PCRE2_ENDANCHORED;
     int         errorcode   = 0;
@@ -77,21 +77,22 @@ pcre2_code *amm_semtype_cnst_set_textpat(amm_semtype_cnst_t *obj, const char *pa
     if (!cfg)
     {
         CACE_LOG_ERR("Failed to compile regex pattern (error %d at %z): %s", errorcode, erroroffset, pat);
-        return NULL;
+        return 2;
     }
 
     obj->type       = AMM_SEMTYPE_CNST_TEXTPAT;
     obj->as_textpat = cfg;
 
-    return cfg;
+    return 0;
+#else  /* PCRE_FOUND */
+    return 100;
+#endif /* PCRE_FOUND */
 }
 
-#endif /* PCRE_FOUND */
-
-cace_amm_range_int64_t *amm_semtype_cnst_set_range_int64(amm_semtype_cnst_t *obj)
+cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj)
 {
     CHKNULL(obj);
-    amm_semtype_cnst_deinit(obj);
+    cace_amm_semtype_cnst_deinit(obj);
 
     obj->type                   = AMM_SEMTYPE_CNST_RANGE_INT64;
     cace_amm_range_int64_t *cfg = &(obj->as_range_int64);
@@ -100,7 +101,7 @@ cace_amm_range_int64_t *amm_semtype_cnst_set_range_int64(amm_semtype_cnst_t *obj
     return cfg;
 }
 
-bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
+bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const cace_ari_t *val)
 {
     bool retval = false;
     switch (obj->type)
@@ -116,12 +117,12 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
             size_t len = 0;
             switch (val->as_lit.prim_type)
             {
-                case ARI_PRIM_TSTR:
+                case CACE_ARI_PRIM_TSTR:
                     // ignore terminating null
-                    len = ari_cget_tstr(val)->len - 1;
+                    len = cace_ari_cget_tstr(val)->len - 1;
                     break;
-                case ARI_PRIM_BSTR:
-                    len = ari_cget_bstr(val)->len;
+                case CACE_ARI_PRIM_BSTR:
+                    len = cace_ari_cget_bstr(val)->len;
                     break;
                 default:
                     return false;
@@ -134,7 +135,7 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
 #if defined(PCRE_FOUND)
         case AMM_SEMTYPE_CNST_TEXTPAT:
         {
-            const cace_data_t *data = ari_cget_tstr(val);
+            const cace_data_t *data = cace_ari_cget_tstr(val);
             if (!data)
             {
                 return false;
@@ -161,7 +162,7 @@ bool amm_semtype_cnst_is_valid(const amm_semtype_cnst_t *obj, const ari_t *val)
         case AMM_SEMTYPE_CNST_RANGE_INT64:
         {
             int64_t intval;
-            if (ari_get_vast(val, &intval))
+            if (cace_ari_get_vast(val, &intval))
             {
                 return false;
             }

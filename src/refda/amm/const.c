@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -19,11 +19,13 @@
 
 void refda_amm_const_desc_init(refda_amm_const_desc_t *obj)
 {
-    obj->value = ARI_INIT_UNDEFINED;
+    obj->val_type = CACE_AMM_TYPE_INIT_INVALID;
+    obj->value    = CACE_ARI_INIT_UNDEFINED;
 }
 
 void refda_amm_const_desc_deinit(refda_amm_const_desc_t *obj)
 {
-    ari_deinit(&(obj->value));
+    cace_ari_deinit(&(obj->value));
+    cace_amm_type_deinit(&(obj->val_type));
     memset(obj, 0, sizeof(*obj));
 }

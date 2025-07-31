@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2011-2024 The Johns Hopkins University Applied Physics
+## Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Delay-Tolerant Networking Management
@@ -21,28 +21,28 @@
 # From a fresh checkout perform a full build
 #
 set -e
+set -o pipefail
 
-source setenv.sh
+SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+source ${SELFDIR}/setenv.sh
 
 BUILDDIR=${SELFDIR}/build/default
 
 if [ "$1" = "docs" ]
 then
-    cmake --build ${BUILDDIR} --target docs
+    cmake --build ${BUILDDIR} --target docs-api-html
 elif [ "$1" = "install" ]
 then
     shift
     cmake --install ${BUILDDIR} "$@"
 elif [ "$1" = "check" ]
 then
-    ctest --test-dir ${BUILDDIR} \
-        --output-junit testresults.xml \
-        --verbose
+    cmake --build ${BUILDDIR} --target test
 elif [ "$1" = "coverage" ]
 then
     cmake --build ${BUILDDIR} -j1 --target \
         coverage-cace-html coverage-cace-xml \
         coverage-refda-html coverage-refda-xml
 else
-    cmake --build ${BUILDDIR}
+    cmake --build ${BUILDDIR} "$@"
 fi
