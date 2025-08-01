@@ -1927,8 +1927,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
     else
     {
         CACE_LOG_INFO("ensure-odm found existing ODM");
-        CACE_FREE(org_name);
-        CACE_FREE(model_name);
+        string_list_pop_back(NULL, agent->odm_names); // Free unneeded data
+        string_list_pop_back(NULL, agent->odm_names);
     }
 
     cace_ari_t result = CACE_ARI_INIT_NULL;
