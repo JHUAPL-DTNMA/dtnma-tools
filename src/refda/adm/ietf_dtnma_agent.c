@@ -2269,25 +2269,23 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
+    REFDA_AGENT_LOCK(agent, );
+    bool valid = false;
     {
         if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_SBR, (const char *)obj_name->ptr))
         {
             // FIXME: update fields on existing SBR in this case, instead of just returning??
             CACE_LOG_INFO("SBR already exists");
-            cace_ari_init(&ari_result);
-            cace_ari_set_uint(&ari_result, 0);
-            refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
-            return;
+            valid = true;
+            goto ensure_sbr_cleanup;
         }
 
         if (NULL != cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_SBR, obj_id))
         {
             // FIXME: same comment as above
             CACE_LOG_INFO("SBR already exists");
-            cace_ari_init(&ari_result);
-            cace_ari_set_uint(&ari_result, 0);
-            refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
-            return;
+            valid = true;
+            goto ensure_sbr_cleanup;
         }
     }
 
@@ -2303,7 +2301,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for action");
                 refda_amm_sbr_desc_deinit(objdata);
                 CACE_FREE(objdata);
-                return;
+                goto ensure_sbr_cleanup;
             }
             cace_ari_set_copy(&(objdata->action), ari_action);
         }
@@ -2315,7 +2313,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for condition");
                 refda_amm_sbr_desc_deinit(objdata);
                 CACE_FREE(objdata);
-                return;
+                goto ensure_sbr_cleanup;
             }
             cace_ari_set_copy(&(objdata->condition), ari_condition);
         }
@@ -2327,7 +2325,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for min interval");
                 refda_amm_sbr_desc_deinit(objdata);
                 CACE_FREE(objdata);
-                return;
+                goto ensure_sbr_cleanup;
             }
             cace_ari_set_td(&(objdata->min_interval), ts);
         }
@@ -2339,7 +2337,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for init enabled");
                 refda_amm_sbr_desc_deinit(objdata);
                 CACE_FREE(objdata);
-                return;
+                goto ensure_sbr_cleanup;
             }
             objdata->init_enabled = init_enabled;
         }
@@ -2351,12 +2349,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for max exec count");
                 refda_amm_sbr_desc_deinit(objdata);
                 CACE_FREE(objdata);
-                return;
+                goto ensure_sbr_cleanup;
             }
             objdata->max_exec_count = max_exec_count;
         }
 
-        REFDA_AGENT_LOCK(agent, );
         obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum((char *)obj_name->ptr, obj_id), objdata);
 
         if (obj && obj->app_data.ptr)
@@ -2367,12 +2364,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
                 refda_exec_sbr_enable(agent, desc);
             }
         }
-        REFDA_AGENT_UNLOCK(agent, );
+        valid = true;
     }
 
-    cace_ari_init(&ari_result);
-    cace_ari_set_uint(&ari_result, 0);
-    refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+ensure_sbr_cleanup:
+    if (valid)
+    {
+        cace_ari_init(&ari_result);
+        cace_ari_set_uint(&ari_result, 0);
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr BODY
@@ -2447,25 +2450,23 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
+    REFDA_AGENT_LOCK(agent, );
+    bool valid = false;
     {
         if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_TBR, (const char *)obj_name->ptr))
         {
             // FIXME: update fields on existing TBR in this case, instead of just returning??
             CACE_LOG_INFO("TBR already exists");
-            cace_ari_init(&ari_result);
-            cace_ari_set_uint(&ari_result, 0);
-            refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
-            return;
+            valid = true;
+            goto ensure_tbr_cleanup;
         }
 
         if (NULL != cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_TBR, obj_id))
         {
             // FIXME: same comment as above
             CACE_LOG_INFO("TBR already exists");
-            cace_ari_init(&ari_result);
-            cace_ari_set_uint(&ari_result, 0);
-            refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
-            return;
+            valid = true;
+            goto ensure_tbr_cleanup;
         }
     }
 
@@ -2481,7 +2482,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for action");
                 refda_amm_tbr_desc_deinit(objdata);
                 CACE_FREE(objdata);
-                return;
+                goto ensure_tbr_cleanup;
             }
             cace_ari_set_copy(&(objdata->action), ari_action);
         }
@@ -2493,7 +2494,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for period");
                 refda_amm_tbr_desc_deinit(objdata);
                 CACE_FREE(objdata);
-                return;
+                goto ensure_tbr_cleanup;
             }
             cace_ari_set_td(&(objdata->period), ts);
         }
@@ -2519,7 +2520,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
                     CACE_LOG_ERR("Invalid ARI received for start time");
                     refda_amm_tbr_desc_deinit(objdata);
                     CACE_FREE(objdata);
-                    return;
+                    goto ensure_tbr_cleanup;
                 }
             }
         }
@@ -2531,7 +2532,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for init enabled");
                 refda_amm_tbr_desc_deinit(objdata);
                 CACE_FREE(objdata);
-                return;
+                goto ensure_tbr_cleanup;
             }
             objdata->init_enabled = init_enabled;
         }
@@ -2543,12 +2544,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Invalid ARI received for max exec count");
                 refda_amm_tbr_desc_deinit(objdata);
                 CACE_FREE(objdata);
-                return;
+                goto ensure_tbr_cleanup;
             }
             objdata->max_exec_count = max_exec_count;
         }
 
-        REFDA_AGENT_LOCK(agent, );
         obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum((char *)obj_name->ptr, obj_id), objdata);
 
         if (obj && obj->app_data.ptr)
@@ -2559,12 +2559,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
                 refda_exec_tbr_enable(agent, desc);
             }
         }
-        REFDA_AGENT_UNLOCK(agent, );
+        valid = true;
     }
 
-    cace_ari_init(&ari_result);
-    cace_ari_set_uint(&ari_result, 0);
-    refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+ensure_tbr_cleanup:
+    if (valid)
+    {
+        cace_ari_init(&ari_result);
+        cace_ari_set_uint(&ari_result, 0);
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr BODY
@@ -2592,9 +2598,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
     const cace_ari_t *target      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *ari_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
 
-    cace_ari_t ari_result;
-    cace_ari_init(&ari_result);
-    cace_ari_set_uint(&ari_result, 0);
+    if (cace_ari_is_undefined(target))
+    {
+        CACE_LOG_ERR("Invalid ARI for target");
+        return;
+    }
 
     cace_ari_bool enabled;
     if (cace_ari_get_bool(ari_enabled, &enabled))
@@ -2602,6 +2610,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
         CACE_LOG_ERR("Invalid ARI for enabled");
         return;
     }
+
+    cace_ari_t ari_result;
+    cace_ari_init(&ari_result);
+    cace_ari_set_uint(&ari_result, 0);
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
