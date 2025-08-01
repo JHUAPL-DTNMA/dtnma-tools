@@ -38,13 +38,21 @@ void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj)
     CHKVOID(obj);
 }
 
+bool refda_ctrl_exec_ctx_has_aparam_undefined(const refda_ctrl_exec_ctx_t *ctx)
+{
+    CHKFALSE(ctx);
+    return ctx->item->deref.aparams.any_undefined;
+}
+
 const cace_ari_t *refda_ctrl_exec_ctx_get_aparam_index(const refda_ctrl_exec_ctx_t *ctx, size_t index)
 {
+    CHKNULL(ctx);
     return cace_ari_array_cget(ctx->item->deref.aparams.ordered, index);
 }
 
 const cace_ari_t *refda_ctrl_exec_ctx_get_aparam_name(const refda_ctrl_exec_ctx_t *ctx, const char *name)
 {
+    CHKNULL(ctx);
     return *cace_named_ari_ptr_dict_cget(ctx->item->deref.aparams.named, name);
 }
 
@@ -117,6 +125,7 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
 int refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const cace_ari_t *value)
 {
     CHKERR1(ctx);
+    CHKERR1(value);
     cace_ari_set_copy(&(ctx->item->result), value);
     return refda_ctrl_exec_ctx_check_result(ctx);
 }
@@ -124,6 +133,7 @@ int refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const cace_a
 int refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, cace_ari_t *value)
 {
     CHKERR1(ctx);
+    CHKERR1(value);
     cace_ari_set_move(&(ctx->item->result), value);
     return refda_ctrl_exec_ctx_check_result(ctx);
 }

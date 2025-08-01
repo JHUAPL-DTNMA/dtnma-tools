@@ -79,9 +79,23 @@ void refda_oper_eval_ctx_deinit(refda_oper_eval_ctx_t *obj);
 int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_lookup_t *deref,
                                  const refda_amm_oper_desc_t *oper, refda_eval_ctx_t *eval);
 
+/** Determine if any actual parameter is undefined.
+ *
+ * @param[in] ctx The evaluation context.
+ * @return True if there are any undefined values.
+ */
+bool refda_oper_eval_ctx_has_aparam_undefined(const refda_oper_eval_ctx_t *ctx);
+
 const cace_ari_t *refda_oper_eval_ctx_get_aparam_index(const refda_oper_eval_ctx_t *ctx, size_t index);
 
 const cace_ari_t *refda_oper_eval_ctx_get_aparam_name(const refda_oper_eval_ctx_t *ctx, const char *name);
+
+/** Determine if any operand value is undefined.
+ *
+ * @param[in] ctx The evaluation context.
+ * @return True if there are any undefined values.
+ */
+bool refda_oper_eval_ctx_has_operand_undefined(const refda_oper_eval_ctx_t *ctx);
 
 const cace_ari_t *refda_oper_eval_ctx_get_operand_index(const refda_oper_eval_ctx_t *ctx, size_t index);
 

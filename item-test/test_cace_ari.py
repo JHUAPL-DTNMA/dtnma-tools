@@ -37,6 +37,11 @@ HEXPAT = r'^[0-9a-fA-F]+'
 URIPAT = r'^ari:.+'
 ''' Text form of ARI regex pattern. '''
 
+# ADM handling outside of tests
+ADMS = AdmSet(cache_dir=False)
+logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
+ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
+
 
 class TestCaceAri(unittest.TestCase):
     ''' Verify behavior of the cace_ari utility '''
@@ -49,11 +54,6 @@ class TestCaceAri(unittest.TestCase):
         LOGGER.info('Working in %s', path)
 
         self._runner = None
-
-        # ADM handling
-        adms = AdmSet(cache_dir=False)
-        adms.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
-        self._adms = adms
 
     def tearDown(self):
         if self._runner:
@@ -68,7 +68,7 @@ class TestCaceAri(unittest.TestCase):
         return self._runner
 
     def _ari_obj_from_text(self, text:str) -> ARI:
-        nn_func = nickname.Converter(nickname.Mode.TO_NN, self._adms.db_session(), must_nickname=True)
+        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
 
         with io.StringIO(text) as buf:
             ari = ari_text.Decoder().decode(buf)

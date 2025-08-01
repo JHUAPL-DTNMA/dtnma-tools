@@ -23,6 +23,7 @@ void cace_ari_itemized_init(cace_ari_itemized_t *obj)
     CHKVOID(obj);
     cace_ari_array_init(obj->ordered);
     cace_named_ari_ptr_dict_init(obj->named);
+    obj->any_undefined = false;
 }
 
 void cace_ari_itemized_init_set(cace_ari_itemized_t *obj, const cace_ari_itemized_t *src)
@@ -31,6 +32,7 @@ void cace_ari_itemized_init_set(cace_ari_itemized_t *obj, const cace_ari_itemize
     CHKVOID(src);
     cace_ari_array_init_set(obj->ordered, src->ordered);
     cace_named_ari_ptr_dict_init_set(obj->named, src->named);
+    obj->any_undefined = src->any_undefined;
 }
 
 void cace_ari_itemized_init_move(cace_ari_itemized_t *obj, cace_ari_itemized_t *src)
@@ -39,6 +41,7 @@ void cace_ari_itemized_init_move(cace_ari_itemized_t *obj, cace_ari_itemized_t *
     CHKVOID(src);
     cace_ari_array_init_move(obj->ordered, src->ordered);
     cace_named_ari_ptr_dict_init_move(obj->named, src->named);
+    obj->any_undefined = src->any_undefined;
 }
 
 void cace_ari_itemized_deinit(cace_ari_itemized_t *obj)
@@ -53,4 +56,5 @@ void cace_ari_itemized_reset(cace_ari_itemized_t *obj)
     CHKVOID(obj);
     cace_ari_array_reset(obj->ordered);
     cace_named_ari_ptr_dict_reset(obj->named);
+    obj->any_undefined = false;
 }

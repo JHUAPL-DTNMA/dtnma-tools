@@ -351,7 +351,7 @@ int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
         }
     }
 
-    // no deinit for runctx
+    refda_runctx_deinit(&runctx);
     refda_msgdata_deinit(&msg);
 
     return retval;

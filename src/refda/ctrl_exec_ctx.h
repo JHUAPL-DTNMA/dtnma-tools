@@ -62,6 +62,13 @@ void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *ite
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj);
 
+/** Determine if any actual parameter is undefined.
+ *
+ * @param[in] ctx The execution context.
+ * @return True if there are any undefined values.
+ */
+bool refda_ctrl_exec_ctx_has_aparam_undefined(const refda_ctrl_exec_ctx_t *ctx);
+
 /** Get an actual parameter for this execution.
  *
  * @param[in] ctx The execution context.
