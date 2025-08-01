@@ -22,6 +22,7 @@
 #include "idseg_val.h"
 #include "idseg_ref.h"
 #include "cace/ari/ref.h"
+#include "cace/util/defs.h"
 #include "cace/util/nocase.h"
 #include <m-rbtree.h>
 #include <m-shared-ptr.h>
@@ -112,6 +113,14 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_name(const cace_amm_obj_ns_t *ns, 
 
 cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
                                                    cace_ari_int_id_t intenum);
+
+/**
+ * Determine if the object namespace is an ODM.
+ *
+ * @param[in] The namespace to inspect.
+ * @return True if the namespace is an ODM, false otherwise.
+ */
+bool cace_amm_obj_ns_is_odm(const cace_amm_obj_ns_t *ns);
 
 #ifdef __cplusplus
 } // extern C

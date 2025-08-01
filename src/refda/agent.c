@@ -38,6 +38,7 @@ void refda_agent_init(refda_agent_t *agent)
     refda_instr_init(&(agent->instr));
     cace_threadset_init(agent->threads);
 
+    string_list_init(agent->odm_names);
     cace_amm_obj_store_init(&(agent->objs));
     pthread_mutex_init(&(agent->objs_mutex), NULL);
 
@@ -68,6 +69,7 @@ void refda_agent_deinit(refda_agent_t *agent)
 
     pthread_mutex_destroy(&(agent->objs_mutex));
     cace_amm_obj_store_deinit(&(agent->objs));
+    string_list_clear(agent->odm_names);
 
     refda_instr_deinit(&(agent->instr));
     cace_threadset_clear(agent->threads);
