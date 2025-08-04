@@ -42,6 +42,14 @@ extern "C" {
 /// Size of agent handoff queues
 #define AGENT_QUEUE_SIZE 1024
 
+/** @struct string_list_t
+ * Linked list of text strings with ownership semantics.
+ * Usable as a simple memory pool for runtime text allocation.
+ */
+/// @cond Doxygen_Suppress
+M_LIST_DEF(string_list, m_string_t, M_STRING_OPLIST)
+/// @endcond
+
 /** State of a DTNMA Agent.
  */
 typedef struct refda_agent_s
@@ -58,9 +66,11 @@ typedef struct refda_agent_s
     /// Threads associated with the agent
     cace_threadset_t threads;
 
+    /// Text string ownership for ODM (runtime-defined) text names
+    string_list_t odm_names;
     /// Runtime AMM object store
     cace_amm_obj_store_t objs;
-    /// Mutex for the state of #objs
+    /// Mutex for the state of #objs, its object subtrees, and #odm_names
     pthread_mutex_t objs_mutex;
 
     /// Cached type from //ietf-amm/TYPEDEF/MAC

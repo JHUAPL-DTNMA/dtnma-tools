@@ -67,12 +67,13 @@ class TestStdioAgent(unittest.TestCase):
         self._agent.start()
         self._wait_rptset()
 
-    def _ari_text_to_obj(self, text:str) -> ARI:
+    def _ari_text_to_obj(self, text:str, nn:bool = True) -> ARI:
         nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
 
         with io.StringIO(text) as buf:
             ari = ari_text.Decoder().decode(buf)
-        ari = nn_func(ari)
+        if nn == True:
+            ari = nn_func(ari)
         return ari
 
     def _ari_obj_to_cbor(self, ari:ARI) -> bytes:
@@ -85,10 +86,10 @@ class TestStdioAgent(unittest.TestCase):
             ari = ari_cbor.Decoder().decode(buf)
         return ari
 
-    def _send_execset(self, text:str):
+    def _send_execset(self, text:str, nn:bool = True):
         ''' Send an EXECSET with a number of target ARIs. '''
         LOGGER.info('Sending value %s', text)
-        data = self._ari_obj_to_cbor(self._ari_text_to_obj(text))
+        data = self._ari_obj_to_cbor(self._ari_text_to_obj(text, nn))
         line = binascii.b2a_hex(data).decode('ascii')
         LOGGER.info('Sending line %s', line)
         self._agent.send_stdin(line + '\n')
@@ -219,7 +220,7 @@ class TestStdioAgent(unittest.TestCase):
         self._start()
 
         self._send_execset(
-            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm(example, 100, !test-model-1, -1))'
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm(ietf, 1, !test-model-1, -1))'
         )
 
         rptset = self._wait_rptset().value
@@ -228,11 +229,11 @@ class TestStdioAgent(unittest.TestCase):
         rpt = rptset.reports[0]
         LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm(example, 100, !test-model-1, -1)'), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm(ietf, 1, !test-model-1, -1)'), rpt.source)
         # items of the report
         self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
-        # FIXME: Add following test. Currently fails due to ACE error reading ODM
+        # FIXME: Add following test
         # ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//example/!test-model-1))
 
         self._send_execset(
@@ -249,3 +250,115 @@ class TestStdioAgent(unittest.TestCase):
         # items of the report
         self.assertEqual(1, len(rpt.items))
 
+        ## ODM Rules
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false))', False)
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false)', False), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false))', False)
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false)', False), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/AC/(false),/TD/999999,1,false))', False)
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/AC/(false),/TD/999999,1,false)', False), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sbr-list(false)))')
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sbr-list(false))'), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(6, rpt.items[0].value.size);
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))')
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(12, rpt.items[0].value.size);
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true))', False)
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true)', False), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/reset-rule-enabled(//ietf/!test-model-1/TBR/test-tbr))', False)
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/reset-rule-enabled(//ietf/!test-model-1/TBR/test-tbr)', False), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-rule(//ietf/!test-model-1/TBR/test-tbr2))', False)
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/obsolete-rule(//ietf/!test-model-1/TBR/test-tbr2)', False), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))')
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        LOGGER.info('Got rpt %s', rpt)
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(6, rpt.items[0].value.size);
+        self.assertEqual(False, rpt.items[0].value[0][5].value); # Confirm rule is disabled
