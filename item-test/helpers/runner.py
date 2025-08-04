@@ -98,7 +98,7 @@ class CmdRunner:
         )
         self._writer.start()
 
-    def stop(self, timeout=5):
+    def stop(self, timeout=5) -> int:
         if not self.proc:
             return None
 
@@ -124,22 +124,22 @@ class CmdRunner:
         return ret
 
     def _read_stdout(self, stream):
-        LOGGER.info('Starting stdout thread')
+        LOGGER.debug('Starting stdout thread')
         for line in iter(stream.readline, ''):
-            LOGGER.info('Got stdout: %s', line.strip())
+            LOGGER.debug('Got stdout: %s', line.strip())
             self._stdout_lines.put(line)
-        LOGGER.info('Stopping stdout thread')
+        LOGGER.debug('Stopping stdout thread')
 
     def _write_stdin(self, stream):
-        LOGGER.info('Starting stdin thread')
+        LOGGER.debug('Starting stdin thread')
         while True:
             text = self._stdin_lines.get()
             if text is None:
                 break
-            LOGGER.info('Sending stdin: %s', text.strip())
+            LOGGER.debug('Sending stdin: %s', text.strip())
             stream.write(text)
             stream.flush()
-        LOGGER.info('Stopping stdin thread')
+        LOGGER.debug('Stopping stdin thread')
 
     def wait_for_line(self, timeout=5):
         try:
