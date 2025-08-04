@@ -87,6 +87,8 @@ jobs:
           -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}}
           -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}}
           -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
+          -DTEST_COVERAGE=${{matrix.os != 'ubuntu-22.04' && 'ON' || 'OFF'}}
+          -DTEST_MEMCHECK=${{matrix.os != 'ubuntu-22.04' && 'ON' || 'OFF'}}
       - name: Build
         run: ./build.sh
       - name: Install
@@ -96,13 +98,16 @@ jobs:
       - name: Test
         run: ./build.sh check
       - name: Collect coverage
+        if: matrix.os != 'ubuntu-22.04'
         run: ./build.sh coverage
       - name: Archive coverage
+        if: matrix.os != 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
           name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-${{matrix.deps}}-coverage
           path: build/default/coverage*
       - name: Report coverage
+        if: matrix.os != 'ubuntu-22.04'
         run: |
           SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-cace-xml.xml)
           echo "CACE coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
