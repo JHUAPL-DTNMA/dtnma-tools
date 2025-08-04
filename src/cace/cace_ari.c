@@ -120,8 +120,7 @@ static int read_text(cace_ari_t *inval, FILE *source)
     if (res)
     {
         fprintf(stderr, "Failed to decode text ARI (err %d): %s\n", res, errm);
-        if (errm != NULL)
-            CACE_FREE((char *)errm);
+        CACE_FREE((char *)errm);
         return 2;
     }
 
@@ -211,8 +210,7 @@ static int read_cborhex(cace_ari_t *inval, FILE *source)
     if (res)
     {
         fprintf(stderr, "Failed to decode CBOR ARI (err %d): %s\n", res, errm);
-        if (errm != NULL)
-            CACE_FREE((char *)errm);
+        CACE_FREE((char *)errm);
         return 2;
     }
 
