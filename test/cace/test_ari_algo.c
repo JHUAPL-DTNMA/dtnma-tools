@@ -53,7 +53,7 @@ static const char *different_aris[] = {
     NULL,
 };
 
-void test_ari_hash()
+void test_ari_hash(void)
 {
     test_seen_hash_t hash_history;
     test_seen_hash_init(hash_history);
@@ -103,7 +103,7 @@ void test_ari_hash()
     test_seen_hash_clear(hash_history);
 }
 
-void test_ari_equal()
+void test_ari_equal(void)
 {
     static test_seen_ari_t ari_history;
     test_seen_ari_init(ari_history);
