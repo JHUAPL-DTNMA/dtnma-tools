@@ -168,7 +168,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU")
     set(COVERAGE_COMPILER_FLAGS "-g --coverage")
     set(GCOV_EXEC "--gcov-executable" "gcov")
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-    set(COVERAGE_COMPILER_FLAGS "-g-dwarf4 --coverage")
+    set(COVERAGE_COMPILER_FLAGS "-gdwarf-4 --coverage")
     set(GCOV_EXEC "--gcov-executable" "llvm-cov gcov")
 endif()
 
