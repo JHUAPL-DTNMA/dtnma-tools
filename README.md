@@ -78,6 +78,18 @@ After the build is successful, the following will install to a local prefix path
 
 For further details, see the example in [integration-test-socket/Dockerfile](integration-test-socket/Dockerfile), which builds a stand-alone test environment container image, along with the other files in `integration-test-socket`.
 
+## As-Built Item Testing
+
+For testing the REFDA library and the [stand-alone agent](#stand-alone-agent), there is an _item test suite_ defined in the [item-test](item-test) directory.
+Test are defined in the python modules under that directory and run using the `item-test/run.sh` script, which will pass through any of its command line arguments to the pytest facility.
+
+The environment variable `TEST_MEMCHECK`, if set to any value, will cause the item tests to run their executable-under-test within Valgrind memcheck.
+
+An example full shell command to build and run specific (pytest-filtered) test cases is:
+```sh
+./build.sh && ./build.sh install && ./item-test/run.sh -k test_exec_inspect
+```
+
 
 ## Usage
 

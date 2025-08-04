@@ -132,7 +132,7 @@ void setUp(void)
         {
             refda_amm_var_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_var_desc_t));
             refda_amm_var_desc_init(objdata);
-            cace_amm_type_set_use_direct(&(objdata->val_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_VAST));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->val_type), CACE_ARI_TYPE_VAST));
             cace_ari_set_vast(&(objdata->value), 123456);
 
             obj = refda_register_var(adm, cace_amm_idseg_ref_withenum("var1", 1), objdata);
@@ -145,7 +145,7 @@ void setUp(void)
         {
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
-            cace_amm_type_set_use_direct(&(objdata->prod_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->prod_type), CACE_ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_int;
 
             obj = refda_register_edd(adm, cace_amm_idseg_ref_withenum("edd1", 1), objdata);
@@ -154,7 +154,7 @@ void setUp(void)
         {
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
-            cace_amm_type_set_use_direct(&(objdata->prod_type), cace_amm_type_get_builtin(CACE_ARI_TYPE_INT));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->prod_type), CACE_ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_one_int;
 
             obj = refda_register_edd(adm, cace_amm_idseg_ref_withenum("edd2", 2), objdata);

@@ -21,6 +21,7 @@
 
 void refda_oper_eval_ctx_init(refda_oper_eval_ctx_t *obj)
 {
+    CHKVOID(obj);
     obj->evalctx = NULL;
     obj->deref   = NULL;
     obj->oper    = NULL;
@@ -30,6 +31,7 @@ void refda_oper_eval_ctx_init(refda_oper_eval_ctx_t *obj)
 
 void refda_oper_eval_ctx_deinit(refda_oper_eval_ctx_t *obj)
 {
+    CHKVOID(obj);
     cace_ari_itemized_deinit(&(obj->operands));
     cace_ari_deinit(&(obj->result));
     obj->oper    = NULL;
@@ -41,6 +43,9 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
                                  const refda_amm_oper_desc_t *oper, refda_eval_ctx_t *eval)
 {
     CHKERR1(obj);
+    CHKERR1(deref);
+    CHKERR1(oper);
+    CHKERR1(eval);
     obj->evalctx = eval;
     obj->deref   = deref;
     obj->oper    = oper;
@@ -81,23 +86,39 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
     return failcnt ? 3 : 0;
 }
 
+bool refda_oper_eval_ctx_has_aparam_undefined(const refda_oper_eval_ctx_t *ctx)
+{
+    CHKFALSE(ctx);
+    return ctx->deref->aparams.any_undefined;
+}
+
 const cace_ari_t *refda_oper_eval_ctx_get_aparam_index(const refda_oper_eval_ctx_t *ctx, size_t index)
 {
+    CHKNULL(ctx);
     return cace_ari_array_cget(ctx->deref->aparams.ordered, index);
 }
 
 const cace_ari_t *refda_oper_eval_ctx_get_aparam_name(const refda_oper_eval_ctx_t *ctx, const char *name)
 {
+    CHKNULL(ctx);
     return *cace_named_ari_ptr_dict_cget(ctx->deref->aparams.named, name);
+}
+
+bool refda_oper_eval_ctx_has_operand_undefined(const refda_oper_eval_ctx_t *ctx)
+{
+    CHKFALSE(ctx);
+    return ctx->operands.any_undefined;
 }
 
 const cace_ari_t *refda_oper_eval_ctx_get_operand_index(const refda_oper_eval_ctx_t *ctx, size_t index)
 {
+    CHKNULL(ctx);
     return cace_ari_array_cget(ctx->operands.ordered, index);
 }
 
 const cace_ari_t *refda_oper_eval_ctx_get_operand_name(const refda_oper_eval_ctx_t *ctx, const char *name)
 {
+    CHKNULL(ctx);
     return *cace_named_ari_ptr_dict_cget(ctx->operands.named, name);
 }
 
@@ -108,5 +129,6 @@ void refda_oper_eval_ctx_set_result_copy(refda_oper_eval_ctx_t *ctx, const cace_
 
 void refda_oper_eval_ctx_set_result_move(refda_oper_eval_ctx_t *ctx, cace_ari_t *value)
 {
+    CHKVOID(ctx);
     cace_ari_set_move(&(ctx->result), value);
 }
