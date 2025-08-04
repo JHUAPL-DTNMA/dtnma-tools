@@ -164,8 +164,13 @@ foreach(LANG ${LANGUAGES})
   endif()
 endforeach()
 
-set(COVERAGE_COMPILER_FLAGS "-g --coverage"
-    CACHE INTERNAL "")
+if(CMAKE_C_COMPILER_ID MATCHES "GNU")
+    set(COVERAGE_COMPILER_FLAGS "-g --coverage")
+    set(GCOV_EXEC "--gcov-executable" "gcov")
+elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set(COVERAGE_COMPILER_FLAGS "-g-dwarf4 --coverage")
+    set(GCOV_EXEC "--gcov-executable" "llvm-cov gcov")
+endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
     include(CheckCXXCompilerFlag)
@@ -180,12 +185,6 @@ if(CMAKE_C_COMPILER_ID MATCHES "(GNU|Clang)")
     if(HAVE_c_fprofile_abs_path)
         set(COVERAGE_C_COMPILER_FLAGS "${COVERAGE_COMPILER_FLAGS} -fprofile-abs-path")
     endif()
-endif()
-
-if(CMAKE_C_COMPILER_ID MATCHES "GNU")
-    set(GCOV_EXEC "--gcov-executable" "gcov")
-elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-    set(GCOV_EXEC "--gcov-executable" "llvm-cov gcov")
 endif()
 
 set(CMAKE_Fortran_FLAGS_COVERAGE
