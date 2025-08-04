@@ -176,7 +176,16 @@ static int agentsGetHandler(struct mg_connection *conn)
 
         cJSON *agentObj = cJSON_CreateObject();
         cJSON_AddStringToObject(agentObj, "name", string_get_cstr(agent->eid));
-        cJSON_AddNumberToObject(agentObj, "rpts_count", cace_ari_list_size(agent->rptsets));
+        {
+            size_t count;
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+            // FIXME: add DB query in nm_sql.h
+            count = refdm_db_fetch_rptset_count(refdm_db_fetch_agent_idx(&agent->eid));
+#else
+            count = cace_ari_list_size(agent->rptsets);
+#endif
+            cJSON_AddNumberToObject(agentObj, "rpts_count", count);
+        }
         cJSON_AddItemToArray(agentList, agentObj);
     }
     pthread_mutex_unlock(&mgr->agent_mutex);
