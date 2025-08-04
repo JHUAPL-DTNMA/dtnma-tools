@@ -109,9 +109,9 @@ int cace_amp_msg_decode(cace_ari_list_t items, const uint8_t *msgbuf_ptr, size_t
         cace_ari_t item;
         cace_ari_init(&item);
 
-        int         res;
-        size_t      used;
-        const char *errm = NULL;
+        int    res;
+        size_t used;
+        char  *errm = NULL;
 
         res = cace_ari_cbor_decode(&item, &view, &used, &errm);
         cace_data_deinit(&view);
@@ -124,13 +124,8 @@ int cace_amp_msg_decode(cace_ari_list_t items, const uint8_t *msgbuf_ptr, size_t
         if (res)
         {
             CACE_LOG_ERR("Failed to decode CBOR ARI (err %d): %s\n", res, errm);
-        }
-        if (errm)
-        {
-            CACE_FREE((char *)errm);
-        }
-        if (res)
-        {
+            CACE_FREE(errm);
+
             cace_ari_deinit(&item);
             retval = 3;
             break;

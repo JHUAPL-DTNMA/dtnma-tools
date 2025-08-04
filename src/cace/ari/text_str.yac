@@ -38,7 +38,7 @@ typedef struct {
     /// The final result ARI
     cace_ari_t *ari;
     /// Optional error text storage
-    const char **errm;
+    char **errm;
     
     /// Storage for container parameters
     size_t tbl_c;
@@ -571,7 +571,7 @@ params:
 
 %%
 
-int cace_ari_text_decode(cace_ari_t *ari, const string_t text, const char **errm)
+int cace_ari_text_decode(cace_ari_t *ari, const string_t text, char **errm)
 {
     yyscan_t scanner;
     int res;

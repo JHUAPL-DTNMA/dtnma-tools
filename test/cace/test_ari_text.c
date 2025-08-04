@@ -27,13 +27,13 @@
 #define TEST_CASE(...)
 
 /// Resource cleanup for failure messages
-static const char *errm = NULL;
+static char *errm = NULL;
 
 void tearDown(void)
 {
     if (errm)
     {
-        M_MEMORY_FREE((char *)errm);
+        CACE_FREE(errm);
         errm = NULL;
     }
 }
@@ -1228,7 +1228,7 @@ void test_ari_text_loopback(const char *intext)
     string_init_set_str(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
     string_clear(inbuf);
-    if (ret && errm)
+    if ((ret != 0) ^ (errm != NULL)) // only error message upon failure
     {
         TEST_FAIL_MESSAGE(errm);
     }
@@ -1292,7 +1292,7 @@ void test_ari_text_reencode(const char *intext, const char *expect_outtext)
     string_init_set_str(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
     string_clear(inbuf);
-    if (ret && errm)
+    if ((ret != 0) ^ (errm != NULL)) // only error message upon failure
     {
         TEST_FAIL_MESSAGE(errm);
     }
@@ -1380,7 +1380,7 @@ void test_ari_text_decode_invalid(const char *intext)
     string_init_set_str(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
     string_clear(inbuf);
-    if (ret && errm)
+    if ((ret != 0) ^ (errm != NULL)) // only error message upon failure
     {
         TEST_FAIL_MESSAGE(errm);
     }

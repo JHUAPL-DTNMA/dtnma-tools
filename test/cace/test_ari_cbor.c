@@ -43,13 +43,13 @@ int suiteTearDown(int failures)
 }
 
 /// Resource cleanup for failure messages
-static const char *errm = NULL;
+static char *errm = NULL;
 
 void tearDown(void)
 {
     if (errm)
     {
-        M_MEMORY_FREE((char *)errm);
+        CACE_FREE(errm);
         errm = NULL;
     }
 }
