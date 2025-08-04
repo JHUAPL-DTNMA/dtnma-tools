@@ -115,7 +115,7 @@ static int read_text(cace_ari_t *inval, FILE *source)
     free(buf);
 
     char *errm = NULL;
-    res              = cace_ari_text_decode(inval, intext, &errm);
+    res        = cace_ari_text_decode(inval, intext, &errm);
     string_clear(intext);
     if (res)
     {
@@ -148,10 +148,10 @@ static int read_cbor(cace_ari_t *inval, FILE *source)
             cace_data_append_from(&store, got, buf);
         }
 
-        int         res;
-        size_t      used;
-        char *errm = NULL;
-        res              = cace_ari_cbor_decode(inval, &store, &used, &errm);
+        int    res;
+        size_t used;
+        char  *errm = NULL;
+        res         = cace_ari_cbor_decode(inval, &store, &used, &errm);
         if (used)
         {
             // chop off used data
@@ -199,7 +199,7 @@ static int read_cborhex(cace_ari_t *inval, FILE *source)
     }
 
     char *errm = NULL;
-    res              = cace_ari_cbor_decode(inval, &cbordata, NULL, &errm);
+    res        = cace_ari_cbor_decode(inval, &cbordata, NULL, &errm);
     cace_data_deinit(&cbordata);
     if (res)
     {

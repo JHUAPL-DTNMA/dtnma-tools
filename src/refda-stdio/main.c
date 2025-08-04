@@ -181,8 +181,8 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
                     cace_ari_init(&item);
                     if (!lineret)
                     {
-                        size_t      used;
-                        char *errm;
+                        size_t used;
+                        char  *errm;
                         res = cace_ari_cbor_decode(&item, &inbin, &used, &errm);
                         if (res)
                         {
