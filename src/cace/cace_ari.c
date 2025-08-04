@@ -114,13 +114,13 @@ static int read_text(cace_ari_t *inval, FILE *source)
     string_init_set_str(intext, buf);
     free(buf);
 
-    const char *errm = NULL;
+    char *errm = NULL;
     res              = cace_ari_text_decode(inval, intext, &errm);
     string_clear(intext);
     if (res)
     {
         fprintf(stderr, "Failed to decode text ARI (err %d): %s\n", res, errm);
-        CACE_FREE((char *)errm);
+        CACE_FREE(errm);
         return 2;
     }
 
@@ -150,7 +150,7 @@ static int read_cbor(cace_ari_t *inval, FILE *source)
 
         int         res;
         size_t      used;
-        const char *errm = NULL;
+        char *errm = NULL;
         res              = cace_ari_cbor_decode(inval, &store, &used, &errm);
         if (used)
         {
@@ -161,13 +161,7 @@ static int read_cbor(cace_ari_t *inval, FILE *source)
         if (res)
         {
             fprintf(stderr, "Failed to decode CBOR ARI (err %d): %s\n", res, errm);
-        }
-        if (errm)
-        {
-            CACE_FREE((char *)errm);
-        }
-        if (res)
-        {
+            CACE_FREE(errm);
             return 3;
         }
 
@@ -204,13 +198,13 @@ static int read_cborhex(cace_ari_t *inval, FILE *source)
         return 2;
     }
 
-    const char *errm = NULL;
+    char *errm = NULL;
     res              = cace_ari_cbor_decode(inval, &cbordata, NULL, &errm);
     cace_data_deinit(&cbordata);
     if (res)
     {
         fprintf(stderr, "Failed to decode CBOR ARI (err %d): %s\n", res, errm);
-        CACE_FREE((char *)errm);
+        CACE_FREE(errm);
         return 2;
     }
 
