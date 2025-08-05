@@ -19,13 +19,6 @@
  * @ingroup ari
  * This file contains definitions for AMM typing of ARI values.
  */
-/** @page amm_typing AMM Typing
- * Types within the AMM extend beyond the built-in types of ARI values into
- * "semantic types" as defined in Section 3.3 of the AMM @cite ietf-dtn-adm-00.
- *
- * The struct amm_type_s is used to represent both built-in ARI types as well
- * as different forms of semantic typing built upon the built-in types.
- */
 #ifndef CACE_AMM_TYPING_H_
 #define CACE_AMM_TYPING_H_
 

@@ -35,11 +35,11 @@ endif(PLANTUML_JAR)
 
 configure_file(Doxyfile.in Doxyfile @ONLY)
 
-add_custom_command(
-    OUTPUT
+add_custom_target(
+    docs-api-html
+    BYPRODUCTS
         ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
         ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
-    BYPRODUCTS
         ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
     DEPENDS
         ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
@@ -49,10 +49,6 @@ add_custom_command(
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating API documentation with Doxygen"
     USES_TERMINAL
-)
-add_custom_target(
-    docs-api-html
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
 )
 install(
     FILES
@@ -67,18 +63,16 @@ install(
 )
 
 if(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
+    add_custom_target(
+        docs-api-pdf
+        BYPRODUCTS
+            ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
         DEPENDS
             ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
             ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
         COMMAND ${MAKE_EXECUTABLE}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/latex
         COMMENT "Generating API documentation PDF"
-    )
-    add_custom_target(
-        docs-api-pdf
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
     )
     install(
         FILES
