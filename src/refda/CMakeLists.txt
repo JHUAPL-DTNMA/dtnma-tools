@@ -49,6 +49,7 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_amm_semtype.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_network_base.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_dtnma_agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_dtnma_agent_acl.h"
 )
 set(CFILES
     "agent.c"
@@ -85,6 +86,7 @@ set(CFILES
     "adm/ietf_amm_semtype.c"
     "adm/ietf_network_base.c"
     "adm/ietf_dtnma_agent.c"
+    "adm/ietf_dtnma_agent_acl.c"
 )
 add_library(refda)
 target_sources(refda PUBLIC ${HFILES})
