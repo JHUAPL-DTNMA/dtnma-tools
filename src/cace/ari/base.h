@@ -44,8 +44,8 @@ extern "C" {
 /**
  * Defines a general-purpose ARI structure.
  *
- * The ARI being captured here can be either literal-value, using the ::cace_ari_lit_t struct, or an object or namespace reference value, using the ::cace_ari_ref_t struct.
- * The
+ * The ARI being captured here can be either literal-value, using the ::cace_ari_lit_t struct, or an object or namespace
+ * reference value, using the ::cace_ari_ref_t struct, consistent with the cace_ari_s#is_ref value.
  */
 typedef struct cace_ari_s
 {

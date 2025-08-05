@@ -56,10 +56,10 @@
  * @param[in] name The variable name to get.
  * @return A copy of the string, or NULL if no environment is defined.
  */
-static char * refdm_envdup(const char *name)
+static char *refdm_envdup(const char *name)
 {
     const char *got = getenv(name);
-    char *cpy = got ? strdup(got) : NULL;
+    char       *cpy = got ? strdup(got) : NULL;
     return cpy;
 }
 
