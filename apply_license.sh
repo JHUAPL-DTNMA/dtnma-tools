@@ -31,7 +31,7 @@ SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/apply_license.tmpl"
 LICENSEOPTS="${LICENSEOPTS} --years 2011-2025"
 # Excludes only apply to directory (--dir) mode and not file mode
-LICENSEOPTS="${LICENSEOPTS} --exclude=*.md"
+LICENSEOPTS="${LICENSEOPTS} --exclude=${SELFDIR}/docs/api/*.md"
 
 
 # Specific paths
