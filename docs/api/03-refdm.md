@@ -94,7 +94,7 @@ This binding uses the Unix reliable datagram sockets (`AF_UNIX` with `SOCK_SEQPA
 The daemon executable is named `refdm-proxy`.
 
 The daemon will attempt to connect to the proxy server at start up, with linear back-off if the server is not responsive.
-If an initial connection cannot be made after 500 attempts the daemon will exit with an error code.
+If an initial connection cannot be made after 600 attempts the daemon will exit with an error code.
 
 The daemon for this binding has the following additional command-line options.
 
@@ -107,7 +107,8 @@ The daemon for this binding has the following additional command-line options.
 An example of a proxy server implementation which itself registers as a BPv7 endpoint with a local JPL ION Agent is provided for reference.
 The daemon executable is named `ion-app-proxy`.
 
-The daemon will 
+The daemon will register its endpoint in the local BP Agent at startup and bind to the listening socket file path.
+If either of these fail the daemon will exit with an error code.
 
 The server daemon has the following additional command-line options.
 
