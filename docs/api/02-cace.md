@@ -29,7 +29,7 @@ The specific header @ref cace/util/logging.h deals with @ref logging which is us
 The `cace/ari` directory deals with the ARI data model and encoding / decoding (CODEC) functions related to processing ARI values.
 There is also a top-level include @ref cace/ari.h which includes all other headers dealing with ARI handling.
 
-The type ::cace_ari_t (for struct ::cace_ari_s) is the API focal point for this library.
+The type ::cace_ari_t is the API focal point for this library.
 There are related algorithmic types and functions like cace_ari_visit() and cace_ari_translate() defined here.
 
 # AMM Definitions
@@ -40,7 +40,7 @@ Types within the AMM extend beyond the built-in types of ARI values into "semant
 The type ::cace_amm_obj_store_t is used to register and lookup abstract AMM object handles, which used within the @ref refda for state keeping.
 There are related algorithmic types and functions like cace_amm_lookup_deref() for object dereferencing and cace_amm_actual_param_set_populate() for parameter handling.
 
-The type ::cace_amm_type_t (for struct ::cace_amm_type_s) is used to represent both built-in ARI types as well as different forms of semantic typing built upon the built-in types.
+The type [cace_amm_type_t](@ref cace_amm_type_s) is used to represent both built-in ARI types as well as different forms of semantic typing built upon the built-in types.
 There are related algorithmic functions like cace_amm_type_match() and cace_amm_type_convert defined here.
 
 # AMP Message Handling

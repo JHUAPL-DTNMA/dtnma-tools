@@ -57,7 +57,7 @@ jobs:
           -DBUILD_DOCS_API=ON
       - name: Build
         run: |
-          ./build.sh --target docs-api-html docs-api-pdf
+          ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling
           ./build.sh install --component docs-api
       - name: Compress
         working-directory: testroot/usr/share/doc/dtnma-tools
