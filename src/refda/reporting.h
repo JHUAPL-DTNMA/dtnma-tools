@@ -34,7 +34,7 @@ extern "C" {
 /// Error result when value EXPR evaluation fails
 #define REFDA_REPORTING_ERR_EVAL_FAILED 6
 
-/** Generate a RPTSET for the conclusion of a CTRL exectuion.
+/** Generate a RPTSET for the conclusion of a CTRL execution.
  *
  * @param[in] runctx The context for RPTSET aggregation.
  * @param[in] target The original execution target being reported on.

@@ -27,7 +27,7 @@ The specific header @ref cace/util/logging.h deals with @ref logging which is us
 # ARI Handling
 
 The `cace/ari` directory deals with the ARI data model and encoding / decoding (CODEC) functions related to processing ARI values.
-There is also a top-level incluede @ref cace/ari.h which includes all other headers dealing with ARI handling.
+There is also a top-level include @ref cace/ari.h which includes all other headers dealing with ARI handling.
 
 The type ::cace_ari_t (for struct ::cace_ari_s) is the API focal point for this library.
 There are related algorithmic types and functions like cace_ari_visit() and cace_ari_translate() defined here.
@@ -46,4 +46,4 @@ There are related algorithmic functions like cace_amm_type_match() and cace_amm_
 # AMP Message Handling
 
 The `cace/amp` directory deals with ARI values encoded in binary form into AMP messages
-This includes POSIX socket utilites used by the `refda-socket` and `refdm-socket` daemons as a reference to what an AMP transport binding should look like and how it should behave.
+This includes POSIX socket utilities used by the `refda-socket` and `refdm-socket` daemons as a reference to what an AMP transport binding should look like and how it should behave.

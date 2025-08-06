@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-/** An identifer segment with name by-reference.
+/** An identifier segment with name by-reference.
  */
 typedef struct
 {

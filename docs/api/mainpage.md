@@ -75,7 +75,7 @@ More details are described in the @ref cace page.
 
 The reference DTNMA Agent (REFDA) (with its default ADM implementations) is built as the `refda` library and has default daemons which bind it to the following transports:
 
- * The `refda-socket` which is a simple binding to @ref refda-socket used to tranport AMP messages.
+ * The `refda-socket` which is a simple binding to @ref refda-socket used to transport AMP messages.
    This DA is intended to be usable for testing and interoperation with the `refdm-socket` daemon without needing complex transport parameters.
  * The `refda-ion` which is a binding to the @ref refda-ion, and is a drop-in replacement to the earlier ION-integrated DTNMA Agent.
  * The `refda-stdio` which is a binding to @ref refda-stdio and is intended only as a test DA because it uses the process `stdin` and `stdout` for text-form ARI transport.
@@ -87,11 +87,11 @@ More details are described in the @ref refda page.
 
 The reference DTNMA Manager (REFDM) is built as the `refdm` library and has default daemons which bind it to the following transports:
 
- * The `refdm-socket` which is a simple binding to @ref refdm-socket to tranport AMP messages.
+ * The `refdm-socket` which is a simple binding to @ref refdm-socket to transport AMP messages.
    This DA is intended to be usable for testing and interoperation with the `refdm-socket` daemon without needing complex transport parameters.
  * The `refdm-ion` which is a binding to the @ref refdm-ion, and is a drop-in replacement to the earlier ION-integrated DTNMA Manager.
  * The `refdm-proxy` which is a binding to @ref refdm-proxy connecting to an associated local AMP proxy daemon.
-   The project contains an simple `ion-app-proxy` daemon to fulfil that purpose with limited configuration.
+   The project contains an simple `ion-app-proxy` daemon to fulfill that purpose with limited configuration.
 
 Each of the refdm daemons provides a REST API for user/application interaction.
 
@@ -101,7 +101,7 @@ More details are described in the @ref refdm page.
 
 Details on conventions used by the APIs and expected of new development is defined in the @ref conventions page.
 
-Depening on what you are trying to implement or integrate with, either the @ref cace, @ref refda, or @ref refdm are a starting point for specfic top-level APIs.
+Depening on what you are trying to implement or integrate with, either the @ref cace, @ref refda, or @ref refdm are a starting point for specific top-level APIs.
 
 # Build and Runtime Dependencies
 
@@ -114,7 +114,7 @@ The following third party libraries are needed at **build time** and **runtime**
 : A C11-compatible container library which is type-safe.
 
 [timespec](https://github.com/solemnwarning/timespec)
-: A set of supplimental `struct timespec` processing functions.
+: A set of supplemental `struct timespec` processing functions.
 
 [Civetweb](https://github.com/civetweb/civetweb)
 : A minimal HTTP server library supporting the REFDM application interface (see @ref refdm).
@@ -134,7 +134,7 @@ Also available directly from PIP with the package [`dtnma-camp`](https://pypi.or
 The following are used for **testing**:
 
 [Unity](https://github.com/ThrowTheSwitch/Unity)
-: A C unit test fixture and asertion library.
+: A C unit test fixture and assertion library.
 
 [dtnma-ace](https://github.com/JHUAPL-DTNMA/dtnma-ace)
 : A Python library for processing ARIs and ADMs for built-item testing.

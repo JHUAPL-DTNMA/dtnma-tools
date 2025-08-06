@@ -72,7 +72,7 @@ void cace_amm_type_reset(cace_amm_type_t *type);
 /** A pointer to cace_amm_type_t with ownership semantics.
  *
  * The M_SHARED_PTR_RELAXED_DEF cannot be used here because it requires a
- * concrete type defintion and cannot be used with forward-declared types.
+ * concrete type definition and cannot be used with forward-declared types.
  */
 typedef struct
 {
@@ -123,7 +123,7 @@ typedef enum
     CACE_AMM_TYPE_MATCH_UNDEFINED,
 } cace_amm_type_match_res_t;
 
-/** Return either a postive or negative match depending on a condition.
+/** Return either a positive or negative match depending on a condition.
  */
 static inline cace_amm_type_match_res_t cace_amm_type_match_pos_neg(bool cond)
 {

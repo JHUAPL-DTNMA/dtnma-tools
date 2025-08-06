@@ -21,13 +21,13 @@ The Reference DTNMA Agent (REFDA) is implemented as two portions: a reusable lib
 
 # REFDA Library
 
-This library is meant to implement all of the Agent behaviors defined in Section 3 and Section 6 of the AMM @cite ietf-dtn-amm-05 in a way which is indpendent of the exact context in which the Agent is being deployed and independent of the specific transport used for ARI/AMP messaging.
+This library is meant to implement all of the Agent behaviors defined in Section 3 and Section 6 of the AMM @cite ietf-dtn-amm-05 in a way which is independent of the exact context in which the Agent is being deployed and independent of the specific transport used for ARI/AMP messaging.
 
 # Application Interface
 
 The application-side interface of the REFDA is provided by C11 functions related to registering application model objects in a ::cace_amm_obj_store_t instance under a specific model namespace ::cace_amm_obj_ns_t instance.
 
-The Python package CAMP is specifically intended to automate the use of this interface by automated conversion of ADM modules (input file) into a REFDA-compatible registration implementaion (C compilation unit).
+The Python package CAMP is specifically intended to automate the use of this interface by automated conversion of ADM modules (input file) into a REFDA-compatible registration implementation (C compilation unit).
 
 # Transport Interface
 
