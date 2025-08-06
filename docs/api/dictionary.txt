@@ -211,7 +211,6 @@ structs
 Structs
 StructureContext
 subgraph
-succes
 suiteSetUp
 suiteTearDown
 sw

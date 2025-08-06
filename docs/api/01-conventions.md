@@ -99,7 +99,7 @@ Functions that can fail should have `int` return type and use the following comm
 
 0 - Success   
 1 - Invalid parameter (unless otherwise noted)
-NOTE!! This pattern is being adapted. A negative value indicates error, zero indicates succes.
+NOTE!! This pattern is being adapted. A negative value indicates error, zero indicates success.
 There may be times when there may be meaningful context associated with a positive value (e.g., number of bytes written).
 
 For ADM functions it is good practice to log warnings about why a result is `undefined`.
