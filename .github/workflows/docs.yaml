@@ -39,11 +39,13 @@ jobs:
       - name: Set up OS
         run: |
           sudo rm /var/lib/man-db/auto-update
-          sudo apt-get update && sudo apt-get install -y \
+          sudo apt-get update
+          sudo apt-get install -y \
               cmake ninja-build \
               ruby build-essential autoconf libtool \
               flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev \
-              doxygen graphviz plantuml dblatex texlive texlive-latex-extra texlive-font-utils \
+              doxygen graphviz plantuml \
+              dblatex texlive texlive-latex-extra texlive-font-utils \
               xmlstarlet aspell
       - name: Dependency build
         env:
