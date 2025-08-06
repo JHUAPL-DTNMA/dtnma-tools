@@ -173,7 +173,7 @@ Table that tracks all the formal definition. All formal definitions should inclu
 - `fp_spec_id` int unsigned  
 	id of the formal parmspec for this MAC, fk into formal_parmspec 
 - `ac_id` int unsigned  
-	the collection containg the controls and other macros this macro calls. fk into ari_collection,
+	the collection containing the controls and other macros this macro calls. fk into ari_collection,
 - `max_call_depth` int unsigned  
 	max call depth into other macro definitions, default 4 
 

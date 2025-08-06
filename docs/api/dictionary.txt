@@ -98,8 +98,6 @@ expr
 EXPR
 fd
 filesystem
-fontname
-fontsize
 frontend
 ge
 Heiner

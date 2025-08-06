@@ -10,6 +10,7 @@
   <xsl:template match="qualifiedname"/>
   <xsl:template match="initializer"/>
   <xsl:template match="listofallmembers"/>
+  <xsl:template match="term"/>
   <xsl:template match="parametername"/>
   <xsl:template match="incdepgraph"/>
   <xsl:template match="invincdepgraph"/>
@@ -25,6 +26,11 @@
   <xsl:template match="computeroutput"/>
   <xsl:template match="verbatim"/>
   <xsl:template match="programlisting"/>
+  <xsl:template match="dot"/>
+  <!-- remove characters that aspell cannot handle -->
+  <xsl:template match="para/text()">
+    <xsl:value-of select="translate(., '&#8217;', '')"/>
+  </xsl:template>
   <!-- standard copy template -->
   <xsl:template match="@*|node()">
     <xsl:copy>
