@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 /** All value types representable by an ARI.
- * These are encodable enumerations, which are different than
+ * These are encodeable enumerations, which are different than
  * ::ari_prim_type_e internal union-switching enumerations.
  */
 typedef enum

@@ -19,7 +19,9 @@
  * Test the cace_ari_cbor.h interfaces.
  *
  * As a shortcut to producing expected binary contents, use commands similar to:
+ * @code{.sh}
  *  echo "42" | diag2cbor.rb | xxd -i
+ * @endcode
  */
 #include <cace/ari/cbor.h>
 #include <cace/ari/text.h>

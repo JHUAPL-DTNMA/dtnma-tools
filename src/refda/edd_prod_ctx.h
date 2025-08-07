@@ -51,7 +51,7 @@ typedef struct refda_edd_prod_ctx_s
  * a target object's formal parameters.
  *
  * @param[out] obj The context to initialize.
- * @[aram[in] edd The EDD descriptor to produce from.
+ * @param[in] edd The EDD descriptor to produce from.
  * @param[in,out] prodctx The production state.
  * The result must outlive this context.
  */
