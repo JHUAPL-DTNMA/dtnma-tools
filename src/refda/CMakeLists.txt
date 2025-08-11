@@ -18,6 +18,7 @@ limitations under the License.
 
 set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/acl.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/instr.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/binding.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/msgdata.h"
@@ -53,6 +54,7 @@ set(HFILES
 )
 set(CFILES
     "agent.c"
+    "acl.c"
     "instr.c"
     "binding.c"
     "msgdata.c"

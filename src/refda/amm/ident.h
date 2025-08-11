@@ -43,13 +43,13 @@ void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj);
 
 /// M*LIB OPLIST for refda_amm_ident_base_t
 #define M_OPL_refda_amm_ident_base_t() \
-    (INIT(API_2(refda_amm_ident_base_init)), CLEAR(API_2(refda_amm_ident_base_deinit)))
+    (INIT(API_2(refda_amm_ident_base_init)), INIT_SET(0), CLEAR(API_2(refda_amm_ident_base_deinit)), SET(0))
 
-/** @struct refda_amm_ident_base_list
+/** @struct refda_amm_ident_base_list_t
  * A list of possible base objects.
  */
 /// @cond Doxygen_Suppress
-M_DEQUE_DEF(refda_amm_ident_base_list, refda_amm_ident_base_t)
+M_ARRAY_DEF(refda_amm_ident_base_list, refda_amm_ident_base_t)
 /// @endcond
 
 /** An IDENT descriptor.

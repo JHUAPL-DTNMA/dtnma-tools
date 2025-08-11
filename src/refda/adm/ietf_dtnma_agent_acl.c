@@ -85,6 +85,9 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_current_group_id(refda_edd_prod_c
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_current_group_id BODY
      * +-------------------------------------------------------------------------+
      */
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_uint(&result, ctx->prodctx->parent->acl_group_id);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_current_group_id BODY
@@ -110,6 +113,47 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_group_list BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    if (pthread_mutex_lock(&(agent->acl_mutex)))
+    {
+        CACE_LOG_ERR("failed to lock agent ACL");
+        return;
+    }
+
+    cace_ari_tbl_t table;
+    cace_ari_tbl_init(&table, 3, 0);
+
+    refda_acl_group_list_it_t grp_it;
+    for (refda_acl_group_list_it(grp_it, agent->acl.groups); !refda_acl_group_list_end_p(grp_it);
+         refda_acl_group_list_next(grp_it))
+    {
+        const refda_acl_group_t *grp = refda_acl_group_list_cref(grp_it);
+        if (!grp)
+        {
+            continue;
+        }
+
+        cace_ari_array_t row;
+        cace_ari_array_init(row);
+        cace_ari_array_resize(row, 3);
+
+        cace_ari_set_int(cace_ari_array_get(row, 0), grp->id);
+        cace_ari_set_tstr(cace_ari_array_get(row, 0), m_string_get_cstr(grp->name), true);
+
+        // append the row
+        cace_ari_tbl_move_row_array(&table, row);
+        cace_ari_array_clear(row);
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tbl(&result, &table);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    if (pthread_mutex_unlock(&(agent->acl_mutex)))
+    {
+        CACE_LOG_ERR("failed to unlock agent ACL");
+        return;
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_group_list BODY

@@ -24,6 +24,7 @@
 #include "exec_seq.h"
 #include "rpt_agg.h"
 #include "timeline.h"
+#include "acl.h"
 #include <cace/util/daemon_run.h>
 #include <cace/util/threadset.h>
 #include <cace/amm/obj_ns.h>
@@ -65,6 +66,11 @@ typedef struct refda_agent_s
     refda_instr_t instr;
     /// Threads associated with the agent
     cace_threadset_t threads;
+
+    /// Access control list
+    refda_acl_t acl;
+    /// Mutext for the state of #acl
+    pthread_mutex_t acl_mutex;
 
     /// Text string ownership for ODM (runtime-defined) text names
     string_list_t odm_names;

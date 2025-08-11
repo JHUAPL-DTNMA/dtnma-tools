@@ -18,6 +18,7 @@
 #ifndef REFDA_RUNCTX_H_
 #define REFDA_RUNCTX_H_
 
+#include "acl.h"
 #include "cace/ari/base.h"
 #include "cace/amm/lookup.h"
 #include <m-shared.h>
@@ -59,7 +60,6 @@ void refda_amm_modval_state_deinit(refda_amm_modval_state_t *obj);
 void refda_amm_modval_state_inc(refda_amm_modval_state_t *obj);
 
 /** Context for all agent runtime activities.
- * Because all contents are external pointers, no deinit function is needed.
  */
 typedef struct
 {
@@ -77,6 +77,10 @@ typedef struct
      * Otherwise this will be the undefined value.
      */
     cace_ari_t nonce;
+
+    /** Cached ACL-derived group ID.
+     */
+    refda_acl_group_id_t acl_group_id;
 
 } refda_runctx_t;
 
