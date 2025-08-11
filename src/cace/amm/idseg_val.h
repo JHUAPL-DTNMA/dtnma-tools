@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-/// Each component of a namespace identifer
+/// Each component of a namespace identifier
 typedef struct
 {
     /// Mandatory name for the component, stored with this struct

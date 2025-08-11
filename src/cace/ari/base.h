@@ -41,28 +41,23 @@
 extern "C" {
 #endif
 
-/*
+/**
  * Defines a general-purpose ARI structure.
  *
- * The ARI being captured here can be either a "regular" ARI,
- * in which case the structure should be interpreted as a
- * cace_ari_reg_t structure or a "literal" ARI, in which case the
- * structure can be interpreted as a type/name/value.
- *
- * The use of a separate type field is redundant in that type
- * information is already captured in both the "regular" ARI
- * flag and the TYPE part of a literal ARI. However, extracting
- * the type information makes processing simpler and any other
- * method of distinguishing a regular and literal ARI would
- * likely use up at least a byte of space anyway.
+ * The ARI being captured here can be either literal-value, using the ::cace_ari_lit_t struct, or an object or namespace
+ * reference value, using the ::cace_ari_ref_t struct, consistent with the cace_ari_s#is_ref value.
  */
-
 typedef struct cace_ari_s
 {
+    /** Determine which member struct contains the value.
+     * If true the ::as_ref is the value, if false the ::as_lit is the value.
+     */
     bool is_ref;
     union
     {
+        /// Used when #is_ref is false
         cace_ari_lit_t as_lit;
+        /// Used when #is_ref is true
         cace_ari_ref_t as_ref;
     };
 } cace_ari_t;

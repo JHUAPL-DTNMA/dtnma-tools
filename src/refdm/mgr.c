@@ -50,6 +50,19 @@
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 #include "nm_sql.h"
+
+/** Get a copy of a specific environment variable, if defined.
+ *
+ * @param[in] name The variable name to get.
+ * @return A copy of the string, or NULL if no environment is defined.
+ */
+static char *refdm_envdup(const char *name)
+{
+    const char *got = getenv(name);
+    char       *cpy = got ? strdup(got) : NULL;
+    return cpy;
+}
+
 #endif
 
 void refdm_mgr_init(refdm_mgr_t *mgr)
@@ -81,10 +94,10 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 
     // setting sql info
-    mgr->sql_info.server   = strdup(getenv("DB_HOST"));
-    mgr->sql_info.username = strdup(getenv("DB_USER"));
-    mgr->sql_info.password = strdup(getenv("DB_PASSWORD"));
-    mgr->sql_info.database = strdup(getenv("DB_NAME"));
+    mgr->sql_info.server   = refdm_envdup("DB_HOST");
+    mgr->sql_info.username = refdm_envdup("DB_USER");
+    mgr->sql_info.password = refdm_envdup("DB_PASSWORD");
+    mgr->sql_info.database = refdm_envdup("DB_NAME");
 
     pthread_mutex_init(&(mgr->sql_lock), NULL);
     refdm_db_mgt_init(&(mgr->sql_info), 0, 1);

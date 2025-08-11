@@ -20,6 +20,9 @@ include(GNUInstallDirs)
 
 find_package(Doxygen REQUIRED)
 
+find_program(XMLSTARLET_EXECUTABLE xmlstarlet)
+find_program(ASPELL_EXECUTABLE aspell)
+
 find_program(MAKE_EXECUTABLE make)
 message(STATUS "Found make at ${MAKE_EXECUTABLE}")
 find_program(DBLATEX_EXECUTABLE dblatex)
@@ -35,12 +38,15 @@ endif(PLANTUML_JAR)
 
 configure_file(Doxyfile.in Doxyfile @ONLY)
 
-add_custom_command(
-    OUTPUT
+set(XML_COMBINE ${CMAKE_CURRENT_BINARY_DIR}/xml/combine.xslt)
+set(XML_INDEX ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml)
+add_custom_target(
+    docs-api-html
+    BYPRODUCTS
         ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
         ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
-    BYPRODUCTS
         ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
+        ${XML_COMBINE} ${XML_INDEX}
     DEPENDS
         ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
         ${CMAKE_CURRENT_SOURCE_DIR}/footer.html
@@ -49,10 +55,6 @@ add_custom_command(
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating API documentation with Doxygen"
     USES_TERMINAL
-)
-add_custom_target(
-    docs-api-html
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
 )
 install(
     FILES
@@ -66,19 +68,49 @@ install(
     COMPONENT docs-api
 )
 
-if(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
+if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
+    # spellcheck on combined XML output
+    set(DICTIONARY_TXT "${CMAKE_CURRENT_SOURCE_DIR}/dictionary.txt")
+    set(SPELLCHECK_XSL "${CMAKE_CURRENT_SOURCE_DIR}/spellcheck.xsl")
+    set(MISSPELLING_TXT "misspelling.txt")
     add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
+        OUTPUT "dictionary.cwl"
+        DEPENDS ${DICTIONARY_TXT}
+        COMMAND cat "${DICTIONARY_TXT}" |
+            ${ASPELL_EXECUTABLE} --lang=en create master "./dictionary.cwl"
+    )
+    add_custom_command(
+        OUTPUT ${MISSPELLING_TXT}
+        DEPENDS
+            ${XML_COMBINE} ${XML_INDEX}
+            ${SPELLCHECK_XSL} "dictionary.cwl"
+        COMMAND
+            ${XMLSTARLET_EXECUTABLE} tr "${XML_COMBINE}" "${XML_INDEX}" |
+            ${XMLSTARLET_EXECUTABLE} tr "${SPELLCHECK_XSL}" |
+            ${ASPELL_EXECUTABLE} --mode=html --lang=EN_US --extra-dicts=./dictionary.cwl list |
+            sort | uniq > "${MISSPELLING_TXT}"
+    )
+    add_custom_target(
+        docs-api-misspelling ALL
+        DEPENDS "${MISSPELLING_TXT}"
+        COMMAND cat "${MISSPELLING_TXT}"
+        # success means file is present and empty
+        COMMAND test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}"
+        COMMENT "Checking ${MISSPELLING_TXT}"
+    )
+endif(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
+
+if(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
+    add_custom_target(
+        docs-api-pdf
+        BYPRODUCTS
+            ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
         DEPENDS
             ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
             ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
         COMMAND ${MAKE_EXECUTABLE}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/latex
         COMMENT "Generating API documentation PDF"
-    )
-    add_custom_target(
-        docs-api-pdf
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
     )
     install(
         FILES

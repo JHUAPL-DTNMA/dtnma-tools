@@ -1,3 +1,4 @@
+@page conventions Conventions
 <!--
 Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -27,15 +28,15 @@ For reference, Doxygen comment blocks can contain complex markup based on a larg
 
 When M*LIB macros are used to declare type-safe containers, the Doxygen inspection of the macro-expanded code should be inhibited but there should also be a explicit Doxygen block to provide explanation of the purpose of the struct and a reference to the type of its contents.
 
-An example of this is below (corresponding to @ref ari_list_t).
+An example of this is below (corresponding to @ref cace_ari_list_t).
 
 @verbatim
-/** @struct ari_list_t
+/** @struct cace_ari_list_t
  * An [M-I-LIST](https://github.com/P-p-H-d/mlib/blob/master/README.md#m-i-list)
- * of ::ari_t items.
+ * of ::cace_ari_t items.
  */
 /// @cond Doxygen_Suppress
-M_DEQUE_DEF(ari_list, ari_t)
+M_DEQUE_DEF(cace_ari_list, cace_ari_t)
 /// @endcond
 @endverbatim
 
@@ -98,7 +99,7 @@ Functions that can fail should have `int` return type and use the following comm
 
 0 - Success   
 1 - Invalid parameter (unless otherwise noted)
-NOTE!! This pattern is being adapted. A negative value indicates error, zero indicates succes.
+NOTE!! This pattern is being adapted. A negative value indicates error, zero indicates success.
 There may be times when there may be meaningful context associated with a positive value (e.g., number of bytes written).
 
 For ADM functions it is good practice to log warnings about why a result is `undefined`.
@@ -130,9 +131,9 @@ This section contains references to commonly used macros defined for the librari
 
 When heap memory is needed at runtime, the following macros are used and have the same signature and semantics as the corresponding C99 functions indicated below.
 
-- [ARI_MALLOC](@ref ARI_MALLOC) as `malloc()`
-- [ARI_REALLOC](@ref ARI_REALLOC) as `realloc()`
-- [ARI_FREE](@ref ARI_FREE) as `free()`
+- [CACE_MALLOC](@ref CACE_MALLOC) as `malloc()`
+- [CACE_REALLOC](@ref CACE_REALLOC) as `realloc()`
+- [CACE_FREE](@ref CACE_FREE) as `free()`
 
 ## Error Checking Handler Macros
 
@@ -147,7 +148,7 @@ The precondition checks (on function parameters or on any other state generally)
 
 # Enums
 
-Enums with explicit values must be justified with citations, for example the declarations of @ref ari_type_t.
+Enums with explicit values must be justified with citations, for example the declarations of @ref cace_ari_type_t.
 Otherwise, they should not be given values.
 
 Enums should be `typedef`-ed with a `_e` suffix.

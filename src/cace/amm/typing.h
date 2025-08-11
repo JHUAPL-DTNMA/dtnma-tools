@@ -19,13 +19,6 @@
  * @ingroup ari
  * This file contains definitions for AMM typing of ARI values.
  */
-/** @page amm_typing AMM Typing
- * Types within the AMM extend beyond the built-in types of ARI values into
- * "semantic types" as defined in Section 3.3 of the AMM @cite ietf-dtn-adm-00.
- *
- * The struct amm_type_s is used to represent both built-in ARI types as well
- * as different forms of semantic typing built upon the built-in types.
- */
 #ifndef CACE_AMM_TYPING_H_
 #define CACE_AMM_TYPING_H_
 
@@ -79,7 +72,7 @@ void cace_amm_type_reset(cace_amm_type_t *type);
 /** A pointer to cace_amm_type_t with ownership semantics.
  *
  * The M_SHARED_PTR_RELAXED_DEF cannot be used here because it requires a
- * concrete type defintion and cannot be used with forward-declared types.
+ * concrete type definition and cannot be used with forward-declared types.
  */
 typedef struct
 {
@@ -130,7 +123,7 @@ typedef enum
     CACE_AMM_TYPE_MATCH_UNDEFINED,
 } cace_amm_type_match_res_t;
 
-/** Return either a postive or negative match depending on a condition.
+/** Return either a positive or negative match depending on a condition.
  */
 static inline cace_amm_type_match_res_t cace_amm_type_match_pos_neg(bool cond)
 {

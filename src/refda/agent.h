@@ -39,7 +39,7 @@ extern "C" {
 /// Error result when agent locking fails
 #define REFDA_AGENT_ERR_LOCK_FAILED 2
 
-/// Size of agent handoff queues
+/// Size of agent hand-off queues
 #define AGENT_QUEUE_SIZE 1024
 
 /** @struct string_list_t
@@ -70,7 +70,7 @@ typedef struct refda_agent_s
     string_list_t odm_names;
     /// Runtime AMM object store
     cace_amm_obj_store_t objs;
-    /// Mutex for the state of #objs, its object subtrees, and #odm_names
+    /// Mutex for the state of #objs, its object sub-trees, and #odm_names
     pthread_mutex_t objs_mutex;
 
     /// Cached type from //ietf-amm/TYPEDEF/MAC
@@ -159,7 +159,7 @@ int refda_agent_bindrefs(refda_agent_t *agent);
 /** After all ADMs are registered, finish object initialization.
  *
  * @param[in,out] agent The agent state to update.
- * @return The number of failed inits, or zero if successful.
+ * @return The number of failed object initializations, or zero if successful.
  */
 int refda_agent_init_objs(refda_agent_t *agent);
 

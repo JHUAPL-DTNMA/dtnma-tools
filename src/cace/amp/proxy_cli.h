@@ -66,12 +66,12 @@ int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_
  */
 void cace_amp_proxy_cli_state_disconnect(cace_amp_proxy_cli_state_t *state);
 
-/** Provider of ::cace_amm_msg_if_send_f interface for BP-proxy socket transport.
+/** Provider of cace_amm_msg_if_t::send interface for BP-proxy socket transport.
  * The user data for this function is a ::cace_amp_proxy_cli_state_t instance.
  */
 int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx);
 
-/** Provider of ::cace_amm_msg_if_recv_f interface for BP-proxy socket transport.
+/** Provider of cace_amm_msg_if_t::recv interface for BP-proxy socket transport.
  * The user data for this function is a ::cace_amp_proxy_cli_state_t instance.
  */
 int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, cace_daemon_run_t *running,

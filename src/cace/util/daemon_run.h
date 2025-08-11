@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-/** State for daemon run/stop signalling.
+/** State for daemon run/stop signaling.
  */
 typedef struct daemon_run
 {

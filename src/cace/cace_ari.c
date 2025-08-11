@@ -114,12 +114,13 @@ static int read_text(cace_ari_t *inval, FILE *source)
     string_init_set_str(intext, buf);
     free(buf);
 
-    const char *errm = NULL;
-    res              = cace_ari_text_decode(inval, intext, &errm);
+    char *errm = NULL;
+    res        = cace_ari_text_decode(inval, intext, &errm);
     string_clear(intext);
     if (res)
     {
         fprintf(stderr, "Failed to decode text ARI (err %d): %s\n", res, errm);
+        CACE_FREE(errm);
         return 2;
     }
 
@@ -147,10 +148,10 @@ static int read_cbor(cace_ari_t *inval, FILE *source)
             cace_data_append_from(&store, got, buf);
         }
 
-        int         res;
-        size_t      used;
-        const char *errm = NULL;
-        res              = cace_ari_cbor_decode(inval, &store, &used, &errm);
+        int    res;
+        size_t used;
+        char  *errm = NULL;
+        res         = cace_ari_cbor_decode(inval, &store, &used, &errm);
         if (used)
         {
             // chop off used data
@@ -160,13 +161,7 @@ static int read_cbor(cace_ari_t *inval, FILE *source)
         if (res)
         {
             fprintf(stderr, "Failed to decode CBOR ARI (err %d): %s\n", res, errm);
-        }
-        if (errm)
-        {
-            CACE_FREE((char *)errm);
-        }
-        if (res)
-        {
+            CACE_FREE(errm);
             return 3;
         }
 
@@ -194,6 +189,7 @@ static int read_cborhex(cace_ari_t *inval, FILE *source)
     free(buf);
 
     cace_data_t cbordata;
+    cace_data_init(&cbordata);
     res = cace_base16_decode(&cbordata, inhex);
     string_clear(inhex);
     if (res)
@@ -202,12 +198,13 @@ static int read_cborhex(cace_ari_t *inval, FILE *source)
         return 2;
     }
 
-    const char *errm = NULL;
-    res              = cace_ari_cbor_decode(inval, &cbordata, NULL, &errm);
+    char *errm = NULL;
+    res        = cace_ari_cbor_decode(inval, &cbordata, NULL, &errm);
     cace_data_deinit(&cbordata);
     if (res)
     {
         fprintf(stderr, "Failed to decode CBOR ARI (err %d): %s\n", res, errm);
+        CACE_FREE(errm);
         return 2;
     }
 

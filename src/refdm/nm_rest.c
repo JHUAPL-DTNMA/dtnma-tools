@@ -293,7 +293,7 @@ static int agentParseHex(struct mg_connection *conn, cace_ari_list_t tosend)
         m_string_init(hexbuf);
         cace_data_t databuf;
         cace_data_init(&databuf);
-        const char *errm = NULL;
+        char *errm = NULL;
 
         static const char *arisep = " \f\n\r\t\v"; // Identical to isspace()
 
@@ -334,7 +334,7 @@ static int agentParseHex(struct mg_connection *conn, cace_ari_list_t tosend)
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "Error decoding execution ARI: %s", errm);
                 retval = HTTP_BAD_REQUEST;
 
-                CACE_FREE((char *)errm);
+                CACE_FREE(errm);
                 errm = NULL;
             }
             if (cace_log_is_enabled_for(LOG_DEBUG))
@@ -383,7 +383,7 @@ static int agentParseText(struct mg_connection *conn, cace_ari_list_t tosend)
 
         m_string_t linebuf;
         m_string_init(linebuf);
-        const char *errm = NULL;
+        char *errm = NULL;
 
         static const char *ctrlsep = "\n\r"; // only newline
 
@@ -410,7 +410,7 @@ static int agentParseText(struct mg_connection *conn, cace_ari_list_t tosend)
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "Error decoding execution ARI: %s", errm);
                 retval = HTTP_BAD_REQUEST;
 
-                CACE_FREE((char *)errm);
+                CACE_FREE(errm);
                 errm = NULL;
             }
 #endif

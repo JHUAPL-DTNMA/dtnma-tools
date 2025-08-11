@@ -66,11 +66,11 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *encoder, const cace_ari_t *a
  * is not a valid ARI.
  * @param[out] errm If non-null, this will be set to a specific error message
  * associated with any failure.
- * Regardless of the return code, if the pointed-to pointer is non-null it
+ * When the return code is non-zero, if the pointed-to pointer is non-null it
  * must be freed using CACE_FREE().
  * @return Zero upon success.
  */
-int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, const char **errm);
+int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, char **errm);
 
 /** Lower-level stream decoding interface.
  *

@@ -1043,7 +1043,7 @@ static int cace_ari_cbor_decode_label(QCBORDecodeContext *dec, cace_ari_lit_t *l
     return 0;
 }
 
-int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, const char **errm)
+int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, char **errm)
 {
     CHKERR1(ari);
     CHKERR1(buf);
