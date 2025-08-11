@@ -172,7 +172,7 @@ jobs:
       - name: Test
         env:
           PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
-          PATH: "$PATH:/usr/lib/postgresql/16/bin"
+          PATH: "${env:PATH}:/usr/lib/postgresql/16/bin"
           TEST_MEMCHECK: '1'
         run: ./item-test/run.sh
 
