@@ -47,7 +47,7 @@ jobs:
           sudo apt-get install -y \
               cmake ninja-build \
               ruby pkg-config build-essential patch autoconf libtool \
-              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev postgresql-16' || ''}} \
+              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev postgresql' || ''}} \
               valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -169,10 +169,12 @@ jobs:
         run: ./build.sh
       - name: Install
         run: ./build.sh install
+      - name: System Path
+        if: matrix.os == 'ubuntu-24.04'
+        run: echo "/usr/lib/postgresql/16/bin" >>$GITHUB_PATH
       - name: Test
         env:
           PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
-          PATH: "${env:PATH}:/usr/lib/postgresql/16/bin"
           TEST_MEMCHECK: '1'
         run: ./item-test/run.sh
 
