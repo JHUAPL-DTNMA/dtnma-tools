@@ -94,10 +94,14 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 
     // setting sql info
-    mgr->sql_info.server   = refdm_envdup("DB_HOST");
-    mgr->sql_info.username = refdm_envdup("DB_USER");
-    mgr->sql_info.password = refdm_envdup("DB_PASSWORD");
-    mgr->sql_info.database = refdm_envdup("DB_NAME");
+#if defined(HAVE_POSTGRESQL)
+    mgr->sql_info.server   = refdm_envdup("PGHOST");
+    mgr->sql_info.username = refdm_envdup("PGUSER");
+    mgr->sql_info.password = refdm_envdup("PGPASSWORD");
+    mgr->sql_info.database = refdm_envdup("PGDATABASE");
+#else
+#error "not defined"
+#endif
 
     pthread_mutex_init(&(mgr->sql_lock), NULL);
     refdm_db_mgt_init(&(mgr->sql_info), 0, 1);
@@ -262,5 +266,8 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
 void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
 {
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#else
     cace_ari_list_reset(agent->rptsets);
+#endif
 }

@@ -180,7 +180,7 @@ static int agentsGetHandler(struct mg_connection *conn)
             size_t count;
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
             // FIXME: add DB query in nm_sql.h
-            count = refdm_db_fetch_rptset_count(refdm_db_fetch_agent_idx(&agent->eid));
+            count = 0;//refdm_db_fetch_rptset_count(refdm_db_fetch_agent_idx(&agent->eid));
 #else
             count = cace_ari_list_size(agent->rptsets);
 #endif
@@ -492,10 +492,14 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+    return HTTP_NO_CONTENT;
+#else
     if (cace_ari_list_empty_p(agent->rptsets))
     {
         mg_send_http_error(conn, HTTP_NO_CONTENT, "");
-        return 204;
+        return HTTP_NO_CONTENT;
     }
     int retval = 0;
 
@@ -532,16 +536,21 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     }
     m_string_clear(body);
     return retval;
+#endif
 }
 
 static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+    return HTTP_NO_CONTENT;
+#else
     if (cace_ari_list_empty_p(agent->rptsets))
     {
         mg_send_http_error(conn, HTTP_NO_CONTENT, "");
-        return 204;
+        return HTTP_NO_CONTENT;
     }
     int retval = 0;
 
@@ -584,6 +593,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 
     m_string_clear(body);
     return retval;
+#endif
 }
 
 /// Characters disallowed in URI segments (per RFC 3986) to know where they end

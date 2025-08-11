@@ -15,13 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+''' Test the local socket transport of the REFDM.
 
+This uses the environment variable DB_HOST to determine whether to spawn a
+private PostgreSQL server or use an external one.
+'''
+import glob
 import io
 import logging
 import os
 import signal
 import socket
-import subprocess
 import tempfile
 from typing import List, Set
 from urllib.parse import quote
@@ -48,6 +52,95 @@ def split_content_type(text):
 
 class TestRefdmSocket(unittest.TestCase):
     ''' Verify whole-agent behavior with the refdm-socket '''
+
+    @classmethod
+    def _sql_start(cls):
+        ''' Spawn an SQL server and load the refdb schema.
+        '''
+        cls._sqldir = tempfile.TemporaryDirectory(delete=False)
+        sql_data = os.path.join(cls._sqldir.name, 'data')
+        os.makedirs(sql_data)
+        sql_sock = os.path.join(cls._sqldir.name, 'run')
+        os.makedirs(sql_sock)
+
+        initdb = CmdRunner([
+            'initdb',
+            '-D', sql_data,
+            '--auth-local=trust',
+        ])
+        initdb.start()
+        if initdb.wait(timeout=10) != 0:
+            raise RuntimeError('Failed to run initdb')
+
+        args = [
+            'postgres',
+            '-D', sql_data,
+            '-h', '',
+            '-k', sql_sock
+        ]
+        cls._sqldb = CmdRunner(args)
+        cls._sqldb.start()
+
+        isready = CmdRunner([
+            'pg_isready',
+            '-h', sql_sock,
+            '-d', 'postgres',
+        ])
+        with Timer(10) as timer:
+            while timer:
+                timer.sleep(0.1)
+
+                isready.start()
+                if isready.wait() == 0:
+                    timer.finish()
+
+        db_name = 'refdm'
+        # After all setup, expose the state
+        os.environ['PGHOST'] = sql_sock
+        os.environ['PGUSER'] = ''
+        os.environ.pop('PGPASSWORD', None)
+        os.environ['PGDATABASE'] = db_name
+
+        psql = CmdRunner([
+            'psql',
+            '-w',
+            '-d', 'postgres',
+            '-c', f'create database {db_name}',
+        ])
+        psql.start()
+        if psql.wait() != 0:
+            raise RuntimeError('Failed to run psql')
+
+        script_pat = os.path.join(OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
+        for filepath in glob.glob(script_pat):
+            LOGGER.info('Loading script %s', filepath)
+            psql = CmdRunner([
+                'psql',
+                '-w',
+                '-f', filepath
+            ])
+            psql.start()
+            if psql.wait() != 0:
+                raise RuntimeError('Failed to run psql')
+
+    @classmethod
+    def _sql_stop(cls):
+        cls._sqldb.stop()
+        cls._sqldb = None
+        cls._sqldir.cleanup()
+        cls._sqldir = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._sql_host = os.environ.get('DB_HOST')
+        if cls._sql_host is None:
+            cls._sql_start()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if cls._sqldb:
+            cls._sql_stop()
+        cls._sql_host = None
 
     def setUp(self):
         logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)

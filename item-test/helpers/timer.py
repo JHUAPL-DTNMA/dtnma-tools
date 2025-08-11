@@ -19,6 +19,7 @@
 import logging
 import datetime
 import time
+from typing import Optional
 
 LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
@@ -26,19 +27,36 @@ LOGGER = logging.getLogger(__name__)
 
 class Timer:
     ''' Manager a wall-clock overall timeout timer.
+
+    :param timeout: The timeout in seconds.
     '''
 
-    def __init__(self, timeout):
+    def __init__(self, timeout:float):
         now = datetime.datetime.now(datetime.timezone.utc)
         self._timeout = now + datetime.timedelta(seconds=timeout)
 
-    def sleep(self, delay):
+    def remaining(self) -> Optional[float]:
+        ''' Determine the remaining time.
+
+        :return: The remaing time in seconds, or None if already finished.
+        '''
+        if self._timeout is None:
+            return None
+        now = datetime.datetime.now(datetime.timezone.utc)
+        return (self._timeout - now).total_seconds()
+
+    def sleep(self, delay) -> None:
+        ''' Sleep for some portion of the remaining time. '''
         time.sleep(delay)
 
-    def finish(self):
+    def finish(self) -> None:
+        ''' Mark the timed activity as being finished.
+        '''
         self._timeout = None
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
+        ''' Determine if the timeout has elapsed.
+        '''
         if self._timeout is None:
             return False
         now = datetime.datetime.now(datetime.timezone.utc)
