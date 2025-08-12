@@ -269,10 +269,10 @@ class TestRefdmSocket(unittest.TestCase):
         return bind['path']
 
     def _wait_execset(self, agent_ix=0) -> List[ARI]:
-        ''' Wait for an EXECSET and decode it.
+        ''' Wait for an AMP message with EXECSET values and decode it.
 
         :param agent_ix: The agent index to receive on.
-        :return: The ARI decoded form.
+        :return: The contained ARIs in decoded form.
         '''
         recv_sock = self._agent_bind[agent_ix]['sock']
 
@@ -285,13 +285,16 @@ class TestRefdmSocket(unittest.TestCase):
         with io.BytesIO(data) as infile:
             vers = cbor2.load(infile)
             self.assertEqual(1, vers, msg='Invalid AMP version')
-            ari = dec.decode(infile)
-            values.append(ari)
 
-            if LOGGER.isEnabledFor(logging.INFO):
-                textbuf = io.StringIO()
-                ari_text.Encoder().encode(ari, textbuf)
-                LOGGER.info('Received value: %s', textbuf.getvalue())
+            while infile.tell() < len(data):
+                ari = dec.decode(infile)
+                self.assertIsInstance(ari.value, ari.ExecutionSet)
+                values.append(ari)
+
+                if LOGGER.isEnabledFor(logging.INFO):
+                    textbuf = io.StringIO()
+                    ari_text.Encoder().encode(ari, textbuf)
+                    LOGGER.info('Received value: %s', textbuf.getvalue())
 
         return values
 
@@ -326,8 +329,7 @@ class TestRefdmSocket(unittest.TestCase):
         data = resp.json()
         return set([agt['name'] for agt in data['agents']])
 
-    def _wait_for_db_rptset(self, min_count:int=1):
-        table_name = 'ari_rptset'
+    def _wait_for_db_table(self, table_name:str, min_count:int=1):
         LOGGER.info('Waiting for DB table %s with %d rows', table_name, min_count)
         with self._db_eng.connect() as conn:
             query = sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.literal_column('1'))).select_from(sqlalchemy.table(table_name))
@@ -468,7 +470,7 @@ class TestRefdmSocket(unittest.TestCase):
         resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=hex')
         self.assertEqual(404, resp.status_code)
 
-    def test_recv_one_report(self):
+    def test_recv_one_rptset(self):
         self._start()
 
         # initial state
@@ -490,7 +492,7 @@ class TestRefdmSocket(unittest.TestCase):
                     timer.finish()
                     break
 
-        self._wait_for_db_rptset()
+        self._wait_for_db_table('ari_rptset')
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
@@ -513,11 +515,15 @@ class TestRefdmSocket(unittest.TestCase):
         for line in lines:
             self.assertTrue(line.startswith('ari:/RPTSET/'))
 
-    def test_recv_two_reports(self):
+    def test_recv_three_rptsets(self):
         self._start()
 
+        # each primitive type of nonce
         self._send_rptset(
-            'ari:/RPTSET/n=null;r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+        )
+        self._send_rptset(
+            'ari:/RPTSET/n=\'test\';r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         sock_path = self._send_rptset(
             'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
@@ -525,7 +531,7 @@ class TestRefdmSocket(unittest.TestCase):
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
 
-        self._wait_for_db_rptset(2)
+        self._wait_for_db_table('ari_rptset', 3)
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
@@ -624,6 +630,48 @@ class TestRefdmSocket(unittest.TestCase):
 
         values = self._wait_execset(0)
         self.assertEqual([send_ari], values)
+
+        # no other datagrams
+        with self.assertRaises(TimeoutError):
+            self._wait_execset(0)
+
+    def test_send_three_execsets(self):
+        self._start()
+
+        agent_bind = self._agent_bind[0]
+        agent_eid = f'file:{agent_bind["path"]}'
+        eid_seg = quote(agent_eid, safe="")
+
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data=(agent_eid + '\r\n'),
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        # each primitive type of nonce
+        send_text = "\
+ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/inspect)\r\n\
+ari:/EXECSET/n=1234;(//ietf/dtnma-agent/CTRL/inspect)\r\n\
+ari:/EXECSET/n='test';(//ietf/dtnma-agent/CTRL/inspect)\r\n\
+"
+        resp = self._req.post(
+            self._base_url + f'agents/eid/{eid_seg}/send?form=text',
+            data=send_text,
+            headers={
+                'content-type': 'text/uri-list',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+
+        self._wait_for_db_table('execution_set', 3)
+
+        # three sent together
+        values = self._wait_execset(0)
+        self.assertEqual(3, len(values))
 
         # no other datagrams
         with self.assertRaises(TimeoutError):

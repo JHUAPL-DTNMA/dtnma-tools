@@ -87,8 +87,6 @@ enum queries
 
     ARI_RPTSET_INSERT,
 
-    ARI_TBL_INSERT,
-
     ARI_AGENT_INSERT,
 
     ARI_EXECSET_INSERT,
@@ -491,18 +489,11 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
 
-            // rptt sets
+            // RPTSET values
             queries[idx][ARI_RPTSET_INSERT] = db_mgr_sql_prepare(
-                idx, "call sp__insert_ari_rpt_set($1::int4, $2::varchar, $3::varchar, $4::bytea, $5::varchar)",
-                "ARI_RPTSET_INSERT", 5, NULL);
+                idx, "call sp__insert_rptset($1::int4, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::varchar)",
+                "ARI_RPTSET_INSERT", 6, NULL);
             // correlator_nonce, reference_time, entries , agent_id, ari_rptt_id
-
-            // tables
-            // in p_ari_tblt_id INT, p_num_entries INT, p_table_entry varchar,  p_agent_id varchar)
-            queries[idx][ARI_TBL_INSERT] = db_mgr_sql_prepare(
-                idx, "call SP__insert_ari_tbl($1::int4, $2::int4, $3::varchar, $4::bytea, $5::varchar)",
-                "ARI_TBL_INSERT", 5,
-                NULL); // rpt_id, entries
 
             queries[idx][REFDM_DB_LOG_MSG] =
                 db_mgr_sql_prepare(idx,
@@ -513,11 +504,10 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
             queries[idx][ARI_AGENT_INSERT] =
                 db_mgr_sql_prepare(idx, "call SP__insert_agent($1::varchar,null)", "SP__insert_agent", 2, NULL);
 
-            // (in p_correlator_nonce INT,  p_user_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries
-            // INT)
+            // EXECSET values
             queries[idx][ARI_EXECSET_INSERT] = db_mgr_sql_prepare(
-                idx, "call SP__insert_execset($1::int4, $2::varchar, $3::varchar, $4::bytea, $5::int4)",
-                "SP__insert_execset", 5, NULL);
+                idx, "call SP__insert_execset($1::int4, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::int4)",
+                "SP__insert_execset", 6, NULL);
 
 #endif // HAVE_POSTGRESQL
         }
@@ -1107,25 +1097,28 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     cace_data_init(&cbordata);
                     cace_ari_cbor_encode(&cbordata, val);
 
-                    dbprep_declare(DB_RPT_CON, ARI_RPTSET_INSERT, 5, 1);
+                    dbprep_declare(DB_RPT_CON, ARI_RPTSET_INSERT, 6, 1);
 
                     // correlator_nonce, reference_time, entries ,
                     if (nonce_null)
                     {
                         dbprep_bind_param_null(0);
+                        dbprep_bind_param_null(1);
                     }
                     else if (nonce_bstr)
                     {
-                        // FIXME handle bstr: dbprep_bind_param_byte(0);
+                        dbprep_bind_param_null(0);
+                        dbprep_bind_param_byte(1, nonce_bstr->ptr, nonce_bstr->len);
                     }
                     else
                     {
                         dbprep_bind_param_int(0, nonce_int);
+                        dbprep_bind_param_null(1);
                     }
-                    dbprep_bind_param_str(1, string_get_cstr(tp));
-                    dbprep_bind_param_str(2, string_get_cstr(rpt));
-                    dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
-                    dbprep_bind_param_str(4, string_get_cstr(agent->eid));
+                    dbprep_bind_param_str(2, string_get_cstr(tp));
+                    dbprep_bind_param_str(3, string_get_cstr(rpt));
+                    dbprep_bind_param_byte(4, cbordata.ptr, cbordata.len);
+                    dbprep_bind_param_str(5, string_get_cstr(agent->eid));
 
 #ifdef HAVE_MYSQL
                     mysql_stmt_bind_param(stmt, bind_param);
@@ -1228,7 +1221,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     else if (nonce_bstr)
                     {
                         dbprep_bind_param_null(0);
-                        dbprep_bind_param_byte(4, nonce_bstr->ptr, nonce_bstr->len);
+                        dbprep_bind_param_byte(1, nonce_bstr->ptr, nonce_bstr->len);
                     }
                     else
                     {

@@ -507,14 +507,15 @@ create table if not exists ari_tbl (
 -- exec-set
 create table if not exists execution_set(
     execution_set_id serial not null ,
-    correlator_nonce int,
+    nonce_int BIGINT,
+    nonce_bytes BYTEA,
     ac_id INT,
     use_desc varchar,
     agent_id varchar,
     primary key (execution_set_id),
     foreign key (ac_id)
         references ari_collection (ac_id),
-    unique(correlator_nonce,ac_id,agent_id) --AC would be unique for entry and one nonce per agent
+    unique(nonce_int, nonce_bytes, ac_id, agent_id) --AC would be unique for entry and one nonce per agent
 );
 
 -- ari-tbl template 
@@ -531,7 +532,8 @@ use_desc varchar,
 -- rpt-sets
 create table if not exists ari_rptset (
     ari_rptset_id serial not null,
-    correlator_nonce BIGINT, 
+    nonce_int BIGINT,
+    nonce_bytes BYTEA,
     reference_time varchar not null,
     report_list varchar,
     report_list_cbor bytea,
