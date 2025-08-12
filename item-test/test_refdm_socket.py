@@ -234,24 +234,24 @@ class TestRefdmSocket(unittest.TestCase):
         nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
 
         with io.StringIO(text) as buf:
-            ari = ari_text.Decoder().decode(buf)
-        ari = nn_func(ari)
-        return ari
+            val = ari_text.Decoder().decode(buf)
+        val = nn_func(val)
+        return val
 
-    def _ari_obj_to_text(self, ari:ARI) -> str:
+    def _ari_obj_to_text(self, val:ARI) -> str:
         buf = io.StringIO()
-        ari_text.Encoder().encode(ari, buf)
+        ari_text.Encoder().encode(val, buf)
         return buf.getvalue()
 
-    def _ari_obj_to_cbor(self, ari:ARI) -> bytes:
+    def _ari_obj_to_cbor(self, val:ARI) -> bytes:
         buf = io.BytesIO()
-        ari_cbor.Encoder().encode(ari, buf)
+        ari_cbor.Encoder().encode(val, buf)
         return buf.getvalue()
 
     def _ari_obj_from_cbor(self, databuf:bytes) -> ARI:
         with io.BytesIO(databuf) as buf:
-            ari = ari_cbor.Decoder().decode(buf)
-        return ari
+            val = ari_cbor.Decoder().decode(buf)
+        return val
 
     def _send_rptset(self, text:str, agent_ix=0) -> str:
         ''' Send an RPTSET with a number of target ARIs.
@@ -287,13 +287,13 @@ class TestRefdmSocket(unittest.TestCase):
             self.assertEqual(1, vers, msg='Invalid AMP version')
 
             while infile.tell() < len(data):
-                ari = dec.decode(infile)
-                self.assertIsInstance(ari.value, ari.ExecutionSet)
-                values.append(ari)
+                val = dec.decode(infile)
+                self.assertIsInstance(val.value, ari.ExecutionSet)
+                values.append(val)
 
                 if LOGGER.isEnabledFor(logging.INFO):
                     textbuf = io.StringIO()
-                    ari_text.Encoder().encode(ari, textbuf)
+                    ari_text.Encoder().encode(val, textbuf)
                     LOGGER.info('Received value: %s', textbuf.getvalue())
 
         return values
