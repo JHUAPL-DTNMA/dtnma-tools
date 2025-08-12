@@ -1064,10 +1064,21 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     cace_ari_rptset_t *rpt_set = cace_ari_get_rptset(val);
 
                     // correlator_nonce INT,
-                    uint64_t nonce_id = 0;
-                    if (!cace_ari_get_uvast(&rpt_set->nonce, &nonce_id))
+                    bool nonce_null = false;
+                    uint64_t nonce_int = 0;
+                    const cace_data_t *nonce_bstr = NULL;
+                    if (cace_ari_is_null(&rpt_set->nonce))
                     {
-                        CACE_LOG_INFO("inserting RPTSET with nonce integer %" PRId64, nonce_id);
+                        CACE_LOG_INFO("inserting RPTSET with nonce null");
+                        nonce_null = true;
+                    }
+                    else if ((nonce_bstr = cace_ari_cget_bstr(&rpt_set->nonce)))
+                    {
+                        CACE_LOG_INFO("inserting RPTSET with nonce bstr length %zd", nonce_bstr->len);
+                    }
+                    else if (!cace_ari_get_uvast(&rpt_set->nonce, &nonce_int))
+                    {
+                        CACE_LOG_INFO("inserting RPTSET with nonce integer %" PRId64, nonce_int);
                     }
                     else
                     {
@@ -1099,7 +1110,18 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     dbprep_declare(DB_RPT_CON, ARI_RPTSET_INSERT, 5, 1);
 
                     // correlator_nonce, reference_time, entries ,
-                    dbprep_bind_param_int(0, nonce_id);
+                    if (nonce_null)
+                    {
+                        dbprep_bind_param_null(0);
+                    }
+                    else if (nonce_bstr)
+                    {
+                        //FIXME handle bstr: dbprep_bind_param_byte(0);
+                    }
+                    else
+                    {
+                        dbprep_bind_param_int(0, nonce_int);
+                    }
                     dbprep_bind_param_str(1, string_get_cstr(tp));
                     dbprep_bind_param_str(2, string_get_cstr(rpt));
                     dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
@@ -1224,10 +1246,10 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     cace_ari_execset_t *execset = cace_ari_get_execset(val);
 
                     // correlator_nonce
-                    uint64_t nonce_id = 0;
-                    if (!cace_ari_get_uvast(&execset->nonce, &nonce_id))
+                    uint64_t nonce_int = 0;
+                    if (!cace_ari_get_uvast(&execset->nonce, &nonce_int))
                     {
-                        CACE_LOG_INFO("inserting EXECSET with nonce integer %" PRId64, nonce_id);
+                        CACE_LOG_INFO("inserting EXECSET with nonce integer %" PRId64, nonce_int);
                     }
                     else
                     {
@@ -1244,7 +1266,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
                     // p_correlator_nonce INT,  p_user_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries
                     // INT
-                    dbprep_bind_param_int(0, nonce_id);
+                    dbprep_bind_param_int(0, nonce_int);
                     dbprep_bind_param_str(1, "");
                     dbprep_bind_param_str(2, string_get_cstr(agent->eid));
                     dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);

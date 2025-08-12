@@ -32,6 +32,7 @@ from urllib.parse import quote
 import unittest
 import cbor2
 import requests
+import sqlalchemy
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
 from helpers import CmdRunner, Timer, compose_args
 
@@ -100,6 +101,7 @@ class TestRefdmSocket(unittest.TestCase):
         os.environ['DB_USER'] = ''
         os.environ.pop('DB_PASSWORD', None)
         os.environ['DB_NAME'] = db_name
+        cls._db_uri = f'postgresql+psycopg2:///{db_name}?host={sql_sock}'
 
         psql = CmdRunner([
             'psql',
@@ -128,6 +130,7 @@ class TestRefdmSocket(unittest.TestCase):
 
     @classmethod
     def _sql_stop(cls):
+        cls._db_uri = None
         cls._sqldb.stop()
         cls._sqldb = None
         cls._sqldir.cleanup()
@@ -135,6 +138,7 @@ class TestRefdmSocket(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        cls._db_uri = None
         cls._sql_host = os.environ.get('DB_HOST')
         if cls._sql_host is None:
             cls._sql_start()
@@ -154,6 +158,11 @@ class TestRefdmSocket(unittest.TestCase):
 
         self._req = requests.Session()
         self._base_url = 'http://localhost:8089/nm/api/'
+
+        if self._db_uri:
+            self._db_eng = sqlalchemy.create_engine(self._db_uri)
+        else:
+            self._db_eng = None
 
         self._tmp = tempfile.TemporaryDirectory()
         self._mgr_sock_path = os.path.join(self._tmp.name, 'mgr.sock')
@@ -317,6 +326,20 @@ class TestRefdmSocket(unittest.TestCase):
         data = resp.json()
         return set([agt['name'] for agt in data['agents']])
 
+    def _wait_for_db_rptset(self, min_count:int=1):
+        table_name = 'ari_rptset'
+        LOGGER.info('Waiting for DB table %s with %d rows', table_name, min_count)
+        with self._db_eng.connect() as conn:
+            query = sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.literal_column('1'))).select_from(sqlalchemy.table(table_name))
+            with Timer(5) as timer:
+                while timer:
+                    timer.sleep(0.1)
+                    count = conn.execute(query).scalar()
+                    if count >= min_count:
+                        timer.finish()
+                        break
+                LOGGER.info('Have %d rows after %0.1f s', count, timer.elapsed())
+
     def test_rest_agents_add_valid(self):
         self._start()
         self.assertEqual(set(), self._get_agent_names())
@@ -453,7 +476,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         # first check behavior with one report
         sock_path = self._send_rptset(
-            'ari:/RPTSET/n=null;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
@@ -461,11 +484,13 @@ class TestRefdmSocket(unittest.TestCase):
         LOGGER.info('Waiting for agent %s', agent_eid)
         with Timer(5) as timer:
             while timer:
+                timer.sleep(0.1)
                 available = self._get_agent_names()
                 if agent_eid in available:
                     timer.finish()
                     break
-                timer.sleep(0.1)
+
+        self._wait_for_db_rptset()
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
@@ -495,10 +520,12 @@ class TestRefdmSocket(unittest.TestCase):
             'ari:/RPTSET/n=null;r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         sock_path = self._send_rptset(
-            'ari:/RPTSET/n=null;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
+
+        self._wait_for_db_rptset(2)
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)

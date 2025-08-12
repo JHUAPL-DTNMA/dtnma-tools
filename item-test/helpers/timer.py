@@ -32,8 +32,16 @@ class Timer:
     '''
 
     def __init__(self, timeout:float):
+        self._start = datetime.datetime.now(datetime.timezone.utc)
+        self._timeout = self._start + datetime.timedelta(seconds=timeout)
+
+    def elapsed(self) -> float:
+        ''' Determine the elapsed time so far.
+
+        :return: The time in seconds.
+        '''
         now = datetime.datetime.now(datetime.timezone.utc)
-        self._timeout = now + datetime.timedelta(seconds=timeout)
+        return (now - self._start).total_seconds()
 
     def remaining(self) -> Optional[float]:
         ''' Determine the remaining time.
