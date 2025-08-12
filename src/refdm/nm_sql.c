@@ -17,10 +17,6 @@
  */
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-#include <string.h>
-#include <arpa/inet.h>
-#include <m-bstring.h>
-
 #include "nm_sql.h"
 
 #include <cace/ari/cbor.h>
@@ -29,6 +25,10 @@
 #include <cace/util/logging.h>
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
+
+#include <string.h>
+#include <arpa/inet.h>
+#include <m-bstring.h>
 
 /* Number of threads interacting with the database.
  - DB Polling Thread - Check for reports pending transmission
@@ -1064,13 +1064,27 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     cace_ari_rptset_t *rpt_set = cace_ari_get_rptset(val);
 
                     // correlator_nonce INT,
-                    int64_t nonce_id = rpt_set->nonce.as_lit.value.as_int64;
+                    uint64_t nonce_id = 0;
+                    if (!cace_ari_get_uvast(&rpt_set->nonce, &nonce_id))
+                    {
+                        CACE_LOG_INFO("inserting RPTSET with nonce integer %" PRId64, nonce_id);
+                    }
+                    else
+                    {
+                        CACE_LOG_ERR("unhandled nonce value");
+                        return 1;
+                    }
 
                     // reference_time INT not null,
-                    struct timespec ref_time = rpt_set->reftime.as_lit.value.as_timespec;
-                    string_t        tp;
+                    struct timespec ref_time;
+                    if (cace_ari_get_tp(&rpt_set->reftime, &ref_time))
+                    {
+                        CACE_LOG_ERR("unhandled ref_time value");
+                        return 1;
+                    }
+                    string_t tp;
                     string_init(tp);
-                    cace_utctime_encode(tp, &(rpt_set->reftime.as_lit.value.as_timespec), true);
+                    cace_utctime_encode(tp, &ref_time, true);
 
                     // report_list varchar as string ,
                     string_t rpt;
@@ -1100,6 +1114,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
 #ifdef HAVE_POSTGRESQL
                     dbexec_prepared;
+                    PQclear(res);
 #endif // HAVE_POSTGRESQL
 
                     // cleaning up vars
@@ -1158,7 +1173,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
 #ifdef HAVE_POSTGRESQL
                     dbexec_prepared;
-
+                    PQclear(res);
 #endif // HAVE_POSTGRESQL
        // cleaning up vars
                     string_clear(items);
@@ -1194,7 +1209,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
 #ifdef HAVE_POSTGRESQL
                     dbexec_prepared;
-
+                    PQclear(res);
 #endif // HAVE_POSTGRESQL
        // cleaning up vars
                     return rtv;
@@ -1208,10 +1223,17 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
                     cace_ari_execset_t *execset = cace_ari_get_execset(val);
 
-                    // correlator_nonce INT,
-                    int64_t nonce_id = execset->nonce.as_lit.value.as_int64;
-
-                    CACE_LOG_INFO("inserting EXECSET with nonce %d", nonce_id);
+                    // correlator_nonce
+                    uint64_t nonce_id = 0;
+                    if (!cace_ari_get_uvast(&execset->nonce, &nonce_id))
+                    {
+                        CACE_LOG_INFO("inserting EXECSET with nonce integer %" PRId64, nonce_id);
+                    }
+                    else
+                    {
+                        CACE_LOG_ERR("unhandled nonce value");
+                        return 1;
+                    }
 
                     // report_list varchar as cbor,xw
                     cace_data_t cbordata;
@@ -1237,11 +1259,12 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
 #ifdef HAVE_POSTGRESQL
                     dbexec_prepared;
+                    PQclear(res);
 #endif // HAVE_POSTGRESQL
 
                     // cleaning up vars
                     cace_data_deinit(&cbordata);
-                    CACE_LOG_INFO("done inserting EXECSET with nonce %d", nonce_id);
+                    CACE_LOG_INFO("done inserting EXECSET");
 
                     return rtv;
                 }
