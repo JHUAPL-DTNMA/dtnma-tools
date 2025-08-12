@@ -206,12 +206,11 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     CACE_LOG_INFO("logging agent in db started");
-    int db_status = 0;
 
     m_string_t eid;
     m_string_init(eid);
     string_set_str(eid, agent_eid);
-    refdm_db_insert_agent(eid, &db_status);
+    refdm_db_insert_agent(eid);
     m_string_clear(eid);
     CACE_LOG_INFO("logging agent in db finished");
 #endif

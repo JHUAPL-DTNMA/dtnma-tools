@@ -61,8 +61,7 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 {
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
-    int db_status = 0;
-    refdm_db_insert_msg_rpt_set(val, agent, &db_status);
+    refdm_db_insert_rptset(val, agent);
 #else
     // local daemon storage
     cace_ari_set_copy(cace_ari_list_push_back_new(agent->rptsets), val);
@@ -83,15 +82,6 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
             agent->log_fd_cnt++;
             wrote = true;
         }
-#if defined(USE_JSON) && 0 // FIXME
-        if (agent->log_fd && mgr->agent_log_cfg.rx_rpt)
-        {
-            ui_print_cfg_t fd = INIT_UI_PRINT_CFG_FD(agent->log_fd);
-            ui_fprint_json_report(&fd, rpt);
-            agent->log_fd_cnt++;
-            wrote = true;
-        }
-#endif
         if (agent->log_fd && wrote)
         {
             // Flush file after we've written set

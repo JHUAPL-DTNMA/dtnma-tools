@@ -460,13 +460,12 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     CACE_LOG_INFO("logging EXECSETs in db started");
-    int db_status = 0;
-    int i;
     // add all execset
-    for (i = 0; i < cace_ari_list_size(tosend); i++)
+    cace_ari_list_it_t it;
+    for (cace_ari_list_it(it, tosend); !cace_ari_list_end_p(it); cace_ari_list_next(it))
     {
-        cace_ari_t *curr_set = cace_ari_list_get(tosend, i);
-        refdm_db_insert_execset(curr_set, agent, &db_status);
+        const cace_ari_t *curr_set = cace_ari_list_cref(it);
+        refdm_db_insert_execset(curr_set, agent);
     }
 
     // m_string_clear(eid);
