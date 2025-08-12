@@ -180,7 +180,7 @@ static int agentsGetHandler(struct mg_connection *conn)
             size_t count;
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
             // FIXME: add DB query in nm_sql.h
-            count = 0;//refdm_db_fetch_rptset_count(refdm_db_fetch_agent_idx(&agent->eid));
+            count = 0; // refdm_db_fetch_rptset_count(refdm_db_fetch_agent_idx(&agent->eid));
 #else
             count = cace_ari_list_size(agent->rptsets);
 #endif

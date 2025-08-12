@@ -54,7 +54,7 @@ typedef struct
     /// Endpoint ID (opaque URI) for this agent
     m_string_t eid;
 
-#if ! (defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL))
+#if !(defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL))
     /// Received RPTSET values
     cace_ari_list_t rptsets;
 #endif
