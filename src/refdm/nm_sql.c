@@ -841,12 +841,12 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                         PQclear(res);
 #endif // HAVE_POSTGRESQL
 #ifdef HAVE_MYSQL
-                         const char *errm = mysql_error(gConn[db_idx]);
+                        const char *errm = mysql_error(gConn[db_idx]);
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                         const char *errm = PQerrorMessage(gConn[db_idx]);
+                        const char *errm = PQerrorMessage(gConn[db_idx]);
 #endif // HAVE_POSTGRESQL
-                         CACE_LOG_ERR("Database Error: %s", errm);
+                        CACE_LOG_ERR("Database Error: %s", errm);
                         CACE_LOG_INFO("-->%d", 0);
                         return 0;
                     }
