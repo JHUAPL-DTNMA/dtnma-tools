@@ -57,7 +57,7 @@ class TestRefdmSocket(unittest.TestCase):
     def _sql_start(cls):
         ''' Spawn an SQL server and load the refdb schema.
         '''
-        cls._sqldir = tempfile.TemporaryDirectory(delete=False)
+        cls._sqldir = tempfile.TemporaryDirectory()
         sql_data = os.path.join(cls._sqldir.name, 'data')
         os.makedirs(sql_data)
         sql_sock = os.path.join(cls._sqldir.name, 'run')
@@ -96,13 +96,14 @@ class TestRefdmSocket(unittest.TestCase):
 
         db_name = 'refdm'
         # After all setup, expose the state
-        os.environ['PGHOST'] = sql_sock
-        os.environ['PGUSER'] = ''
-        os.environ.pop('PGPASSWORD', None)
-        os.environ['PGDATABASE'] = db_name
+        os.environ['DB_HOST'] = sql_sock
+        os.environ['DB_USER'] = ''
+        os.environ.pop('DB_PASSWORD', None)
+        os.environ['DB_NAME'] = db_name
 
         psql = CmdRunner([
             'psql',
+            '-h', sql_sock,
             '-w',
             '-d', 'postgres',
             '-c', f'create database {db_name}',
@@ -116,8 +117,10 @@ class TestRefdmSocket(unittest.TestCase):
             LOGGER.info('Loading script %s', filepath)
             psql = CmdRunner([
                 'psql',
+                '-h', sql_sock,
                 '-w',
-                '-f', filepath
+                '-d', db_name,
+                '-f', filepath,
             ])
             psql.start()
             if psql.wait() != 0:
@@ -178,10 +181,14 @@ class TestRefdmSocket(unittest.TestCase):
         self._mgr = CmdRunner(args)
 
     def tearDown(self):
-        self._mgr.stop()
+        self.assertEqual(0, self._mgr.stop())
         self._mgr = None
 
+        for bind in self._agent_bind:
+            sock = bind['sock']
+            sock.close()
         self._agent_bind = None
+
         self._mgr_sock_path = None
         self._tmp = None
 
