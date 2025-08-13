@@ -97,18 +97,13 @@ int32_t refdm_db_mgt_query_fetch(PGresult **res, char *format, ...);
 #endif // HAVE_POSTGRESQL
 int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...);
 
-/* Functions to process outgoing  tables and reprots. */
-uint32_t       refdm_db_insert_msg_rpt_set(cace_ari_t *val, refdm_agent_t *agent, int *status);
-uint32_t       refdm_db_insert_msg_tbl(cace_ari_t *val, refdm_agent_t *agent, int *status);
-uint32_t       refdm_db_insert_agent(m_string_t eid, int *status);
-uint32_t       refdm_db_insert_execset(cace_ari_t *val, refdm_agent_t *agent, int *status);
+/* Functions to process outgoing EXECSET and incoming RPTSET. */
+uint32_t       refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agent);
+uint32_t       refdm_db_insert_agent(const m_string_t eid);
+uint32_t       refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent);
 refdm_agent_t *refdm_db_fetch_agent(int32_t id);
-int32_t        refdm_db_fetch_agent_idx(string_t *sender);
+int32_t        refdm_db_fetch_agent_idx(const string_t *sender);
 string_t      *db_fetch_ari_col(int idx);
-
-// If set, always log CBOR-encoded inputs and outputs to DB for debug purposes.  Received reports shall always be logged
-// in the event of an error.
-#define DB_LOG_RAW
 
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.

@@ -17,10 +17,6 @@
  */
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-#include <string.h>
-#include <arpa/inet.h>
-#include <m-bstring.h>
-
 #include "nm_sql.h"
 
 #include <cace/ari/cbor.h>
@@ -29,6 +25,10 @@
 #include <cace/util/logging.h>
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
+
+#include <string.h>
+#include <arpa/inet.h>
+#include <m-bstring.h>
 
 /* Number of threads interacting with the database.
  - DB Polling Thread - Check for reports pending transmission
@@ -86,8 +86,6 @@ enum queries
     ARI_MAPS_INSERT,
 
     ARI_RPTSET_INSERT,
-
-    ARI_TBL_INSERT,
 
     ARI_AGENT_INSERT,
 
@@ -491,18 +489,11 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
 
-            // rptt sets
+            // RPTSET values
             queries[idx][ARI_RPTSET_INSERT] = db_mgr_sql_prepare(
-                idx, "call sp__insert_ari_rpt_set($1::int4, $2::varchar, $3::varchar, $4::bytea, $5::varchar)",
-                "ARI_RPTSET_INSERT", 5, NULL);
+                idx, "call sp__insert_rptset($1::bigint, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::varchar)",
+                "ARI_RPTSET_INSERT", 6, NULL);
             // correlator_nonce, reference_time, entries , agent_id, ari_rptt_id
-
-            // tables
-            // in p_ari_tblt_id INT, p_num_entries INT, p_table_entry varchar,  p_agent_id varchar)
-            queries[idx][ARI_TBL_INSERT] = db_mgr_sql_prepare(
-                idx, "call SP__insert_ari_tbl($1::int4, $2::int4, $3::varchar, $4::bytea, $5::varchar)",
-                "ARI_TBL_INSERT", 5,
-                NULL); // rpt_id, entries
 
             queries[idx][REFDM_DB_LOG_MSG] =
                 db_mgr_sql_prepare(idx,
@@ -513,11 +504,10 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
             queries[idx][ARI_AGENT_INSERT] =
                 db_mgr_sql_prepare(idx, "call SP__insert_agent($1::varchar,null)", "SP__insert_agent", 2, NULL);
 
-            // (in p_correlator_nonce INT,  p_user_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries
-            // INT)
+            // EXECSET values
             queries[idx][ARI_EXECSET_INSERT] = db_mgr_sql_prepare(
-                idx, "call SP__insert_execset($1::int4, $2::varchar, $3::varchar, $4::bytea, $5::int4)",
-                "SP__insert_execset", 5, NULL);
+                idx, "call SP__insert_execset($1::bigint, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::int4)",
+                "SP__insert_execset", 6, NULL);
 
 #endif // HAVE_POSTGRESQL
         }
@@ -764,14 +754,13 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                 {
                     PQclear(*res);
 #endif // HAVE_POSTGRESQL
-                    CACE_LOG_ERR("Database Error: %s",
 #ifdef HAVE_MYSQL
-                                 mysql_error(gConn[idx])
+                    const char *errm = mysql_error(gConn[idx]);
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                                     PQerrorMessage(gConn[idx])
+                    const char *errm = PQerrorMessage(gConn[idx]);
 #endif // HAVE_POSTGRESQL
-                    );
+                    CACE_LOG_ERR("Database Error: %s", errm);
                     CACE_LOG_INFO("-->%d", 0);
                     return 0;
                 }
@@ -851,14 +840,13 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     {
                         PQclear(res);
 #endif // HAVE_POSTGRESQL
-                        CACE_LOG_ERR("Database Error: %s",
 #ifdef HAVE_MYSQL
-                                     mysql_error(gConn[db_idx])
+                        const char *errm = mysql_error(gConn[db_idx]);
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-                                         PQerrorMessage(gConn[db_idx])
+                        const char *errm = PQerrorMessage(gConn[db_idx]);
 #endif // HAVE_POSTGRESQL
-                        );
+                        CACE_LOG_ERR("Database Error: %s", errm);
                         CACE_LOG_INFO("-->%d", 0);
                         return 0;
                     }
@@ -984,7 +972,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
              *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
              *****************************************************************************/
 
-            int32_t refdm_db_fetch_agent_idx(string_t * eid)
+            int32_t refdm_db_fetch_agent_idx(const string_t *eid)
             {
                 int32_t result = 0;
 #ifdef HAVE_MYSQL
@@ -1053,24 +1041,51 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                  * success
                  * @returns  Set ID, or 0 on error
                  */
-                uint32_t refdm_db_insert_msg_rpt_set(cace_ari_t * val, refdm_agent_t * agent, int *status)
+                uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agent)
                 {
                     CACE_LOG_INFO("logging report set in db started");
 
                     uint32_t rtv = 0;
 
-                    int dbstatus;
+                    const cace_ari_rptset_t *rpt_set = cace_ari_cget_rptset(val);
+                    if (!rpt_set)
+                    {
+                        return 1;
+                    }
 
-                    cace_ari_rptset_t *rpt_set = cace_ari_get_rptset(val);
-
-                    // correlator_nonce INT,
-                    int64_t nonce_id = rpt_set->nonce.as_lit.value.as_int64;
+                    // correlator_nonce: either INT, BYTES, or neither
+                    bool               nonce_null = false;
+                    const cace_data_t *nonce_bstr = NULL;
+                    uint64_t           nonce_int  = 0;
+                    if (cace_ari_is_null(&rpt_set->nonce))
+                    {
+                        CACE_LOG_INFO("inserting RPTSET with nonce null");
+                        nonce_null = true;
+                    }
+                    else if ((nonce_bstr = cace_ari_cget_bstr(&rpt_set->nonce)))
+                    {
+                        CACE_LOG_INFO("inserting RPTSET with nonce bstr length %zd", nonce_bstr->len);
+                    }
+                    else if (!cace_ari_get_uvast(&rpt_set->nonce, &nonce_int))
+                    {
+                        CACE_LOG_INFO("inserting RPTSET with nonce integer %" PRIu64, nonce_int);
+                    }
+                    else
+                    {
+                        CACE_LOG_ERR("unhandled nonce value");
+                        return 1;
+                    }
 
                     // reference_time INT not null,
-                    struct timespec ref_time = rpt_set->reftime.as_lit.value.as_timespec;
-                    string_t        tp;
+                    struct timespec ref_time;
+                    if (cace_ari_get_tp(&rpt_set->reftime, &ref_time))
+                    {
+                        CACE_LOG_ERR("unhandled ref_time value");
+                        return 1;
+                    }
+                    string_t tp;
                     string_init(tp);
-                    cace_utctime_encode(tp, &(rpt_set->reftime.as_lit.value.as_timespec), true);
+                    cace_utctime_encode(tp, &ref_time, true);
 
                     // report_list varchar as string ,
                     string_t rpt;
@@ -1082,14 +1097,28 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     cace_data_init(&cbordata);
                     cace_ari_cbor_encode(&cbordata, val);
 
-                    dbprep_declare(DB_RPT_CON, ARI_RPTSET_INSERT, 5, 1);
+                    dbprep_declare(DB_RPT_CON, ARI_RPTSET_INSERT, 6, 1);
 
                     // correlator_nonce, reference_time, entries ,
-                    dbprep_bind_param_int(0, nonce_id);
-                    dbprep_bind_param_str(1, string_get_cstr(tp));
-                    dbprep_bind_param_str(2, string_get_cstr(rpt));
-                    dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
-                    dbprep_bind_param_str(4, string_get_cstr(agent->eid));
+                    if (nonce_null)
+                    {
+                        dbprep_bind_param_null(0);
+                        dbprep_bind_param_null(1);
+                    }
+                    else if (nonce_bstr)
+                    {
+                        dbprep_bind_param_null(0);
+                        dbprep_bind_param_byte(1, nonce_bstr->ptr, nonce_bstr->len);
+                    }
+                    else
+                    {
+                        dbprep_bind_param_bigint(0, nonce_int);
+                        dbprep_bind_param_null(1);
+                    }
+                    dbprep_bind_param_str(2, string_get_cstr(tp));
+                    dbprep_bind_param_str(3, string_get_cstr(rpt));
+                    dbprep_bind_param_byte(4, cbordata.ptr, cbordata.len);
+                    dbprep_bind_param_str(5, string_get_cstr(agent->eid));
 
 #ifdef HAVE_MYSQL
                     mysql_stmt_bind_param(stmt, bind_param);
@@ -1100,70 +1129,13 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
 #ifdef HAVE_POSTGRESQL
                     dbexec_prepared;
+                    PQclear(res);
 #endif // HAVE_POSTGRESQL
 
                     // cleaning up vars
                     string_clear(tp);
                     string_clear(rpt);
                     cace_data_deinit(&cbordata);
-                    return rtv;
-                }
-
-                /**
-                 * @param val - table set
-                 * @param agent - agent table set being inserted in
-                 * @param status - Set to 0 if
-                 * parsing fails, but not modified on
-                 * success
-                 * @returns Report Set ID, or 0 on error
-                 */
-                uint32_t refdm_db_insert_msg_tbl(cace_ari_t * val, refdm_agent_t * agent, int *status)
-                {
-                    CACE_LOG_INFO("logging table set in db started");
-                    uint32_t rtv = 0;
-
-                    int dbstatus;
-
-                    /// Row-major array of values
-                    // cace_ari_array_t items;
-                    cace_ari_tbl_t *tbl = cace_ari_get_tbl(val);
-
-                    // num columns INT,
-                    int64_t num_cols = tbl->ncols;
-
-                    // table items varchar,
-                    string_t items;
-                    string_init(items);
-                    cace_ari_text_encode(items, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-
-                    // table items varchar as cbor,
-                    cace_data_t cbordata;
-                    cace_data_init(&cbordata);
-                    cace_ari_cbor_encode(&cbordata, val);
-
-                    dbprep_declare(DB_RPT_CON, ARI_TBL_INSERT, 5, 1);
-                    // num cols, tblt,  entries , agent_id
-                    dbprep_bind_param_int(0, num_cols);
-                    dbprep_bind_param_int(1, -1); // todo handle table templates
-                    dbprep_bind_param_str(2, string_get_cstr(items));
-                    dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
-                    dbprep_bind_param_str(4, string_get_cstr(agent->eid));
-
-#ifdef HAVE_MYSQL
-                    mysql_stmt_bind_param(stmt, bind_param);
-                    dbprep_bind_res_int(0, rtv);
-                    mysql_stmt_execute(stmt);
-                    mysql_stmt_bind_result(stmt, bind_res);
-#endif // HAVE_MYSQL
-
-#ifdef HAVE_POSTGRESQL
-                    dbexec_prepared;
-
-#endif // HAVE_POSTGRESQL
-       // cleaning up vars
-                    string_clear(items);
-                    cace_data_deinit(&cbordata);
-
                     return rtv;
                 }
 
@@ -1175,12 +1147,11 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                  * success
                  * @returns Report Set ID, or 0 on error
                  */
-                uint32_t refdm_db_insert_agent(m_string_t eid, int *status)
+                uint32_t refdm_db_insert_agent(const m_string_t eid)
                 {
                     CACE_LOG_INFO("logging agent in db started");
                     uint32_t rtv = 0;
                     int64_t  id;
-                    int      dbstatus;
 
                     dbprep_declare(DB_RPT_CON, ARI_AGENT_INSERT, 1, 1);
                     dbprep_bind_param_str(0, m_string_get_cstr(eid));
@@ -1194,39 +1165,73 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
 #ifdef HAVE_POSTGRESQL
                     dbexec_prepared;
-
+                    PQclear(res);
 #endif // HAVE_POSTGRESQL
        // cleaning up vars
                     return rtv;
                 }
                 // cace_ari_execset_t
-                uint32_t refdm_db_insert_execset(cace_ari_t * val, refdm_agent_t * agent, int *status)
+                uint32_t refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent)
                 {
                     uint32_t rtv = 0;
 
-                    int dbstatus;
+                    const cace_ari_execset_t *execset = cace_ari_cget_execset(val);
+                    if (!execset)
+                    {
+                        return 1;
+                    }
 
-                    cace_ari_execset_t *execset = cace_ari_get_execset(val);
-
-                    // correlator_nonce INT,
-                    int64_t nonce_id = execset->nonce.as_lit.value.as_int64;
-
-                    CACE_LOG_INFO("inserting EXECSET with nonce %d", nonce_id);
+                    // correlator_nonce: either INT, BYTES, or neither
+                    bool               nonce_null = false;
+                    const cace_data_t *nonce_bstr = NULL;
+                    uint64_t           nonce_int  = 0;
+                    if (cace_ari_is_null(&execset->nonce))
+                    {
+                        CACE_LOG_INFO("inserting EXECSET with nonce null");
+                        nonce_null = true;
+                    }
+                    else if ((nonce_bstr = cace_ari_cget_bstr(&execset->nonce)))
+                    {
+                        CACE_LOG_INFO("inserting EXECSET with nonce bstr length %zd", nonce_bstr->len);
+                    }
+                    else if (!cace_ari_get_uvast(&execset->nonce, &nonce_int))
+                    {
+                        CACE_LOG_INFO("inserting EXECSET with nonce integer %" PRIu64, nonce_int);
+                    }
+                    else
+                    {
+                        CACE_LOG_ERR("unhandled nonce value");
+                        return 1;
+                    }
 
                     // report_list varchar as cbor,xw
                     cace_data_t cbordata;
                     cace_data_init(&cbordata);
                     cace_ari_cbor_encode(&cbordata, val);
 
-                    dbprep_declare(DB_RPT_CON, ARI_EXECSET_INSERT, 5, 1);
+                    dbprep_declare(DB_RPT_CON, ARI_EXECSET_INSERT, 6, 1);
 
-                    // p_correlator_nonce INT,  p_user_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries
-                    // INT
-                    dbprep_bind_param_int(0, nonce_id);
-                    dbprep_bind_param_str(1, "");
-                    dbprep_bind_param_str(2, string_get_cstr(agent->eid));
-                    dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
-                    dbprep_bind_param_int(4, cace_ari_list_size(execset->targets));
+                    // p_nonce_int INT, p_nonce_bytes BYTEA, p_user_desc varchar, p_agent_id varchar, p_exec_set BYTEA,
+                    // p_num_entries INT
+                    if (nonce_null)
+                    {
+                        dbprep_bind_param_null(0);
+                        dbprep_bind_param_null(1);
+                    }
+                    else if (nonce_bstr)
+                    {
+                        dbprep_bind_param_null(0);
+                        dbprep_bind_param_byte(1, nonce_bstr->ptr, nonce_bstr->len);
+                    }
+                    else
+                    {
+                        dbprep_bind_param_bigint(0, nonce_int);
+                        dbprep_bind_param_null(1);
+                    }
+                    dbprep_bind_param_str(2, "");
+                    dbprep_bind_param_str(3, string_get_cstr(agent->eid));
+                    dbprep_bind_param_byte(4, cbordata.ptr, cbordata.len);
+                    dbprep_bind_param_int(5, cace_ari_list_size(execset->targets));
 
 #ifdef HAVE_MYSQL
                     mysql_stmt_bind_param(stmt, bind_param);
@@ -1237,11 +1242,12 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
 #ifdef HAVE_POSTGRESQL
                     dbexec_prepared;
+                    PQclear(res);
 #endif // HAVE_POSTGRESQL
 
                     // cleaning up vars
                     cace_data_deinit(&cbordata);
-                    CACE_LOG_INFO("done inserting EXECSET with nonce %d", nonce_id);
+                    CACE_LOG_INFO("done inserting EXECSET");
 
                     return rtv;
                 }

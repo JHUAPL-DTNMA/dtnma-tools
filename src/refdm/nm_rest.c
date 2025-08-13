@@ -176,7 +176,16 @@ static int agentsGetHandler(struct mg_connection *conn)
 
         cJSON *agentObj = cJSON_CreateObject();
         cJSON_AddStringToObject(agentObj, "name", string_get_cstr(agent->eid));
-        cJSON_AddNumberToObject(agentObj, "rpts_count", cace_ari_list_size(agent->rptsets));
+        {
+            size_t count;
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+            // FIXME: add DB query in nm_sql.h
+            count = 0; // refdm_db_fetch_rptset_count(refdm_db_fetch_agent_idx(&agent->eid));
+#else
+            count = cace_ari_list_size(agent->rptsets);
+#endif
+            cJSON_AddNumberToObject(agentObj, "rpts_count", count);
+        }
         cJSON_AddItemToArray(agentList, agentObj);
     }
     pthread_mutex_unlock(&mgr->agent_mutex);
@@ -451,13 +460,12 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     CACE_LOG_INFO("logging EXECSETs in db started");
-    int db_status = 0;
-    int i;
     // add all execset
-    for (i = 0; i < cace_ari_list_size(tosend); i++)
+    cace_ari_list_it_t it;
+    for (cace_ari_list_it(it, tosend); !cace_ari_list_end_p(it); cace_ari_list_next(it))
     {
-        cace_ari_t *curr_set = cace_ari_list_get(tosend, i);
-        refdm_db_insert_execset(curr_set, agent, &db_status);
+        const cace_ari_t *curr_set = cace_ari_list_cref(it);
+        refdm_db_insert_execset(curr_set, agent);
     }
 
     // m_string_clear(eid);
@@ -483,10 +491,14 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+    return HTTP_NO_CONTENT;
+#else
     if (cace_ari_list_empty_p(agent->rptsets))
     {
         mg_send_http_error(conn, HTTP_NO_CONTENT, "");
-        return 204;
+        return HTTP_NO_CONTENT;
     }
     int retval = 0;
 
@@ -523,16 +535,21 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     }
     m_string_clear(body);
     return retval;
+#endif
 }
 
 static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+    return HTTP_NO_CONTENT;
+#else
     if (cace_ari_list_empty_p(agent->rptsets))
     {
         mg_send_http_error(conn, HTTP_NO_CONTENT, "");
-        return 204;
+        return HTTP_NO_CONTENT;
     }
     int retval = 0;
 
@@ -575,6 +592,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 
     m_string_clear(body);
     return retval;
+#endif
 }
 
 /// Characters disallowed in URI segments (per RFC 3986) to know where they end
