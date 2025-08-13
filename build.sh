@@ -42,7 +42,8 @@ elif [ "$1" = "coverage" ]
 then
     cmake --build ${BUILDDIR} -j1 --target \
         coverage-cace-html coverage-cace-xml \
-        coverage-refda-html coverage-refda-xml
+        coverage-refda-html coverage-refda-xml \
+        coverage-refdm-html coverage-refdm-xml
 elif [ "$1" = "coverage-summary" ]
 then
     for DIRNAME in cace refda refdm
