@@ -24,7 +24,8 @@ void refda_amm_tbr_desc_init(refda_amm_tbr_desc_t *obj)
     obj->period                      = CACE_ARI_INIT_UNDEFINED;
     obj->max_exec_count              = 0;
     obj->init_enabled                = true;
-    obj->enabled                     = true;
+    obj->enabled                     = false;
+    obj->obsolete                    = false;
     obj->exec_count                  = 0;
     obj->absolute_start_time.tv_sec  = 0;
     obj->absolute_start_time.tv_nsec = 0;

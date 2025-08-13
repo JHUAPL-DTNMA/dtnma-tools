@@ -89,7 +89,7 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state)
                 break;
             }
 
-            // linear backoff
+            // linear back-off
             sleep(try_ix);
         }
     }

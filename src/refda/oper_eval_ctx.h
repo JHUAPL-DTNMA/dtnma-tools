@@ -71,7 +71,7 @@ void refda_oper_eval_ctx_deinit(refda_oper_eval_ctx_t *obj);
  *
  * @param[out] obj The context to initialize.
  * @param[in] deref The lookup dereference.
- * @[aram[in] oper The OPER descriptor to evaluate with.
+ * @param[in] oper The OPER descriptor to evaluate with.
  * @param[in,out] eval The evaluation state to pop operands from.
  * The result must outlive this context.
  * @return Zero if successful.

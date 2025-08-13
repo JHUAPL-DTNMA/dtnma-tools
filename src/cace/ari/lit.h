@@ -126,8 +126,14 @@ union cace_ari_prim_val_u
     struct cace_ari_rptset_s *as_rptset;
 };
 
-/** Represent a literal-value ARI.
+/** Represent a literal-value ARI in accordance with @cite ietf-dtn-ari-06.
  *
+ * A literal ARI is self-contained and fully identifies its own value.
+ * Literal values have an optional type part and a mandatory value part.
+ * Some values can only be present when the type is present (such as TP or TD types).
+ * Some types of literal values are themselves value containers (such as AC, AM, and TBL types) with subordinate values.
+ *
+ * This struct is always contained within a ::cace_ari_s.
  */
 typedef struct
 {

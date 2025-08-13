@@ -53,7 +53,7 @@ void refda_amm_modval_state_init(refda_amm_modval_state_t *obj);
 
 void refda_amm_modval_state_deinit(refda_amm_modval_state_t *obj);
 
-/** Increment the counter to the next value and signal to a registerd callback.
+/** Increment the counter to the next value and signal to a registered callback.
  *
  */
 void refda_amm_modval_state_inc(refda_amm_modval_state_t *obj);
@@ -86,7 +86,7 @@ void refda_runctx_deinit(refda_runctx_t *ctx);
 
 /** Take values for a runtime context.
  *
- * @param[out] ctx The contect to initialize.
+ * @param[out] ctx The context to initialize.
  * @param[in] agent The agent being run within.
  * @param[in] msg The optional EXECSET message being run within.
  * @return Zero if successful.

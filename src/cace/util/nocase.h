@@ -42,7 +42,7 @@ static inline size_t m_core_cstr_nocase_hash(const char str[])
 /// Case-insensitive equality comparison
 #define M_CSTR_NOCASE_EQUAL(a, b) (strcasecmp((a), (b)) == 0)
 
-/** M*LIB OPLIST for case-insenstive C-string values.
+/** M*LIB OPLIST for case-insensitive C-string values.
  * This is intended to be used as dict/tree keys of type "const char *" with
  * external memory management.
  */
@@ -65,7 +65,7 @@ static inline int m_string_nocase_eq(const m_string_t v1, const m_string_t v2)
     return (m_string_size(v1) == m_string_size(v2)) && (strcasecmp(m_string_get_cstr(v1), m_string_get_cstr(v2)) == 0);
 }
 
-/** M*LIB OPLIST for case-insenstive M-STRING values.
+/** M*LIB OPLIST for case-insensitive M-STRING values.
  * This is intended to be used as dict/tree keys of type "m_string_t" with
  * external memory management.
  */

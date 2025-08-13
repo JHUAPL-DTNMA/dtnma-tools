@@ -19,7 +19,9 @@
  * Test the cace_ari_cbor.h interfaces.
  *
  * As a shortcut to producing expected binary contents, use commands similar to:
+ * @code{.sh}
  *  echo "42" | diag2cbor.rb | xxd -i
+ * @endcode
  */
 #include <cace/ari/cbor.h>
 #include <cace/ari/text.h>
@@ -43,13 +45,13 @@ int suiteTearDown(int failures)
 }
 
 /// Resource cleanup for failure messages
-static const char *errm = NULL;
+static char *errm = NULL;
 
 void tearDown(void)
 {
     if (errm)
     {
-        M_MEMORY_FREE((char *)errm);
+        CACE_FREE(errm);
         errm = NULL;
     }
 }

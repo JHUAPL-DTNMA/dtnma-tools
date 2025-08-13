@@ -128,11 +128,11 @@ int cace_ari_text_encode(string_t text, const cace_ari_t *ari, cace_ari_text_enc
  * @param text A null-terminated UTF-8 text string.
  * @param[out] errm If non-null, this will be set to a specific error message
  * associated with any failure.
- * Regardless of the return code, if the pointed-to pointer is non-null it
- * must be freed using M_MEMORY_FREE().
+ * When the return code is non-zero, if the pointed-to pointer is non-null it
+ * must be freed using ::CACE_FREE().
  * @return Zero upon success.
  */
-int cace_ari_text_decode(cace_ari_t *ari, const string_t text, const char **errm);
+int cace_ari_text_decode(cace_ari_t *ari, const string_t text, char **errm);
 
 #endif /* ARI_TEXT_PARSE */
 

@@ -241,24 +241,13 @@ void cace_ari_params_set_ac(cace_ari_params_t *obj, struct cace_ari_list_s *src)
 /// @overload
 void cace_ari_params_set_am(cace_ari_params_t *obj, struct cace_ari_tree_s *src);
 
-/** Represent an object reference ARI.
+/** Represent an object reference or namespace reference ARI in accordance with
+ * @cite ietf-dtn-ari-06.
  *
- * A regular ARI identifies an object whose value is not itself captured in the
- * identifier. Put another way, a regular ARI is one what identifies anything'
- * other than a literal value.
+ * A object reference ARI identifies an object whose state is not itself captured in the identifier.
+ * Put another way, a reference ARI is one what identifies anything other than a literal value.
  *
- * Nicknames, Issuers, and Tags are stored in databases on the Agent and the
- * Manager and the ARI structure stores an index into these databases. This is
- * done for space compression. For example, a nickname may be up to 64 bits in
- * length whereas an index into the NN database can be 16 bits. This results in
- * an average savings of 18 bytes for ARIs that use nicknames, issuers, and
- * 64-bit tags.
- *
- * The name field is an unparsed bytestring whose value is determined by naming
- * rules for the ADM or user that defines the object being identified.
- *
- * \todo: Nicknames, Issuers, Tags, and Names might all more efficiently by
- *        stored as an index into a tree structure, such as a radix tree.
+ * This struct is always contained within a ::cace_ari_s.
  */
 typedef struct
 {
