@@ -32,10 +32,10 @@ option(TRANSPORT_ION_BP "Enable transport bindings for ION BP" ON)
 option(ARI_TEXT_PARSE "Build ARI text-form parsing capability" ON)
 option(ENABLE_LUT_CACHE "Enable runtime lookup caching" ON)
 option(REFDM_UI_CLI "Enable text UI CLI for refdm" OFF)
-option(BUILD_TESTING "Enable test fixtures and libraries" OFF)
-option(TEST_MEMCHECK "Enable test runtime memory checking" OFF)
-option(TEST_COVERAGE "Enable test runtime coverage logging" OFF)
-
+option(BUILD_UNITTEST "Enable building unit tests" ON)
+option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
+option(BUILD_COVERAGE "Enable runtime coverage logging and reporting" OFF)
+option(BUILD_FUZZING "Enable building fuzzing executables" OFF)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -68,6 +68,7 @@ if(NOT PROJECT_VERSION)
 endif(NOT PROJECT_VERSION)
 
 project(dtnma-tools
+    LANGUAGES C CXX
     VERSION ${PROJECT_VERSION}
 )
 
@@ -89,16 +90,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Generic warn/error options
 add_compile_options(
     -Wall
-    -Wextra
-    -Wpedantic
+    $<$<COMPILE_LANGUAGE:C>:-Wextra>
+    $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
+    $<$<COMPILE_LANGUAGE:C>:-Werror>
     $<$<COMPILE_LANGUAGE:C>:-Werror=implicit-function-declaration>
     $<$<COMPILE_LANGUAGE:C>:-Werror=incompatible-pointer-types>
-)
-add_compile_options(
     -ffunction-sections
     -fdata-sections
     -fno-omit-frame-pointer
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
 )
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
@@ -121,7 +120,7 @@ check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
 check_symbol_exists(getopt_long "getopt.h" HAVE_GETOPT_LONG)
 
 
-if(BUILD_TESTING)
+if(BUILD_UNITTEST)
   if(TEST_MEMCHECK)
     find_program(MEMCHECK_CMD valgrind)
     message(STATUS "Using valgrind memcheck for tests: ${MEMCHECK_CMD}")
@@ -136,46 +135,36 @@ if(BUILD_TESTING)
     # Arguments as list into global scope for Findunitytools.cmake
     set(TEST_EXEC_PREFIX "${MEMCHECK_CMD}" ${MEMCHECK_OPTIONS})
   endif(TEST_MEMCHECK)
-  if(TEST_COVERAGE)
-    include(CodeCoverage)
-    append_coverage_compiler_flags()
+endif(BUILD_UNITTEST)
+if(BUILD_FUZZING)
+  find_package(libfuzzer)
+endif(BUILD_FUZZING)
+if(BUILD_COVERAGE)
+  include(CodeCoverage)
+  append_coverage_compiler_flags()
 
-    set(COVERAGE_EXCLUDES
-      "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
-      "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
-      "${CMAKE_CURRENT_BINARY_DIR}/test/*"
-    )
-    set(GCOVR_ADDITIONAL_ARGS
-      "--gcov-ignore-errors=no_working_dir_found"
-    )
-    setup_target_for_coverage_gcovr_xml(
-      NAME coverage-cace-xml
-      BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/cace"
-      BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/cace"
-    )
-    setup_target_for_coverage_gcovr_html(
-      NAME coverage-cace-html
-      BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/cace"
-      BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/cace"
-    )
-    setup_target_for_coverage_gcovr_xml(
-      NAME coverage-refda-xml
-      BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refda"
-      BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refda"
-    )
-    setup_target_for_coverage_gcovr_html(
-      NAME coverage-refda-html
-      BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refda"
-      BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refda"
-    )
-  endif(TEST_COVERAGE)
-
-  include(CTest)
-  set(CMAKE_CTEST_ARGUMENTS
-    --output-junit testresults.xml
-    --output-on-failure
+  set(COVERAGE_EXCLUDES
+    "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
+    "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
+    "${CMAKE_CURRENT_BINARY_DIR}/test/*"
   )
-endif(BUILD_TESTING)
+  set(GCOVR_ADDITIONAL_ARGS
+  )
+  setup_target_for_coverage_gcovr_xml(
+    NAME coverage-xml
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  )
+  setup_target_for_coverage_gcovr_html(
+    NAME coverage-html
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  )
+endif(BUILD_COVERAGE)
+
+include(CTest)
+set(CMAKE_CTEST_ARGUMENTS
+  --output-junit testresults.xml
+  --output-on-failure
+)
 
 include(FindPkgConfig)
 
@@ -213,10 +202,7 @@ endif(BUILD_MANAGER)
 
 add_subdirectory(src)
 
-if(BUILD_TESTING)
-    add_subdirectory(test)
-endif(BUILD_TESTING)
+add_subdirectory(test)
 
-if(BUILD_DOCS_API OR BUILD_DOCS_MAN)
-    add_subdirectory(docs)
-endif(BUILD_DOCS_API OR BUILD_DOCS_MAN)
+add_subdirectory(docs)
+

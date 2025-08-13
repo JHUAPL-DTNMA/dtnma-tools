@@ -57,8 +57,8 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
-          dnf config-manager --set-enabled crb
           dnf install -y epel-release
+          crb enable
           dnf install -y \
               git rsync \
               cmake ninja-build \
@@ -83,11 +83,12 @@ jobs:
       - name: Prep
         run: >
           ./prep.sh 
-          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+          -DBUILD_UNITTEST=ON -DBUILD_COVERAGE=ON
           -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}}
           -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}}
           -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
-          -DTEST_COVERAGE=${{matrix.os != 'ubuntu-22.04' && 'ON' || 'OFF'}}
+          -DBUILD_COVERAGE=${{matrix.os != 'ubuntu-22.04' && 'ON' || 'OFF'}}
           -DTEST_MEMCHECK=${{matrix.os != 'ubuntu-22.04' && 'ON' || 'OFF'}}
       - name: Build
         run: ./build.sh
@@ -118,8 +119,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #os: ['ubuntu-24.04', 'centos-9']
-        os: ['ubuntu-24.04']
+        os: ['ubuntu-24.04', 'centos-9']
     name: Built-Item Test (${{matrix.os}} gcc)
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
@@ -168,7 +168,8 @@ jobs:
       - name: Prep
         run: >
           ./prep.sh \
-          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=OFF
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+          -DBUILD_UNITTEST=OFF -DBUILD_COVERAGE=ON
           -DBUILD_ION_PROXY=OFF
           -DTRANSPORT_ION_BP=OFF
       - name: Build
@@ -180,6 +181,15 @@ jobs:
           PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
           TEST_MEMCHECK: '1'
         run: ./item-test/run.sh
+      - name: Collect coverage
+        run: ./build.sh coverage
+      - name: Archive coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{github.job}}-${{matrix.os}}-gcc-coverage
+          path: build/default/coverage*
+      - name: Report coverage
+        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
 
   integration-test:
     strategy:
