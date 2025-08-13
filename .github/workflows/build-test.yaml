@@ -109,11 +109,7 @@ jobs:
           path: build/default/coverage*
       - name: Report coverage
         if: matrix.os != 'ubuntu-22.04'
-        run: |
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-cace-xml.xml)
-          echo "CACE coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/@line-rate * 100)' -n build/default/coverage-refda-xml.xml)
-          echo "REFDA coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
+        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
 
   item-test:
     strategy:

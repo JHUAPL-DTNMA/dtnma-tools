@@ -41,13 +41,14 @@ then
 elif [ "$1" = "coverage" ]
 then
     cmake --build ${BUILDDIR} -j1 --target \
-        coverage-html coverage-xml
+        coverage-cace-html coverage-cace-xml \
+        coverage-refda-html coverage-refda-xml
 elif [ "$1" = "coverage-summary" ]
 then
     for DIRNAME in cace refda refdm
     do
-	COV_XPATH="format-number(/coverage/packages/package[@name='src.${DIRNAME}']/@line-rate * 100, '#.0')"
-        COV_PERC=$(xmlstarlet sel -t -v "${COV_XPATH}" -n build/default/coverage-xml.xml 2>/dev/null)
+        COV_XPATH="format-number(/coverage/@line-rate * 100, '#.0')"
+        COV_PERC=$(xmlstarlet sel -t -v "${COV_XPATH}" -n build/default/coverage-${DIRNAME}-xml.xml 2>/dev/null)
         echo "Source ${DIRNAME} coverage: ${COV_PERC}%"
     done
 else
