@@ -491,7 +491,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
             // RPTSET values
             queries[idx][ARI_RPTSET_INSERT] = db_mgr_sql_prepare(
-                idx, "call sp__insert_rptset($1::int4, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::varchar)",
+                idx, "call sp__insert_rptset($1::bigint, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::varchar)",
                 "ARI_RPTSET_INSERT", 6, NULL);
             // correlator_nonce, reference_time, entries , agent_id, ari_rptt_id
 
@@ -506,7 +506,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
             // EXECSET values
             queries[idx][ARI_EXECSET_INSERT] = db_mgr_sql_prepare(
-                idx, "call SP__insert_execset($1::int4, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::int4)",
+                idx, "call SP__insert_execset($1::bigint, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::int4)",
                 "SP__insert_execset", 6, NULL);
 
 #endif // HAVE_POSTGRESQL
@@ -1068,7 +1068,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     }
                     else if (!cace_ari_get_uvast(&rpt_set->nonce, &nonce_int))
                     {
-                        CACE_LOG_INFO("inserting RPTSET with nonce integer %" PRId64, nonce_int);
+                        CACE_LOG_INFO("inserting RPTSET with nonce integer %" PRIu64, nonce_int);
                     }
                     else
                     {
@@ -1112,7 +1112,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     }
                     else
                     {
-                        dbprep_bind_param_int(0, nonce_int);
+                        dbprep_bind_param_bigint(0, nonce_int);
                         dbprep_bind_param_null(1);
                     }
                     dbprep_bind_param_str(2, string_get_cstr(tp));
@@ -1196,7 +1196,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     }
                     else if (!cace_ari_get_uvast(&execset->nonce, &nonce_int))
                     {
-                        CACE_LOG_INFO("inserting EXECSET with nonce integer %" PRId64, nonce_int);
+                        CACE_LOG_INFO("inserting EXECSET with nonce integer %" PRIu64, nonce_int);
                     }
                     else
                     {
@@ -1225,7 +1225,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                     }
                     else
                     {
-                        dbprep_bind_param_int(0, nonce_int);
+                        dbprep_bind_param_bigint(0, nonce_int);
                         dbprep_bind_param_null(1);
                     }
                     dbprep_bind_param_str(2, "");

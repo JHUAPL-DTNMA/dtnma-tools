@@ -342,6 +342,10 @@ class TestRefdmSocket(unittest.TestCase):
                         break
                 LOGGER.info('Have %d rows after %0.1f s', count, timer.elapsed())
 
+                query = sqlalchemy.select(sqlalchemy.literal_column('*')).select_from(sqlalchemy.table(table_name))
+                for row in conn.execute(query).fetchall():
+                    LOGGER.debug('Row: %s', row)
+
     def test_rest_agents_add_valid(self):
         self._start()
         self.assertEqual(set(), self._get_agent_names())
@@ -478,7 +482,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         # first check behavior with one report
         sock_path = self._send_rptset(
-            'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=9223372036854775808;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
