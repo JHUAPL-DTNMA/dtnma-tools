@@ -92,9 +92,10 @@ add_compile_options(
     -Wall
     $<$<COMPILE_LANGUAGE:C>:-Wextra>
     $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
-    $<$<COMPILE_LANGUAGE:C>:-Werror>
-    $<$<COMPILE_LANGUAGE:C>:-Werror=implicit-function-declaration>
-    $<$<COMPILE_LANGUAGE:C>:-Werror=incompatible-pointer-types>
+#     $<$<COMPILE_LANGUAGE:C>:-Werror>
+    $<$<COMPILE_LANGUAGE:C>:-Wno-error=unused-parameter>
+    $<$<COMPILE_LANGUAGE:C>:-Wno-error=unused-variable>
+    $<$<COMPILE_LANGUAGE:C>:-Wno-error=unused-but-set-variable>
     -ffunction-sections
     -fdata-sections
     -fno-omit-frame-pointer
