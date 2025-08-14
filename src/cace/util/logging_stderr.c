@@ -220,7 +220,7 @@ void cace_closelog(void)
     }
 
     // no consumer after join above
-    BSL_LogEvent_queue_clear(event_queue);
+    cace_log_queue_clear(event_queue);
 }
 
 int cace_log_get_severity(int *severity, const char *name)
@@ -262,7 +262,7 @@ bool cace_log_is_enabled_for(int severity)
 
     const int limit = atomic_load(&least_severity);
     // lower severity has higher define value
-    const bool enabled = (least_severity >= severity);
+    const bool enabled = (limit >= severity);
     return enabled;
 }
 
