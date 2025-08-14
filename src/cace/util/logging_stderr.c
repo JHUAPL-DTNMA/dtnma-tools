@@ -20,6 +20,7 @@
 #include "defs.h"
 #include <m-buffer.h>
 #include <m-string.h>
+#include <m-atomic.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -65,6 +66,24 @@ void cace_log_event_init(cace_log_event_t *obj)
     m_string_init(obj->message);
 }
 
+static void cace_log_event_init_set(cace_log_event_t *obj, const cace_log_event_t *src)
+{
+    obj->thread    = src->thread;
+    obj->timestamp = src->timestamp;
+    obj->severity  = src->severity;
+    string_init_set(obj->context, src->message);
+    string_init_set(obj->message, src->message);
+}
+
+static void cace_log_event_set(cace_log_event_t *obj, const cace_log_event_t *src)
+{
+    obj->thread    = src->thread;
+    obj->timestamp = src->timestamp;
+    obj->severity  = src->severity;
+    string_set(obj->context, src->message);
+    string_set(obj->message, src->message);
+}
+
 void cace_log_event_deinit(cace_log_event_t *obj)
 {
     m_string_clear(obj->message);
@@ -72,16 +91,14 @@ void cace_log_event_deinit(cace_log_event_t *obj)
 }
 
 /// OPLIST for cace_log_event_t
-#define M_OPL_cace_log_event_t() (INIT(API_2(cace_log_event_init)), CLEAR(API_2(cace_log_event_deinit)))
+#define M_OPL_cace_log_event_t() (INIT(API_2(cace_log_event_init)), INIT_SET(API_6(cace_log_event_init_set)), SET(API_6(cace_log_event_set)), CLEAR(API_2(cace_log_event_deinit)))
 
 /// @cond Doxygen_Suppress
 M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING)
 /// @endcond
 
 /// Shared least severity
-static int least_severity = LOG_DEBUG;
-/// Mutex for #least_severity
-static pthread_mutex_t least_severity_mutex = PTHREAD_MUTEX_INITIALIZER;
+static atomic_int least_severity = LOG_DEBUG;
 
 /// Shared safe queue
 static cace_log_queue_t event_queue;
@@ -131,14 +148,12 @@ static void *work_sink(void *arg _U_)
     while (true)
     {
         cace_log_event_t event;
+        cace_log_event_init(&event);
         cace_log_queue_pop(&event, event_queue);
-        if (m_string_empty_p(event.message))
+        if (!m_string_empty_p(event.message))
         {
-            cace_log_event_deinit(&event);
-            break;
+            write_log(&event);
         }
-
-        write_log(&event);
         cace_log_event_deinit(&event);
     }
     return NULL;
@@ -170,6 +185,7 @@ void cace_closelog(void)
     cace_log_event_t event;
     cace_log_event_init(&event);
     cace_log_queue_push(event_queue, event);
+    cace_log_event_deinit(&event);
 
     int res = pthread_join(thr_sink, NULL);
     if (res)
@@ -215,12 +231,7 @@ void cace_log_set_least_severity(int severity)
         return;
     }
 
-    if (pthread_mutex_lock(&least_severity_mutex))
-    {
-        return;
-    }
-    least_severity = severity;
-    pthread_mutex_unlock(&least_severity_mutex);
+    atomic_store(&least_severity, severity);
 }
 
 bool cace_log_is_enabled_for(int severity)
@@ -230,13 +241,9 @@ bool cace_log_is_enabled_for(int severity)
         return false;
     }
 
-    if (pthread_mutex_lock(&least_severity_mutex))
-    {
-        return false;
-    }
+    const int limit = atomic_load(&least_severity);
     // lower severity has higher define value
     const bool enabled = (least_severity >= severity);
-    pthread_mutex_unlock(&least_severity_mutex);
     return enabled;
 }
 
@@ -273,27 +280,24 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
         m_string_vprintf(event.message, format, val);
         va_end(val);
     }
-    if (m_string_empty_p(event.message))
+    // ignore empty messages
+    if (!m_string_empty_p(event.message))
     {
-        // ignore empty messages
-        cace_log_event_deinit(&event);
-        return;
+        if (atomic_load(&thr_valid))
+        {
+            cace_log_queue_push(event_queue, event);
+        }
+        else
+        {
+            cace_log_event_t manual;
+            cace_log_event_init(&manual);
+            manual.severity = LOG_CRIT;
+            m_string_set_cstr(manual.message, "cace_log() called before cace_openlog()");
+            write_log(&manual);
+            cace_log_event_deinit(&manual);
+    
+            write_log(&event);
+        }
     }
-
-    if (atomic_load(&thr_valid))
-    {
-        cace_log_queue_push(event_queue, event);
-    }
-    else
-    {
-        cace_log_event_t manual;
-        cace_log_event_init(&manual);
-        manual.severity = LOG_CRIT;
-        m_string_set_cstr(manual.message, "cace_log() called before cace_openlog()");
-        write_log(&manual);
-        cace_log_event_deinit(&manual);
-
-        write_log(&event);
-        cace_log_event_deinit(&event);
-    }
+    cace_log_event_deinit(&event);
 }
