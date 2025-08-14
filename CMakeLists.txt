@@ -224,8 +224,9 @@ if(BUILD_MANAGER)
 endif(BUILD_MANAGER)
 
 add_subdirectory(src)
-
-add_subdirectory(test)
-
-add_subdirectory(docs)
-
+if(BUILD_UNITTEST OR BUILD_FUZZING)
+  add_subdirectory(test)
+endif(BUILD_UNITTEST OR BUILD_FUZZING)
+if(BUILD_DOCS_API OR BUILD_DOCS_MAN)
+  add_subdirectory(docs)
+endif(BUILD_DOCS_API OR BUILD_DOCS_MAN)

@@ -163,7 +163,7 @@ jobs:
         run: ./deps.sh
       - name: Prep
         run: >
-          ./prep.sh \
+          ./prep.sh
           -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
           -DBUILD_UNITTEST=OFF -DBUILD_COVERAGE=ON
           -DBUILD_ION_PROXY=OFF
