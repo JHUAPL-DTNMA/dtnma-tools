@@ -75,6 +75,15 @@ static void cace_log_event_init_set(cace_log_event_t *obj, const cace_log_event_
     string_init_set(obj->message, src->message);
 }
 
+static void cace_log_event_init_move(cace_log_event_t *obj, cace_log_event_t *src)
+{
+    obj->thread    = src->thread;
+    obj->timestamp = src->timestamp;
+    obj->severity  = src->severity;
+    string_init_move(obj->context, src->context);
+    string_init_move(obj->message, src->message);
+}
+
 static void cace_log_event_set(cace_log_event_t *obj, const cace_log_event_t *src)
 {
     obj->thread    = src->thread;
@@ -91,10 +100,10 @@ void cace_log_event_deinit(cace_log_event_t *obj)
 }
 
 /// OPLIST for cace_log_event_t
-#define M_OPL_cace_log_event_t() (INIT(API_2(cace_log_event_init)), INIT_SET(API_6(cace_log_event_init_set)), SET(API_6(cace_log_event_set)), CLEAR(API_2(cace_log_event_deinit)))
+#define M_OPL_cace_log_event_t() (INIT(API_2(cace_log_event_init)), INIT_SET(API_6(cace_log_event_init_set)), INIT_MOVE(API_6(cace_log_event_init_move)), SET(API_6(cace_log_event_set)), CLEAR(API_2(cace_log_event_deinit)))
 
 /// @cond Doxygen_Suppress
-M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING)
+M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
 /// @endcond
 
 /// Shared least severity
@@ -149,7 +158,6 @@ static void *work_sink(void *arg _U_)
     while (running)
     {
         cace_log_event_t event;
-        cace_log_event_init(&event);
         cace_log_queue_pop(&event, event_queue);
         if (m_string_empty_p(event.message))
         {
@@ -207,6 +215,9 @@ void cace_closelog(void)
     {
         atomic_store(&thr_valid, false);
     }
+
+    // no consumer after join above
+    BSL_LogEvent_queue_clear(event_queue);
 }
 
 int cace_log_get_severity(int *severity, const char *name)
