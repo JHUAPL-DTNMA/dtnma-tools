@@ -84,7 +84,7 @@ jobs:
         run: >
           ./prep.sh 
           -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
-          -DBUILD_UNITTEST=ON -DBUILD_COVERAGE=ON
+          -DBUILD_UNITTEST=ON
           -DARI_TEXT_PARSE=${{matrix.deps=='full' && 'ON' || 'OFF'}}
           -DBUILD_ION_PROXY=${{matrix.deps=='full' && 'ON' || 'OFF'}}
           -DTRANSPORT_ION_BP=${{matrix.deps=='full' && 'ON' || 'OFF'}}
@@ -165,7 +165,8 @@ jobs:
         run: >
           ./prep.sh
           -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
-          -DBUILD_UNITTEST=OFF -DBUILD_COVERAGE=ON
+          -DBUILD_UNITTEST=OFF
+          -DBUILD_COVERAGE=ON
           -DBUILD_ION_PROXY=OFF
           -DTRANSPORT_ION_BP=OFF
       - name: Build

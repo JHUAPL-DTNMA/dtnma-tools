@@ -145,14 +145,15 @@ if(BUILD_COVERAGE)
   append_coverage_compiler_flags()
 
   set(COVERAGE_EXCLUDES
-    "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
-    "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
-    "${CMAKE_CURRENT_BINARY_DIR}/test/*"
+    "${CMAKE_SOURCE_DIR}/deps/"
+    "${CMAKE_SOURCE_DIR}/testroot/"
+    "${CMAKE_SOURCE_DIR}/test/"
+    "${CMAKE_BINARY_DIR}/test/"
   )
   set(GCOVR_ADDITIONAL_ARGS
   )
 
-  set(CACE_EXCLUDES "src/refda*" "src/refdm*" "src/ion-app-proxy")
+  set(CACE_EXCLUDES "src/refda" "src/refdm" "src/ion-app-proxy")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-cace-xml
     EXCLUDE ${CACE_EXCLUDES}
@@ -162,7 +163,7 @@ if(BUILD_COVERAGE)
     EXCLUDE ${CACE_EXCLUDES}
   )
 
-  set(REFDA_EXCLUDES "src/cace" "src/refdm*" "src/ion-app-proxy")
+  set(REFDA_EXCLUDES "src/cace" "src/refdm" "src/ion-app-proxy")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-refda-xml
     EXCLUDE ${REFDA_EXCLUDES}
@@ -172,7 +173,7 @@ if(BUILD_COVERAGE)
     EXCLUDE ${REFDA_EXCLUDES}
   )
 
-  set(REFDM_EXCLUDES "src/cace" "src/refda*")
+  set(REFDM_EXCLUDES "src/cace" "src/refda")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-refdm-xml
     EXCLUDE ${REFDM_EXCLUDES}
