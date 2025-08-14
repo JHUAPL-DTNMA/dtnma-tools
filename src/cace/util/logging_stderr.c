@@ -71,7 +71,7 @@ static void cace_log_event_init_set(cace_log_event_t *obj, const cace_log_event_
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_init_set(obj->context, src->message);
+    string_init_set(obj->context, src->context);
     string_init_set(obj->message, src->message);
 }
 
@@ -80,7 +80,7 @@ static void cace_log_event_set(cace_log_event_t *obj, const cace_log_event_t *sr
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_set(obj->context, src->message);
+    string_set(obj->context, src->context);
     string_set(obj->message, src->message);
 }
 
