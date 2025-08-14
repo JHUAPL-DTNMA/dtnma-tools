@@ -131,9 +131,8 @@ target_include_directories(
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
 target_link_libraries(cace PUBLIC MLIB::mlib)
-target_link_libraries(cace PUBLIC qcbor)
+target_link_libraries(cace PUBLIC QCBOR::qcbor)
 target_link_libraries(cace PUBLIC timespec::timespec)
-target_link_libraries(cace PUBLIC m)
 if(PCRE_FOUND)
     target_link_libraries(cace PUBLIC PkgConfig::PCRE)
 endif(PCRE_FOUND)

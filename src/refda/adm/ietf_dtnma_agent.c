@@ -591,7 +591,7 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     return RET_PASS;
 }
 
-static int timespec_numeric_mod(cace_ari_t *_U_, const cace_ari_t *_U_, const cace_ari_t *_U_)
+static int timespec_numeric_mod(cace_ari_t *result _U_, const cace_ari_t *left _U_, const cace_ari_t *right _U_)
 {
     // Calculating the remainder associated with timespec objects is unsupported
     return RET_FAIL_UNDEFINED;
