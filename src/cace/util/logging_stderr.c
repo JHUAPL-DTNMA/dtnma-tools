@@ -100,10 +100,13 @@ void cace_log_event_deinit(cace_log_event_t *obj)
 }
 
 /// OPLIST for cace_log_event_t
-#define M_OPL_cace_log_event_t() (INIT(API_2(cace_log_event_init)), INIT_SET(API_6(cace_log_event_init_set)), INIT_MOVE(API_6(cace_log_event_init_move)), SET(API_6(cace_log_event_set)), CLEAR(API_2(cace_log_event_deinit)))
+#define M_OPL_cace_log_event_t()                                                 \
+    (INIT(API_2(cace_log_event_init)), INIT_SET(API_6(cace_log_event_init_set)), \
+     INIT_MOVE(API_6(cace_log_event_init_move)), SET(API_6(cace_log_event_set)), CLEAR(API_2(cace_log_event_deinit)))
 
 /// @cond Doxygen_Suppress
-M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
+M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE,
+             M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
 /// @endcond
 
 /// Shared least severity
@@ -311,7 +314,7 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
             m_string_set_cstr(manual.message, "cace_log() called before cace_openlog()");
             write_log(&manual);
             cace_log_event_deinit(&manual);
-    
+
             write_log(&event);
         }
     }
