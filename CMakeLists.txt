@@ -151,35 +151,35 @@ if(BUILD_COVERAGE)
   )
   set(GCOVR_ADDITIONAL_ARGS
   )
+
+  set(CACE_EXCLUDES "src/refda*" "src/refdm*" "src/ion-app-proxy")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-cace-xml
-    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/cace"
-    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/cace"
+    EXCLUDE ${CACE_EXCLUDES}
   )
   setup_target_for_coverage_gcovr_html(
     NAME coverage-cace-html
-    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/cace"
-    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/cace"
+    EXCLUDE ${CACE_EXCLUDES}
   )
+
+  set(REFDA_EXCLUDES "src/cace" "src/refdm*" "src/ion-app-proxy")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-refda-xml
-    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refda"
-    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refda"
+    EXCLUDE ${REFDA_EXCLUDES}
   )
   setup_target_for_coverage_gcovr_html(
     NAME coverage-refda-html
-    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refda"
-    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refda"
+    EXCLUDE ${REFDA_EXCLUDES}
   )
+
+  set(REFDM_EXCLUDES "src/cace" "src/refda*")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-refdm-xml
-    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refdm"
-    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refdm"
+    EXCLUDE ${REFDM_EXCLUDES}
   )
   setup_target_for_coverage_gcovr_html(
     NAME coverage-refdm-html
-    BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/refdm"
-    BINARY_DIRECTORY "${CMAKE_BINARY_DIR}/src/refdm"
+    EXCLUDE ${REFDM_EXCLUDES}
   )
 endif(BUILD_COVERAGE)
 
