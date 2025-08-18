@@ -224,6 +224,8 @@ if(BUILD_MANAGER)
     find_package(cJSON)
 endif(BUILD_MANAGER)
 
+include(GNUInstallDirs)
+
 add_subdirectory(src)
 if(BUILD_UNITTEST OR BUILD_FUZZING)
   add_subdirectory(test)

@@ -140,9 +140,15 @@ if(ION_FOUND)
     target_link_libraries(cace PUBLIC ION::BP)
 endif(ION_FOUND)
 
-include(GNUInstallDirs)
 install(
-    TARGETS cace cace_ari
+    TARGETS cace
+    RUNTIME
+        COMPONENT runtime
+    LIBRARY
+        COMPONENT runtime
+        NAMELINK_COMPONENT devel
+    ARCHIVE
+        COMPONENT devel
 )
 install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -163,5 +169,7 @@ if(NOT BUILD_FUZZING)
     target_link_libraries(cace_ari PUBLIC cace)
     install(
         TARGETS cace_ari
+        RUNTIME
+            COMPONENT runtime
     )
 endif(NOT BUILD_FUZZING)

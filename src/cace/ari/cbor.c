@@ -365,12 +365,14 @@ static int cace_ari_cbor_decode_am(QCBORDecodeContext *dec, cace_ari_am_t *obj)
         return 2;
     }
 
+    CACE_LOG_INFO("start with AM");
     while (true)
     {
         cace_ari_t key   = CACE_ARI_INIT_UNDEFINED;
         cace_ari_t value = CACE_ARI_INIT_UNDEFINED;
 
         int key_res = cace_ari_cbor_decode_stream(dec, &key);
+        CACE_LOG_INFO("decoded key with status %d type %d %d", key_res, key.is_ref, key.as_lit.prim_type);
         int dec_res = QCBORDecode_GetAndResetError(dec);
         // first item determines end-of-map
         bool atend = (dec_res == QCBOR_ERR_NO_MORE_ITEMS);
@@ -1145,10 +1147,6 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
         if (decitem.val.uCount == 2)
         {
             cace_ari_lit_t *obj = cace_ari_init_lit(ari);
-            // literal value state
-            *obj = (cace_ari_lit_t) {
-                .has_ari_type = true,
-            };
 
             int64_t type_id;
             QCBORDecode_GetInt64(dec, &type_id);
@@ -1157,6 +1155,7 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
                 return 3;
             }
             obj->ari_type = (int32_t)type_id;
+            obj->has_ari_type = true;
 
             switch (obj->ari_type)
             {
@@ -1272,6 +1271,7 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
                             retval = 3;
                         }
                         obj->params.state = CACE_ARI_PARAMS_AC;
+                        // move the struct
                         obj->params.as_ac = params.value.as_ac;
                         break;
                     case QCBOR_TYPE_MAP_AS_ARRAY:
@@ -1281,6 +1281,7 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
                             retval = 3;
                         }
                         obj->params.state = CACE_ARI_PARAMS_AM;
+                        // move the struct
                         obj->params.as_am = params.value.as_am;
                         break;
 
@@ -1309,10 +1310,6 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
     {
         // otherwise this is a single primitive value
         cace_ari_lit_t *obj = cace_ari_init_lit(ari);
-
-        *obj = (cace_ari_lit_t) {
-            .has_ari_type = false,
-        };
 
         if (cace_ari_cbor_decode_primval(dec, obj))
         {

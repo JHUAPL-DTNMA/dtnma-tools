@@ -389,6 +389,7 @@ void cace_ari_objpath_set_intid_opt(cace_ari_objpath_t *path, const cace_ari_int
     }
 }
 
+#include <cace/util/logging.h>
 int cace_ari_params_deinit(cace_ari_params_t *obj)
 {
     CHKERR1(obj);
@@ -402,6 +403,7 @@ int cace_ari_params_deinit(cace_ari_params_t *obj)
             CACE_FREE(obj->as_ac);
             break;
         case CACE_ARI_PARAMS_AM:
+            CACE_LOG_INFO("DEINIT! count %zu", cace_ari_tree_size(obj->as_am->items));
             CHKERR1(obj->as_am);
             cace_ari_am_deinit(obj->as_am);
             CACE_FREE(obj->as_am);
