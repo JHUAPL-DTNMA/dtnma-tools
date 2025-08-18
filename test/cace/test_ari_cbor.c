@@ -605,25 +605,33 @@ void test_cace_ari_cbor_decode_tp(const char *inhex, time_t expect_sec, long exp
     TEST_ASSERT_EQUAL_INT(expect_nsec, ari.as_lit.value.as_timespec.tv_nsec);
 }
 
-TEST_CASE("8519FFFF02200520")                   // bad parameter type
-TEST_CASE("8619FFFF02200580182D")               // extra item after parameters
-TEST_CASE("A0")                                 // bad major type
-TEST_CASE("821182A0820417")                     // AC with item having bad major type
-TEST_CASE("8364746573740A6474686174")           // ari://test/TEXTSTR/that
-TEST_CASE("820C82290C")                         // TP with decimal fraction exponent of -10
-TEST_CASE("820C820A0C")                         // TP with decimal fraction exponent of 10
-TEST_CASE("820EFB3FF3333333333333")             // ari:/LABEL/1.2
-TEST_CASE("821386030102030405")                 // ari:/TBL/c=3;(1,2,3)(4,5)
-TEST_CASE("821380")                             // ari:/TBL/
-TEST_CASE("8213816474657374")                   // ari:/TBL/test
-TEST_CASE("8214816474657374")                   // ari:/EXECSET/n=test;()
-TEST_CASE("82148120")                           // ari:/EXECSET/n=-1;()
-TEST_CASE("82158264746573741A2B450625")         // ari:/RPTSET/n=test;r=725943845;
-TEST_CASE("821582FB3FF33333333333331A2B450625") // ari:/RPTSET/n=1.2;r=725943845;
-// ari:/RPTSET/n=1234;r=test;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
-TEST_CASE("8215831904D26474657374850083647465737422626869F603426869")
-// ari:/RPTSET/n=1234;r=/REAL64/1.0;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
-TEST_CASE("8215831904D28209F93C00850083647465737422626869F603426869")
+// TEST_CASE("8519FFFF02200520")                   // bad parameter type
+// TEST_CASE("8619FFFF02200580182D")               // extra item after parameters
+// TEST_CASE("A0")                                 // bad major type
+// TEST_CASE("821182A0820417")                     // AC with item having bad major type
+// TEST_CASE("8364746573740A6474686174")           // ari://test/TEXTSTR/that
+// TEST_CASE("820C82290C")                         // TP with decimal fraction exponent of -10
+// TEST_CASE("820C820A0C")                         // TP with decimal fraction exponent of 10
+// TEST_CASE("820EFB3FF3333333333333")             // ari:/LABEL/1.2
+// TEST_CASE("821386030102030405")                 // ari:/TBL/c=3;(1,2,3)(4,5)
+// TEST_CASE("821380")                             // ari:/TBL/
+// TEST_CASE("8213816474657374")                   // ari:/TBL/test
+// TEST_CASE("8214816474657374")                   // ari:/EXECSET/n=test;()
+// TEST_CASE("82148120")                           // ari:/EXECSET/n=-1;()
+// TEST_CASE("82158264746573741A2B450625")         // ari:/RPTSET/n=test;r=725943845;
+// TEST_CASE("821582FB3FF33333333333331A2B450625") // ari:/RPTSET/n=1.2;r=725943845;
+//// ari:/RPTSET/n=1234;r=test;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
+// TEST_CASE("8215831904D26474657374850083647465737422626869F603426869")
+//// ari:/RPTSET/n=1234;r=/REAL64/1.0;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
+// TEST_CASE("8215831904D28209F93C00850083647465737422626869F603426869")
+//  found via fuzzing
+TEST_CASE("8214841904d28519ffff01220c8af7f7f58214841904d28519ff2e01220c"
+          "8af7f6f40d8225040a29fa497a247e006009f92b1540820960f97e841904"
+          "d28519ffff01220c8af7f7f5f40a8214841904d28519ffff01220c8af7f7"
+          "f58214841904d28519ff2e01220caaf7f6f40d8225040a29fa497a247e00"
+          "6009f92b1540820960f97e841904d28519ffff01220c8af7f7f5f40a29fa"
+          "820d822582148419044060f97ef92b0440820960f97e008209f92b29fa82"
+          "0d822582148419044060f97ef92b0440820960f97e008209f92b15")
 void test_cace_ari_cbor_decode_failure(const char *inhex)
 {
     string_t intext;
@@ -638,6 +646,8 @@ void test_cace_ari_cbor_decode_failure(const char *inhex)
     size_t       used;
     int          res = cace_ari_cbor_decode(&ari, &indata, &used, &errm);
     cace_data_deinit(&indata);
+    // postcondition
+    TEST_ASSERT_TRUE(cace_ari_is_undefined(&ari));
     cace_ari_deinit(&ari);
 
     TEST_ASSERT_NOT_EQUAL_INT(0, res);

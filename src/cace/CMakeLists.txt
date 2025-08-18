@@ -140,12 +140,6 @@ if(ION_FOUND)
     target_link_libraries(cace PUBLIC ION::BP)
 endif(ION_FOUND)
 
-# Stand-alone ARI manipulation tool
-add_executable(cace_ari)
-target_sources(cace_ari PRIVATE cace_ari.c)
-target_link_libraries(cace_ari PUBLIC cace)
-
-
 include(GNUInstallDirs)
 install(
     TARGETS cace cace_ari
@@ -161,3 +155,13 @@ install(
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/cace"
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
 )
+
+if(NOT BUILD_FUZZING)
+    # Stand-alone ARI manipulation tool
+    add_executable(cace_ari)
+    target_sources(cace_ari PRIVATE cace_ari.c)
+    target_link_libraries(cace_ari PUBLIC cace)
+    install(
+        TARGETS cace_ari
+    )
+endif(NOT BUILD_FUZZING)

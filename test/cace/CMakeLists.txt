@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-if(BUILD_UNITTEST)
+if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   add_unity_test(SOURCE "test_ari_cbor.c")
   target_link_libraries(test_ari_cbor PUBLIC cace)
   
@@ -56,4 +56,9 @@ if(BUILD_UNITTEST)
   add_executable(test_cace_cpp)
   target_sources(test_cace_cpp PRIVATE test_cace_cpp.cpp)
   target_link_libraries(test_cace_cpp PUBLIC cace)
-endif(BUILD_UNITTEST)
+endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)
+
+if(BUILD_FUZZING)
+  add_fuzz_test(SOURCE "fuzz_cace_ari_cbor.cpp")
+  target_link_libraries(fuzz_cace_ari_cbor PUBLIC cace)
+endif(BUILD_FUZZING)

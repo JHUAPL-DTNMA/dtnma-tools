@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-if(BUILD_UNITTEST)
+if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   add_unity_test(SOURCE "test_amm_const.c")
   target_link_libraries(test_amm_const PUBLIC refda test_util)
   
@@ -39,4 +39,4 @@ if(BUILD_UNITTEST)
   add_executable(test_refda_cpp)
   target_sources(test_refda_cpp PRIVATE test_refda_cpp.cpp)
   target_link_libraries(test_refda_cpp PUBLIC refda)
-endif(BUILD_UNITTEST)
+endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)

@@ -298,28 +298,26 @@ static int cace_ari_cbor_decode_ac(QCBORDecodeContext *dec, cace_ari_ac_t *obj)
         int        parse_res = cace_ari_cbor_decode_stream(dec, &ari);
 
         int  dec_res = QCBORDecode_GetAndResetError(dec);
-        bool atend   = dec_res == QCBOR_ERR_NO_MORE_ITEMS;
+        bool atend   = (dec_res == QCBOR_ERR_NO_MORE_ITEMS);
         if (!atend)
         {
             if (dec_res)
             {
                 // not well-formed CBOR
+                CACE_LOG_ERR("decoding AC failed with decoder error %d", dec_res);
                 retval = 2;
             }
             else if (parse_res)
             {
                 // well-formed CBOR but not valid ARI
+                CACE_LOG_ERR("decoding AC failed with parser error %d", dec_res);
                 retval = 3;
             }
         }
 
-        if (retval)
+        if (retval || atend)
         {
             cace_ari_deinit(&ari);
-            break;
-        }
-        if (atend)
-        {
             break;
         }
 
@@ -369,36 +367,48 @@ static int cace_ari_cbor_decode_am(QCBORDecodeContext *dec, cace_ari_am_t *obj)
 
     while (true)
     {
-        cace_ari_t key     = CACE_ARI_INIT_UNDEFINED;
-        int        key_res = cace_ari_cbor_decode_stream(dec, &key);
+        cace_ari_t key   = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_t value = CACE_ARI_INIT_UNDEFINED;
 
-        cace_ari_t value     = CACE_ARI_INIT_UNDEFINED;
-        int        value_res = cace_ari_cbor_decode_stream(dec, &value);
+        int key_res = cace_ari_cbor_decode_stream(dec, &key);
+        int dec_res = QCBORDecode_GetAndResetError(dec);
+        // first item determines end-of-map
+        bool atend = (dec_res == QCBOR_ERR_NO_MORE_ITEMS);
 
-        int  dec_res = QCBORDecode_GetAndResetError(dec);
-        bool atend   = dec_res == QCBOR_ERR_NO_MORE_ITEMS;
+        // only care about value if key was successful decoding
+        // but if key was set, the value *must* be present
+        int value_res = 0;
+        if (!key_res && (dec_res == QCBOR_SUCCESS))
+        {
+            value_res = cace_ari_cbor_decode_stream(dec, &value);
+            dec_res   = QCBORDecode_GetError(dec);
+        }
+
         if (!atend)
         {
             if (dec_res)
             {
                 // not well-formed CBOR
+                CACE_LOG_ERR("decoding AM failed with decoder error %d", dec_res);
                 retval = 2;
             }
             else if (key_res || value_res)
             {
                 // well-formed CBOR but not valid ARI
+                CACE_LOG_ERR("decoding AM failed with parser error %d %d", key_res, value_res);
                 retval = 3;
+            }
+            else if (key.is_ref)
+            {
+                // this should not be a key
+                retval = 4;
             }
         }
 
-        if (retval)
+        if (retval || atend)
         {
             cace_ari_deinit(&key);
             cace_ari_deinit(&value);
-            break;
-        }
-        if (atend)
-        {
             break;
         }
 
@@ -456,28 +466,26 @@ static int cace_ari_cbor_decode_tbl(QCBORDecodeContext *dec, cace_ari_tbl_t *obj
         int        parse_res = cace_ari_cbor_decode_stream(dec, &ari);
 
         int  dec_res = QCBORDecode_GetAndResetError(dec);
-        bool atend   = dec_res == QCBOR_ERR_NO_MORE_ITEMS;
+        bool atend   = (dec_res == QCBOR_ERR_NO_MORE_ITEMS);
         if (!atend)
         {
             if (dec_res)
             {
                 // not well-formed CBOR
+                CACE_LOG_ERR("decoding TBL failed with decoder error %d", dec_res);
                 retval = 2;
             }
             else if (parse_res)
             {
                 // well-formed CBOR but not valid ARI
+                CACE_LOG_ERR("decoding TBL failed with parser error %d", dec_res);
                 retval = 3;
             }
         }
 
-        if (retval)
+        if (retval || atend)
         {
             cace_ari_deinit(&ari);
-            break;
-        }
-        if (atend)
-        {
             break;
         }
 
@@ -563,28 +571,26 @@ static int cace_ari_cbor_decode_execset(QCBORDecodeContext *dec, cace_ari_execse
         int        parse_res = cace_ari_cbor_decode_stream(dec, &ari);
 
         int  dec_res = QCBORDecode_GetAndResetError(dec);
-        bool atend   = dec_res == QCBOR_ERR_NO_MORE_ITEMS;
+        bool atend   = (dec_res == QCBOR_ERR_NO_MORE_ITEMS);
         if (!atend)
         {
             if (dec_res)
             {
                 // not well-formed CBOR
+                CACE_LOG_ERR("decoding EXECSET failed with decoder error %d", dec_res);
                 retval = 2;
             }
             else if (parse_res)
             {
                 // well-formed CBOR but not valid ARI
+                CACE_LOG_ERR("decoding EXECSET failed with parser error %d", parse_res);
                 retval = 3;
             }
         }
 
-        if (retval)
+        if (retval || atend)
         {
             cace_ari_deinit(&ari);
-            break;
-        }
-        if (atend)
-        {
             break;
         }
 
@@ -662,7 +668,7 @@ static int cace_ari_cbor_decode_report(QCBORDecodeContext *dec, cace_ari_report_
         int        parse_res = cace_ari_cbor_decode_stream(dec, &ari);
 
         int  dec_res = QCBORDecode_GetAndResetError(dec);
-        bool atend   = dec_res == QCBOR_ERR_NO_MORE_ITEMS;
+        bool atend   = (dec_res == QCBOR_ERR_NO_MORE_ITEMS);
         if (!atend)
         {
             if (dec_res)
@@ -677,13 +683,9 @@ static int cace_ari_cbor_decode_report(QCBORDecodeContext *dec, cace_ari_report_
             }
         }
 
-        if (retval)
+        if (retval || atend)
         {
             cace_ari_deinit(&ari);
-            break;
-        }
-        if (atend)
-        {
             break;
         }
 
@@ -785,17 +787,19 @@ static int cace_ari_cbor_decode_rptset(QCBORDecodeContext *dec, cace_ari_rptset_
         int parse_res = cace_ari_cbor_decode_report(dec, &rpt);
 
         int  dec_res = QCBORDecode_GetAndResetError(dec);
-        bool atend   = dec_res == QCBOR_ERR_NO_MORE_ITEMS;
+        bool atend   = (dec_res == QCBOR_ERR_NO_MORE_ITEMS);
         if (!atend)
         {
             if (dec_res)
             {
                 // not well-formed CBOR
+                CACE_LOG_ERR("decoding RPTSET failed with decoder error %d", dec_res);
                 retval = 2;
             }
             else if (parse_res)
             {
                 // well-formed CBOR but not valid ARI
+                CACE_LOG_ERR("decoding RPTSET failed with parser error %d", parse_res);
                 retval = 3;
             }
         }
@@ -1005,6 +1009,7 @@ static int cace_ari_cbor_decode_primval(QCBORDecodeContext *dec, cace_ari_lit_t 
             lit->prim_type = CACE_ARI_PRIM_TSTR;
             cace_data_init(&(lit->value.as_data));
             cace_data_copy_from(&(lit->value.as_data), decitem.val.string.len, (cace_data_ptr_t)decitem.val.string.ptr);
+            // add the null termination
             cace_data_append_byte(&(lit->value.as_data), 0);
             break;
         case QCBOR_TYPE_BYTE_STRING:
@@ -1048,6 +1053,8 @@ int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, 
     CHKERR1(ari);
     CHKERR1(buf);
 
+    cace_ari_reset(ari);
+
     if (!buf->ptr || !buf->len)
     {
         if (used)
@@ -1061,7 +1068,6 @@ int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, 
     UsefulBufC         indata = { .ptr = buf->ptr, .len = buf->len };
     QCBORDecode_Init(&dec, indata, QCBOR_DECODE_MODE_MAP_AS_ARRAY);
 
-    cace_ari_deinit(ari);
     int parse_res = cace_ari_cbor_decode_stream(&dec, ari);
     if (used)
     {
@@ -1073,21 +1079,41 @@ int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, 
         }
         *used = pos;
     }
-    int dec_res = QCBORDecode_Finish(&dec);
+    QCBORError dec_res = QCBORDecode_Finish(&dec);
 
+    int retval = 0;
     if (errm)
     {
         if (parse_res)
         {
             string_t err;
             string_init_printf(err, "parser error %d", parse_res);
-            *errm = string_clear_get_str(err);
+            *errm  = string_clear_get_str(err);
+            retval = 3;
         }
-        else if (dec_res)
+        else if (dec_res != QCBOR_SUCCESS)
         {
-            string_t err;
-            string_init_printf(err, "decoder error %d: %s", dec_res, qcbor_err_to_str(dec_res));
-            *errm = string_clear_get_str(err);
+            // undecoded input
+            if (dec_res == QCBOR_ERR_EXTRA_BYTES)
+            {
+                // user expects all input is used
+                if (!used)
+                {
+                    retval = 4;
+                }
+            }
+            else
+            {
+                // any other error
+                retval = 3;
+            }
+
+            if (retval)
+            {
+                string_t err;
+                string_init_printf(err, "decoder error %d: %s", dec_res, qcbor_err_to_str(dec_res));
+                *errm = string_clear_get_str(err);
+            }
         }
         else
         {
@@ -1095,24 +1121,7 @@ int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, 
         }
     }
 
-    if (parse_res)
-    {
-        return 3;
-    }
-    switch (dec_res)
-    {
-        case QCBOR_SUCCESS:
-            break;
-        case QCBOR_ERR_EXTRA_BYTES:
-            if (!used)
-            {
-                return 4;
-            }
-            break;
-        default:
-            return 3;
-    }
-    return 0;
+    return retval;
 }
 
 int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
@@ -1300,8 +1309,9 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
     {
         // otherwise this is a single primitive value
         cace_ari_lit_t *obj = cace_ari_init_lit(ari);
-        *obj                = (cace_ari_lit_t) {
-                           .has_ari_type = false,
+
+        *obj = (cace_ari_lit_t) {
+            .has_ari_type = false,
         };
 
         if (cace_ari_cbor_decode_primval(dec, obj))
@@ -1312,7 +1322,8 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
 
     if (retval)
     {
-        cace_ari_deinit(ari);
+        // don't leave a partial state
+        cace_ari_reset(ari);
     }
     return retval;
 }
