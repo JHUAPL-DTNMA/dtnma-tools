@@ -366,14 +366,12 @@ static int cace_ari_cbor_decode_am(QCBORDecodeContext *dec, cace_ari_am_t *obj)
         return 2;
     }
 
-    CACE_LOG_INFO("start with AM");
     while (true)
     {
         cace_ari_t key   = CACE_ARI_INIT_UNDEFINED;
         cace_ari_t value = CACE_ARI_INIT_UNDEFINED;
 
         int key_res = cace_ari_cbor_decode_stream(dec, &key);
-        CACE_LOG_INFO("decoded key with status %d type %d %d", key_res, key.is_ref, key.as_lit.prim_type);
         int dec_res = QCBORDecode_GetAndResetError(dec);
         // first item determines end-of-map
         bool atend = (dec_res == QCBOR_ERR_NO_MORE_ITEMS);
@@ -1084,41 +1082,45 @@ int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, 
     }
     QCBORError dec_res = QCBORDecode_Finish(&dec);
 
+    // Figure out the result state
     int retval = 0;
-    if (errm)
+    if (parse_res)
     {
-        if (parse_res)
+        if (errm)
         {
             string_t err;
             string_init_printf(err, "parser error %d", parse_res);
             *errm  = string_clear_get_str(err);
-            retval = 3;
         }
-        else if (dec_res != QCBOR_SUCCESS)
+        retval = 3;
+    }
+    else if (dec_res != QCBOR_SUCCESS)
+    {
+        // undecoded input
+        if (dec_res == QCBOR_ERR_EXTRA_BYTES)
         {
-            // undecoded input
-            if (dec_res == QCBOR_ERR_EXTRA_BYTES)
+            // user expects all input is used
+            if (!used)
             {
-                // user expects all input is used
-                if (!used)
-                {
-                    retval = 4;
-                }
-            }
-            else
-            {
-                // any other error
-                retval = 3;
-            }
-
-            if (retval)
-            {
-                string_t err;
-                string_init_printf(err, "decoder error %d: %s", dec_res, qcbor_err_to_str(dec_res));
-                *errm = string_clear_get_str(err);
+                retval = 4;
             }
         }
         else
+        {
+            // any other error
+            retval = 3;
+        }
+
+        if (retval && errm)
+        {
+            string_t err;
+            string_init_printf(err, "decoder error %d: %s", dec_res, qcbor_err_to_str(dec_res));
+            *errm = string_clear_get_str(err);
+        }
+    }
+    else
+    {
+        if (errm)
         {
             *errm = NULL;
         }
@@ -1240,18 +1242,21 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
             --remain;
             if (fail)
             {
-                return 3;
+                retval = 3;
             }
 
-            // Validate AMM object type
-            int err = cace_ari_objpath_derive_type(&(obj->objpath));
-            if (err)
+            if (!retval)
             {
-                return 3;
+                // Validate AMM object type
+                int err = cace_ari_objpath_derive_type(&(obj->objpath));
+                if (err)
+                {
+                    retval = 3;
+                }
             }
 
             obj->params.state = CACE_ARI_PARAMS_NONE;
-            if (remain == 1)
+            if (!retval && (remain == 1))
             {
                 --remain;
                 // some parameters present
