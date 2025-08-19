@@ -399,7 +399,7 @@ static int cace_ari_cbor_decode_am(QCBORDecodeContext *dec, cace_ari_am_t *obj)
                 CACE_LOG_ERR("decoding AM failed with parser error %d %d", key_res, value_res);
                 retval = 3;
             }
-            else if (key.is_ref)
+            else if (key.is_ref || key.as_lit.has_ari_type)
             {
                 // this should not be a key
                 retval = 4;
@@ -413,10 +413,25 @@ static int cace_ari_cbor_decode_am(QCBORDecodeContext *dec, cace_ari_am_t *obj)
             break;
         }
 
+        {
+            string_t buf;
+            string_init(buf);
+            cace_ari_text_encode(buf, &key, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("  key %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+
         // push only after fully reading
+#if 0
+        cace_ari_tree_set_at(obj->items, key, value);
+        cace_ari_deinit(&key);
+        cace_ari_deinit(&value);
+#else
         cace_ari_t *val = cace_ari_tree_safe_get(obj->items, key);
+        CACE_LOG_DEBUG("  val %p", val);
         cace_ari_set_move(val, &value);
         cace_ari_deinit(&key);
+#endif
     }
 
     QCBORDecode_ExitArray(dec);
