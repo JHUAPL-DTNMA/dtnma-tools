@@ -882,6 +882,7 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
                     // already handled above
                     break;
                 default:
+                    CACE_LOG_ERR("no logic to compare primitive type %d", left->as_lit.prim_type);
                     break;
             }
         }
