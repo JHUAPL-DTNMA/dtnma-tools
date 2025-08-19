@@ -1090,7 +1090,7 @@ int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, 
         {
             string_t err;
             string_init_printf(err, "parser error %d", parse_res);
-            *errm  = string_clear_get_str(err);
+            *errm = string_clear_get_str(err);
         }
         retval = 3;
     }

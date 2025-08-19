@@ -51,7 +51,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
-              libssl-dev libjansson-dev \
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev \
               valgrind gcovr xmlstarlet
           sudo gem install cbor-diag
       - name: Set up OS
@@ -64,7 +64,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
-              openssl-devel jansson-devel \
+              flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
           gem install cbor-diag
@@ -78,6 +78,8 @@ jobs:
         with:
           create-symlink: true
       - name: Dependencies
+        env:
+          DEPS_BUILD_ION: '0'
         run: ./deps.sh
       - name: Prep
         run: >

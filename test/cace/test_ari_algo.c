@@ -38,7 +38,6 @@ static const char *different_aris[] = {
     "F4",             // ari:false
     "1864",           // ari:100
     "F90000",         // ari:0.0
-//    "F9564080",
     "F97E00",         // ari:NaN
     "40",             // ari:h''
     "426869",         // ari:h'6869'
