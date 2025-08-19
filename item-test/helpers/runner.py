@@ -98,12 +98,51 @@ class CmdRunner:
         )
         self._writer.start()
 
-    def stop(self, timeout=5) -> Optional[int]:
+    def _finish(self):
+        ''' Clean up the process state after exit.
+        '''
+        ret = self.proc.returncode
+        self.proc = None
+        LOGGER.info('Stopped with exit code: %s', ret)
+
+        self._reader.join()
+        self._reader = None
+
+        self._stdin_lines.put(None)
+        self._writer.join()
+        self._writer = None
+
+        return ret
+
+    def wait(self, timeout=5) -> Optional[int]:
+        ''' Wait for the process to finish.
+
+        :param timeout: The time (in seconds) to wait for the process to exit.
+        :return: The exit code, or None if it not already running.
+        :raise subprocess.TimeoutExpired: If the wait has timed out.
+        '''
         if not self.proc:
             return None
 
+        LOGGER.info('Waiting on process: %s', self._fmt_args())
         if self.proc.returncode is None:
-            LOGGER.info('Stopping process: %s', self._fmt_args())
+            self.proc.wait(timeout=timeout)
+
+        return self._finish()
+
+    def stop(self, timeout=5) -> Optional[int]:
+        ''' Signal for the process to stop.
+        If the process has not stopped after the timeout, it is killed.
+
+        :param timeout: The time (in seconds) to wait for the process to exit.
+        :return: The exit code, or None if it not already running.
+        :raise subprocess.TimeoutExpired: If the wait has timed out.
+        '''
+        if not self.proc:
+            return None
+
+        LOGGER.info('Stopping process: %s', self._fmt_args())
+        if self.proc.returncode is None:
             self.proc.send_signal(signal.SIGINT)
             try:
                 self.proc.wait(timeout=timeout)
@@ -112,17 +151,7 @@ class CmdRunner:
                 self.proc.kill()
                 self.proc.wait(timeout=timeout)
 
-        ret = self.proc.returncode
-        self.proc = None
-        LOGGER.info('Stopped with exit code: %s', ret)
-
-        self._reader.join()
-        self._reader = None
-        self._stdin_lines.put(None)
-        self._writer.join()
-        self._writer = None
-
-        return ret
+        return self._finish()
 
     def _read_stdout(self, stream):
         LOGGER.debug('Starting stdout thread')
