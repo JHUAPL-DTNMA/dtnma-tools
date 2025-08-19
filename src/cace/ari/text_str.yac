@@ -502,6 +502,7 @@ objpath:
         $$.org_id = $2;
         if (cace_model_split_rev(&$$, &$3))
         {
+            cace_ari_objpath_deinit(&$$);
             cace_ari_text_str_error(scanner, input, "Invalid model revision");
             YYERROR;
         }
@@ -509,6 +510,7 @@ objpath:
         $$.obj_id = $5;
         if (cace_validate_objpath(&$$))
         {
+            cace_ari_objpath_deinit(&$$);
             cace_ari_text_str_error(scanner, input, "Invalid object type");
             YYERROR;
         }
@@ -518,6 +520,7 @@ objpath:
         cace_ari_objpath_init(&$$);
         if (cace_model_split_rev(&$$, &$2))
         {
+            cace_ari_objpath_deinit(&$$);
             cace_ari_text_str_error(scanner, input, "Invalid model revision");
             YYERROR;
         }
@@ -525,6 +528,7 @@ objpath:
         $$.obj_id = $4;
         if (cace_validate_objpath(&$$))
         {
+            cace_ari_objpath_deinit(&$$);
             cace_ari_text_str_error(scanner, input, "Invalid object type");
             YYERROR;
         }
@@ -536,6 +540,7 @@ objpath:
         $$.obj_id = $3;
         if (cace_validate_objpath(&$$))
         {
+            cace_ari_objpath_deinit(&$$);
             cace_ari_text_str_error(scanner, input, "Invalid object type");
             YYERROR;
         }
@@ -546,6 +551,7 @@ objpath:
         $$.org_id = $2;
         if (cace_model_split_rev(&$$, &$3))
         {
+            cace_ari_objpath_deinit(&$$);
             cace_ari_text_str_error(scanner, input, "Invalid model revision");
             YYERROR;
         }
@@ -556,6 +562,7 @@ objpath:
         cace_ari_objpath_init(&$$);
         if (cace_model_split_rev(&$$, &$2))
         {
+            cace_ari_objpath_deinit(&$$);
             cace_ari_text_str_error(scanner, input, "Invalid model revision");
             YYERROR;
         }

@@ -16,8 +16,8 @@ add_compile_options(
 
 function(add_fuzz_test)
   set(options OPTIONAL )
-  set(oneValueArgs TARGET MAIN_NAME RUNS_COUNT)
-  set(multiValueArgs SOURCE)
+  set(oneValueArgs TARGET RUNS_COUNT)
+  set(multiValueArgs SOURCE EXTRA_ARGS)
   cmake_parse_arguments(
     FUZZTEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
   )
@@ -56,6 +56,7 @@ function(add_fuzz_test)
       "${BASENAME}-corpus"
       -runs=${FUZZTEST_RUNS_COUNT}
       -detect_leaks=1
+      ${FUZZTEST_EXTRA_ARGS}
   )
 
   if(TEST_INSTALL_PREFIX)

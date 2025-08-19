@@ -59,6 +59,9 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
 endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)
 
 if(BUILD_FUZZING)
-  add_fuzz_test(SOURCE "fuzz_cace_ari_cbor.cpp")
+  add_fuzz_test(SOURCE "fuzz_cace_ari_cbor.cpp" RUNS_COUNT 1000000)
   target_link_libraries(fuzz_cace_ari_cbor PUBLIC cace)
+
+  add_fuzz_test(SOURCE "fuzz_cace_ari_uri.cpp" RUNS_COUNT 100000 EXTRA_ARGS "-only_ascii=1")
+  target_link_libraries(fuzz_cace_ari_uri PUBLIC cace)
 endif(BUILD_FUZZING)
