@@ -78,10 +78,10 @@ jobs:
         with:
           create-symlink: true
       - name: Dependencies
-        run: ./build.sh deps
+        run: ./deps.sh
       - name: Prep
         run: >
-          ./build.sh prep
+          ./prep.sh
           -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
           -DBUILD_FUZZING=ON -DBUILD_COVERAGE=ON
       - name: Build
