@@ -54,7 +54,7 @@ int cace_ari_text_encode_objpath(string_t text, const cace_ari_objpath_t *path, 
 typedef struct
 {
     /** True if the scheme is present at the start of the text.
-     * This defaults to CACE_ARI_TEXT_SCHEME_FIRST.
+     * This defaults to ::CACE_ARI_TEXT_SCHEME_FIRST.
      */
     enum
     {
@@ -66,7 +66,7 @@ typedef struct
         CACE_ARI_TEXT_SCHEME_ALL,
     } scheme_prefix;
     /** Determine how to show cace_ari_type_t values.
-     * This defaults to CACE_ARI_TEXT_ARITYPE_TEXT.
+     * This defaults to ::CACE_ARI_TEXT_ARITYPE_TEXT.
      */
     enum cace_ari_text_aritype_e show_ari_type;
     /** Desired base of integer values.

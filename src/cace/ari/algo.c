@@ -17,6 +17,7 @@
  */
 #include "algo.h"
 #include "containers.h"
+#include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include "cace/amm/numeric.h"
 #include "cace/amm/typing.h"
@@ -734,8 +735,11 @@ int cace_ari_cmp(const cace_ari_t *left, const cace_ari_t *right)
                 }
                 part_cmp = M_CMP_BASIC(left->as_lit.value.as_timespec.tv_nsec, right->as_lit.value.as_timespec.tv_nsec);
                 break;
+            case CACE_ARI_PRIM_OTHER:
+                // already handled above
+                break;
             default:
-                part_cmp = -2;
+                CACE_LOG_ERR("no logic to compare primitive type %d", left->as_lit.prim_type);
                 break;
         }
 
@@ -873,6 +877,9 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
                     {
                         result = false;
                     }
+                    break;
+                case CACE_ARI_PRIM_OTHER:
+                    // already handled above
                     break;
                 default:
                     break;

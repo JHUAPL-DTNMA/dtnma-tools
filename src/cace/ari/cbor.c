@@ -354,6 +354,7 @@ static int cace_ari_cbor_encode_am(QCBOREncodeContext *enc, const cace_ari_am_t 
     return retval;
 }
 
+#include "text.h"
 static int cace_ari_cbor_decode_am(QCBORDecodeContext *dec, cace_ari_am_t *obj)
 {
     int retval = 0;
@@ -1154,7 +1155,7 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
             {
                 return 3;
             }
-            obj->ari_type = (int32_t)type_id;
+            obj->ari_type     = (int32_t)type_id;
             obj->has_ari_type = true;
 
             switch (obj->ari_type)

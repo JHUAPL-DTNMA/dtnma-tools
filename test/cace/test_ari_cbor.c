@@ -440,8 +440,15 @@ void test_cace_ari_cbor_decode_lit_prim_uint64(const char *inhex, uint64_t expec
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE("F93E00", 1.5)
+// compressed float16
+TEST_CASE("F90000", 0.0f)
+TEST_CASE("F93E00", 1.5f)
 TEST_CASE("F97E00", (cace_ari_real32)NAN)
+// normal float32
+TEST_CASE("FA00000000", 0.0f)
+TEST_CASE("FAFFC00001", (cace_ari_real32)NAN)
+TEST_CASE("FA7F800000", (cace_ari_real32)INFINITY)
+TEST_CASE("FAFF800000", (cace_ari_real32)-INFINITY)
 void test_cace_ari_cbor_decode_lit_prim_float32(const char *inhex, cace_ari_real32 expect)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
@@ -455,11 +462,11 @@ void test_cace_ari_cbor_decode_lit_prim_float32(const char *inhex, cace_ari_real
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE("F90000", 0.0)
-TEST_CASE("F93E00", 1.5)
-TEST_CASE("F97E00", (cace_ari_real64)NAN)
-TEST_CASE("F97C00", (cace_ari_real64)INFINITY)
-TEST_CASE("F9FC00", (cace_ari_real64)-INFINITY)
+TEST_CASE("FB0000000000000000", 0.0)
+TEST_CASE("FB3FD3333333333333", 0.3)
+TEST_CASE("FB7FF8000000000001", (cace_ari_real64)NAN)
+TEST_CASE("FB7FF0000000000000", (cace_ari_real64)INFINITY)
+TEST_CASE("FBFFF0000000000000", (cace_ari_real64)-INFINITY)
 void test_cace_ari_cbor_decode_lit_prim_float64(const char *inhex, cace_ari_real64 expect)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
@@ -605,25 +612,26 @@ void test_cace_ari_cbor_decode_tp(const char *inhex, time_t expect_sec, long exp
     TEST_ASSERT_EQUAL_INT(expect_nsec, ari.as_lit.value.as_timespec.tv_nsec);
 }
 
-// TEST_CASE("8519FFFF02200520")                   // bad parameter type
-// TEST_CASE("8619FFFF02200580182D")               // extra item after parameters
-// TEST_CASE("A0")                                 // bad major type
-// TEST_CASE("821182A0820417")                     // AC with item having bad major type
-// TEST_CASE("8364746573740A6474686174")           // ari://test/TEXTSTR/that
-// TEST_CASE("820C82290C")                         // TP with decimal fraction exponent of -10
-// TEST_CASE("820C820A0C")                         // TP with decimal fraction exponent of 10
-// TEST_CASE("820EFB3FF3333333333333")             // ari:/LABEL/1.2
-// TEST_CASE("821386030102030405")                 // ari:/TBL/c=3;(1,2,3)(4,5)
-// TEST_CASE("821380")                             // ari:/TBL/
-// TEST_CASE("8213816474657374")                   // ari:/TBL/test
-// TEST_CASE("8214816474657374")                   // ari:/EXECSET/n=test;()
-// TEST_CASE("82148120")                           // ari:/EXECSET/n=-1;()
-// TEST_CASE("82158264746573741A2B450625")         // ari:/RPTSET/n=test;r=725943845;
-// TEST_CASE("821582FB3FF33333333333331A2B450625") // ari:/RPTSET/n=1.2;r=725943845;
-//// ari:/RPTSET/n=1234;r=test;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
-// TEST_CASE("8215831904D26474657374850083647465737422626869F603426869")
-//// ari:/RPTSET/n=1234;r=/REAL64/1.0;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
-// TEST_CASE("8215831904D28209F93C00850083647465737422626869F603426869")
+TEST_CASE("F900")                               // not enough float argument
+TEST_CASE("8519FFFF02200520")                   // bad parameter type
+TEST_CASE("8619FFFF02200580182D")               // extra item after parameters
+TEST_CASE("A0")                                 // bad major type
+TEST_CASE("821182A0820417")                     // AC with item having bad major type
+TEST_CASE("8364746573740A6474686174")           // ari://test/TEXTSTR/that
+TEST_CASE("820C82290C")                         // TP with decimal fraction exponent of -10
+TEST_CASE("820C820A0C")                         // TP with decimal fraction exponent of 10
+TEST_CASE("820EFB3FF3333333333333")             // ari:/LABEL/1.2
+TEST_CASE("821386030102030405")                 // ari:/TBL/c=3;(1,2,3)(4,5)
+TEST_CASE("821380")                             // ari:/TBL/
+TEST_CASE("8213816474657374")                   // ari:/TBL/test
+TEST_CASE("8214816474657374")                   // ari:/EXECSET/n=test;()
+TEST_CASE("82148120")                           // ari:/EXECSET/n=-1;()
+TEST_CASE("82158264746573741A2B450625")         // ari:/RPTSET/n=test;r=725943845;
+TEST_CASE("821582FB3FF33333333333331A2B450625") // ari:/RPTSET/n=1.2;r=725943845;
+// ari:/RPTSET/n=1234;r=test;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
+TEST_CASE("8215831904D26474657374850083647465737422626869F603426869")
+// ari:/RPTSET/n=1234;r=/REAL64/1.0;(t=/TD/PT0S;s=//test/CTRL/hi;(null,3,h'6869'))
+TEST_CASE("8215831904D28209F93C00850083647465737422626869F603426869")
 //  found via fuzzing
 TEST_CASE("8214841904d28519ffff01220c8af7f7f58214841904d28519ff2e01220c"
           "8af7f6f40d8225040a29fa497a247e006009f92b1540820960f97e841904"
@@ -632,8 +640,6 @@ TEST_CASE("8214841904d28519ffff01220c8af7f7f58214841904d28519ff2e01220c"
           "6009f92b1540820960f97e841904d28519ffff01220c8af7f7f5f40a29fa"
           "820d822582148419044060f97ef92b0440820960f97e008209f92b29fa82"
           "0d822582148419044060f97ef92b0440820960f97e008209f92b15")
-// OR
-// ./build.sh && echo "8214841904d28519ffff01220c8af7f7f58214841904d28519ff2e01220c8af7f6f40d8225040a29fa497a247e006009f92b1540820960f97e841904d28519ffff01220c8af7f7f5f40a8214841904d28519ffff01220c8af7f7f58214841904d28519ff2e01220caaf7f6f40d8225040a29fa497a247e006009f92b1540820960f97e841904d28519ffff01220c8af7f7f5f40a29fa820d822582148419044060f97ef92b0440820960f97e008209f92b29fa820d822582148419044060f97ef92b0440820960f97e008209f92b15" | valgrind --leak-check=full --show-leak-kinds=all --suppressions=memcheck.supp ./build/default/src/cace/cace_ari
 void test_cace_ari_cbor_decode_failure(const char *inhex)
 {
     string_t intext;
