@@ -621,6 +621,7 @@ TEST_CASE("8364746573740A6474686174")           // ari://test/TEXTSTR/that
 TEST_CASE("820C82290C")                         // TP with decimal fraction exponent of -10
 TEST_CASE("820C820A0C")                         // TP with decimal fraction exponent of 10
 TEST_CASE("820EFB3FF3333333333333")             // ari:/LABEL/1.2
+TEST_CASE("8212A182040AF5")         // ari:/AM/(/INT/10=true), no typed keys
 TEST_CASE("821386030102030405")                 // ari:/TBL/c=3;(1,2,3)(4,5)
 TEST_CASE("821380")                             // ari:/TBL/
 TEST_CASE("8213816474657374")                   // ari:/TBL/test
@@ -692,7 +693,6 @@ void test_cace_ari_cbor_decode_partial(const char *inhex)
 TEST_CASE("820001")                 // ari:/NULL/1
 TEST_CASE("820101")                 // ari:/BOOL/1
 TEST_CASE("820220")                 // ari:/BYTE/-1
-TEST_CASE("8212A182040AF5")         // ari:/AM/(/INT/10=true), no typed keys
 TEST_CASE("8202190100")             // ari:/BYTE/256
 TEST_CASE("82043A80000000")         // ari:/INT/-2147483649
 TEST_CASE("82041A80000000")         // ari:/INT/2147483648
