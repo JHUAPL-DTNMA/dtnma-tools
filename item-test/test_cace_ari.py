@@ -57,7 +57,8 @@ class TestCaceAri(unittest.TestCase):
 
     def tearDown(self):
         if self._runner:
-            self._runner.stop()
+            self._runner.close_stdin()
+            self.assertEqual(0, self._runner.stop())
             self._runner = None
 
     def _start(self, *cmd_args: Tuple[str]) -> CmdRunner:
