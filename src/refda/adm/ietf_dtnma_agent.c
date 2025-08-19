@@ -2470,7 +2470,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
 
         if (valid)
         {
-            obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum((char *)obj_name->ptr, obj_id), objdata);
+            m_string_t *sbr_name = string_list_push_new(agent->odm_names);
+            m_string_set_cstr(*sbr_name, (char *)obj_name->ptr);
+
+            obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*sbr_name), obj_id), objdata);
 
             if (obj && obj->app_data.ptr)
             {
@@ -2682,7 +2685,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
 
         if (valid)
         {
-            obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum((char *)obj_name->ptr, obj_id), objdata);
+            m_string_t *tbr_name = string_list_push_new(agent->odm_names);
+            m_string_set_cstr(*tbr_name, (char *)obj_name->ptr);
+
+            obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*tbr_name), obj_id), objdata);
 
             if (obj && obj->app_data.ptr)
             {
