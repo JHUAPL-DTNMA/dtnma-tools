@@ -2173,6 +2173,101 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *ari_namespace = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_obj_name  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_obj_enum  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+    const cace_ari_t *ari_type      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+    const cace_ari_t *ari_init      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
+
+    refda_agent_t *agent = ctx->runctx->agent;
+
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    // TODO: could probably create a helper for a lot of this common code
+    REFDA_AGENT_LOCK(agent, );
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
+    REFDA_AGENT_UNLOCK(agent, );
+
+    if (!odm)
+    {
+        CACE_LOG_INFO("ODM not found");
+        return;
+    }
+
+    if (!cace_amm_obj_ns_is_odm(odm))
+    {
+        CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        return;
+    }
+    // END TODO
+
+    const cace_data_t *obj_name = cace_ari_cget_tstr(ari_obj_name);
+    if (obj_name == NULL || obj_name->ptr == NULL)
+    {
+        CACE_LOG_ERR("Unable to retrieve obj name");
+        return;
+    }
+
+    cace_ari_int obj_id;
+    if (cace_ari_get_int(ari_obj_enum, &obj_id))
+    {
+        CACE_LOG_ERR("Unable to retrieve object ID");
+        return;
+    }
+
+    REFDA_AGENT_LOCK(agent, );
+    // bool valid = true, var_exists = false;
+    refda_amm_var_desc_t *var = NULL;
+
+    {
+        cace_amm_obj_desc_t *obj = NULL;
+        obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_VAR, (const char *)obj_name->ptr);
+        if (obj)
+        {
+            CACE_LOG_INFO("VAR already exists");
+        }
+        else
+        {
+            obj = cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_VAR, obj_id);
+            if (obj)
+            {
+                CACE_LOG_INFO("VAR already exists");
+            }
+        }
+
+        if (obj)
+        {
+            var = obj->app_data.ptr;
+        }
+    }
+
+    if (var == NULL)
+    {
+        refda_amm_var_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_var_desc_t));
+        refda_amm_var_desc_init(objdata);
+
+        cace_amm_type_set_use_ref(&(objdata->val_type), ari_type);
+
+        int res = refda_eval_target(ctx->runctx, &(objdata->value), ari_init);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to evaluate VAR initial value");
+        }
+
+        m_string_t *var_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*var_name, (char *)obj_name->ptr);
+
+        refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*var_name), obj_id), objdata);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
+
+    cace_ari_t ari_result = CACE_ARI_INIT_NULL;
+    refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
