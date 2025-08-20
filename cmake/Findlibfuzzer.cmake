@@ -48,12 +48,14 @@ function(add_fuzz_test)
       -fsanitize=fuzzer,address
   )
 
+  # generated corpus files go in this binary directory
+  file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${BASENAME}-corpus")
   add_test(
     NAME ${BASENAME}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND
       "${CMAKE_CURRENT_BINARY_DIR}/${BASENAME}"
-      "${BASENAME}-corpus"
+      "${CMAKE_CURRENT_BINARY_DIR}/${BASENAME}-corpus"
+      "${CMAKE_CURRENT_SOURCE_DIR}/${BASENAME}-corpus"
       -runs=${FUZZTEST_RUNS_COUNT}
       -detect_leaks=1
       ${FUZZTEST_EXTRA_ARGS}
