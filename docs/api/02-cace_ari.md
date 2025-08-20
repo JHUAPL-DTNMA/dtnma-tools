@@ -32,36 +32,41 @@ usage: cace_ari [--help,-h]
 
 # Named Arguments
 
-`--log-level`::
-Possible choices: debug, info, warning, error, crit
-+
-The minimum log severity.
-+
-Default: `info`
+- `--log-level`
 
-`--inform`::
-Possible choices: auto, text, cbor, cborhex
-+
-The input encoding.
-+
-The choice of 'auto' uses the initial bytes of the first input to detect the scheme "ari:" to indicate if the input is 'text'.
-Otherwise, it is assumed to be 'cborhex' and processed accordingly.
-+
-Default: `auto`
+  Possible choices: debug, info, warning, error, crit
 
-`--source`::
-The input file name to read or "-" for stdin stream.
-+
-Default: `-`
+  The minimum log severity.
 
-`--outform`::
-Possible choices: auto, text, cbor, cborhex
-+
-The output encoding.
-+
-The choice of 'auto' assumes a 'text' output if the input is 'cbor' or 'cborhex' and assumes a 'cborhex' output if the input is 'text'.
+  Default: `info`
 
-`--dest`::
-The output file name to write or "-" for stdout stream.
-+
-Default: `-`
+- `--inform`
+
+  Possible choices: auto, text, cbor, cborhex
+
+  The input encoding.
+
+  The choice of 'auto' uses the initial bytes of the first input to detect the scheme "ari:" to indicate if the input is 'text'.
+  Otherwise, it is assumed to be 'cborhex' and processed accordingly.
+
+  Default: `auto`
+
+- `--source`
+
+  The input file name to read or "-" for stdin stream.
+
+  Default: `-`
+
+- `--outform`
+
+  Possible choices: auto, text, cbor, cborhex
+
+  The output encoding.
+
+  The choice of 'auto' assumes a 'text' output if the input is 'cbor' or 'cborhex' and assumes a 'cborhex' output if the input is 'text'.
+
+- `--dest`
+
+  The output file name to write or "-" for stdout stream.
+
+  Default: `-`
