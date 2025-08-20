@@ -985,14 +985,14 @@ void test_ari_text_decode_lit_typed_execset(const char *text, enum cace_ari_prim
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE("ari:/RPTSET/n=null;r=725943845;", CACE_ARI_PRIM_NULL, 0)
+TEST_CASE("ari:/RPTSET/n=null;r=725943845;()", CACE_ARI_PRIM_NULL, 0)
 TEST_CASE("ari:/RPTSET/n=1234;r=725943845;(t=0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=725943845;(t=0.0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845;(t=/TD/0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845.000;(t=/TD/0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE(
-    "ari:/RPTSET/n=h'6869';r=/TP/725943845;(t=/TD/0;s=//example/test/CTRL/hi;())(t=/TD/1;s=//example/test/CTRL/eh;())",
+    "ari:/RPTSET/n=h'6869';r=/TP/725943845;(t=/TD/0;s=//example/test/CTRL/hi;(),t=/TD/1;s=//example/test/CTRL/eh;())",
     CACE_ARI_PRIM_BSTR, 2)
 void test_ari_text_decode_lit_typed_rptset(const char *text, enum cace_ari_prim_type_e expect_n, size_t expect_count)
 {
