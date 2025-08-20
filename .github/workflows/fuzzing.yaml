@@ -93,7 +93,9 @@ jobs:
       - name: Test
         run: ./build.sh check
       - name: Report corpus
-        run: for FN in $(find test/*cbor*corpus -type f); do echo $FN; cborseq2diag.rb <$FN || true; done
+        run: |
+          for FN in $(find build/default/test/cace/*cbor*corpus -type f); do echo $FN; cborseq2diag.rb <$FN || true; done
+          for FN in $(find build/default/test/cace/*uri*corpus -type f); do echo $FN; cat $FN; echo; done
       - name: Collect coverage
         run: ./build.sh coverage
       - name: Archive coverage
