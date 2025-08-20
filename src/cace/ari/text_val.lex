@@ -221,6 +221,7 @@ DECDIG [0-9]
             string_clear(clean);
             if (ret)
             {
+                cace_data_deinit(&data);
                 cace_ari_text_val_error(yyscanner, yyextra, "base16 failed to decode");
                 return YYerror;
             }
@@ -234,6 +235,7 @@ DECDIG [0-9]
             string_clear(clean);
             if (ret)
             {
+                cace_data_deinit(&data);
                 cace_ari_text_val_error(yyscanner, yyextra, "base64 failed to decode");
                 return YYerror;
             }
