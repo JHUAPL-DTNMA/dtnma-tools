@@ -307,7 +307,7 @@ static int cace_ari_text_encode_rptset(cace_ari_text_enc_state_t *state, const c
 
     string_push_back(state->out, '(');
 
-    int retval = 0;
+    int  retval = 0;
     bool sep    = false;
 
     cace_ari_report_list_it_t rpt_it;
@@ -316,7 +316,7 @@ static int cace_ari_text_encode_rptset(cace_ari_text_enc_state_t *state, const c
     {
         const cace_ari_report_t *rpt = cace_ari_report_list_cref(rpt_it);
 
-	if (sep)
+        if (sep)
         {
             string_push_back(state->out, ',');
         }
