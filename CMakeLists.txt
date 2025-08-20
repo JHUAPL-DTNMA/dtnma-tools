@@ -163,7 +163,7 @@ if(BUILD_COVERAGE)
     EXCLUDE ${CACE_EXCLUDES}
   )
 
-  set(REFDA_EXCLUDES "src/cace" "src/refdm" "src/ion-app-proxy")
+  set(REFDA_EXCLUDES "src/cace" "src/refdm" "src/ion-app-proxy" "${CMAKE_BUILD_DIR}/src/cace")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-refda-xml
     EXCLUDE ${REFDA_EXCLUDES}
@@ -173,7 +173,8 @@ if(BUILD_COVERAGE)
     EXCLUDE ${REFDA_EXCLUDES}
   )
 
-  set(REFDM_EXCLUDES "src/cace" "src/refda")
+  # include ion-app-proxy with refdm
+  set(REFDM_EXCLUDES "src/cace" "src/refda" "${CMAKE_BUILD_DIR}/src/cace")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-refdm-xml
     EXCLUDE ${REFDM_EXCLUDES}
