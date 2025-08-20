@@ -29,7 +29,7 @@
 extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 {
     cace_openlog();
-    cace_log_set_least_severity(LOG_DEBUG);
+    cace_log_set_least_severity(LOG_CRIT);
     return 0;
 }
 
