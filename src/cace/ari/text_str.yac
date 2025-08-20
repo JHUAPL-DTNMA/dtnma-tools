@@ -75,6 +75,7 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 }
 
 %token T_ARI_PREFIX
+%token T_SLASH
 %token T_COMMA
 %token T_LPAREN
 %token T_RPAREN
@@ -103,9 +104,10 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 %token <idseg> T_IDSEG
 %token <text> T_VALSEG
 
-%type <objref> ssp-objref
+%type <objref> ssp-ref
 %type <objpath> objpath
 %type <params> params
+%type <objpath> nspath
 
 %type <ari> ari
 %type <ari> ssp
@@ -133,7 +135,7 @@ ari:
 ;
 
 ssp:
-    ssp-objref { *cace_ari_init_objref(&$$) = $1; }
+    ssp-ref { *cace_ari_init_objref(&$$) = $1; }
     | ssp-literal { *cace_ari_init_lit(&$$) = $1; }
 ;
 
@@ -490,9 +492,11 @@ report:
     }
 ;
 
-ssp-objref:
+ssp-ref:
     objpath { $$.objpath = $1; $$.params.state = CACE_ARI_PARAMS_NONE; }
     | objpath params { $$.objpath = $1; $$.params = $2; }
+    | nspath { $$.objpath = $1; $$.params.state = CACE_ARI_PARAMS_NONE; }
+    | nspath T_SLASH { $$.objpath = $1; $$.params.state = CACE_ARI_PARAMS_NONE; }
 ;
 
 objpath:
@@ -500,14 +504,14 @@ objpath:
         // absolute object reference
         cace_ari_objpath_init(&$$);
         $$.org_id = $2;
+        $$.type_id = $4;
+        $$.obj_id = $5;
         if (cace_model_split_rev(&$$, &$3))
         {
             cace_ari_objpath_deinit(&$$);
             cace_ari_text_str_error(scanner, input, "Invalid model revision");
             YYERROR;
         }
-        $$.type_id = $4;
-        $$.obj_id = $5;
         if (cace_validate_objpath(&$$))
         {
             cace_ari_objpath_deinit(&$$);
@@ -518,14 +522,14 @@ objpath:
     | T_REF_REL_DOTDOT T_IDSEG T_IDSEG T_IDSEG {
         // org-relative reference
         cace_ari_objpath_init(&$$);
+        $$.type_id = $3;
+        $$.obj_id = $4;
         if (cace_model_split_rev(&$$, &$2))
         {
             cace_ari_objpath_deinit(&$$);
             cace_ari_text_str_error(scanner, input, "Invalid model revision");
             YYERROR;
         }
-        $$.type_id = $3;
-        $$.obj_id = $4;
         if (cace_validate_objpath(&$$))
         {
             cace_ari_objpath_deinit(&$$);
@@ -545,7 +549,10 @@ objpath:
             YYERROR;
         }
     }
-    | T_REF_ABS T_IDSEG T_IDSEG {
+;
+
+nspath:
+    T_REF_ABS T_IDSEG T_IDSEG {
         // absolute namespace
         cace_ari_objpath_init(&$$);
         $$.org_id = $2;
@@ -567,6 +574,10 @@ objpath:
             YYERROR;
         }
         cace_validate_objpath(&$$);
+    }
+    | T_REF_REL_DOT {
+        // model-relative namespace
+        cace_ari_objpath_init(&$$);
     }
 ;
 

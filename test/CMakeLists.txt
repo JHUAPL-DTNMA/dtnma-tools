@@ -27,4 +27,6 @@ include_directories(
 
 add_subdirectory(util)
 add_subdirectory(cace)
-add_subdirectory(refda)
+if(BUILD_AGENT)
+  add_subdirectory(refda)
+endif(BUILD_AGENT)

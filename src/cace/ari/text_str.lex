@@ -57,10 +57,12 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 }
 
 <ARI_OBJREF>"/" {
-    // Ignore trailing slash
+    // Possible trailing slash
+    return T_SLASH;
 }
 
 <ARI_OBJREF>\/{VALSEG} {
+    //fprintf(stderr, "VALSEG:%s\n", yytext);
     // Match one path segment including leading slash
     char *curs = yytext + 1;
 
