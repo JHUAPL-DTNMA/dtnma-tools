@@ -290,7 +290,7 @@ int refda_agent_start(refda_agent_t *agent)
      * pop from the inter-thread queues. This is fully implemented for overwriting the ingress system using a call to
      * refda_ingress_push_move from a "external" thread.
      */
-    size_t       threadCount = 0;
+    size_t            threadCount = 0;
     cace_threadinfo_t threadinfo[3];
     if (agent->mif.recv)
     {
