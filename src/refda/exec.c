@@ -271,29 +271,19 @@ int refda_exec_waiting(refda_agent_t *agent)
     }
 
     refda_exec_seq_list_it_t seq_it;
-    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);)
+    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it); refda_exec_seq_list_next(seq_it))
     {
         refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
 
-        if (refda_exec_item_list_empty_p(seq->items))
+        // Skip completed or still waiting exec items
+        //
+        // Do not remove completed item now because it will relocate seq in memory and cause
+        // problems with pointers within items. We clean up after iterating.
+        if (!refda_exec_item_list_empty_p(seq->items) && atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) != REFDA_EXEC_WAITING)
         {
-            // Skip completed exec item
-            //
-            // Do not remove now because it will relocate seq in memory and cause
-            // problems with pointers within items. We clean up after iterating.
-            refda_exec_seq_list_next(seq_it);
-            continue;
+            CACE_LOG_DEBUG("pushing to ready");
+            refda_exec_seq_ptr_list_push_back(ready, seq);
         }
-
-        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == REFDA_EXEC_WAITING)
-        {
-            // still waiting
-            continue;
-        }
-
-        CACE_LOG_DEBUG("pushing to ready");
-        refda_exec_seq_ptr_list_push_back(ready, seq);
-        refda_exec_seq_list_next(seq_it);
     }
 
     // Safely clear any completed sequences from the front of the queue
