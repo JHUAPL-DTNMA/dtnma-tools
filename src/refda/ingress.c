@@ -89,3 +89,23 @@ void *refda_ingress_worker(void *arg)
     CACE_LOG_INFO("Worker stopped");
     return NULL;
 }
+
+void refda_ingress_push_move(refda_agent_t *agent, const cace_amm_msg_if_metadata_t *meta, cace_ari_t *ari)
+{
+    if (cace_ari_get_execset(ari) == NULL)
+    {
+        CACE_LOG_ERR("Ignoring input ARI that is not an EXECSET");
+        return;
+    }
+
+    refda_msgdata_t execItem;
+    refda_msgdata_init(&execItem);
+    cace_ari_set_copy(&execItem.ident, &meta->src);
+    cace_ari_set_move(&execItem.value, ari);
+
+    refda_msgdata_queue_push_move(agent->execs, &execItem);
+    sem_post(&(agent->execs_sem));
+
+    atomic_fetch_add(&agent->instr.num_execset_recv, 1);
+    CACE_LOG_DEBUG("Pushed an item into the exec thread");
+}
