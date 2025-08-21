@@ -5,9 +5,10 @@
 find_path(
   TIMESPEC_INCLUDE_DIR
   "timespec.h"
+  HINTS "${CMAKE_CURRENT_LIST_DIR}/../deps/timespec"
   REQUIRED
 )
-find_library(TIMESPEC_LIB NAMES timespec REQUIRED)
+find_library(TIMESPEC_LIB NAMES timespec HINTS "${CMAKE_CURRENT_LIST_DIR}/../deps/timespec" REQUIRED)
 
 add_library(timespec::timespec SHARED IMPORTED)
 target_include_directories(timespec::timespec INTERFACE ${TIMESPEC_INCLUDE_DIR})

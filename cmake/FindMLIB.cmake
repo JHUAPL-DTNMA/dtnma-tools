@@ -5,6 +5,7 @@ find_path(
   MLIB_INCLUDE_DIR
   "m-core.h"
   PATH_SUFFIXES "m-lib"
+  HINTS "${CMAKE_CURRENT_LIST_DIR}/../deps/mlib"
   REQUIRED
 )
 add_library(MLIB::mlib INTERFACE IMPORTED)

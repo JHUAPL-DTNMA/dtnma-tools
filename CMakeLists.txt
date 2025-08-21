@@ -35,9 +35,10 @@ option(REFDM_UI_CLI "Enable text UI CLI for refdm" OFF)
 option(BUILD_TESTING "Enable test fixtures and libraries" OFF)
 option(TEST_MEMCHECK "Enable test runtime memory checking" OFF)
 option(TEST_COVERAGE "Enable test runtime coverage logging" OFF)
+option(IS_SUBDIRECTORY "Is a subidrectory of another project. Do not build tests." OFF)
 
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if(NOT PROJECT_VERSION)
   # Ingest the git tag as project version name
@@ -121,7 +122,7 @@ check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
 check_symbol_exists(getopt_long "getopt.h" HAVE_GETOPT_LONG)
 
 
-if(BUILD_TESTING)
+if(BUILD_TESTING AND NOT IS_SUBDIRECTORY)
   if(TEST_MEMCHECK)
     find_program(MEMCHECK_CMD valgrind)
     message(STATUS "Using valgrind memcheck for tests: ${MEMCHECK_CMD}")
@@ -174,14 +175,44 @@ if(BUILD_TESTING)
     --output-junit testresults.xml
     --output-on-failure
   )
-endif(BUILD_TESTING)
+endif(BUILD_TESTING AND NOT IS_SUBDIRECTORY)
 
 include(FindPkgConfig)
 
 # Libaries in deps but built separately
-find_package(QCBOR REQUIRED)
+add_subdirectory(deps/QCBOR)
+
+# Redefine QCBOR headers to use relative paths for inclusion in parent projects
+set(QCBOR_PUBLIC_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_common.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_private.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_encode.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_decode.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_spiffy_decode.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/UsefulBuf.h
+)
+set_target_properties(qcbor PROPERTIES
+    PUBLIC_HEADER "${QCBOR_PUBLIC_HEADERS}"
+)
+
+# Redefine QCBOR headers to use relative paths for inclusion in parent projects
+set(QCBOR_PUBLIC_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_common.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_private.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_encode.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_decode.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/qcbor_spiffy_decode.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/QCBOR/inc/qcbor/UsefulBuf.h
+)
+set_target_properties(qcbor PROPERTIES
+    PUBLIC_HEADER "${QCBOR_PUBLIC_HEADERS}"
+)
+
 find_package(MLIB REQUIRED)
-find_package(timespec REQUIRED)
+add_subdirectory(deps) # for timespec
+
 # Optional dependencies
 pkg_search_module(PCRE libpcre2-8 IMPORTED_TARGET)
 message(STATUS "Found PCRE version ${PCRE_VERSION}")
@@ -202,19 +233,19 @@ endif(ARI_TEXT_PARSE)
 if(BUILD_MANAGER)
     # All these are optional
     pkg_search_module(MYSQLCLIENT mysqlclient IMPORTED_TARGET)
-    message(STATUS "Found MySQLClient version ${MYSQLCLIENT_VERSION}")
+    # message(STATUS "Found MySQLClient version ${MYSQLCLIENT_VERSION}")
     find_package(PostgreSQL)
-    message(STATUS "Found PostgreSQL version ${PostgreSQL_VERSION}")
+    # message(STATUS "Found PostgreSQL version ${PostgreSQL_VERSION}")
     find_package(civetweb)
-    message(STATUS "Found civetweb version ${civetweb_VERSION}")
+    # message(STATUS "Found civetweb version ${civetweb_VERSION}")
     find_package(cJSON)
 endif(BUILD_MANAGER)
 
 add_subdirectory(src)
 
-if(BUILD_TESTING)
+if(BUILD_TESTING AND NOT IS_SUBDIRECTORY)
     add_subdirectory(test)
-endif(BUILD_TESTING)
+endif(BUILD_TESTING AND NOT IS_SUBDIRECTORY)
 
 if(BUILD_DOCS_API OR BUILD_DOCS_MAN)
     add_subdirectory(docs)

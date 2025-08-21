@@ -12,18 +12,10 @@ endif()
 set(RUBY_BIN ${RUBY_BIN} PARENT_SCOPE)
 
 # Test runner source generator
-find_file(UNITY_GENERATOR_BIN "generate_test_runner.rb" 
-  PATHS "${UNITY_ROOT}/auto" 
-  NO_DEFAULT_PATH
-  REQUIRED
-)
+set(UNITY_GENERATOR_BIN "${UNITY_ROOT}/auto/generate_test_runner.rb")
 set(UNITY_GENERATOR_BIN ${UNITY_GENERATOR_BIN} PARENT_SCOPE)
 
-find_file(UNITY_PARSER_BIN "parse_output.rb" 
-  PATHS "${UNITY_ROOT}/auto" 
-  NO_DEFAULT_PATH
-  REQUIRED
-)
+set(UNITY_PARSER_BIN "${UNITY_ROOT}/auto/parse_output.rb")
 
 # Compile time package
 find_package(unity REQUIRED)

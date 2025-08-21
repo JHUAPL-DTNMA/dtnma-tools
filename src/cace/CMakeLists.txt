@@ -17,9 +17,9 @@ limitations under the License.
 ]]
 
 # AMM and ARI handling library
-configure_file("config.h.in" "config.h")
+configure_file("config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/cace/config.h")
 set(HFILES
-    "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/cace/config.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/cace_data.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/util/defs.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/util/logging.h"
@@ -130,9 +130,14 @@ target_include_directories(
   cace PUBLIC
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
+
+get_filename_component(CACE_BINARY_PARENT "${CMAKE_CURRENT_BINARY_DIR}" DIRECTORY)
+
+target_include_directories(cace PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+
 target_link_libraries(cace PUBLIC MLIB::mlib)
 target_link_libraries(cace PUBLIC qcbor)
-target_link_libraries(cace PUBLIC timespec::timespec)
+target_link_libraries(cace PUBLIC timespec)
 target_link_libraries(cace PUBLIC m)
 if(PCRE_FOUND)
     target_link_libraries(cace PUBLIC PkgConfig::PCRE)
@@ -158,7 +163,7 @@ install(
     FILES_MATCHING PATTERN "*.h"
 )
 install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/cace/config.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/cace"
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
 )
