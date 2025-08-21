@@ -17,6 +17,7 @@ Birrane
 bitwise
 BLS
 bool
+boolean
 Bormann
 bp
 BPA
@@ -130,6 +131,7 @@ malloc
 MALLOC
 Masinter
 memset
+mif
 msg
 msgdata
 mutex
@@ -194,6 +196,8 @@ rptset
 RPTSET
 rptt
 RPTT
+runtime
+Runtime
 rx
 sbr
 SBR
