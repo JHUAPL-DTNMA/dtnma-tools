@@ -17,6 +17,7 @@ Birrane
 bitwise
 BLS
 bool
+boolean
 Bormann
 bp
 BPA
@@ -194,6 +195,8 @@ rptset
 RPTSET
 rptt
 RPTT
+runtime
+Runtime
 rx
 sbr
 SBR
