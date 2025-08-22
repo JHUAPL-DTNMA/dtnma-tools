@@ -1,0 +1,15 @@
+ari:undefined
+ari:true
+ari:1.1
+ari:1.1e+06
+ari:0x1.4p+3
+ari:10
+ari:0xA
+ari:0b1010
+ari:-0x10
+ari:'bytes'
+ari:h'6279746573'
+ari:b64'Ynl0ZXM'
+ari:%22text%22
+ari:%22hi%5Cu1234%22
+ari:%22hi%5CuD834%5CuDD1E%22

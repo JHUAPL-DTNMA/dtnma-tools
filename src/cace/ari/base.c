@@ -129,6 +129,7 @@ int cace_ari_deinit(cace_ari_t *ari)
 {
     CHKERR1(ari);
     cace_ari_deinit_parts(ari);
+    // reset is a convenience for postcondition
     cace_ari_state_reset(ari);
     return 0;
 }

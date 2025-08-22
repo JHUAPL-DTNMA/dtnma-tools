@@ -131,9 +131,8 @@ target_include_directories(
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
 target_link_libraries(cace PUBLIC MLIB::mlib)
-target_link_libraries(cace PUBLIC qcbor)
+target_link_libraries(cace PUBLIC QCBOR::qcbor)
 target_link_libraries(cace PUBLIC timespec::timespec)
-target_link_libraries(cace PUBLIC m)
 if(PCRE_FOUND)
     target_link_libraries(cace PUBLIC PkgConfig::PCRE)
 endif(PCRE_FOUND)
@@ -141,15 +140,15 @@ if(ION_FOUND)
     target_link_libraries(cace PUBLIC ION::BP)
 endif(ION_FOUND)
 
-# Stand-alone ARI manipulation tool
-add_executable(cace_ari)
-target_sources(cace_ari PRIVATE cace_ari.c)
-target_link_libraries(cace_ari PUBLIC cace)
-
-
-include(GNUInstallDirs)
 install(
-    TARGETS cace cace_ari
+    TARGETS cace
+    RUNTIME
+        COMPONENT runtime
+    LIBRARY
+        COMPONENT runtime
+        NAMELINK_COMPONENT devel
+    ARCHIVE
+        COMPONENT devel
 )
 install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -162,3 +161,15 @@ install(
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/cace"
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
 )
+
+if(NOT BUILD_FUZZING)
+    # Stand-alone ARI manipulation tool
+    add_executable(cace_ari)
+    target_sources(cace_ari PRIVATE cace_ari.c)
+    target_link_libraries(cace_ari PUBLIC cace)
+    install(
+        TARGETS cace_ari
+        RUNTIME
+            COMPONENT runtime
+    )
+endif(NOT BUILD_FUZZING)
