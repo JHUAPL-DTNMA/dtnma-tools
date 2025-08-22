@@ -131,7 +131,6 @@ malloc
 MALLOC
 Masinter
 memset
-mif
 msg
 msgdata
 mutex

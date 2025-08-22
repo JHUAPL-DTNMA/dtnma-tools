@@ -284,7 +284,7 @@ int refda_agent_start(refda_agent_t *agent)
     CHKERR1(agent);
     CACE_LOG_INFO("Work threads starting...");
 
-    /**
+    /*
      * This following code only runs the ingress or egress threads if mif.recv and/or mif.send are defined.
      * This allows for short-cutting the ingress or egress threads and workers such that you can directly push into or
      * pop from the inter-thread queues. This is fully implemented for overwriting the ingress system using a call to

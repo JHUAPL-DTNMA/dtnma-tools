@@ -34,7 +34,7 @@ void *refda_ingress_worker(void *arg);
 
 /**
  * API for external thread to push ARIs into exec thread. This can be used instead of
- * the refda_ingress_worker. To do this, set the agent's `mif.recv` to NULL to prevent
+ * the refda_ingress_worker. To do this, set the agent's cace_amm_msg_if_t.recv to NULL to prevent
  * starting the ingress thread.
  *
  * @param agent a pointer to the agent
