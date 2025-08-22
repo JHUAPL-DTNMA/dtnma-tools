@@ -833,7 +833,6 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed(refda_edd_prod_ctx_
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
@@ -881,7 +880,6 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(refda_edd_prod_ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
@@ -903,7 +901,6 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t 
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
@@ -1570,7 +1567,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
@@ -1597,7 +1593,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
@@ -2126,7 +2121,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
@@ -2150,7 +2144,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_const BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_const BODY
@@ -2178,7 +2171,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
@@ -2202,7 +2194,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_var BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_var BODY
@@ -3560,7 +3551,6 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_filter BODY
      * +-------------------------------------------------------------------------+
      */
-    (void)ctx;
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_filter BODY
