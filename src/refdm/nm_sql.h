@@ -49,6 +49,27 @@ extern "C" {
  * +--------------------------------------------------------------------------+
  */
 
+// TODO: Consider refactoring these return code constants and moving them to a common header file
+// Constants relating to return codes.
+
+/** Return code that indicates normal completion. */
+#define RET_PASS 0
+
+/** Return code that indicates the input resolves to an undefined result. */
+#define RET_FAIL_UNDEFINED 1
+
+/** Return code that indicates the input resolves to an unexpected/abnormal state. */
+#define RET_FAIL_UNEXPECTED 2
+
+/** Return code that indicates that bad input argumetst were passed. */
+#define RET_FAIL_BAD_ARGS 3
+
+/** Return code that there was a database (generic) error. */
+#define RET_FAIL_DATABASE 10
+
+/** Return code that there was a database connection error. */
+#define RET_FAIL_DATABASE_CONNECTION 11
+
 /*
  * Constants relating to how long to try and reconnect to the DB when
  * a connection has failed.
@@ -103,7 +124,26 @@ uint32_t       refdm_db_insert_agent(const m_string_t eid);
 uint32_t       refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent);
 refdm_agent_t *refdm_db_fetch_agent(int32_t id);
 int32_t        refdm_db_fetch_agent_idx(const string_t *sender);
-string_t      *db_fetch_ari_col(int idx);
+
+/**
+ * Runs a query on the database and retrieves the number of rptsets.
+ *
+ * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ *
+ * \param[out] count - Argument used to return the number of rptsets.
+ */
+int refdm_db_fetch_rptset_count(size_t *count);
+
+/**
+ * Runs a query on the database and retrieves the list of rptsets.
+ *
+ * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ *
+ * \param[out] rptsets - The list used to hold the retrieved rptsets.
+ */
+int refdm_db_fetch_rptset_list(cace_ari_list_t *rptsets);
+
+string_t *db_fetch_ari_col(int idx);
 
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.
@@ -121,4 +161,4 @@ void refdm_db_log_msg(const char *filename, int lineno, const char *funcname, in
 
 #endif /* NM_MGR_SQL_H */
 
-#endif // HAVE_MYSQL
+#endif // HAVE_MYSQL || HAVE_POSTGRESQL
