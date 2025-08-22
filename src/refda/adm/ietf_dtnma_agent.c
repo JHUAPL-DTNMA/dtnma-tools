@@ -1823,8 +1823,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
         return;
     }
 
-    refda_agent_t *agent = ctx->runctx->agent;
-
     // ignore return code because failure cannot be handled here
     if (refda_reporting_target(ctx->runctx, template))
     {
