@@ -28,6 +28,6 @@ add_library(test_util)
 target_sources(test_util PRIVATE ${HFILES})
 target_sources(test_util PRIVATE ${CFILES})
 target_include_directories(
-  test_util PUBLIC
+  test_util PUBLIC ${CMAKE_SOURCE_DIR}/external/dtnma-agent/dtnma-tools/src
 )
 target_link_libraries(test_util PUBLIC cace)

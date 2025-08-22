@@ -18,21 +18,21 @@ limitations under the License.
 
 # NM Manager library without concrete messaging interface
 set(CIVETWEB_FOUND ${civetweb_FOUND})
-configure_file("config.h.in" "config.h")
+configure_file("config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 set(HFILES
   ${CMAKE_CURRENT_BINARY_DIR}/config.h
-  agents.h
-  ingress.h
-  instr.h
-  nm_sql.h
-  mgr.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/agents.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/ingress.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/instr.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/nm_sql.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mgr.h
 )
 set(CFILES
-  agents.c
-  ingress.c
-  instr.c
-  nm_sql.c
-  mgr.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/agents.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/ingress.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/instr.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/nm_sql.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mgr.c
 )
 if(REFDM_UI_CLI)
   list(APPEND HFILES
@@ -47,14 +47,14 @@ if(REFDM_UI_CLI)
   )
 endif(REFDM_UI_CLI)
 if(civetweb_FOUND)
-  list(APPEND HFILES nm_rest.h)
-  list(APPEND CFILES nm_rest.c)
+  list(APPEND HFILES ${CMAKE_CURRENT_SOURCE_DIR}/nm_rest.h)
+  list(APPEND CFILES ${CMAKE_CURRENT_SOURCE_DIR}/nm_rest.c)
 endif(civetweb_FOUND)
 
 
 add_library(refdm)
 
-target_sources(refdm PRIVATE ${HFILES})
+target_sources(refdm PUBLIC ${HFILES})
 target_sources(refdm PRIVATE ${CFILES})
 target_include_directories(
   refdm PUBLIC
