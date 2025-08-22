@@ -29,8 +29,6 @@
 #include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"
 #include "refda/oper_eval_ctx.h"
-#include "refda/exec.h"
-#include "refda/reporting.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
@@ -38,6 +36,8 @@
 
 /*   START CUSTOM INCLUDES HERE  */
 #include "refda/eval.h"
+#include "refda/exec.h"
+#include "refda/reporting.h"
 #include "cace/amm/numeric.h"
 #include "cace/ari/text_util.h"
 #include <timespec.h>
