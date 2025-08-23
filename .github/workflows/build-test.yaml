@@ -147,7 +147,7 @@ jobs:
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               binutils \
               valgrind xmlstarlet \
-              python3-pip python3-wheel python3-venv python3-devel
+              python3-pip python3-wheel python3-devel
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4

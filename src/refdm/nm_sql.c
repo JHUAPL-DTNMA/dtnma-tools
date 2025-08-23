@@ -363,7 +363,7 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
     dbprep_bind_param_str(2, fun);
     dbprep_bind_param_str(3, file);
     dbprep_bind_param_int(4, line);
-    ;
+
 #ifdef HAVE_MYSQL
     DB_CHKVOID(mysql_stmt_bind_param(stmt, bind_param));
     DB_CHKVOID(mysql_stmt_execute(stmt));
@@ -373,6 +373,8 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
     DB_CHKVOID(dbtest_result(PGRES_COMMAND_OK))
     PQclear(res);
 #endif // HAVE_POSTGRESQL
+
+    m_string_clear(msg);
 }
 
 /******************************************************************************
@@ -503,8 +505,8 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
             // RPTSET values
             queries[idx][ARI_RPTSET_INSERT] = db_mgr_sql_prepare(
-                idx, "call sp__insert_rptset($1::bigint, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::varchar)",
-                "ARI_RPTSET_INSERT", 6, NULL);
+                idx, "call sp__insert_rptset($1::bytea, $2::varchar, $3::varchar, $4::bytea, $5::varchar)",
+                "ARI_RPTSET_INSERT", 5, NULL);
             // correlator_nonce, reference_time, entries , agent_id, ari_rptt_id
 
             queries[idx][REFDM_DB_LOG_MSG] =
@@ -518,8 +520,8 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
             // EXECSET values
             queries[idx][ARI_EXECSET_INSERT] = db_mgr_sql_prepare(
-                idx, "call SP__insert_execset($1::bigint, $2::bytea, $3::varchar, $4::varchar, $5::bytea, $6::int4)",
-                "SP__insert_execset", 6, NULL);
+                idx, "call SP__insert_execset($1::bytea, $2::varchar, $3::varchar, $4::bytea, $5::int4)",
+                "SP__insert_execset", 5, NULL);
 
 #endif // HAVE_POSTGRESQL
         }
