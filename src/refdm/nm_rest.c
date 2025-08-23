@@ -526,7 +526,7 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     is_remote_rptsets = true;
 #else  // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
     // Set the prt_rptsets to point to the local copy on the agent
-    ptr_rptsets = &agent->rptsets;
+    ptr_rptsets       = &agent->rptsets;
     is_remote_rptsets = false;
 #endif // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
 
@@ -612,7 +612,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     is_remote_rptsets = true;
 #else  // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
     // Set the prt_rptsets to point to the local copy on the agent
-    ptr_rptsets = &agent->rptsets;
+    ptr_rptsets       = &agent->rptsets;
     is_remote_rptsets = false;
 #endif // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
 

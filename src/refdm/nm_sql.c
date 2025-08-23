@@ -540,7 +540,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
      *  07/12/13  S. Jacobs      Initial implementation,
      *****************************************************************************/
 
-    void refdm_db_mgt_close()
+    void refdm_db_mgt_close(void)
     {
         CACE_LOG_INFO("refdm_db_mgt_close", "()");
 
@@ -723,8 +723,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
     int32_t refdm_db_mgt_query_fetch(MYSQL_RES * *res, char *format, ...)
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-        int32_t
-        refdm_db_mgt_query_fetch(PGresult * *res, char *format, ...)
+        int32_t refdm_db_mgt_query_fetch(PGresult * *res, char *format, ...)
 #endif // HAVE_POSTGRESQL
     {
         char   query[1024];
@@ -897,7 +896,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
      * associated with any failure. When the return code is non-zero, if the pointed-to pointer is non-null
      * it must be freed using CACE_FREE().
      */
-    int transform_cbor_str_to_cace_data(cace_ari_t * ari_item, char *cbor_str, char **errm)
+    static int transform_cbor_str_to_cace_data(cace_ari_t * ari_item, char *cbor_str, char **errm)
     {
         // Check input string for leading '\x' chars
         char *chexstr    = cbor_str;
@@ -947,7 +946,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
      * <p>
      * This should not be used in production code.
      */
-    void debugPostgresSqlResult(PGresult * res, int max_row_cnt)
+    static void debugPostgresSqlResult(PGresult * res, int max_row_cnt)
     {
         fprintf(stderr, "\n\n >>>>>>>>>>>>>>----------------- DEBUG PGresult: -----------------<<<<<<<<<<<<<< \n");
         fprintf(stderr, "...PQstatus: %s \n\n", PQresStatus(PQresultStatus(res)));

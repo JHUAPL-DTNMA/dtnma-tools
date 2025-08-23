@@ -107,7 +107,7 @@ int32_t db_add_agent(const cace_data_t *agent_eid);
 uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log);
 uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms);
 
-void refdm_db_mgt_close();
+void refdm_db_mgt_close(void);
 void refdm__db_mgt_close_conn(size_t i);
 int  refdm_db_mgt_connected(size_t i);
 #ifdef HAVE_MYSQL
