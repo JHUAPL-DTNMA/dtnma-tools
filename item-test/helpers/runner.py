@@ -180,6 +180,7 @@ class CmdRunner:
             LOGGER.debug('Got stdout: %s', line.strip())
             self._stdout_lines.put(line)
         LOGGER.debug('Stopping stdout thread')
+        stream.close()
 
     def _read_stderr(self, stream):
         LOGGER.debug('Starting stderr thread')
@@ -187,6 +188,7 @@ class CmdRunner:
             LOGGER.debug('Got stderr: %s', line.strip())
             self._stderr_lines.put(line)
         LOGGER.debug('Stopping stderr thread')
+        stream.close()
 
     def _write_stdin(self, stream):
         LOGGER.debug('Starting stdin thread')
@@ -198,6 +200,7 @@ class CmdRunner:
             stream.write(text)
             stream.flush()
         LOGGER.debug('Stopping stdin thread')
+        stream.close()
 
     def wait_for_line(self, timeout:float=5) -> str:
         ''' Wait for any received stdout line.
@@ -246,3 +249,8 @@ class CmdRunner:
             at the endd.
         '''
         self._stdin_lines.put(text)
+
+    def close_stdin(self):
+        ''' Flush and close the stdin stream.
+        '''
+        self._stdin_lines.put(None)

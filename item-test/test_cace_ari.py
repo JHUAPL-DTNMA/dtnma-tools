@@ -57,7 +57,8 @@ class TestCaceAri(unittest.TestCase):
 
     def tearDown(self):
         if self._runner:
-            self._runner.stop()
+            self._runner.close_stdin()
+            self.assertEqual(0, self._runner.wait())
             self._runner = None
 
     def _start(self, *cmd_args: Tuple[str]) -> CmdRunner:
@@ -94,7 +95,8 @@ class TestCaceAri(unittest.TestCase):
 
         LOGGER.info('Sending SIGINT')
         runner.proc.send_signal(signal.SIGINT)
-        self.assertEqual(-2, runner.proc.wait(timeout=5))
+        self.assertEqual(-2, self._runner.wait())
+        self._runner = None
 
     def test_start_close(self):
         runner = self._start()

@@ -1128,27 +1128,55 @@ void test_ari_text_decode_objref_invalid(const char *intext)
     TEST_MESSAGE(errm);
 }
 
-TEST_CASE("ari://65535/adm")
-TEST_CASE("ari://65535/adm/")
-TEST_CASE("ari://65535/18")
-TEST_CASE("ari://65535/18/")
-TEST_CASE("ari://65535/65536/")
-TEST_CASE("ari://65535/-20/")
-TEST_CASE("ari://example/adm-a@2024-06-25/")
-TEST_CASE("ari://example/adm-a/")
-TEST_CASE("ari://example/!odm-b/")
-void test_ari_text_decode_nsref(const char *text)
+TEST_CASE("ari://65535/adm", CACE_ARI_IDSEG_INT, CACE_ARI_IDSEG_TEXT)
+TEST_CASE("ari://65535/adm/", CACE_ARI_IDSEG_INT, CACE_ARI_IDSEG_TEXT)
+TEST_CASE("ari://65535/18", CACE_ARI_IDSEG_INT, CACE_ARI_IDSEG_INT)
+TEST_CASE("ari://65535/18/", CACE_ARI_IDSEG_INT, CACE_ARI_IDSEG_INT)
+TEST_CASE("ari://65535/65536/", CACE_ARI_IDSEG_INT, CACE_ARI_IDSEG_INT)
+TEST_CASE("ari://65535/-20/", CACE_ARI_IDSEG_INT, CACE_ARI_IDSEG_INT)
+TEST_CASE("ari://example/adm-a@2024-06-25/", CACE_ARI_IDSEG_TEXT, CACE_ARI_IDSEG_TEXT)
+TEST_CASE("ari://example/adm-a/", CACE_ARI_IDSEG_TEXT, CACE_ARI_IDSEG_TEXT)
+TEST_CASE("ari://example/!odm-b/", CACE_ARI_IDSEG_TEXT, CACE_ARI_IDSEG_TEXT)
+TEST_CASE("../adm", CACE_ARI_IDSEG_NULL, CACE_ARI_IDSEG_TEXT)
+TEST_CASE("../adm/", CACE_ARI_IDSEG_NULL, CACE_ARI_IDSEG_TEXT)
+TEST_CASE(".", CACE_ARI_IDSEG_NULL, CACE_ARI_IDSEG_NULL)
+TEST_CASE("./", CACE_ARI_IDSEG_NULL, CACE_ARI_IDSEG_NULL)
+void test_ari_text_decode_nsref(const char *text, int org_form, int model_form)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
     check_decode(&ari, text);
     TEST_ASSERT_TRUE(ari.is_ref);
     TEST_ASSERT_FALSE(ari.as_ref.objpath.has_ari_type);
-    TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.org_id.form);
-    TEST_ASSERT_NOT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.model_id.form);
+    TEST_ASSERT_EQUAL_INT(org_form, ari.as_ref.objpath.org_id.form);
+    TEST_ASSERT_EQUAL_INT(model_form, ari.as_ref.objpath.model_id.form);
     TEST_ASSERT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.type_id.form);
     TEST_ASSERT_EQUAL_INT(CACE_ARI_IDSEG_NULL, ari.as_ref.objpath.obj_id.form);
 
     cace_ari_deinit(&ari);
+}
+
+TEST_CASE("ari://")
+TEST_CASE("ari:///")
+TEST_CASE("ari://example//")
+TEST_CASE("ari://example/test//")
+TEST_CASE("ari://example//test/")
+TEST_CASE("ari://example/test()")
+TEST_CASE("ari://example/test/()")
+TEST_CASE("..")
+TEST_CASE("../")
+TEST_CASE("..//")
+void test_ari_text_decode_nsref_invalid(const char *intext)
+{
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    string_t   inbuf;
+    string_init_set_str(inbuf, intext);
+    int ret = cace_ari_text_decode(&ari, inbuf, &errm);
+    string_clear(inbuf);
+    cace_ari_deinit(&ari);
+
+    TEST_ASSERT_NOT_EQUAL_INT(0, ret);
+    TEST_ASSERT_NOT_NULL_MESSAGE(errm, "decode failure must provide a message");
+    TEST_MESSAGE(errm);
 }
 
 TEST_CASE("ari:./CTRL/do_thing", CACE_ARI_TYPE_CTRL)
@@ -1345,6 +1373,7 @@ TEST_CASE("ari:/EXECSET/n=1;")
 TEST_CASE("ari:/EXECSET/n=1;n=2;()")
 TEST_CASE("ari:/EXECSET/n=-1234;(//example/test/CTRL/hi)")
 TEST_CASE("ari:/RPTSET/n=-1234;r=725943845;(t=0;s=//example/test/CTRL/hi;())")
+// relative cannot contain initial slashes
 TEST_CASE("ari://./object/hi")
 TEST_CASE("./object/hi")
 TEST_CASE("ari://example/test@1234/") // bad revision

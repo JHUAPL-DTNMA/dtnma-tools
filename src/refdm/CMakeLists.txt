@@ -88,8 +88,16 @@ if(civetweb_FOUND)
 endif(civetweb_FOUND)
 
 
-include(GNUInstallDirs)
-install(TARGETS refdm)
+install(
+    TARGETS refdm
+    RUNTIME
+        COMPONENT runtime
+    LIBRARY
+        COMPONENT runtime
+        NAMELINK_COMPONENT devel
+    ARCHIVE
+        COMPONENT devel
+)
 install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"

@@ -25,7 +25,7 @@ include_directories(
 
 add_subdirectory(cace)
 
-if(BUILD_AGENT)
+if(BUILD_AGENT AND NOT BUILD_FUZZING)
     add_subdirectory(refda)
     add_subdirectory(refda-stdio)
     if(TRANSPORT_UNIX_SOCKET)
@@ -34,9 +34,9 @@ if(BUILD_AGENT)
     if(TRANSPORT_ION_BP)
         add_subdirectory(refda-ion)
     endif(TRANSPORT_ION_BP)
-endif(BUILD_AGENT)
+endif(BUILD_AGENT AND NOT BUILD_FUZZING)
 
-if(BUILD_MANAGER)
+if(BUILD_MANAGER AND NOT BUILD_FUZZING)
     add_subdirectory(refdm)
     if(TRANSPORT_UNIX_SOCKET)
         add_subdirectory(refdm-socket)
@@ -47,9 +47,9 @@ if(BUILD_MANAGER)
     if(TRANSPORT_PROXY_SOCKET)
         add_subdirectory(refdm-proxy)
     endif(TRANSPORT_PROXY_SOCKET)
-endif(BUILD_MANAGER)
+endif(BUILD_MANAGER AND NOT BUILD_FUZZING)
 
 # Just the ION BP app proxy
-if(BUILD_ION_PROXY)
+if(BUILD_ION_PROXY AND NOT BUILD_FUZZING)
     add_subdirectory(ion-app-proxy)
-endif(BUILD_ION_PROXY)
+endif(BUILD_ION_PROXY AND NOT BUILD_FUZZING)
