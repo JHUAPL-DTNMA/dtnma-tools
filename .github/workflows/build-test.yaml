@@ -146,7 +146,7 @@ jobs:
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               binutils \
               valgrind xmlstarlet python3-pip \
-              python3.11
+              python3-wheel
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -178,7 +178,6 @@ jobs:
         run: echo "/usr/lib/postgresql/16/bin" >>$GITHUB_PATH
       - name: Test
         env:
-          PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
           TEST_MEMCHECK: '1'
         run: ./item-test/run.sh
       - name: Collect coverage
