@@ -19,5 +19,11 @@
 -- the prime contract 80NM0018D0004 between the Caltech and NASA under
 -- subcontract 1658085.
 --
-CREATE ROLE healthcheck LOGIN PASSWORD 'healthcheck';
-CREATE DATABASE healthcheck WITH OWNER healthcheck;
+
+IF NOT EXISTS (
+  SELECT FROM pg_catalog.pg_roles
+  WHERE  rolname = 'healthcheck') THEN
+    CREATE ROLE healthcheck LOGIN PASSWORD 'healthcheck';
+END IF;
+
+CREATE DATABASE IF NOT EXISTS healthcheck WITH OWNER healthcheck;

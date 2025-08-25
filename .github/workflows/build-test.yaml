@@ -138,8 +138,8 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
-          dnf config-manager --set-enabled crb
           dnf install -y epel-release
+          crb enable
           dnf install -y \
               git rsync \
               cmake ninja-build \
@@ -147,7 +147,7 @@ jobs:
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               binutils \
               valgrind xmlstarlet \
-              python3-pip python3-wheel python3-devel postgresql-16
+              python3-pip python3-wheel python3-devel postgresql-server
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4

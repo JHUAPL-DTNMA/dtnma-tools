@@ -128,7 +128,8 @@ class TestRefdmSocket(unittest.TestCase):
         db_uri = f'postgresql+psycopg2:///{self.DB_NAME}?host={self._sql_sock}'
 
         script_pat = os.path.join(OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
-        for filepath in glob.glob(script_pat):
+        # execute in alphabetic order
+        for filepath in sorted(glob.glob(script_pat)):
             LOGGER.info('Loading script %s', filepath)
             psql = CmdRunner([
                 'psql',
