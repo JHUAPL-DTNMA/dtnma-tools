@@ -95,50 +95,69 @@ class TestRefdmSocket(unittest.TestCase):
                 if isready.wait() == 0:
                     timer.finish()
 
-        db_name = 'refdm'
-        # After all setup, expose the state
-        os.environ['DB_HOST'] = sql_sock
-        os.environ['DB_USER'] = ''
-        os.environ.pop('DB_PASSWORD', None)
-        os.environ['DB_NAME'] = db_name
-        cls._db_uri = f'postgresql+psycopg2:///{db_name}?host={sql_sock}'
+        cls._sql_sock = sql_sock
 
+    @classmethod
+    def _sql_stop(cls):
+        cls._sqldb.stop()
+        cls._sqldb = None
+        cls._sqldir.cleanup()
+        cls._sqldir = None
+
+    DB_NAME = 'refdm'
+    ''' The test database name to recycle for each case '''
+
+    def _database_create(self) -> str:
+        ''' Create a test database in a running postgres server '''
         psql = CmdRunner([
             'psql',
-            '-h', sql_sock,
+            '-h', self._sql_sock,
             '-w',
             '-d', 'postgres',
-            '-c', f'create database {db_name}',
+            '-c', f'CREATE DATABASE {self.DB_NAME}',
         ])
         psql.start()
         if psql.wait() != 0:
-            raise RuntimeError('Failed to run psql')
+            raise RuntimeError('Failed to run create database')
+
+        # After all setup, expose the state
+        os.environ['DB_HOST'] = self._sql_sock
+        os.environ['DB_USER'] = ''
+        os.environ.pop('DB_PASSWORD', None)
+        os.environ['DB_NAME'] = self.DB_NAME
+        db_uri = f'postgresql+psycopg2:///{self.DB_NAME}?host={self._sql_sock}'
 
         script_pat = os.path.join(OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
         for filepath in glob.glob(script_pat):
             LOGGER.info('Loading script %s', filepath)
             psql = CmdRunner([
                 'psql',
-                '-h', sql_sock,
+                '-h', self._sql_sock,
                 '-w',
-                '-d', db_name,
+                '-d', self.DB_NAME,
                 '-f', filepath,
             ])
             psql.start()
             if psql.wait() != 0:
                 raise RuntimeError('Failed to run psql')
 
-    @classmethod
-    def _sql_stop(cls):
-        cls._db_uri = None
-        cls._sqldb.stop()
-        cls._sqldb = None
-        cls._sqldir.cleanup()
-        cls._sqldir = None
+        return db_uri
+
+    def _database_drop(self):
+        ''' Drop the test database if necessary '''
+        psql = CmdRunner([
+            'psql',
+            '-h', self._sql_sock,
+            '-w',
+            '-d', 'postgres',
+            '-c', f'DROP DATABASE IF EXISTS {self.DB_NAME} WITH (FORCE)',
+        ])
+        psql.start()
+        if psql.wait(timeout=10) != 0:
+            raise RuntimeError('Failed to run drop database')
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._db_uri = None
         cls._sql_host = os.environ.get('DB_HOST')
         if cls._sql_host is None:
             cls._sql_start()
@@ -152,17 +171,11 @@ class TestRefdmSocket(unittest.TestCase):
     def setUp(self):
         logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
-        path = os.path.abspath(os.path.join(OWNPATH, '..'))
-        os.chdir(path)
-        LOGGER.info('Working in %s', path)
-
         self._req = requests.Session()
         self._base_url = 'http://localhost:8089/nm/api/'
 
-        if self._db_uri:
-            self._db_eng = sqlalchemy.create_engine(self._db_uri)
-        else:
-            self._db_eng = None
+        db_uri = self._database_create()
+        self._db_eng = sqlalchemy.create_engine(db_uri)
 
         self._tmp = tempfile.TemporaryDirectory()
         self._mgr_sock_path = os.path.join(self._tmp.name, 'mgr.sock')
@@ -190,7 +203,7 @@ class TestRefdmSocket(unittest.TestCase):
         self._mgr = CmdRunner(args)
 
     def tearDown(self):
-        self.assertEqual(0, self._mgr.stop())
+        mgr_exit = self._mgr.stop()
         self._mgr = None
 
         for bind in self._agent_bind:
@@ -201,7 +214,15 @@ class TestRefdmSocket(unittest.TestCase):
         self._mgr_sock_path = None
         self._tmp = None
 
+        if self._db_eng:
+            self._db_eng.dispose()
+        self._db_eng = None
+        self._database_drop()
+
         self._req = None
+
+        # assert after all other shutdown
+        self.assertEqual(0, mgr_exit)
 
     def _start(self):
         ''' Spawn the process. '''
@@ -340,11 +361,12 @@ class TestRefdmSocket(unittest.TestCase):
                     if count >= min_count:
                         timer.finish()
                         break
-                LOGGER.info('Have %d rows after %0.1f s', count, timer.elapsed())
 
-                query = sqlalchemy.select(sqlalchemy.literal_column('*')).select_from(sqlalchemy.table(table_name))
-                for row in conn.execute(query).fetchall():
-                    LOGGER.debug('Row: %s', row)
+                LOGGER.info('Have %d rows after %0.1f s', count, timer.elapsed())
+                if LOGGER.isEnabledFor(logging.DEBUG):
+                    query = sqlalchemy.select(sqlalchemy.literal_column('*')).select_from(sqlalchemy.table(table_name))
+                    for row in conn.execute(query).fetchall():
+                        LOGGER.debug('Row: %s', row)
 
     def test_rest_agents_add_valid(self):
         self._start()
@@ -482,7 +504,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         # first check behavior with one report
         sock_path = self._send_rptset(
-            'ari:/RPTSET/n=9223372036854775808;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+            'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
@@ -532,16 +554,17 @@ class TestRefdmSocket(unittest.TestCase):
         sock_path = self._send_rptset(
             'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
+        rptset_count = 3
+
+        self._wait_for_db_table('ari_rptset', rptset_count)
+
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
-
-        self._wait_for_db_table('ari_rptset', 3)
-
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
-        self.assertEqual(2, len(lines))
+        self.assertEqual(rptset_count, len(lines))
 
         # index resource gets the same result
         resp = self._req.get(self._base_url + f'agents/idx/0/reports?form=hex')
@@ -554,7 +577,7 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
-        self.assertEqual(2, len(lines))
+        self.assertEqual(rptset_count, len(lines))
         for line in lines:
             self.assertTrue(line.startswith('ari:/RPTSET/'))
 

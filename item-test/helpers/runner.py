@@ -29,6 +29,8 @@ from .timer import Timer
 
 LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
+OWNPATH = os.path.dirname(os.path.abspath(__file__))
+''' Parent directory path '''
 
 
 def compose_args(args: List[str]) -> List[str]:
@@ -46,7 +48,7 @@ def compose_args(args: List[str]) -> List[str]:
             '--error-exitcode=2',
         ]
         args = valgrind + args
-    args = ['./run.sh'] + args
+    args = [os.path.join(OWNPATH, '..', '..', 'run.sh')] + args
     return args
 
 
@@ -117,7 +119,7 @@ class CmdRunner:
         )
         self._stdin_writer.start()
 
-    def _finish(self):
+    def _finish(self) -> int:
         ''' Clean up the process state after exit.
         '''
         ret = self.proc.returncode
@@ -147,7 +149,10 @@ class CmdRunner:
 
         LOGGER.info('Waiting on process: %s', self._fmt_args())
         if self.proc.returncode is None:
-            self.proc.wait(timeout=timeout)
+            try:
+                self.proc.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                self._finish()
 
         return self._finish()
 
@@ -171,6 +176,7 @@ class CmdRunner:
                 LOGGER.error('Timed-out after SIGINT, killing process: %s', self._fmt_args())
                 self.proc.kill()
                 self.proc.wait(timeout=timeout)
+                self._finish()
 
         return self._finish()
 

@@ -131,10 +131,10 @@ jobs:
           sudo apt-get install -y \
               cmake ninja-build \
               ruby pkg-config gcc g++ ccache patch autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev postgresql-16 \
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev \
               binutils \
               valgrind gcovr xmlstarlet \
-              python3-pip python3-wheel python3-venv
+              python3-pip python3-wheel python3-venv postgresql-16
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -147,7 +147,7 @@ jobs:
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               binutils \
               valgrind xmlstarlet \
-              python3-pip python3-wheel python3-devel
+              python3-pip python3-wheel python3-devel postgresql-16
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4

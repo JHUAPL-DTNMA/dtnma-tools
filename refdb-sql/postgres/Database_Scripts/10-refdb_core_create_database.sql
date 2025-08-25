@@ -507,15 +507,14 @@ create table if not exists ari_tbl (
 -- exec-set
 create table if not exists execution_set(
     execution_set_id serial not null ,
-    nonce_int BIGINT,
-    nonce_bytes BYTEA,
+    nonce_cbor BYTEA,
     ac_id INT,
     use_desc varchar,
     agent_id varchar,
     primary key (execution_set_id),
     foreign key (ac_id)
         references ari_collection (ac_id),
-    unique(nonce_int, nonce_bytes, ac_id, agent_id) --AC would be unique for entry and one nonce per agent
+    unique(nonce_cbor, ac_id, agent_id) --AC would be unique for entry and one nonce per agent
 );
 
 -- ari-tbl template 
@@ -532,14 +531,16 @@ use_desc varchar,
 -- rpt-sets
 create table if not exists ari_rptset (
     ari_rptset_id serial not null,
-    nonce_int BIGINT,
-    nonce_bytes BYTEA,
-    reference_time varchar not null,
+    nonce_cbor BYTEA not null,
+    reference_time varchar not null, -- TODO timestamp
     report_list varchar,
     report_list_cbor bytea,
     agent_id varchar,
     primary key (ari_rptset_id)
 );
+CREATE INDEX idx_rptset_nonce ON ari_rptset (nonce_cbor);
+CREATE INDEX idx_rptset_reftime ON ari_rptset (reference_time);
+
 
 create table if not exists formal_parmspec (
     fp_spec_id serial not null ,
