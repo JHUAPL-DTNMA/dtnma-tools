@@ -1234,8 +1234,11 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
             }
 
             // append the row
-            cace_ari_tbl_move_row_array(&table, row);
-            cace_ari_array_clear(row);
+            if (cnst && !cnst->obsolete)
+            {
+                cace_ari_tbl_move_row_array(&table, row);
+                cace_ari_array_clear(row);
+            }
         }
     }
 
@@ -1326,8 +1329,11 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
             }
 
             // append the row
-            cace_ari_tbl_move_row_array(&table, row);
-            cace_ari_array_clear(row);
+            if (var && !var->obsolete)
+            {
+                cace_ari_tbl_move_row_array(&table, row);
+                cace_ari_array_clear(row);
+            }
         }
     }
 
@@ -2146,6 +2152,41 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_const BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else if (!cace_amm_obj_ns_is_odm(deref.ns))
+    {
+        CACE_LOG_WARNING("unable to obsolete an ADM object");
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_VAR)
+    {
+        refda_amm_const_desc_t *cnst = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (cnst)
+        {
+            CACE_LOG_DEBUG("Marking CONST as obsolete");
+            cnst->obsolete = true;
+        }
+        cace_ari_t ari_result = CACE_ARI_INIT_NULL;
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    }
+
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_const BODY
@@ -2291,6 +2332,41 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_var BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else if (!cace_amm_obj_ns_is_odm(deref.ns))
+    {
+        CACE_LOG_WARNING("unable to obsolete an ADM object");
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_VAR)
+    {
+        refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (var)
+        {
+            CACE_LOG_DEBUG("Marking VAR as obsolete");
+            var->obsolete = true;
+        }
+        cace_ari_t ari_result = CACE_ARI_INIT_NULL;
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    }
+
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_var BODY
