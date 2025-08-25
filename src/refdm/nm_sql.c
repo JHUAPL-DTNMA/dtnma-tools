@@ -270,7 +270,7 @@ static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out)
 #endif // HAVE_POSTGRESQL
 
 #ifdef HAVE_POSTGRESQL
-#define dbexec_prepared \
+#define dbexec_prepared                                                                                   \
     res = PQexecPrepared(conn, stmtName, nParams, paramValues, paramLengths, paramFormats, resultFormat); \
     CACE_LOG_DEBUG("dbexec_prepared result: %s", PQresStatus(PQresultStatus(res)));
 #define dbtest_result(expected) ((PQresultStatus(res) == expected) ? 0 : 1)
@@ -334,9 +334,8 @@ static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out)
 #endif // HAVE_POSTGRESQL
 
 #ifdef HAVE_MYSQL
-#define query_log_err(status)                                                                    \
-    CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)", __FILE__, __LINE__, mysql_stmt_error(stmt), \
-                 mysql_stmt_errno(stmt));
+#define query_log_err(status) \
+    CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)", __FILE__, __LINE__, mysql_stmt_error(stmt), mysql_stmt_errno(stmt));
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
 #define query_log_err(status) \
