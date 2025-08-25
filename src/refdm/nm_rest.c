@@ -177,24 +177,21 @@ static int agentsGetHandler(struct mg_connection *conn)
         cJSON *agentObj = cJSON_CreateObject();
         cJSON_AddStringToObject(agentObj, "name", string_get_cstr(agent->eid));
         {
-            size_t count;
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+            size_t count;
             int ecode = refdm_db_fetch_rptset_count(&count);
             if (ecode != RET_PASS)
             {
-                // Any issue, results in a fast fail...
-                //
-                // Release the lock and bail
-                pthread_mutex_unlock(&mgr->agent_mutex);
-
-                cJSON_Delete(obj);
-                mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "Database error");
-                return HTTP_INTERNAL_ERROR;
+                CACE_LOG_ERR("Failed to obtain RPTSET count for %s", string_get_cstr(agent->eid));
+            }
+            else
+            {
+                cJSON_AddNumberToObject(agentObj, "rpts_count", count);
             }
 #else
-            count = cace_ari_list_size(agent->rptsets);
-#endif
+            size_t count = cace_ari_list_size(agent->rptsets);
             cJSON_AddNumberToObject(agentObj, "rpts_count", count);
+#endif
         }
         cJSON_AddItemToArray(agentList, agentObj);
     }

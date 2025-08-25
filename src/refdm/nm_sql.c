@@ -734,8 +734,8 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
         /* Step 0: Sanity check. */
         if (format == NULL)
         {
-            CACE_LOG_ERR(idx, "Bad Args.", NULL);
-            CACE_LOG_ERR(idx, "-->%d", 0);
+            CACE_LOG_ERR("Bad Args.");
+            CACE_LOG_INFO("-->%d", 0);
             return RET_FAIL_BAD_ARGS;
         }
 
@@ -745,7 +745,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
          */
         if (refdm_db_mgt_connected(idx) != 0)
         {
-            CACE_LOG_ERR("DB not connected.", NULL);
+            CACE_LOG_ERR("DB not connected.");
             CACE_LOG_INFO("-->%d", -1);
             return RET_FAIL_DATABASE_CONNECTION;
         }
