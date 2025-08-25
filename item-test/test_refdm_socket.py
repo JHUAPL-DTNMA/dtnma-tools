@@ -56,8 +56,18 @@ class TestRefdmSocket(unittest.TestCase):
 
     @classmethod
     def _sql_start(cls):
-        ''' Spawn an SQL server and load the refdb schema.
+        ''' Spawn an SQL server if necessary.
         '''
+        db_host = os.environ.get('DB_HOST')
+        if db_host is not None:
+            # nothing to do for processes
+            cls._sqldir = None
+            cls._sqldb = None
+            os.environ['PGHOST'] = os.environ['DB_HOST']
+            os.environ['PGUSER'] = os.environ['DB_USER']
+            os.environ['PGPASSWORD'] = os.environ['DB_PASSWORD']
+            return
+
         cls._sqldir = tempfile.TemporaryDirectory()
         sql_data = os.path.join(cls._sqldir.name, 'data')
         os.makedirs(sql_data)
@@ -82,9 +92,17 @@ class TestRefdmSocket(unittest.TestCase):
         cls._sqldb = CmdRunner(args)
         cls._sqldb.start()
 
+        # After all setup, expose the state
+        os.environ['DB_HOST'] = sql_sock
+        os.environ['DB_USER'] = ''
+        os.environ.pop('DB_PASSWORD', None)
+
+        os.environ['PGHOST'] = sql_sock
+        os.environ['PGUSER'] = ''
+        os.environ.pop('PGPASSWORD', None)
+
         isready = CmdRunner([
             'pg_isready',
-            '-h', sql_sock,
             '-d', 'postgres',
         ])
         with Timer(10) as timer:
@@ -95,14 +113,14 @@ class TestRefdmSocket(unittest.TestCase):
                 if isready.wait() == 0:
                     timer.finish()
 
-        cls._sql_sock = sql_sock
-
     @classmethod
     def _sql_stop(cls):
-        cls._sqldb.stop()
-        cls._sqldb = None
-        cls._sqldir.cleanup()
-        cls._sqldir = None
+        if cls._sqldb:
+            cls._sqldb.stop()
+            cls._sqldb = None
+        if cls._sqldir:
+            cls._sqldir.cleanup()
+            cls._sqldir = None
 
     DB_NAME = 'refdm'
     ''' The test database name to recycle for each case '''
@@ -111,7 +129,6 @@ class TestRefdmSocket(unittest.TestCase):
         ''' Create a test database in a running postgres server '''
         psql = CmdRunner([
             'psql',
-            '-h', self._sql_sock,
             '-w',
             '-d', 'postgres',
             '-c', f'CREATE DATABASE {self.DB_NAME}',
@@ -120,12 +137,9 @@ class TestRefdmSocket(unittest.TestCase):
         if psql.wait() != 0:
             raise RuntimeError('Failed to run create database')
 
-        # After all setup, expose the state
-        os.environ['DB_HOST'] = self._sql_sock
-        os.environ['DB_USER'] = ''
-        os.environ.pop('DB_PASSWORD', None)
+        db_host = os.environ['DB_HOST']
         os.environ['DB_NAME'] = self.DB_NAME
-        db_uri = f'postgresql+psycopg2:///{self.DB_NAME}?host={self._sql_sock}'
+        db_uri = f'postgresql+psycopg2:///{self.DB_NAME}?host={db_host}'
 
         script_pat = os.path.join(OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
         # execute in alphabetic order
@@ -133,7 +147,6 @@ class TestRefdmSocket(unittest.TestCase):
             LOGGER.info('Loading script %s', filepath)
             psql = CmdRunner([
                 'psql',
-                '-h', self._sql_sock,
                 '-w',
                 '-d', self.DB_NAME,
                 '-f', filepath,
@@ -148,7 +161,6 @@ class TestRefdmSocket(unittest.TestCase):
         ''' Drop the test database if necessary '''
         psql = CmdRunner([
             'psql',
-            '-h', self._sql_sock,
             '-w',
             '-d', 'postgres',
             '-c', f'DROP DATABASE IF EXISTS {self.DB_NAME} WITH (FORCE)',
@@ -159,15 +171,11 @@ class TestRefdmSocket(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._sql_host = os.environ.get('DB_HOST')
-        if cls._sql_host is None:
-            cls._sql_start()
+        cls._sql_start()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        if cls._sqldb:
-            cls._sql_stop()
-        cls._sql_host = None
+        cls._sql_stop()
 
     def setUp(self):
         logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)

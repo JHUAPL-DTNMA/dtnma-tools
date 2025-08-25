@@ -119,6 +119,20 @@ jobs:
     name: Built-Item Test (${{matrix.os}} gcc)
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    services:
+      postgres:
+        # Docker Hub image
+        image: postgres:16
+        env:
+          POSTGRES_USER: tester
+          POSTGRES_PASSWORD: tester
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     permissions:
       contents: read
       actions: write
@@ -180,6 +194,9 @@ jobs:
       - name: Test
         env:
           TEST_MEMCHECK: '1'
+          DB_HOST: 'postgres'
+          DB_USER: 'tester'
+          DB_PASSWORD: 'tester'
         run: ./item-test/run.sh
       - name: Collect coverage
         run: ./build.sh coverage
