@@ -21,6 +21,6 @@
 set -e
 
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
-source setenv.sh
+source ${SELFDIR}/setenv.sh
 
 exec $@

@@ -49,6 +49,27 @@ extern "C" {
  * +--------------------------------------------------------------------------+
  */
 
+// TODO: Consider refactoring these return code constants and moving them to a common header file
+// Constants relating to return codes.
+
+/** Return code that indicates normal completion. */
+#define RET_PASS 0
+
+/** Return code that indicates the input resolves to an undefined result. */
+#define RET_FAIL_UNDEFINED 1
+
+/** Return code that indicates the input resolves to an unexpected/abnormal state. */
+#define RET_FAIL_UNEXPECTED 2
+
+/** Return code that indicates that bad input argumetst were passed. */
+#define RET_FAIL_BAD_ARGS 3
+
+/** Return code that there was a database (generic) error. */
+#define RET_FAIL_DATABASE 10
+
+/** Return code that there was a database connection error. */
+#define RET_FAIL_DATABASE_CONNECTION 11
+
 /*
  * Constants relating to how long to try and reconnect to the DB when
  * a connection has failed.
@@ -86,7 +107,7 @@ int32_t db_add_agent(const cace_data_t *agent_eid);
 uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log);
 uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms);
 
-void refdm_db_mgt_close();
+void refdm_db_mgt_close(void);
 void refdm__db_mgt_close_conn(size_t i);
 int  refdm_db_mgt_connected(size_t i);
 #ifdef HAVE_MYSQL
@@ -97,18 +118,32 @@ int32_t refdm_db_mgt_query_fetch(PGresult **res, char *format, ...);
 #endif // HAVE_POSTGRESQL
 int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...);
 
-/* Functions to process outgoing  tables and reprots. */
-uint32_t       refdm_db_insert_msg_rpt_set(cace_ari_t *val, refdm_agent_t *agent, int *status);
-uint32_t       refdm_db_insert_msg_tbl(cace_ari_t *val, refdm_agent_t *agent, int *status);
-uint32_t       refdm_db_insert_agent(m_string_t eid, int *status);
-uint32_t       refdm_db_insert_execset(cace_ari_t *val, refdm_agent_t *agent, int *status);
+/* Functions to process outgoing EXECSET and incoming RPTSET. */
+uint32_t       refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agent);
+uint32_t       refdm_db_insert_agent(const m_string_t eid);
+uint32_t       refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent);
 refdm_agent_t *refdm_db_fetch_agent(int32_t id);
-int32_t        refdm_db_fetch_agent_idx(string_t *sender);
-string_t      *db_fetch_ari_col(int idx);
+int32_t        refdm_db_fetch_agent_idx(const string_t *sender);
 
-// If set, always log CBOR-encoded inputs and outputs to DB for debug purposes.  Received reports shall always be logged
-// in the event of an error.
-#define DB_LOG_RAW
+/**
+ * Runs a query on the database and retrieves the number of rptsets.
+ *
+ * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ *
+ * \param[out] count - Argument used to return the number of rptsets.
+ */
+int refdm_db_fetch_rptset_count(size_t *count);
+
+/**
+ * Runs a query on the database and retrieves the list of rptsets.
+ *
+ * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ *
+ * \param[out] rptsets - The list used to hold the retrieved rptsets.
+ */
+int refdm_db_fetch_rptset_list(cace_ari_list_t *rptsets);
+
+string_t *db_fetch_ari_col(int idx);
 
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.
@@ -126,4 +161,4 @@ void refdm_db_log_msg(const char *filename, int lineno, const char *funcname, in
 
 #endif /* NM_MGR_SQL_H */
 
-#endif // HAVE_MYSQL
+#endif // HAVE_MYSQL || HAVE_POSTGRESQL

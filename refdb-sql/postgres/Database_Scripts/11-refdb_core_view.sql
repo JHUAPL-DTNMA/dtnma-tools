@@ -1037,7 +1037,7 @@ create or replace
 view vw_execution_set as
 select 
 execution_set.execution_set_id ,
-execution_set.correlator_nonce,
+execution_set.nonce_cbor,
 execution_set.use_desc,
 execution_set.agent_id,
 ari_collection.num_entries,

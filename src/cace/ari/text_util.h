@@ -132,7 +132,7 @@ int cace_slash_escape(m_string_t out, const cace_data_t *in, const char quote);
 int cace_slash_unescape(m_string_t out, const cace_data_t *in);
 
 /** Remove whitespace characters from a text string.
- * This is based on isspace() inspection.
+ * This is based on @c isspace() inspection.
  *
  * @param[out] out The output buffer, which will be replaced.
  * @param[in] in The input text to read.

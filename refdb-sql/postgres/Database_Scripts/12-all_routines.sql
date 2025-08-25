@@ -1496,23 +1496,14 @@ as $$ BEGIN
 END$$;
 
 
-create or replace procedure SP__insert_ari_rpt_set(in p_correlator_nonce INT, p_reference_time varchar, p_report_list varchar, p_report_list_cbor bytea, p_agent_id varchar)
+create or replace procedure SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time varchar, p_report_list varchar, p_report_list_cbor bytea, p_agent_id varchar)
 language plpgsql
 	as $$ BEGIN 
-		INSERT INTO ari_rptset(correlator_nonce, reference_time, report_list, report_list_cbor, agent_id)
-	VALUES(p_correlator_nonce, p_reference_time, p_report_list, p_report_list_cbor, p_agent_id);
+		INSERT INTO ari_rptset(nonce_cbor, reference_time, report_list, report_list_cbor, agent_id)
+	VALUES(p_nonce_cbor, p_reference_time, p_report_list, p_report_list_cbor, p_agent_id);
 	End$$;
 
-
-
-create or replace procedure SP__insert_ari_tbl(in p_ari_tblt_id INT, p_num_entries INTEGER, p_table_entry varchar, p_table_entry_cbor bytea,  p_agent_id varchar)
-language plpgsql
-	as $$ BEGIN 
-		INSERT INTO ari_tbl(ari_tblt_id, num_entries , table_entry, table_entry_cbor, agent_id)
-	VALUES(p_ari_tblt_id, p_num_entries , p_table_entry, p_table_entry_cbor, p_agent_id);
-	End$$;
-
-create or replace procedure SP__insert_execset(in p_correlator_nonce INT,  p_use_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries INT)
+create or replace procedure SP__insert_execset(in p_nonce_cbor BYTEA, p_use_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries INT)
 language plpgsql
 	as $$ 
 	DECLARE
@@ -1524,7 +1515,7 @@ language plpgsql
 	IF (r_ac_id IS NULL) THEN
 		insert INTO ari_collection(num_entries,entries) 
 		VALUES(p_num_entries,p_exec_set) RETURNING ac_id into r_ac_id;
-    END IF ;	
-		INSERT INTO execution_set(correlator_nonce, ac_id , use_desc, agent_id)
-	VALUES(p_correlator_nonce, r_ac_id , p_use_desc, p_agent_id);
+    END IF ;
+		INSERT INTO execution_set(nonce_cbor, ac_id , use_desc, agent_id)
+	VALUES(p_nonce_cbor, r_ac_id, p_use_desc, p_agent_id);
 	End$$;
