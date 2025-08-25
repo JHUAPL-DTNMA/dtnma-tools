@@ -229,9 +229,12 @@ class TestRefdmSocket(unittest.TestCase):
         ''' Spawn the process. '''
         self._mgr.start()
 
+        delay = 0.1
         with Timer(10) as timer:
             while timer:
-                timer.sleep(0.1)
+                # linear back-off
+                timer.sleep(delay)
+                delay += 0.1
 
                 sock_ready = os.path.exists(self._mgr_sock_path)
 

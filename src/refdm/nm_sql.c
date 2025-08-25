@@ -922,6 +922,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
         string_init(inhex);
         m_string_set_cstrn(inhex, chexstr, chexstrlen);
         int ecode = cace_base16_decode(&inbin, inhex);
+        string_clear(inhex);
         if (ecode != RET_PASS)
         {
             if (errm != NULL)
@@ -935,7 +936,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
         // Transform from cbor_hex to ari
         ecode = cace_ari_cbor_decode(ari_item, &inbin, NULL, errm);
-        //                    if (ecode != RET_PASS)
+        cace_data_deinit(&inbin);
         if (ecode != 0)
             return RET_FAIL_UNEXPECTED;
 
@@ -1072,8 +1073,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
             CACE_FREE(errm);
 
             // Add the report to the list
-            cace_ari_list_push_back(*rptsets, ari_item);
-            cace_ari_deinit(&ari_item);
+            cace_ari_list_push_back_move(*rptsets, &ari_item);
         }
 
         CACE_LOG_INFO("Success with retrieval of rptset items. Num items: %d", num_rows);

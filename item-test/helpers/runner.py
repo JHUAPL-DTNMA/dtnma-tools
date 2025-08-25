@@ -31,6 +31,8 @@ LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 ''' Parent directory path '''
+PROJPATH = os.path.abspath(os.path.join(OWNPATH, '..', '..'))
+''' Project top path '''
 
 
 def compose_args(args: List[str]) -> List[str]:
@@ -43,12 +45,12 @@ def compose_args(args: List[str]) -> List[str]:
             'valgrind',
             '--tool=memcheck',
             '--leak-check=full',
-            '--suppressions=memcheck.supp',
+            f'--suppressions={PROJPATH}/memcheck.supp',
             '--gen-suppressions=all',
             '--error-exitcode=2',
         ]
         args = valgrind + args
-    args = [os.path.join(OWNPATH, '..', '..', 'run.sh')] + args
+    args = [os.path.join(PROJPATH, 'run.sh')] + args
     return args
 
 
