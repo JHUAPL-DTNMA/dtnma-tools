@@ -142,6 +142,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
+              git rsync \
               cmake ninja-build \
               ruby pkg-config gcc g++ ccache patch autoconf libtool \
               flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev \
