@@ -1270,7 +1270,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                 return 1;
             }
 
-            // correlator_nonce: either INT, BYTES, or neither
+            // correlator_nonce: either NULL, UVAST, or BYTES
             if (cace_log_is_enabled_for(LOG_DEBUG))
             {
                 string_t buf;
@@ -1279,11 +1279,6 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                 CACE_LOG_DEBUG("inserting RPTSET with nonce %s", string_get_cstr(buf));
                 string_clear(buf);
             }
-//            if ...
-//            {
-//                CACE_LOG_ERR("unhandled nonce value");
-//                return 1;
-//            }
 
             cace_data_t nonce_cbor = CACE_DATA_INIT_NULL;
             cace_ari_cbor_encode(&nonce_cbor, &rpt_set->nonce);
@@ -1379,57 +1374,32 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
                 return 1;
             }
 
-            // correlator_nonce: either INT, BYTES, or neither
-            bool               nonce_null = false;
-            const cace_data_t *nonce_bstr = NULL;
-            uint64_t           nonce_int  = 0;
-            if (cace_ari_is_null(&execset->nonce))
+            // correlator_nonce: either NULL, UVAST, or BYTES
+            if (cace_log_is_enabled_for(LOG_DEBUG))
             {
-                CACE_LOG_INFO("inserting EXECSET with nonce null");
-                nonce_null = true;
+                string_t buf;
+                string_init(buf);
+                cace_ari_text_encode(buf, &execset->nonce, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_DEBUG("inserting EXECSET with nonce %s", string_get_cstr(buf));
+                string_clear(buf);
             }
-            else if ((nonce_bstr = cace_ari_cget_bstr(&execset->nonce)))
-            {
-                CACE_LOG_INFO("inserting EXECSET with nonce bstr length %zd", nonce_bstr->len);
-            }
-            else if (!cace_ari_get_uvast(&execset->nonce, &nonce_int))
-            {
-                CACE_LOG_INFO("inserting EXECSET with nonce integer %" PRIu64, nonce_int);
-            }
-            else
-            {
-                CACE_LOG_ERR("unhandled nonce value");
-                return 1;
-            }
+
+            cace_data_t nonce_cbor = CACE_DATA_INIT_NULL;
+            cace_ari_cbor_encode(&nonce_cbor, &execset->nonce);
 
             // report_list varchar as cbor,xw
             cace_data_t cbordata;
             cace_data_init(&cbordata);
             cace_ari_cbor_encode(&cbordata, val);
 
-            dbprep_declare(DB_RPT_CON, ARI_EXECSET_INSERT, 6, 1);
+            dbprep_declare(DB_RPT_CON, ARI_EXECSET_INSERT, 5, 1);
 
-            // p_nonce_int INT, p_nonce_bytes BYTEA, p_user_desc varchar, p_agent_id varchar, p_exec_set BYTEA,
-            // p_num_entries INT
-            if (nonce_null)
-            {
-                dbprep_bind_param_null(0);
-                dbprep_bind_param_null(1);
-            }
-            else if (nonce_bstr)
-            {
-                dbprep_bind_param_null(0);
-                dbprep_bind_param_byte(1, nonce_bstr->ptr, nonce_bstr->len);
-            }
-            else
-            {
-                dbprep_bind_param_bigint(0, nonce_int);
-                dbprep_bind_param_null(1);
-            }
-            dbprep_bind_param_str(2, "");
-            dbprep_bind_param_str(3, string_get_cstr(agent->eid));
-            dbprep_bind_param_byte(4, cbordata.ptr, cbordata.len);
-            dbprep_bind_param_int(5, cace_ari_list_size(execset->targets));
+            // p_nonce_cbor BYTEA, p_user_desc varchar, p_agent_id varchar, p_exec_set BYTEA, p_num_entries INT
+            dbprep_bind_param_byte(0, nonce_cbor.ptr, nonce_cbor.len);
+            dbprep_bind_param_str(1, "");
+            dbprep_bind_param_str(2, string_get_cstr(agent->eid));
+            dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
+            dbprep_bind_param_int(4, cace_ari_list_size(execset->targets));
 
 #ifdef HAVE_MYSQL
             mysql_stmt_bind_param(stmt, bind_param);
@@ -1445,7 +1415,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 
             // cleaning up vars
             cace_data_deinit(&cbordata);
-            CACE_LOG_INFO("done inserting EXECSET");
+            cace_data_deinit(&nonce_cbor);
 
             return rtv;
         }
