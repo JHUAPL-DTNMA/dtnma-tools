@@ -179,7 +179,7 @@ static int agentsGetHandler(struct mg_connection *conn)
         {
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
             size_t count;
-            int ecode = refdm_db_fetch_rptset_count(&count);
+            int    ecode = refdm_db_fetch_rptset_count(&count);
             if (ecode != RET_PASS)
             {
                 CACE_LOG_ERR("Failed to obtain RPTSET count for %s", string_get_cstr(agent->eid));
