@@ -335,12 +335,12 @@ static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out)
 
 #ifdef HAVE_MYSQL
 #define query_log_err(status)                                                                    \
-    CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__, __LINE__, mysql_stmt_error(stmt), \
+    CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)", __FILE__, __LINE__, mysql_stmt_error(stmt), \
                  mysql_stmt_errno(stmt));
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
 #define query_log_err(status) \
-    CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)\n", __FILE__, __LINE__, PQresultErrorMessage(res), status);
+    CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)", __FILE__, __LINE__, PQresultErrorMessage(res), status);
 #endif // HAVE_POSTGRESQL
 
 void refdm_db_log_msg(const char *file, int line, const char *fun, int level, size_t dbidx, const char *format, ...)
@@ -732,13 +732,11 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
         char   query[1024];
         size_t idx = DB_RPT_CON; // TODO
 
-        DB_LOG_INFO(idx, "(%p,%p)", res, format);
-
         /* Step 0: Sanity check. */
         if (format == NULL)
         {
-            DB_LOG_ERR(idx, "Bad Args.", NULL);
-            DB_LOG_ERR(idx, "-->%d", 0);
+            CACE_LOG_ERR(idx, "Bad Args.", NULL);
+            CACE_LOG_ERR(idx, "-->%d", 0);
             return RET_FAIL_BAD_ARGS;
         }
 
@@ -1235,7 +1233,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
             }
             else
             {
-                CACE_LOG_ERR("Did not find EID with ID of %s\n", m_string_get_cstr(*eid));
+                CACE_LOG_ERR("Did not find EID with ID of %s", m_string_get_cstr(*eid));
             }
 
 /* Step 3: Free database resources. */

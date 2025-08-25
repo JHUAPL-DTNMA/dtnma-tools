@@ -117,8 +117,8 @@ jobs:
       matrix:
         os: ['ubuntu-24.04', 'centos-9']
     name: Built-Item Test (${{matrix.os}} gcc)
-    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
-    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    runs-on: ubuntu-24.04
+    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || 'ubuntu:24.04' }}
     services:
       postgres:
         # Docker Hub image
@@ -140,15 +140,15 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo rm /var/lib/man-db/auto-update
-          sudo apt-get update
-          sudo apt-get install -y \
+          rm /var/lib/man-db/auto-update
+          apt-get update
+          apt-get install -y \
               cmake ninja-build \
               ruby pkg-config gcc g++ ccache patch autoconf libtool \
               flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev \
               binutils \
               valgrind gcovr xmlstarlet \
-              python3-pip python3-wheel python3-venv postgresql-16
+              python3-pip python3-wheel python3-venv
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -161,7 +161,7 @@ jobs:
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               binutils \
               valgrind xmlstarlet \
-              python3-pip python3-wheel python3-devel postgresql-server
+              python3-pip python3-wheel python3-devel
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4

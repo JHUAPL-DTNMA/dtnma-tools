@@ -634,7 +634,7 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual([send_ari], values)
 
         # no other datagrams
-        with self.assertRaises(TimeoutError):
+        with self.assertRaises((socket.timeout, TimeoutError)):
             self._wait_execset(0)
 
     def test_agents_send_text(self):
@@ -671,7 +671,7 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual([send_ari], values)
 
         # no other datagrams
-        with self.assertRaises(TimeoutError):
+        with self.assertRaises((socket.timeout, TimeoutError)):
             self._wait_execset(0)
 
     def test_send_three_execsets(self):
@@ -713,5 +713,5 @@ ari:/EXECSET/n='test';(//ietf/dtnma-agent/CTRL/inspect)\r\n\
         self.assertEqual(3, len(values))
 
         # no other datagrams
-        with self.assertRaises(TimeoutError):
+        with self.assertRaises((socket.timeout, TimeoutError)):
             self._wait_execset(0)
