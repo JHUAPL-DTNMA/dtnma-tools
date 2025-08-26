@@ -87,39 +87,45 @@ class CmdRunner:
         if self.proc:
             return
 
+        while not self._stdin_lines.empty():
+            self._stdin_lines.get()
         while not self._stdout_lines.empty():
             self._stdout_lines.get()
         while not self._stderr_lines.empty():
             self._stderr_lines.get()
 
+        do_stdin = (self._kwargs.setdefault('stdin', subprocess.PIPE) == subprocess.PIPE)
+        do_stdout = (self._kwargs.setdefault('stdout', subprocess.PIPE) == subprocess.PIPE)
+        do_stderr = (self._kwargs.setdefault('stderr', subprocess.PIPE) == subprocess.PIPE)
+
         LOGGER.info('Starting process: %s', self._fmt_args())
         self.proc = subprocess.Popen(
             self._args,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
             text=True,
             **self._kwargs
         )
         LOGGER.debug('Started with PID %d', self.proc.pid)
 
-        self._stdout_reader = threading.Thread(
-            target=self._read_stdout,
-            args=[self.proc.stdout]
-        )
-        self._stdout_reader.start()
+        if do_stdin:
+            self._stdin_writer = threading.Thread(
+                target=self._write_stdin,
+                args=[self.proc.stdin]
+            )
+            self._stdin_writer.start()
 
-        self._stderr_reader = threading.Thread(
-            target=self._read_stderr,
-            args=[self.proc.stderr]
-        )
-        self._stderr_reader.start()
+        if do_stdout:
+            self._stdout_reader = threading.Thread(
+                target=self._read_stdout,
+                args=[self.proc.stdout]
+            )
+            self._stdout_reader.start()
 
-        self._stdin_writer = threading.Thread(
-            target=self._write_stdin,
-            args=[self.proc.stdin]
-        )
-        self._stdin_writer.start()
+        if do_stderr:
+            self._stderr_reader = threading.Thread(
+                target=self._read_stderr,
+                args=[self.proc.stderr]
+            )
+            self._stderr_reader.start()
 
     def _finish(self) -> Optional[int]:
         ''' Clean up the process state after exit.
@@ -131,14 +137,17 @@ class CmdRunner:
         self.proc = None
         LOGGER.info('Stopped with exit code: %s', ret)
 
-        self._stdout_reader.join()
-        self._stdout_reader = None
-        self._stderr_reader.join()
-        self._stderr_reader = None
+        if self._stdout_reader:
+            self._stdout_reader.join()
+            self._stdout_reader = None
+        if self._stderr_reader:
+            self._stderr_reader.join()
+            self._stderr_reader = None
 
-        self._stdin_lines.put(None)
-        self._stdin_writer.join()
-        self._stdin_writer = None
+        if self._stdin_writer:
+            self._stdin_lines.put(None)
+            self._stdin_writer.join()
+            self._stdin_writer = None
 
         return ret
 

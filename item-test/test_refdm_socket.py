@@ -26,6 +26,7 @@ import logging
 import os
 import signal
 import socket
+import subprocess
 import tempfile
 from typing import List, Set
 from urllib.parse import quote
@@ -146,13 +147,12 @@ class TestRefdmSocket(unittest.TestCase):
         script_pat = os.path.join(OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
         # execute in alphabetic order
         for filepath in sorted(glob.glob(script_pat)):
-            LOGGER.info('Loading script %s', filepath)
             psql = CmdRunner([
                 'psql',
                 '-w',
                 '-d', self.DB_NAME,
                 '-f', filepath,
-            ])
+            ], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
             psql.start()
             if psql.wait() != 0:
                 raise RuntimeError('Failed to run psql')
@@ -365,15 +365,15 @@ class TestRefdmSocket(unittest.TestCase):
         data = resp.json()
         return set([agt['name'] for agt in data['agents']])
 
-    def _wait_for_db_table(self, table_name:str, count:int):
-        LOGGER.info('Waiting for DB table %s with %d rows', table_name, count)
+    def _wait_for_db_table(self, table_name:str, need_count:int):
+        LOGGER.info('Waiting for DB table %s with %d rows', table_name, need_count)
         with self._db_eng.connect() as conn:
             query = sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.literal_column('1'))).select_from(sqlalchemy.table(table_name))
             with Timer(5) as timer:
                 while timer:
                     timer.sleep(0.1)
                     count = conn.execute(query).scalar()
-                    if count == count:
+                    if count == need_count:
                         timer.finish()
                         break
 

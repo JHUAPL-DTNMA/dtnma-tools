@@ -1181,11 +1181,11 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
     if (PQntuples(res) != 0)
     {
         result = strtol(PQgetvalue(res, 0, agent_id_fnum), NULL, 10);
-#endif // HAVE_POSTGRESQL
     }
+#endif // HAVE_POSTGRESQL
     else
     {
-        CACE_LOG_ERR("Did not find EID with ID of %s", eid);
+        CACE_LOG_ERR("Did not find Agent with EID of %s", eid);
     }
 
 /* Step 3: Free database resources. */
