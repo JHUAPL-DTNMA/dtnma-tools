@@ -362,15 +362,15 @@ class TestRefdmSocket(unittest.TestCase):
         data = resp.json()
         return set([agt['name'] for agt in data['agents']])
 
-    def _wait_for_db_table(self, table_name:str, min_count:int=1):
-        LOGGER.info('Waiting for DB table %s with %d rows', table_name, min_count)
+    def _wait_for_db_table(self, table_name:str, count:int):
+        LOGGER.info('Waiting for DB table %s with %d rows', table_name, count)
         with self._db_eng.connect() as conn:
             query = sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.literal_column('1'))).select_from(sqlalchemy.table(table_name))
             with Timer(5) as timer:
                 while timer:
                     timer.sleep(0.1)
                     count = conn.execute(query).scalar()
-                    if count >= min_count:
+                    if count == count:
                         timer.finish()
                         break
 
@@ -530,7 +530,7 @@ class TestRefdmSocket(unittest.TestCase):
                     timer.finish()
                     break
 
-        self._wait_for_db_table('ari_rptset')
+        self._wait_for_db_table('ari_rptset', 1)
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
@@ -566,12 +566,11 @@ class TestRefdmSocket(unittest.TestCase):
         sock_path = self._send_rptset(
             'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
+        eid_seg = quote(f'file:{sock_path}', safe="")
         rptset_count = 3
 
         self._wait_for_db_table('ari_rptset', rptset_count)
 
-        agent_eid = f'file:{sock_path}'
-        eid_seg = quote(agent_eid, safe="")
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
@@ -599,6 +598,26 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         other_lines = resp.text.splitlines()
         self.assertEqual(lines, other_lines)
+
+    def test_recv_clear_rptset(self):
+        self._start()
+
+        sock_path = self._send_rptset(
+            'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+        )
+        eid_seg = quote(f'file:{sock_path}', safe="")
+
+        self._wait_for_db_table('ari_rptset', 1)
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
+        self.assertEqual(200, resp.status_code)
+
+        # clear RPTSETs explicitly
+        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg}/clear_reports')
+        self.assertEqual(204, resp.status_code)
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
+        self.assertEqual(204, resp.status_code)
+
+        self._wait_for_db_table('ari_rptset', 0)
 
     def test_agents_send_hex(self):
         self._start()

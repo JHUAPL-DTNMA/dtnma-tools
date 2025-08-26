@@ -24,14 +24,12 @@ set(HFILES
   agents.h
   ingress.h
   instr.h
-  nm_sql.h
   mgr.h
 )
 set(CFILES
   agents.c
   ingress.c
   instr.c
-  nm_sql.c
   mgr.c
 )
 if(REFDM_UI_CLI)
@@ -46,6 +44,10 @@ if(REFDM_UI_CLI)
     ui_input.c
   )
 endif(REFDM_UI_CLI)
+if(PostgreSQL_FOUND OR MYSQLCLIENT_FOUND)
+  list(APPEND HFILES nm_sql.h)
+  list(APPEND CFILES nm_sql.c)
+endif(PostgreSQL_FOUND OR MYSQLCLIENT_FOUND)
 if(civetweb_FOUND)
   list(APPEND HFILES nm_rest.h)
   list(APPEND CFILES nm_rest.c)

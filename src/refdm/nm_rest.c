@@ -178,8 +178,10 @@ static int agentsGetHandler(struct mg_connection *conn)
         cJSON_AddStringToObject(agentObj, "name", string_get_cstr(agent->eid));
         {
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+            int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
+
             size_t count;
-            int    ecode = refdm_db_fetch_rptset_count(&count);
+            int    ecode = refdm_db_fetch_rptset_count(idx, &count);
             if (ecode != RET_PASS)
             {
                 CACE_LOG_ERR("Failed to obtain RPTSET count for %s", string_get_cstr(agent->eid));
@@ -509,7 +511,8 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     cace_ari_list_init(rptsets);
 
     // Retrieve the rptsets from the remote (database) source
-    int ecode = refdm_db_fetch_rptset_list(&rptsets);
+    int32_t idx   = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
+    int     ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
     if (ecode != 0)
     {
         cace_ari_list_clear(rptsets);
@@ -574,7 +577,9 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 
     // Release the resources of rptsets (if it is source remotely)
     if (is_remote_rptsets == true)
+    {
         cace_ari_list_clear(*ptr_rptsets);
+    }
 
     m_string_clear(body);
     return retval;
@@ -595,7 +600,8 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     cace_ari_list_init(rptsets);
 
     // Retrieve the rptsets from the remote (database) source
-    int ecode = refdm_db_fetch_rptset_list(&rptsets);
+    int32_t idx   = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
+    int     ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
     if (ecode != 0)
     {
         cace_ari_list_clear(rptsets);
@@ -665,7 +671,9 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 
     // Release the resources of rptsets (if it is sourced remotely)
     if (is_remote_rptsets == true)
+    {
         cace_ari_list_clear(*ptr_rptsets);
+    }
 
     m_string_clear(body);
     return retval;

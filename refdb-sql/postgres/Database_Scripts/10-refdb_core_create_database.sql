@@ -359,13 +359,10 @@ create table if not exists data_model (
 
 
 CREATE TABLE if not exists registered_agents (
-    registered_agents_id serial  NOT NULL ,
-    agent_id_string VARCHAR(128) NOT NULL DEFAULT 'ipn:0.0',
+    registered_agents_id serial  NOT NULL,
+    agent_id_string VARCHAR(128) NOT NULL,
     first_registered TIMESTAMP NOT NULL DEFAULT NOW(),
     last_registered TIMESTAMP NOT NULL DEFAULT NOW(),
-    historical_data json[],
-    received_reports json[],
-    supported_a_d_ms character varying(255)[],  
     PRIMARY KEY (registered_agents_id),
     UNIQUE (agent_id_string)
 );
@@ -535,8 +532,9 @@ create table if not exists ari_rptset (
     reference_time varchar not null, -- TODO timestamp
     report_list varchar,
     report_list_cbor bytea,
-    agent_id varchar,
-    primary key (ari_rptset_id)
+    agent_id INTEGER,
+    primary key (ari_rptset_id),
+    foreign key (agent_id) references registered_agents (registered_agents_id)
 );
 CREATE INDEX idx_rptset_nonce ON ari_rptset (nonce_cbor);
 CREATE INDEX idx_rptset_reftime ON ari_rptset (reference_time);

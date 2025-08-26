@@ -262,6 +262,11 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
 {
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
+    if (idx > 0)
+    {
+        refdm_db_clear_rptset(idx);
+    }
 #else
     cace_ari_list_reset(agent->rptsets);
 #endif

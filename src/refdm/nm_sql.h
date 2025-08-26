@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-
-#ifndef NM_MGR_SQL_H
-#define NM_MGR_SQL_H
+/** @file
+ * This file is only included in the build when either ::HAVE_POSTGRESQL or
+ * ::HAVE_MYSQL are defined.
+ */
+#ifndef REFDM_NM_SQL_H_
+#define REFDM_NM_SQL_H_
 
 /* System Headers */
 #include <stdio.h>
@@ -123,27 +124,38 @@ uint32_t       refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t
 uint32_t       refdm_db_insert_agent(const m_string_t eid);
 uint32_t       refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent);
 refdm_agent_t *refdm_db_fetch_agent(int32_t id);
-int32_t        refdm_db_fetch_agent_idx(const string_t *sender);
+
+/** Get the index of an Agent from its endpoint name.
+ *
+ * @param[in] sender The agent EID.
+ * @return The corresponding Index, or zero if unsuccessful
+ */
+int32_t refdm_db_fetch_agent_idx(const char *eid);
 
 /**
  * Runs a query on the database and retrieves the number of rptsets.
  *
- * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
- *
- * \param[out] count - Argument used to return the number of rptsets.
+ * @param agent_idx The row index of the source Agent.
+ * @param[out] count - Argument used to return the number of rptsets.
+ * @return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
  */
-int refdm_db_fetch_rptset_count(size_t *count);
+int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count);
 
 /**
  * Runs a query on the database and retrieves the list of rptsets.
  *
- * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
- *
- * \param[out] rptsets - The list used to hold the retrieved rptsets.
+ * @param agent_idx The row index of the source Agent.
+ * @param[out] rptsets - The list used to hold the retrieved rptsets.
+ * @return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
  */
-int refdm_db_fetch_rptset_list(cace_ari_list_t *rptsets);
+int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets);
 
-string_t *db_fetch_ari_col(int idx);
+/** Clears all RPTSET stored for a specific agent.
+ *
+ * @param agent_idx The row index of the source Agent.
+ * @return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ */
+int refdm_db_clear_rptset(int32_t agent_idx);
 
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.
@@ -159,6 +171,4 @@ void refdm_db_log_msg(const char *filename, int lineno, const char *funcname, in
 }
 #endif
 
-#endif /* NM_MGR_SQL_H */
-
-#endif // HAVE_MYSQL || HAVE_POSTGRESQL
+#endif /* REFDM_NM_SQL_H_ */
