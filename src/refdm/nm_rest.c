@@ -534,9 +534,10 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     if (cace_ari_list_empty_p(*ptr_rptsets))
     {
         // Clear the internals of data pointed to by ptr_rptsets (if it was sourced remotely).
-        // TODO: Is this clearing even necessary?
         if (is_remote_rptsets == true)
+        {
             cace_ari_list_clear(*ptr_rptsets);
+        }
 
         mg_send_http_error(conn, HTTP_NO_CONTENT, "");
         return HTTP_NO_CONTENT;
@@ -592,7 +593,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     // Flag that defines if the rptsets came from a remote source (i.e. a database). If this
     // is set to true, then the variable ptr_rptsets should be cleared within this method.
     bool                   is_remote_rptsets = false;
-    const cace_ari_list_t *ptr_rptsets       = NULL;
+    cace_ari_list_t *ptr_rptsets       = NULL;
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     // Synthesize the rptsets (on the stack)

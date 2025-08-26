@@ -78,7 +78,6 @@ extern "C" {
 
 #define SQL_RECONN_TIME_MSEC 500
 #define SQL_CONN_TRIES       10
-#define SQL_MAX_QUERY        8192
 
 /*
  * +--------------------------------------------------------------------------+

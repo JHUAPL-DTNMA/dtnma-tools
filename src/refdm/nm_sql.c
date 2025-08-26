@@ -89,16 +89,6 @@ cace_ari_ac_t *db_query_ac(size_t dbidx, int ac_id);
  */
 enum queries
 {
-    AC_CREATE = 0,
-    AC_INSERT,
-    AC_GET,
-
-    ARI_GET,
-    ARI_GET_META,
-    ARI_INSERT_CTRL, // TODO: Additional variants may be needed for other ARI typess
-
-    ARI_MAPS_INSERT,
-
     ARI_RPTSET_INSERT,
 
     ARI_AGENT_INSERT,
@@ -728,8 +718,7 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
     int32_t refdm_db_mgt_query_fetch(PGresult **res, char *format, ...)
 #endif // HAVE_POSTGRESQL
 {
-    char   query[1024];
-    size_t idx = DB_RPT_CON; // TODO
+    const size_t db_idx = DB_RPT_CON;
 
     /* Step 0: Sanity check. */
     if (format == NULL)
@@ -743,7 +732,7 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
      * Step 1: Assert the DB connection. This should not only check
      *         the connection as well as try and re-establish it.
      */
-    if (refdm_db_mgt_connected(idx) != 0)
+    if (refdm_db_mgt_connected(db_idx) != 0)
     {
         CACE_LOG_ERR("DB not connected.");
         CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE_CONNECTION);
@@ -752,19 +741,22 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
 
     va_list args;
     va_start(args, format); // format is last parameter before "..."
-    vsnprintf(query, 1024, format, args);
+    m_string_t query;
+    m_string_init_vprintf(query, format, args);
     va_end(args);
 
 #ifdef HAVE_MYSQL
-    if (mysql_query(gConn[idx], query))
+    int status = mysql_query(gConn[db_idx], m_string_get_cstr(query));
+    m_string_clear(query);
+    if (status)
     {
-        const char *errm = mysql_error(gConn[idx]);
+        const char *errm = mysql_error(gConn[db_idx]);
         CACE_LOG_ERR("Database Error: %s", errm);
         CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
         return RET_FAIL_DATABASE;
     }
 
-    if ((*res = mysql_store_result(gConn[idx])) == NULL)
+    if ((*res = mysql_store_result(gConn[db_idx])) == NULL)
     {
         CACE_LOG_ERR("Can't get result.");
         CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
@@ -772,11 +764,12 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
     }
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-    *res = PQexec(gConn[idx], query);
+    *res = PQexec(gConn[db_idx], m_string_get_cstr(query));
+    m_string_clear(query);
     if ((PQresultStatus(*res) != PGRES_TUPLES_OK) && (PQresultStatus(*res) != PGRES_COMMAND_OK))
     {
         PQclear(*res);
-        const char *errm = PQerrorMessage(gConn[idx]);
+        const char *errm = PQerrorMessage(gConn[db_idx]);
         CACE_LOG_ERR("Database Error: %s", errm);
         CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
         return RET_FAIL_DATABASE;
@@ -812,8 +805,7 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
  *****************************************************************************/
 int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...)
 {
-    char   query[SQL_MAX_QUERY];
-    size_t db_idx = DB_RPT_CON; // TODO
+    const size_t db_idx = DB_RPT_CON;
 
     DB_LOG_INFO(db_idx, "refdm_db_mgt_query_insert", "(%p,%p)", idx, format);
 
@@ -826,14 +818,14 @@ int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...)
 
     va_list args;
     va_start(args, format); // format is last parameter before "..."
-    if (vsnprintf(query, SQL_MAX_QUERY, format, args) == SQL_MAX_QUERY)
-    {
-        CACE_LOG_ERR("query is too long. Maximum length is %d", SQL_MAX_QUERY);
-    }
+    m_string_t query;
+    m_string_init_vprintf(query, format, args);
     va_end(args);
 
 #ifdef HAVE_MYSQL
-    if (mysql_query(gConn[db_idx], query))
+    int status = mysql_query(gConn[db_idx], m_string_get_cstr(query));
+    m_string_clear(query);
+    if (status)
     {
         const char *errm = mysql_error(gConn[db_idx]);
         CACE_LOG_ERR("Database Error: %s", errm);
@@ -842,7 +834,8 @@ int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...)
     }
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-    PGresult *res = PQexec(gConn[db_idx], query);
+    PGresult *res = PQexec(gConn[db_idx], m_string_get_cstr(query));
+    m_string_clear(query);
     if (dbtest_result(PGRES_COMMAND_OK) != 0 && dbtest_result(PGRES_TUPLES_OK) != 0)
     {
         PQclear(res);
@@ -898,26 +891,17 @@ int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...)
  */
 static int transform_cbor_str_to_cace_data(cace_ari_t *ari_item, char *cbor_str, char **errm)
 {
-    // Check input string for leading '\x' chars
-    char *chexstr    = cbor_str;
-    int   chexstrlen = 0;
-    if (cbor_str != NULL)
-    {
-        // Strip the '\x' off
-        chexstrlen = strlen(cbor_str);
-        if (chexstrlen > 2 && cbor_str[0] == '\\' && cbor_str[1] == 'x')
-        {
-            chexstr = cbor_str + 2;
-            chexstrlen -= 2;
-        }
-    }
+    size_t chexstr_len = 0;
+    char  *chexstr     = PQunescapeBytea(cbor_str, &chexstr_len);
 
-    // Convert from c string to cace_data string
-    cace_data_t inbin;
-    cace_data_init(&inbin);
     string_t inhex;
     string_init(inhex);
-    m_string_set_cstrn(inhex, chexstr, chexstrlen);
+    m_string_set_cstrn(inhex, chexstr, chexstr_len);
+    free(chexstr);
+
+    // Convert from hex string to cace_data buffer
+    cace_data_t inbin;
+    cace_data_init(&inbin);
     int ecode = cace_base16_decode(&inbin, inhex);
     string_clear(inhex);
     if (ecode != RET_PASS)
@@ -928,6 +912,8 @@ static int transform_cbor_str_to_cace_data(cace_ari_t *ari_item, char *cbor_str,
             string_init_printf(err, "Failed to base-16 decode.   ecode: %d   | input: %s", ecode, cbor_str);
             *errm = string_clear_get_str(err);
         }
+
+        cace_data_deinit(&inbin);
         return RET_FAIL_UNEXPECTED;
     }
 
@@ -935,7 +921,9 @@ static int transform_cbor_str_to_cace_data(cace_ari_t *ari_item, char *cbor_str,
     ecode = cace_ari_cbor_decode(ari_item, &inbin, NULL, errm);
     cace_data_deinit(&inbin);
     if (ecode != 0)
+    {
         return RET_FAIL_UNEXPECTED;
+    }
 
     return RET_PASS;
 }
@@ -1033,34 +1021,11 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
     }
 
     // Extract the column indexes relevant for this request
-    //                int idx_agent_id = PQfnumber(res, COL_NAME_AGENT_ID);
-    //                int idx_ari_rptset_id = PQfnumber(res, COL_NAME_ARI_RPTSET_ID);
-    //                int idx_time = PQfnumber(res, COL_NAME_REFERENCE_TIME);
-    //                int idx_report_list = PQfnumber(res, COL_NAME_REPORT_LIST);
     int idx_report_list_cbor = PQfnumber(res, COL_NAME_REPORT_LIST_CBOR);
-    //                int idx_nonce_int = PQfnumber(res, COL_NAME_NONCE_INT);
-    //                int idx_nonce_bytes = PQfnumber(res, COL_NAME_NONCE_BYTES);
-
-    // Bail if we failed to locate any relevant colum names
-    const char *err_miss_col_name = NULL;
+    // Bail if we failed to locate any relevant column names
     if (idx_report_list_cbor == -1)
-        err_miss_col_name = COL_NAME_REPORT_LIST_CBOR;
-    //                if (idx_time == -1)
-    //                    err_miss_col_name = COL_NAME_REFERENCE_TIME;
-    //                else if (idx_agent_id == -1)
-    //                    err_miss_col_name = COL_NAME_AGENT_ID;
-    //                else if (idx_ari_rptset_id == -1)
-    //                    err_miss_col_name = COL_NAME_ARI_RPTSET_ID;
-    //                else if (idx_report_list == -1)
-    //                    err_miss_col_name = COL_NAME_REPORT_LIST;
-    //                else if (idx_nonce_int == -1)
-    //                    err_miss_col_name = COL_NAME_NONCE_INT;
-    //                else if (idx_nonce_bytes == -1)
-    //                    err_miss_col_name = COL_NAME_NONCE_BYTES;
-
-    if (err_miss_col_name != NULL)
     {
-        fprintf(stderr, "Failed to locate table column for %s\n", err_miss_col_name);
+        fprintf(stderr, "Failed to locate table column for %s\n", COL_NAME_REPORT_LIST_CBOR);
         PQclear(res);
         return RET_FAIL_DATABASE;
     }
