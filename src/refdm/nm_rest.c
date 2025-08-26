@@ -510,9 +510,9 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     cace_ari_list_t rptsets;
     cace_ari_list_init(rptsets);
 
+    int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
     // Retrieve the rptsets from the remote (database) source
-    int32_t idx   = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
-    int     ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
+    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
     if (ecode != 0)
     {
         cace_ari_list_clear(rptsets);
@@ -575,7 +575,7 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
         retval = HTTP_OK;
     }
 
-    // Release the resources of rptsets (if it is source remotely)
+    // Release the resources of rptsets (if it is sourced remotely)
     if (is_remote_rptsets == true)
     {
         cace_ari_list_clear(*ptr_rptsets);
@@ -599,9 +599,9 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     cace_ari_list_t rptsets;
     cace_ari_list_init(rptsets);
 
+    int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
     // Retrieve the rptsets from the remote (database) source
-    int32_t idx   = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
-    int     ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
+    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
     if (ecode != 0)
     {
         cace_ari_list_clear(rptsets);

@@ -133,6 +133,13 @@ refdm_agent_t *refdm_db_fetch_agent(int32_t id);
 int32_t refdm_db_fetch_agent_idx(const char *eid);
 
 /**
+ * Runs a clear request on the rptset database table. All rows will be removed.
+ *
+ * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ */
+int refdm_db_clear_rptset(int32_t agent_idx);
+
+/**
  * Runs a query on the database and retrieves the number of rptsets.
  *
  * @param agent_idx The row index of the source Agent.
@@ -149,13 +156,6 @@ int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count);
  * @return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
  */
 int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets);
-
-/** Clears all RPTSET stored for a specific agent.
- *
- * @param agent_idx The row index of the source Agent.
- * @return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
- */
-int refdm_db_clear_rptset(int32_t agent_idx);
 
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.

@@ -735,7 +735,7 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
     if (format == NULL)
     {
         CACE_LOG_ERR("Bad Args.");
-        CACE_LOG_INFO("-->%d", 0);
+        CACE_LOG_INFO("-->%d", RET_FAIL_BAD_ARGS);
         return RET_FAIL_BAD_ARGS;
     }
 
@@ -746,7 +746,7 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
     if (refdm_db_mgt_connected(idx) != 0)
     {
         CACE_LOG_ERR("DB not connected.");
-        CACE_LOG_INFO("-->%d", -1);
+        CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE_CONNECTION);
         return RET_FAIL_DATABASE_CONNECTION;
     }
 
@@ -760,14 +760,14 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
     {
         const char *errm = mysql_error(gConn[idx]);
         CACE_LOG_ERR("Database Error: %s", errm);
-        CACE_LOG_INFO("-->%d", 0);
+        CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
         return RET_FAIL_DATABASE;
     }
 
     if ((*res = mysql_store_result(gConn[idx])) == NULL)
     {
-        CACE_LOG_ERR("Can't get result.", NULL);
-        CACE_LOG_INFO("-->%d", 0);
+        CACE_LOG_ERR("Can't get result.");
+        CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
         return RET_FAIL_DATABASE;
     }
 #endif // HAVE_MYSQL
@@ -778,12 +778,12 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
         PQclear(*res);
         const char *errm = PQerrorMessage(gConn[idx]);
         CACE_LOG_ERR("Database Error: %s", errm);
-        CACE_LOG_INFO("-->%d", 0);
+        CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
         return RET_FAIL_DATABASE;
     }
 #endif // HAVE_POSTGRESQL
 
-    CACE_LOG_INFO("-->%d", 1);
+    CACE_LOG_INFO("-->%d", RET_PASS);
     return RET_PASS;
 }
 
@@ -977,10 +977,26 @@ static void debugPostgresSqlResult(PGresult *res, int max_row_cnt)
 }
 
 //-------------------------------------------------------------------------------------
-int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
+int refdm_db_clear_rptset(int32_t agent_idx)
 {
     PGresult *res   = NULL;
-    int       ecode = refdm_db_mgt_query_fetch(&res, "SELECT COUNT(*) FROM %s", TBL_NAME_RPTSET);
+    int       ecode = refdm_db_mgt_query_fetch(&res, "DELETE FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET, agent_idx);
+    if (ecode != RET_PASS)
+    {
+        CACE_LOG_ERR("Failed to clear table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
+        //        PQclear(res);
+        return RET_FAIL_DATABASE;
+    }
+
+    PQclear(res);
+    return RET_PASS;
+}
+
+//-------------------------------------------------------------------------------------
+int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
+{
+    PGresult *res = NULL;
+    int ecode = refdm_db_mgt_query_fetch(&res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET, agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to retrieve the count of table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
@@ -1005,7 +1021,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
 {
     // Get the rptset rows from the database
     PGresult *res   = NULL;
-    int       ecode = refdm_db_mgt_query_fetch(&res, "SELECT * FROM %s", TBL_NAME_RPTSET);
+    int       ecode = refdm_db_mgt_query_fetch(&res, "SELECT %s FROM %s WHERE agent_id=%d", COL_NAME_REPORT_LIST_CBOR, TBL_NAME_RPTSET, agent_idx);
     // debugPostgresSqlResult(res, 9);
     if (ecode != RET_PASS)
     {
@@ -1079,22 +1095,15 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
     return RET_PASS;
 }
 
-int refdm_db_clear_rptset(int32_t agent_idx)
-{
-    PGresult *res   = NULL;
-
-    int       ecode = refdm_db_mgt_query_fetch(&res, "DELETE FROM %s WHERE ", TBL_NAME_RPTSET);
-    if (ecode != RET_PASS)
-    {
-        CACE_LOG_ERR("Failed to retrieve the count of table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
-        //        PQclear(res);
-        return RET_FAIL_DATABASE;
-    }
-}
-
 #endif // HAVE_POSTGRESQL
 
 #ifdef HAVE_MYSQL
+
+//-------------------------------------------------------------------------------------
+int refdm_db_clear_rptset(int32_t agent_idx)
+{
+    return RET_FAIL_UNDEFINED;
+}
 
 //-------------------------------------------------------------------------------------
 int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
@@ -1201,9 +1210,7 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
 
     /* Step 1: Grab the OID row. */
     // TODO this does not escape the text
-    if (refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE agent_id_string='%s'",
-                                 eid)
-        != RET_PASS)
+    if (refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE agent_id_string='%s'", eid) != RET_PASS)
     {
         CACE_LOG_ERR("Can't fetch");
         CACE_LOG_INFO("-->%d", 0);

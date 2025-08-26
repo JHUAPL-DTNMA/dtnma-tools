@@ -1500,14 +1500,14 @@ create or replace procedure SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference
 language plpgsql
 as $$
 DECLARE
-    agent_id INTEGER;
+    r_agent_id INTEGER;
 BEGIN
     INSERT INTO registered_agents(agent_id_string)
         VALUES(p_agent_id)
-        ON CONFLICT DO NOTHING
-        RETURNING registered_agents_id INTO agent_id;
+        ON CONFLICT (agent_id_string) DO UPDATE SET last_registered=DEFAULT
+        RETURNING registered_agents_id INTO r_agent_id;
     INSERT INTO ari_rptset(nonce_cbor, reference_time, report_list, report_list_cbor, agent_id)
-        VALUES(p_nonce_cbor, p_reference_time, p_report_list, p_report_list_cbor, agent_id);
+        VALUES(p_nonce_cbor, p_reference_time, p_report_list, p_report_list_cbor, r_agent_id);
 End$$;
 
 create or replace procedure SP__insert_execset(in p_nonce_cbor BYTEA, p_use_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries INT)

@@ -532,7 +532,7 @@ create table if not exists ari_rptset (
     reference_time varchar not null, -- TODO timestamp
     report_list varchar,
     report_list_cbor bytea,
-    agent_id INTEGER,
+    agent_id INTEGER NOT NULL,
     primary key (ari_rptset_id),
     foreign key (agent_id) references registered_agents (registered_agents_id)
 );
