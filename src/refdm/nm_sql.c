@@ -891,35 +891,16 @@ int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...)
  */
 static int transform_cbor_str_to_cace_data(cace_ari_t *ari_item, char *cbor_str, char **errm)
 {
-    size_t chexstr_len = 0;
-    char  *chexstr     = PQunescapeBytea(cbor_str, &chexstr_len);
+    size_t   bytea_len = 0;
+    uint8_t *bytea_ptr = PQunescapeBytea(cbor_str, &bytea_len);
 
-    string_t inhex;
-    string_init(inhex);
-    m_string_set_cstrn(inhex, chexstr, chexstr_len);
-    free(chexstr);
-
-    // Convert from hex string to cace_data buffer
     cace_data_t inbin;
-    cace_data_init(&inbin);
-    int ecode = cace_base16_decode(&inbin, inhex);
-    string_clear(inhex);
-    if (ecode != RET_PASS)
-    {
-        if (errm != NULL)
-        {
-            string_t err;
-            string_init_printf(err, "Failed to base-16 decode.   ecode: %d   | input: %s", ecode, cbor_str);
-            *errm = string_clear_get_str(err);
-        }
+    cace_data_init_view(&inbin, bytea_len, bytea_ptr);
 
-        cace_data_deinit(&inbin);
-        return RET_FAIL_UNEXPECTED;
-    }
-
-    // Transform from cbor_hex to ari
-    ecode = cace_ari_cbor_decode(ari_item, &inbin, NULL, errm);
+    // Transform from CBOR to ARI
+    int ecode = cace_ari_cbor_decode(ari_item, &inbin, NULL, errm);
     cace_data_deinit(&inbin);
+    free(bytea_ptr);
     if (ecode != 0)
     {
         return RET_FAIL_UNEXPECTED;
@@ -1174,9 +1155,14 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
         return 0;
     }
 
+    const size_t eid_len      = strlen(eid);
+    char        *eid_buf      = CACE_MALLOC(2 * eid_len + 1);
+    size_t       eid_buf_used = PQescapeStringConn(gConn[DB_RPT_CON], eid_buf, eid, eid_len, NULL);
+
     /* Step 1: Grab the OID row. */
-    // TODO this does not escape the text
-    if (refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE agent_id_string='%s'", eid) != RET_PASS)
+    int status = refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE agent_id_string='%s'", eid_buf);
+    CACE_FREE(eid_buf);
+    if (status != RET_PASS)
     {
         CACE_LOG_ERR("Can't fetch");
         CACE_LOG_INFO("-->%d", 0);
