@@ -286,11 +286,11 @@ class TestRefdmSocket(unittest.TestCase):
             val = ari_cbor.Decoder().decode(buf)
         return val
 
-    def _send_rptset(self, text:str, agent_ix=0) -> str:
+    def _send_rptset(self, agent_ix:int, text:str) -> str:
         ''' Send an RPTSET with a number of target ARIs.
 
-        :param text: The ARI text form to send.
         :param agent_ix: The agent index to send from.
+        :param text: The ARI text form to send.
         :return: The socket path from which it was sent.
         '''
         LOGGER.info('Sending value %s', text)
@@ -508,14 +508,14 @@ class TestRefdmSocket(unittest.TestCase):
         resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=hex')
         self.assertEqual(404, resp.status_code)
 
-    def test_recv_one_rptset(self):
+    def test_recv_one_agent_one_rptset(self):
         self._start()
 
         # initial state
         self.assertEqual(set(), self._get_agent_names())
 
         # first check behavior with one report
-        sock_path = self._send_rptset(
+        sock_path = self._send_rptset(0,
             'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
@@ -553,17 +553,17 @@ class TestRefdmSocket(unittest.TestCase):
         for line in lines:
             self.assertTrue(line.startswith('ari:/RPTSET/'))
 
-    def test_recv_three_rptsets(self):
+    def test_recv_one_agent_three_rptset(self):
         self._start()
 
         # each primitive type of nonce
-        self._send_rptset(
+        self._send_rptset(0,
             'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
-        self._send_rptset(
+        self._send_rptset(0,
             'ari:/RPTSET/n=\'test\';r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
-        sock_path = self._send_rptset(
+        sock_path = self._send_rptset(0,
             'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         eid_seg = quote(f'file:{sock_path}', safe="")
@@ -599,25 +599,41 @@ class TestRefdmSocket(unittest.TestCase):
         other_lines = resp.text.splitlines()
         self.assertEqual(lines, other_lines)
 
-    def test_recv_clear_rptset(self):
+    def test_recv_two_agents_clear_rptset(self):
         self._start()
 
-        sock_path = self._send_rptset(
+        # one each from different agents
+        sock_path = self._send_rptset(0,
             'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
-        eid_seg = quote(f'file:{sock_path}', safe="")
+        eid_seg0 = quote(f'file:{sock_path}', safe="")
 
-        self._wait_for_db_table('ari_rptset', 1)
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
+        sock_path = self._send_rptset(1,
+            'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+        )
+        eid_seg1 = quote(f'file:{sock_path}', safe="")
+
+        self._wait_for_db_table('ari_rptset', 2)
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
+        self.assertEqual(200, resp.status_code)
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
 
         # clear RPTSETs explicitly
-        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg}/clear_reports')
+        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg0}/clear_reports')
         self.assertEqual(204, resp.status_code)
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
+        self._wait_for_db_table('ari_rptset', 1)
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
+        self.assertEqual(204, resp.status_code)
+        # repeats do nothing
+        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg0}/clear_reports')
         self.assertEqual(204, resp.status_code)
 
+        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg1}/clear_reports')
+        self.assertEqual(204, resp.status_code)
         self._wait_for_db_table('ari_rptset', 0)
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=hex')
+        self.assertEqual(204, resp.status_code)
 
     def test_agents_send_hex(self):
         self._start()

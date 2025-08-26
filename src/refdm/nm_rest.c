@@ -538,7 +538,7 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
         if (is_remote_rptsets == true)
             cace_ari_list_clear(*ptr_rptsets);
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "No reports were located.");
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
         return HTTP_NO_CONTENT;
     }
 
@@ -592,7 +592,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     // Flag that defines if the rptsets came from a remote source (i.e. a database). If this
     // is set to true, then the variable ptr_rptsets should be cleared within this method.
     bool             is_remote_rptsets = false;
-    cace_ari_list_t *ptr_rptsets       = NULL;
+    const cace_ari_list_t *ptr_rptsets       = NULL;
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     // Synthesize the rptsets (on the stack)
@@ -623,11 +623,12 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     if (cace_ari_list_empty_p(*ptr_rptsets))
     {
         // Clear the internals of data pointed to by ptr_rptsets (if it was sourced remotely).
-        // TODO: Is this clearing even necessary?
         if (is_remote_rptsets == true)
+        {
             cace_ari_list_clear(*ptr_rptsets);
+        }
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "No reports were located.");
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
         return HTTP_NO_CONTENT;
     }
 
@@ -849,10 +850,8 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
 
-        const char *resp = "Successfully cleared reports";
-        mg_send_http_ok(conn, "text/plain", strlen(resp));
-        mg_printf(conn, "%s", resp);
-        return HTTP_OK;
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        return HTTP_NO_CONTENT;
     }
     else
     {
