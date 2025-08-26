@@ -572,9 +572,11 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
         retval = HTTP_OK;
     }
 
-    // Release the resources of rptsets (if it is source remotely)
+    // Release the resources of rptsets (if it is sourced remotely)
     if (is_remote_rptsets == true)
+    {
         cace_ari_list_clear(*ptr_rptsets);
+    }
 
     m_string_clear(body);
     return retval;
@@ -665,7 +667,9 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 
     // Release the resources of rptsets (if it is sourced remotely)
     if (is_remote_rptsets == true)
+    {
         cace_ari_list_clear(*ptr_rptsets);
+    }
 
     m_string_clear(body);
     return retval;
