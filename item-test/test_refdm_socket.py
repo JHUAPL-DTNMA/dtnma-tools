@@ -296,8 +296,8 @@ class TestRefdmSocket(unittest.TestCase):
         LOGGER.info('Sending value %s', text)
         data = cbor2.dumps(1) + self._ari_obj_to_cbor(self._ari_text_to_obj(text))
         addr = self._mgr_sock_path
-        LOGGER.info('Sending message %s to %s', data.hex(), addr)
         bind = self._agent_bind[agent_ix]
+        LOGGER.info('Sending message %s from %s to %s', data.hex(), bind['path'], addr)
         bind['sock'].sendto(data, addr)
         return bind['path']
 
@@ -307,10 +307,11 @@ class TestRefdmSocket(unittest.TestCase):
         :param agent_ix: The agent index to receive on.
         :return: The contained ARIs in decoded form.
         '''
-        recv_sock = self._agent_bind[agent_ix]['sock']
+        bind = self._agent_bind[agent_ix]
+        recv_sock = bind['sock']
 
         (data, addr) = recv_sock.recvfrom(1024)
-        LOGGER.info('Received message %s from %s', data.hex(), addr)
+        LOGGER.info('Received message %s to %s from %s', data.hex(), bind['path'], addr)
         self.assertEqual(self._mgr_sock_path, addr)
 
         values = []
@@ -616,8 +617,10 @@ class TestRefdmSocket(unittest.TestCase):
         self._wait_for_db_table('ari_rptset', 2)
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
+        self.assertEqual(1, len(resp.text.splitlines()))
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
+        self.assertEqual(1, len(resp.text.splitlines()))
 
         # clear RPTSETs explicitly
         resp = self._req.post(self._base_url + f'agents/eid/{eid_seg0}/clear_reports')

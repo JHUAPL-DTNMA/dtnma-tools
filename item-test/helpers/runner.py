@@ -121,9 +121,12 @@ class CmdRunner:
         )
         self._stdin_writer.start()
 
-    def _finish(self) -> int:
+    def _finish(self) -> Optional[int]:
         ''' Clean up the process state after exit.
         '''
+        if self.proc is None:
+            return None
+
         ret = self.proc.returncode
         self.proc = None
         LOGGER.info('Stopped with exit code: %s', ret)
@@ -155,6 +158,7 @@ class CmdRunner:
                 self.proc.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
                 self._finish()
+                raise
 
         return self._finish()
 
@@ -179,6 +183,7 @@ class CmdRunner:
                 self.proc.kill()
                 self.proc.wait(timeout=timeout)
                 self._finish()
+                raise
 
         return self._finish()
 
