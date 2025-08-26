@@ -111,12 +111,12 @@ void refdm_db_mgt_close(void);
 void refdm__db_mgt_close_conn(size_t i);
 int  refdm_db_mgt_connected(size_t i);
 #ifdef HAVE_MYSQL
-int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...);
+int32_t refdm_db_mgt_query_fetch(int db_idx, MYSQL_RES **res, char *format, ...);
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-int32_t refdm_db_mgt_query_fetch(PGresult **res, char *format, ...);
+int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...);
 #endif // HAVE_POSTGRESQL
-int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...);
+int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...);
 
 /* Functions to process outgoing EXECSET and incoming RPTSET. */
 uint32_t       refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agent);

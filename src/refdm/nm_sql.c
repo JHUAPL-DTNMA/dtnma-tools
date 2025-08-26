@@ -49,11 +49,16 @@ const char *COL_NAME_NONCE_BYTES      = "nonce_bytes";
  - Mgr Report Rx Thread - Log received reports
  - UI - If we add UI functions to query the DB, a separate connection will be needed.
 */
-typedef enum db_con_t
+typedef enum db_con_e
 {
-    DB_CTRL_CON, // Primary connection for receiving outgoing controls from database
-    DB_RPT_CON,  // Primary connection associated with Mgr rx thread. All activities in this thread will execute within
-                 // transactions.
+    /// Connection for receiving outgoing controls from database
+    DB_CTRL_CON,
+    /// Connection associated with DM RX thread.
+    /// All activities in this thread will execute within transactions.
+    DB_RPT_CON,
+    /// Connection for REST API access
+    DB_REST_CON,
+    /// Total number of connections
     MGR_NUM_SQL_CONNECTIONS
 } db_con_t;
 
@@ -65,9 +70,8 @@ static MYSQL *gConn[MGR_NUM_SQL_CONNECTIONS];
 static PGconn *gConn[MGR_NUM_SQL_CONNECTIONS];
 #endif // HAVE_POSTGRESQL
 static refdm_db_t *gParms;
-static uint8_t     gInTxn;
-int db_log_always = 1; // If set, always log raw CBOR of incoming messages for debug purposes, otherwise log errors
-                       // only. TODO: Add UI or command-line option to change setting at runtime
+
+static pthread_mutex_t db_rest_con_use;
 
 // Private functions
 #ifdef HAVE_MYSQL
@@ -409,10 +413,10 @@ static inline void db_mgt_txn_commit(int dbidx)
  * \retval 0 Failure
  *        !0 Success
  *
- * \param[in]  server - The machine hosting the SQL database.
- * \param[in]  user - The username for the SQL database.
- * \param[in]  pwd - The password for this user.
- * \param[in]  database - The database housing the DTNMP tables.
+ * \param[in]  server The machine hosting the SQL database.
+ * \param[in]  user The username for the SQL database.
+ * \param[in]  pwd The password for this user.
+ * \param[in]  database The database housing the DTNMP tables.
  *
  * Modification History:
  *  MM/DD/YY  AUTHOR         DESCRIPTION
@@ -422,13 +426,16 @@ static inline void db_mgt_txn_commit(int dbidx)
  *****************************************************************************/
 uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log)
 {
-    CACE_LOG_INFO("setting up db connect for ctrl");
+    pthread_mutex_init(&db_rest_con_use, NULL);
 
+    CACE_LOG_INFO("setting up db connect for DB_CTRL_CON");
     refdm_db_mgt_init_con(DB_CTRL_CON, parms);
 
-    CACE_LOG_INFO("setting up db connect for rpts");
-
+    CACE_LOG_INFO("setting up db connect for DB_RPT_CON");
     refdm_db_mgt_init_con(DB_RPT_CON, parms);
+
+    CACE_LOG_INFO("setting up db connect for DB_REST_CON");
+    refdm_db_mgt_init_con(DB_REST_CON, parms);
 
     // A mysql_commit or mysql_rollback will automatically start a new transaction as the old one is closed
     if (gConn[DB_RPT_CON] != NULL)
@@ -459,7 +466,6 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
         gConn[idx] = mysql_init(NULL);
 #endif // HAVE_MYSQL
         gParms = parms;
-        gInTxn = 0;
 
 #ifdef HAVE_MYSQL
         if (!mysql_real_connect(gConn[idx], parms->server, parms->username, parms->password, parms->database, 0, NULL,
@@ -542,6 +548,8 @@ void refdm_db_mgt_close(void)
         refdm__db_mgt_close_conn(i);
     }
     CACE_LOG_INFO("refdm_db_mgt_close", "-->.");
+
+    pthread_mutex_destroy(&db_rest_con_use);
 }
 void refdm__db_mgt_close_conn(size_t idx)
 {
@@ -698,12 +706,12 @@ static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, i
  *
  * \return Returns ::RET_PASS on success otherwise @c RET_FAIL_* on failure.
  *
- * \param[out] res    - The result.
- * \param[in]  format - Format to build query
- * \param[in]  ...    - Var args to build query given format string.
+ * \param[out] res    The result.
+ * \param[in]  format Format to build query
+ * \param[in]  ...    Var args to build query given format string.
  *
- * \par Notes:
- *   - The res structure should be a pointer but without being allocated. This
+ * \note
+ * The @c res structure should be a pointer but without being allocated. This
  *     function will create the storage.
  *
  * Modification History:
@@ -712,14 +720,12 @@ static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, i
  *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
  *****************************************************************************/
 #ifdef HAVE_MYSQL
-int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
+int32_t refdm_db_mgt_query_fetch(int db_idx, MYSQL_RES **res, char *format, ...)
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-    int32_t refdm_db_mgt_query_fetch(PGresult **res, char *format, ...)
+    int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...)
 #endif // HAVE_POSTGRESQL
 {
-    const size_t db_idx = DB_RPT_CON;
-
     /* Step 0: Sanity check. */
     if (format == NULL)
     {
@@ -791,24 +797,20 @@ int32_t refdm_db_mgt_query_fetch(MYSQL_RES **res, char *format, ...)
  *         0   - Non-fatal issue.
  *         >0         - The index of the inserted item.
  *
- * \param[out] idx    - The index of the inserted row.
- * \param[in]  format - Format to build query
- * \param[in]  ...    - Var args to build query given format string.
+ * \param[out] idx    The index of the inserted row.
+ * \param[in]  format Format to build query
+ * \param[in]  ...    Var args to build query given format string.
  *
- * \par Notes:
- *   - The idx may be NULL if the insert index is not needed.
+ * \note
+ *  The @c idx may be NULL if the insert index is not needed.
  *
  * Modification History:
  *  MM/DD/YY  AUTHOR         DESCRIPTION
  *  --------  ------------   ---------------------------------------------
  *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
  *****************************************************************************/
-int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...)
+int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...)
 {
-    const size_t db_idx = DB_RPT_CON;
-
-    DB_LOG_INFO(db_idx, "refdm_db_mgt_query_insert", "(%p,%p)", idx, format);
-
     if (refdm_db_mgt_connected(db_idx) == 0)
     {
         CACE_LOG_ERR("DB not connected.", NULL);
@@ -948,56 +950,79 @@ static void debugPostgresSqlResult(PGresult *res, int max_row_cnt)
 //-------------------------------------------------------------------------------------
 int refdm_db_clear_rptset(int32_t agent_idx)
 {
-    PGresult *res   = NULL;
-    int       ecode = refdm_db_mgt_query_fetch(&res, "DELETE FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET, agent_idx);
+    int ecode;
+    if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
+    {
+        CACE_LOG_ERR("failed to lock mutex");
+        return RET_FAIL_DATABASE_CONNECTION;
+    }
+
+    PGresult *res = NULL;
+    ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "DELETE FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET, agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to clear table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
-        //        PQclear(res);
+        pthread_mutex_unlock(&db_rest_con_use);
         return RET_FAIL_DATABASE;
     }
 
     PQclear(res);
+    pthread_mutex_unlock(&db_rest_con_use);
     return RET_PASS;
 }
 
 //-------------------------------------------------------------------------------------
 int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
 {
+    int ecode;
+    if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
+    {
+        CACE_LOG_ERR("failed to lock mutex");
+        return RET_FAIL_DATABASE_CONNECTION;
+    }
+
     PGresult *res = NULL;
-    int ecode = refdm_db_mgt_query_fetch(&res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET, agent_idx);
+    ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET,
+                                     agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to retrieve the count of table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
-        //        PQclear(res);
+        pthread_mutex_unlock(&db_rest_con_use);
         return RET_FAIL_DATABASE;
     }
 
     long count_val = 0;
-    if (PQntuples(res) > 0 && PQnfields(res) > 0)
+    if ((PQntuples(res) > 0) && (PQnfields(res) > 0))
     {
         char *count_str = PQgetvalue(res, 0, 0);
-        count_val       = atol(count_str);
+        count_val       = strtol(count_str, NULL, 10);
     }
     *count = count_val;
 
     PQclear(res);
+    pthread_mutex_unlock(&db_rest_con_use);
     return RET_PASS;
 }
 
 //-------------------------------------------------------------------------------------
 int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
 {
+    int ecode;
+    if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
+    {
+        CACE_LOG_ERR("failed to lock mutex");
+        return RET_FAIL_DATABASE_CONNECTION;
+    }
+
     // Get the rptset rows from the database
-    PGresult *res   = NULL;
-    int       ecode = refdm_db_mgt_query_fetch(&res, "SELECT %s FROM %s WHERE agent_id=%d", COL_NAME_REPORT_LIST_CBOR,
-                                               TBL_NAME_RPTSET, agent_idx);
+    PGresult *res = NULL;
+    ecode         = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT %s FROM %s WHERE agent_id=%d",
+                                             COL_NAME_REPORT_LIST_CBOR, TBL_NAME_RPTSET, agent_idx);
     // debugPostgresSqlResult(res, 9);
     if (ecode != RET_PASS)
     {
-        CACE_LOG_ERR("Failed to retrieve the rptset items.");
-
-        //                    PQclear(res);
+        CACE_LOG_ERR("Failed to retrieve the RPTSET items.");
+        pthread_mutex_unlock(&db_rest_con_use);
         return RET_FAIL_DATABASE;
     }
 
@@ -1006,8 +1031,9 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
     // Bail if we failed to locate any relevant column names
     if (idx_report_list_cbor == -1)
     {
-        fprintf(stderr, "Failed to locate table column for %s\n", COL_NAME_REPORT_LIST_CBOR);
+        CACE_LOG_ERR("Failed to locate table column for %s", COL_NAME_REPORT_LIST_CBOR);
         PQclear(res);
+        pthread_mutex_unlock(&db_rest_con_use);
         return RET_FAIL_DATABASE;
     }
 
@@ -1018,7 +1044,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
         // Extract the report_list_cbor from the database row
         char *cbor_str = PQgetvalue(res, row, idx_report_list_cbor);
 
-        // Transform from database cbor string to a report
+        // Transform from database BYTEA to a RPTSET value
         cace_ari_t ari_item;
         cace_ari_init(&ari_item);
         char *errm = NULL;
@@ -1028,6 +1054,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
             // Skip to next on failure
             CACE_LOG_ERR("Database has invalid report.   row: %d   |   ecode: %d   |   errm: %s", row, ecode, errm);
             CACE_FREE(errm);
+            pthread_mutex_unlock(&db_rest_con_use);
             continue;
         }
         CACE_FREE(errm);
@@ -1039,6 +1066,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
     CACE_LOG_INFO("Success with retrieval of rptset items. Num items: %d", num_rows);
 
     PQclear(res);
+    pthread_mutex_unlock(&db_rest_con_use);
     return RET_PASS;
 }
 
@@ -1075,7 +1103,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
  * \retval NULL Failure
  *        !NULL The built adm_reg_agent_t  structure.
  *
- * \param[in] id - The Primary Key of the desired registered agent.
+ * \param[in] id The Primary Key of the desired registered agent.
  *
  * Modification History:
  *  MM/DD/YY  AUTHOR         DESCRIPTION
@@ -1097,7 +1125,8 @@ refdm_agent_t *refdm_db_fetch_agent(int32_t id)
     CACE_LOG_INFO("(%d)", id);
 
     /* Step 1: Grab the OID row. */
-    if (refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE registered_agents_id=%d", id) != RET_PASS)
+    if (refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT * FROM registered_agents WHERE registered_agents_id=%d", id)
+        != RET_PASS)
     {
         CACE_LOG_ERR("Cant fetch agent %d", id);
         return NULL;
@@ -1160,7 +1189,8 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
     size_t       eid_buf_used = PQescapeStringConn(gConn[DB_RPT_CON], eid_buf, eid, eid_len, NULL);
 
     /* Step 1: Grab the OID row. */
-    int status = refdm_db_mgt_query_fetch(&res, "SELECT * FROM registered_agents WHERE agent_id_string='%s'", eid_buf);
+    int status = refdm_db_mgt_query_fetch(DB_REST_CON, &res,
+                                          "SELECT * FROM registered_agents WHERE agent_id_string='%s'", eid_buf);
     CACE_FREE(eid_buf);
     if (status != RET_PASS)
     {
@@ -1201,9 +1231,9 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
 }
 
 /**
- * @param val - Report
- * @param agent - agent table set being inserted in
- * @param status - Set to 0 if
+ * @param val Report
+ * @param agent agent table set being inserted in
+ * @param status Set to 0 if
  * parsing fails, but not modified on
  * success
  * @returns  Set ID, or 0 on error
@@ -1284,8 +1314,8 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
 
 /**
 
- * @param eid - agent eid being added
- * @param status - Set to 0 if
+ * @param eid agent eid being added
+ * @param status Set to 0 if
  * parsing fails, but not modified on
  * success
  * @returns Report Set ID, or 0 on error
