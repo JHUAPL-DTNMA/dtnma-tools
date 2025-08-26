@@ -1021,7 +1021,8 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
 {
     // Get the rptset rows from the database
     PGresult *res   = NULL;
-    int       ecode = refdm_db_mgt_query_fetch(&res, "SELECT %s FROM %s WHERE agent_id=%d", COL_NAME_REPORT_LIST_CBOR, TBL_NAME_RPTSET, agent_idx);
+    int       ecode = refdm_db_mgt_query_fetch(&res, "SELECT %s FROM %s WHERE agent_id=%d", COL_NAME_REPORT_LIST_CBOR,
+                                               TBL_NAME_RPTSET, agent_idx);
     // debugPostgresSqlResult(res, 9);
     if (ecode != RET_PASS)
     {

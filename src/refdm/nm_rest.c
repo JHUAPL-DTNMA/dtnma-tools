@@ -591,7 +591,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 
     // Flag that defines if the rptsets came from a remote source (i.e. a database). If this
     // is set to true, then the variable ptr_rptsets should be cleared within this method.
-    bool             is_remote_rptsets = false;
+    bool                   is_remote_rptsets = false;
     const cace_ari_list_t *ptr_rptsets       = NULL;
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
