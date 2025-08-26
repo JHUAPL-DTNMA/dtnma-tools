@@ -259,10 +259,14 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
     return got ? *got : NULL;
 }
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent _U_)
+{
+    refdm_db_clear_rptset();
+}
+#else
 void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
 {
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-#else
     cace_ari_list_reset(agent->rptsets);
-#endif
 }
+#endif

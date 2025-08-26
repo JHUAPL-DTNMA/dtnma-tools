@@ -977,6 +977,22 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
     }
 
     //-------------------------------------------------------------------------------------
+    int refdm_db_clear_rptset(void)
+    {
+        PGresult *res   = NULL;
+        int       ecode = refdm_db_mgt_query_fetch(&res, "DELETE FROM %s;", TBL_NAME_RPTSET);
+        if (ecode != RET_PASS)
+        {
+            CACE_LOG_ERR("Failed to clear table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
+            //        PQclear(res);
+            return RET_FAIL_DATABASE;
+        }
+
+        PQclear(res);
+        return RET_PASS;
+    }
+
+    //-------------------------------------------------------------------------------------
     int refdm_db_fetch_rptset_count(size_t * count)
     {
         PGresult *res   = NULL;
@@ -1082,6 +1098,12 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 #endif // HAVE_POSTGRESQL
 
 #ifdef HAVE_MYSQL
+
+    //-------------------------------------------------------------------------------------
+    int refdm_db_clear_rptset(void)
+    {
+        return RET_FAIL_UNDEFINED;
+    }
 
     //-------------------------------------------------------------------------------------
     int refdm_db_fetch_rptset_count(size_t * count)

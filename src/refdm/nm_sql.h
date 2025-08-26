@@ -126,6 +126,13 @@ refdm_agent_t *refdm_db_fetch_agent(int32_t id);
 int32_t        refdm_db_fetch_agent_idx(const string_t *sender);
 
 /**
+ * Runs a clear request on the rptset database table. All rows will be removed.
+ *
+ * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ */
+int refdm_db_clear_rptset(void);
+
+/**
  * Runs a query on the database and retrieves the number of rptsets.
  *
  * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
