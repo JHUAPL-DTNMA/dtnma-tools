@@ -735,7 +735,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
         if (format == NULL)
         {
             CACE_LOG_ERR("Bad Args.");
-            CACE_LOG_INFO("-->%d", 0);
+            CACE_LOG_INFO("-->%d", RET_FAIL_BAD_ARGS);
             return RET_FAIL_BAD_ARGS;
         }
 
@@ -746,7 +746,7 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
         if (refdm_db_mgt_connected(idx) != 0)
         {
             CACE_LOG_ERR("DB not connected.");
-            CACE_LOG_INFO("-->%d", -1);
+            CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE_CONNECTION);
             return RET_FAIL_DATABASE_CONNECTION;
         }
 
@@ -760,14 +760,14 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
         {
             const char *errm = mysql_error(gConn[idx]);
             CACE_LOG_ERR("Database Error: %s", errm);
-            CACE_LOG_INFO("-->%d", 0);
+            CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
             return RET_FAIL_DATABASE;
         }
 
         if ((*res = mysql_store_result(gConn[idx])) == NULL)
         {
             CACE_LOG_ERR("Can't get result.", NULL);
-            CACE_LOG_INFO("-->%d", 0);
+            CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
             return RET_FAIL_DATABASE;
         }
 #endif // HAVE_MYSQL
@@ -778,12 +778,12 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
             PQclear(*res);
             const char *errm = PQerrorMessage(gConn[idx]);
             CACE_LOG_ERR("Database Error: %s", errm);
-            CACE_LOG_INFO("-->%d", 0);
+            CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
             return RET_FAIL_DATABASE;
         }
 #endif // HAVE_POSTGRESQL
 
-        CACE_LOG_INFO("-->%d", 1);
+        CACE_LOG_INFO("-->%d", RET_PASS);
         return RET_PASS;
     }
 
