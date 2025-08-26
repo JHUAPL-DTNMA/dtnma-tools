@@ -74,6 +74,7 @@ dereferencing
 DGRAM
 diag
 dlist
+DM
 DNS
 dothing
 Doxygen
