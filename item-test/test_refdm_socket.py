@@ -127,6 +127,8 @@ class TestRefdmSocket(unittest.TestCase):
 
     def _database_create(self) -> str:
         ''' Create a test database in a running postgres server '''
+        self._database_drop()
+
         psql = CmdRunner([
             'psql',
             '-w',
