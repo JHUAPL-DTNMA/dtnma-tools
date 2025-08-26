@@ -696,7 +696,7 @@ static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, i
  *
  * \par Runs a fetch in the database given a query and returns the result.
  *
- * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ * \return Returns ::RET_PASS on success otherwise @c RET_FAIL_* on failure.
  *
  * \param[out] res    - The result.
  * \param[in]  format - Format to build query
@@ -877,9 +877,9 @@ int32_t refdm_db_mgt_query_insert(uint32_t *idx, char *format, ...)
 }
 
 /**
- * Takes a c string and returns the corresponding cace_ari_
+ * Takes a C string and returns the corresponding ::cace_ari_t
  *
- *  \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ *  \return Returns @c RET_PASS on success otherwise @c RET_FAIL_* on failure.
  *
  * * @param[out] ari_item The ARI to decode into.
  *

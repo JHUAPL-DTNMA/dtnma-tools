@@ -62,7 +62,7 @@ extern "C" {
 /** Return code that indicates the input resolves to an unexpected/abnormal state. */
 #define RET_FAIL_UNEXPECTED 2
 
-/** Return code that indicates that bad input argumetst were passed. */
+/** Return code that indicates that bad input arguments were passed. */
 #define RET_FAIL_BAD_ARGS 3
 
 /** Return code that there was a database (generic) error. */
@@ -134,25 +134,25 @@ int32_t refdm_db_fetch_agent_idx(const char *eid);
 /**
  * Runs a clear request on the rptset database table. All rows will be removed.
  *
- * \return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ * \return Returns ::RET_PASS on success otherwise @c RET_FAIL_* on failure.
  */
 int refdm_db_clear_rptset(int32_t agent_idx);
 
 /**
- * Runs a query on the database and retrieves the number of rptsets.
+ * Runs a query on the database and retrieves the number of RPTSETs.
  *
  * @param agent_idx The row index of the source Agent.
- * @param[out] count - Argument used to return the number of rptsets.
- * @return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ * @param[out] count Argument used to return the number of RPTSETs.
+ * @return Returns ::RET_PASS on success otherwise @c RET_FAIL_* on failure.
  */
 int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count);
 
 /**
- * Runs a query on the database and retrieves the list of rptsets.
+ * Runs a query on the database and retrieves the list of RPTSETs.
  *
  * @param agent_idx The row index of the source Agent.
- * @param[out] rptsets - The list used to hold the retrieved rptsets.
- * @return Returns RET_PASS on success otherwise RET_FAIL_* on failure.
+ * @param[out] rptsets The list used to hold the retrieved RPTSETs.
+ * @return Returns ::RET_PASS on success otherwise @c RET_FAIL_* on failure.
  */
 int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets);
 

@@ -30,7 +30,7 @@ BUILDDIR=${SELFDIR}/build/default
 
 if [ "$1" = "docs" ]
 then
-    cmake --build ${BUILDDIR} --target docs-api-html
+    cmake --build ${BUILDDIR} --target docs-api-html docs-api-misspelling
 elif [ "$1" = "install" ]
 then
     shift

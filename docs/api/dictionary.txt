@@ -193,6 +193,7 @@ rfcXXXX
 rpt
 rptset
 RPTSET
+RPTSETs
 rptt
 RPTT
 runtime
