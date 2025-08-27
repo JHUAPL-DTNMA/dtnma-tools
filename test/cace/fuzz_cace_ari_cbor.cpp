@@ -43,7 +43,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     {
         size_t used;
         char  *errm = NULL;
-        int res         = cace_ari_cbor_decode(&val, &in_data, &used, &errm);
+        int    res  = cace_ari_cbor_decode(&val, &in_data, &used, &errm);
         if (res)
         {
             CACE_LOG_ERR("Failure: %s", errm);

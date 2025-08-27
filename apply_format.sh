@@ -27,9 +27,18 @@ cd ${SELFDIR}
 
 if [[ "$#" -ne 0 ]]
 then
-    ARGS="$@"
+    FILES="$@"
 else
-    ARGS=$(find src test -iname '*.h' -o -iname '*.c')
+    FILES=$(find src test refdb-sql -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' -o -iname '*.sql')
 fi
 
-clang-format --style=file -i $ARGS
+for FN in ${FILES}
+do
+    EXT="${FN##*.}"
+    if [[ "$EXT" = ".sql" ]]
+    then
+        pg_format -i "${FN}"
+    else
+        clang-format --style=file -i "${FN}"
+    fi
+done

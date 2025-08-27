@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2025 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -14,7 +14,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 -->
 # refdb-sql
  JHUAPL    
