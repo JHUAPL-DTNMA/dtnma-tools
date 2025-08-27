@@ -501,10 +501,11 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 #ifdef HAVE_POSTGRESQL
 
         // RPTSET values
-        queries[idx][ARI_RPTSET_INSERT] = db_mgr_sql_prepare(
-            idx, "call sp__insert_rptset($1::bytea, $2::varchar, $3::varchar, $4::bytea, $5::varchar)",
-            "ARI_RPTSET_INSERT", 5, NULL);
-        // correlator_nonce, reference_time, entries , agent_id, ari_rptt_id
+        // signature IN p_nonce_cbor BYTEA, p_reference_time TIMESTAMP, p_report_list TEXT, p_report_list_cbor BYTEA,
+        // p_agent_endpoint_uri TEXT
+        queries[idx][ARI_RPTSET_INSERT] =
+            db_mgr_sql_prepare(idx, "call sp__insert_rptset($1::bytea, $2::timestamp, $3::text, $4::bytea, $5::text)",
+                               "ARI_RPTSET_INSERT", 5, NULL);
 
         queries[idx][REFDM_DB_LOG_MSG] =
             db_mgr_sql_prepare(idx,
@@ -1136,7 +1137,7 @@ refdm_agent_t *refdm_db_fetch_agent(int32_t id)
     if ((row = mysql_fetch_row(res)) != NULL)
 #endif // HAVE_MYSQL
 #ifdef HAVE_POSTGRESQL
-        int name_fnum = PQfnumber(res, "agent_id_string");
+        int name_fnum = PQfnumber(res, "agent_endpoint_uri");
     if (PQntuples(res) != 0)
 #endif // HAVE_POSTGRESQL
     {
@@ -1190,7 +1191,7 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
 
     /* Step 1: Grab the OID row. */
     int status = refdm_db_mgt_query_fetch(DB_REST_CON, &res,
-                                          "SELECT * FROM registered_agents WHERE agent_id_string='%s'", eid_buf);
+                                          "SELECT * FROM registered_agents WHERE agent_endpoint_uri='%s'", eid_buf);
     CACE_FREE(eid_buf);
     if (status != RET_PASS)
     {

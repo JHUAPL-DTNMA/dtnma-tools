@@ -360,11 +360,11 @@ create table if not exists data_model (
 
 CREATE TABLE if not exists registered_agents (
     registered_agents_id serial  NOT NULL,
-    agent_id_string VARCHAR(128) NOT NULL,
+    agent_endpoint_uri TEXT NOT NULL,
     first_registered TIMESTAMP NOT NULL DEFAULT NOW(),
     last_registered TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (registered_agents_id),
-    UNIQUE (agent_id_string)
+    UNIQUE (agent_endpoint_uri)
 );
 
 create table if not exists network_config (
@@ -527,11 +527,11 @@ use_desc varchar,
 
 -- rpt-sets
 create table if not exists ari_rptset (
-    ari_rptset_id serial not null,
-    nonce_cbor BYTEA not null,
-    reference_time varchar not null, -- TODO timestamp
-    report_list varchar,
-    report_list_cbor bytea,
+    ari_rptset_id serial NOT NULL,
+    nonce_cbor BYTEA NOT NULL,
+    reference_time TIMESTAMP NOT NULL,
+    report_list TEXT NOT NULL,
+    report_list_cbor BYTEA NOT NULL,
     agent_id INTEGER NOT NULL,
     primary key (ari_rptset_id),
     foreign key (agent_id) references registered_agents (registered_agents_id)
