@@ -171,6 +171,11 @@ int cace_data_cmp(const cace_data_t *lt, const cace_data_t *rt)
         return part_cmp;
     }
 
+    if (!lt->ptr && !rt->ptr)
+    {
+        // both null are equal
+        return 0;
+    }
     if (!lt->ptr || !rt->ptr)
     {
         // null ptr ordered before non-null
@@ -189,6 +194,10 @@ bool cace_data_equal(const cace_data_t *lt, const cace_data_t *rt)
         return false;
     }
 
+    if (!lt->ptr && !rt->ptr)
+    {
+        return true;
+    }
     if (!lt->ptr || !rt->ptr)
     {
         return false;

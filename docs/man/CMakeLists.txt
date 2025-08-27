@@ -17,7 +17,6 @@ limitations under the License.
 ]]
 find_program(ASCIIDOCTOR_EXECUTABLE asciidoctor REQUIRED)
 message(STATUS "Found asciidoctor at ${ASCIIDOCTOR_EXECUTABLE}")
-include(GNUInstallDirs)
 
 set(OUT_MAN_FILES "")
 file(GLOB IN_MAN_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/" "man?")

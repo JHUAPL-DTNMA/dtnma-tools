@@ -19,6 +19,8 @@
 #ifndef REFDA_INGRESS_H_
 #define REFDA_INGRESS_H_
 
+#include "agent.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,6 +31,17 @@ extern "C" {
  * @return Always NULL pointer.
  */
 void *refda_ingress_worker(void *arg);
+
+/**
+ * API for external thread to push ARIs into exec thread. This can be used instead of
+ * the refda_ingress_worker. To do this, set the agent's cace_amm_msg_if_t.recv to NULL to prevent
+ * starting the ingress thread.
+ *
+ * @param agent a pointer to the agent
+ * @param meta structure containing the manager's id
+ * @param ari the ARI to insert
+ */
+void refda_ingress_push_move(refda_agent_t *agent, const cace_amm_msg_if_metadata_t *meta, cace_ari_t *ari);
 
 #ifdef __cplusplus
 } // extern C

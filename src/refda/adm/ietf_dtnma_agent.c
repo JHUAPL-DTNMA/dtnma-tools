@@ -29,8 +29,6 @@
 #include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"
 #include "refda/oper_eval_ctx.h"
-#include "refda/exec.h"
-#include "refda/reporting.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
@@ -38,6 +36,8 @@
 
 /*   START CUSTOM INCLUDES HERE  */
 #include "refda/eval.h"
+#include "refda/exec.h"
+#include "refda/reporting.h"
 #include "cace/amm/numeric.h"
 #include "cace/ari/text_util.h"
 #include <timespec.h>
@@ -591,7 +591,7 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     return RET_PASS;
 }
 
-static int timespec_numeric_mod(cace_ari_t *_U_, const cace_ari_t *_U_, const cace_ari_t *_U_)
+static int timespec_numeric_mod(cace_ari_t *result _U_, const cace_ari_t *left _U_, const cace_ari_t *right _U_)
 {
     // Calculating the remainder associated with timespec objects is unsupported
     return RET_FAIL_UNDEFINED;
@@ -1828,8 +1828,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
         CACE_LOG_ERR("no destinations");
         return;
     }
-
-    refda_agent_t *agent = ctx->runctx->agent;
 
     // ignore return code because failure cannot be handled here
     if (refda_reporting_target(ctx->runctx, template))
