@@ -2260,7 +2260,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
     {
         CACE_LOG_WARNING("unable to obsolete an ADM object");
     }
-    else if (deref.obj_type == CACE_ARI_TYPE_VAR)
+    else if (deref.obj_type == CACE_ARI_TYPE_CONST)
     {
         refda_amm_const_desc_t *cnst = deref.obj->app_data.ptr;
         // FIXME need agent access control
