@@ -362,3 +362,50 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertEqual(6, rpt.items[0].value.size);
         self.assertEqual(False, rpt.items[0].value[0][5].value); # Confirm rule is disabled
+
+
+    def test_odm_var_const(self):
+        self._start()
+
+        LOGGER.setLevel(logging.INFO)
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm(ietf, 1, !test-model-1, -1))'
+        )
+        rptset = self._wait_rptset().value
+
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,test-var,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)
+        rptset = self._wait_rptset().value
+
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/var-list(false)))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(2, rpt.items[0].value.size)
+
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-var(//ietf/!test-model-1/VAR/test-var))', False)
+        rptset = self._wait_rptset().value
+
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/var-list(false)))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(0, rpt.items[0].value.size)
+
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,test-const,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)
+        rptset = self._wait_rptset().value
+
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/const-list(false)))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(2, rpt.items[0].value.size)
+
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-const(//ietf/!test-model-1/CONST/test-const))', False)
+        rptset = self._wait_rptset().value
+
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/const-list(false)))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(0, rpt.items[0].value.size)
