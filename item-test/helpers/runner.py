@@ -25,9 +25,14 @@ import time
 import threading
 from typing import List, Optional
 import queue
+from .timer import Timer
 
 LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
+OWNPATH = os.path.dirname(os.path.abspath(__file__))
+''' Parent directory path '''
+PROJPATH = os.path.abspath(os.path.join(OWNPATH, '..', '..'))
+''' Project top path '''
 
 
 def compose_args(args: List[str]) -> List[str]:
@@ -40,12 +45,12 @@ def compose_args(args: List[str]) -> List[str]:
             'valgrind',
             '--tool=memcheck',
             '--leak-check=full',
-            '--suppressions=memcheck.supp',
+            f'--suppressions={PROJPATH}/memcheck.supp',
             '--gen-suppressions=all',
             '--error-exitcode=2',
         ]
         args = valgrind + args
-    args.insert(0, './run.sh')
+    args = [os.path.join(PROJPATH, 'run.sh')] + args
     return args
 
 
@@ -59,13 +64,17 @@ class CmdRunner:
     '''
 
     def __init__(self, args: List[str], **kwargs):
-        self.proc = None
-        self._reader = None
         self._args = args
         self._kwargs = kwargs
 
+        self.proc = None
+        self._stdout_reader = None
+        self._stderr_reader = None
+        self._stdin_writer = None
+
         self._stdin_lines = queue.Queue()
         self._stdout_lines = queue.Queue()
+        self._stderr_lines = queue.Queue()
 
     def _fmt_args(self):
         return ' '.join([
@@ -73,44 +82,72 @@ class CmdRunner:
         ])
 
     def start(self):
+        ''' Start a new child process.
+        '''
         if self.proc:
             return
 
+        while not self._stdin_lines.empty():
+            self._stdin_lines.get()
         while not self._stdout_lines.empty():
             self._stdout_lines.get()
+        while not self._stderr_lines.empty():
+            self._stderr_lines.get()
+
+        do_stdin = (self._kwargs.setdefault('stdin', subprocess.PIPE) == subprocess.PIPE)
+        do_stdout = (self._kwargs.setdefault('stdout', subprocess.PIPE) == subprocess.PIPE)
+        do_stderr = (self._kwargs.setdefault('stderr', subprocess.PIPE) == subprocess.PIPE)
 
         LOGGER.info('Starting process: %s', self._fmt_args())
         self.proc = subprocess.Popen(
             self._args,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
             text=True,
             **self._kwargs
         )
-        self._reader = threading.Thread(
-            target=self._read_stdout,
-            args=[self.proc.stdout]
-        )
-        self._reader.start()
-        self._writer = threading.Thread(
-            target=self._write_stdin,
-            args=[self.proc.stdin]
-        )
-        self._writer.start()
+        LOGGER.debug('Started with PID %d', self.proc.pid)
 
-    def _finish(self):
+        if do_stdin:
+            self._stdin_writer = threading.Thread(
+                target=self._write_stdin,
+                args=[self.proc.stdin]
+            )
+            self._stdin_writer.start()
+
+        if do_stdout:
+            self._stdout_reader = threading.Thread(
+                target=self._read_stdout,
+                args=[self.proc.stdout]
+            )
+            self._stdout_reader.start()
+
+        if do_stderr:
+            self._stderr_reader = threading.Thread(
+                target=self._read_stderr,
+                args=[self.proc.stderr]
+            )
+            self._stderr_reader.start()
+
+    def _finish(self) -> Optional[int]:
         ''' Clean up the process state after exit.
         '''
+        if self.proc is None:
+            return None
+
         ret = self.proc.returncode
         self.proc = None
         LOGGER.info('Stopped with exit code: %s', ret)
 
-        self._reader.join()
-        self._reader = None
+        if self._stdout_reader:
+            self._stdout_reader.join()
+            self._stdout_reader = None
+        if self._stderr_reader:
+            self._stderr_reader.join()
+            self._stderr_reader = None
 
-        self._stdin_lines.put(None)
-        self._writer.join()
-        self._writer = None
+        if self._stdin_writer:
+            self._stdin_lines.put(None)
+            self._stdin_writer.join()
+            self._stdin_writer = None
 
         return ret
 
@@ -126,7 +163,11 @@ class CmdRunner:
 
         LOGGER.info('Waiting on process: %s', self._fmt_args())
         if self.proc.returncode is None:
-            self.proc.wait(timeout=timeout)
+            try:
+                self.proc.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                self._finish()
+                raise
 
         return self._finish()
 
@@ -150,6 +191,8 @@ class CmdRunner:
                 LOGGER.error('Timed-out after SIGINT, killing process: %s', self._fmt_args())
                 self.proc.kill()
                 self.proc.wait(timeout=timeout)
+                self._finish()
+                raise
 
         return self._finish()
 
@@ -159,6 +202,14 @@ class CmdRunner:
             LOGGER.debug('Got stdout: %s', line.strip())
             self._stdout_lines.put(line)
         LOGGER.debug('Stopping stdout thread')
+        stream.close()
+
+    def _read_stderr(self, stream):
+        LOGGER.debug('Starting stderr thread')
+        for line in iter(stream.readline, ''):
+            LOGGER.debug('Got stderr: %s', line.strip())
+            self._stderr_lines.put(line)
+        LOGGER.debug('Stopping stderr thread')
         stream.close()
 
     def _write_stdin(self, stream):
@@ -192,25 +243,26 @@ class CmdRunner:
 
         :param pattern: The pattern which must match the full line.
             Use prefix or suffix ".*" as needed.
-        :param timeout: The total time to wait for this line.
+        :param timeout: The total time (in seconds) to wait for this line.
         :return The matching line.
         :raise TimeoutError: If the line was not seen in time.
         '''
         expr = re.compile(pattern)
         LOGGER.debug('Waiting for pattern "%s" ...', pattern)
 
-        deadline_time = time.time_ns() / 1e9 + timeout
-        while True:
-            remain_time = deadline_time - time.time_ns() / 1e9
-            if remain_time <= 0:
-                break
-            try:
-                text = self._stdout_lines.get(timeout=remain_time)
-            except queue.Empty:
-                raise TimeoutError('text not received before timeout')
+        with Timer(timeout) as deadline:
+            while deadline:
+                remain_time = deadline.remaining()
+                if remain_time is None:
+                    break
 
-            if expr.match(text) is not None:
-                return text
+                try:
+                    text = self._stdout_lines.get(timeout=remain_time)
+                except queue.Empty:
+                    raise TimeoutError('text not received before timeout')
+
+                if expr.match(text) is not None:
+                    return text
 
     def send_stdin(self, text:str):
         ''' Send an exact line of text to the process stdin.

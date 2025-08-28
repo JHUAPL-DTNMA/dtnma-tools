@@ -74,6 +74,7 @@ dereferencing
 DGRAM
 diag
 dlist
+DM
 DNS
 dothing
 Doxygen
@@ -193,6 +194,7 @@ rfcXXXX
 rpt
 rptset
 RPTSET
+RPTSETs
 rptt
 RPTT
 runtime

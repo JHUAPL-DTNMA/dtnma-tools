@@ -45,7 +45,9 @@ void refdm_agent_init(refdm_agent_t *obj)
 {
     CHKVOID(obj);
     m_string_init(obj->eid);
+#if !(defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL))
     cace_ari_list_init(obj->rptsets);
+#endif
 
     pthread_mutex_init(&(obj->log_mutex), NULL);
     obj->log_fd       = NULL;
@@ -64,7 +66,9 @@ void refdm_agent_deinit(refdm_agent_t *obj)
     }
 
     pthread_mutex_destroy(&(obj->log_mutex));
+#if !(defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL))
     cace_ari_list_clear(obj->rptsets);
+#endif
     m_string_clear(obj->eid);
 }
 

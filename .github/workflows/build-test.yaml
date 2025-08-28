@@ -52,7 +52,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config gcc g++ ccache patch autoconf libtool \
               ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
-              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev postgresql' || ''}} \
+              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev' || ''}} \
               valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -117,8 +117,22 @@ jobs:
       matrix:
         os: ['ubuntu-24.04', 'centos-9']
     name: Built-Item Test (${{matrix.os}} gcc)
-    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
-    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    runs-on: ubuntu-24.04
+    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || 'ubuntu:24.04' }}
+    services:
+      postgres:
+        # Docker Hub image
+        image: postgres:16
+        env:
+          POSTGRES_USER: tester
+          POSTGRES_PASSWORD: tester
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     permissions:
       contents: read
       actions: write
@@ -126,27 +140,28 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo rm /var/lib/man-db/auto-update
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y \
+              git rsync \
               cmake ninja-build \
               ruby pkg-config gcc g++ ccache patch autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev postgresql\
+              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev \
               binutils \
-              valgrind gcovr xmlstarlet python3-venv
+              valgrind gcovr xmlstarlet \
+              python3-pip python3-wheel python3-venv postgresql-client
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
-          dnf config-manager --set-enabled crb
           dnf install -y epel-release
+          crb enable
           dnf install -y \
               git rsync \
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               binutils \
-              valgrind xmlstarlet python3-pip \
-              python3.11
+              valgrind xmlstarlet \
+              python3-pip python3-wheel python3-devel postgresql
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -173,10 +188,15 @@ jobs:
         run: ./build.sh
       - name: Install
         run: ./build.sh install
+      - name: System Path
+        if: matrix.os == 'ubuntu-24.04'
+        run: echo "/usr/lib/postgresql/16/bin" >>$GITHUB_PATH
       - name: Test
         env:
-          PYTHON: ${{ matrix.os == 'centos-9' && 'python3.11' || 'python3' }}
           TEST_MEMCHECK: '1'
+          DB_HOST: 'postgres'
+          DB_USER: 'tester'
+          DB_PASSWORD: 'tester'
         run: ./item-test/run.sh
       - name: Collect coverage
         run: ./build.sh coverage
