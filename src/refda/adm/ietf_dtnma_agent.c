@@ -889,7 +889,7 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(refda_edd_prod_ctx
     cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
     atomic_ullong  val    = atomic_load(&agent->instr.num_ctrls_succeeded);
     cace_ari_set_uvast(&result, val);
-    refda_edd_prod_ctx_set_result_move(ctx, &result);    
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
