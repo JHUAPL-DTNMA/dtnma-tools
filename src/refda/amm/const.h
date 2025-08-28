@@ -45,6 +45,9 @@ typedef struct
      */
     cace_ari_t value;
 
+    /** Determine whether the const has been marked obsolete
+     */
+    bool obsolete;
 } refda_amm_const_desc_t;
 
 void refda_amm_const_desc_init(refda_amm_const_desc_t *obj);
