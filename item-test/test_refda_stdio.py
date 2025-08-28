@@ -374,38 +374,66 @@ class TestStdioAgent(unittest.TestCase):
         )
         rptset = self._wait_rptset().value
 
+        # Verify var-list is empty
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/var-list(false)))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual(0, rpt.items[0].value.size)
+
+        # Add a variable
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,test-var,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)
         rptset = self._wait_rptset().value
 
+        # Verify VAR can be read back
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/var-list(false)))')
         rptset = self._wait_rptset().value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual(2, rpt.items[0].value.size)
 
+        # Obsolete the VAR
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-var(//ietf/!test-model-1/VAR/test-var))', False)
         rptset = self._wait_rptset().value
 
+        # Verify var list is empty again
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/var-list(false)))')
         rptset = self._wait_rptset().value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual(0, rpt.items[0].value.size)
 
+        # Verify list of constants is empty
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/const-list(false)))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual(0, rpt.items[0].value.size)
+
+        # Add a constant
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,test-const,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)
         rptset = self._wait_rptset().value
 
+        # Verify const is listed now
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/const-list(false)))')
         rptset = self._wait_rptset().value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual(2, rpt.items[0].value.size)
 
+        # Obsolete the CONST
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-const(//ietf/!test-model-1/CONST/test-const))', False)
         rptset = self._wait_rptset().value
 
+        # Verify CONST is no longer listed
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/const-list(false)))')
         rptset = self._wait_rptset().value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual(0, rpt.items[0].value.size)
