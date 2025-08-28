@@ -2143,17 +2143,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
     REFDA_AGENT_LOCK(agent, );
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
-    REFDA_AGENT_UNLOCK(agent, );
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
     if (!cace_amm_obj_ns_is_odm(odm))
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2161,6 +2162,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
     if (obj_name == NULL || obj_name->ptr == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2168,12 +2170,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
     refda_amm_const_desc_t *cnst = NULL;
-
     {
         cace_amm_obj_desc_t *obj = NULL;
         obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_CONST, (const char *)obj_name->ptr);
@@ -2320,17 +2321,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
 
     REFDA_AGENT_LOCK(agent, );
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
-    REFDA_AGENT_UNLOCK(agent, );
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
     if (!cace_amm_obj_ns_is_odm(odm))
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2338,6 +2340,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
     if (obj_name == NULL || obj_name->ptr == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2345,12 +2348,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
     refda_amm_var_desc_t *var = NULL;
-
     {
         cace_amm_obj_desc_t *obj = NULL;
         obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_VAR, (const char *)obj_name->ptr);
