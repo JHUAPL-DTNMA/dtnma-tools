@@ -44,6 +44,17 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
 
     refda_runctx_t *runctx = refda_runctx_ptr_ref(item->seq->runctx);
 
+    // Track number of successes/failures
+    refda_agent_t *agent = runctx->agent;
+    if (cace_ari_is_undefined(&(item->result)))
+    {
+        atomic_fetch_add(&agent->instr.num_ctrls_failed, 1);
+    }
+    else
+    {
+        atomic_fetch_add(&agent->instr.num_ctrls_succeeded, 1);
+    }
+
     if (!cace_ari_is_null(&(runctx->nonce)))
     {
         // generate report regardless of success or failure
@@ -82,6 +93,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
     {
         refda_ctrl_exec_ctx_t ctx;
         refda_ctrl_exec_ctx_init(&ctx, item);
+        atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
         (ctrl->execute)(&ctx);
         refda_ctrl_exec_ctx_deinit(&ctx);
         CACE_LOG_DEBUG("execution callback returned");
@@ -428,6 +440,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                     {
                         refda_ctrl_exec_ctx_t ctx;
                         refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                        atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
                         (next->exec.callback)(&ctx);
                         refda_ctrl_exec_ctx_deinit(&ctx);
                     }
