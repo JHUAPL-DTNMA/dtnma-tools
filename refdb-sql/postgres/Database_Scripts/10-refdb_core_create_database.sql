@@ -359,15 +359,12 @@ create table if not exists data_model (
 
 
 CREATE TABLE if not exists registered_agents (
-    registered_agents_id serial  NOT NULL ,
-    agent_id_string VARCHAR(128) NOT NULL DEFAULT 'ipn:0.0',
+    registered_agents_id serial  NOT NULL,
+    agent_endpoint_uri TEXT NOT NULL,
     first_registered TIMESTAMP NOT NULL DEFAULT NOW(),
     last_registered TIMESTAMP NOT NULL DEFAULT NOW(),
-    historical_data json[],
-    received_reports json[],
-    supported_a_d_ms character varying(255)[],  
     PRIMARY KEY (registered_agents_id),
-    UNIQUE (agent_id_string)
+    UNIQUE (agent_endpoint_uri)
 );
 
 create table if not exists network_config (
@@ -507,14 +504,14 @@ create table if not exists ari_tbl (
 -- exec-set
 create table if not exists execution_set(
     execution_set_id serial not null ,
-    correlator_nonce int,
+    nonce_cbor BYTEA,
     ac_id INT,
     use_desc varchar,
     agent_id varchar,
     primary key (execution_set_id),
     foreign key (ac_id)
         references ari_collection (ac_id),
-    unique(correlator_nonce,ac_id,agent_id) --AC would be unique for entry and one nonce per agent
+    unique(nonce_cbor, ac_id, agent_id) --AC would be unique for entry and one nonce per agent
 );
 
 -- ari-tbl template 
@@ -530,14 +527,18 @@ use_desc varchar,
 
 -- rpt-sets
 create table if not exists ari_rptset (
-    ari_rptset_id serial not null,
-    correlator_nonce BIGINT, 
-    reference_time varchar not null,
-    report_list varchar,
-    report_list_cbor bytea,
-    agent_id varchar,
-    primary key (ari_rptset_id)
+    ari_rptset_id serial NOT NULL,
+    nonce_cbor BYTEA NOT NULL,
+    reference_time TIMESTAMP NOT NULL,
+    report_list TEXT NOT NULL,
+    report_list_cbor BYTEA NOT NULL,
+    agent_id INTEGER NOT NULL,
+    primary key (ari_rptset_id),
+    foreign key (agent_id) references registered_agents (registered_agents_id)
 );
+CREATE INDEX idx_rptset_nonce ON ari_rptset (nonce_cbor);
+CREATE INDEX idx_rptset_reftime ON ari_rptset (reference_time);
+
 
 create table if not exists formal_parmspec (
     fp_spec_id serial not null ,

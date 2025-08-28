@@ -15,7 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+''' Test the local socket transport of the REFDM.
 
+This uses the environment variable DB_HOST to determine whether to spawn a
+private PostgreSQL server or use an external one.
+'''
+import glob
 import io
 import logging
 import os
@@ -28,6 +33,7 @@ from urllib.parse import quote
 import unittest
 import cbor2
 import requests
+import sqlalchemy
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
 from helpers import CmdRunner, Timer, compose_args
 
@@ -49,15 +55,138 @@ def split_content_type(text):
 class TestRefdmSocket(unittest.TestCase):
     ''' Verify whole-agent behavior with the refdm-socket '''
 
+    @classmethod
+    def _sql_start(cls):
+        ''' Spawn an SQL server if necessary.
+        '''
+        db_host = os.environ.get('DB_HOST')
+        if db_host is not None:
+            # nothing to do for processes
+            cls._sqldir = None
+            cls._sqldb = None
+            os.environ['PGHOST'] = os.environ['DB_HOST']
+            os.environ['PGUSER'] = os.environ['DB_USER']
+            os.environ['PGPASSWORD'] = os.environ['DB_PASSWORD']
+            return
+
+        cls._sqldir = tempfile.TemporaryDirectory()
+        sql_data = os.path.join(cls._sqldir.name, 'data')
+        os.makedirs(sql_data)
+        sql_sock = os.path.join(cls._sqldir.name, 'run')
+        os.makedirs(sql_sock)
+
+        initdb = CmdRunner([
+            'initdb',
+            '-D', sql_data,
+            '--auth-local=trust',
+        ])
+        initdb.start()
+        if initdb.wait(timeout=10) != 0:
+            raise RuntimeError('Failed to run initdb')
+
+        args = [
+            'postgres',
+            '-D', sql_data,
+            '-h', '',
+            '-k', sql_sock
+        ]
+        cls._sqldb = CmdRunner(args)
+        cls._sqldb.start()
+
+        # After all setup, expose the state
+        os.environ['DB_HOST'] = sql_sock
+        os.environ['DB_USER'] = ''
+        os.environ.pop('DB_PASSWORD', None)
+
+        os.environ['PGHOST'] = sql_sock
+        os.environ['PGUSER'] = ''
+        os.environ.pop('PGPASSWORD', None)
+
+        isready = CmdRunner([
+            'pg_isready',
+            '-d', 'postgres',
+        ])
+        with Timer(10) as timer:
+            while timer:
+                timer.sleep(0.1)
+
+                isready.start()
+                if isready.wait() == 0:
+                    timer.finish()
+
+    @classmethod
+    def _sql_stop(cls):
+        if cls._sqldb:
+            cls._sqldb.stop()
+            cls._sqldb = None
+        if cls._sqldir:
+            cls._sqldir.cleanup()
+            cls._sqldir = None
+
+    DB_NAME = 'refdm'
+    ''' The test database name to recycle for each case '''
+
+    def _database_create(self) -> str:
+        ''' Create a test database in a running postgres server '''
+        self._database_drop()
+
+        psql = CmdRunner([
+            'psql',
+            '-w',
+            '-d', 'postgres',
+            '-c', f'CREATE DATABASE {self.DB_NAME}',
+        ])
+        psql.start()
+        if psql.wait() != 0:
+            raise RuntimeError('Failed to run create database')
+
+        db_host = os.environ['DB_HOST']
+        os.environ['DB_NAME'] = self.DB_NAME
+        db_uri = f'postgresql+psycopg2:///{self.DB_NAME}?host={db_host}'
+
+        script_pat = os.path.join(OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
+        # execute in alphabetic order
+        for filepath in sorted(glob.glob(script_pat)):
+            psql = CmdRunner([
+                'psql',
+                '-w',
+                '-d', self.DB_NAME,
+                '-f', filepath,
+            ], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            psql.start()
+            if psql.wait() != 0:
+                raise RuntimeError('Failed to run psql')
+
+        return db_uri
+
+    def _database_drop(self):
+        ''' Drop the test database if necessary '''
+        psql = CmdRunner([
+            'psql',
+            '-w',
+            '-d', 'postgres',
+            '-c', f'DROP DATABASE IF EXISTS {self.DB_NAME} WITH (FORCE)',
+        ])
+        psql.start()
+        if psql.wait(timeout=10) != 0:
+            raise RuntimeError('Failed to run drop database')
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._sql_start()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._sql_stop()
+
     def setUp(self):
         logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
-        path = os.path.abspath(os.path.join(OWNPATH, '..'))
-        os.chdir(path)
-        LOGGER.info('Working in %s', path)
-
         self._req = requests.Session()
         self._base_url = 'http://localhost:8089/nm/api/'
+
+        db_uri = self._database_create()
+        self._db_eng = sqlalchemy.create_engine(db_uri)
 
         self._tmp = tempfile.TemporaryDirectory()
         self._mgr_sock_path = os.path.join(self._tmp.name, 'mgr.sock')
@@ -85,22 +214,37 @@ class TestRefdmSocket(unittest.TestCase):
         self._mgr = CmdRunner(args)
 
     def tearDown(self):
-        self._mgr.stop()
+        mgr_exit = self._mgr.stop()
         self._mgr = None
 
+        for bind in self._agent_bind:
+            sock = bind['sock']
+            sock.close()
         self._agent_bind = None
+
         self._mgr_sock_path = None
         self._tmp = None
 
+        if self._db_eng:
+            self._db_eng.dispose()
+        self._db_eng = None
+        self._database_drop()
+
         self._req = None
+
+        # assert after all other shutdown
+        self.assertEqual(0, mgr_exit)
 
     def _start(self):
         ''' Spawn the process. '''
         self._mgr.start()
 
+        delay = 0.1
         with Timer(10) as timer:
             while timer:
-                timer.sleep(0.1)
+                # linear back-off
+                timer.sleep(delay)
+                delay += 0.1
 
                 sock_ready = os.path.exists(self._mgr_sock_path)
 
@@ -125,50 +269,51 @@ class TestRefdmSocket(unittest.TestCase):
         nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
 
         with io.StringIO(text) as buf:
-            ari = ari_text.Decoder().decode(buf)
-        ari = nn_func(ari)
-        return ari
+            val = ari_text.Decoder().decode(buf)
+        val = nn_func(val)
+        return val
 
-    def _ari_obj_to_text(self, ari:ARI) -> str:
+    def _ari_obj_to_text(self, val:ARI) -> str:
         buf = io.StringIO()
-        ari_text.Encoder().encode(ari, buf)
+        ari_text.Encoder().encode(val, buf)
         return buf.getvalue()
 
-    def _ari_obj_to_cbor(self, ari:ARI) -> bytes:
+    def _ari_obj_to_cbor(self, val:ARI) -> bytes:
         buf = io.BytesIO()
-        ari_cbor.Encoder().encode(ari, buf)
+        ari_cbor.Encoder().encode(val, buf)
         return buf.getvalue()
 
     def _ari_obj_from_cbor(self, databuf:bytes) -> ARI:
         with io.BytesIO(databuf) as buf:
-            ari = ari_cbor.Decoder().decode(buf)
-        return ari
+            val = ari_cbor.Decoder().decode(buf)
+        return val
 
-    def _send_rptset(self, text:str, agent_ix=0) -> str:
+    def _send_rptset(self, agent_ix:int, text:str) -> str:
         ''' Send an RPTSET with a number of target ARIs.
 
-        :param text: The ARI text form to send.
         :param agent_ix: The agent index to send from.
+        :param text: The ARI text form to send.
         :return: The socket path from which it was sent.
         '''
         LOGGER.info('Sending value %s', text)
         data = cbor2.dumps(1) + self._ari_obj_to_cbor(self._ari_text_to_obj(text))
         addr = self._mgr_sock_path
-        LOGGER.info('Sending message %s to %s', data.hex(), addr)
         bind = self._agent_bind[agent_ix]
+        LOGGER.info('Sending message %s from %s to %s', data.hex(), bind['path'], addr)
         bind['sock'].sendto(data, addr)
         return bind['path']
 
     def _wait_execset(self, agent_ix=0) -> List[ARI]:
-        ''' Wait for an EXECSET and decode it.
+        ''' Wait for an AMP message with EXECSET values and decode it.
 
         :param agent_ix: The agent index to receive on.
-        :return: The ARI decoded form.
+        :return: The contained ARIs in decoded form.
         '''
-        recv_sock = self._agent_bind[agent_ix]['sock']
+        bind = self._agent_bind[agent_ix]
+        recv_sock = bind['sock']
 
         (data, addr) = recv_sock.recvfrom(1024)
-        LOGGER.info('Received message %s from %s', data.hex(), addr)
+        LOGGER.info('Received message %s to %s from %s', data.hex(), bind['path'], addr)
         self.assertEqual(self._mgr_sock_path, addr)
 
         values = []
@@ -176,13 +321,16 @@ class TestRefdmSocket(unittest.TestCase):
         with io.BytesIO(data) as infile:
             vers = cbor2.load(infile)
             self.assertEqual(1, vers, msg='Invalid AMP version')
-            ari = dec.decode(infile)
-            values.append(ari)
 
-            if LOGGER.isEnabledFor(logging.INFO):
-                textbuf = io.StringIO()
-                ari_text.Encoder().encode(ari, textbuf)
-                LOGGER.info('Received value: %s', textbuf.getvalue())
+            while infile.tell() < len(data):
+                val = dec.decode(infile)
+                self.assertIsInstance(val.value, ari.ExecutionSet)
+                values.append(val)
+
+                if LOGGER.isEnabledFor(logging.INFO):
+                    textbuf = io.StringIO()
+                    ari_text.Encoder().encode(val, textbuf)
+                    LOGGER.info('Received value: %s', textbuf.getvalue())
 
         return values
 
@@ -216,6 +364,24 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
         data = resp.json()
         return set([agt['name'] for agt in data['agents']])
+
+    def _wait_for_db_table(self, table_name:str, need_count:int):
+        LOGGER.info('Waiting for DB table %s with %d rows', table_name, need_count)
+        with self._db_eng.connect() as conn:
+            query = sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.literal_column('1'))).select_from(sqlalchemy.table(table_name))
+            with Timer(5) as timer:
+                while timer:
+                    timer.sleep(0.1)
+                    count = conn.execute(query).scalar()
+                    if count == need_count:
+                        timer.finish()
+                        break
+
+                LOGGER.info('Have %d rows after %0.1f s', count, timer.elapsed())
+                if LOGGER.isEnabledFor(logging.DEBUG):
+                    query = sqlalchemy.select(sqlalchemy.literal_column('*')).select_from(sqlalchemy.table(table_name))
+                    for row in conn.execute(query).fetchall():
+                        LOGGER.debug('Row: %s', row)
 
     def test_rest_agents_add_valid(self):
         self._start()
@@ -345,15 +511,15 @@ class TestRefdmSocket(unittest.TestCase):
         resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=hex')
         self.assertEqual(404, resp.status_code)
 
-    def test_recv_one_report(self):
+    def test_recv_one_agent_one_rptset(self):
         self._start()
 
         # initial state
         self.assertEqual(set(), self._get_agent_names())
 
         # first check behavior with one report
-        sock_path = self._send_rptset(
-            'ari:/RPTSET/n=null;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+        sock_path = self._send_rptset(0,
+            'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
         agent_eid = f'file:{sock_path}'
         eid_seg = quote(agent_eid, safe="")
@@ -361,11 +527,13 @@ class TestRefdmSocket(unittest.TestCase):
         LOGGER.info('Waiting for agent %s', agent_eid)
         with Timer(5) as timer:
             while timer:
+                timer.sleep(0.1)
                 available = self._get_agent_names()
                 if agent_eid in available:
                     timer.finish()
                     break
-                timer.sleep(0.1)
+
+        self._wait_for_db_table('ari_rptset', 1)
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
@@ -388,23 +556,29 @@ class TestRefdmSocket(unittest.TestCase):
         for line in lines:
             self.assertTrue(line.startswith('ari:/RPTSET/'))
 
-    def test_recv_two_reports(self):
+    def test_recv_one_agent_three_rptset(self):
         self._start()
 
-        self._send_rptset(
-            'ari:/RPTSET/n=null;r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+        # each primitive type of nonce
+        self._send_rptset(0,
+            'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
-        sock_path = self._send_rptset(
-            'ari:/RPTSET/n=null;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+        self._send_rptset(0,
+            'ari:/RPTSET/n=\'test\';r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
         )
-        agent_eid = f'file:{sock_path}'
-        eid_seg = quote(agent_eid, safe="")
+        sock_path = self._send_rptset(0,
+            'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+        )
+        eid_seg = quote(f'file:{sock_path}', safe="")
+        rptset_count = 3
+
+        self._wait_for_db_table('ari_rptset', rptset_count)
 
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
-        self.assertEqual(2, len(lines))
+        self.assertEqual(rptset_count, len(lines))
 
         # index resource gets the same result
         resp = self._req.get(self._base_url + f'agents/idx/0/reports?form=hex')
@@ -417,7 +591,7 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
-        self.assertEqual(2, len(lines))
+        self.assertEqual(rptset_count, len(lines))
         for line in lines:
             self.assertTrue(line.startswith('ari:/RPTSET/'))
 
@@ -427,6 +601,44 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         other_lines = resp.text.splitlines()
         self.assertEqual(lines, other_lines)
+
+    def test_recv_two_agents_clear_rptset(self):
+        self._start()
+
+        # one each from different agents
+        sock_path = self._send_rptset(0,
+            'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+        )
+        eid_seg0 = quote(f'file:{sock_path}', safe="")
+
+        sock_path = self._send_rptset(1,
+            'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+        )
+        eid_seg1 = quote(f'file:{sock_path}', safe="")
+
+        self._wait_for_db_table('ari_rptset', 2)
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(1, len(resp.text.splitlines()))
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=hex')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(1, len(resp.text.splitlines()))
+
+        # clear RPTSETs explicitly
+        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg0}/clear_reports')
+        self.assertEqual(204, resp.status_code)
+        self._wait_for_db_table('ari_rptset', 1)
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
+        self.assertEqual(204, resp.status_code)
+        # repeats do nothing
+        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg0}/clear_reports')
+        self.assertEqual(204, resp.status_code)
+
+        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg1}/clear_reports')
+        self.assertEqual(204, resp.status_code)
+        self._wait_for_db_table('ari_rptset', 0)
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=hex')
+        self.assertEqual(204, resp.status_code)
 
     def test_agents_send_hex(self):
         self._start()
@@ -462,7 +674,7 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual([send_ari], values)
 
         # no other datagrams
-        with self.assertRaises(TimeoutError):
+        with self.assertRaises((socket.timeout, TimeoutError)):
             self._wait_execset(0)
 
     def test_agents_send_text(self):
@@ -499,5 +711,47 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual([send_ari], values)
 
         # no other datagrams
-        with self.assertRaises(TimeoutError):
+        with self.assertRaises((socket.timeout, TimeoutError)):
+            self._wait_execset(0)
+
+    def test_send_three_execsets(self):
+        self._start()
+
+        agent_bind = self._agent_bind[0]
+        agent_eid = f'file:{agent_bind["path"]}'
+        eid_seg = quote(agent_eid, safe="")
+
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data=(agent_eid + '\r\n'),
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        # each primitive type of nonce
+        send_text = "\
+ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/inspect)\r\n\
+ari:/EXECSET/n=1234;(//ietf/dtnma-agent/CTRL/inspect)\r\n\
+ari:/EXECSET/n='test';(//ietf/dtnma-agent/CTRL/inspect)\r\n\
+"
+        resp = self._req.post(
+            self._base_url + f'agents/eid/{eid_seg}/send?form=text',
+            data=send_text,
+            headers={
+                'content-type': 'text/uri-list',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+
+        self._wait_for_db_table('execution_set', 3)
+
+        # three sent together
+        values = self._wait_execset(0)
+        self.assertEqual(3, len(values))
+
+        # no other datagrams
+        with self.assertRaises((socket.timeout, TimeoutError)):
             self._wait_execset(0)
