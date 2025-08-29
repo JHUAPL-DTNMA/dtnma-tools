@@ -363,6 +363,37 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(6, rpt.items[0].value.size);
         self.assertEqual(False, rpt.items[0].value[0][5].value); # Confirm rule is disabled
 
+    def test_edd_counters(self):
+        self._start()
+
+        # Baseline
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-exec-started))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, int)
+        self.assertEqual(1, rpt.items[0].value) # 1 because it counts inspect call above
+
+        # Count number of successful exec's
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-exec-succeeded))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(1, rpt.items[0].value)
+
+        # Count number of failed exec's
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-exec-failed))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(0, rpt.items[0].value)       
+
+        # Sanity check expected count of tx failures
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-msg-tx-failed))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(0, rpt.items[0].value)
 
     def test_odm_var_const(self):
         self._start()
