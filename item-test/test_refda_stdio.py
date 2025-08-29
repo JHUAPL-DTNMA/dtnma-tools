@@ -363,7 +363,7 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(6, rpt.items[0].value.size);
         self.assertEqual(False, rpt.items[0].value[0][5].value); # Confirm rule is disabled
 
-    def test_ctrl_counters(self):
+    def test_edd_counters(self):
         self._start()
 
         # Baseline
@@ -387,6 +387,13 @@ class TestStdioAgent(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertEqual(0, rpt.items[0].value)       
+
+        # Sanity check expected count of tx failures
+        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-msg-tx-failed))')
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual(0, rpt.items[0].value)
 
     def test_odm_var_const(self):
         self._start()
