@@ -35,7 +35,6 @@ extern "C" {
  */
 int cace_get_system_time(cace_ari_t *timestamp);
 
-
 #ifdef __cplusplus
 }
 #endif
