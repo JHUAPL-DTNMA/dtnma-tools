@@ -1588,6 +1588,34 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *ari_condition = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_on_truthy = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_on_falsy = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    } 
+
+    /*
+    TODO:
+    - eval condition (see check_sbr_condition in exec.c and generalize)
+    - if true and on-truthy not null, exec on-truthy (how?)
+      - see exec_rule_action (which should be generalized) for an example of what to do
+    - else and on-falsy not null exec on-falsy
+    - return bool indicating which branch
+    */
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (refda_eval_condition(ctx->runctx, &result, ari_condition))
+    {
+        CACE_LOG_ERR("Unable to evaluate if-then-else condition");
+        return;
+    }
+
+    if (cace_ari_equal
+    // TODO: return result from CTRL
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY

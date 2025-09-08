@@ -255,3 +255,27 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     refda_eval_ctx_deinit(&eval_ctx);
     return retval;
 }
+
+int refda_eval_condition(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *condition)
+{
+    cace_ari_t ari_res = CACE_ARI_INIT_UNDEFINED;
+    int        res     = refda_eval_target(&runctx, &ari_res, condition);
+
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to evaluate condition");
+    }
+    else
+    {
+        const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
+        res                            = cace_amm_type_convert(typeobj, result, &ari_res);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to convert condition result to boolean");
+        }
+    }
+
+    cace_ari_deinit(&ari_res);
+
+    return res;
+}

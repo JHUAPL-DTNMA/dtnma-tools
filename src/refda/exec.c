@@ -671,24 +671,7 @@ static int refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_de
         return 2;
     }
 
-    cace_ari_t ari_res = CACE_ARI_INIT_UNDEFINED;
-    int        res     = refda_eval_target(&runctx, &ari_res, &(sbr->condition));
-
-    if (res)
-    {
-        CACE_LOG_ERR("Unable to evaluate SBR condition");
-    }
-    else
-    {
-        const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
-        res                            = cace_amm_type_convert(typeobj, result, &ari_res);
-        if (res)
-        {
-            CACE_LOG_ERR("Unable to convert SBR condition result to boolean");
-        }
-    }
-
-    cace_ari_deinit(&ari_res);
+    int res = refda_eval_condition(&runctx, result, &(sbr->condition));
     refda_runctx_deinit(&runctx);
 
     return res;
