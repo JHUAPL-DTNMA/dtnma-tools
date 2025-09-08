@@ -31,6 +31,8 @@ typedef struct
     cace_ari_t src;
     /// Destination endpoint ID (opaque text)
     cace_ari_t dest;
+    /// Time from local clock at which the message was first seen
+    cace_ari_t timestamp;
 } cace_amm_msg_if_metadata_t;
 
 void cace_amm_msg_if_metadata_init(cace_amm_msg_if_metadata_t *meta);

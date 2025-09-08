@@ -15,18 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "msg_if.h"
+/** @file
+ * @ingroup ari
+ * This file contains definitions for comman ARI time related functionality.
+ */
+#ifndef CACE_ARI_TIME_UTIL_H_
+#define CACE_ARI_TIME_UTIL_H_
 
-void cace_amm_msg_if_metadata_init(cace_amm_msg_if_metadata_t *meta)
-{
-    cace_ari_init(&meta->src);
-    cace_ari_init(&meta->dest);
-    cace_ari_init(&meta->timestamp);
-}
+#include "cace/ari.h"
 
-void cace_amm_msg_if_metadata_deinit(cace_amm_msg_if_metadata_t *meta)
-{
-    cace_ari_deinit(&meta->dest);
-    cace_ari_deinit(&meta->src);
-    cace_ari_deinit(&meta->timestamp);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Store the current system time as an ARI timestamp.
+ *
+ * @param [out] timestamp The ARI struct to store the system timestamp.
+ * @return Zero upon success.
+ */
+int cace_get_system_time(cace_ari_t *timestamp);
+
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* CACE_ARI_TIME_UTIL_H_ */

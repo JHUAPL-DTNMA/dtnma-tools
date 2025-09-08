@@ -15,18 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "msg_if.h"
+#include "time_util.h"
 
-void cace_amm_msg_if_metadata_init(cace_amm_msg_if_metadata_t *meta)
-{
-    cace_ari_init(&meta->src);
-    cace_ari_init(&meta->dest);
-    cace_ari_init(&meta->timestamp);
-}
+#include "cace/ari/access.h"
+#include "cace/util/logging.h"
 
-void cace_amm_msg_if_metadata_deinit(cace_amm_msg_if_metadata_t *meta)
+//-----------------------------------------------------------------------------
+int cace_get_system_time(cace_ari_t *timestamp)
 {
-    cace_ari_deinit(&meta->dest);
-    cace_ari_deinit(&meta->src);
-    cace_ari_deinit(&meta->timestamp);
+    // Get the current system time
+    struct timespec nowtime;
+    int             res = clock_gettime(CLOCK_REALTIME, &nowtime);
+    if (res != 0)
+    {
+        CACE_LOG_CRIT("Failed clock_gettime() with ecode: %d", res);
+        // TODO: Use a constant/enum rather than literal
+        return 1;
+    }
+
+    cace_ari_set_tp_posix(timestamp, nowtime);
+    return 0;
 }
