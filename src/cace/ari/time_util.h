@@ -17,7 +17,7 @@
  */
 /** @file
  * @ingroup ari
- * This file contains definitions for comman ARI time related functionality.
+ * This file contains definitions for common ARI time related functionality.
  */
 #ifndef CACE_ARI_TIME_UTIL_H_
 #define CACE_ARI_TIME_UTIL_H_
