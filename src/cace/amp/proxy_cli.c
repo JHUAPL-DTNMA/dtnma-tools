@@ -180,7 +180,6 @@ int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_me
 
         int     flags = 0;
         ssize_t got   = send(sock_fd, msg_begin, msg_size, flags);
-        m_bstring_clear(msgbuf);
 
         if (got != (ssize_t)msg_size)
         {
@@ -189,6 +188,7 @@ int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_me
             result = 4;
         }
     }
+    m_bstring_clear(msgbuf);
 
     return result;
 }
