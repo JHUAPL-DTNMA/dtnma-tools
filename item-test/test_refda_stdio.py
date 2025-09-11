@@ -468,3 +468,17 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual(0, rpt.items[0].value.size)
+
+    def test_agent_control_flow_ctrls(self):
+        self._start()
+
+        LOGGER.setLevel(logging.INFO)
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), null, null))'
+        )
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, bool)
+        self.assertEqual(True, rpt.items[0].value)
