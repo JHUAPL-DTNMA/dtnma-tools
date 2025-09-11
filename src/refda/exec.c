@@ -805,3 +805,42 @@ int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     atomic_fetch_sub(&agent->instr.num_sbrs, 1);
     return 0;
 }
+
+/** Execute an action that has already been verified
+ * Based on code from refda_exec_exp_execset
+ */
+static int refda_exec_action(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *action)
+{
+    refda_runctx_ptr_t ctxptr;
+    refda_runctx_ptr_init_new(ctxptr);
+
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
+
+    if (refda_runctx_from(runctx, agent, NULL))
+    {
+        return 2;
+    }
+
+    refda_runctx_ptr_set(seq->runctx, ctxptr);
+    int res = refda_exec_exp_mac(runctx, seq, action);
+
+    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
+    return res;
+}
+
+void refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari)
+{
+    CHKVOID(agent);
+    CHKVOID(ari);
+
+    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+    seq->pid              = agent->exec_next_pid++;
+
+    // Expand target ARI and create exec items, CTRLs are run later by exec worker
+    if (!refda_exec_action(agent, seq, ari))
+    {
+        atomic_fetch_add(&agent->instr.num_tbrs_trig, 1);
+    }
+
+    return;
+}
