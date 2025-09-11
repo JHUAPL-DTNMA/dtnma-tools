@@ -422,17 +422,16 @@ TEST_CASE("821183820D191B58820D190FA08401012563737562", "820D390BB7")
 // ari:/AC/(/TD/0.25,/TD/3.75,//1/1/OPER/sub) -> /TD/3.5
 TEST_CASE("821183820D82211819820D82211901778401012563737562", "820D82201823")
 //
+// --- Subtraction of TD from TP value ---
+// ari:/AC/(/TD/1000,/TP/20000101T001640Z,//1/1/OPER/sub) -> /TP/20000101T000000Z
+TEST_CASE("821183820D1903E8820C1903E88401012563737562", "820C00")
+//
 //-----------------------------------------------------------------------------------------------------------
 // TODO: The 2 unit tests below fail and it may be due to bad parsing of negative fractional TD values.
 // // ari:/AC/(/TD/-2.25,/TD/0.75,//1/1/OPER/sub) -> /TD/3
 // TEST_CASE("821183820D822138AE820D8221184B8401012563737562", "820D03")
 // // ari:/AC/(/TD/3.25,/TD/0.75,//1/1/OPER/sub) -> /TD/-2.5
 // TEST_CASE("821183820D8221190145820D8221184B8401012563737562", "820D82202E")
-//
-//-----------------------------------------------------------------------------------------------------------
-// TODO: Based on ticket #132, this should be an error. Should this eventually be supported?
-// // ari:/AC/(/TD/1000,/TP/20000101T001640Z,//1/1/OPER/sub) -> /TP/20000101T000000Z
-// TEST_CASE("821183820D1903E8820C1903E88401012563737562", "820C00")
 
 // Test scaling (multiplication / division) of TD with a primitive (int or float):
 //

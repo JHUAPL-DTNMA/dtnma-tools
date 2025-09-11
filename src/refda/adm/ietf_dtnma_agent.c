@@ -401,8 +401,20 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     bool is_result_TD = false;
     is_result_TD |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TP;
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
-    if (is_result_TD == false)
-        // Bail if the result will not be a TD
+
+    // Note the following will result in TP:
+    // - Substraction of TD from TP
+    bool is_result_TP = false;
+    is_result_TP |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TD;
+
+    // Determine the cace_ari_type_t of the result
+    cace_ari_type_t ari_type;
+    if (is_result_TD == true)
+        ari_type = CACE_ARI_TYPE_TD;
+    else if (is_result_TP == true)
+        ari_type = CACE_ARI_TYPE_TP;
+    else
+        // Bail if the result will not be a TD or TP
         return RET_FAIL_UNDEFINED;
 
     // Delegate the subtraction
@@ -418,7 +430,7 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
 
     res_lit->has_ari_type      = true;
-    res_lit->ari_type          = CACE_ARI_TYPE_TD;
+    res_lit->ari_type          = ari_type;
     res_lit->prim_type         = CACE_ARI_PRIM_TIMESPEC;
     res_lit->value.as_timespec = result_TS;
 
