@@ -361,12 +361,18 @@ static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, co
     // Determine the cace_ari_type_t of the result
     cace_ari_type_t ari_type;
     if (is_result_TD == true)
+    {
         ari_type = CACE_ARI_TYPE_TD;
+    }
     else if (is_result_TP == true)
+    {
         ari_type = CACE_ARI_TYPE_TP;
+    }
     else
+    {
         // Bail if the result will not be a TD or TP
         return RET_FAIL_UNDEFINED;
+    }
 
     // Delegate the addition
     struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
@@ -410,12 +416,18 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     // Determine the cace_ari_type_t of the result
     cace_ari_type_t ari_type;
     if (is_result_TD == true)
+    {
         ari_type = CACE_ARI_TYPE_TD;
+    }
     else if (is_result_TP == true)
+    {
         ari_type = CACE_ARI_TYPE_TP;
+    }
     else
+    {
         // Bail if the result will not be a TD or TP
         return RET_FAIL_UNDEFINED;
+    }
 
     // Delegate the subtraction
     struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
@@ -452,8 +464,10 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
     bool is_result_TD = false;
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
     if (is_result_TD == false)
+    {
         // Bail if the result will not be a TD
         return RET_FAIL_UNDEFINED;
+    }
 
     time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
     long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
@@ -481,7 +495,9 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
             double scalar_double = valueB->as_lit.value.as_float64;
             int    scalar_class  = fpclassify(scalar_double);
             if (scalar_class == FP_INFINITE || scalar_class == FP_NAN)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             // Calculate the seconds (as a double) and extract the integral and the fraction parts out.
             // Note we assign the integral part to result_TS.tv_sec, and the fractional part is sent to
@@ -531,8 +547,10 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     bool is_result_TD = false;
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
     if (is_result_TD == false)
+    {
         // Bail if the result will not be a TD
         return RET_FAIL_UNDEFINED;
+    }
 
     time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
     long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
@@ -545,7 +563,9 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             // Bail if scalar is 0
             uint64_t scalar_uint64 = valueB->as_lit.value.as_uint64;
             if (scalar_uint64 == 0)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             result_TS.tv_sec  = valueA_sec / scalar_uint64;
             result_TS.tv_nsec = valueA_nano / scalar_uint64;
@@ -558,7 +578,9 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             // Bail if scalar is 0
             int64_t scalar_int64 = valueB->as_lit.value.as_int64;
             if (scalar_int64 == 0)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             result_TS.tv_sec  = valueA_sec / scalar_int64;
             result_TS.tv_nsec = valueA_nano / scalar_int64;
@@ -572,14 +594,18 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             double scalar_double = valueB->as_lit.value.as_float64;
             int    scalar_class  = fpclassify(scalar_double);
             if (scalar_class == FP_ZERO || scalar_class == FP_NAN)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             result_TS.tv_sec  = valueA_sec / scalar_double;
             result_TS.tv_nsec = valueA_nano / scalar_double;
             // Adjust nanos to take into account the factional second component. Note do not adjust if the
             // scalar is infinite (since the above 2 lines will resolve to 0) but the line below may not.
             if (scalar_class != FP_INFINITE)
+            {
                 result_TS.tv_nsec += ((valueA_sec - (result_TS.tv_sec * scalar_double)) * NANOS_IN_SEC) / scalar_double;
+            }
             break;
         }
         default:
@@ -1593,7 +1619,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
  *
  * Result name "branch", type: use of ari:/ARITYPE/BOOL
  */
-static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *ctx)
+static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *ctx _U_)
 {
     /*
      * +-------------------------------------------------------------------------+
@@ -1619,7 +1645,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
  *
  * Result name "try-success", type: use of ari:/ARITYPE/BOOL
  */
-static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
+static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx _U_)
 {
     /*
      * +-------------------------------------------------------------------------+
@@ -3843,7 +3869,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
  *
  * Result name "out", type: use of ari:/ARITYPE/TBL
  */
-static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ctx)
+static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ctx _U_)
 {
     /*
      * +-------------------------------------------------------------------------+
