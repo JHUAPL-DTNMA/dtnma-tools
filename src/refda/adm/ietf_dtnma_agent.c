@@ -1619,7 +1619,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
  *
  * Result name "branch", type: use of ari:/ARITYPE/BOOL
  */
-static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *ctx)
 {
     /*
      * +-------------------------------------------------------------------------+
@@ -1645,7 +1645,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
  *
  * Result name "try-success", type: use of ari:/ARITYPE/BOOL
  */
-static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
 {
     /*
      * +-------------------------------------------------------------------------+
@@ -3869,7 +3869,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
  *
  * Result name "out", type: use of ari:/ARITYPE/TBL
  */
-static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ctx _U_)
+static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ctx)
 {
     /*
      * +-------------------------------------------------------------------------+
