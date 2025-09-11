@@ -30,6 +30,7 @@ cace
 CACE
 Carsten
 cbor
+cborhex
 CDDL
 CFE
 CHKERR
@@ -51,6 +52,7 @@ cond
 config
 const
 CONST
+crit
 CRIT
 ctrl
 CTRL
@@ -229,6 +231,7 @@ tgt
 thr
 timespec
 TP
+Transcoder
 tstr
 TSTR
 tv

@@ -341,15 +341,15 @@ static int write_cborhex(const cace_ari_t *val, FILE *dest)
 static void show_usage(const char *argv0)
 {
     fprintf(stderr,
-            "Usage: %s {-l <log-level>} "
-            "[--source {filename or -}] "
+            "Usage: %s {--log-level,-l <log-level>} "
+            "[--source,-s {filename or -}] "
 #if defined(ARI_TEXT_PARSE)
-            "[--inform {auto,text,cbor,cborhex}] "
+            "[--inform,-i {auto,text,cbor,cborhex}] "
 #else
-            "[--inform {cbor,cborhex}] "
+            "[--inform,-i {cbor,cborhex}] "
 #endif /* ARI_TEXT_PARSE */
-            "[--dest {filename or -}] "
-            "[--outform {auto,text,cbor,cborhex}]\n",
+            "[--dest,-d {filename or -}] "
+            "[--outform,-o {auto,text,cbor,cborhex}]\n",
             argv0);
 }
 
