@@ -409,7 +409,7 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
 
     // Note the following will result in TP:
-    // - Substraction of TD from TP
+    // - Subtraction of TD from TP
     bool is_result_TP = false;
     is_result_TP |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TD;
 
