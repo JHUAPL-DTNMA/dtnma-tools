@@ -1590,22 +1590,15 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
      */
     const cace_ari_t *ari_condition = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *ari_on_truthy = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
-    const cace_ari_t *ari_on_falsy = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+    const cace_ari_t *ari_on_falsy  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+
+    refda_agent_t *agent = ctx->runctx->agent;
 
     if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
     {
         CACE_LOG_ERR("Invalid parameter, unable to continue");
         return;
-    } 
-
-    /*
-    TODO:
-    - eval condition (see check_sbr_condition in exec.c and generalize)
-    - if true and on-truthy not null, exec on-truthy (how?)
-      - see exec_rule_action (which should be generalized) for an example of what to do
-    - else and on-falsy not null exec on-falsy
-    - return bool indicating which branch
-    */
+    }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     if (refda_eval_condition(ctx->runctx, &result, ari_condition))
@@ -1614,8 +1607,27 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
         return;
     }
 
-    if (cace_ari_equal
-    // TODO: return result from CTRL
+    bool condition;
+    if (cace_ari_get_bool(&result, &condition))
+    {
+        CACE_LOG_ERR("Unable to unpack boolean returned from refda_eval_condition");
+        return;
+    }
+
+    REFDA_AGENT_LOCK(agent, );
+    result = CACE_ARI_INIT_UNDEFINED;
+    if (condition)
+    {
+        refda_exec_queue(agent, ari_on_truthy);
+        cace_ari_set_bool(&result, true);
+    }
+    else
+    {
+        refda_exec_queue(agent, ari_on_falsy);
+        cace_ari_set_bool(&result, false);
+    }
+    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
