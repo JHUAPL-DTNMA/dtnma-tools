@@ -828,7 +828,7 @@ static int refda_exec_action(refda_agent_t *agent, refda_exec_seq_t *seq, const 
     return res;
 }
 
-void refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari)
+int refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari)
 {
     CHKVOID(agent);
     CHKVOID(ari);
@@ -837,10 +837,11 @@ void refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari)
     seq->pid              = agent->exec_next_pid++;
 
     // Expand target ARI and create exec items, CTRLs are run later by exec worker
-    if (!refda_exec_action(agent, seq, ari))
+    int res = refda_exec_action(agent, seq, ari);
+    if (!res)
     {
         atomic_fetch_add(&agent->instr.num_tbrs_trig, 1);
     }
 
-    return;
+    return res;
 }

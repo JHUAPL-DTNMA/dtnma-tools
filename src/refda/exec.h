@@ -105,8 +105,9 @@ int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
  * Queue an ARI for execution
  * @param[in] agent The agent context pointer
  * @param[in] ari   The ARI to execute
+ * @return Non-zero if the ARI could not be queued for execution
  */
-void refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari);
+int refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari);
 
 #ifdef __cplusplus
 } // extern C
