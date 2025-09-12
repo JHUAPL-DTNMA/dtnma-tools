@@ -19,6 +19,7 @@
 #include "msg.h"
 #include "cace/ari/cbor.h"
 #include "cace/ari/text.h"
+#include "cace/ari/time_util.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include <qcbor/qcbor.h>
@@ -253,6 +254,7 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
     {
         cace_data_t view;
         cace_data_init_view(&view, got, (uint8_t *)msg_begin);
+        cace_get_system_time(&meta->timestamp);
         if (cace_ari_cbor_decode(&meta->src, &view, &head_len, NULL))
         {
             result = 3;
