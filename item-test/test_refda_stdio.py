@@ -482,3 +482,12 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, bool)
         self.assertEqual(True, rpt.items[0].value)
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), //ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version), null))'
+        )
+        rptset = self._wait_rptset().value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, bool)
+        self.assertEqual(True, rpt.items[0].value)
