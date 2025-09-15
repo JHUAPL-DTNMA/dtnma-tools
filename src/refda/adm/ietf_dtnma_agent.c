@@ -1618,14 +1618,16 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
     result = CACE_ARI_INIT_UNDEFINED;
     if (condition)
     {
-        if (!cace_ari_is_null(ari_on_truthy)){
+        if (!cace_ari_is_null(ari_on_truthy))
+        {
             refda_exec_queue(agent, ari_on_truthy);
         }
         cace_ari_set_bool(&result, true);
     }
     else
     {
-        if (!cace_ari_is_null(ari_on_falsy)){
+        if (!cace_ari_is_null(ari_on_falsy))
+        {
             refda_exec_queue(agent, ari_on_falsy);
         }
         cace_ari_set_bool(&result, false);
