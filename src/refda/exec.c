@@ -830,14 +830,34 @@ static int refda_exec_action(refda_agent_t *agent, refda_exec_seq_t *seq, const 
 
 int refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari)
 {
-    CHKVOID(agent);
-    CHKVOID(ari);
+    CHKERR1(agent);
+    CHKERR1(ari);
 
+    int               res = 0;
     refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
     seq->pid              = agent->exec_next_pid++;
 
-    // Expand target ARI and create exec items, CTRLs are run later by exec worker
-    int res = refda_exec_action(agent, seq, ari);
+    // Encapsulate ARI within an AC if needed
+    if (!cace_ari_get_ac((cace_ari_t *)ari))
+    {
+        cace_ari_ac_t acinit;
+        cace_ari_ac_init(&acinit);
+        {
+            cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
+            cace_ari_set_copy(item, ari);
+        }
+
+        cace_ari_t ari_ac = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_ac(&ari_ac, &acinit);
+
+        // Expand target ARI and create exec items, CTRLs are run later by exec worker
+        res = refda_exec_action(agent, seq, &ari_ac);
+    }
+    else
+    {
+        // Expand target ARI and create exec items, CTRLs are run later by exec worker
+        res = refda_exec_action(agent, seq, ari);
+    }
 
     return res;
 }
