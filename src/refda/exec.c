@@ -838,10 +838,6 @@ int refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari)
 
     // Expand target ARI and create exec items, CTRLs are run later by exec worker
     int res = refda_exec_action(agent, seq, ari);
-    if (!res)
-    {
-        atomic_fetch_add(&agent->instr.num_tbrs_trig, 1);
-    }
 
     return res;
 }
