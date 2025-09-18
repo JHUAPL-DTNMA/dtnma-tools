@@ -259,7 +259,7 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
 int refda_eval_condition(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *condition)
 {
     cace_ari_t ari_res = CACE_ARI_INIT_UNDEFINED;
-    int        res     = refda_eval_target(&runctx, &ari_res, condition);
+    int        res     = refda_eval_target(runctx, &ari_res, condition);
 
     if (res)
     {
