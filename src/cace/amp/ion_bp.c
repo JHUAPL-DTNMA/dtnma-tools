@@ -23,6 +23,7 @@
 #include "ion_bp.h"
 #include "msg.h"
 #include "cace/ari/text.h"
+#include "cace/ari/time_util.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 
@@ -235,6 +236,7 @@ int cace_amp_ion_bp_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta,
     if (!retval)
     {
         cace_ari_set_tstr(&meta->src, dlv.bundleSourceEid, true);
+        cace_get_system_time(&meta->timestamp);
 
         const vast adu_len = zco_source_data_length(sdr, dlv.adu);
         if (adu_len)
