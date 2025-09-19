@@ -207,7 +207,9 @@ int cace_numeric_binary_operator(cace_ari_t *result, const cace_ari_t *lt_val, c
     is_oper_TS |= lt_typ == CACE_ARI_TYPE_TD || lt_typ == CACE_ARI_TYPE_TP;
     is_oper_TS |= rt_typ == CACE_ARI_TYPE_TD || rt_typ == CACE_ARI_TYPE_TP;
     if (is_oper_TS == true)
+    {
         return op_timespec(result, lt_val, rt_val);
+    }
 
     // Logic for non timespec operations
     cace_ari_type_t promote;

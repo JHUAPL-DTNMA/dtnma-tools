@@ -929,13 +929,17 @@ static void debugPostgresSqlResult(PGresult *res, int max_row_cnt)
     int num_cols = PQnfields(res);
     fprintf(stderr, "...Number of rows: %d   |   Number of cols: %d\n", num_rows, num_cols);
     if (max_row_cnt > 0 && max_row_cnt < num_rows)
+    {
         fprintf(stderr, "...Max rows to log: %d\n", max_row_cnt);
+    }
 
     // Iterate through each row and send the table column and log contents
     for (int row = 0; row < num_rows; row++)
     {
         if (row == max_row_cnt)
+        {
             break;
+        }
 
         fprintf(stderr, "......Row %d:\n", row);
         for (int col = 0; col < num_cols; col++)
