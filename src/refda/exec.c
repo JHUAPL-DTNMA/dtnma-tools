@@ -205,6 +205,7 @@ static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     cace_ari_list_t *items = &(ari->as_lit.value.as_ac->items);
 
     int retval = 0;
+
     cace_ari_list_it_t it;
     for (cace_ari_list_it(it, *items); !cace_ari_list_end_p(it); cace_ari_list_next(it))
     {
