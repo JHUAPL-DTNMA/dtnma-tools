@@ -39,36 +39,50 @@
 // Allow this macro
 #define TEST_CASE(...)
 
+/// Agent context for testing
+static refda_agent_t agent;
+
+/// State for test_reporting_edd_one_int()
 static atomic_int edd_backing_value;
+
+/// Sequence of executions for test_exec_ctrl_exec_one_int()
+static cace_ari_list_t exec_log;
+
+static void suite_adms_init(refda_agent_t *agent);
 
 void suiteSetUp(void)
 {
     cace_openlog();
+
     atomic_init(&edd_backing_value, 0);
+    cace_ari_list_init(exec_log);
+    refda_agent_init(&agent);
+    suite_adms_init(&agent);
 }
 
 int suiteTearDown(int failures)
 {
+    cace_ari_list_clear(exec_log);
+    refda_agent_deinit(&agent);
+
     cace_closelog();
     return failures;
 }
 
+void tearDown(void)
+{
+    cace_ari_list_reset(exec_log);
+}
+
 #define EXAMPLE_ORG_ENUM 65535
 #define EXAMPLE_ADM_ENUM 10
-
-/// Agent context for testing
-static refda_agent_t agent;
-
-/// Sequence of executions
-static cace_ari_list_t exec_log;
 
 static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
 {
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     int        val    = atomic_load(&edd_backing_value);
     cace_ari_set_int(&result, val);
-    refda_edd_prod_ctx_set_result_copy(ctx, &result);
-    cace_ari_deinit(&result);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
 }
 
 static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
@@ -89,22 +103,20 @@ static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
     refda_ctrl_exec_ctx_set_result_copy(ctx, val);
 }
 
-void setUp(void)
+static void suite_adms_init(refda_agent_t *agent)
 {
-    refda_agent_init(&agent);
-    // ADM initialization
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(&agent));
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_base_init(&agent));
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_semtype_init(&agent));
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_network_base_init(&agent));
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(&agent));
 
-    cace_ari_list_init(exec_log);
+    // ADM initialization
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_base_init(agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_semtype_init(agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_network_base_init(agent));
+    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(agent));
 
     {
         // ADM for this test fixture
         cace_amm_obj_ns_t *adm =
-            cace_amm_obj_store_add_ns(&(agent.objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
+            cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
                                       cace_amm_idseg_ref_withenum("adm", EXAMPLE_ADM_ENUM), "2025-02-10");
         cace_amm_obj_desc_t *obj;
 
@@ -182,16 +194,15 @@ void setUp(void)
         }
     }
 
-    int res = refda_agent_bindrefs(&agent);
+    int res = refda_agent_bindrefs(agent);
     TEST_ASSERT_EQUAL_INT(0, res);
 }
 
-void tearDown(void)
-{
-    cace_ari_list_clear(exec_log);
-    refda_agent_deinit(&agent);
-}
-
+/** Perform a single execution on a single target.
+ *
+ * @param[in] target The target to execute.
+ * @param expect_exp The expected refda_exec_exp_target() return code.
+ */
 static void check_execute(const cace_ari_t *target, int expect_exp, int wait_limit, int wait_ms[])
 {
     {
@@ -299,6 +310,9 @@ TEST_CASE("8419FFFF0A2201", 0, "821181""8419FFFF0A2201")
 TEST_CASE("8419FFFF0A2220", 4, "821180")
 // direct MAC ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2)
 TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", 0, "821182""8419FFFF0A2201""8419FFFF0A2202")
+// direct MAC ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/-1)
+// invalid reference means second CTRL is not executed
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2220", 0, "821181""8419FFFF0A2201")
 // indirect MAC ari://65535/10/CONST/1
 TEST_CASE("8419FFFF0A2101", 0, "821182""8419FFFF0A2201""8419FFFF0A2202")
 // recursive MAC ari:/AC/(//65535/10/CONST/1)
@@ -319,7 +333,7 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
     }
     cace_ari_list_t *expect_seq = &(expect_log.as_lit.value.as_ac->items);
 
-    int wait_limit = expect_exp == 0 ? 1 : 0;
+    int wait_limit = (expect_exp == 0 ? 1 : 0);
     int wait_ms[]  = { 0 };
     check_execute(&target, expect_exp, wait_limit, wait_ms);
 
@@ -350,7 +364,7 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
     cace_ari_deinit(&target);
 }
 
-TEST_CASE(1000)
+TEST_CASE(100)
 void test_refda_exec_wait_for(int delay_ms)
 {
     // synthesize the target
@@ -376,7 +390,7 @@ void test_refda_exec_wait_for(int delay_ms)
     cace_ari_deinit(&target);
 }
 
-TEST_CASE(1000)
+TEST_CASE(100)
 void test_refda_exec_wait_until(int delay_ms)
 {
     struct timespec nowtime;
@@ -407,7 +421,7 @@ void test_refda_exec_wait_until(int delay_ms)
     cace_ari_deinit(&target);
 }
 
-TEST_CASE(1000)
+TEST_CASE(100)
 void test_refda_exec_wait_cond(int delay_ms)
 {
     // synthesize the target
