@@ -62,9 +62,15 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
         refda_reporting_ctrl(runctx, &(item->ref), &(item->result));
     }
 
-    // done with this item
-    if (item->seq)
+    if (cace_ari_is_undefined(&(item->result)))
     {
+        // Failure, so done with this whole sequence
+        CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " failed, halting", item->seq->pid);
+        refda_exec_item_list_reset(item->seq->items);
+    }
+    else if (item->seq)
+    {
+        // done with this item
         refda_exec_item_list_pop_front(NULL, item->seq->items);
     }
 
@@ -132,11 +138,11 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
     return retval;
 }
 
-/** Execute any ARI target (reference or literal).
+/** Expand any ARI target (reference or literal).
  */
 static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target);
 
-/** Execute an arbitrary object reference.
+/** Expand an arbitrary object reference.
  */
 static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target)
 {
@@ -192,21 +198,26 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     return retval;
 }
 
-/** Execute a MAC-typed literal value.
+/** Expand a MAC-typed literal value.
  */
 static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *ari)
 {
     cace_ari_list_t *items = &(ari->as_lit.value.as_ac->items);
 
+    int retval = 0;
     cace_ari_list_it_t it;
     for (cace_ari_list_it(it, *items); !cace_ari_list_end_p(it); cace_ari_list_next(it))
     {
         const cace_ari_t *item = cace_ari_list_cref(it);
 
-        refda_exec_exp_item(runctx, seq, item);
+        retval = refda_exec_exp_item(runctx, seq, item);
+        if (retval)
+        {
+            break;
+        }
     }
 
-    return 0;
+    return retval;
 }
 
 static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target)

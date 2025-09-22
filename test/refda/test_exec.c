@@ -131,13 +131,31 @@ static void suite_adms_init(refda_agent_t *agent)
                 cace_ari_ac_init(&acinit);
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
-                    // ari://example/adm/CTRL/ctrl1
-                    cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 1);
+                    // ari://example/adm/CTRL/ctrl1(10)
+                    cace_ari_ref_t *ref = cace_ari_set_objref(item);
+                    cace_ari_objpath_set_intid(&(ref->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 1);
+
+                    cace_ari_list_t params;
+                    cace_ari_list_init(params);
+                    {
+                        cace_ari_t *param = cace_ari_list_push_back_new(params);
+                        cace_ari_set_int(param, 10);
+                    }
+                    cace_ari_params_set_ac(&(ref->params), params);
                 }
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
-                    // ari://example/adm/CTRL/ctrl2
-                    cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 2);
+                    // ari://example/adm/CTRL/ctrl2(20)
+                    cace_ari_ref_t *ref = cace_ari_set_objref(item);
+                    cace_ari_objpath_set_intid(&(ref->objpath), EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 2);
+
+                    cace_ari_list_t params;
+                    cace_ari_list_init(params);
+                    {
+                        cace_ari_t *param = cace_ari_list_push_back_new(params);
+                        cace_ari_set_int(param, 20);
+                    }
+                    cace_ari_params_set_ac(&(ref->params), params);
                 }
 
                 cace_ari_set_ac(&(objdata->value), &acinit);
@@ -304,19 +322,25 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
 }
 
 // clang-format off
+// direct ref ari://65535/10/CTRL/1(10)
+TEST_CASE("8519FFFF0A2201810A", 0, "821181""8519FFFF0A2201810A")
 // direct ref ari://65535/10/CTRL/1
 TEST_CASE("8419FFFF0A2201", 0, "821181""8419FFFF0A2201")
 // bad deref ref ari://65535/10/CTRL/-1
 TEST_CASE("8419FFFF0A2220", 4, "821180")
-// direct MAC ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2)
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", 0, "821182""8419FFFF0A2201""8419FFFF0A2202")
-// direct MAC ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/-1)
-// invalid reference means second CTRL is not executed
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2220", 0, "821181""8419FFFF0A2201")
+// direct MAC ari:/AC/(//65535/10/CTRL/1(10),//65535/10/CTRL/2(20))
+TEST_CASE("821182""8519FFFF0A2201810A""8519FFFF0A22028114", 0, "821182""8519FFFF0A2201810A""8519FFFF0A22028114")
 // indirect MAC ari://65535/10/CONST/1
-TEST_CASE("8419FFFF0A2101", 0, "821182""8419FFFF0A2201""8419FFFF0A2202")
+TEST_CASE("8419FFFF0A2101", 0, "821182""8519FFFF0A22018182040A""8519FFFF0A220281820414")
 // recursive MAC ari:/AC/(//65535/10/CONST/1)
-TEST_CASE("8211818419FFFF0A2101", 0, "821182""8419FFFF0A2201""8419FFFF0A2202")
+TEST_CASE("821181""8419FFFF0A2101", 0, "821182""8519FFFF0A22018182040A""8519FFFF0A220281820414")
+// direct MAC ari:/AC/(//65535/10/CTRL/1(10),//65535/10/CTRL/-1)
+TEST_CASE("821182""8519FFFF0A2201810A""8419FFFF0A2220", 4, "821180")
+// direct MAC ari:/AC/(//65535/10/CTRL/1(10),//65535/10/CTRL/1('hi'))
+TEST_CASE("821182""8519FFFF0A2201810A""8519FFFF0A222081426869", 4, "821180")
+// direct MAC ari:/AC/(//65535/10/CTRL/1(10),//65535/10/CTRL/1,//65535/10/CTRL/2(20))
+// invalid reference means execution stops after second CTRL
+TEST_CASE("821183""8519FFFF0A2201810A""8419FFFF0A2201""8519FFFF0A22028114", 0, "821182""8519FFFF0A2201810A""8419FFFF0A2201")
 // clang-format on
 void test_refda_exec_target(const char *targethex, int expect_exp, const char *expectloghex)
 {
@@ -353,7 +377,17 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
     {
         // TEST_MESSAGE()
         const bool equal = cace_ari_equal(cace_ari_list_cref(expect_it), cace_ari_list_cref(got_it));
-        TEST_ASSERT_TRUE_MESSAGE(equal, "exec_log ARI is different");
+        if (!equal)
+        {
+            string_t buf;
+            string_init(buf);
+            cace_ari_text_encode(buf, cace_ari_list_cref(expect_it), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            TEST_PRINTF("exec_log expect %s", string_get_cstr(buf));
+            cace_ari_text_encode(buf, cace_ari_list_cref(got_it), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            TEST_PRINTF("exec_log item %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+        TEST_ASSERT_TRUE_MESSAGE(equal, "exec_log item is different");
     }
 
     // no remaining state
