@@ -39,13 +39,13 @@
 // Allow this macro
 #define TEST_CASE(...)
 
-/// Agent context for testing
+// Agent context for testing
 static refda_agent_t agent;
 
-/// State for test_reporting_edd_one_int()
+// State for test_reporting_edd_one_int()
 static atomic_int edd_backing_value;
 
-/// Sequence of executions for test_exec_ctrl_exec_one_int()
+// Sequence of executions for test_exec_ctrl_exec_one_int()
 static cace_ari_list_t exec_log;
 
 static void suite_adms_init(refda_agent_t *agent);
