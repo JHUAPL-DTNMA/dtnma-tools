@@ -41,12 +41,13 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
         CACE_LOG_DEBUG("execution finished with result %s", string_get_cstr(buf));
         string_clear(buf);
     }
+    const bool is_failure = cace_ari_is_undefined(&(item->result));
 
     refda_runctx_t *runctx = refda_runctx_ptr_ref(item->seq->runctx);
 
     // Track number of successes/failures
     refda_agent_t *agent = runctx->agent;
-    if (cace_ari_is_undefined(&(item->result)))
+    if (is_failure)
     {
         atomic_fetch_add(&agent->instr.num_ctrls_failed, 1);
     }
@@ -59,12 +60,13 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
     {
         // generate report regardless of success or failure
         CACE_LOG_DEBUG("Pushing execution result");
+        // this moves the result value
         refda_reporting_ctrl(runctx, &(item->ref), &(item->result));
     }
 
-    if (cace_ari_is_undefined(&(item->result)))
+    if (is_failure)
     {
-        // Failure, so done with this whole sequence
+        // done with this whole sequence
         CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " failed, halting", item->seq->pid);
         refda_exec_item_list_reset(item->seq->items);
     }
