@@ -1988,8 +1988,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         string_list_pop_back(NULL, agent->odm_names);
     }
 
-    cace_ari_t result = CACE_ARI_INIT_NULL;
-    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+    refda_ctrl_exec_ctx_set_result_null(ctx);
 
     REFDA_AGENT_UNLOCK(agent, );
     /*
@@ -2026,8 +2025,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
         CACE_LOG_INFO("ODM found, marking as obsolete");
         odm->obsolete = true;
 
-        cace_ari_t result = CACE_ARI_INIT_NULL; // Indicate successful result
-        refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+        // Indicate successful result
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
     else
     {
@@ -2088,6 +2087,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
                 string_clear(buf);
             }
             cace_ari_set_copy(&(var->value), &(var->init_val));
+            refda_ctrl_exec_ctx_set_result_null(ctx);
         }
     }
     cace_amm_lookup_deinit(&deref);
@@ -2148,6 +2148,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
                 string_clear(buf);
             }
             cace_ari_set_copy(&(var->value), value);
+            refda_ctrl_exec_ctx_set_result_null(ctx);
         }
     }
     cace_amm_lookup_deinit(&deref);
@@ -2271,8 +2272,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
     REFDA_AGENT_UNLOCK(agent, );
 
-    cace_ari_t ari_result = CACE_ARI_INIT_NULL;
-    refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
@@ -2324,8 +2324,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
             CACE_LOG_DEBUG("Marking CONST as obsolete");
             cnst->obsolete = true;
         }
-        cace_ari_t ari_result = CACE_ARI_INIT_NULL;
-        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
 
     cace_amm_lookup_deinit(&deref);
@@ -2449,8 +2448,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
 
     REFDA_AGENT_UNLOCK(agent, );
 
-    cace_ari_t ari_result = CACE_ARI_INIT_NULL;
-    refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
@@ -2502,8 +2500,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
             CACE_LOG_DEBUG("Marking VAR as obsolete");
             var->obsolete = true;
         }
-        cace_ari_t ari_result = CACE_ARI_INIT_NULL;
-        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
 
     cace_amm_lookup_deinit(&deref);
