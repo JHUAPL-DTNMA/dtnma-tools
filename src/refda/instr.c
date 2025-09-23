@@ -33,6 +33,8 @@ void refda_instr_init(refda_instr_t *obj)
     atomic_init(&(obj->num_sbrs), 0);
     atomic_init(&(obj->num_sbrs_trig), 0);
     atomic_init(&(obj->num_ctrls_run), 0);
+    atomic_init(&(obj->num_ctrls_succeeded), 0);
+    atomic_init(&(obj->num_ctrls_failed), 0);
 }
 
 void refda_instr_deinit(refda_instr_t *obj _U_)

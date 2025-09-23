@@ -44,6 +44,17 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
 
     refda_runctx_t *runctx = refda_runctx_ptr_ref(item->seq->runctx);
 
+    // Track number of successes/failures
+    refda_agent_t *agent = runctx->agent;
+    if (cace_ari_is_undefined(&(item->result)))
+    {
+        atomic_fetch_add(&agent->instr.num_ctrls_failed, 1);
+    }
+    else
+    {
+        atomic_fetch_add(&agent->instr.num_ctrls_succeeded, 1);
+    }
+
     if (!cace_ari_is_null(&(runctx->nonce)))
     {
         // generate report regardless of success or failure
@@ -82,6 +93,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
     {
         refda_ctrl_exec_ctx_t ctx;
         refda_ctrl_exec_ctx_init(&ctx, item);
+        atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
         (ctrl->execute)(&ctx);
         refda_ctrl_exec_ctx_deinit(&ctx);
         CACE_LOG_DEBUG("execution callback returned");
@@ -271,29 +283,21 @@ int refda_exec_waiting(refda_agent_t *agent)
     }
 
     refda_exec_seq_list_it_t seq_it;
-    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);)
+    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);
+         refda_exec_seq_list_next(seq_it))
     {
         refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
 
-        if (refda_exec_item_list_empty_p(seq->items))
+        // Skip completed or still waiting exec items
+        //
+        // Do not remove completed item now because it will relocate seq in memory and cause
+        // problems with pointers within items. We clean up after iterating.
+        if (!refda_exec_item_list_empty_p(seq->items)
+            && atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) != REFDA_EXEC_WAITING)
         {
-            // Skip completed exec item
-            //
-            // Do not remove now because it will relocate seq in memory and cause
-            // problems with pointers within items. We clean up after iterating.
-            refda_exec_seq_list_next(seq_it);
-            continue;
+            CACE_LOG_DEBUG("pushing to ready");
+            refda_exec_seq_ptr_list_push_back(ready, seq);
         }
-
-        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == REFDA_EXEC_WAITING)
-        {
-            // still waiting
-            continue;
-        }
-
-        CACE_LOG_DEBUG("pushing to ready");
-        refda_exec_seq_ptr_list_push_back(ready, seq);
-        refda_exec_seq_list_next(seq_it);
     }
 
     // Safely clear any completed sequences from the front of the queue
@@ -436,6 +440,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                     {
                         refda_ctrl_exec_ctx_t ctx;
                         refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                        atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
                         (next->exec.callback)(&ctx);
                         refda_ctrl_exec_ctx_deinit(&ctx);
                     }

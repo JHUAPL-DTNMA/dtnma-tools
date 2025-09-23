@@ -57,16 +57,17 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 }
 
 <ARI_OBJREF>"/" {
-    // Ignore trailing slash
+    // Possible trailing slash
+    return T_SLASH;
 }
 
 <ARI_OBJREF>\/{VALSEG} {
-//     fprintf(stderr, "VALSEG from: %s\n", yytext);
+    //fprintf(stderr, "VALSEG:%s\n", yytext);
     // Match one path segment including leading slash
     char *curs = yytext + 1;
 
     {
-        string_t decoded;
+        m_string_t decoded;
         if (cace_ari_valseg_decode(decoded, curs, yyleng - 1))
         {
             cace_ari_text_str_error(yyscanner, yyextra, "ID segment failed to percent-decode");
@@ -136,7 +137,6 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 }
 
 <INITIAL,ARI_TYPEDLIT>{VALSEG} {
-//    fprintf(stderr, "VALSEG from: %s\n", yytext);
     const char *text_begin = yytext;
     const size_t text_len = yyleng;
 

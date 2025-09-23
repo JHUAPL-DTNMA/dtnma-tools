@@ -33,6 +33,18 @@
 extern "C" {
 #endif
 
+/// Options for URI scheme presence
+enum cace_ari_text_scheme_prefix_e
+{
+    /// Never prefix with a scheme
+    CACE_ARI_TEXT_SCHEME_NONE,
+    /// Prefix only the outer-most value
+    CACE_ARI_TEXT_SCHEME_FIRST,
+    /// Prefix all values, including container contents
+    CACE_ARI_TEXT_SCHEME_ALL,
+};
+
+/// Options for encoding ARITYPE values
 enum cace_ari_text_aritype_e
 {
     /// Show whatever the original decoding was
@@ -43,6 +55,26 @@ enum cace_ari_text_aritype_e
     CACE_ARI_TEXT_ARITYPE_INT,
 };
 
+/// Options for encoding integer bases
+enum cace_ari_int_base_e
+{
+    /// Binary with 0b prefix
+    CACE_ARI_TEXT_INT_BASE2 = 2,
+    /// Decimal
+    CACE_ARI_TEXT_INT_BASE10 = 10,
+    /// Hexadecimal with 0x prefix
+    CACE_ARI_TEXT_INT_BASE16 = 16,
+};
+/// Options for encoding byte strings
+enum cace_ari_bstr_form_e
+{
+    /// Attempt to output as text
+    CACE_ARI_TEXT_BSTR_RAW,
+    /// Base16 according to Section 8 of RFC 4648 @cite rfc4648
+    CACE_ARI_TEXT_BSTR_BASE16,
+    // Base64 according to Section 5 of RFC 4648 @cite rfc4648
+    CACE_ARI_TEXT_BSTR_BASE64URL,
+};
 /** Encode just an object path, which can be useful for debugging output.
  *
  */
@@ -54,48 +86,27 @@ int cace_ari_text_encode_objpath(string_t text, const cace_ari_objpath_t *path, 
 typedef struct
 {
     /** True if the scheme is present at the start of the text.
-     * This defaults to CACE_ARI_TEXT_SCHEME_FIRST.
+     * This defaults to ::CACE_ARI_TEXT_SCHEME_FIRST.
      */
-    enum
-    {
-        /// Never prefix with a scheme
-        CACE_ARI_TEXT_SCHEME_NONE,
-        /// Prefix only the outer-most value
-        CACE_ARI_TEXT_SCHEME_FIRST,
-        /// Prefix all values, including container contents
-        CACE_ARI_TEXT_SCHEME_ALL,
-    } scheme_prefix;
+    enum cace_ari_text_scheme_prefix_e scheme_prefix;
     /** Determine how to show cace_ari_type_t values.
-     * This defaults to CACE_ARI_TEXT_ARITYPE_TEXT.
+     * This defaults to ::CACE_ARI_TEXT_ARITYPE_TEXT.
      */
     enum cace_ari_text_aritype_e show_ari_type;
     /** Desired base of integer values.
      * This defaults to 10 (decimal).
      */
-    enum cace_ari_int_base_e
-    {
-        /// Binary with 0b prefix
-        CACE_ARI_TEXT_INT_BASE2 = 2,
-        /// Decimal
-        CACE_ARI_TEXT_INT_BASE10 = 10,
-        /// Hexadecimal with 0x prefix
-        CACE_ARI_TEXT_INT_BASE16 = 16,
-    } int_base;
+    enum cace_ari_int_base_e int_base;
     /** One of 'f', 'g', or 'e' for decimal format, or 'a' for hexadecimal.
      */
     char float_form;
     /** True if specific text can be left unquoted.
      */
     bool text_identity;
-    enum cace_ari_bstr_form_e
-    {
-        /// Attempt to output as text
-        CACE_ARI_TEXT_BSTR_RAW,
-        /// Base16 according to Section 8 of RFC 4648 @cite rfc4648
-        CACE_ARI_TEXT_BSTR_BASE16,
-        // Base64 according to Section 5 of RFC 4648 @cite rfc4648
-        CACE_ARI_TEXT_BSTR_BASE64URL,
-    } bstr_form;
+    /** Desired encoding form for byte string values.
+     * This defaults to base-16 (hexadecimal strings).
+     */
+    enum cace_ari_bstr_form_e bstr_form;
     /** True if time values should be in text form.
      * False to use decimal fraction form.
      */

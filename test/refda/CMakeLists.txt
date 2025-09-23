@@ -16,25 +16,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-add_unity_test(SOURCE "test_amm_const.c")
-target_link_libraries(test_amm_const PUBLIC refda test_util)
-
-add_unity_test(SOURCE "test_amm_ctrl.c")
-target_link_libraries(test_amm_ctrl PUBLIC refda test_util)
-
-add_unity_test(SOURCE "test_exec.c")
-target_link_libraries(test_exec PUBLIC refda test_util)
-
-add_unity_test(SOURCE "test_eval.c")
-target_link_libraries(test_eval PUBLIC refda test_util)
-
-add_unity_test(SOURCE "test_reporting.c")
-target_link_libraries(test_reporting PUBLIC refda test_util)
-
-add_unity_test(SOURCE "test_adm_ietf_dtnma_agent.c")
-target_link_libraries(test_adm_ietf_dtnma_agent PUBLIC refda test_util)
-
-# Test just being able to compile and link a C++ user with the refda library
-add_executable(test_refda_cpp)
-target_sources(test_refda_cpp PRIVATE test_refda_cpp.cpp)
-target_link_libraries(test_refda_cpp PUBLIC refda)
+if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
+  add_unity_test(SOURCE "test_amm_const.c")
+  target_link_libraries(test_amm_const PUBLIC refda test_util)
+  
+  add_unity_test(SOURCE "test_amm_ctrl.c")
+  target_link_libraries(test_amm_ctrl PUBLIC refda test_util)
+  
+  add_unity_test(SOURCE "test_exec.c")
+  target_link_libraries(test_exec PUBLIC refda test_util)
+  
+  add_unity_test(SOURCE "test_eval.c")
+  target_link_libraries(test_eval PUBLIC refda test_util)
+  
+  add_unity_test(SOURCE "test_reporting.c")
+  target_link_libraries(test_reporting PUBLIC refda test_util)
+  
+  add_unity_test(SOURCE "test_adm_ietf_dtnma_agent.c")
+  target_link_libraries(test_adm_ietf_dtnma_agent PUBLIC refda test_util)
+  
+  # Test just being able to compile and link a C++ user with the refda library
+  add_executable(test_refda_cpp)
+  target_sources(test_refda_cpp PRIVATE test_refda_cpp.cpp)
+  target_link_libraries(test_refda_cpp PUBLIC refda)
+endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)

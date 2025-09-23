@@ -50,6 +50,19 @@
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 #include "nm_sql.h"
+
+/** Get a copy of a specific environment variable, if defined.
+ *
+ * @param[in] name The variable name to get.
+ * @return A copy of the string, or NULL if no environment is defined.
+ */
+static char *refdm_envdup(const char *name)
+{
+    const char *got = getenv(name);
+    char       *cpy = got ? strdup(got) : NULL;
+    return cpy;
+}
+
 #endif
 
 void refdm_mgr_init(refdm_mgr_t *mgr)
@@ -81,10 +94,10 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 
     // setting sql info
-    mgr->sql_info.server   = strdup(getenv("DB_HOST"));
-    mgr->sql_info.username = strdup(getenv("DB_USER"));
-    mgr->sql_info.password = strdup(getenv("DB_PASSWORD"));
-    mgr->sql_info.database = strdup(getenv("DB_NAME"));
+    mgr->sql_info.server   = refdm_envdup("DB_HOST");
+    mgr->sql_info.username = refdm_envdup("DB_USER");
+    mgr->sql_info.password = refdm_envdup("DB_PASSWORD");
+    mgr->sql_info.database = refdm_envdup("DB_NAME");
 
     pthread_mutex_init(&(mgr->sql_lock), NULL);
     refdm_db_mgt_init(&(mgr->sql_info), 0, 1);
@@ -193,12 +206,11 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     CACE_LOG_INFO("logging agent in db started");
-    int db_status = 0;
 
     m_string_t eid;
     m_string_init(eid);
     string_set_str(eid, agent_eid);
-    refdm_db_insert_agent(eid, &db_status);
+    refdm_db_insert_agent(eid);
     m_string_clear(eid);
     CACE_LOG_INFO("logging agent in db finished");
 #endif
@@ -249,5 +261,13 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
 void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
 {
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
+    if (idx > 0)
+    {
+        refdm_db_clear_rptset(idx);
+    }
+#else
     cace_ari_list_reset(agent->rptsets);
+#endif
 }

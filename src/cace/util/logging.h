@@ -18,7 +18,7 @@
 /** @file
  * Abstract interface for event logging.
  */
-/** @page Logging
+/** @page logging Logging
  * The CACE library provides a general purpose thread-safe logging facility
  * for the library itself and users of the library.
  *

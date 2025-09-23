@@ -43,6 +43,9 @@ typedef struct
     atomic_ullong num_sbrs_trig;
     /// Count of individual CTRL run during execution
     atomic_ullong num_ctrls_run;
+    atomic_ullong num_ctrls_succeeded;
+    atomic_ullong num_ctrls_failed;
+
 } refda_instr_t;
 
 /** Initialize counters to zero.

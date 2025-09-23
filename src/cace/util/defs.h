@@ -51,7 +51,7 @@ extern "C" {
 
 /** Check a condition and if not met return a specific value.
  *
- * @param cond The conditition to check.
+ * @param cond The condition to check.
  * @param val The return value if the check fails.
  */
 #define CHKRET(cond, val) \

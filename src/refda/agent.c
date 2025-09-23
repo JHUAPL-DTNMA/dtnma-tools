@@ -288,20 +288,30 @@ int refda_agent_init_objs(refda_agent_t *agent)
 int refda_agent_start(refda_agent_t *agent)
 {
     CHKERR1(agent);
-    CHKERR1(agent->mif.recv);
-    CHKERR1(agent->mif.send);
     CACE_LOG_INFO("Work threads starting...");
 
-    // clang-format off
-    cace_threadinfo_t threadinfo[] = {
-        { &refda_ingress_worker, "ingress" },
-        { &refda_egress_worker, "egress" },
-        { &refda_exec_worker, "exec" },
-        //        { &rda_reports, "rda_reports" },
-        //        { &rda_rules, "rda_rules" },
-    };
-    // clang-format on
-    int res = cace_threadset_start(agent->threads, threadinfo, sizeof(threadinfo) / sizeof(cace_threadinfo_t), agent);
+    /*
+     * This following code only runs the ingress or egress threads if mif.recv and/or mif.send are defined.
+     * This allows for short-cutting the ingress or egress threads and workers such that you can directly push into or
+     * pop from the inter-thread queues. This is fully implemented for overwriting the ingress system using a call to
+     * refda_ingress_push_move from a "external" thread.
+     */
+    size_t            threadCount = 0;
+    cace_threadinfo_t threadinfo[3];
+    if (agent->mif.recv)
+    {
+        threadinfo[threadCount].func   = &refda_ingress_worker;
+        threadinfo[threadCount++].name = "ingress";
+    }
+    if (agent->mif.send)
+    {
+        threadinfo[threadCount].func   = &refda_egress_worker;
+        threadinfo[threadCount++].name = "egress";
+    }
+    threadinfo[threadCount].func   = &refda_exec_worker;
+    threadinfo[threadCount++].name = "exec";
+
+    int res = cace_threadset_start(agent->threads, threadinfo, threadCount, agent);
     if (res)
     {
         CACE_LOG_ERR("Failed to start work threads: %d", res);
@@ -316,6 +326,17 @@ int refda_agent_stop(refda_agent_t *agent)
 {
     CHKERR1(agent);
     CACE_LOG_INFO("Work threads stopping...");
+
+    // If the ingress system has been overwritten, then the undefined message needs to be
+    // pushed in to signal shutdown.
+    if (agent->mif.recv == NULL)
+    {
+        // Send sentinel to end thread execution
+        refda_msgdata_t undef;
+        refda_msgdata_init(&undef);
+        refda_msgdata_queue_push_move(&agent->execs[0], &undef);
+        sem_post(&(agent->execs_sem));
+    }
 
     /* Notify threads */
     cace_daemon_run_stop(&agent->running);

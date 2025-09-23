@@ -49,6 +49,10 @@ typedef struct
      * This is set to the undefined value if not used.
      */
     cace_ari_t init_val;
+
+    /** Determine whether the var has been marked obsolete
+     */
+    bool obsolete;
 } refda_amm_var_desc_t;
 
 void refda_amm_var_desc_init(refda_amm_var_desc_t *obj);

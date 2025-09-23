@@ -176,7 +176,25 @@ static int agentsGetHandler(struct mg_connection *conn)
 
         cJSON *agentObj = cJSON_CreateObject();
         cJSON_AddStringToObject(agentObj, "name", string_get_cstr(agent->eid));
-        cJSON_AddNumberToObject(agentObj, "rpts_count", cace_ari_list_size(agent->rptsets));
+        {
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+            int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
+
+            size_t count;
+            int    ecode = refdm_db_fetch_rptset_count(idx, &count);
+            if (ecode != RET_PASS)
+            {
+                CACE_LOG_ERR("Failed to obtain RPTSET count for %s", string_get_cstr(agent->eid));
+            }
+            else
+            {
+                cJSON_AddNumberToObject(agentObj, "rpts_count", count);
+            }
+#else
+            size_t count = cace_ari_list_size(agent->rptsets);
+            cJSON_AddNumberToObject(agentObj, "rpts_count", count);
+#endif
+        }
         cJSON_AddItemToArray(agentList, agentObj);
     }
     pthread_mutex_unlock(&mgr->agent_mutex);
@@ -451,13 +469,12 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     CACE_LOG_INFO("logging EXECSETs in db started");
-    int db_status = 0;
-    int i;
     // add all execset
-    for (i = 0; i < cace_ari_list_size(tosend); i++)
+    cace_ari_list_it_t it;
+    for (cace_ari_list_it(it, tosend); !cace_ari_list_end_p(it); cace_ari_list_next(it))
     {
-        cace_ari_t *curr_set = cace_ari_list_get(tosend, i);
-        refdm_db_insert_execset(curr_set, agent, &db_status);
+        const cace_ari_t *curr_set = cace_ari_list_cref(it);
+        refdm_db_insert_execset(curr_set, agent);
     }
 
     // m_string_clear(eid);
@@ -483,19 +500,56 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
-    if (cace_ari_list_empty_p(agent->rptsets))
-    {
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
-        return 204;
-    }
-    int retval = 0;
+    // Flag that defines if the rptsets came from a remote source (i.e. a database). If this
+    // is set to true, then the variable ptr_rptsets should be cleared within this method.
+    bool             is_remote_rptsets = false;
+    cace_ari_list_t *ptr_rptsets       = NULL;
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    // Synthesize the rptsets (on the stack)
+    cace_ari_list_t rptsets;
+    cace_ari_list_init(rptsets);
+
+    int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
+    // Retrieve the rptsets from the remote (database) source
+    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
+    if (ecode != 0)
+    {
+        cace_ari_list_clear(rptsets);
+
+        mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "Database error encountered.");
+        return HTTP_INTERNAL_ERROR;
+    }
+
+    // Set the prt_rptsets to point to the stack
+    ptr_rptsets       = &rptsets;
+    is_remote_rptsets = true;
+#else  // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
+    // Set the prt_rptsets to point to the local copy on the agent
+    ptr_rptsets       = &agent->rptsets;
+    is_remote_rptsets = false;
+#endif // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
+
+    // Return no content if there are no reports
+    if (cace_ari_list_empty_p(*ptr_rptsets))
+    {
+        // Clear the internals of data pointed to by ptr_rptsets (if it was sourced remotely).
+        if (is_remote_rptsets == true)
+        {
+            cace_ari_list_clear(*ptr_rptsets);
+        }
+
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        return HTTP_NO_CONTENT;
+    }
+
+    int        retval = 0;
     m_string_t body;
     m_string_init(body);
 
     /* Iterate through all RPTSET for this agent in one buffer */
     cace_ari_list_it_t rpt_it;
-    for (cace_ari_list_it(rpt_it, agent->rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
+    for (cace_ari_list_it(rpt_it, *ptr_rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
     {
         const cace_ari_t *val = cace_ari_list_cref(rpt_it);
 
@@ -521,6 +575,13 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
         mg_write(conn, m_string_get_cstr(body), m_string_size(body));
         retval = HTTP_OK;
     }
+
+    // Release the resources of rptsets (if it is sourced remotely)
+    if (is_remote_rptsets == true)
+    {
+        cace_ari_list_clear(*ptr_rptsets);
+    }
+
     m_string_clear(body);
     return retval;
 }
@@ -529,19 +590,56 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
-    if (cace_ari_list_empty_p(agent->rptsets))
-    {
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
-        return 204;
-    }
-    int retval = 0;
+    // Flag that defines if the rptsets came from a remote source (i.e. a database). If this
+    // is set to true, then the variable ptr_rptsets should be cleared within this method.
+    bool             is_remote_rptsets = false;
+    cace_ari_list_t *ptr_rptsets       = NULL;
 
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    // Synthesize the rptsets (on the stack)
+    cace_ari_list_t rptsets;
+    cace_ari_list_init(rptsets);
+
+    int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
+    // Retrieve the rptsets from the remote (database) source
+    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
+    if (ecode != 0)
+    {
+        cace_ari_list_clear(rptsets);
+
+        mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "Database error encountered.");
+        return HTTP_INTERNAL_ERROR;
+    }
+
+    // Set the prt_rptsets to point to the stack
+    ptr_rptsets       = &rptsets;
+    is_remote_rptsets = true;
+#else  // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
+    // Set the prt_rptsets to point to the local copy on the agent
+    ptr_rptsets       = &agent->rptsets;
+    is_remote_rptsets = false;
+#endif // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
+
+    // Return no content if there are no reports
+    if (cace_ari_list_empty_p(*ptr_rptsets))
+    {
+        // Clear the internals of data pointed to by ptr_rptsets (if it was sourced remotely).
+        if (is_remote_rptsets == true)
+        {
+            cace_ari_list_clear(*ptr_rptsets);
+        }
+
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        return HTTP_NO_CONTENT;
+    }
+
+    int        retval = 0;
     m_string_t body;
     m_string_init(body);
 
     /* Iterate through all RPTSET for this agent. */
     cace_ari_list_it_t rpt_it;
-    for (cace_ari_list_it(rpt_it, agent->rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
+    for (cace_ari_list_it(rpt_it, *ptr_rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
     {
         const cace_ari_t *val = cace_ari_list_cref(rpt_it);
 
@@ -571,6 +669,12 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
         mg_send_http_ok(conn, "text/plain", m_string_size(body));
         mg_write(conn, m_string_get_cstr(body), m_string_size(body));
         retval = HTTP_OK;
+    }
+
+    // Release the resources of rptsets (if it is sourced remotely)
+    if (is_remote_rptsets == true)
+    {
+        cace_ari_list_clear(*ptr_rptsets);
     }
 
     m_string_clear(body);
@@ -747,10 +851,8 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
 
-        const char *resp = "Successfully cleared reports";
-        mg_send_http_ok(conn, "text/plain", strlen(resp));
-        mg_printf(conn, "%s", resp);
-        return HTTP_OK;
+        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        return HTTP_NO_CONTENT;
     }
     else
     {

@@ -1,0 +1,7 @@
+ari://example/adm-a@2024-06-25/EDD/someobj
+ari://example/adm-a/EDD/someobj
+ari://example/adm-a/CTRL/otherobj(true,3)
+ari://example/adm-a/CTRL/otherobj(%22a%20param%22,/UINT/10)
+ari://65535/1/-1/0
+ari://example/!odm-b/VAR/counter
+ari://65535/-20/-11/84
