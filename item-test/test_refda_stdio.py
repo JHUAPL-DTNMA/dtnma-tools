@@ -67,13 +67,13 @@ class TestStdioAgent(unittest.TestCase):
         self._agent.start()
         self._wait_rptset()
 
-    def _ari_text_to_obj(self, text:str, nn:bool = True) -> ARI:
-        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
-
+    def _ari_text_to_obj(self, text: str, nn: bool=True) -> ARI:
         with io.StringIO(text) as buf:
             ari = ari_text.Decoder().decode(buf)
-        if nn == True:
-            ari = nn_func(ari)
+
+        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=nn)
+        ari = nn_func(ari)
+
         return ari
 
     def _ari_obj_to_cbor(self, ari:ARI) -> bytes:
@@ -86,7 +86,7 @@ class TestStdioAgent(unittest.TestCase):
             ari = ari_cbor.Decoder().decode(buf)
         return ari
 
-    def _send_execset(self, text:str, nn:bool = True):
+    def _send_execset(self, text: str, nn: bool=True):
         ''' Send an EXECSET with a number of target ARIs. '''
         LOGGER.info('Sending value %s', text)
         data = self._ari_obj_to_cbor(self._ari_text_to_obj(text, nn))
@@ -94,9 +94,9 @@ class TestStdioAgent(unittest.TestCase):
         LOGGER.info('Sending line %s', line)
         self._agent.send_stdin(line + '\n')
 
-    def _wait_rptset(self) -> ARI:
+    def _wait_rptset(self, timeout:float=5) -> ARI:
         ''' Wait for a RPTSET and decode it. '''
-        line = self._agent.wait_for_text(HEXPAT).strip()
+        line = self._agent.wait_for_text(HEXPAT, timeout=timeout).strip()
         LOGGER.info('Received line %s', line)
         data = binascii.a2b_hex(line)
         ari = self._ari_obj_from_cbor(data)
@@ -210,11 +210,92 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(ari.LiteralARI(123), rptset.nonce)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
         # items of the report
         self.assertEqual([ari.LiteralARI('0.0.0')], rpt.items)
+
+    def test_exec_macro_success(self):
+        self._start()
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(/ac/('
+            +'//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),'
+            +'//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'
+            +'))'
+        )
+
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        # no other RPTSET
+        with self.assertRaises(TimeoutError):
+            self._wait_rptset(0.1)
+
+    def test_exec_macro_failure_expand(self):
+        self._start()
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(/ac/('
+            +'//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),'
+            +'//ietf/dtnma-agent/CTRL/inspect(false),'  # invalid parameter
+            +'//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'
+            +'))',
+            nn=False
+        )
+        #
+        # rptset = self._wait_rptset().value
+        # self.assertIsInstance(rptset, ari.ReportSet)
+        # self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        # self.assertEqual(1, len(rptset.reports))
+        # rpt = rptset.reports[0]
+        # self.assertIsInstance(rpt, ari.Report)
+        # self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(false)'), rpt.source)
+        # self.assertEqual([ari.UNDEFINED], rpt.items)
+
+        # no other RPTSET
+        with self.assertRaises(TimeoutError):
+            self._wait_rptset(0.1)
+
+    def test_exec_macro_failure_exec(self):
+        self._start()
+
+        self._send_execset(
+            'ari:/EXECSET/n=123;(/ac/('
+            +'//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),'
+            +'//ietf/dtnma-agent/CTRL/inspect(//!private/!odm/EDD/missing),'  # invalid target
+            +'//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'
+            +'))',
+            nn=False
+        )
+
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//!private/!odm/EDD/missing)', nn=False), rpt.source)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
+
+        # no other RPTSET
+        with self.assertRaises(TimeoutError):
+            self._wait_rptset(0.1)
 
     def test_odm(self):
         self._start()
@@ -250,7 +331,7 @@ class TestStdioAgent(unittest.TestCase):
         # items of the report
         self.assertEqual(1, len(rpt.items))
 
-        ## ODM Rules
+        # # ODM Rules
         self._send_execset(
             'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false))', False)
         rptset = self._wait_rptset().value
@@ -361,7 +442,7 @@ class TestStdioAgent(unittest.TestCase):
         # items of the report
         self.assertEqual(1, len(rpt.items))
         self.assertEqual(6, rpt.items[0].value.size);
-        self.assertEqual(False, rpt.items[0].value[0][5].value); # Confirm rule is disabled
+        self.assertEqual(False, rpt.items[0].value[0][5].value);  # Confirm rule is disabled
 
     def test_edd_counters(self):
         self._start()
@@ -372,7 +453,7 @@ class TestStdioAgent(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, int)
-        self.assertEqual(1, rpt.items[0].value) # 1 because it counts inspect call above
+        self.assertEqual(1, rpt.items[0].value)  # 1 because it counts inspect call above
 
         # Count number of successful exec's
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-exec-succeeded))')
@@ -386,7 +467,7 @@ class TestStdioAgent(unittest.TestCase):
         rptset = self._wait_rptset().value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual(0, rpt.items[0].value)       
+        self.assertEqual(0, rpt.items[0].value)
 
         # Sanity check expected count of tx failures
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-msg-tx-failed))')
