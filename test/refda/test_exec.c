@@ -173,13 +173,13 @@ static void suite_adms_init(refda_agent_t *agent)
         {
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
-            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->prod_type), CACE_ARI_TYPE_VAST));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->prod_type), CACE_ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_one_int;
 
             obj = refda_register_edd(adm, cace_amm_idseg_ref_withenum("edd2", 2), objdata);
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "val");
-                TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_VAST));
+                TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
             }
         }
 
@@ -189,7 +189,7 @@ static void suite_adms_init(refda_agent_t *agent)
         {
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_VAST));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_INT));
             objdata->execute = test_exec_ctrl_exec_one_int;
 
             obj = refda_register_ctrl(adm, cace_amm_idseg_ref_withenum("ctrl1", 1), objdata);
@@ -202,7 +202,7 @@ static void suite_adms_init(refda_agent_t *agent)
         {
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_VAST));
+            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_INT));
             objdata->execute = test_exec_ctrl_exec_one_int;
 
             obj = refda_register_ctrl(adm, cace_amm_idseg_ref_withenum("ctrl2", 2), objdata);
@@ -330,6 +330,8 @@ TEST_CASE("8519FFFF0A2201810A", 0, "821181""8519FFFF0A2201810A")
 TEST_CASE("8419FFFF0A2201", 0, "821181""8419FFFF0A2201")
 // bad deref ref ari://65535/10/CTRL/-1
 TEST_CASE("8419FFFF0A2220", 4, "821180")
+// bad target type ari:false
+TEST_CASE("F4", 3, "821180")
 // direct MAC ari:/AC/(//65535/10/CTRL/1(10),//65535/10/CTRL/2(20))
 TEST_CASE("821182""8519FFFF0A2201810A""8519FFFF0A22028114", 0, "821182""8519FFFF0A2201810A""8519FFFF0A22028114")
 // indirect MAC ari://65535/10/CONST/1
@@ -355,7 +357,7 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
     {
         const cace_amm_type_t *ac_type = cace_amm_type_get_builtin(CACE_ARI_TYPE_AC);
         TEST_ASSERT_NOT_NULL(ac_type);
-        TEST_ASSERT_TRUE_MESSAGE(cace_amm_type_match(ac_type, &expect_log), "invalid log ARI");
+        TEST_ASSERT_EQUAL_MESSAGE(CACE_AMM_TYPE_MATCH_POSITIVE, cace_amm_type_match(ac_type, &expect_log), "invalid log ARI");
     }
     cace_ari_list_t *expect_seq = &(expect_log.as_lit.value.as_ac->items);
 

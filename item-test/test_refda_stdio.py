@@ -234,6 +234,15 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'), rpt.source)
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
         # no other RPTSET
         with self.assertRaises(TimeoutError):
             self._wait_rptset(0.1)
@@ -249,15 +258,15 @@ class TestStdioAgent(unittest.TestCase):
             +'))',
             nn=False
         )
-        #
-        # rptset = self._wait_rptset().value
-        # self.assertIsInstance(rptset, ari.ReportSet)
-        # self.assertEqual(ari.LiteralARI(123), rptset.nonce)
-        # self.assertEqual(1, len(rptset.reports))
-        # rpt = rptset.reports[0]
-        # self.assertIsInstance(rpt, ari.Report)
-        # self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(false)'), rpt.source)
-        # self.assertEqual([ari.UNDEFINED], rpt.items)
+
+        rptset = self._wait_rptset().value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(false)'), rpt.source)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
 
         # no other RPTSET
         with self.assertRaises(TimeoutError):

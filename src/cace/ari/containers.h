@@ -54,12 +54,24 @@ extern "C" {
  * Flat array of cace_ari_t.
  * This is used for TBL literal type.
  */
+/** @struct cace_ari_ptr_array_t
+ * Flat array of ::cace_ari_t pointers.
+ * This is used for referencing values without copying.
+ */
+/** @struct cace_ari_cptr_array_t
+ * Flat array of ::cace_ari_t pointers.
+ * This is used for referencing values without copying.
+ */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_DEQUE_DEF(cace_ari_list, cace_ari_t)
 M_DICT_DEF2(cace_ari_dict, cace_ari_t, M_OPL_cace_ari_t(), cace_ari_t, M_OPL_cace_ari_t())
 M_DICT_DEF2(cace_named_ari_dict, string_t, M_STRING_OPLIST, cace_ari_t, M_OPL_cace_ari_t())
 M_BPTREE_DEF2(cace_ari_tree, 4, cace_ari_t, M_OPL_cace_ari_t(), cace_ari_t, M_OPL_cace_ari_t())
 M_ARRAY_DEF(cace_ari_array, cace_ari_t)
+M_ARRAY_DEF(cace_ari_ptr_array, cace_ari_t *, M_PTR_OPLIST)
+M_ARRAY_DEF(cace_ari_cptr_array, const cace_ari_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /*

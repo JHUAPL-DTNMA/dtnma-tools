@@ -142,11 +142,12 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
 
 /** Expand any ARI target (reference or literal).
  */
-static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target);
+static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target, cace_ari_array_t invalid_items);
 
 /** Expand an arbitrary object reference.
  */
-static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target)
+static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target,
+                              cace_ari_array_t invalid_items)
 {
     int retval = 0;
 
@@ -157,6 +158,7 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     CACE_LOG_DEBUG("Lookup result %d", res);
     if (res)
     {
+        cace_ari_array_push_back(invalid_items, *target);
         retval = REFDA_EXEC_ERR_DEREF_FAILED;
     }
 
@@ -168,7 +170,8 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
             {
                 // expansion finished, execution comes later
                 refda_exec_item_t *item = refda_exec_item_list_push_back_new(seq->items);
-                item->seq               = seq;
+
+                item->seq = seq;
                 cace_ari_set_copy(&(item->ref), target);
                 cace_amm_lookup_set_move(&(item->deref), &deref);
                 cace_amm_lookup_init(&deref);
@@ -181,15 +184,20 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
                 refda_valprod_ctx_t prodctx;
                 refda_valprod_ctx_init(&prodctx, runctx, target, &deref);
                 retval = refda_valprod_run(&prodctx);
-                if (!retval)
+                if (retval)
+                {
+                    cace_ari_array_push_back(invalid_items, *target);
+                }
+                else
                 {
                     // execute the produced value as a target
-                    retval = refda_exec_exp_item(runctx, seq, &(prodctx.value));
+                    retval = refda_exec_exp_item(runctx, seq, &(prodctx.value), invalid_items);
                 }
                 refda_valprod_ctx_deinit(&prodctx);
                 break;
             }
             default:
+                cace_ari_array_push_back(invalid_items, *target);
                 retval = REFDA_EXEC_ERR_BAD_TYPE;
                 break;
         }
@@ -202,18 +210,20 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
 
 /** Expand a MAC-typed literal value.
  */
-static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *ari)
+static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *ari,
+                              cace_ari_array_t invalid_items)
 {
-    cace_ari_list_t *items = &(ari->as_lit.value.as_ac->items);
+    const struct cace_ari_ac_s *inval = cace_ari_cget_ac(ari);
+    CHKERR1(inval);
 
     int retval = 0;
 
     cace_ari_list_it_t it;
-    for (cace_ari_list_it(it, *items); !cace_ari_list_end_p(it); cace_ari_list_next(it))
+    for (cace_ari_list_it(it, inval->items); !cace_ari_list_end_p(it); cace_ari_list_next(it))
     {
         const cace_ari_t *item = cace_ari_list_cref(it);
 
-        retval = refda_exec_exp_item(runctx, seq, item);
+        retval = refda_exec_exp_item(runctx, seq, item, invalid_items);
         if (retval)
         {
             break;
@@ -223,25 +233,28 @@ static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     return retval;
 }
 
-static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target)
+static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target,
+        cace_ari_array_t invalid_items)
 {
     int retval = 0;
     if (target->is_ref)
     {
         CACE_LOG_DEBUG("Expanding as reference");
-        retval = refda_exec_exp_ref(runctx, seq, target);
+        retval = refda_exec_exp_ref(runctx, seq, target, invalid_items);
     }
     else
     {
-        if (!cace_amm_type_match(runctx->agent->mac_type, target))
+        const bool valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(runctx->agent->mac_type, target));
+        if (!valid)
         {
             CACE_LOG_WARNING("Attempt to execute a non-MAC literal");
+            cace_ari_array_push_back(invalid_items, *target);
             retval = REFDA_EXEC_ERR_BAD_TYPE;
         }
         else
         {
             CACE_LOG_DEBUG("Expanding as MAC");
-            retval = refda_exec_exp_mac(runctx, seq, target);
+            retval = refda_exec_exp_mac(runctx, seq, target, invalid_items);
         }
     }
 
@@ -271,13 +284,29 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
 
     refda_runctx_ptr_set(seq->runctx, runctxp);
 
+    cace_ari_array_t invalid_items;
+    cace_ari_array_init(invalid_items);
+
     // FIXME: lock more fine-grained level
     REFDA_AGENT_LOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
-    int retval = refda_exec_exp_item(runctx, seq, target);
+    int retval = refda_exec_exp_item(runctx, seq, target, invalid_items);
 
     // FIXME: lock more fine-grained level
     REFDA_AGENT_UNLOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
+
+    // report on any failed expansions
+    cace_ari_array_it_t inval_it;
+    for (cace_ari_array_it(inval_it, invalid_items); !cace_ari_array_end_p(inval_it);
+            cace_ari_array_next(inval_it))
+    {
+        const cace_ari_t *item = cace_ari_array_cref(inval_it);
+
+        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+        // this moves the result value
+        refda_reporting_ctrl(runctx, item, &result);
+    }
+    cace_ari_array_clear(invalid_items);
 
     return retval;
 }
@@ -520,7 +549,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
 
 static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting);
 
-/** Execute a rule's action that has already been verified
+/** Expand a rule's action that has already been verified.
  * Based on code from refda_exec_exp_execset
  */
 static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *action)
@@ -536,7 +565,16 @@ static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, c
     }
 
     refda_runctx_ptr_set(seq->runctx, ctxptr);
-    int res = refda_exec_exp_mac(runctx, seq, action);
+
+    cace_ari_array_t invalid_items;
+    cace_ari_array_init(invalid_items);
+    int res = refda_exec_exp_item(runctx, seq, action, invalid_items);
+
+    if (!cace_ari_array_empty_p(invalid_items))
+    {
+        CACE_LOG_ERR("Failed to expand a rule action with %zd invalid items", cace_ari_array_size(invalid_items));
+    }
+    cace_ari_array_clear(invalid_items);
 
     refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
     return res;
