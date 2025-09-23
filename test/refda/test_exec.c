@@ -357,7 +357,8 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
     {
         const cace_amm_type_t *ac_type = cace_amm_type_get_builtin(CACE_ARI_TYPE_AC);
         TEST_ASSERT_NOT_NULL(ac_type);
-        TEST_ASSERT_EQUAL_MESSAGE(CACE_AMM_TYPE_MATCH_POSITIVE, cace_amm_type_match(ac_type, &expect_log), "invalid log ARI");
+        TEST_ASSERT_EQUAL_MESSAGE(CACE_AMM_TYPE_MATCH_POSITIVE, cace_amm_type_match(ac_type, &expect_log),
+                                  "invalid log ARI");
     }
     cace_ari_list_t *expect_seq = &(expect_log.as_lit.value.as_ac->items);
 

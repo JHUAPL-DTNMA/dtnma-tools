@@ -142,7 +142,8 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
 
 /** Expand any ARI target (reference or literal).
  */
-static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target, cace_ari_array_t invalid_items);
+static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target,
+                               cace_ari_array_t invalid_items);
 
 /** Expand an arbitrary object reference.
  */
@@ -234,7 +235,7 @@ static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
 }
 
 static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target,
-        cace_ari_array_t invalid_items)
+                               cace_ari_array_t invalid_items)
 {
     int retval = 0;
     if (target->is_ref)
@@ -297,8 +298,7 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
 
     // report on any failed expansions
     cace_ari_array_it_t inval_it;
-    for (cace_ari_array_it(inval_it, invalid_items); !cace_ari_array_end_p(inval_it);
-            cace_ari_array_next(inval_it))
+    for (cace_ari_array_it(inval_it, invalid_items); !cace_ari_array_end_p(inval_it); cace_ari_array_next(inval_it))
     {
         const cace_ari_t *item = cace_ari_array_cref(inval_it);
 
