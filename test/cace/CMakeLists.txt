@@ -16,42 +16,52 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-add_unity_test(SOURCE "test_ari_cbor.c")
-target_link_libraries(test_ari_cbor PUBLIC cace)
+if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
+  add_unity_test(SOURCE "test_ari_cbor.c")
+  target_link_libraries(test_ari_cbor PUBLIC cace)
+  
+  if(ARI_TEXT_PARSE)
+  add_unity_test(SOURCE "test_ari_text.c")
+  target_link_libraries(test_ari_text PUBLIC cace)
+  
+  add_unity_test(SOURCE "test_ari_text_util.c")
+  target_link_libraries(test_ari_text_util PUBLIC cace)
+  
+  add_unity_test(SOURCE "test_ari_roundtrip.c")
+  target_link_libraries(test_ari_roundtrip PUBLIC cace)
+  endif(ARI_TEXT_PARSE)
+  
+  add_unity_test(SOURCE "test_ari_algo.c")
+  target_link_libraries(test_ari_algo PUBLIC cace)
+  
+  add_unity_test(SOURCE "test_amm_semtype_cnst.c")
+  target_link_libraries(test_amm_semtype_cnst PUBLIC cace)
+  
+  add_unity_test(SOURCE "test_amm_typing.c")
+  target_link_libraries(test_amm_typing PUBLIC cace)
+  
+  add_unity_test(SOURCE "test_amm_parameters.c")
+  target_link_libraries(test_amm_parameters PUBLIC cace)
+  
+  add_unity_test(SOURCE "test_amm_obj_ns.c")
+  target_link_libraries(test_amm_obj_ns PUBLIC cace)
+  
+  add_unity_test(SOURCE "test_amm_lookup.c")
+  target_link_libraries(test_amm_lookup PUBLIC cace)
+  
+  add_unity_test(SOURCE "test_amp_socket.c")
+  target_link_libraries(test_amp_socket PUBLIC cace)
+  
+  # Test just being able to compile and link a C++ user with the cace library
+  add_executable(test_cace_cpp)
+  target_sources(test_cace_cpp PRIVATE test_cace_cpp.cpp)
+  target_link_libraries(test_cace_cpp PUBLIC cace)
+endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)
 
-if(ARI_TEXT_PARSE)
-add_unity_test(SOURCE "test_ari_text.c")
-target_link_libraries(test_ari_text PUBLIC cace)
+if(BUILD_FUZZING)
+  add_fuzz_test(SOURCE "fuzz_cace_ari_cbor.cpp" RUNS_COUNT 1000000)
+  target_link_libraries(fuzz_cace_ari_cbor PUBLIC cace)
 
-add_unity_test(SOURCE "test_ari_text_util.c")
-target_link_libraries(test_ari_text_util PUBLIC cace)
-
-add_unity_test(SOURCE "test_ari_roundtrip.c")
-target_link_libraries(test_ari_roundtrip PUBLIC cace)
-endif(ARI_TEXT_PARSE)
-
-add_unity_test(SOURCE "test_ari_algo.c")
-target_link_libraries(test_ari_algo PUBLIC cace)
-
-add_unity_test(SOURCE "test_amm_semtype_cnst.c")
-target_link_libraries(test_amm_semtype_cnst PUBLIC cace)
-
-add_unity_test(SOURCE "test_amm_typing.c")
-target_link_libraries(test_amm_typing PUBLIC cace)
-
-add_unity_test(SOURCE "test_amm_parameters.c")
-target_link_libraries(test_amm_parameters PUBLIC cace)
-
-add_unity_test(SOURCE "test_amm_obj_ns.c")
-target_link_libraries(test_amm_obj_ns PUBLIC cace)
-
-add_unity_test(SOURCE "test_amm_lookup.c")
-target_link_libraries(test_amm_lookup PUBLIC cace)
-
-add_unity_test(SOURCE "test_amp_socket.c")
-target_link_libraries(test_amp_socket PUBLIC cace)
-
-# Test just being able to compile and link a C++ user with the cace library
-add_executable(test_cace_cpp)
-target_sources(test_cace_cpp PRIVATE test_cace_cpp.cpp)
-target_link_libraries(test_cace_cpp PUBLIC cace)
+  add_fuzz_test(SOURCE "fuzz_cace_ari_uri.cpp" RUNS_COUNT 300000 EXTRA_ARGS "-only_ascii=1")
+  target_link_libraries(fuzz_cace_ari_uri PUBLIC cace)
+endif(BUILD_FUZZING)

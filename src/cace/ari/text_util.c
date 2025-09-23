@@ -1047,6 +1047,7 @@ int cace_date_decode(struct tm *out, const cace_data_t *in)
     {
         retval = 2;
     }
+    m_string_clear(unsep);
 
     return retval;
 }

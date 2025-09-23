@@ -54,6 +54,7 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
+        (void)obj;
     }
     REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     return 0;

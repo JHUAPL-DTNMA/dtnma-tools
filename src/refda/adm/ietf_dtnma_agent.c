@@ -361,12 +361,18 @@ static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, co
     // Determine the cace_ari_type_t of the result
     cace_ari_type_t ari_type;
     if (is_result_TD == true)
+    {
         ari_type = CACE_ARI_TYPE_TD;
+    }
     else if (is_result_TP == true)
+    {
         ari_type = CACE_ARI_TYPE_TP;
+    }
     else
+    {
         // Bail if the result will not be a TD or TP
         return RET_FAIL_UNDEFINED;
+    }
 
     // Delegate the addition
     struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
@@ -401,9 +407,27 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     bool is_result_TD = false;
     is_result_TD |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TP;
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
-    if (is_result_TD == false)
-        // Bail if the result will not be a TD
+
+    // Note the following will result in TP:
+    // - Subtraction of TD from TP
+    bool is_result_TP = false;
+    is_result_TP |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TD;
+
+    // Determine the cace_ari_type_t of the result
+    cace_ari_type_t ari_type;
+    if (is_result_TD == true)
+    {
+        ari_type = CACE_ARI_TYPE_TD;
+    }
+    else if (is_result_TP == true)
+    {
+        ari_type = CACE_ARI_TYPE_TP;
+    }
+    else
+    {
+        // Bail if the result will not be a TD or TP
         return RET_FAIL_UNDEFINED;
+    }
 
     // Delegate the subtraction
     struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
@@ -418,7 +442,7 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
 
     res_lit->has_ari_type      = true;
-    res_lit->ari_type          = CACE_ARI_TYPE_TD;
+    res_lit->ari_type          = ari_type;
     res_lit->prim_type         = CACE_ARI_PRIM_TIMESPEC;
     res_lit->value.as_timespec = result_TS;
 
@@ -440,8 +464,10 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
     bool is_result_TD = false;
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
     if (is_result_TD == false)
+    {
         // Bail if the result will not be a TD
         return RET_FAIL_UNDEFINED;
+    }
 
     time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
     long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
@@ -469,7 +495,9 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
             double scalar_double = valueB->as_lit.value.as_float64;
             int    scalar_class  = fpclassify(scalar_double);
             if (scalar_class == FP_INFINITE || scalar_class == FP_NAN)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             // Calculate the seconds (as a double) and extract the integral and the fraction parts out.
             // Note we assign the integral part to result_TS.tv_sec, and the fractional part is sent to
@@ -519,8 +547,10 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     bool is_result_TD = false;
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
     if (is_result_TD == false)
+    {
         // Bail if the result will not be a TD
         return RET_FAIL_UNDEFINED;
+    }
 
     time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
     long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
@@ -533,7 +563,9 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             // Bail if scalar is 0
             uint64_t scalar_uint64 = valueB->as_lit.value.as_uint64;
             if (scalar_uint64 == 0)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             result_TS.tv_sec  = valueA_sec / scalar_uint64;
             result_TS.tv_nsec = valueA_nano / scalar_uint64;
@@ -546,7 +578,9 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             // Bail if scalar is 0
             int64_t scalar_int64 = valueB->as_lit.value.as_int64;
             if (scalar_int64 == 0)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             result_TS.tv_sec  = valueA_sec / scalar_int64;
             result_TS.tv_nsec = valueA_nano / scalar_int64;
@@ -560,14 +594,18 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             double scalar_double = valueB->as_lit.value.as_float64;
             int    scalar_class  = fpclassify(scalar_double);
             if (scalar_class == FP_ZERO || scalar_class == FP_NAN)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             result_TS.tv_sec  = valueA_sec / scalar_double;
             result_TS.tv_nsec = valueA_nano / scalar_double;
             // Adjust nanos to take into account the factional second component. Note do not adjust if the
             // scalar is infinite (since the above 2 lines will resolve to 0) but the line below may not.
             if (scalar_class != FP_INFINITE)
+            {
                 result_TS.tv_nsec += ((valueA_sec - (result_TS.tv_sec * scalar_double)) * NANOS_IN_SEC) / scalar_double;
+            }
             break;
         }
         default:
@@ -591,7 +629,7 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     return RET_PASS;
 }
 
-static int timespec_numeric_mod(cace_ari_t *_U_, const cace_ari_t *_U_, const cace_ari_t *_U_)
+static int timespec_numeric_mod(cace_ari_t *result _U_, const cace_ari_t *left _U_, const cace_ari_t *right _U_)
 {
     // Calculating the remainder associated with timespec objects is unsupported
     return RET_FAIL_UNDEFINED;
@@ -833,6 +871,11 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed(refda_edd_prod_ctx_
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
+    atomic_ullong  val    = atomic_load(&agent->instr.num_rptset_sent_failure);
+    cace_ari_set_uvast(&result, val);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
@@ -880,6 +923,11 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(refda_edd_prod_ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
+    atomic_ullong  val    = atomic_load(&agent->instr.num_ctrls_succeeded);
+    cace_ari_set_uvast(&result, val);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
@@ -901,6 +949,11 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t 
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
+    atomic_ullong  val    = atomic_load(&agent->instr.num_ctrls_failed);
+    cace_ari_set_uvast(&result, val);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
@@ -1234,8 +1287,11 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
             }
 
             // append the row
-            cace_ari_tbl_move_row_array(&table, row);
-            cace_ari_array_clear(row);
+            if (cnst && !cnst->obsolete)
+            {
+                cace_ari_tbl_move_row_array(&table, row);
+                cace_ari_array_clear(row);
+            }
         }
     }
 
@@ -1326,8 +1382,11 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
             }
 
             // append the row
-            cace_ari_tbl_move_row_array(&table, row);
-            cace_ari_array_clear(row);
+            if (var && !var->obsolete)
+            {
+                cace_ari_tbl_move_row_array(&table, row);
+                cace_ari_array_clear(row);
+            }
         }
     }
 
@@ -1823,8 +1882,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
         return;
     }
 
-    refda_agent_t *agent = ctx->runctx->agent;
-
     // ignore return code because failure cannot be handled here
     if (refda_reporting_target(ctx->runctx, template))
     {
@@ -1960,8 +2017,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
      */
     const cace_ari_t *odm_ns = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     refda_agent_t    *agent  = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
 
+    REFDA_AGENT_LOCK(agent, );
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
 
     if (odm)
@@ -2123,6 +2180,99 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *ari_namespace = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_obj_name  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_obj_enum  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+    const cace_ari_t *ari_type      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+    const cace_ari_t *ari_init      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
+
+    refda_agent_t *agent = ctx->runctx->agent;
+
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    REFDA_AGENT_LOCK(agent, );
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
+
+    if (!odm)
+    {
+        CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    if (!cace_amm_obj_ns_is_odm(odm))
+    {
+        CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    const cace_data_t *obj_name = cace_ari_cget_tstr(ari_obj_name);
+    if (obj_name == NULL || obj_name->ptr == NULL)
+    {
+        CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    cace_ari_int obj_id;
+    if (cace_ari_get_int(ari_obj_enum, &obj_id))
+    {
+        CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    refda_amm_const_desc_t *cnst = NULL;
+    {
+        cace_amm_obj_desc_t *obj = NULL;
+        obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_CONST, (const char *)obj_name->ptr);
+        if (obj)
+        {
+            CACE_LOG_INFO("CONST already exists");
+        }
+        else
+        {
+            obj = cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_CONST, obj_id);
+            if (obj)
+            {
+                CACE_LOG_INFO("CONST already exists");
+            }
+        }
+
+        if (obj)
+        {
+            cnst = obj->app_data.ptr;
+        }
+    }
+
+    if (cnst == NULL)
+    {
+        refda_amm_const_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
+        refda_amm_const_desc_init(objdata);
+
+        cace_amm_type_set_use_ref(&(objdata->val_type), ari_type);
+
+        int res = refda_eval_target(ctx->runctx, &(objdata->value), ari_init);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to evaluate CONST initial value");
+        }
+
+        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*cnst_name, (char *)obj_name->ptr);
+
+        refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
+
+    cace_ari_t ari_result = CACE_ARI_INIT_NULL;
+    refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
@@ -2146,6 +2296,41 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_const BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else if (!cace_amm_obj_ns_is_odm(deref.ns))
+    {
+        CACE_LOG_WARNING("unable to obsolete an ADM object");
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_CONST)
+    {
+        refda_amm_const_desc_t *cnst = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (cnst)
+        {
+            CACE_LOG_DEBUG("Marking CONST as obsolete");
+            cnst->obsolete = true;
+        }
+        cace_ari_t ari_result = CACE_ARI_INIT_NULL;
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    }
+
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_const BODY
@@ -2173,6 +2358,99 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *ari_namespace = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_obj_name  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_obj_enum  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+    const cace_ari_t *ari_type      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+    const cace_ari_t *ari_init      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
+
+    refda_agent_t *agent = ctx->runctx->agent;
+
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    REFDA_AGENT_LOCK(agent, );
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
+
+    if (!odm)
+    {
+        CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    if (!cace_amm_obj_ns_is_odm(odm))
+    {
+        CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    const cace_data_t *obj_name = cace_ari_cget_tstr(ari_obj_name);
+    if (obj_name == NULL || obj_name->ptr == NULL)
+    {
+        CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    cace_ari_int obj_id;
+    if (cace_ari_get_int(ari_obj_enum, &obj_id))
+    {
+        CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    refda_amm_var_desc_t *var = NULL;
+    {
+        cace_amm_obj_desc_t *obj = NULL;
+        obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_VAR, (const char *)obj_name->ptr);
+        if (obj)
+        {
+            CACE_LOG_INFO("VAR already exists");
+        }
+        else
+        {
+            obj = cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_VAR, obj_id);
+            if (obj)
+            {
+                CACE_LOG_INFO("VAR already exists");
+            }
+        }
+
+        if (obj)
+        {
+            var = obj->app_data.ptr;
+        }
+    }
+
+    if (var == NULL)
+    {
+        refda_amm_var_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_var_desc_t));
+        refda_amm_var_desc_init(objdata);
+
+        cace_amm_type_set_use_ref(&(objdata->val_type), ari_type);
+
+        int res = refda_eval_target(ctx->runctx, &(objdata->value), ari_init);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to evaluate VAR initial value");
+        }
+
+        m_string_t *var_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*var_name, (char *)obj_name->ptr);
+
+        refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*var_name), obj_id), objdata);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
+
+    cace_ari_t ari_result = CACE_ARI_INIT_NULL;
+    refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
@@ -2196,6 +2474,41 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_var BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        CACE_LOG_WARNING("lookup failed with status %d", res);
+    }
+    else if (!cace_amm_obj_ns_is_odm(deref.ns))
+    {
+        CACE_LOG_WARNING("unable to obsolete an ADM object");
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_VAR)
+    {
+        refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (var)
+        {
+            CACE_LOG_DEBUG("Marking VAR as obsolete");
+            var->obsolete = true;
+        }
+        cace_ari_t ari_result = CACE_ARI_INIT_NULL;
+        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+    }
+
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_var BODY
@@ -2241,17 +2554,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
 
     REFDA_AGENT_LOCK(agent, );
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
-    REFDA_AGENT_UNLOCK(agent, );
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
     if (odm->model_id.intenum >= 0)
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2259,6 +2573,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     if (obj_name == NULL || obj_name->ptr == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2266,10 +2581,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
     bool valid = true, rule_exists = false;
     {
         if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_SBR, (const char *)obj_name->ptr))
@@ -2375,7 +2690,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
 
         if (valid)
         {
-            obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum((char *)obj_name->ptr, obj_id), objdata);
+            m_string_t *sbr_name = string_list_push_new(agent->odm_names);
+            m_string_set_cstr(*sbr_name, (char *)obj_name->ptr);
+
+            obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*sbr_name), obj_id), objdata);
 
             if (obj && obj->app_data.ptr)
             {
@@ -2442,17 +2760,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
 
     REFDA_AGENT_LOCK(agent, );
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
-    REFDA_AGENT_UNLOCK(agent, );
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
     if (!cace_amm_obj_ns_is_odm(odm))
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2460,6 +2779,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     if (obj_name == NULL || obj_name->ptr == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2467,10 +2787,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
     bool valid = true, rule_exists = false;
     {
         if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_TBR, (const char *)obj_name->ptr))
@@ -2587,7 +2907,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
 
         if (valid)
         {
-            obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum((char *)obj_name->ptr, obj_id), objdata);
+            m_string_t *tbr_name = string_list_push_new(agent->odm_names);
+            m_string_set_cstr(*tbr_name, (char *)obj_name->ptr);
+
+            obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*tbr_name), obj_id), objdata);
 
             if (obj && obj->app_data.ptr)
             {

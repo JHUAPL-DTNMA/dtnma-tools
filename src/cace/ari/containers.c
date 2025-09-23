@@ -179,7 +179,17 @@ void cace_ari_tbl_deinit(cace_ari_tbl_t *obj)
 
 bool cace_ari_tbl_cmp(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right)
 {
+    // column count exactly equal
     int part_cmp = M_CMP_BASIC(left->ncols, right->ncols);
+    if (part_cmp)
+    {
+        return part_cmp;
+    }
+
+    const size_t lt_size = cace_ari_array_size(left->items);
+    const size_t rt_size = cace_ari_array_size(right->items);
+
+    part_cmp = M_CMP_DEFAULT(lt_size, rt_size);
     if (part_cmp)
     {
         return part_cmp;

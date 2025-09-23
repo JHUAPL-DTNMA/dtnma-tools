@@ -1,0 +1,15 @@
+ari:/BOOL/true
+ari:/UINT/10
+ari:/VAST/10
+ari:/LABEL/name
+ari:/TP/20230102T030405Z
+ari:/TP/2023-01-02T03:04:05Z
+ari:/TP/725943845
+ari:/TD/+PT1H
+ari:/TD/3600
+ari:/CBOR/h'0a'
+ari:/CBOR/%3C%3C10%3E%3E
+ari:/AC/(1,2,3)
+ari:/AM/(1=2,2=4,3=9)
+ari:/TBL/c=3;(1,true,%22A%22)(2,false,%22B%22)
+ari:/EXECSET/n=1234;(//example/adm-a/CTRL/dothing,//example/adm-a/CONST/amacro)

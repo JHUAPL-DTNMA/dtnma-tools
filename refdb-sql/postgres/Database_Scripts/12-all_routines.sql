@@ -247,31 +247,37 @@ end$$;
 -- SP__insert_agent
 --  inserting a new agent into the systemß
 -- IN 
--- 		p_agent_id_string- name of the agent to insert 
+-- 		p_agent_endpoint_uri- name of the agent to insert 
 -- OUT
--- 		r_registered_agents_id - teh id of the agent in the db
+-- 		r_row_id - teh id of the agent in the db
 -- ==================================================================
-CREATE OR REPLACE PROCEDURE SP__insert_agent(IN p_agent_id_string varchar, INOUT r_registered_agents_id integer)
+CREATE OR REPLACE PROCEDURE SP__insert_agent(IN p_agent_endpoint_uri TEXT, INOUT r_row_id integer)
 LANGUAGE plpgsql
 
 AS $$
 DECLARE
  cur_time TIMESTAMP;
- lower_name varchar;
- eid INTEGER;
- BEGIN 
-	cur_time := NOW(); 
-    lower_name := LOWER(p_agent_id_string);
-    eid := NULL;
-    SELECT registered_agents_id INTO eid FROM registered_agents WHERE lower_name = agent_id_string;
-    
-	IF (eid IS NOT NULL) THEN BEGIN 
-		UPDATE registered_agents SET last_registered = cur_time WHERE registered_agents_id=eid;
-        r_registered_agents_id := eid;
+ lower_uri TEXT;
+ row_id INTEGER;
+BEGIN
+    cur_time := NOW(); 
+    lower_uri := LOWER(p_agent_endpoint_uri);
+    row_id := NULL;
+    SELECT registered_agents_id INTO row_id
+        FROM registered_agents WHERE lower_uri = agent_endpoint_uri;
+
+    IF (row_id IS NOT NULL) THEN
+    BEGIN 
+        UPDATE registered_agents
+            SET last_registered = cur_time 
+            WHERE registered_agents_id=row_id;
+        r_row_id := row_id;
     END;
-    ELSE BEGIN
-    INSERT INTO registered_agents (agent_id_string,first_registered, last_registered)
-		VALUES (lower_name, cur_time, cur_time) RETURNING registered_agents_id INTO r_registered_agents_id;
+    ELSE
+    BEGIN
+        INSERT INTO registered_agents (agent_endpoint_uri, first_registered, last_registered)
+            VALUES (lower_uri, cur_time, cur_time)
+            RETURNING registered_agents_id INTO r_row_id;
     END;
     END IF;
 end$$;
@@ -1496,23 +1502,18 @@ as $$ BEGIN
 END$$;
 
 
-create or replace procedure SP__insert_ari_rpt_set(in p_correlator_nonce INT, p_reference_time varchar, p_report_list varchar, p_report_list_cbor bytea, p_agent_id varchar)
+create or replace procedure SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time TIMESTAMP, p_report_list TEXT, p_report_list_cbor BYTEA, p_agent_endpoint_uri TEXT)
 language plpgsql
-	as $$ BEGIN 
-		INSERT INTO ari_rptset(correlator_nonce, reference_time, report_list, report_list_cbor, agent_id)
-	VALUES(p_correlator_nonce, p_reference_time, p_report_list, p_report_list_cbor, p_agent_id);
-	End$$;
+as $$
+DECLARE
+    agent_row_id INTEGER;
+BEGIN
+    CALL SP__insert_agent(p_agent_endpoint_uri, agent_row_id);
+    INSERT INTO ari_rptset(nonce_cbor, reference_time, report_list, report_list_cbor, agent_id)
+        VALUES(p_nonce_cbor, p_reference_time, p_report_list, p_report_list_cbor, agent_row_id);
+End$$;
 
-
-
-create or replace procedure SP__insert_ari_tbl(in p_ari_tblt_id INT, p_num_entries INTEGER, p_table_entry varchar, p_table_entry_cbor bytea,  p_agent_id varchar)
-language plpgsql
-	as $$ BEGIN 
-		INSERT INTO ari_tbl(ari_tblt_id, num_entries , table_entry, table_entry_cbor, agent_id)
-	VALUES(p_ari_tblt_id, p_num_entries , p_table_entry, p_table_entry_cbor, p_agent_id);
-	End$$;
-
-create or replace procedure SP__insert_execset(in p_correlator_nonce INT,  p_use_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries INT)
+create or replace procedure SP__insert_execset(in p_nonce_cbor BYTEA, p_use_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries INT)
 language plpgsql
 	as $$ 
 	DECLARE
@@ -1524,7 +1525,7 @@ language plpgsql
 	IF (r_ac_id IS NULL) THEN
 		insert INTO ari_collection(num_entries,entries) 
 		VALUES(p_num_entries,p_exec_set) RETURNING ac_id into r_ac_id;
-    END IF ;	
-		INSERT INTO execution_set(correlator_nonce, ac_id , use_desc, agent_id)
-	VALUES(p_correlator_nonce, r_ac_id , p_use_desc, p_agent_id);
+    END IF ;
+		INSERT INTO execution_set(nonce_cbor, ac_id , use_desc, agent_id)
+	VALUES(p_nonce_cbor, r_ac_id, p_use_desc, p_agent_id);
 	End$$;

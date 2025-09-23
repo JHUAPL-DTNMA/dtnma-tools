@@ -17,6 +17,7 @@ Birrane
 bitwise
 BLS
 bool
+boolean
 Bormann
 bp
 BPA
@@ -75,6 +76,7 @@ dereferencing
 DGRAM
 diag
 dlist
+DM
 DNS
 dothing
 Doxygen
@@ -194,8 +196,11 @@ rfcXXXX
 rpt
 rptset
 RPTSET
+RPTSETs
 rptt
 RPTT
+runtime
+Runtime
 rx
 sbr
 SBR

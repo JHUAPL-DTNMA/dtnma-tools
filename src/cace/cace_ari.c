@@ -107,6 +107,7 @@ static int read_text(cace_ari_t *inval, FILE *source)
     if (res < 0)
     {
         // end of file
+        free(buf);
         return -1;
     }
 
@@ -180,6 +181,7 @@ static int read_cborhex(cace_ari_t *inval, FILE *source)
     int    res = getline(&buf, &len, source);
     if (res < 0)
     {
+        free(buf);
         return -1;
     }
 
@@ -221,6 +223,7 @@ static int read_auto(cace_ari_form_t *inform, cace_ari_form_t *outform, cace_ari
     if (res < 0)
     {
         // end of file
+        free(buf);
         return -1;
     }
 
@@ -250,6 +253,7 @@ static int read_auto(cace_ari_form_t *inform, cace_ari_form_t *outform, cace_ari
         res = read_cborhex(inval, tmp);
         fclose(tmp);
     }
+    free(buf);
     return res;
 }
 #endif /* ARI_TEXT_PARSE */

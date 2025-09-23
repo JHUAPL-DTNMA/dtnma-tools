@@ -16,8 +16,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-include(GNUInstallDirs)
-
 find_package(Doxygen REQUIRED)
 
 find_program(XMLSTARLET_EXECUTABLE xmlstarlet)
@@ -91,7 +89,7 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
             sort | uniq > "${MISSPELLING_TXT}"
     )
     add_custom_target(
-        docs-api-misspelling ALL
+        docs-api-misspelling
         DEPENDS "${MISSPELLING_TXT}"
         COMMAND cat "${MISSPELLING_TXT}"
         # success means file is present and empty
