@@ -722,7 +722,8 @@ static void cace_amm_semtype_tblt_name(const cace_amm_type_t *self, cace_ari_t *
 
                 // FIXME can this itself be a table?
                 cace_ari_ref_t *col_ref = cace_ari_set_objref(name_item);
-                cace_ari_objpath_set_textid(&(col_ref->objpath), "ietf", "amm-semtype", CACE_ARI_TYPE_IDENT, "tblt-col");
+                cace_ari_objpath_set_textid(&(col_ref->objpath), "ietf", "amm-semtype", CACE_ARI_TYPE_IDENT,
+                                            "tblt-col");
 
                 cace_ari_tree_t col_params;
                 cace_ari_tree_init(col_params);
@@ -770,7 +771,8 @@ static cace_amm_type_match_res_t cace_amm_semtype_tblt_match(const cace_amm_type
 
     if (val->ncols != cace_amm_named_type_array_size(semtype->columns))
     {
-        CACE_LOG_DEBUG("TBLT needs %zu columns, value has %zu columns", cace_amm_named_type_array_size(semtype->columns), val->ncols);
+        CACE_LOG_DEBUG("TBLT needs %zu columns, value has %zu columns",
+                       cace_amm_named_type_array_size(semtype->columns), val->ncols);
         return CACE_AMM_TYPE_MATCH_NEGATIVE;
     }
 
