@@ -110,7 +110,7 @@ typedef struct cace_ari_tbl_s
 {
     /// Number of columns in the table
     size_t ncols;
-    /// Row-major array of values
+    /// Row-major array of all values in the table
     cace_ari_array_t items;
 } cace_ari_tbl_t;
 

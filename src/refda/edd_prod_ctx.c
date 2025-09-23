@@ -76,7 +76,7 @@ static int refda_edd_prod_check_result(refda_edd_prod_ctx_t *ctx)
         string_clear(buf);
     }
 
-    bool valid = true;//FIXME reinstate (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctx->edd->prod_type), &(ctx->prodctx->value)));
+    bool valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctx->edd->prod_type), &(ctx->prodctx->value)));
     if (!valid)
     {
         CACE_LOG_ERR("EDD result type failed to match a produced value");

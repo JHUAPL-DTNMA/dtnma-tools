@@ -1271,6 +1271,12 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
         {
             const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
+            const refda_amm_const_desc_t *cnst = obj->app_data.ptr;
+            if (!cnst || cnst->obsolete)
+            {
+                continue;
+            }
+
             cace_ari_array_t row;
             cace_ari_array_init(row);
             cace_ari_array_resize(row, 2);
@@ -1279,19 +1285,11 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-
-            const refda_amm_const_desc_t *cnst = obj->app_data.ptr;
-            if (cnst)
-            {
-                cace_amm_type_get_name(&(cnst->val_type), cace_ari_array_get(row, 1));
-            }
+            cace_amm_type_get_name(&(cnst->val_type), cace_ari_array_get(row, 1));
 
             // append the row
-            if (cnst && !cnst->obsolete)
-            {
-                cace_ari_tbl_move_row_array(&table, row);
-                cace_ari_array_clear(row);
-            }
+            cace_ari_tbl_move_row_array(&table, row);
+            cace_ari_array_clear(row);
         }
     }
 
@@ -1366,6 +1364,12 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
         {
             const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
+            const refda_amm_var_desc_t *var = obj->app_data.ptr;
+            if (!var || var->obsolete)
+            {
+                continue;
+            }
+
             cace_ari_array_t row;
             cace_ari_array_init(row);
             cace_ari_array_resize(row, 2);
@@ -1374,19 +1378,11 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-
-            const refda_amm_var_desc_t *var = obj->app_data.ptr;
-            if (var)
-            {
-                cace_amm_type_get_name(&(var->val_type), cace_ari_array_get(row, 1));
-            }
+            cace_amm_type_get_name(&(var->val_type), cace_ari_array_get(row, 1));
 
             // append the row
-            if (var && !var->obsolete)
-            {
-                cace_ari_tbl_move_row_array(&table, row);
-                cace_ari_array_clear(row);
-            }
+            cace_ari_tbl_move_row_array(&table, row);
+            cace_ari_array_clear(row);
         }
     }
 
@@ -1431,7 +1427,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_tbl_t table;
-    cace_ari_tbl_init(&table, 6, 0);
+    cace_ari_tbl_init(&table, 7, 0);
     const cace_ari_type_t obj_type = CACE_ARI_TYPE_SBR;
 
     cace_amm_obj_ns_list_it_t ns_it;
@@ -1463,30 +1459,30 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
         {
             const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
+            const refda_amm_sbr_desc_t *sbr = obj->app_data.ptr;
+            if (!sbr || sbr->obsolete)
+            {
+                continue;
+            }
+
             cace_ari_array_t row;
             cace_ari_array_init(row);
-            cace_ari_array_resize(row, 6);
-
+            cace_ari_array_resize(row, 7);
             {
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-
-            const refda_amm_sbr_desc_t *sbr = obj->app_data.ptr;
-            if (sbr)
             {
                 cace_ari_set_copy(cace_ari_array_get(row, 1), &(sbr->action));
                 cace_ari_set_copy(cace_ari_array_get(row, 2), &(sbr->condition));
                 cace_ari_set_copy(cace_ari_array_get(row, 3), &(sbr->min_interval));
                 cace_ari_set_uvast(cace_ari_array_get(row, 4), sbr->max_exec_count);
-                cace_ari_set_bool(cace_ari_array_get(row, 5), sbr->enabled);
+                cace_ari_set_bool(cace_ari_array_get(row, 5), sbr->init_enabled);
+                cace_ari_set_bool(cace_ari_array_get(row, 6), sbr->enabled);
             }
 
             // append the row
-            if (sbr && !sbr->obsolete)
-            {
-                cace_ari_tbl_move_row_array(&table, row);
-            }
+            cace_ari_tbl_move_row_array(&table, row);
             cace_ari_array_clear(row);
         }
     }
@@ -1532,7 +1528,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_tbl_t table;
-    cace_ari_tbl_init(&table, 6, 0);
+    cace_ari_tbl_init(&table, 7, 0);
     const cace_ari_type_t obj_type = CACE_ARI_TYPE_TBR;
 
     cace_amm_obj_ns_list_it_t ns_it;
@@ -1564,30 +1560,30 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
         {
             const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
+            const refda_amm_tbr_desc_t *tbr = obj->app_data.ptr;
+            if (!tbr || tbr->obsolete)
+            {
+                continue;
+            }
+
             cace_ari_array_t row;
             cace_ari_array_init(row);
-            cace_ari_array_resize(row, 6);
-
+            cace_ari_array_resize(row, 7);
             {
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-
-            const refda_amm_tbr_desc_t *tbr = obj->app_data.ptr;
-            if (tbr)
             {
                 cace_ari_set_copy(cace_ari_array_get(row, 1), &(tbr->action));
                 cace_ari_set_copy(cace_ari_array_get(row, 2), &(tbr->start_time));
                 cace_ari_set_copy(cace_ari_array_get(row, 3), &(tbr->period));
                 cace_ari_set_uvast(cace_ari_array_get(row, 4), tbr->max_exec_count);
-                cace_ari_set_bool(cace_ari_array_get(row, 5), tbr->enabled);
+                cace_ari_set_bool(cace_ari_array_get(row, 5), tbr->init_enabled);
+                cace_ari_set_bool(cace_ari_array_get(row, 6), tbr->enabled);
             }
 
             // append the row
-            if (tbr && !tbr->obsolete)
-            {
-                cace_ari_tbl_move_row_array(&table, row);
-            }
+            cace_ari_tbl_move_row_array(&table, row);
             cace_ari_array_clear(row);
         }
     }
