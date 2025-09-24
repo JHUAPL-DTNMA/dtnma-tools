@@ -137,10 +137,10 @@ class TestRefdaSocket(unittest.TestCase):
         return val
 
     def _send_msg(self, values: List[ARI], mgr_ix: int = 0) -> str:
-        ''' Send an EXECSET with a number of target ARIs.
+        ''' Send an AMP message with EXECSET values.
 
-        :param agent_ix: The agent index to send from.
         :param values: The ARI items to send.
+        :param mgr_ix: The agent index to send from.
         :return: The socket path from which it was sent.
         '''
         data = cbor2.dumps(1)

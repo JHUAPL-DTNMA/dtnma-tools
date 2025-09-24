@@ -106,13 +106,13 @@ class TestRefdmSocket(unittest.TestCase):
             'pg_isready',
             '-d', 'postgres',
         ])
-        with Timer(10) as timer:
-            while timer:
-                timer.sleep(0.1)
+        timer = Timer(10)
+        while timer:
+            timer.sleep(0.1)
 
-                isready.start()
-                if isready.wait() == 0:
-                    timer.finish()
+            isready.start()
+            if isready.wait() == 0:
+                timer.finish()
 
     @classmethod
     def _sql_stop(cls):
@@ -290,15 +290,17 @@ class TestRefdmSocket(unittest.TestCase):
             val = ari_cbor.Decoder().decode(buf)
         return val
 
-    def _send_rptset(self, agent_ix: int, text: str) -> str:
-        ''' Send an RPTSET with a number of target ARIs.
+    def _send_msg(self, values: List[ARI], agent_ix: int = 0) -> str:
+        ''' Send an AMP message with RPTSET values.
 
+        :param values: The ARI items to send.
         :param agent_ix: The agent index to send from.
-        :param text: The ARI text form to send.
         :return: The socket path from which it was sent.
         '''
-        LOGGER.info('Sending value %s', text)
-        data = cbor2.dumps(1) + self._ari_obj_to_cbor(self._ari_text_to_obj(text))
+        data = cbor2.dumps(1)
+        for val in values:
+            LOGGER.info('Sending value %s', self._ari_obj_to_text(val))
+            data += self._ari_obj_to_cbor(val)
         addr = self._mgr_sock_path
         bind = self._agent_bind[agent_ix]
         LOGGER.info('Sending message %s from %s to %s', data.hex(), bind['path'], addr)
@@ -371,19 +373,19 @@ class TestRefdmSocket(unittest.TestCase):
         LOGGER.info('Waiting for DB table %s with %d rows', table_name, need_count)
         with self._db_eng.connect() as conn:
             query = sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.literal_column('1'))).select_from(sqlalchemy.table(table_name))
-            with Timer(5) as timer:
-                while timer:
-                    timer.sleep(0.1)
-                    count = conn.execute(query).scalar()
-                    if count == need_count:
-                        timer.finish()
-                        break
+            timer = Timer(5)
+            while timer:
+                timer.sleep(0.1)
+                count = conn.execute(query).scalar()
+                if count == need_count:
+                    timer.finish()
+                    break
 
-                LOGGER.info('Have %d rows after %0.1f s', count, timer.elapsed())
-                if LOGGER.isEnabledFor(logging.DEBUG):
-                    query = sqlalchemy.select(sqlalchemy.literal_column('*')).select_from(sqlalchemy.table(table_name))
-                    for row in conn.execute(query).fetchall():
-                        LOGGER.debug('Row: %s', row)
+            LOGGER.info('Have %d rows after %0.1f s', count, timer.elapsed())
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                query = sqlalchemy.select(sqlalchemy.literal_column('*')).select_from(sqlalchemy.table(table_name))
+                for row in conn.execute(query).fetchall():
+                    LOGGER.debug('Row: %s', row)
 
     def test_rest_agents_add_valid(self):
         self._start()
@@ -520,20 +522,20 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual(set(), self._get_agent_names())
 
         # first check behavior with one report
-        sock_path = self._send_rptset(0,
-                                      'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-                                      )
-        agent_eid = f'file: {sock_path}'
+        sock_path = self._send_msg(
+            [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
+        )
+        agent_eid = 'file:' + sock_path
         eid_seg = quote(agent_eid, safe="")
 
         LOGGER.info('Waiting for agent %s', agent_eid)
-        with Timer(5) as timer:
-            while timer:
-                timer.sleep(0.1)
-                available = self._get_agent_names()
-                if agent_eid in available:
-                    timer.finish()
-                    break
+        timer = Timer(5)
+        while timer:
+            timer.sleep(0.1)
+            available = self._get_agent_names()
+            if agent_eid in available:
+                timer.finish()
+                break
 
         self._wait_for_db_table('ari_rptset', 1)
 
@@ -562,16 +564,16 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
 
         # each primitive type of nonce
-        self._send_rptset(0,
-                          'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-                          )
-        self._send_rptset(0,
-                          'ari:/RPTSET/n=\'test\';r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-                          )
-        sock_path = self._send_rptset(0,
-                                      'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-                                      )
-        eid_seg = quote(f'file: {sock_path}', safe="")
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
+        )
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/RPTSET/n=\'test\';r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
+        )
+        sock_path = self._send_msg(
+            [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
+        )
+        eid_seg = quote('file:' + sock_path, safe="")
         rptset_count = 3
 
         self._wait_for_db_table('ari_rptset', rptset_count)
@@ -608,15 +610,16 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
 
         # one each from different agents
-        sock_path = self._send_rptset(0,
-                                      'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-                                      )
-        eid_seg0 = quote(f'file: {sock_path}', safe="")
+        sock_path = self._send_msg(
+            [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
+        )
+        eid_seg0 = quote('file:' + sock_path, safe="")
 
-        sock_path = self._send_rptset(1,
-                                      'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-                                      )
-        eid_seg1 = quote(f'file: {sock_path}', safe="")
+        sock_path = self._send_msg(
+            [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
+            agent_id=1
+        )
+        eid_seg1 = quote('file:' + sock_path, safe="")
 
         self._wait_for_db_table('ari_rptset', 2)
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
@@ -646,7 +649,7 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
 
         agent_bind = self._agent_bind[0]
-        agent_eid = f'file: {agent_bind["path"]}'
+        agent_eid = 'file:' + agent_bind["path"]
         eid_seg = quote(agent_eid, safe="")
 
         resp = self._req.post(
@@ -683,7 +686,7 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
 
         agent_bind = self._agent_bind[0]
-        agent_eid = f'file: {agent_bind["path"]}'
+        agent_eid = 'file:' + agent_bind["path"]
         eid_seg = quote(agent_eid, safe="")
 
         resp = self._req.post(
@@ -720,7 +723,7 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
 
         agent_bind = self._agent_bind[0]
-        agent_eid = f'file: {agent_bind["path"]}'
+        agent_eid = 'file:' + agent_bind["path"]
         eid_seg = quote(agent_eid, safe="")
 
         resp = self._req.post(
