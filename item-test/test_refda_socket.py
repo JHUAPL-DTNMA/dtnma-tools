@@ -110,7 +110,15 @@ class TestRefdaSocket(unittest.TestCase):
                 LOGGER.info('waiting for agent socket at %s', self._agent_sock_path)
 
         # Initial HELLO
-        self._wait_rptset()
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(None), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
 
     def _ari_text_to_obj(self, text: str, nn: bool = True) -> ARI:
         with io.StringIO(text) as buf:
@@ -153,10 +161,11 @@ class TestRefdaSocket(unittest.TestCase):
         bind['sock'].sendto(data, addr)
         return bind['path']
 
-    def _wait_rptset(self, mgr_ix: int=0, timeout: float=1) -> ARI:
+    def _wait_msg(self, mgr_ix: int=0, timeout: float=1) -> List[ARI]:
         ''' Wait for an AMP message with RPTSET values and decode it.
 
         :param agent_ix: The agent index to receive on.
+        :param timeout: The time to wait in seconds.
         :return: The contained ARIs in decoded form.
         :raise TimeoutError: If not received in time.
         '''
@@ -184,7 +193,7 @@ class TestRefdaSocket(unittest.TestCase):
                 self.assertIsInstance(val.value, ari.ReportSet)
                 values.append(val)
 
-        return values[0]
+        return values
 
     def test_start_sigint(self):
         self._start()
@@ -208,7 +217,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version))')],
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(ari.LiteralARI(123), rptset.nonce)
         self.assertEqual(1, len(rptset.reports))
@@ -226,7 +237,9 @@ class TestRefdaSocket(unittest.TestCase):
         )
 
         # RPTSET for the generated report
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(ari.LiteralARI(None), rptset.nonce)
         self.assertEqual(1, len(rptset.reports))
@@ -237,7 +250,9 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertLessEqual(3, len(rpt.items))
 
         # RPTSET for the execution itself
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(ari.LiteralARI(123), rptset.nonce)
         self.assertEqual(1, len(rptset.reports))
@@ -255,7 +270,9 @@ class TestRefdaSocket(unittest.TestCase):
         )
 
         # RPTSET for the execution itself
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(ari.LiteralARI(123), rptset.nonce)
         self.assertEqual(1, len(rptset.reports))
@@ -273,7 +290,9 @@ class TestRefdaSocket(unittest.TestCase):
                 'ari:/EXECSET/n=123;(/AC/(//ietf/dtnma-agent/CTRL/wait-for(/TD/PT1.5S),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)))')]
         )
 
-        rptset = self._wait_rptset(timeout=3).value
+        msg_vals = self._wait_msg(timeout=3)
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(ari.LiteralARI(123), rptset.nonce)
         self.assertEqual(1, len(rptset.reports))
@@ -283,7 +302,9 @@ class TestRefdaSocket(unittest.TestCase):
         # items of the report
         self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(ari.LiteralARI(123), rptset.nonce)
         self.assertEqual(1, len(rptset.reports))
@@ -301,7 +322,9 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm(ietf, 1, !test-model-1, -1))')]
         )
 
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -318,7 +341,9 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/odm-list))')]
         )
 
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -333,7 +358,9 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -348,7 +375,9 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -363,7 +392,9 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/AC/(false),/TD/999999,1,false))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -377,7 +408,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sbr-list(false)))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -391,7 +424,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -405,7 +440,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -418,7 +455,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/reset-rule-enabled(//ietf/!test-model-1/TBR/test-tbr))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -431,7 +470,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-rule(//ietf/!test-model-1/TBR/test-tbr2))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -444,7 +485,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
@@ -463,7 +506,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-exec-started))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, int)
@@ -473,7 +518,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-exec-succeeded))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertEqual(1, rpt.items[0].value)
@@ -482,7 +529,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-exec-failed))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertEqual(0, rpt.items[0].value)
@@ -491,7 +540,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-msg-tx-failed))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertEqual(0, rpt.items[0].value)
@@ -504,13 +555,17 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm(ietf, 1, !test-model-1, -1))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
 
         # Verify var-list is empty
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/var-list(false)))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
@@ -521,13 +576,17 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,test-var,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
 
         # Verify VAR can be read back
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/var-list(false)))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
@@ -537,13 +596,17 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-var(//ietf/!test-model-1/VAR/test-var))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
 
         # Verify var list is empty again
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/var-list(false)))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
@@ -553,7 +616,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/const-list(false)))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
@@ -564,13 +629,17 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,test-const,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
 
         # Verify const is listed now
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/const-list(false)))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
@@ -580,13 +649,17 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-const(//ietf/!test-model-1/CONST/test-const))', False)]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
 
         # Verify CONST is no longer listed
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/const-list(false)))')]
         )
-        rptset = self._wait_rptset().value
+        msg_vals = self._wait_msg()
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)

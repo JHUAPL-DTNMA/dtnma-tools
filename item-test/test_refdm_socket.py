@@ -142,7 +142,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         db_host = os.environ['DB_HOST']
         os.environ['DB_NAME'] = self.DB_NAME
-        db_uri = f'postgresql+psycopg2: ///{self.DB_NAME}?host={db_host}'
+        db_uri = 'postgresql+psycopg2:' + f'///{self.DB_NAME}?host={db_host}'
 
         script_pat = os.path.join(OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
         # execute in alphabetic order
@@ -194,7 +194,6 @@ class TestRefdmSocket(unittest.TestCase):
 
         def bound_sock(name):
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-            sock.settimeout(0.1)
 
             path = os.path.join(self._tmp.name, name)
             LOGGER.info('binding to socket at %s', path)
@@ -307,15 +306,18 @@ class TestRefdmSocket(unittest.TestCase):
         bind['sock'].sendto(data, addr)
         return bind['path']
 
-    def _wait_execset(self, agent_ix: int=0) -> List[ARI]:
+    def _wait_msg(self, agent_ix: int=0, timeout: float=1) -> List[ARI]:
         ''' Wait for an AMP message with EXECSET values and decode it.
 
         :param agent_ix: The agent index to receive on.
+        :param timeout: The time to wait in seconds.
         :return: The contained ARIs in decoded form.
         :raise TimeoutError: If not received in time.
         '''
         bind = self._agent_bind[agent_ix]
         recv_sock = bind['sock']
+
+        recv_sock.settimeout(timeout)
 
         try:
             (data, addr) = recv_sock.recvfrom(10240)
