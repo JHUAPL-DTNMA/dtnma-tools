@@ -81,7 +81,7 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
     bool valid = false;
     if (cace_amm_type_is_valid(&(ctx->ctrl->res_type)))
     {
-        valid = cace_amm_type_match(&(ctx->ctrl->res_type), &(ctx->item->result));
+        valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctx->ctrl->res_type), &(ctx->item->result)));
         if (!valid)
         {
             CACE_LOG_ERR("CTRL result type failed to match a result value");
