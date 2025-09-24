@@ -276,6 +276,8 @@ static int cace_amm_semtype_ulist_convert(const cace_amm_type_t *self, cace_ari_
 
     // always pass ownership to the output value
     cace_ari_set_ac(out, &outval);
+    cace_ari_ac_deinit(&outval);
+
     return retval;
 }
 
@@ -497,6 +499,8 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
 
     // always pass ownership to the output value
     cace_ari_set_ac(out, &outval);
+    cace_ari_ac_deinit(&outval);
+
     return retval;
 }
 
@@ -786,6 +790,7 @@ static void cace_amm_semtype_union_name(const cace_amm_type_t *self, cace_ari_t 
             }
 
             cace_ari_set_ac(&val, &list);
+            cace_ari_ac_deinit(&list);
         }
         cace_ari_tree_set_at(params, key, val);
     }
