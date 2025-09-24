@@ -24,7 +24,6 @@ import glob
 import io
 import logging
 import os
-import psutil
 import signal
 import socket
 import subprocess
