@@ -20,6 +20,7 @@
 #include "refda/adm/ietf_amm_base.h"
 #include "refda/adm/ietf_amm_semtype.h"
 #include "refda/adm/ietf_dtnma_agent.h"
+#include "refda/adm/ietf_dtnma_agent_acl.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include "cace/ari/text_util.h"
@@ -296,6 +297,7 @@ int main(int argc, char *argv[])
     refda_adm_ietf_amm_base_init(&agent);
     refda_adm_ietf_amm_semtype_init(&agent);
     refda_adm_ietf_dtnma_agent_init(&agent);
+    refda_adm_ietf_dtnma_agent_acl_init(&agent);
 #if 0
   dtn_bp_agent_init();
   dtn_ion_ionadmin_init();

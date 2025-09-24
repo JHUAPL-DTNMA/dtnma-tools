@@ -115,20 +115,17 @@ void setUp(void)
             refda_amm_const_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
             refda_amm_const_desc_init(objdata);
             {
-                cace_ari_ac_t acinit;
-                cace_ari_ac_init(&acinit);
+                cace_ari_ac_t *acinit = cace_ari_set_ac(&(objdata->value), NULL);
                 {
-                    cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
+                    cace_ari_t *item = cace_ari_list_push_back_new(acinit->items);
                     // ari://example/adm/CTRL/ctrl1
                     cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 1);
                 }
                 {
-                    cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
+                    cace_ari_t *item = cace_ari_list_push_back_new(acinit->items);
                     // ari://example/adm/CTRL/ctrl2
                     cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 2);
                 }
-
-                cace_ari_set_ac(&(objdata->value), &acinit);
             }
 
             obj = refda_register_const(adm, cace_amm_idseg_ref_withenum("mac1", 1), objdata);
@@ -420,18 +417,15 @@ void test_refda_exec_wait_cond(int delay_ms)
         cace_ari_list_t params;
         cace_ari_list_init(params);
         {
-            cace_ari_t *param = cace_ari_list_push_back_new(params);
-
-            cace_ari_ac_t expr;
-            cace_ari_ac_init(&expr);
+            cace_ari_t    *param = cace_ari_list_push_back_new(params);
+            cace_ari_ac_t *expr  = cace_ari_set_ac(param, NULL);
             {
-                cace_ari_t     *expr_item = cace_ari_list_push_back_new(expr.items);
+                cace_ari_t     *expr_item = cace_ari_list_push_back_new(expr->items);
                 cace_ari_ref_t *pref      = cace_ari_set_objref(expr_item);
                 // will always evaluate truthy
                 cace_ari_objpath_set_intid(&(pref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_EDD,
                                            REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION);
             }
-            cace_ari_set_ac(param, &expr);
         }
         cace_ari_params_set_ac(&(ref->params), params);
     }

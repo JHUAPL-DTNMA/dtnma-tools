@@ -62,6 +62,61 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_access_list BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    if (pthread_mutex_lock(&(agent->acl_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock agent ACL");
+        return;
+    }
+
+    cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
+    cace_ari_tbl_reset(table, 4, 0);
+
+    refda_acl_access_list_it_t acc_it;
+    for (refda_acl_access_list_it(acc_it, agent->acl.access); !refda_acl_access_list_end_p(acc_it);
+         refda_acl_access_list_next(acc_it))
+    {
+        const refda_acl_access_t *acc = refda_acl_access_list_cref(acc_it);
+        if (!acc)
+        {
+            continue;
+        }
+
+        cace_ari_array_t row;
+        cace_ari_array_init(row);
+        cace_ari_array_resize(row, 4);
+
+        cace_ari_set_uint(cace_ari_array_get(row, 0), acc->id);
+        {
+            cace_ari_ac_t *grps_ac = cace_ari_set_ac(cace_ari_array_get(row, 1), NULL);
+
+            refda_acl_id_tree_it_t grpid_it;
+            for (refda_acl_id_tree_it(grpid_it, acc->groups); !refda_acl_id_tree_end_p(grpid_it);
+                 refda_acl_id_tree_next(grpid_it))
+            {
+                const refda_acl_group_id_t *grpid = refda_acl_id_tree_cref(grpid_it);
+                // arbitrary order
+                cace_ari_set_uint(cace_ari_list_push_back_new(grps_ac->items), *grpid);
+            }
+        }
+        {
+            cace_ari_ac_t grps;
+            cace_ari_ac_init(&grps);
+            cace_ari_set_ac(cace_ari_array_get(row, 3), &grps);
+        }
+
+        // append the row
+        cace_ari_tbl_move_row_array(table, row);
+    }
+
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    if (pthread_mutex_unlock(&(agent->acl_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock agent ACL");
+        return;
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_access_list BODY
@@ -116,12 +171,13 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
     refda_agent_t *agent = ctx->prodctx->parent->agent;
     if (pthread_mutex_lock(&(agent->acl_mutex)))
     {
-        CACE_LOG_ERR("failed to lock agent ACL");
+        CACE_LOG_CRIT("failed to lock agent ACL");
         return;
     }
 
-    cace_ari_tbl_t table;
-    cace_ari_tbl_init(&table, 3, 0);
+    cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
+    cace_ari_tbl_reset(table, 3, 0);
 
     refda_acl_group_list_it_t grp_it;
     for (refda_acl_group_list_it(grp_it, agent->acl.groups); !refda_acl_group_list_end_p(grp_it);
@@ -137,21 +193,21 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
         cace_ari_array_init(row);
         cace_ari_array_resize(row, 3);
 
-        cace_ari_set_int(cace_ari_array_get(row, 0), grp->id);
-        cace_ari_set_tstr(cace_ari_array_get(row, 0), m_string_get_cstr(grp->name), true);
+        cace_ari_set_uint(cace_ari_array_get(row, 0), grp->id);
+        cace_ari_set_tstr(cace_ari_array_get(row, 1), m_string_get_cstr(grp->name), true);
+        {
+            cace_ari_array_get(row, 2); // FIXME populate
+        }
 
         // append the row
-        cace_ari_tbl_move_row_array(&table, row);
-        cace_ari_array_clear(row);
+        cace_ari_tbl_move_row_array(table, row);
     }
 
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_tbl(&result, &table);
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
     if (pthread_mutex_unlock(&(agent->acl_mutex)))
     {
-        CACE_LOG_ERR("failed to unlock agent ACL");
+        CACE_LOG_CRIT("failed to unlock agent ACL");
         return;
     }
     /*

@@ -37,11 +37,13 @@ void refda_acl_access_init(refda_acl_access_t *obj)
     CHKVOID(obj);
     obj->id = 0;
     refda_acl_id_tree_init(obj->groups);
+    refda_amm_ident_base_list_init(obj->permissions);
 }
 
 void refda_acl_access_deinit(refda_acl_access_t *obj)
 {
     CHKVOID(obj);
+    refda_amm_ident_base_list_clear(obj->permissions);
     refda_acl_id_tree_clear(obj->groups);
     obj->id = 0;
 }

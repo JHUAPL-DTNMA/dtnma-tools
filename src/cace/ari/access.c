@@ -559,9 +559,9 @@ const struct cace_ari_ac_s *cace_ari_cget_ac(const cace_ari_t *ari)
     return ari->as_lit.value.as_ac;
 }
 
-void cace_ari_set_ac(cace_ari_t *ari, struct cace_ari_ac_s *src)
+struct cace_ari_ac_s *cace_ari_set_ac(cace_ari_t *ari, struct cace_ari_ac_s *src)
 {
-    CHKVOID(ari);
+    CHKNULL(ari);
     cace_ari_deinit(ari);
 
     cace_ari_ac_t *ctr = M_MEMORY_ALLOC(cace_ari_ac_t);
@@ -577,6 +577,7 @@ void cace_ari_set_ac(cace_ari_t *ari, struct cace_ari_ac_s *src)
                                                  .value        = {
                                                             .as_ac = ctr,
                                                  } };
+    return ctr;
 }
 
 struct cace_ari_am_s *cace_ari_get_am(cace_ari_t *ari)
@@ -597,9 +598,9 @@ const struct cace_ari_am_s *cace_ari_cget_am(const cace_ari_t *ari)
     return ari->as_lit.value.as_am;
 }
 
-void cace_ari_set_am(cace_ari_t *ari, struct cace_ari_am_s *src)
+struct cace_ari_am_s *cace_ari_set_am(cace_ari_t *ari, struct cace_ari_am_s *src)
 {
-    CHKVOID(ari);
+    CHKNULL(ari);
     cace_ari_deinit(ari);
 
     cace_ari_am_t *ctr = M_MEMORY_ALLOC(cace_ari_am_t);
@@ -615,6 +616,7 @@ void cace_ari_set_am(cace_ari_t *ari, struct cace_ari_am_s *src)
                                                  .value        = {
                                                             .as_am = ctr,
                                                  } };
+    return ctr;
 }
 
 struct cace_ari_tbl_s *cace_ari_get_tbl(cace_ari_t *ari)
@@ -635,13 +637,13 @@ const struct cace_ari_tbl_s *cace_ari_cget_tbl(const cace_ari_t *ari)
     return ari->as_lit.value.as_tbl;
 }
 
-void cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src)
+struct cace_ari_tbl_s *cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src)
 {
-    CHKVOID(ari);
+    CHKNULL(ari);
     cace_ari_deinit(ari);
 
     cace_ari_tbl_t *ctr = M_MEMORY_ALLOC(cace_ari_tbl_t);
-    cace_ari_tbl_init(ctr, 0, 0);
+    cace_ari_tbl_init(ctr);
     if (src)
     {
         ctr->ncols = src->ncols;
@@ -654,6 +656,7 @@ void cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src)
                                                  .value        = {
                                                             .as_tbl = ctr,
                                                  } };
+    return ctr;
 }
 
 struct cace_ari_execset_s *cace_ari_get_execset(cace_ari_t *ari)

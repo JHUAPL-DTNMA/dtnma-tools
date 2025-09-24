@@ -327,9 +327,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    cace_ari_ac_t acinit0;
-                    cace_ari_ac_init(&acinit0);
-                    cace_ari_set_ac(&(fparam->defval), &acinit0);
+                    cace_ari_ac_t *acinit0 = cace_ari_set_ac(&(fparam->defval), NULL);
                 }
             }
         }

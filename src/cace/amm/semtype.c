@@ -251,8 +251,8 @@ static int cace_amm_semtype_ulist_convert(const cace_amm_type_t *self, cace_ari_
         }
     }
 
-    cace_ari_ac_t outval;
-    cace_ari_ac_init(&outval);
+    cace_ari_ac_t *out_ac = cace_ari_set_ac(out, NULL);
+
     int retval = 0;
 
     // input and output have exact same size
@@ -271,11 +271,9 @@ static int cace_amm_semtype_ulist_convert(const cace_amm_type_t *self, cace_ari_
             break;
         }
 
-        cace_ari_list_push_back_move(outval.items, &out_item);
+        cace_ari_list_push_back_move(out_ac->items, &out_item);
     }
 
-    // always pass ownership to the output value
-    cace_ari_set_ac(out, &outval);
     return retval;
 }
 
@@ -441,8 +439,8 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
 
-    cace_ari_ac_t outval;
-    cace_ari_ac_init(&outval);
+    cace_ari_ac_t *out_ac = cace_ari_set_ac(out, NULL);
+
     int retval = 0;
 
     cace_ari_list_it_t inval_it;
@@ -458,7 +456,7 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
         if (typ_item->type_class == CACE_AMM_TYPE_SEQ)
         {
             cace_amm_semtype_seq_t *seq = typ_item->as_semtype;
-            if (!cace_amm_semtype_seq_convert_it(seq, outval.items, inval_it))
+            if (!cace_amm_semtype_seq_convert_it(seq, out_ac->items, inval_it))
             {
                 retval = CACE_AMM_ERR_CONVERT_BADVALUE;
                 break;
@@ -484,7 +482,7 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
                 break;
             }
 
-            cace_ari_list_push_back_move(outval.items, &out_item);
+            cace_ari_list_push_back_move(out_ac->items, &out_item);
             cace_ari_list_next(inval_it);
         }
     }
@@ -495,8 +493,6 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
         retval = CACE_AMM_ERR_CONVERT_BADVALUE;
     }
 
-    // always pass ownership to the output value
-    cace_ari_set_ac(out, &outval);
     return retval;
 }
 
@@ -703,9 +699,11 @@ static int cace_amm_semtype_tblt_convert(const cace_amm_type_t *self, cace_ari_t
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
 
-    cace_ari_tbl_t outval;
-    const size_t   nrows = cace_ari_array_size(inval->items) / inval->ncols;
-    cace_ari_tbl_init(&outval, inval->ncols, nrows);
+    const size_t nrows = cace_ari_array_size(inval->items) / inval->ncols;
+
+    cace_ari_tbl_t *outval = cace_ari_set_tbl(out, NULL);
+    cace_ari_tbl_reset(outval, inval->ncols, nrows);
+
     int retval = 0;
 
     cace_amm_named_type_array_it_t col_it;
@@ -713,7 +711,7 @@ static int cace_amm_semtype_tblt_convert(const cace_amm_type_t *self, cace_ari_t
 
     // input and output have exact same size
     cace_ari_array_it_t inval_it, outval_it;
-    for (cace_ari_array_it(inval_it, inval->items), cace_ari_array_it(outval_it, outval.items);
+    for (cace_ari_array_it(inval_it, inval->items), cace_ari_array_it(outval_it, outval->items);
          !cace_ari_array_end_p(inval_it);
          cace_ari_array_next(inval_it), cace_ari_array_next(outval_it), cace_amm_named_type_array_next(col_it))
     {
@@ -734,8 +732,6 @@ static int cace_amm_semtype_tblt_convert(const cace_amm_type_t *self, cace_ari_t
         }
     }
 
-    // always pass ownership to the output value
-    cace_ari_set_tbl(out, &outval);
     return retval;
 }
 
@@ -773,19 +769,16 @@ static void cace_amm_semtype_union_name(const cace_amm_type_t *self, cace_ari_t 
         cace_ari_set_tstr(&key, "choices", false);
         cace_ari_t val = CACE_ARI_INIT_UNDEFINED;
         {
-            cace_ari_ac_t list;
-            cace_ari_ac_init(&list);
+            cace_ari_ac_t *name_ac = cace_ari_set_ac(&val, NULL);
 
             cace_amm_type_array_it_t it;
             for (cace_amm_type_array_it(it, semtype->choices); !cace_amm_type_array_end_p(it);
                  cace_amm_type_array_next(it))
             {
                 const cace_amm_type_t *choice   = cace_amm_type_array_ref(it);
-                cace_ari_t            *listitem = cace_ari_list_push_back_new(list.items);
+                cace_ari_t            *listitem = cace_ari_list_push_back_new(name_ac->items);
                 cace_amm_type_get_name(choice, listitem);
             }
-
-            cace_ari_set_ac(&val, &list);
         }
         cace_ari_tree_set_at(params, key, val);
     }

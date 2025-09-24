@@ -102,10 +102,19 @@ typedef struct cace_ari_tbl_s
     cace_ari_array_t items;
 } cace_ari_tbl_t;
 
-void cace_ari_tbl_init(cace_ari_tbl_t *obj, size_t ncols, size_t nrows);
+void cace_ari_tbl_init(cace_ari_tbl_t *obj);
 void cace_ari_tbl_deinit(cace_ari_tbl_t *obj);
 bool cace_ari_tbl_cmp(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right);
 bool cace_ari_tbl_equal(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right);
+
+/** Reset a table to a specific size.
+ *
+ * @param[in,out] obj The table to append to.
+ * @param ncols The number of columns.
+ * @param nrows The number of rows, which can start zero and be appended to.
+ * @sa cace_ari_tbl_move_row_ac(), cace_ari_tbl_move_row_array()
+ */
+void cace_ari_tbl_reset(cace_ari_tbl_t *obj, size_t ncols, size_t nrows);
 
 /** Append a row to a table, moving data from the source.
  *

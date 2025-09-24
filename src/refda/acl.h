@@ -77,7 +77,8 @@ typedef struct
     uint32_t id;
     /// Groups to which this entry applies
     refda_acl_id_tree_t groups;
-    /// Objects to which this entry applies
+    /// Permissions granted to these groups and objects
+    refda_amm_ident_base_list_t permissions;
 
 } refda_acl_access_t;
 

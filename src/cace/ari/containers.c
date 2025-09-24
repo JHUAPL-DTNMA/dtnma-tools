@@ -160,15 +160,10 @@ bool cace_ari_am_equal(const cace_ari_am_t *left, const cace_ari_am_t *right)
     return cace_ari_tree_equal_p(left->items, right->items);
 }
 
-void cace_ari_tbl_init(cace_ari_tbl_t *obj, size_t ncols, size_t nrows)
+void cace_ari_tbl_init(cace_ari_tbl_t *obj)
 {
     CHKVOID(obj);
-    obj->ncols = ncols;
     cace_ari_array_init(obj->items);
-    if (ncols && nrows)
-    {
-        cace_ari_array_resize(obj->items, ncols * nrows);
-    }
 }
 
 void cace_ari_tbl_deinit(cace_ari_tbl_t *obj)
@@ -217,6 +212,17 @@ bool cace_ari_tbl_equal(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right)
     return ((left->ncols == right->ncols) && cace_ari_array_equal_p(left->items, right->items));
 }
 
+void cace_ari_tbl_reset(cace_ari_tbl_t *obj, size_t ncols, size_t nrows)
+{
+    cace_ari_array_reset(obj->items);
+
+    obj->ncols = ncols;
+    if (ncols && nrows)
+    {
+        cace_ari_array_resize(obj->items, ncols * nrows);
+    }
+}
+
 int cace_ari_tbl_move_row_ac(cace_ari_tbl_t *obj, cace_ari_ac_t *row)
 {
     CHKERR1(obj);
@@ -247,6 +253,8 @@ int cace_ari_tbl_move_row_array(cace_ari_tbl_t *obj, cace_ari_array_t row)
     }
 
     cace_ari_array_splice(obj->items, row);
+    cace_ari_array_clear(row);
+
     return 0;
 }
 
@@ -404,7 +412,7 @@ void cace_ari_lit_init_container(cace_ari_lit_t *lit, cace_ari_type_t ctype)
         case CACE_ARI_TYPE_TBL:
         {
             cace_ari_tbl_t *ctr = M_MEMORY_ALLOC(cace_ari_tbl_t);
-            cace_ari_tbl_init(ctr, 0, 0);
+            cace_ari_tbl_init(ctr);
             lit->value.as_tbl = ctr;
             break;
         }
