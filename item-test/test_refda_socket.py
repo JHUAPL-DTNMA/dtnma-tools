@@ -520,7 +520,8 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sbr-list(false))'), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual(6, rpt.items[0].value.size)
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((1, 7), rpt.items[0].value.shape)
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))')]
@@ -535,7 +536,8 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual(12, rpt.items[0].value.size)
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((2, 7), rpt.items[0].value.shape)
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true))', False)]
@@ -592,7 +594,8 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual(6, rpt.items[0].value.size)
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((1, 7), rpt.items[0].value.shape)
         self.assertEqual(False, rpt.items[0].value[0][5].value)  # Confirm rule is disabled
 
     def test_edd_counters(self):
@@ -665,7 +668,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
-        self.assertEqual(0, rpt.items[0].value.size)
+        self.assertEqual((0, 2), rpt.items[0].value.shape)
 
         # Add a variable
         self._send_msg(
@@ -686,7 +689,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
-        self.assertEqual(2, rpt.items[0].value.size)
+        self.assertEqual((1, 2), rpt.items[0].value.shape)
 
         # Obsolete the VAR
         self._send_msg(
@@ -706,7 +709,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
-        self.assertEqual(0, rpt.items[0].value.size)
+        self.assertEqual((0, 2), rpt.items[0].value.shape)
 
         # Verify list of constants is empty
         self._send_msg(
@@ -718,7 +721,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
-        self.assertEqual(0, rpt.items[0].value.size)
+        self.assertEqual((0, 2), rpt.items[0].value.shape)
 
         # Add a constant
         self._send_msg(
@@ -739,7 +742,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
-        self.assertEqual(2, rpt.items[0].value.size)
+        self.assertEqual((1, 2), rpt.items[0].value.shape)
 
         # Obsolete the CONST
         self._send_msg(
@@ -759,4 +762,4 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
-        self.assertEqual(0, rpt.items[0].value.size)
+        self.assertEqual((0, 2), rpt.items[0].value.shape)
