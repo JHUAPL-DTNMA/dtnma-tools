@@ -196,6 +196,7 @@ int main(int argc, char *argv[])
 
     if (!retval && !m_string_empty_p(hello_eid))
     {
+        CACE_LOG_DEBUG("Sending hello report to %s", m_string_get_cstr(hello_eid));
         if (refda_agent_send_hello(&agent, m_string_get_cstr(hello_eid)))
         {
             CACE_LOG_ERR("Agent hello failed");
