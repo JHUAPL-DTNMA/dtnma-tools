@@ -24,6 +24,7 @@ import glob
 import io
 import logging
 import os
+import psutil
 import signal
 import socket
 import subprocess
@@ -306,7 +307,7 @@ class TestRefdmSocket(unittest.TestCase):
         bind['sock'].sendto(data, addr)
         return bind['path']
 
-    def _wait_msg(self, agent_ix: int=0, timeout: float=1) -> List[ARI]:
+    def _wait_msg(self, agent_ix: int, timeout: float=1) -> List[ARI]:
         ''' Wait for an AMP message with EXECSET values and decode it.
 
         :param agent_ix: The agent index to receive on.
@@ -619,7 +620,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         sock_path = self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
-            agent_id=1
+            agent_ix=1
         )
         eid_seg1 = quote('file:' + sock_path, safe="")
 
@@ -677,12 +678,12 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
 
-        values = self._wait_execset(0)
-        self.assertEqual([send_ari], values)
+        msg_vals = self._wait_msg(agent_ix=0)
+        self.assertEqual([send_ari], msg_vals)
 
         # no other datagrams
         with self.assertRaises(TimeoutError):
-            self._wait_execset(0)
+            self._wait_msg(agent_ix=0)
 
     def test_agents_send_text(self):
         self._start()
@@ -714,12 +715,12 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
 
-        values = self._wait_execset(0)
-        self.assertEqual([send_ari], values)
+        msg_vals = self._wait_msg(agent_ix=0)
+        self.assertEqual([send_ari], msg_vals)
 
         # no other datagrams
         with self.assertRaises(TimeoutError):
-            self._wait_execset(0)
+            self._wait_msg(agent_ix=0)
 
     def test_send_three_execsets(self):
         self._start()
@@ -756,9 +757,9 @@ ari:/EXECSET/n='test';(//ietf/dtnma-agent/CTRL/inspect)\r\n\
         self._wait_for_db_table('execution_set', 3)
 
         # three sent together
-        values = self._wait_execset(0)
-        self.assertEqual(3, len(values))
+        msg_vals = self._wait_msg(agent_ix=0)
+        self.assertEqual(3, len(msg_vals))
 
         # no other datagrams
         with self.assertRaises(TimeoutError):
-            self._wait_execset(0)
+            self._wait_msg(agent_ix=0)
