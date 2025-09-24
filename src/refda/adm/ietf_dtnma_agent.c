@@ -1290,8 +1290,8 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
             if (cnst && !cnst->obsolete)
             {
                 cace_ari_tbl_move_row_array(&table, row);
-                cace_ari_array_clear(row);
             }
+            cace_ari_array_clear(row);
         }
     }
 
@@ -1385,8 +1385,8 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
             if (var && !var->obsolete)
             {
                 cace_ari_tbl_move_row_array(&table, row);
-                cace_ari_array_clear(row);
             }
+            cace_ari_array_clear(row);
         }
     }
 
