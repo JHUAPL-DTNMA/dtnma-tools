@@ -142,7 +142,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         db_host = os.environ['DB_HOST']
         os.environ['DB_NAME'] = self.DB_NAME
-        db_uri = f'postgresql+psycopg2:///{self.DB_NAME}?host={db_host}'
+        db_uri = f'postgresql+psycopg2: ///{self.DB_NAME}?host={db_host}'
 
         script_pat = os.path.join(OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
         # execute in alphabetic order
@@ -173,15 +173,16 @@ class TestRefdmSocket(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+        logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
+
         cls._sql_start()
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls._sql_stop()
 
-    def setUp(self):
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-
+    def setUp(self) -> None:
         self._req = requests.Session()
         self._base_url = 'http://localhost:8089/nm/api/'
 
@@ -213,7 +214,7 @@ class TestRefdmSocket(unittest.TestCase):
         ])
         self._mgr = CmdRunner(args)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         mgr_exit = self._mgr.stop()
         self._mgr = None
 
@@ -235,60 +236,61 @@ class TestRefdmSocket(unittest.TestCase):
         # assert after all other shutdown
         self.assertEqual(0, mgr_exit)
 
-    def _start(self):
+    def _start(self) -> None:
         ''' Spawn the process. '''
         self._mgr.start()
 
         delay = 0.1
-        with Timer(10) as timer:
-            while timer:
-                # linear back-off
-                timer.sleep(delay)
-                delay += 0.1
+        timer = Timer(10)
+        while timer:
+            # linear back-off
+            timer.sleep(delay)
+            delay += 0.1
 
-                sock_ready = os.path.exists(self._mgr_sock_path)
+            sock_ready = os.path.exists(self._mgr_sock_path)
 
-                try:
-                    resp = self._req.options(self._base_url)
-                    rest_ready = True
-                except requests.exceptions.ConnectionError:
-                    rest_ready = False
+            try:
+                resp = self._req.options(self._base_url)
+                rest_ready = True
+            except requests.exceptions.ConnectionError:
+                rest_ready = False
 
-                if sock_ready and rest_ready:
-                    timer.finish()
-                    return
+            if sock_ready and rest_ready:
+                timer.finish()
+                return
 
-                if not sock_ready:
-                    LOGGER.info('waiting for manager socket at %s', self._mgr_sock_path)
-                if not rest_ready:
-                    LOGGER.info('waiting for manager response on %s', self._base_url)
+            if not sock_ready:
+                LOGGER.info('waiting for manager socket at %s', self._mgr_sock_path)
+            if not rest_ready:
+                LOGGER.info('waiting for manager response on %s', self._base_url)
 
         self.fail(f'Manager did not create socket at {self._mgr_sock_path}')
 
-    def _ari_text_to_obj(self, text:str) -> ARI:
-        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
-
+    def _ari_text_to_obj(self, text: str, nn: bool = True) -> ARI:
         with io.StringIO(text) as buf:
             val = ari_text.Decoder().decode(buf)
+
+        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=nn)
         val = nn_func(val)
+
         return val
 
-    def _ari_obj_to_text(self, val:ARI) -> str:
+    def _ari_obj_to_text(self, val: ARI) -> str:
         buf = io.StringIO()
         ari_text.Encoder().encode(val, buf)
         return buf.getvalue()
 
-    def _ari_obj_to_cbor(self, val:ARI) -> bytes:
+    def _ari_obj_to_cbor(self, val: ARI) -> bytes:
         buf = io.BytesIO()
         ari_cbor.Encoder().encode(val, buf)
         return buf.getvalue()
 
-    def _ari_obj_from_cbor(self, databuf:bytes) -> ARI:
+    def _ari_obj_from_cbor(self, databuf: bytes) -> ARI:
         with io.BytesIO(databuf) as buf:
             val = ari_cbor.Decoder().decode(buf)
         return val
 
-    def _send_rptset(self, agent_ix:int, text:str) -> str:
+    def _send_rptset(self, agent_ix: int, text: str) -> str:
         ''' Send an RPTSET with a number of target ARIs.
 
         :param agent_ix: The agent index to send from.
@@ -303,16 +305,20 @@ class TestRefdmSocket(unittest.TestCase):
         bind['sock'].sendto(data, addr)
         return bind['path']
 
-    def _wait_execset(self, agent_ix=0) -> List[ARI]:
+    def _wait_execset(self, agent_ix: int=0) -> List[ARI]:
         ''' Wait for an AMP message with EXECSET values and decode it.
 
         :param agent_ix: The agent index to receive on.
         :return: The contained ARIs in decoded form.
+        :raise TimeoutError: If not received in time.
         '''
         bind = self._agent_bind[agent_ix]
         recv_sock = bind['sock']
 
-        (data, addr) = recv_sock.recvfrom(1024)
+        try:
+            (data, addr) = recv_sock.recvfrom(10240)
+        except (socket.timeout, TimeoutError) as err:
+            raise TimeoutError("No message received") from err
         LOGGER.info('Received message %s to %s from %s', data.hex(), bind['path'], addr)
         self.assertEqual(self._mgr_sock_path, addr)
 
@@ -324,13 +330,9 @@ class TestRefdmSocket(unittest.TestCase):
 
             while infile.tell() < len(data):
                 val = dec.decode(infile)
+                LOGGER.info('Received value %s', self._ari_obj_to_text(val))
                 self.assertIsInstance(val.value, ari.ExecutionSet)
                 values.append(val)
-
-                if LOGGER.isEnabledFor(logging.INFO):
-                    textbuf = io.StringIO()
-                    ari_text.Encoder().encode(val, textbuf)
-                    LOGGER.info('Received value: %s', textbuf.getvalue())
 
         return values
 
@@ -365,7 +367,7 @@ class TestRefdmSocket(unittest.TestCase):
         data = resp.json()
         return set([agt['name'] for agt in data['agents']])
 
-    def _wait_for_db_table(self, table_name:str, need_count:int):
+    def _wait_for_db_table(self, table_name: str, need_count: int):
         LOGGER.info('Waiting for DB table %s with %d rows', table_name, need_count)
         with self._db_eng.connect() as conn:
             query = sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.literal_column('1'))).select_from(sqlalchemy.table(table_name))
@@ -519,9 +521,9 @@ class TestRefdmSocket(unittest.TestCase):
 
         # first check behavior with one report
         sock_path = self._send_rptset(0,
-            'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-        )
-        agent_eid = f'file:{sock_path}'
+                                      'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+                                      )
+        agent_eid = f'file: {sock_path}'
         eid_seg = quote(agent_eid, safe="")
 
         LOGGER.info('Waiting for agent %s', agent_eid)
@@ -561,15 +563,15 @@ class TestRefdmSocket(unittest.TestCase):
 
         # each primitive type of nonce
         self._send_rptset(0,
-            'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-        )
+                          'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+                          )
         self._send_rptset(0,
-            'ari:/RPTSET/n=\'test\';r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-        )
+                          'ari:/RPTSET/n=\'test\';r=/TP/20240102T030406Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+                          )
         sock_path = self._send_rptset(0,
-            'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-        )
-        eid_seg = quote(f'file:{sock_path}', safe="")
+                                      'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+                                      )
+        eid_seg = quote(f'file: {sock_path}', safe="")
         rptset_count = 3
 
         self._wait_for_db_table('ari_rptset', rptset_count)
@@ -607,14 +609,14 @@ class TestRefdmSocket(unittest.TestCase):
 
         # one each from different agents
         sock_path = self._send_rptset(0,
-            'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-        )
-        eid_seg0 = quote(f'file:{sock_path}', safe="")
+                                      'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+                                      )
+        eid_seg0 = quote(f'file: {sock_path}', safe="")
 
         sock_path = self._send_rptset(1,
-            'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
-        )
-        eid_seg1 = quote(f'file:{sock_path}', safe="")
+                                      'ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))',
+                                      )
+        eid_seg1 = quote(f'file: {sock_path}', safe="")
 
         self._wait_for_db_table('ari_rptset', 2)
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
@@ -644,7 +646,7 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
 
         agent_bind = self._agent_bind[0]
-        agent_eid = f'file:{agent_bind["path"]}'
+        agent_eid = f'file: {agent_bind["path"]}'
         eid_seg = quote(agent_eid, safe="")
 
         resp = self._req.post(
@@ -674,14 +676,14 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual([send_ari], values)
 
         # no other datagrams
-        with self.assertRaises((socket.timeout, TimeoutError)):
+        with self.assertRaises(TimeoutError):
             self._wait_execset(0)
 
     def test_agents_send_text(self):
         self._start()
 
         agent_bind = self._agent_bind[0]
-        agent_eid = f'file:{agent_bind["path"]}'
+        agent_eid = f'file: {agent_bind["path"]}'
         eid_seg = quote(agent_eid, safe="")
 
         resp = self._req.post(
@@ -711,14 +713,14 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual([send_ari], values)
 
         # no other datagrams
-        with self.assertRaises((socket.timeout, TimeoutError)):
+        with self.assertRaises(TimeoutError):
             self._wait_execset(0)
 
     def test_send_three_execsets(self):
         self._start()
 
         agent_bind = self._agent_bind[0]
-        agent_eid = f'file:{agent_bind["path"]}'
+        agent_eid = f'file: {agent_bind["path"]}'
         eid_seg = quote(agent_eid, safe="")
 
         resp = self._req.post(
@@ -753,5 +755,5 @@ ari:/EXECSET/n='test';(//ietf/dtnma-agent/CTRL/inspect)\r\n\
         self.assertEqual(3, len(values))
 
         # no other datagrams
-        with self.assertRaises((socket.timeout, TimeoutError)):
+        with self.assertRaises(TimeoutError):
             self._wait_execset(0)

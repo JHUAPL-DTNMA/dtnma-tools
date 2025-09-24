@@ -280,6 +280,7 @@ int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const
 
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
+    cace_ari_set_copy(&msg.ident, mgr_ident);
 
     cace_ari_rptset_t *rpts = cace_ari_set_rptset(&msg.value);
     cace_ari_set_null(&(rpts->nonce));
