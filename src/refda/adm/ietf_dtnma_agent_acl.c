@@ -40,7 +40,20 @@
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
-/*             TODO              */
+#define AGENT_ACL_LOCK(agent)                      \
+    if (pthread_mutex_lock(&((agent)->acl_mutex))) \
+    {                                              \
+        CACE_LOG_CRIT("failed to lock agent ACL"); \
+        return;                                    \
+    }
+
+#define AGENT_ACL_UNLOCK(agent)                      \
+    if (pthread_mutex_unlock(&((agent)->acl_mutex))) \
+    {                                                \
+        CACE_LOG_CRIT("failed to unlock agent ACL"); \
+        return;                                      \
+    }
+
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
 /* Name: access-list
@@ -63,11 +76,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
      * +-------------------------------------------------------------------------+
      */
     refda_agent_t *agent = ctx->prodctx->parent->agent;
-    if (pthread_mutex_lock(&(agent->acl_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock agent ACL");
-        return;
-    }
+    AGENT_ACL_LOCK(agent)
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -110,13 +119,8 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
         cace_ari_tbl_move_row_array(table, row);
     }
 
+    AGENT_ACL_UNLOCK(agent)
     refda_edd_prod_ctx_set_result_move(ctx, &result);
-
-    if (pthread_mutex_unlock(&(agent->acl_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock agent ACL");
-        return;
-    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_access_list BODY
@@ -169,11 +173,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
      * +-------------------------------------------------------------------------+
      */
     refda_agent_t *agent = ctx->prodctx->parent->agent;
-    if (pthread_mutex_lock(&(agent->acl_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock agent ACL");
-        return;
-    }
+    AGENT_ACL_LOCK(agent)
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -184,10 +184,6 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
          refda_acl_group_list_next(grp_it))
     {
         const refda_acl_group_t *grp = refda_acl_group_list_cref(grp_it);
-        if (!grp)
-        {
-            continue;
-        }
 
         cace_ari_array_t row;
         cace_ari_array_init(row);
@@ -203,13 +199,8 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
         cace_ari_tbl_move_row_array(table, row);
     }
 
+    AGENT_ACL_UNLOCK(agent)
     refda_edd_prod_ctx_set_result_move(ctx, &result);
-
-    if (pthread_mutex_unlock(&(agent->acl_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock agent ACL");
-        return;
-    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_group_list BODY
@@ -285,6 +276,76 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group(refda_ctrl_exec_ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *p_id   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *p_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+
+    cace_ari_uint gid;
+    if (cace_ari_get_uint(p_id, &gid) || (gid == 0))
+    {
+        CACE_LOG_ERR("Invalid group ID");
+        return;
+    }
+
+    const char *name = cace_ari_cget_tstr_cstr(p_id);
+    if (!name)
+    {
+        CACE_LOG_ERR("Invalid group name");
+        return;
+    }
+
+    bool success = false;
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    AGENT_ACL_LOCK(agent)
+
+    refda_acl_group_t *found_id = NULL, *found_name = NULL;
+
+    refda_acl_group_list_it_t grp_it;
+    for (refda_acl_group_list_it(grp_it, agent->acl.groups); !refda_acl_group_list_end_p(grp_it);
+         refda_acl_group_list_next(grp_it))
+    {
+        refda_acl_group_t *grp = refda_acl_group_list_ref(grp_it);
+        if (grp->id == gid)
+        {
+            found_id = grp;
+        }
+        if (m_string_equal_cstr_p(grp->name, name))
+        {
+            found_id = grp;
+        }
+    }
+
+    if (found_id && found_name)
+    {
+        if (found_id != found_name)
+        {
+            CACE_LOG_ERR("Mismatch existing groups with ID %"PRIu32" and name %s", gid, name);
+        }
+        // nothing else to do
+    }
+    else if (found_id)
+    {
+        // TODO handle this
+    }
+    else if (found_name)
+    {
+        // TODO handle this
+    }
+    else
+    {
+        // new group
+        refda_acl_group_t *grp = refda_acl_group_list_push_new(agent->acl.groups);
+
+        grp->id = gid;
+        m_string_set_cstr(grp->name, name);
+        success = true;
+    }
+
+    AGENT_ACL_UNLOCK(agent)
+    if (success)
+    {
+        refda_ctrl_exec_ctx_set_result_null(ctx);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group BODY

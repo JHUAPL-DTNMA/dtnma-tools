@@ -377,6 +377,20 @@ const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari)
     return &(ari->as_lit.value.as_data);
 }
 
+const char *cace_ari_cget_tstr_cstr(const cace_ari_t *ari)
+{
+    if (ari->is_ref || (ari->as_lit.prim_type != CACE_ARI_PRIM_TSTR))
+    {
+        return NULL;
+    }
+    return (const char *)(ari->as_lit.value.as_data.ptr);
+}
+
+const char *cace_ari_get_tstr_cstr(cace_ari_t *ari)
+{
+    return (char *)cace_ari_cget_tstr_cstr(ari);
+}
+
 void cace_ari_set_tstr(cace_ari_t *ari, const char *buf, bool copy)
 {
     CHKVOID(ari);

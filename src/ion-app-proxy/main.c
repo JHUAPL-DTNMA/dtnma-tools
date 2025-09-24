@@ -288,15 +288,11 @@ static void *bp_send_worker(void *ctx _U_)
             }
 
             // This is pointer-to-non-const because of ION API issue
-            char *dest_eid = NULL;
+            const char *dest_eid = NULL;
             if (result == 0)
             {
-                const cace_data_t *dest_data = cace_ari_cget_tstr(&item->peer);
-                if (dest_data)
-                {
-                    dest_eid = (char *)(dest_data->ptr);
-                }
-                else
+                dest_eid = cace_ari_cget_tstr_cstr(&item->peer);
+                if (!dest_eid)
                 {
                     string_t buf;
                     string_init(buf);
@@ -321,7 +317,8 @@ static void *bp_send_worker(void *ctx _U_)
                 BpAncillaryData       ancData       = { 0 };
                 ancData.flags                       = BP_RELIABLE | BP_BEST_EFFORT;
 
-                int result = bp_send(ion_sap, dest_eid, // destination
+                int result = bp_send(ion_sap,
+                                     (char *)dest_eid, // destination
                                      NULL,              // report-to
                                      lifetime_s,        // lifetime in seconds
                                      priority,          // Class-of-Service / Priority

@@ -232,6 +232,14 @@ struct cace_ari_tbl_s *cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *
  * @notice This data will always have a terminating null byte.
  */
 const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari);
+/** @overload
+ * This form casts to const C-string pointer.
+ */
+const char *cace_ari_cget_tstr_cstr(const cace_ari_t *ari);
+/** @overload
+ * This form casts to mutable C-string pointer.
+ */
+const char *cace_ari_get_tstr_cstr(cace_ari_t *ari);
 
 /// @overload
 const cace_data_t *cace_ari_cget_bstr(const cace_ari_t *ari);

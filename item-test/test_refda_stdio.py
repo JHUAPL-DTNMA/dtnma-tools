@@ -49,7 +49,7 @@ class TestStdioAgent(unittest.TestCase):
         super().setUpClass()
 
         logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-        logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
+        logging.getLogger('ace').setLevel(logging.ERROR)
 
     def setUp(self):
         path = os.path.abspath(os.path.join(OWNPATH, '..'))
@@ -67,7 +67,7 @@ class TestStdioAgent(unittest.TestCase):
         self._agent.start()
         self._wait_rptset()
 
-    def _ari_text_to_obj(self, text:str, nn:bool = True) -> ARI:
+    def _ari_text_to_obj(self, text: str, nn: bool = True) -> ARI:
         nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
 
         with io.StringIO(text) as buf:
@@ -76,17 +76,17 @@ class TestStdioAgent(unittest.TestCase):
             ari = nn_func(ari)
         return ari
 
-    def _ari_obj_to_cbor(self, ari:ARI) -> bytes:
+    def _ari_obj_to_cbor(self, ari: ARI) -> bytes:
         buf = io.BytesIO()
         ari_cbor.Encoder().encode(ari, buf)
         return buf.getvalue()
 
-    def _ari_obj_from_cbor(self, databuf:bytes) -> ARI:
+    def _ari_obj_from_cbor(self, databuf: bytes) -> ARI:
         with io.BytesIO(databuf) as buf:
             ari = ari_cbor.Decoder().decode(buf)
         return ari
 
-    def _send_execset(self, text:str, nn:bool = True):
+    def _send_execset(self, text: str, nn: bool = True):
         ''' Send an EXECSET with a number of target ARIs. '''
         LOGGER.info('Sending value %s', text)
         data = self._ari_obj_to_cbor(self._ari_text_to_obj(text, nn))
@@ -250,7 +250,7 @@ class TestStdioAgent(unittest.TestCase):
         # items of the report
         self.assertEqual(1, len(rpt.items))
 
-        ## ODM Rules
+        # ODM Rules
         self._send_execset(
             'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false))', False)
         rptset = self._wait_rptset().value
@@ -259,7 +259,8 @@ class TestStdioAgent(unittest.TestCase):
         rpt = rptset.reports[0]
         LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false)', False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj(
+            '//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false)', False), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
 
@@ -271,7 +272,8 @@ class TestStdioAgent(unittest.TestCase):
         rpt = rptset.reports[0]
         LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false)', False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj(
+            '//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false)', False), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
 
@@ -283,7 +285,8 @@ class TestStdioAgent(unittest.TestCase):
         rpt = rptset.reports[0]
         LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/AC/(false),/TD/999999,1,false)', False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj(
+            '//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/AC/(false),/TD/999999,1,false)', False), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
 
@@ -298,7 +301,7 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sbr-list(false))'), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual(6, rpt.items[0].value.size);
+        self.assertEqual(6, rpt.items[0].value.size)
 
         self._send_execset(
             'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))')
@@ -311,7 +314,7 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual(12, rpt.items[0].value.size);
+        self.assertEqual(12, rpt.items[0].value.size)
 
         self._send_execset(
             'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true))', False)
@@ -360,8 +363,8 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual(6, rpt.items[0].value.size);
-        self.assertEqual(False, rpt.items[0].value[0][5].value); # Confirm rule is disabled
+        self.assertEqual(6, rpt.items[0].value.size)
+        self.assertEqual(False, rpt.items[0].value[0][5].value)  # Confirm rule is disabled
 
     def test_edd_counters(self):
         self._start()
@@ -372,7 +375,7 @@ class TestStdioAgent(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, int)
-        self.assertEqual(1, rpt.items[0].value) # 1 because it counts inspect call above
+        self.assertEqual(1, rpt.items[0].value)  # 1 because it counts inspect call above
 
         # Count number of successful exec's
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-exec-succeeded))')
@@ -386,7 +389,7 @@ class TestStdioAgent(unittest.TestCase):
         rptset = self._wait_rptset().value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual(0, rpt.items[0].value)       
+        self.assertEqual(0, rpt.items[0].value)
 
         # Sanity check expected count of tx failures
         self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/num-msg-tx-failed))')
@@ -414,7 +417,8 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(0, rpt.items[0].value.size)
 
         # Add a variable
-        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,test-var,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,test-var,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)
         rptset = self._wait_rptset().value
 
         # Verify VAR can be read back
@@ -446,7 +450,8 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(0, rpt.items[0].value.size)
 
         # Add a constant
-        self._send_execset('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,test-const,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,test-const,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),/AC/(1)))', False)
         rptset = self._wait_rptset().value
 
         # Verify const is listed now
@@ -468,3 +473,34 @@ class TestStdioAgent(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual(0, rpt.items[0].value.size)
+
+    def test_acl(self):
+        self._start()
+
+        # Initial default state
+        self._send_execset(
+            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/group-list),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/access-list))')
+        rptset = self._wait_rptset().value
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 3), rpt.items[0].value.shape)
+
+        rptset = self._wait_rptset().value
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 4), rpt.items[0].value.shape)
+
+        # Add a constant
+        self._send_execset(
+            'ari:/EXECSET/n=123;(/ac/(//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example),//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/TYPEDEF/endpoint-pattern))))')
+        rptset = self._wait_rptset().value
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example)'), rpt.source)
+        self.assertNotIn(ari.UNDEFINED, rpt.items)

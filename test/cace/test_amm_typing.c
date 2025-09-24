@@ -143,9 +143,9 @@ void test_amm_type_get_name(cace_ari_type_t type)
     TEST_ASSERT_TRUE(cace_amm_type_get_name(typeobj, &name));
 
     TEST_ASSERT_TRUE(cace_ari_is_lit_typed(&name, CACE_ARI_TYPE_ARITYPE));
-    const cace_data_t *data = cace_ari_cget_tstr(&name);
-    TEST_ASSERT_NOT_NULL(data);
-    TEST_PRINTF("got name %s", (const char *)(data->ptr));
+    const char *strptr = cace_ari_cget_tstr_cstr(&name);
+    TEST_ASSERT_NOT_NULL(strptr);
+    TEST_PRINTF("got name %s", strptr);
 }
 
 TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined

@@ -118,23 +118,16 @@ int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
 
     int retval = 0;
 
-    const char *dest_eid = NULL;
+    const char *dest_eid = cace_ari_cget_tstr_cstr(&meta->dest);
+    if (!dest_eid)
     {
-        const cace_data_t *dest_data = cace_ari_cget_tstr(&meta->dest);
-        if (dest_data)
-        {
-            dest_eid = (char *)(dest_data->ptr);
-        }
-        else
-        {
-            string_t buf;
-            string_init(buf);
-            cace_ari_text_encode(buf, &meta->dest, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_ERR("This transport can only send to text URI destinations, not %s", m_string_get_cstr(buf));
-            string_clear(buf);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, &meta->dest, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_ERR("This transport can only send to text URI destinations, not %s", m_string_get_cstr(buf));
+        string_clear(buf);
 
-            return 6;
-        }
+        return 6;
     }
 
     if (!dest_eid)
