@@ -302,16 +302,21 @@ struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari);
 
 /** Convenience setter.
  */
-static inline void cace_ari_set_objref_path_intid(cace_ari_t *ari, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
-                                                  cace_ari_type_t type_id, cace_ari_int_id_t obj_id)
+static inline cace_ari_ref_t *cace_ari_set_objref_path_intid(cace_ari_t *ari, cace_ari_int_id_t org_id,
+                                                             cace_ari_int_id_t model_id, cace_ari_type_t type_id,
+                                                             cace_ari_int_id_t obj_id)
 {
-    cace_ari_objpath_set_intid(&(cace_ari_set_objref(ari)->objpath), org_id, model_id, type_id, obj_id);
+    cace_ari_ref_t *ref = cace_ari_set_objref(ari);
+    cace_ari_objpath_set_intid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    return ref;
 }
 /// @overload
-static inline void cace_ari_set_objref_path_textid(cace_ari_t *ari, const char *org_id, const char *model_id,
-                                                   cace_ari_type_t type_id, const char *obj_id)
+static inline cace_ari_ref_t *cace_ari_set_objref_path_textid(cace_ari_t *ari, const char *org_id, const char *model_id,
+                                                              cace_ari_type_t type_id, const char *obj_id)
 {
-    cace_ari_objpath_set_textid(&(cace_ari_set_objref(ari)->objpath), org_id, model_id, type_id, obj_id);
+    cace_ari_ref_t *ref = cace_ari_set_objref(ari);
+    cace_ari_objpath_set_textid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    return ref;
 }
 
 #ifdef __cplusplus

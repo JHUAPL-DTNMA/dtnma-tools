@@ -146,16 +146,16 @@ int cace_amp_ion_bp_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
 
         int res = bp_send(state->sap,
                           // TODO fix ION API
-                          (char *)dest_eid,      // destination
-                          NULL,          // report-to
-                          lifetime_s,    // lifetime in seconds
-                          priority,      // Class-of-Service / Priority
-                          custodySwitch, // Custody Switch
-                          rrFlags,       // SRR Flags
-                          ackRequested,  // ACK Requested
-                          &ancData,      // ancillary data
-                          content,       // ADU
-                          NULL           // bundleObj
+                          (char *)dest_eid, // destination
+                          NULL,             // report-to
+                          lifetime_s,       // lifetime in seconds
+                          priority,         // Class-of-Service / Priority
+                          custodySwitch,    // Custody Switch
+                          rrFlags,          // SRR Flags
+                          ackRequested,     // ACK Requested
+                          &ancData,         // ancillary data
+                          content,          // ADU
+                          NULL              // bundleObj
         );
         if (res != 1)
         {

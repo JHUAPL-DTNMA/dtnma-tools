@@ -906,13 +906,13 @@ static void cace_amm_semtype_union_name(const cace_amm_type_t *self, cace_ari_t 
         cace_ari_deinit(&key);
 
         {
-            cace_ari_ac_t *name_ac = cace_ari_set_ac(&val, NULL);
+            cace_ari_ac_t *name_ac = cace_ari_set_ac(val, NULL);
 
             cace_amm_type_array_it_t it;
             for (cace_amm_type_array_it(it, semtype->choices); !cace_amm_type_array_end_p(it);
                  cace_amm_type_array_next(it))
             {
-                const cace_amm_type_t *choice   = cace_amm_type_array_ref(it);
+                const cace_amm_type_t *choice    = cace_amm_type_array_ref(it);
                 cace_ari_t            *name_item = cace_ari_list_push_back_new(name_ac->items);
                 cace_amm_type_get_name(choice, name_item);
             }

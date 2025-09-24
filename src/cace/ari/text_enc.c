@@ -429,7 +429,7 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
                     }
                 }
                 break;
-#if  0
+#if 0
             case CACE_ARI_TYPE_ARITYPE:
             {
                 // Pretty-print the ARI type

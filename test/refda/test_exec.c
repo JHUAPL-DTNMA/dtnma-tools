@@ -131,7 +131,8 @@ static void suite_adms_init(refda_agent_t *agent)
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit->items);
                     // ari://example/adm/CTRL/ctrl1
-                    cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 1);
+                    cace_ari_ref_t *ref =
+                        cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 1);
 
                     cace_ari_list_t params;
                     cace_ari_list_init(params);
@@ -144,7 +145,8 @@ static void suite_adms_init(refda_agent_t *agent)
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit->items);
                     // ari://example/adm/CTRL/ctrl2
-                    cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 2);
+                    cace_ari_ref_t *ref =
+                        cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_CTRL, 2);
 
                     cace_ari_list_t params;
                     cace_ari_list_init(params);

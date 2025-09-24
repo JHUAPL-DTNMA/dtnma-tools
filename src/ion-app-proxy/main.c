@@ -319,15 +319,15 @@ static void *bp_send_worker(void *ctx _U_)
 
                 int result = bp_send(ion_sap,
                                      (char *)dest_eid, // destination
-                                     NULL,              // report-to
-                                     lifetime_s,        // lifetime in seconds
-                                     priority,          // Class-of-Service / Priority
-                                     custodySwitch,     // Custody Switch
-                                     rrFlags,           // SRR Flags
-                                     ackRequested,      // ACK Requested
-                                     &ancData,          // ancillary data
-                                     bundleZco,         // ADU
-                                     NULL               // bundleObj
+                                     NULL,             // report-to
+                                     lifetime_s,       // lifetime in seconds
+                                     priority,         // Class-of-Service / Priority
+                                     custodySwitch,    // Custody Switch
+                                     rrFlags,          // SRR Flags
+                                     ackRequested,     // ACK Requested
+                                     &ancData,         // ancillary data
+                                     bundleZco,        // ADU
+                                     NULL              // bundleObj
                 );
                 if (result <= 0)
                 {
