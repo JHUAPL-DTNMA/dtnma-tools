@@ -198,6 +198,7 @@ static int builtin_bool_convert(const cace_amm_type_t *self, cace_ari_t *out, co
             case CACE_ARI_PRIM_OTHER:
                 switch (in->as_lit.ari_type)
                 {
+                    case CACE_ARI_TYPE_ARITYPE:
                     case CACE_ARI_TYPE_AC:
                     case CACE_ARI_TYPE_AM:
                     case CACE_ARI_TYPE_TBL:

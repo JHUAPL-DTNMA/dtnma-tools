@@ -498,9 +498,15 @@ class TestStdioAgent(unittest.TestCase):
 
         # Add a constant
         self._send_execset(
-            'ari:/EXECSET/n=123;(/ac/(//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example),//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/TYPEDEF/endpoint-pattern))))')
+            'ari:/EXECSET/n=123;(/ac/(//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example),//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/())))')
         rptset = self._wait_rptset().value
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example)'), rpt.source)
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        rptset = self._wait_rptset().value
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent-acl/CTRL/ensure-group-members(1,/ac/())'), rpt.source)
         self.assertNotIn(ari.UNDEFINED, rpt.items)
