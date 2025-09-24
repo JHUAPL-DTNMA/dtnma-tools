@@ -278,6 +278,7 @@ static int cace_amm_semtype_ulist_convert(const cace_amm_type_t *self, cace_ari_
 
     // always pass ownership to the output value
     cace_ari_set_ac(out, &outval);
+
     return retval;
 }
 
@@ -535,6 +536,7 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
 
     // always pass ownership to the output value
     cace_ari_set_ac(out, &outval);
+
     return retval;
 }
 

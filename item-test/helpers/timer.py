@@ -31,7 +31,7 @@ class Timer:
     :param timeout: The timeout in seconds.
     '''
 
-    def __init__(self, timeout:float):
+    def __init__(self, timeout: float):
         self._start = datetime.datetime.now(datetime.timezone.utc)
         self._timeout = self._start + datetime.timedelta(seconds=timeout)
 
@@ -68,14 +68,7 @@ class Timer:
         if self._timeout is None:
             return False
         now = datetime.datetime.now(datetime.timezone.utc)
-        return now < self._timeout
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._timeout is None:
-            return
-        now = datetime.datetime.now(datetime.timezone.utc)
         if now > self._timeout:
             raise TimeoutError('Timer did not finish before timeout')
+        return now < self._timeout
+
