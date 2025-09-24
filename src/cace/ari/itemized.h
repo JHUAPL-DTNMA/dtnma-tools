@@ -15,6 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup ari
+ * This file contains the definitions, prototypes, constants necessary
+ * to store and lookup an itemized set of ARIs.
+ * See ::cace_ari_itemized_t.
+ */
 #ifndef CACE_ARI_ITEMIZED_H_
 #define CACE_ARI_ITEMIZED_H_
 
@@ -31,7 +37,9 @@ extern "C" {
  * Dictionary from case-sensitive name to external ARI pointer
  */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_DICT_DEF2(cace_named_ari_ptr_dict, const char *, M_CSTR_OPLIST, cace_ari_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /** A itemized (indexed and named) set of ARIs.

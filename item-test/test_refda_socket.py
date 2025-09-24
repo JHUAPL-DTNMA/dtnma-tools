@@ -286,8 +286,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._start()
 
         self._send_msg(
-            [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(/AC/(//ietf/dtnma-agent/CTRL/wait-for(/TD/PT1.5S),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)))')]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(/AC/('
+                                   + '//ietf/dtnma-agent/CTRL/wait-for(/TD/PT1.5S),'
+                                   + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)))')]
         )
 
         msg_vals = self._wait_msg(mgr_ix=0, timeout=3)
@@ -309,11 +310,117 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(ari.LiteralARI(123), rptset.nonce)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
         # items of the report
         self.assertEqual([ari.LiteralARI('0.0.0')], rpt.items)
+
+    def test_exec_macro_success(self):
+        self._start()
+
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(/ac/('
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'
+                + '))'
+            )]
+        )
+
+        msg_vals = self._wait_msg(mgr_ix=0)
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        msg_vals = self._wait_msg(mgr_ix=0)
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'), rpt.source)
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        # no other RPTSET
+        with self.assertRaises(TimeoutError):
+            self._wait_msg(mgr_ix=0, timeout=0.1)
+
+    def test_exec_macro_failure_expand(self):
+        self._start()
+
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(/ac/('
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),'
+                + '//ietf/dtnma-agent/CTRL/inspect(false),'  # invalid parameter
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'
+                + '))',
+                nn=False
+            )]
+        )
+
+        msg_vals = self._wait_msg(mgr_ix=0)
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(false)'), rpt.source)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
+
+        # no other RPTSET
+        with self.assertRaises(TimeoutError):
+            self._wait_msg(mgr_ix=0, timeout=0.1)
+
+    def test_exec_macro_failure_exec(self):
+        self._start()
+
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(/ac/('
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//!private/!odm/EDD/missing),'  # invalid target
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'
+                + '))',
+                nn=False
+            )]
+        )
+
+        msg_vals = self._wait_msg(mgr_ix=0)
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        msg_vals = self._wait_msg(mgr_ix=0)
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
+        self.assertIsInstance(rptset, ari.ReportSet)
+        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
+        self.assertEqual(1, len(rptset.reports))
+        rpt = rptset.reports[0]
+        self.assertIsInstance(rpt, ari.Report)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//!private/!odm/EDD/missing)', nn=False), rpt.source)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
+
+        # no other RPTSET
+        with self.assertRaises(TimeoutError):
+            self._wait_msg(mgr_ix=0, timeout=0.1)
 
     def test_odm(self):
         self._start()
@@ -328,7 +435,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm(ietf, 1, !test-model-1, -1)'), rpt.source)
         # items of the report
@@ -347,7 +453,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/odm-list)'), rpt.source)
         # items of the report
@@ -364,7 +469,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj(
             '//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false)', False), rpt.source)
@@ -381,7 +485,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj(
             '//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false)', False), rpt.source)
@@ -398,7 +501,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj(
             '//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/AC/(false),/TD/999999,1,false)', False), rpt.source)
@@ -414,7 +516,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sbr-list(false))'), rpt.source)
         # items of the report
@@ -430,7 +531,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
         # items of the report
@@ -446,7 +546,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true)', False), rpt.source)
         # items of the report
@@ -461,7 +560,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/reset-rule-enabled(//ietf/!test-model-1/TBR/test-tbr)', False), rpt.source)
         # items of the report
@@ -476,7 +574,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/obsolete-rule(//ietf/!test-model-1/TBR/test-tbr2)', False), rpt.source)
         # items of the report
@@ -491,7 +588,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rptset, ari.ReportSet)
         self.assertEqual(1, len(rptset.reports))
         rpt = rptset.reports[0]
-        LOGGER.info('Got rpt %s', rpt)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
         # items of the report
