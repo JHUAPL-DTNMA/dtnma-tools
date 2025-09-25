@@ -191,7 +191,16 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
         cace_ari_set_uint(cace_ari_array_get(row, 0), grp->id);
         cace_ari_set_tstr(cace_ari_array_get(row, 1), m_string_get_cstr(grp->name), true);
         {
-            cace_ari_array_get(row, 2); // FIXME populate
+            cace_ari_ac_t *memb_ac = cace_ari_set_ac(cace_ari_array_get(row, 2), NULL);
+
+            refda_amm_ident_base_list_it_t memb_it;
+            for (refda_amm_ident_base_list_it(memb_it, grp->member_pats); !refda_amm_ident_base_list_end_p(memb_it);
+                 refda_amm_ident_base_list_next(memb_it))
+            {
+                const refda_amm_ident_base_t *memb = refda_amm_ident_base_list_cref(memb_it);
+
+                cace_ari_list_push_back(memb_ac->items, memb->name);
+            }
         }
 
         // append the row
@@ -275,11 +284,11 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group(refda_ctrl_exec_ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group BODY
      * +-------------------------------------------------------------------------+
      */
-    const cace_ari_t *p_id   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *p_gid  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *p_name = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
 
     cace_ari_uint gid;
-    if (cace_ari_get_uint(p_id, &gid) || (gid == 0))
+    if (cace_ari_get_uint(p_gid, &gid) || (gid == 0))
     {
         CACE_LOG_ERR("Invalid group ID");
         return;
@@ -370,7 +379,60 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group_members(refda_ctrl_
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group_members BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_ctrl_exec_ctx_set_result_null(ctx);
+    const cace_ari_t *p_gid  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *p_memb = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+
+    cace_ari_uint gid;
+    if (cace_ari_get_uint(p_gid, &gid) || (gid == 0))
+    {
+        CACE_LOG_ERR("Invalid group ID");
+        return;
+    }
+    const cace_ari_ac_t *memb_ac = cace_ari_cget_ac(p_memb);
+    if (!memb_ac)
+    {
+        CACE_LOG_ERR("Invalid members parameter");
+        return;
+    }
+
+    bool success = false;
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    AGENT_ACL_LOCK(agent)
+
+    refda_acl_group_t *found_id = NULL;
+
+    refda_acl_group_list_it_t grp_it;
+    for (refda_acl_group_list_it(grp_it, agent->acl.groups); !refda_acl_group_list_end_p(grp_it);
+         refda_acl_group_list_next(grp_it))
+    {
+        refda_acl_group_t *grp = refda_acl_group_list_ref(grp_it);
+        if (grp->id == gid)
+        {
+            found_id = grp;
+            break;
+        }
+    }
+    if (found_id)
+    {
+        // exact copy
+        refda_amm_ident_base_list_reset(found_id->member_pats);
+
+        cace_ari_list_it_t memb_it;
+        for (cace_ari_list_it(memb_it, memb_ac->items); !cace_ari_list_end_p(memb_it); cace_ari_list_next(memb_it))
+        {
+            const cace_ari_t *memb_ref = cace_ari_list_cref(memb_it);
+
+            refda_amm_ident_base_t *memb_pat = refda_amm_ident_base_list_push_new(found_id->member_pats);
+            cace_ari_set_copy(&memb_pat->name, memb_ref);
+
+            // FIXME: lookup the name
+        }
+
+        refda_ctrl_exec_ctx_set_result_null(ctx);
+    }
+
+    AGENT_ACL_UNLOCK(agent)
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group_members BODY

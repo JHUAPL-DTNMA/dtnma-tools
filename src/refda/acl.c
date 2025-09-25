@@ -23,11 +23,13 @@ void refda_acl_group_init(refda_acl_group_t *obj)
     CHKVOID(obj);
     obj->id = 0;
     m_string_init(obj->name);
+    refda_amm_ident_base_list_init(obj->member_pats);
 }
 
 void refda_acl_group_deinit(refda_acl_group_t *obj)
 {
     CHKVOID(obj);
+    refda_amm_ident_base_list_clear(obj->member_pats);
     m_string_clear(obj->name);
     obj->id = 0;
 }

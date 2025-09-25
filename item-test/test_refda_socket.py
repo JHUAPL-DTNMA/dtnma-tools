@@ -19,13 +19,14 @@
 '''
 import io
 import logging
+import numpy
 import os
 import signal
 import socket
 import subprocess
 import tempfile
 from typing import List, Optional, Set
-from urllib.parse import quote
+import urllib.parse
 import unittest
 import cbor2
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
@@ -38,6 +39,11 @@ LOGGER = logging.getLogger(__name__)
 ADMS = AdmSet(cache_dir=False)
 logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
 ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
+
+
+def quote(text: str)->str:
+    ''' URL-encode all non-unreserved characters. '''
+    return urllib.parse.quote(text, safe="")
 
 
 class TestRefdaSocket(unittest.TestCase):
@@ -254,10 +260,10 @@ class TestRefdaSocket(unittest.TestCase):
     def test_exec_report_on_valid(self):
         self._start()
 
-        mgr_eid = quote('file:' + self._mgr_bind[0]['path'], safe="")
+        mgr_eid = quote('"file:' + self._mgr_bind[0]['path'] + '"')
 
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,%22' + mgr_eid + '%22))')]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,' + mgr_eid + '))')]
         )
 
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.NULL)
@@ -272,7 +278,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts[0]
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on(//ietf/dtnma-agent/CONST/hello,%22' + mgr_eid + '%22)'), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on(//ietf/dtnma-agent/CONST/hello,' + mgr_eid + ')'), rpt.source)
         self.assertEqual([ari.NULL], rpt.items)
 
     def test_exec_report_on_no_destination(self):
@@ -404,6 +410,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 3), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         pid_col = rpt.items[0].value[:, 0]
         self.assertEqual([ari.uvast(1)], pid_col)
 
@@ -422,6 +429,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((2, 3), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         pid_col = rpt.items[0].value[:, 0]
         self.assertEqual([ari.uvast(2), ari.uvast(3)], pid_col)
 
@@ -505,6 +513,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 7), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false)))')]
@@ -517,6 +526,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((2, 7), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true))', False)]
@@ -559,6 +569,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 7), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         self.assertEqual(False, rpt.items[0].value[0, 5].value)  # Confirm rule is disabled
 
     def test_edd_counters(self):
@@ -626,6 +637,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((0, 2), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         # Add a variable
         self._send_msg(
@@ -645,6 +657,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 2), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         # Obsolete the VAR
         self._send_msg(
@@ -663,6 +676,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((0, 2), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         # Verify list of constants is empty
         self._send_msg(
@@ -674,6 +688,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((0, 2), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         # Add a constant
         self._send_msg(
@@ -693,6 +708,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 2), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         # Obsolete the CONST
         self._send_msg(
@@ -711,6 +727,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((0, 2), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
     def test_acl(self):
         self._start()
@@ -720,7 +737,8 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;('
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/group-list),'
-                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/access-list))'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'
+                + ')'
             )]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
@@ -731,19 +749,22 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((0, 3), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         rpt = rpts[1]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((0, 4), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
-        # Add a constant
+        # Add a group with catch-all
+        pat = quote('"file:.*"')
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(/ac/('
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example),'
-                + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/()),'
+                + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/ident/uri-regexp-pattern(' + pat + '))),'
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'
                 + '))'
             )]
@@ -756,7 +777,10 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
         rpt = rpts[1]
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent-acl/CTRL/ensure-group-members(1,/ac/())'), rpt.source)
+        self.assertEqual(
+            self._ari_text_to_obj('//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/ident/uri-regexp-pattern(' + pat + ')))'),
+            rpt.source
+        )
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
         rpt = rpts[2]
@@ -764,5 +788,5 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 3), rpt.items[0].value.shape)
-        gid_name = rpt.items[0].value[0, 0:2]
-        self.assertEqual([ari.LiteralARI(1, ari.StructType.UINT), ari.LiteralARI("example")], gid_name)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
+        self.assertEqual([ari.uint(1), ari.LiteralARI("example")], rpt.items[0].value[0, 0:2])

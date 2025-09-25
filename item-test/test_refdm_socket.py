@@ -29,7 +29,7 @@ import socket
 import subprocess
 import tempfile
 from typing import List, Set
-from urllib.parse import quote
+import urllib.parse
 import unittest
 import cbor2
 import requests
@@ -45,6 +45,10 @@ ADMS = AdmSet(cache_dir=False)
 logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
 ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
 
+
+def quote(text: str)->str:
+    ''' URL-encode all non-unreserved characters. '''
+    return urllib.parse.quote(text, safe="")
 
 def split_content_type(text):
     if ';' in text:
@@ -528,7 +532,7 @@ class TestRefdmSocket(unittest.TestCase):
             [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
         )
         agent_eid = 'file:' + sock_path
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         LOGGER.info('Waiting for agent %s', agent_eid)
         timer = Timer(5)
@@ -575,7 +579,7 @@ class TestRefdmSocket(unittest.TestCase):
         sock_path = self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
         )
-        eid_seg = quote('file:' + sock_path, safe="")
+        eid_seg = quote('file:' + sock_path)
         rptset_count = 3
 
         self._wait_for_db_table('ari_rptset', rptset_count)
@@ -615,7 +619,7 @@ class TestRefdmSocket(unittest.TestCase):
         sock_path = self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
         )
-        eid_seg0 = quote('file:' + sock_path, safe="")
+        eid_seg0 = quote('file:' + sock_path)
 
         sock_path = self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
