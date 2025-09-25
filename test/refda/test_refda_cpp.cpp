@@ -22,6 +22,9 @@
  */
 #include <refda/agent.h>
 #include <refda/adm/ietf_amm.h>
+#include <refda/adm/ietf_amm_base.h>
+#include <refda/adm/ietf_amm_semtype.h>
+#include <refda/adm/ietf_network_base.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
