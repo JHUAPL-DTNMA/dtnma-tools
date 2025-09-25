@@ -405,7 +405,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 3), rpt.items[0].value.shape)
         pid_col = rpt.items[0].value[:, 0]
-        self.assertEqual([ari.LiteralARI(1)], pid_col)
+        self.assertEqual([ari.uvast(1)], pid_col)
 
         self._send_msg(
             [self._ari_text_to_obj(
@@ -423,7 +423,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((2, 3), rpt.items[0].value.shape)
         pid_col = rpt.items[0].value[:, 0]
-        self.assertEqual([ari.LiteralARI(2), ari.LiteralARI(3)], pid_col)
+        self.assertEqual([ari.uvast(2), ari.uvast(3)], pid_col)
 
         # TODO fix this shutdown error
         import time
@@ -764,5 +764,5 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 3), rpt.items[0].value.shape)
-        gid_name_col = rpt.items[0].value[0, 0:2]
-        self.assertEqual([ari.LiteralARI(1), ari.LiteralARI("example")], gid_name_col)
+        gid_name = rpt.items[0].value[0, 0:2]
+        self.assertEqual([ari.LiteralARI(1, ari.StructType.UINT), ari.LiteralARI("example")], gid_name)
