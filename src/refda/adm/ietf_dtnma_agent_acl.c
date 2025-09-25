@@ -439,9 +439,9 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
             refda_amm_typedef_desc_init(objdata);
             // named semantic type:
             {
-                // use of ari:/ARITYPE/UVAST
+                // use of ari:/ARITYPE/UINT
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UVAST);
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
                 cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
             }
 
