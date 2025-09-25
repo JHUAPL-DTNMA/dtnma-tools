@@ -208,7 +208,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         args = compose_args([
             'refdm-socket',
-            '-l', 'debug',
+            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
             '-a', self._mgr_sock_path
         ])
         self._mgr = CmdRunner(args)

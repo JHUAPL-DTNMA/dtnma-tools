@@ -63,12 +63,16 @@ class TestCaceAri(unittest.TestCase):
 
     def _start(self, *cmd_args: Tuple[str]) -> CmdRunner:
         ''' Spawn the process. '''
-        args = compose_args(('cace_ari', '-ldebug') + cmd_args)
+        base_args = (
+            'cace_ari',
+            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
+        )
+        args = compose_args(base_args + cmd_args)
         self._runner = CmdRunner(args)
         self._runner.start()
         return self._runner
 
-    def _ari_obj_from_text(self, text:str) -> ARI:
+    def _ari_obj_from_text(self, text: str) -> ARI:
         nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=True)
 
         with io.StringIO(text) as buf:
@@ -76,12 +80,12 @@ class TestCaceAri(unittest.TestCase):
         ari = nn_func(ari)
         return ari
 
-    def _ari_obj_to_cbor(self, ari:ARI) -> bytes:
+    def _ari_obj_to_cbor(self, ari: ARI) -> bytes:
         buf = io.BytesIO()
         ari_cbor.Encoder().encode(ari, buf)
         return buf.getvalue()
 
-    def _ari_obj_from_cbor(self, databuf:bytes) -> ARI:
+    def _ari_obj_from_cbor(self, databuf: bytes) -> ARI:
         with io.BytesIO(databuf) as buf:
             ari = ari_cbor.Decoder().decode(buf)
         return ari

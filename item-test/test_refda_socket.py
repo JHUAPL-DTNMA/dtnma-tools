@@ -69,7 +69,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         args = compose_args([
             'refda-socket',
-            '-l', 'debug',
+            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
             '-a', self._agent_sock_path,
             '-m', self._mgr_bind[0]['path']
         ])
@@ -741,13 +741,15 @@ class TestRefdaSocket(unittest.TestCase):
         # Add a constant
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;('
-                + '/ac/(//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example),'
-                + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/())))'
+                'ari:/EXECSET/n=123;(/ac/('
+                + '//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example),'
+                + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/()),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'
+                + '))'
             )]
         )
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
-        self.assertEqual(2, len(rpts))
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=3)
+        self.assertEqual(3, len(rpts))
 
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example)'), rpt.source)
@@ -756,3 +758,11 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts[1]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent-acl/CTRL/ensure-group-members(1,/ac/())'), rpt.source)
         self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        rpt = rpts[2]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((1, 3), rpt.items[0].value.shape)
+        gid_col = rpt.items[0].value[:, 0]
+        self.assertEqual([ari.LiteralARI(1)], gid_col)
