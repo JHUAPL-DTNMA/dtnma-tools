@@ -298,8 +298,14 @@ int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const
             string_t buf;
             string_init(buf);
             cace_ari_text_encode(buf, src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("Generated a report for source %s with %d items", string_get_cstr(buf),
-                           cace_ari_list_size(rpt->items));
+
+            string_t mgr_buf;
+            string_init(mgr_buf);
+            cace_ari_text_encode(mgr_buf, &msg.ident, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+
+            CACE_LOG_DEBUG("Generated a report destined to %s from source %s with %d items", string_get_cstr(mgr_buf),
+                           string_get_cstr(buf), cace_ari_list_size(rpt->items));
+            string_clear(mgr_buf);
             string_clear(buf);
         }
     }
