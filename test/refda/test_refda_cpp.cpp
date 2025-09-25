@@ -64,6 +64,9 @@ int main(int argc _U_, char *argv[] _U_)
 
     // ADM initialization
     refda_adm_ietf_amm_init(&agent);
+    refda_adm_ietf_amm_base_init(&agent);
+    refda_adm_ietf_amm_semtype_init(&agent);
+    refda_adm_ietf_network_base_init(&agent);
     refda_adm_ietf_dtnma_agent_init(&agent);
 
     /* Start agent threads. */

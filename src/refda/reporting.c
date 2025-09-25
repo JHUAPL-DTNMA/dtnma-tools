@@ -304,7 +304,7 @@ int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const
             cace_ari_text_encode(mgr_buf, &msg.ident, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
             CACE_LOG_INFO("Generated a report destined to %s from source %s with %d items", string_get_cstr(mgr_buf),
-                           string_get_cstr(buf), cace_ari_list_size(rpt->items));
+                          string_get_cstr(buf), cace_ari_list_size(rpt->items));
             string_clear(mgr_buf);
             string_clear(buf);
         }

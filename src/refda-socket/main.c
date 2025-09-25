@@ -19,6 +19,7 @@
 #include "refda/adm/ietf_amm.h"
 #include "refda/adm/ietf_amm_base.h"
 #include "refda/adm/ietf_amm_semtype.h"
+#include "refda/adm/ietf_network_base.h"
 #include "refda/adm/ietf_dtnma_agent.h"
 #include "refda/adm/ietf_dtnma_agent_acl.h"
 #include <cace/amp/socket.h>
@@ -126,6 +127,7 @@ int main(int argc, char *argv[])
         refda_adm_ietf_amm_init(&agent);
         refda_adm_ietf_amm_base_init(&agent);
         refda_adm_ietf_amm_semtype_init(&agent);
+        refda_adm_ietf_network_base_init(&agent);
         refda_adm_ietf_dtnma_agent_init(&agent);
         refda_adm_ietf_dtnma_agent_acl_init(&agent);
 #if 0

@@ -95,6 +95,7 @@ cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const 
         }
     }
 
+    CACE_LOG_INFO("Adding namespace org-ID %s/%: %" PRId64 " model-ID %s/%" PRId64 " revision %s", org_id.name, org_id.intenum, model_id.name, model_id.intenum, revision);
     cace_amm_obj_ns_ptr_t **ns_ptr = cace_amm_obj_ns_list_push_back_new(store->ns_list);
     cace_amm_obj_ns_t      *ns     = cace_amm_obj_ns_ptr_ref(*ns_ptr);
 

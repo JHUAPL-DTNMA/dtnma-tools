@@ -78,7 +78,8 @@ static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace
                 string_t buf;
                 string_init(buf);
                 cace_ari_text_encode(buf, &(semtype->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_WARNING("Binding failed because object is not a TYPEDEF, referenced as %s", m_string_get_cstr(buf));
+                CACE_LOG_WARNING("Binding failed because object is not a TYPEDEF, referenced as %s",
+                                 m_string_get_cstr(buf));
                 string_clear(buf);
 
                 failcnt += 1;
@@ -266,7 +267,8 @@ static int refda_binding_ident_bases(refda_amm_ident_base_list_t bases, const ca
                 string_t buf;
                 string_init(buf);
                 cace_ari_text_encode(buf, &(base->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_WARNING("Binding failed because object is not an IDENT, referenced as %s", m_string_get_cstr(buf));
+                CACE_LOG_WARNING("Binding failed because object is not an IDENT, referenced as %s",
+                                 m_string_get_cstr(buf));
                 string_clear(buf);
 
                 failcnt += 1;
