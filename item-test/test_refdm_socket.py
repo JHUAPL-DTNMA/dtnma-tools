@@ -50,6 +50,7 @@ def quote(text: str)->str:
     ''' URL-encode all non-unreserved characters. '''
     return urllib.parse.quote(text, safe="")
 
+
 def split_content_type(text):
     if ';' in text:
         text = text.split(';', 2)[0]
@@ -625,7 +626,7 @@ class TestRefdmSocket(unittest.TestCase):
             [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
             agent_ix=1
         )
-        eid_seg1 = quote('file:' + sock_path, safe="")
+        eid_seg1 = quote('file:' + sock_path)
 
         self._wait_for_db_table('ari_rptset', 2)
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
@@ -656,7 +657,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         agent_bind = self._agent_bind[0]
         agent_eid = 'file:' + agent_bind["path"]
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         resp = self._req.post(
             self._base_url + 'agents',
@@ -693,7 +694,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         agent_bind = self._agent_bind[0]
         agent_eid = 'file:' + agent_bind["path"]
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         resp = self._req.post(
             self._base_url + 'agents',
@@ -730,7 +731,7 @@ class TestRefdmSocket(unittest.TestCase):
 
         agent_bind = self._agent_bind[0]
         agent_eid = 'file:' + agent_bind["path"]
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         resp = self._req.post(
             self._base_url + 'agents',
