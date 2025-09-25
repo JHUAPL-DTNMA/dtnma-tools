@@ -69,7 +69,7 @@ typedef struct refda_agent_s
 
     /// Access control list
     refda_acl_t acl;
-    /// Mutext for the state of #acl
+    /// Mutex for the state of #acl
     pthread_mutex_t acl_mutex;
 
     /// Text string ownership for ODM (runtime-defined) text names
