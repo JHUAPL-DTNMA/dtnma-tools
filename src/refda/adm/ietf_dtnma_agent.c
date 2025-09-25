@@ -1790,17 +1790,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 
     REFDA_AGENT_UNLOCK(agent, );
 
-    if (cace_log_is_enabled_for(LOG_DEBUG))
+    if (res)
     {
         string_t buf;
         string_init(buf);
-        cace_ari_text_encode_objpath(buf, &(ref->as_ref.objpath), CACE_ARI_TEXT_ARITYPE_TEXT);
-        CACE_LOG_DEBUG("Lookup reference to %s", string_get_cstr(buf));
+        cace_ari_text_encode(buf, ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
         string_clear(buf);
-    }
-    if (res)
-    {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
     }
     else
     {
@@ -2052,7 +2048,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else
     {
@@ -2113,7 +2113,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else
     {
@@ -2291,7 +2295,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else if (!cace_amm_obj_ns_is_odm(deref.ns))
     {
@@ -2467,7 +2475,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else if (!cace_amm_obj_ns_is_odm(deref.ns))
     {
@@ -2965,7 +2977,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else if (deref.obj_type == CACE_ARI_TYPE_SBR)
     {
@@ -3051,7 +3067,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else if (deref.obj_type == CACE_ARI_TYPE_SBR)
     {
@@ -3137,7 +3157,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else if (!cace_amm_obj_ns_is_odm(deref.ns))
     {
