@@ -42,6 +42,7 @@ ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
 
 class TestRefdaSocket(unittest.TestCase):
     ''' Verify whole-agent behavior with the refda-socket '''
+    maxDiff = None
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -302,7 +303,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(2, len(rpts))
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/wait-for(/TD/PT1.5S)'), rpt.source)
-        self.assertEqual([ari.LiteralARI(None)], rpt.items)
+        self.assertEqual([ari.NULL], rpt.items)
 
         rpt = rpts[1]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
@@ -400,6 +401,33 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((1, 3), rpt.items[0].value.shape)
+        pid_col = rpt.items[0].value[:, 0]
+        self.assertEqual([ari.LiteralARI(1)], pid_col)
+
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;('
+                + '//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/edd/exec-running),'
+                + '//ietf/dtnma-agent/CTRL/wait-for(/TD/PT0.1S)'  # do nothing, but add to table
+                + ')'
+            )]
+        )
+
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((2, 3), rpt.items[0].value.shape)
+        pid_col = rpt.items[0].value[:, 0]
+        self.assertEqual([ari.LiteralARI(2), ari.LiteralARI(3)], pid_col)
+
+        # TODO fix this shutdown error
+        import time
+        time.sleep(1)
 
     def test_odm(self):
         self._start()
@@ -413,7 +441,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm(ietf, 1, !test-model-1, -1)'), rpt.source)
         # items of the report
-        self.assertEqual([ari.LiteralARI(None)], rpt.items)
+        self.assertEqual([ari.NULL], rpt.items)
 
         # FIXME: Add following test
         # ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//example/!test-model-1))
@@ -531,7 +559,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 7), rpt.items[0].value.shape)
-        self.assertEqual(False, rpt.items[0].value[0][5].value)  # Confirm rule is disabled
+        self.assertEqual(False, rpt.items[0].value[0, 5].value)  # Confirm rule is disabled
 
     def test_edd_counters(self):
         self._start()

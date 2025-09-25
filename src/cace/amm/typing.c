@@ -387,7 +387,7 @@ static int builtin_byte_convert(const cace_amm_type_t *self, cace_ari_t *out, co
         {
             return CACE_AMM_ERR_CONVERT_BADVALUE;
         }
-        BUILTIN_ANYINT_EXTRACT(cace_ari_byte, cace_ari_set_int);
+        BUILTIN_ANYINT_EXTRACT(cace_ari_byte, cace_ari_set_byte);
         return 0;
     }
 }

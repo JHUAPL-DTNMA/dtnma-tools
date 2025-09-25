@@ -1011,7 +1011,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
             {
                 state = REFDA_EXEC_RUNNING;
             }
-            cace_ari_set_int(cace_ari_array_get(row, 2), state);
+            cace_ari_set_byte(cace_ari_array_get(row, 2), state);
         }
 
         // append the row
