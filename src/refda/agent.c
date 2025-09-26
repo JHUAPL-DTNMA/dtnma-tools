@@ -24,7 +24,9 @@
 #include "adm/ietf.h"
 #include "adm/ietf_amm_base.h"
 #include "adm/ietf_dtnma_agent.h"
+#include "adm/ietf_dtnma_agent_acl.h"
 #include "binding.h"
+#include "cace/ari/text.h"
 #include "cace/amm/lookup.h"
 #include "cace/util/threadset.h"
 #include "cace/util/logging.h"
@@ -105,6 +107,37 @@ int refda_agent_nowtime(refda_agent_t *agent _U_, cace_ari_t *val)
     return 0;
 }
 
+refda_amm_ident_desc_t *refda_agent_get_ident(refda_agent_t *agent, cace_ari_int_id_t org_id,
+                                              cace_ari_int_id_t model_id, cace_ari_int_id_t obj_id)
+{
+    refda_amm_ident_desc_t *found = NULL;
+
+    cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_objref_path_intid(&ref, org_id, model_id, CACE_ARI_TYPE_TYPEDEF, obj_id);
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), &ref);
+    if (res)
+    {
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, &ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
+    }
+    else
+    {
+        found = deref.obj->app_data.ptr;
+    }
+
+    cace_amm_lookup_deinit(&deref);
+    cace_ari_deinit(&ref);
+
+    return found;
+}
+
 cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
                                          cace_ari_int_id_t obj_id)
 {
@@ -116,7 +149,16 @@ cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
 
-    if (!cace_amm_lookup_deref(&deref, &(agent->objs), &ref))
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), &ref);
+    if (res)
+    {
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, &ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
+    }
+    else
     {
         refda_amm_typedef_desc_t *typedesc = deref.obj->app_data.ptr;
         if (typedesc)
@@ -153,6 +195,13 @@ int refda_agent_bindrefs(refda_agent_t *agent)
     agent->rptt_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_BASE_ENUM_ADM,
                                                REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_RPTT);
     if (!agent->rptt_type)
+    {
+        ++failcnt;
+    }
+
+    agent->acl.perm_base = refda_agent_get_ident(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM,
+                                                 REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PERMISSION);
+    if (!agent->acl.perm_base)
     {
         ++failcnt;
     }
@@ -355,6 +404,7 @@ int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
                                    REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
 
     // dummy message source
+    // FIXME: is this needed? reporting should be allowed a destination separate from this identity
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
     cace_ari_set_tstr(&msg.ident, dest, true);
@@ -371,6 +421,9 @@ int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
 
     if (!retval)
     {
+        // always run as agent group
+        refda_acl_id_tree_push(runctx.acl_groups, 0);
+
         res = refda_reporting_target(&runctx, &ref);
         if (res)
         {

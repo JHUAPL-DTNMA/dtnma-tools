@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "acl.h"
+#include "cace/util/logging.h"
 #include "cace/util/defs.h"
 
 void refda_acl_group_init(refda_acl_group_t *obj)
@@ -56,12 +57,49 @@ void refda_acl_init(refda_acl_t *obj)
     obj->perm_base = NULL;
     refda_acl_group_list_init(obj->groups);
     refda_acl_access_list_init(obj->access);
+    refda_acl_access_by_group_init(obj->access_by_group);
 }
 
 void refda_acl_deinit(refda_acl_t *obj)
 {
     CHKVOID(obj);
+    refda_acl_access_by_group_clear(obj->access_by_group);
     refda_acl_access_list_clear(obj->access);
     refda_acl_group_list_clear(obj->groups);
     obj->perm_base = NULL;
+}
+
+int refda_acl_search_endpoint(const refda_acl_t *obj, const cace_ari_t *endpoint, refda_acl_id_tree_t groups)
+{
+    CHKERR1(obj);
+    CHKERR1(endpoint);
+    CACE_LOG_INFO("searching groups");
+
+    refda_acl_id_tree_reset(groups);
+
+    refda_acl_group_list_it_t grp_it;
+    for (refda_acl_group_list_it(grp_it, obj->groups); !refda_acl_group_list_end_p(grp_it);
+         refda_acl_group_list_next(grp_it))
+    {
+        const refda_acl_group_t *grp = refda_acl_group_list_cref(grp_it);
+
+        refda_amm_ident_base_list_it_t pat_it;
+        for (refda_amm_ident_base_list_it(pat_it, grp->member_pats); !refda_amm_ident_base_list_end_p(pat_it);
+             refda_amm_ident_base_list_next(pat_it))
+        {
+            const refda_amm_ident_base_t *pat = refda_amm_ident_base_list_cref(pat_it);
+
+            // TODO match pattern in actual parameter
+            const cace_ari_ref_t *ref = cace_ari_cget_ref(&pat->name);
+            if (!ref)
+            {
+                continue;
+            }
+            //ref->params
+
+            refda_acl_id_tree_push(groups, grp->id);
+        }
+    }
+
+    return 2;
 }

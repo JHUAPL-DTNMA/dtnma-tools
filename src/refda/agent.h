@@ -143,6 +143,19 @@ void refda_agent_deinit(refda_agent_t *agent);
  */
 int refda_agent_nowtime(refda_agent_t *agent, cace_ari_t *val);
 
+/** Lookup a specific known IDENT by reference.
+ *
+ * @pre The agent object store must already be locked.
+ *
+ * @param[in] agent The agent to search within.
+ * @param org_id The namespace organization enumeration.
+ * @param model_id The namespace model enumeration.
+ * @param obj_id The object enumeration.
+ * @return The object descriptor or NULL if not found.
+ */
+refda_amm_ident_desc_t *refda_agent_get_ident(refda_agent_t *agent, cace_ari_int_id_t org_id,
+                                              cace_ari_int_id_t model_id, cace_ari_int_id_t obj_id);
+
 /** Lookup a specific known TYPEDEF by reference.
  *
  * @pre The agent object store must already be locked.
@@ -151,6 +164,7 @@ int refda_agent_nowtime(refda_agent_t *agent, cace_ari_t *val);
  * @param org_id The namespace organization enumeration.
  * @param model_id The namespace model enumeration.
  * @param obj_id The object enumeration.
+ * @return The typing object or NULL if not found.
  */
 cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
                                          cace_ari_int_id_t obj_id);

@@ -53,6 +53,29 @@
         return;                                      \
     }
 
+static void acl_remove_access(refda_acl_t *acl, refda_acl_access_t *access)
+{
+    // TODO can simplify if existing index is valid for groups
+    refda_acl_access_by_group_it_t pair_it;
+    for (refda_acl_access_by_group_it(pair_it, acl->access_by_group); !refda_acl_access_by_group_end_p(pair_it);
+         refda_acl_access_by_group_next(pair_it))
+    {
+        refda_acl_access_by_group_subtype_ct *pair = refda_acl_access_by_group_ref(pair_it);
+        // will remove only if present
+        refda_acl_access_ptr_set_pop_at(NULL, *pair->value_ptr, access);
+    }
+}
+static void acl_add_access(refda_acl_t *acl, refda_acl_access_t *access)
+{
+    refda_acl_id_tree_it_t grp_it;
+    for (refda_acl_id_tree_it(grp_it, access->groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
+    {
+        const refda_acl_id_tree_subtype_ct *grp = refda_acl_id_tree_cref(grp_it);
+
+        refda_acl_access_ptr_set_t *set = refda_acl_access_by_group_safe_get(acl->access_by_group, *grp);
+        refda_acl_access_ptr_set_push(*set, access);
+    }
+}
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
 /* Name: access-list
@@ -123,28 +146,37 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
      */
 }
 
-/* Name: current-group-id
+/* Name: current-groups
  * Description:
- *   Get the group ID for the current execution context, which may be the
- *   implicit Agent group ID zero.
+ *   Get the group IDs for the current execution context, which may incude
+ *   the implicit Agent group ID zero.
  *
  * Parameters: none
  *
- * Produced type: use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
+ * Produced type: ulist of use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
  */
-static void refda_adm_ietf_dtnma_agent_acl_edd_current_group_id(refda_edd_prod_ctx_t *ctx)
+static void refda_adm_ietf_dtnma_agent_acl_edd_current_groups(refda_edd_prod_ctx_t *ctx)
 {
     /*
      * +-------------------------------------------------------------------------+
-     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_current_group_id BODY
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_current_groups BODY
      * +-------------------------------------------------------------------------+
      */
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_uint(&result, ctx->prodctx->parent->acl_group_id);
+    cace_ari_ac_t *grp_ac = cace_ari_set_ac(&result, NULL);
+
+    refda_acl_id_tree_it_t grp_it;
+    for (refda_acl_id_tree_it(grp_it, ctx->prodctx->parent->acl_groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
+    {
+        const refda_acl_id_t *grp = refda_acl_id_tree_cref(grp_it);
+
+        cace_ari_set_uint(cace_ari_list_push_back_new(grp_ac->items), *grp);
+    }
+
     refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
-     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_current_group_id BODY
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_current_groups BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -258,7 +290,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
     refda_agent_t *agent = ctx->runctx->agent;
     AGENT_ACL_LOCK(agent)
 
-    refda_acl_access_t *found_id = NULL;
+    refda_acl_access_t *found = NULL;
 
     refda_acl_access_list_it_t acc_it;
     for (refda_acl_access_list_it(acc_it, agent->acl.access); !refda_acl_access_list_end_p(acc_it);
@@ -268,21 +300,23 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
 
         if (acc->id == aid)
         {
-            found_id = acc;
+            found = acc;
             break;
         }
     }
 
-    if (found_id)
+    if (found)
     {}
     else
     {
         // new item
-        found_id     = refda_acl_access_list_push_back_new(agent->acl.access);
-        found_id->id = aid;
+        found     = refda_acl_access_list_push_back_new(agent->acl.access);
+        found->id = aid;
     }
 
-    refda_acl_id_tree_reset(found_id->groups);
+    acl_remove_access(&agent->acl, found);
+    refda_acl_id_tree_reset(found->groups);
+
     cace_ari_list_it_t gid_it;
     for (cace_ari_list_it(gid_it, gid_ac->items); !cace_ari_list_end_p(gid_it); cace_ari_list_next(gid_it))
     {
@@ -294,16 +328,17 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
             continue;
         }
 
-        refda_acl_id_tree_push(found_id->groups, gid);
+        refda_acl_id_tree_push(found->groups, gid);
     }
+    acl_add_access(&agent->acl, found);
 
-    refda_amm_ident_base_list_reset(found_id->permissions);
+    refda_amm_ident_base_list_reset(found->permissions);
     cace_ari_list_it_t perm_it;
     for (cace_ari_list_it(perm_it, perms_ac->items); !cace_ari_list_end_p(perm_it); cace_ari_list_next(perm_it))
     {
         const cace_ari_t *perm_ref = cace_ari_list_cref(perm_it);
 
-        refda_amm_ident_base_t *perm = refda_amm_ident_base_list_push_new(found_id->permissions);
+        refda_amm_ident_base_t *perm = refda_amm_ident_base_list_push_new(found->permissions);
         refda_amm_ident_base_populate(perm, perm_ref, &agent->objs);
     }
 
@@ -345,25 +380,30 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_discard_access(refda_ctrl_exec_c
     refda_agent_t *agent = ctx->runctx->agent;
     AGENT_ACL_LOCK(agent)
 
+    refda_acl_access_t        *found = NULL;
     refda_acl_access_list_it_t found_it;
-    refda_acl_access_list_it_end(found_it, agent->acl.access);
-
-    refda_acl_access_list_it_t acc_it;
-    for (refda_acl_access_list_it(acc_it, agent->acl.access); !refda_acl_access_list_end_p(acc_it);
-         refda_acl_access_list_next(acc_it))
     {
-        refda_acl_access_t *acc = refda_acl_access_list_ref(acc_it);
-
-        if (acc->id == aid)
+        refda_acl_access_list_it_t acc_it;
+        for (refda_acl_access_list_it(acc_it, agent->acl.access); !refda_acl_access_list_end_p(acc_it);
+             refda_acl_access_list_next(acc_it))
         {
-            refda_acl_access_list_it_set(found_it, acc_it);
-            break;
+            refda_acl_access_t *acc = refda_acl_access_list_ref(acc_it);
+
+            if (acc->id == aid)
+            {
+                found = acc;
+                refda_acl_access_list_it_set(found_it, acc_it);
+                break;
+            }
         }
     }
 
-    if (!refda_acl_access_list_end_p(found_it))
+    if (found)
     {
-        refda_acl_access_list_remove(agent->acl.access, acc_it);
+        // remove references to this
+        acl_remove_access(&agent->acl, found);
+
+        refda_acl_access_list_remove(agent->acl.access, found_it);
     }
     refda_ctrl_exec_ctx_set_result_null(ctx);
 
@@ -504,8 +544,6 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group_members(refda_ctrl_
         return;
     }
 
-    bool success = false;
-
     refda_agent_t *agent = ctx->runctx->agent;
     AGENT_ACL_LOCK(agent)
 
@@ -594,6 +632,9 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_discard_group(refda_ctrl_exec_ct
     if (!refda_acl_group_list_end_p(found_it))
     {
         refda_acl_group_list_remove(agent->acl.groups, grp_it);
+
+        // This group is no more
+        refda_acl_access_by_group_erase(agent->acl.access_by_group, gid);
     }
     refda_ctrl_exec_ctx_set_result_null(ctx);
 
@@ -911,24 +952,28 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./EDD/current-group-id
+        { // For ./EDD/current-groups
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
-                cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 2);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
+                // uniform list
+                cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(objdata->prod_type));
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
+                    cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
+                }
             }
             // callback:
-            objdata->produce = refda_adm_ietf_dtnma_agent_acl_edd_current_group_id;
+            objdata->produce = refda_adm_ietf_dtnma_agent_acl_edd_current_groups;
 
-            obj = refda_register_edd(
-                adm,
-                cace_amm_idseg_ref_withenum("current-group-id",
-                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_EDD_CURRENT_GROUP_ID),
-                objdata);
+            obj =
+                refda_register_edd(adm,
+                                   cace_amm_idseg_ref_withenum(
+                                       "current-groups", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_EDD_CURRENT_GROUPS),
+                                   objdata);
             // no parameters
         }
         { // For ./EDD/group-list

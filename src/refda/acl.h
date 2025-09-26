@@ -22,6 +22,7 @@
 #include "cace/ari/base.h"
 #include <m-deque.h>
 #include <m-rbtree.h>
+#include <m-bptree.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -90,8 +91,16 @@ void refda_acl_access_deinit(refda_acl_access_t *obj);
 /** @struct refda_acl_access_list_t
  * An ordered list of ::refda_acl_access_t instances.
  */
+/** @struct refda_acl_access_by_group_t
+ * A multi-map from group ID to ::refda_acl_access_t pointers for fast lookup.
+ */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_DEQUE_DEF(refda_acl_access_list, refda_acl_access_t)
+M_RBTREE_DEF(refda_acl_access_ptr_set, refda_acl_access_t *, M_PTR_OPLIST)
+M_BPTREE_DEF2(refda_acl_access_by_group, 4, refda_acl_id_t, M_BASIC_OPLIST, refda_acl_access_ptr_set_t,
+              M_RBTREE_OPLIST(refda_acl_access_ptr_set, M_PTR_OPLIST))
+// GCOV_EXCL_STOP
 /// @endcond
 
 /** Storage of the agent ACL and its derived caches.
@@ -110,11 +119,18 @@ typedef struct
      */
     refda_acl_access_list_t access;
 
+    /** Lookup from group ID to accesses.
+     * This is kept in sync with #groups and #access
+     */
+    refda_acl_access_by_group_t access_by_group;
+
 } refda_acl_t;
 
 void refda_acl_init(refda_acl_t *obj);
 
 void refda_acl_deinit(refda_acl_t *obj);
+
+int refda_acl_search_endpoint(const refda_acl_t *obj, const cace_ari_t *endpoint, refda_acl_id_tree_t groups);
 
 #ifdef __cplusplus
 } // extern C
