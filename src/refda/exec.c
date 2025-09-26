@@ -71,7 +71,7 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
         string_init(buf);
         cace_ari_text_encode_objpath(buf, cace_ari_cget_ref_objpath(&item->ref), CACE_ARI_TEXT_ARITYPE_TEXT);
         CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " failed on %s (as %s), halting", item->seq->pid,
-                m_string_get_cstr(item->deref.obj->obj_id.name), m_string_get_cstr(buf));
+                         m_string_get_cstr(item->deref.obj->obj_id.name), m_string_get_cstr(buf));
         string_clear(buf);
 
         refda_exec_item_list_reset(item->seq->items);

@@ -753,7 +753,6 @@ const cace_ari_ref_t *cace_ari_cget_ref(const cace_ari_t *ari)
         return NULL;
     }
     return &ari->as_ref;
-
 }
 
 const cace_ari_objpath_t *cace_ari_cget_ref_objpath(const cace_ari_t *ari)
