@@ -278,7 +278,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
     else
     {
         // new item
-        found_id     = refda_acl_access_list_push_new(agent->acl.access);
+        found_id     = refda_acl_access_list_push_back_new(agent->acl.access);
         found_id->id = aid;
     }
 
@@ -334,6 +334,41 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_discard_access(refda_ctrl_exec_c
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_discard_access BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *p_aid   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    cace_ari_uint aid;
+    if (cace_ari_get_uint(p_aid, &aid))
+    {
+        CACE_LOG_ERR("Invalid access-id parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    AGENT_ACL_LOCK(agent)
+
+    refda_acl_access_list_it_t found_it;
+    refda_acl_access_list_it_end(found_it, agent->acl.access);
+
+    refda_acl_access_list_it_t acc_it;
+    for (refda_acl_access_list_it(acc_it, agent->acl.access); !refda_acl_access_list_end_p(acc_it);
+         refda_acl_access_list_next(acc_it))
+    {
+        refda_acl_access_t *acc = refda_acl_access_list_ref(acc_it);
+
+        if (acc->id == aid)
+        {
+            refda_acl_access_list_it_set(found_it, acc_it);
+            break;
+        }
+    }
+
+    if (!refda_acl_access_list_end_p(found_it))
+    {
+        refda_acl_access_list_remove(agent->acl.access, acc_it);
+    }
+    refda_ctrl_exec_ctx_set_result_null(ctx);
+
+    AGENT_ACL_UNLOCK(agent)
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_discard_access BODY
@@ -417,7 +452,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group(refda_ctrl_exec_ctx
     else
     {
         // new item
-        found_id = refda_acl_group_list_push_new(agent->acl.groups);
+        found_id = refda_acl_group_list_push_back_new(agent->acl.groups);
 
         found_id->id = gid;
         m_string_set_cstr(found_id->name, name);
@@ -529,6 +564,41 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_discard_group(refda_ctrl_exec_ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_discard_group BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *p_gid   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    cace_ari_uint gid;
+    if (cace_ari_get_uint(p_gid, &gid))
+    {
+        CACE_LOG_ERR("Invalid group-id parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    AGENT_ACL_LOCK(agent)
+
+    refda_acl_group_list_it_t found_it;
+    refda_acl_group_list_it_end(found_it, agent->acl.groups);
+
+    refda_acl_group_list_it_t grp_it;
+    for (refda_acl_group_list_it(grp_it, agent->acl.groups); !refda_acl_group_list_end_p(grp_it);
+         refda_acl_group_list_next(grp_it))
+    {
+        refda_acl_group_t *grp = refda_acl_group_list_ref(grp_it);
+
+        if (grp->id == gid)
+        {
+            refda_acl_group_list_it_set(found_it, grp_it);
+            break;
+        }
+    }
+
+    if (!refda_acl_group_list_end_p(found_it))
+    {
+        refda_acl_group_list_remove(agent->acl.groups, grp_it);
+    }
+    refda_ctrl_exec_ctx_set_result_null(ctx);
+
+    AGENT_ACL_UNLOCK(agent)
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_discard_group BODY

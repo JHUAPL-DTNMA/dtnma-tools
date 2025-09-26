@@ -52,13 +52,13 @@ void refda_acl_group_init(refda_acl_group_t *obj);
 void refda_acl_group_deinit(refda_acl_group_t *obj);
 
 #define M_OPL_refda_acl_group_t() \
-    (INIT(API_2(refda_acl_group_init)), INIT_SET(0), CLEAR(API_2(refda_acl_group_deinit)), SET(0))
+    (INIT(API_2(refda_acl_group_init)), CLEAR(API_2(refda_acl_group_deinit)))
 
 /** @struct refda_acl_group_list_t
  * An ordered list of ::refda_acl_group_t instances.
  */
 /// @cond Doxygen_Suppress
-M_ARRAY_DEF(refda_acl_group_list, refda_acl_group_t)
+M_DEQUE_DEF(refda_acl_group_list, refda_acl_group_t)
 /// @endcond
 
 /** @struct refda_acl_id_tree_t
@@ -87,13 +87,13 @@ void refda_acl_access_init(refda_acl_access_t *obj);
 void refda_acl_access_deinit(refda_acl_access_t *obj);
 
 #define M_OPL_refda_acl_access_t() \
-    (INIT(API_2(refda_acl_access_init)), INIT_SET(0), CLEAR(API_2(refda_acl_access_deinit)), SET(0))
+    (INIT(API_2(refda_acl_access_init)), CLEAR(API_2(refda_acl_access_deinit)))
 
 /** @struct refda_acl_access_list_t
  * An ordered list of ::refda_acl_access_t instances.
  */
 /// @cond Doxygen_Suppress
-M_ARRAY_DEF(refda_acl_access_list, refda_acl_access_t)
+M_DEQUE_DEF(refda_acl_access_list, refda_acl_access_t)
 /// @endcond
 
 /** Storage of the agent ACL and its derived caches.

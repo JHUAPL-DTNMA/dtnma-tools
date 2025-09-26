@@ -811,3 +811,30 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual((1, 4), rpt.items[0].value.shape)
         # self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         self.assertEqual(ari.uint(1), rpt.items[0].value[0, 0])
+
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(/ac/('
+                + '//ietf/dtnma-agent-acl/CTRL/discard-group(1),'
+                + '//ietf/dtnma-agent-acl/CTRL/discard-access(1),'
+                + '//ietf/dtnma-agent-acl/CTRL/discard-group(1),'  # duplicate no-op
+                + '//ietf/dtnma-agent-acl/CTRL/discard-access(1),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/group-list),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'
+                + '))'
+            )]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=6)
+        self.assertEqual(6, len(rpts))
+
+        rpt = rpts[4]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 3), rpt.items[0].value.shape)
+
+        rpt = rpts[5]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 4), rpt.items[0].value.shape)
