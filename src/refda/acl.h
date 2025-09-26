@@ -51,8 +51,7 @@ void refda_acl_group_init(refda_acl_group_t *obj);
 
 void refda_acl_group_deinit(refda_acl_group_t *obj);
 
-#define M_OPL_refda_acl_group_t() \
-    (INIT(API_2(refda_acl_group_init)), CLEAR(API_2(refda_acl_group_deinit)))
+#define M_OPL_refda_acl_group_t() (INIT(API_2(refda_acl_group_init)), CLEAR(API_2(refda_acl_group_deinit)))
 
 /** @struct refda_acl_group_list_t
  * An ordered list of ::refda_acl_group_t instances.
@@ -86,8 +85,7 @@ void refda_acl_access_init(refda_acl_access_t *obj);
 
 void refda_acl_access_deinit(refda_acl_access_t *obj);
 
-#define M_OPL_refda_acl_access_t() \
-    (INIT(API_2(refda_acl_access_init)), CLEAR(API_2(refda_acl_access_deinit)))
+#define M_OPL_refda_acl_access_t() (INIT(API_2(refda_acl_access_init)), CLEAR(API_2(refda_acl_access_deinit)))
 
 /** @struct refda_acl_access_list_t
  * An ordered list of ::refda_acl_access_t instances.
