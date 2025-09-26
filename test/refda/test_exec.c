@@ -233,8 +233,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
         string_clear(buf);
     }
 
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
     // no nonce for test
     refda_runctx_from(refda_runctx_ptr_ref(ctxptr), &agent, NULL);
 

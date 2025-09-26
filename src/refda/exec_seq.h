@@ -37,7 +37,7 @@ DEQUE_DEF(refda_exec_item_list, refda_exec_item_t)
 typedef struct refda_exec_seq_s
 {
     /// Context for the source of this sequence
-    refda_runctx_ptr_t runctx;
+    refda_runctx_ptr_t *runctx;
 
     /** Internal unique processing identifier for the execution.
      * Zero is an invalid value and will not be assigned.

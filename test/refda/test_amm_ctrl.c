@@ -75,14 +75,13 @@ static void check_execute(cace_ari_t *result, const refda_amm_ctrl_desc_t *ctrl,
     cace_amm_obj_desc_init(&obj);
     cace_amm_user_data_set_from(&(obj.app_data), (void *)ctrl, false, NULL);
 
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
     // no nonce for test
     refda_runctx_from(refda_runctx_ptr_ref(ctxptr), NULL, NULL);
 
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
-    refda_runctx_ptr_set(eseq.runctx, ctxptr);
+    refda_runctx_ptr_set(&eseq.runctx, ctxptr);
 
     refda_exec_item_t eitem;
     refda_exec_item_init(&eitem);

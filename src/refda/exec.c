@@ -262,7 +262,7 @@ static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, co
     return retval;
 }
 
-int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const cace_ari_t *target)
+int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t *runctxp, const cace_ari_t *target)
 {
     CHKERR1(target);
     refda_runctx_t *runctx = refda_runctx_ptr_ref(runctxp);
@@ -283,7 +283,7 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
         string_clear(buf);
     }
 
-    refda_runctx_ptr_set(seq->runctx, runctxp);
+    refda_runctx_ptr_set(&seq->runctx, runctxp);
 
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
@@ -382,8 +382,7 @@ static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *m
     CHKERR1(agent);
     CHKERR1(msg);
 
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
 
     if (refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, msg))
     {
@@ -554,8 +553,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
  */
 static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *action)
 {
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
 
     refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
 
@@ -564,7 +562,7 @@ static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, c
         return 2;
     }
 
-    refda_runctx_ptr_set(seq->runctx, ctxptr);
+    refda_runctx_ptr_set(&seq->runctx, ctxptr);
 
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
