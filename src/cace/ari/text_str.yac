@@ -115,7 +115,7 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 %destructor { string_clear($$); } <text>
 %destructor { cace_named_ari_dict_clear($$); } <litparams>
 %destructor { cace_ari_lit_deinit(&$$); } <lit>
-%destructor { if ($$) { cace_ari_report_deinit($$); M_MEMORY_DEL($$); } } <report>
+%destructor { if ($$) { cace_ari_report_deinit($$); CACE_FREE($$); } } <report>
 %destructor { cace_ari_ref_deinit(&$$); } <objref>
 %destructor { cace_ari_objpath_deinit(&$$); } <objpath>
 %destructor { cace_ari_idseg_deinit(&$$); } <idseg>
@@ -648,7 +648,7 @@ int cace_ari_lit_from_text(yyscan_t *scanner, cace_ari_text_str_t *input, cace_a
         cace_ari_text_str_error(scanner, input, "%s", errm);
         if (errm)
         {
-            M_MEMORY_FREE((char *)errm);
+            CACE_FREE((char *)errm);
         }
         return 1;
     }

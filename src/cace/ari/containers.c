@@ -397,35 +397,35 @@ void cace_ari_lit_init_container(cace_ari_lit_t *lit, cace_ari_type_t ctype)
     {
         case CACE_ARI_TYPE_AC:
         {
-            cace_ari_ac_t *ctr = M_MEMORY_ALLOC(cace_ari_ac_t);
+            cace_ari_ac_t *ctr = CACE_MALLOC(sizeof(cace_ari_ac_t));
             cace_ari_ac_init(ctr);
             lit->value.as_ac = ctr;
             break;
         }
         case CACE_ARI_TYPE_AM:
         {
-            cace_ari_am_t *ctr = M_MEMORY_ALLOC(cace_ari_am_t);
+            cace_ari_am_t *ctr = CACE_MALLOC(sizeof(cace_ari_am_t));
             cace_ari_am_init(ctr);
             lit->value.as_am = ctr;
             break;
         }
         case CACE_ARI_TYPE_TBL:
         {
-            cace_ari_tbl_t *ctr = M_MEMORY_ALLOC(cace_ari_tbl_t);
+            cace_ari_tbl_t *ctr = CACE_MALLOC(sizeof(cace_ari_tbl_t));
             cace_ari_tbl_init(ctr);
             lit->value.as_tbl = ctr;
             break;
         }
         case CACE_ARI_TYPE_EXECSET:
         {
-            cace_ari_execset_t *ctr = M_MEMORY_ALLOC(cace_ari_execset_t);
+            cace_ari_execset_t *ctr = CACE_MALLOC(sizeof(cace_ari_execset_t));
             cace_ari_execset_init(ctr);
             lit->value.as_execset = ctr;
             break;
         }
         case CACE_ARI_TYPE_RPTSET:
         {
-            cace_ari_rptset_t *ctr = M_MEMORY_ALLOC(cace_ari_rptset_t);
+            cace_ari_rptset_t *ctr = CACE_MALLOC(sizeof(cace_ari_rptset_t));
             cace_ari_rptset_init(ctr);
             lit->value.as_rptset = ctr;
             break;
