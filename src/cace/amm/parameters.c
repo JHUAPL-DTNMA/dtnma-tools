@@ -170,7 +170,8 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                     }
                     if (cace_amm_type_convert(&(fparam->typeobj), aparam, gparam))
                     {
-                        CACE_LOG_WARNING("given parameter for \"%\" failed to convert", m_string_get_cstr(fparam->name));
+                        CACE_LOG_WARNING("given parameter for \"%s\" failed to convert",
+                                         m_string_get_cstr(fparam->name));
                         retval = 2;
                         break;
                     }

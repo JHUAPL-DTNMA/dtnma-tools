@@ -18,6 +18,7 @@
 #ifndef REFDA_AMM_IDENT_H_
 #define REFDA_AMM_IDENT_H_
 
+#include "cace/amm/obj_store.h"
 #include "cace/amm/user_data.h"
 #include <m-deque.h>
 
@@ -40,6 +41,15 @@ typedef struct
 void refda_amm_ident_base_init(refda_amm_ident_base_t *obj);
 
 void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj);
+
+/** Set the name and perform a reference lookup on this object.
+ *
+ * @param[in,out] obj The object to set.
+ * @param[in] ref The new name.
+ * @param[in] objs The object store to search.
+ * @return Zero if the lookup was fully successful.
+ */
+int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t *ref, const cace_amm_obj_store_t *objs);
 
 /// M*LIB OPLIST for refda_amm_ident_base_t
 #define M_OPL_refda_amm_ident_base_t() \

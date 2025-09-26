@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 #include "ident.h"
+#include "cace/amm/lookup.h"
+#include "cace/ari/text.h"
+#include "cace/util/logging.h"
 
 void refda_amm_ident_base_init(refda_amm_ident_base_t *obj)
 {
@@ -27,6 +30,30 @@ void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj)
 {
     obj->ident = NULL;
     cace_ari_deinit(&(obj->name));
+}
+
+int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t *ref, const cace_amm_obj_store_t *objs)
+{
+    cace_ari_set_copy(&obj->name, ref);
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, objs, &obj->name);
+    if (res)
+    {
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, &obj->name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
+
+        obj->ident = NULL;
+    }
+    else
+    {
+        obj->ident = deref.obj->app_data.ptr;
+    }
+    return res;
 }
 
 void refda_amm_ident_desc_init(refda_amm_ident_desc_t *obj)

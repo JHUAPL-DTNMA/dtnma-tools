@@ -2065,8 +2065,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
             {
                 string_t buf;
                 string_init(buf);
-                cace_ari_text_encode_objpath(buf, &(target->as_ref.objpath), CACE_ARI_TEXT_ARITYPE_TEXT);
-                CACE_LOG_DEBUG("resetting state of %s", string_get_cstr(buf));
+                cace_ari_text_encode_objpath(buf, cace_ari_cget_ref_objpath(target), CACE_ARI_TEXT_ARITYPE_TEXT);
+                CACE_LOG_DEBUG("resetting state of %s (as %s)", string_get_cstr(deref.obj->obj_id.name), string_get_cstr(buf));
                 string_clear(buf);
             }
             cace_ari_set_copy(&(var->value), &(var->init_val));
@@ -2130,8 +2130,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
             {
                 string_t buf;
                 string_init(buf);
-                cace_ari_text_encode_objpath(buf, &(target->as_ref.objpath), CACE_ARI_TEXT_ARITYPE_TEXT);
-                CACE_LOG_DEBUG("setting state of %s", string_get_cstr(buf));
+                cace_ari_text_encode_objpath(buf, cace_ari_cget_ref_objpath(target), CACE_ARI_TEXT_ARITYPE_TEXT);
+                CACE_LOG_DEBUG("setting state of %s (as %s)", string_get_cstr(deref.obj->obj_id.name), string_get_cstr(buf));
                 string_clear(buf);
             }
             cace_ari_set_copy(&(var->value), value);

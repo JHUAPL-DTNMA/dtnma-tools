@@ -744,3 +744,20 @@ struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari)
 
     return ctr;
 }
+
+const cace_ari_ref_t *cace_ari_cget_ref(const cace_ari_t *ari)
+
+{
+    if (!ari || !(ari->is_ref))
+    {
+        return NULL;
+    }
+    return &ari->as_ref;
+
+}
+
+const cace_ari_objpath_t *cace_ari_cget_ref_objpath(const cace_ari_t *ari)
+{
+    const cace_ari_ref_t *ref = cace_ari_cget_ref(ari);
+    return ref ? &ref->objpath : NULL;
+}

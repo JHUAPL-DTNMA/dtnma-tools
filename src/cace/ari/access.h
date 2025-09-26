@@ -300,6 +300,15 @@ const struct cace_ari_rptset_s *cace_ari_cget_rptset(const cace_ari_t *ari);
  */
 struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari);
 
+/** Require a reference value and extract a pointer to its struct.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained struct, if present, otherwise NULL.
+ */
+const cace_ari_ref_t *cace_ari_cget_ref(const cace_ari_t *ari);
+/// @overload
+const cace_ari_objpath_t *cace_ari_cget_ref_objpath(const cace_ari_t *ari);
+
 /** Convenience setter.
  */
 static inline cace_ari_ref_t *cace_ari_set_objref_path_intid(cace_ari_t *ari, cace_ari_int_id_t org_id,

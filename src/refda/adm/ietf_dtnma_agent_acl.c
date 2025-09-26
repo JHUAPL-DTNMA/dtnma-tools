@@ -63,7 +63,7 @@
  *
  * Produced type: TBLT with 4 columns:
  *   - Index 0, name "access-id", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
- *   - Index 1, name "group-id", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/optional-entry-id
+ *   - Index 1, name "group-ids", type ulist of use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
  *   - Index 2, name "objects", type use of ari://ietf/amm-base/TYPEDEF/ari-pattern
  *   - Index 3, name "permissions", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/permission-list
  */
@@ -86,10 +86,6 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
          refda_acl_access_list_next(acc_it))
     {
         const refda_acl_access_t *acc = refda_acl_access_list_cref(acc_it);
-        if (!acc)
-        {
-            continue;
-        }
 
         cace_ari_array_t row;
         cace_ari_array_init(row);
@@ -103,7 +99,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
             for (refda_acl_id_tree_it(grpid_it, acc->groups); !refda_acl_id_tree_end_p(grpid_it);
                  refda_acl_id_tree_next(grpid_it))
             {
-                const refda_acl_group_id_t *grpid = refda_acl_id_tree_cref(grpid_it);
+                const refda_acl_id_t *grpid = refda_acl_id_tree_cref(grpid_it);
                 // arbitrary order
                 cace_ari_set_uint(cace_ari_list_push_back_new(grps_ac->items), *grpid);
             }
@@ -223,7 +219,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
  *
  * Parameters list:
  *   - Index 0, name "access-id", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
- *   - Index 1, name "group-id", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/optional-entry-id
+ *   - Index 1, name "group-ids", type ulist of use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
  *   - Index 2, name "objects", type use of ari://ietf/amm-base/TYPEDEF/ari-pattern
  *   - Index 3, name "permissions", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/permission-list
  *
@@ -236,8 +232,84 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access BODY
      * +-------------------------------------------------------------------------+
      */
-    // TODO actual work
+    const cace_ari_t *p_aid   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *p_gid   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *p_perms = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+
+    cace_ari_uint aid;
+    if (cace_ari_get_uint(p_aid, &aid))
+    {
+        CACE_LOG_ERR("Invalid access-id parameter");
+        return;
+    }
+    const cace_ari_ac_t *gid_ac = cace_ari_cget_ac(p_gid);
+    if (!gid_ac)
+    {
+        CACE_LOG_ERR("Invalid group-ids parameter");
+        return;
+    }
+    const cace_ari_ac_t *perms_ac = cace_ari_cget_ac(p_perms);
+    if (!perms_ac)
+    {
+        CACE_LOG_ERR("Invalid permissions parameter");
+        return;
+    }
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    AGENT_ACL_LOCK(agent)
+
+    refda_acl_access_t *found_id = NULL;
+
+    refda_acl_access_list_it_t acc_it;
+    for (refda_acl_access_list_it(acc_it, agent->acl.access); !refda_acl_access_list_end_p(acc_it);
+         refda_acl_access_list_next(acc_it))
+    {
+        refda_acl_access_t *acc = refda_acl_access_list_ref(acc_it);
+
+        if (acc->id == aid)
+        {
+            found_id = acc;
+            break;
+        }
+    }
+
+    if (found_id)
+    {}
+    else
+    {
+        // new item
+        found_id     = refda_acl_access_list_push_new(agent->acl.access);
+        found_id->id = aid;
+    }
+
+    refda_acl_id_tree_reset(found_id->groups);
+    cace_ari_list_it_t gid_it;
+    for (cace_ari_list_it(gid_it, gid_ac->items); !cace_ari_list_end_p(gid_it); cace_ari_list_next(gid_it))
+    {
+        const cace_ari_t *gid_val = cace_ari_list_cref(gid_it);
+
+        refda_acl_id_t gid;
+        if (!cace_ari_get_uint(gid_val, &gid))
+        {
+            continue;
+        }
+
+        refda_acl_id_tree_push(found_id->groups, gid);
+    }
+
+    refda_amm_ident_base_list_reset(found_id->permissions);
+    cace_ari_list_it_t perm_it;
+    for (cace_ari_list_it(perm_it, perms_ac->items); !cace_ari_list_end_p(perm_it); cace_ari_list_next(perm_it))
+    {
+        const cace_ari_t *perm_ref = cace_ari_list_cref(perm_it);
+
+        refda_amm_ident_base_t *perm = refda_amm_ident_base_list_push_new(found_id->permissions);
+        refda_amm_ident_base_populate(perm, perm_ref, &agent->objs);
+    }
+
     refda_ctrl_exec_ctx_set_result_null(ctx);
+
+    AGENT_ACL_UNLOCK(agent)
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access BODY
@@ -293,7 +365,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group(refda_ctrl_exec_ctx
     cace_ari_uint gid;
     if (cace_ari_get_uint(p_gid, &gid) || (gid == 0))
     {
-        CACE_LOG_ERR("Invalid group ID");
+        CACE_LOG_ERR("Invalid group-id parameter");
         return;
     }
 
@@ -344,11 +416,11 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group(refda_ctrl_exec_ctx
     }
     else
     {
-        // new group
-        refda_acl_group_t *grp = refda_acl_group_list_push_new(agent->acl.groups);
+        // new item
+        found_id = refda_acl_group_list_push_new(agent->acl.groups);
 
-        grp->id = gid;
-        m_string_set_cstr(grp->name, name);
+        found_id->id = gid;
+        m_string_set_cstr(found_id->name, name);
         success = true;
     }
 
@@ -388,7 +460,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group_members(refda_ctrl_
     cace_ari_uint gid;
     if (cace_ari_get_uint(p_gid, &gid) || (gid == 0))
     {
-        CACE_LOG_ERR("Invalid group ID");
+        CACE_LOG_ERR("Invalid group-id parameter");
         return;
     }
     const cace_ari_ac_t *memb_ac = cace_ari_cget_ac(p_memb);
@@ -426,24 +498,8 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group_members(refda_ctrl_
         {
             const cace_ari_t *memb_ref = cace_ari_list_cref(memb_it);
 
-            refda_amm_ident_base_t *memb_pat = refda_amm_ident_base_list_push_new(found_id->member_pats);
-            cace_ari_set_copy(&memb_pat->name, memb_ref);
-
-            cace_amm_lookup_t deref;
-            cace_amm_lookup_init(&deref);
-            int res = cace_amm_lookup_deref(&deref, &(ctx->runctx->agent->objs), &memb_pat->name);
-            if (res)
-            {
-                string_t buf;
-                string_init(buf);
-                cace_ari_text_encode(buf, &memb_pat->name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
-                string_clear(buf);
-            }
-            else
-            {
-                memb_pat->ident = deref.obj->app_data.ptr;
-            }
+            refda_amm_ident_base_t *memb = refda_amm_ident_base_list_push_new(found_id->member_pats);
+            refda_amm_ident_base_populate(memb, memb_ref, &agent->objs);
         }
 
         refda_ctrl_exec_ctx_set_result_null(ctx);
@@ -744,12 +800,16 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
-                    m_string_set_cstr(col->name, "group-id");
+                    m_string_set_cstr(col->name, "group-ids");
                     {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/optional-entry-id
-                        cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 3);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        // uniform list
+                        cace_amm_semtype_ulist_t *semtype_d1 = cace_amm_type_set_ulist(&(col->typeobj));
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
+                            cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 2);
+                            cace_amm_type_set_use_ref_move(&(semtype_d1->item_type), &typeref);
+                        }
                     }
                 }
                 {
@@ -880,12 +940,16 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 }
             }
             {
-                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "group-id");
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "group-ids");
                 {
-                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/optional-entry-id
-                    cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                    // uniform list
+                    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
+                        cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 2);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
+                    }
                 }
             }
             {

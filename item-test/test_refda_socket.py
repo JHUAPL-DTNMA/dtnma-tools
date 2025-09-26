@@ -768,7 +768,7 @@ class TestRefdaSocket(unittest.TestCase):
                 'ari:/EXECSET/n=123;(/ac/('
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(1,example),'
                 + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/ident/uri-regexp-pattern(' + pat + '))),'
-                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,1,h\'0102\',/ac/('
+                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(1),h\'0102\',/ac/('
                 + '//ietf/dtnma-agent-acl/ident/execute,'
                 + '//ietf/dtnma-agent-acl/ident/produce'
                 + ')),'
@@ -801,12 +801,13 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 3), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
-        self.assertEqual([ari.uint(1), ari.LiteralARI("example")], rpt.items[0].value[0, 0:2])
+        self.assertEqual(ari.uint(1), rpt.items[0].value[0, 0])
+        self.assertEqual(ari.LiteralARI("example"), rpt.items[0].value[0, 1])
 
         rpt = rpts[4]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 4), rpt.items[0].value.shape)
-        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
-        # self.assertEqual([ari.uint(1), ari.LiteralARI("example")], rpt.items[0].value[0, 0:2])
+        # self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
+        self.assertEqual(ari.uint(1), rpt.items[0].value[0, 0])

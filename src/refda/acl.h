@@ -28,10 +28,10 @@
 extern "C" {
 #endif
 
-/** Identifier for ACL groups.
+/** Identifier for ACL groups and access items.
  * The group ID zero is reserved for the agent itself.
  */
-typedef cace_ari_uint refda_acl_group_id_t;
+typedef cace_ari_uint refda_acl_id_t;
 
 /** A single entry of the ACL group table.
  *
@@ -39,7 +39,7 @@ typedef cace_ari_uint refda_acl_group_id_t;
 typedef struct
 {
     /// Unique group ID
-    refda_acl_group_id_t id;
+    refda_acl_id_t id;
     /// Unique group name
     m_string_t name;
     /// Endpoint patterns for members of this group
@@ -65,7 +65,7 @@ M_ARRAY_DEF(refda_acl_group_list, refda_acl_group_t)
  * An ordered list of unique IDs.
  */
 /// @cond Doxygen_Suppress
-M_RBTREE_DEF(refda_acl_id_tree, refda_acl_group_id_t, M_BASIC_OPLIST)
+M_RBTREE_DEF(refda_acl_id_tree, refda_acl_id_t, M_BASIC_OPLIST)
 /// @endcond
 
 /** A single entry of the ACL access table.
@@ -74,7 +74,7 @@ M_RBTREE_DEF(refda_acl_id_tree, refda_acl_group_id_t, M_BASIC_OPLIST)
 typedef struct
 {
     /// Unique entry ID
-    uint32_t id;
+    refda_acl_id_t id;
     /// Groups to which this entry applies
     refda_acl_id_tree_t groups;
     /// Permissions granted to these groups and objects

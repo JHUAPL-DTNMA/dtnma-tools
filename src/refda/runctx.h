@@ -80,7 +80,7 @@ typedef struct
 
     /** Cached ACL-derived group ID.
      */
-    refda_acl_group_id_t acl_group_id;
+    refda_acl_id_t acl_group_id;
 
 } refda_runctx_t;
 
