@@ -50,27 +50,27 @@ int cace_ari_lit_deinit(cace_ari_lit_t *obj)
             case CACE_ARI_TYPE_AC:
                 CHKERR1(obj->value.as_ac);
                 cace_ari_ac_deinit(obj->value.as_ac);
-                M_MEMORY_DEL(obj->value.as_ac);
+                CACE_FREE(obj->value.as_ac);
                 break;
             case CACE_ARI_TYPE_AM:
                 CHKERR1(obj->value.as_am);
                 cace_ari_am_deinit(obj->value.as_am);
-                M_MEMORY_DEL(obj->value.as_am);
+                CACE_FREE(obj->value.as_am);
                 break;
             case CACE_ARI_TYPE_TBL:
                 CHKERR1(obj->value.as_tbl);
                 cace_ari_tbl_deinit(obj->value.as_tbl);
-                M_MEMORY_DEL(obj->value.as_tbl);
+                CACE_FREE(obj->value.as_tbl);
                 break;
             case CACE_ARI_TYPE_EXECSET:
                 CHKERR1(obj->value.as_execset);
                 cace_ari_execset_deinit(obj->value.as_execset);
-                M_MEMORY_DEL(obj->value.as_execset);
+                CACE_FREE(obj->value.as_execset);
                 break;
             case CACE_ARI_TYPE_RPTSET:
                 CHKERR1(obj->value.as_rptset);
                 cace_ari_rptset_deinit(obj->value.as_rptset);
-                M_MEMORY_DEL(obj->value.as_rptset);
+                CACE_FREE(obj->value.as_rptset);
                 break;
             default:
                 // do nothing
