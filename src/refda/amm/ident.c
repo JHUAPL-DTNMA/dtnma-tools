@@ -53,6 +53,8 @@ int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t 
     {
         obj->ident = deref.obj->app_data.ptr;
     }
+    cace_amm_lookup_deinit(&deref);
+
     return res;
 }
 
