@@ -70,7 +70,7 @@ bool refda_endpoint_pat_match(const refda_agent_t *agent, const cace_ari_t *endp
                 pcre2_code_free(cfg);
             }
 #else  /* PCRE_FOUND */
-            CACE_LOG_ERR("Cannot evaluate uri-regexp-pattern without PCRE")
+            CACE_LOG_ERR("Cannot evaluate uri-regexp-pattern without PCRE");
 #endif /* PCRE_FOUND */
         }
     }
