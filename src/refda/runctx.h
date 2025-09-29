@@ -78,6 +78,8 @@ typedef struct
      */
     cace_ari_t nonce;
 
+    /// refda_acl_t::generation for the cached data
+    uint64_t acl_gen;
     /** Cached ACL-derived group ID.
      */
     refda_acl_id_tree_t acl_groups;

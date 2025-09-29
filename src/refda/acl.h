@@ -46,6 +46,10 @@ typedef struct
     /// Endpoint patterns for members of this group
     refda_amm_ident_base_list_t member_pats;
 
+    /// Added-at timestamp
+    cace_ari_t added_at;
+    /// Updated-at timestamp
+    cace_ari_t updated_at;
 } refda_acl_group_t;
 
 void refda_acl_group_init(refda_acl_group_t *obj);
@@ -80,6 +84,10 @@ typedef struct
     /// Permissions granted to these groups and objects
     refda_amm_ident_base_list_t permissions;
 
+    /// Added-at timestamp
+    cace_ari_t added_at;
+    /// Updated-at timestamp
+    cace_ari_t updated_at;
 } refda_acl_access_t;
 
 void refda_acl_access_init(refda_acl_access_t *obj);
@@ -107,6 +115,14 @@ M_BPTREE_DEF2(refda_acl_access_by_group, 4, refda_acl_id_t, M_BASIC_OPLIST, refd
  */
 typedef struct
 {
+    /** The generation of this ACL data for internal caching.
+     * Any update to other members of this ACL will bump the generation
+     * and invalidate any derived-and-cached group, access, or permission data.
+     * This value is internal and runtime dependent, so not persisted across
+     * agent processes.
+     */
+    uint64_t generation;
+
     /** Base IDENT for permissions.
      */
     refda_amm_ident_desc_t *perm_base;

@@ -49,6 +49,7 @@ void refda_runctx_init(refda_runctx_t *ctx)
     ctx->agent = NULL;
     cace_ari_init(&(ctx->mgr_ident));
     cace_ari_init(&(ctx->nonce));
+    ctx->acl_gen = 0;
     refda_acl_id_tree_init(ctx->acl_groups);
 }
 
@@ -83,6 +84,7 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
         }
 
         // Lookup ACL groups once now
+        ctx->acl_gen = agent->acl.generation;
         refda_acl_search_endpoint(&agent->acl, &ctx->mgr_ident, ctx->acl_groups);
     }
     else
