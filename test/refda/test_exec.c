@@ -25,6 +25,7 @@
 #include <refda/adm/ietf_amm_semtype.h>
 #include <refda/adm/ietf_network_base.h>
 #include <refda/adm/ietf_dtnma_agent.h>
+#include <refda/adm/ietf_dtnma_agent_acl.h>
 #include <refda/amm/const.h>
 #include <refda/amm/ctrl.h>
 #include <cace/amm/semtype.h>
@@ -43,18 +44,18 @@
 static refda_agent_t agent;
 
 // State for test_reporting_edd_one_int()
-static atomic_int edd_backing_value;
+static atomic_int edd_backing_value = ATOMIC_VAR_INIT(0);
 
 // Sequence of executions for test_exec_ctrl_exec_one_int()
 static cace_ari_list_t exec_log;
 
+// Initialize the test #agent
 static void suite_adms_init(refda_agent_t *agent);
 
 void suiteSetUp(void)
 {
     cace_openlog();
 
-    atomic_init(&edd_backing_value, 0);
     cace_ari_list_init(exec_log);
     refda_agent_init(&agent);
     suite_adms_init(&agent);
@@ -105,13 +106,13 @@ static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
 
 static void suite_adms_init(refda_agent_t *agent)
 {
-
     // ADM initialization
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_init(agent));
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_base_init(agent));
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_amm_semtype_init(agent));
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_network_base_init(agent));
-    TEST_ASSERT_EQUAL_INT(0, refda_adm_ietf_dtnma_agent_init(agent));
+    assert(0 == refda_adm_ietf_amm_init(agent));
+    assert(0 == refda_adm_ietf_amm_base_init(agent));
+    assert(0 == refda_adm_ietf_amm_semtype_init(agent));
+    assert(0 == refda_adm_ietf_network_base_init(agent));
+    assert(0 == refda_adm_ietf_dtnma_agent_init(agent));
+    assert(0 == refda_adm_ietf_dtnma_agent_acl_init(agent));
 
     {
         // ADM for this test fixture
@@ -168,13 +169,13 @@ static void suite_adms_init(refda_agent_t *agent)
         {
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
-            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->prod_type), CACE_ARI_TYPE_INT));
+            assert(0 == cace_amm_type_set_use_builtin(&(objdata->prod_type), CACE_ARI_TYPE_INT));
             objdata->produce = test_reporting_edd_one_int;
 
             obj = refda_register_edd(adm, cace_amm_idseg_ref_withenum("edd2", 2), objdata);
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "val");
-                TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
+                assert(0 == cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
             }
         }
 
@@ -184,33 +185,33 @@ static void suite_adms_init(refda_agent_t *agent)
         {
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_INT));
+            assert(0 == cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_INT));
             objdata->execute = test_exec_ctrl_exec_one_int;
 
             obj = refda_register_ctrl(adm, cace_amm_idseg_ref_withenum("ctrl1", 1), objdata);
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "one");
 
-                TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
+                assert(0 == cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
             }
         }
         {
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_INT));
+            assert(0 == cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_INT));
             objdata->execute = test_exec_ctrl_exec_one_int;
 
             obj = refda_register_ctrl(adm, cace_amm_idseg_ref_withenum("ctrl2", 2), objdata);
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "one");
 
-                TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
+                assert(0 == cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
             }
         }
     }
 
     int res = refda_agent_bindrefs(agent);
-    TEST_ASSERT_EQUAL_INT(0, res);
+    assert(0 == res);
 }
 
 /** Perform a single execution on a single target.
