@@ -162,11 +162,12 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_current_groups(refda_edd_prod_ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_current_groups BODY
      * +-------------------------------------------------------------------------+
      */
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_ac_t *grp_ac = cace_ari_set_ac(&result, NULL);
 
     refda_acl_id_tree_it_t grp_it;
-    for (refda_acl_id_tree_it(grp_it, ctx->prodctx->parent->acl_groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
+    for (refda_acl_id_tree_it(grp_it, ctx->prodctx->parent->acl_groups); !refda_acl_id_tree_end_p(grp_it);
+         refda_acl_id_tree_next(grp_it))
     {
         const refda_acl_id_t *grp = refda_acl_id_tree_cref(grp_it);
 

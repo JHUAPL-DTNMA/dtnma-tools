@@ -95,7 +95,7 @@ int refda_acl_search_endpoint(const refda_acl_t *obj, const cace_ari_t *endpoint
             {
                 continue;
             }
-            //ref->params
+            // ref->params
 
             refda_acl_id_tree_push(groups, grp->id);
         }

@@ -53,7 +53,6 @@ static cace_amm_obj_ns_t *ex_adm = NULL;
 // Variable number
 #define EXAMPLE_VAR_ENUM 1
 
-
 void suiteSetUp(void)
 {
     cace_openlog();
@@ -93,7 +92,6 @@ void suiteSetUp(void)
     int res = refda_agent_bindrefs(&agent);
     assert(0 == res);
 }
-
 
 int suiteTearDown(int failures)
 {
