@@ -18,6 +18,7 @@
 #ifndef REFDA_AMM_IDENT_H_
 #define REFDA_AMM_IDENT_H_
 
+#include "cace/amm/lookup.h"
 #include "cace/amm/obj_store.h"
 #include "cace/amm/user_data.h"
 #include <m-deque.h>
@@ -32,6 +33,8 @@ typedef struct
 {
     /// Reference to the object
     cace_ari_t name;
+    /// Lookup result
+    cace_amm_lookup_t deref;
     /** The bound object being used, which is bound based on #name.
      * This is always a reference to an externally-owned object.
      */

@@ -16,18 +16,19 @@
  * limitations under the License.
  */
 #include "ident.h"
-#include "cace/amm/lookup.h"
 #include "cace/ari/text.h"
 #include "cace/util/logging.h"
 
 void refda_amm_ident_base_init(refda_amm_ident_base_t *obj)
 {
     cace_ari_init(&(obj->name));
+    cace_amm_lookup_init(&obj->deref);
     obj->ident = NULL;
 }
 
 void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj)
 {
+    cace_amm_lookup_deinit(&obj->deref);
     obj->ident = NULL;
     cace_ari_deinit(&(obj->name));
 }
@@ -36,9 +37,7 @@ int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t 
 {
     cace_ari_set_copy(&obj->name, ref);
 
-    cace_amm_lookup_t deref;
-    cace_amm_lookup_init(&deref);
-    int res = cace_amm_lookup_deref(&deref, objs, &obj->name);
+    int res = cace_amm_lookup_deref(&obj->deref, objs, &obj->name);
     if (res)
     {
         string_t buf;
@@ -51,9 +50,8 @@ int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t 
     }
     else
     {
-        obj->ident = deref.obj->app_data.ptr;
+        obj->ident = obj->deref.obj->app_data.ptr;
     }
-    cace_amm_lookup_deinit(&deref);
 
     return res;
 }
