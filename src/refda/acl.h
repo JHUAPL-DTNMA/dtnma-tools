@@ -146,7 +146,16 @@ void refda_acl_init(refda_acl_t *obj);
 
 void refda_acl_deinit(refda_acl_t *obj);
 
-int refda_acl_search_endpoint(const refda_acl_t *obj, const cace_ari_t *endpoint, refda_acl_id_tree_t groups);
+typedef struct refda_agent_s refda_agent_t;
+
+/** Search in an ACL for a specific endpoint.
+ *
+ * @param[in] agent The agent state.
+ * @param[in] endpoint The endpoint to search for.
+ * @param[out] groups The set of groups to add to.
+ * @return Zero if successful, which may result in empty groups.
+ */
+int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endpoint, refda_acl_id_tree_t groups);
 
 #ifdef __cplusplus
 } // extern C

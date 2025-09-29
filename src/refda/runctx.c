@@ -85,7 +85,7 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
 
         // Lookup ACL groups once now
         ctx->acl_gen = agent->acl.generation;
-        refda_acl_search_endpoint(&agent->acl, &ctx->mgr_ident, ctx->acl_groups);
+        refda_acl_search_endpoint(agent, &ctx->mgr_ident, ctx->acl_groups);
     }
     else
     {
