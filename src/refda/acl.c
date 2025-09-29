@@ -25,7 +25,7 @@ void refda_acl_group_init(refda_acl_group_t *obj)
     obj->id = 0;
     m_string_init(obj->name);
     refda_amm_ident_base_list_init(obj->member_pats);
-    obj->added_at = CACE_ARI_INIT_UNDEFINED;
+    obj->added_at   = CACE_ARI_INIT_UNDEFINED;
     obj->updated_at = CACE_ARI_INIT_UNDEFINED;
 }
 
@@ -43,7 +43,7 @@ void refda_acl_access_init(refda_acl_access_t *obj)
     obj->id = 0;
     refda_acl_id_tree_init(obj->groups);
     refda_amm_ident_base_list_init(obj->permissions);
-    obj->added_at = CACE_ARI_INIT_UNDEFINED;
+    obj->added_at   = CACE_ARI_INIT_UNDEFINED;
     obj->updated_at = CACE_ARI_INIT_UNDEFINED;
 }
 
@@ -59,7 +59,7 @@ void refda_acl_init(refda_acl_t *obj)
 {
     CHKVOID(obj);
     obj->generation = 0;
-    obj->perm_base = NULL;
+    obj->perm_base  = NULL;
     refda_acl_group_list_init(obj->groups);
     refda_acl_access_list_init(obj->access);
     refda_acl_access_by_group_init(obj->access_by_group);

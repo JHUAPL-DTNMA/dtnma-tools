@@ -135,7 +135,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
 
             refda_amm_ident_base_list_it_t perm_it;
             for (refda_amm_ident_base_list_it(perm_it, acc->permissions); !refda_amm_ident_base_list_end_p(perm_it);
-                    refda_amm_ident_base_list_next(perm_it))
+                 refda_amm_ident_base_list_next(perm_it))
             {
                 const refda_amm_ident_base_t *perm = refda_amm_ident_base_list_cref(perm_it);
                 // arbitrary order
