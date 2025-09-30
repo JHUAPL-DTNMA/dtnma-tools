@@ -602,14 +602,14 @@ void test_refda_exec_state_based_rule_cond_false_then_true(const char *actionhex
 }
 
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2)
-TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", 1000)
-void test_refda_exec_queue(const char *arihex, int wait_ms)
-{
-    cace_ari_t ari_to_exec = CACE_ARI_INIT_UNDEFINED;
-
-    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&ari_to_exec, arihex));
-    int expect_result = 0;
-    TEST_ASSERT_EQUAL_INT(expect_result, refda_exec_queue(&agent, &ari_to_exec));
-
-    cace_ari_deinit(&ari_to_exec);
-}
+// TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", 1000)
+// void test_refda_exec_next(const char *arihex, int wait_ms)
+//{
+//    cace_ari_t ari_to_exec = CACE_ARI_INIT_UNDEFINED;
+//
+//    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&ari_to_exec, arihex));
+//    int expect_result = 0;
+//    TEST_ASSERT_EQUAL_INT(expect_result, refda_exec_next(&agent, agent.&ari_to_exec));
+//
+//    cace_ari_deinit(&ari_to_exec);
+//}

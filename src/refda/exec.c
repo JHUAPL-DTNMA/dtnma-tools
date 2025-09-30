@@ -828,14 +828,43 @@ static int refda_exec_action(refda_agent_t *agent, refda_exec_seq_t *seq, const 
     return res;
 }
 
-int refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari)
+/**
+ * Internal helper function to insert execution items into seq->items such that they will
+ * execute next after the currently-executing CTRL
+ */
+int exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
+{
+    refda_exec_item_list_t tmp_items;
+    refda_exec_item_t      tmp_item;
+    refda_exec_item_list_init(tmp_items);
+
+    // move item at front of seq (the currently executing CTRL) to tmp
+    refda_exec_item_list_pop_front_move(&tmp_item, seq->items);
+    refda_exec_item_list_push_front_move(tmp_items, &tmp_item);
+
+    // stage new sequence so we can inject ARI
+    refda_exec_item_list_swap(tmp_items, seq->items);
+
+    int res = refda_exec_action(agent, seq, ari);
+
+    // move all tmp items back to seq->items
+    while (!refda_exec_item_list_empty_p(tmp_items))
+    {
+        refda_exec_item_list_pop_front_move(&tmp_item, tmp_items);
+        refda_exec_item_list_push_back_move(seq->items, &tmp_item);
+    }
+
+    refda_exec_item_list_clear(tmp_items);
+
+    return res;
+}
+
+int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
 {
     CHKERR1(agent);
     CHKERR1(ari);
 
-    int               res = 0;
-    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
-    seq->pid              = agent->exec_next_pid++;
+    int res = 0;
 
     // Encapsulate ARI within an AC if needed
     if (!cace_ari_get_ac((cace_ari_t *)ari))
@@ -851,12 +880,12 @@ int refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari)
         cace_ari_set_ac(&ari_ac, &acinit);
 
         // Expand target ARI and create exec items, CTRLs are run later by exec worker
-        res = refda_exec_action(agent, seq, &ari_ac);
+        res = exec_next(agent, seq, &ari_ac);
     }
     else
     {
         // Expand target ARI and create exec items, CTRLs are run later by exec worker
-        res = refda_exec_action(agent, seq, ari);
+        res = exec_next(agent, seq, ari);
     }
 
     return res;

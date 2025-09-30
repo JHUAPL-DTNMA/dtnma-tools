@@ -1654,11 +1654,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
 
     REFDA_AGENT_LOCK(agent, );
     result = CACE_ARI_INIT_UNDEFINED;
+
     if (condition)
     {
         if (!cace_ari_is_null(ari_on_truthy))
         {
-            refda_exec_queue(agent, ari_on_truthy);
+            refda_exec_next(agent, ctx->item->seq, ari_on_truthy);
         }
         cace_ari_set_bool(&result, true);
     }
@@ -1666,7 +1667,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
     {
         if (!cace_ari_is_null(ari_on_falsy))
         {
-            refda_exec_queue(agent, ari_on_falsy);
+            refda_exec_next(agent, ctx->item->seq, ari_on_falsy);
         }
         cace_ari_set_bool(&result, false);
     }
@@ -1708,12 +1709,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
         CACE_LOG_ERR("Invalid parameter, unable to continue");
         return;
     }
-    int  res         = refda_exec_queue(agent, ari_try);
+    int  res         = refda_exec_next(agent, ctx->item->seq, ari_try);
     bool try_success = true;
 
     if (res)
     {
-        res         = refda_exec_queue(agent, ari_on_failure);
+        res         = refda_exec_next(agent, ctx->item->seq, ari_on_failure);
         try_success = false;
     }
 

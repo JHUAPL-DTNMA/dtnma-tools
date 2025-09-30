@@ -102,12 +102,13 @@ int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 
 /**
- * Queue an ARI for execution
+ * Setup an ARI to execute next in the sequence
  * @param[in] agent The agent context pointer
+ * @param[in] seq   The sequence within which to inject the ARI target(s)
  * @param[in] ari   The ARI to execute
  * @return Non-zero if the ARI could not be queued for execution
  */
-int refda_exec_queue(refda_agent_t *agent, const cace_ari_t *ari);
+int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari);
 
 #ifdef __cplusplus
 } // extern C
