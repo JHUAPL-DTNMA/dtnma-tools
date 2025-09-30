@@ -127,28 +127,6 @@ static char *queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
     bind_param[idx].error       = 0;
 #endif // HAVE_MYSQL
 
-#ifdef HAVE_POSTGRESQL
-static void double_to_nbo(double in, double *out)
-{
-    uint64_t *i = (uint64_t *)&in;
-    uint32_t *r = (uint32_t *)out;
-
-    /* convert input to network byte order */
-    r[0] = htonl((uint32_t)((*i) >> 32));
-    r[1] = htonl((uint32_t)*i);
-}
-
-static void vast_to_nbo(cace_ari_vast in, cace_ari_vast *out)
-{
-    uint64_t *i = (uint64_t *)&in;
-    uint32_t *r = (uint32_t *)out;
-
-    /* convert input to network byte order */
-    r[0] = htonl((uint32_t)((*i) >> 32));
-    r[1] = htonl((uint32_t)*i);
-}
-#endif // HAVE_POSTGRESQL
-
 #ifdef HAVE_MYSQL
 #define dbprep_bind_param_bool(idx, var)   dbprep_bind_param_cmn(idx, var, MYSQL_TYPE_LONG);
 #define dbprep_bind_param_int(idx, var)    dbprep_bind_param_cmn(idx, var, MYSQL_TYPE_LONG);
@@ -370,38 +348,6 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
 #endif // HAVE_POSTGRESQL
 
     m_string_clear(msg);
-}
-
-/******************************************************************************
- *
- * \par Function Name: db_mgt_txn_commit
- *
- * \par Commits a transaction in the database, if we are in a txn.
- *
- * \par Notes:
- *   - This function is not multi-threaded. We assume that we are the only
- *     input into the database and that there is only one "active" transaction
- *     at a time.
- *   - This function does not support nested transactions.
- *
- * Modification History:
- *  MM/DD/YY  AUTHOR         DESCRIPTION
- *  --------  ------------   ---------------------------------------------
- *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
- *****************************************************************************/
-
-static inline void db_mgt_txn_commit(int dbidx)
-{
-    if (dbidx < MGR_NUM_SQL_CONNECTIONS && gConn[dbidx] != NULL)
-    {
-#ifdef HAVE_MYSQL
-        mysql_commit(gConn[dbidx]);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-        PGresult *res = PQexec(gConn[dbidx], "END");
-        PQclear(res);
-#endif // HAVE_POSTGRESQL]);
-    }
 }
 
 /******************************************************************************
@@ -895,7 +841,7 @@ int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...)
 static int transform_cbor_str_to_cace_data(cace_ari_t *ari_item, char *cbor_str, char **errm)
 {
     size_t   bytea_len = 0;
-    uint8_t *bytea_ptr = PQunescapeBytea(cbor_str, &bytea_len);
+    uint8_t *bytea_ptr = PQunescapeBytea((const uint8_t *)cbor_str, &bytea_len);
 
     cace_data_t inbin;
     cace_data_init_view(&inbin, bytea_len, bytea_ptr);
@@ -912,7 +858,7 @@ static int transform_cbor_str_to_cace_data(cace_ari_t *ari_item, char *cbor_str,
     return RET_PASS;
 }
 
-#ifdef HAVE_POSTGRESQL
+#if FALSE && defined(HAVE_POSTGRESQL)
 
 /**
  * Diagnostic method to aide with debugging the contents of the PostgreSQL result.
@@ -929,13 +875,17 @@ static void debugPostgresSqlResult(PGresult *res, int max_row_cnt)
     int num_cols = PQnfields(res);
     fprintf(stderr, "...Number of rows: %d   |   Number of cols: %d\n", num_rows, num_cols);
     if (max_row_cnt > 0 && max_row_cnt < num_rows)
+    {
         fprintf(stderr, "...Max rows to log: %d\n", max_row_cnt);
+    }
 
     // Iterate through each row and send the table column and log contents
     for (int row = 0; row < num_rows; row++)
     {
         if (row == max_row_cnt)
+        {
             break;
+        }
 
         fprintf(stderr, "......Row %d:\n", row);
         for (int col = 0; col < num_cols; col++)
@@ -947,6 +897,9 @@ static void debugPostgresSqlResult(PGresult *res, int max_row_cnt)
         }
     }
 }
+
+#endif
+#if defined(HAVE_POSTGRESQL)
 
 //-------------------------------------------------------------------------------------
 int refdm_db_clear_rptset(int32_t agent_idx)
