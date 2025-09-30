@@ -873,8 +873,13 @@ static int refda_exec_action(refda_agent_t *agent, refda_exec_seq_t *seq, const 
         return 2;
     }
 
+    cace_ari_array_t invalid_items;
+    cace_ari_array_init(invalid_items);
+
     refda_runctx_ptr_set(seq->runctx, ctxptr);
-    int res = refda_exec_exp_mac(runctx, seq, action);
+    int res = refda_exec_exp_mac(runctx, seq, action, invalid_items);
+
+    cace_ari_array_clear(invalid_items);
 
     refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
     return res;
