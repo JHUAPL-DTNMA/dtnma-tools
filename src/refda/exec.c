@@ -889,7 +889,7 @@ static int refda_exec_action(refda_agent_t *agent, refda_exec_seq_t *seq, const 
  * Internal helper function to insert execution items into seq->items such that they will
  * execute next after the currently-executing CTRL
  */
-int exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
+static int exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
 {
     refda_exec_item_list_t tmp_items;
     refda_exec_item_t      tmp_item;
