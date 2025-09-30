@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
 /** Match a specific endpoint value against a pattern reference.
- * @param[in] agent The agent state for lookups.
+ * @param[in] agent The agent state for reference lookup.
  * @param[in] endpoint The endpoint to match.
  * @param[in pat The pattern reference to match with.
  * @return True if the endpoint matches the pattern.

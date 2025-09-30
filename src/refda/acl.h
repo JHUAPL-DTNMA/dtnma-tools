@@ -150,12 +150,23 @@ typedef struct refda_agent_s refda_agent_t;
 
 /** Search in an ACL for a specific endpoint.
  *
- * @param[in] agent The agent state.
+ * @param[in] agent The agent state for reference lookup.
  * @param[in] endpoint The endpoint to search for.
  * @param[out] groups The set of groups to add to.
  * @return Zero if successful, which may result in empty groups.
  */
 int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endpoint, refda_acl_id_tree_t groups);
+
+/** Search in an ACL for specific access.
+ *
+ * @param[in] agent The agent state for reference lookup.
+ * @param[in] groups The set of groups to filter-in.
+ * @param[in] obj The object being accessed.
+ * @param[in] perms The set of permission objects to filter-in.
+ * @param[out] match The matching permissions.
+ * @return True if permisison is present.
+ */
+//bool refda_acl_search_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_amm_obj_desc_t *obj);
 
 #ifdef __cplusplus
 } // extern C
