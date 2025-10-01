@@ -891,28 +891,8 @@ static int refda_exec_action(refda_agent_t *agent, refda_exec_seq_t *seq, const 
  */
 static int exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
 {
-    refda_exec_item_list_t tmp_items;
-    refda_exec_item_t      tmp_item;
-    refda_exec_item_list_init(tmp_items);
-
-    // move item at front of seq (the currently executing CTRL) to tmp
-    refda_exec_item_list_pop_front_move(&tmp_item, seq->items);
-    refda_exec_item_list_push_front_move(tmp_items, &tmp_item);
-
-    // stage new sequence so we can inject ARI
-    refda_exec_item_list_swap(tmp_items, seq->items);
-
+    // TODO: insert exec targets from ari after front but before any other items in seq
     int res = refda_exec_action(agent, seq, ari);
-
-    // move all tmp items back to seq->items
-    while (!refda_exec_item_list_empty_p(tmp_items))
-    {
-        refda_exec_item_list_pop_front_move(&tmp_item, tmp_items);
-        refda_exec_item_list_push_back_move(seq->items, &tmp_item);
-    }
-
-    refda_exec_item_list_clear(tmp_items);
-
     return res;
 }
 

@@ -345,6 +345,8 @@ TEST_CASE("821182""8519FFFF0A2201810A""8519FFFF0A222081426869", 4, "821180")
 // direct MAC ari:/AC/(//65535/10/CTRL/1(10),//65535/10/CTRL/1,//65535/10/CTRL/2(20))
 // invalid reference means execution stops after second CTRL
 TEST_CASE("821183""8519FFFF0A2201810A""8419FFFF0A2201""8519FFFF0A22028114", 0, "821182""8519FFFF0A2201810A""8419FFFF0A2201")
+// ari://ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), //ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version), null)
+TEST_CASE("8564696574666B64746E6D612D6167656E74226C69662D7468656E2D656C736583821181F58564696574666B64746E6D612D6167656E742267696E7370656374818464696574666B64746E6D612D6167656E74236A73772D76657273696F6EF6", 0, "8211818564696574666B64746E6D612D6167656E74226C69662D7468656E2D656C736583821181F58564696574666B64746E6D612D6167656E742267696E7370656374818464696574666B64746E6D612D6167656E74236A73772D76657273696F6EF6")
 // clang-format on
 void test_refda_exec_target(const char *targethex, int expect_exp, const char *expectloghex)
 {
@@ -653,16 +655,3 @@ void test_refda_exec_state_based_rule_cond_false_then_true(const char *actionhex
     // TEST_ASSERT_EQUAL_INT(expect_exec_count, sbr.exec_count);
     refda_amm_sbr_desc_deinit(&sbr);
 }
-
-// ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2)
-// TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", 1000)
-// void test_refda_exec_next(const char *arihex, int wait_ms)
-//{
-//    cace_ari_t ari_to_exec = CACE_ARI_INIT_UNDEFINED;
-//
-//    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&ari_to_exec, arihex));
-//    int expect_result = 0;
-//    TEST_ASSERT_EQUAL_INT(expect_result, refda_exec_next(&agent, agent.&ari_to_exec));
-//
-//    cace_ari_deinit(&ari_to_exec);
-//}
