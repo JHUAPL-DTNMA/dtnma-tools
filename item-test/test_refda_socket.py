@@ -771,7 +771,7 @@ class TestRefdaSocket(unittest.TestCase):
         LOGGER.setLevel(logging.INFO)
 
         self._send_msg(
-            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), null, null))'
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), null, null))')]
         )
         msg_vals = self._wait_msg(mgr_ix=0)
         self.assertEqual(1, len(msg_vals))
@@ -782,7 +782,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(True, rpt.items[0].value)
 
         self._send_msg(
-            'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), //ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version), null))'
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), //ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version), null))')]
         )
         msg_vals = self._wait_msg(mgr_ix=0)
         rptset = msg_vals[0].value
