@@ -891,8 +891,29 @@ static int refda_exec_action(refda_agent_t *agent, refda_exec_seq_t *seq, const 
  */
 static int exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
 {
-    // TODO: insert exec targets from ari after front but before any other items in seq
+    refda_exec_item_list_t tmp_items;
+    refda_exec_item_t      tmp_item;
+    refda_exec_item_list_init(tmp_items);
+
+    // Remove subsequent execution items
+    while (refda_exec_item_list_size(seq->items) > 1)
+    {
+        refda_exec_item_list_pop_back_move(&tmp_item, seq->items);
+        refda_exec_item_list_push_front_move(tmp_items, &tmp_item);
+    }
+
+    // Insert next execution items immediately after the currently executing item
     int res = refda_exec_action(agent, seq, ari);
+
+    // Move existing items back, so they will execute after the newly-added item(s)
+    while (!refda_exec_item_list_empty_p(tmp_items))
+    {
+        refda_exec_item_list_pop_front_move(&tmp_item, tmp_items);
+        refda_exec_item_list_push_back_move(seq->items, &tmp_item);
+        refda_exec_item_list_back(seq->items)->seq = seq; // Need to manually set this again
+    }
+
+    refda_exec_item_list_clear(tmp_items);
     return res;
 }
 
