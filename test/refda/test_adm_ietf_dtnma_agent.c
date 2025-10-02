@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "util/ari.h"
+#include "util/agent.h"
 #include "util/runctx.h"
 #include <refda/register.h>
 #include <refda/binding.h>
@@ -58,13 +59,8 @@ void suiteSetUp(void)
     cace_openlog();
 
     refda_agent_init(&agent);
-    // ADM initialization
-    assert(0 == refda_adm_ietf_amm_init(&agent));
-    assert(0 == refda_adm_ietf_amm_base_init(&agent));
-    assert(0 == refda_adm_ietf_amm_semtype_init(&agent));
-    assert(0 == refda_adm_ietf_network_base_init(&agent));
-    assert(0 == refda_adm_ietf_dtnma_agent_init(&agent));
-    assert(0 == refda_adm_ietf_dtnma_agent_acl_init(&agent));
+    test_util_agent_crit_adms(&agent);
+    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 
     ex_adm = cace_amm_obj_store_add_ns(&(agent.objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
                                        cace_amm_idseg_ref_withenum("adm", EXAMPLE_ADM_ENUM), "2025-01-03");

@@ -59,8 +59,9 @@ void refda_acl_access_deinit(refda_acl_access_t *obj)
 void refda_acl_init(refda_acl_t *obj)
 {
     CHKVOID(obj);
-    obj->generation = 0;
-    obj->perm_base  = NULL;
+    obj->generation   = 0;
+    obj->perm_base    = NULL;
+    obj->perm_produce = NULL;
     refda_acl_group_list_init(obj->groups);
     refda_acl_access_list_init(obj->access);
     refda_acl_access_by_group_init(obj->access_by_group);
@@ -72,7 +73,8 @@ void refda_acl_deinit(refda_acl_t *obj)
     refda_acl_access_by_group_clear(obj->access_by_group);
     refda_acl_access_list_clear(obj->access);
     refda_acl_group_list_clear(obj->groups);
-    obj->perm_base = NULL;
+    obj->perm_produce = NULL;
+    obj->perm_base    = NULL;
 }
 
 int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endpoint, refda_acl_id_tree_t groups)
@@ -103,4 +105,63 @@ int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endp
     }
 
     return 0;
+}
+
+bool refda_acl_search_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups,
+                                 const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
+                                 refda_amm_ident_base_ptr_set_t match)
+{
+    bool found = false;
+
+    refda_acl_id_tree_it_t grp_it;
+    for (refda_acl_id_tree_it(grp_it, groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
+    {
+        const refda_acl_id_t *grp_id = refda_acl_id_tree_cref(grp_it);
+
+        const refda_acl_access_ptr_set_t *accesses =
+            refda_acl_access_by_group_cget(agent->acl.access_by_group, *grp_id);
+        if (!accesses)
+        {
+            continue;
+        }
+
+        refda_acl_access_ptr_set_it_t acc_it;
+        for (refda_acl_access_ptr_set_it(acc_it, *accesses); !refda_acl_access_ptr_set_end_p(acc_it);
+             refda_acl_access_ptr_set_next(acc_it))
+        {
+            refda_acl_access_t *const *acc_ptr = refda_acl_access_ptr_set_cref(acc_it);
+            const refda_acl_access_t  *acc     = *acc_ptr;
+
+            // TODO filter by acc_obj
+            (void)acc_obj;
+
+            refda_amm_ident_base_list_it_t perm_it;
+            for (refda_amm_ident_base_list_it(perm_it, acc->permissions); !refda_amm_ident_base_list_end_p(perm_it);
+                 refda_amm_ident_base_list_next(perm_it))
+            {
+                refda_amm_ident_base_t *perm = refda_amm_ident_base_list_ref(perm_it);
+
+                // filter-in specific desired permission objects
+                if (cace_amm_obj_desc_ptr_set_cget(perm_objs, perm->deref.obj))
+                {
+                    found = true;
+                    refda_amm_ident_base_ptr_set_push(match, perm);
+                }
+            }
+        }
+    }
+
+    return found;
+}
+
+bool refda_acl_search_one_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups,
+                                     const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
+                                     refda_amm_ident_base_ptr_set_t match)
+{
+    cace_amm_obj_desc_ptr_set_t perm_objs;
+    cace_amm_obj_desc_ptr_set_init(perm_objs);
+    cace_amm_obj_desc_ptr_set_push(perm_objs, (cace_amm_obj_desc_t *)perm_obj);
+    bool found = refda_acl_search_permission(agent, groups, acc_obj, perm_objs, match);
+    cace_amm_obj_desc_ptr_set_clear(perm_objs);
+    return found;
 }

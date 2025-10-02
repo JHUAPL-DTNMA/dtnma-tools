@@ -125,7 +125,11 @@ typedef struct
 
     /** Base IDENT for permissions.
      */
-    refda_amm_ident_desc_t *perm_base;
+    cace_amm_obj_desc_t *perm_base;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/produce>.
+     */
+    cace_amm_obj_desc_t *perm_produce;
 
     /** All groups configured in the Agent.
      */
@@ -139,6 +143,10 @@ typedef struct
      * This is kept in sync with #groups and #access
      */
     refda_acl_access_by_group_t access_by_group;
+
+    /** Permissions present when #access lookup does not match.
+     */
+    refda_amm_ident_base_list_t default_access;
 
 } refda_acl_t;
 
@@ -161,12 +169,18 @@ int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endp
  *
  * @param[in] agent The agent state for reference lookup.
  * @param[in] groups The set of groups to filter-in.
- * @param[in] obj The object being accessed.
- * @param[in] perms The set of permission objects to filter-in.
+ * @param[in] acc_obj The object being accessed.
+ * @param[in] perm_objs The set of permission objects to filter-in.
  * @param[out] match The matching permissions.
- * @return True if permisison is present.
+ * @return True if permisison is present and the @c match is non-empty.
  */
-//bool refda_acl_search_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_amm_obj_desc_t *obj);
+bool refda_acl_search_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups,
+                                 const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
+                                 refda_amm_ident_base_ptr_set_t match);
+
+bool refda_acl_search_one_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups,
+                                     const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
+                                     refda_amm_ident_base_ptr_set_t match);
 
 #ifdef __cplusplus
 } // extern C

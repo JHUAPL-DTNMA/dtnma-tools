@@ -703,7 +703,7 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
@@ -787,7 +787,7 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    refda_agent_t *agent  = ctx->prodctx->runctx->agent;
     cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
     atomic_ullong  val    = atomic_load(&agent->instr.num_execset_recv);
     cace_ari_set_uvast(&result, val);
@@ -813,7 +813,7 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed(refda_edd_prod_ctx_
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    refda_agent_t *agent  = ctx->prodctx->runctx->agent;
     cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
     atomic_ullong  val    = atomic_load(&agent->instr.num_execset_recv_failure);
     cace_ari_set_uvast(&result, val);
@@ -839,7 +839,7 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    refda_agent_t *agent  = ctx->prodctx->runctx->agent;
     cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
     atomic_ullong  val    = atomic_load(&agent->instr.num_rptset_sent);
     cace_ari_set_uvast(&result, val);
@@ -865,7 +865,7 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed(refda_edd_prod_ctx_
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    refda_agent_t *agent  = ctx->prodctx->runctx->agent;
     cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
     atomic_ullong  val    = atomic_load(&agent->instr.num_rptset_sent_failure);
     cace_ari_set_uvast(&result, val);
@@ -891,7 +891,7 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_started(refda_edd_prod_ctx_t
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_started BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    refda_agent_t *agent  = ctx->prodctx->runctx->agent;
     cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
     atomic_ullong  val    = atomic_load(&agent->instr.num_ctrls_run);
     cace_ari_set_uvast(&result, val);
@@ -917,7 +917,7 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(refda_edd_prod_ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    refda_agent_t *agent  = ctx->prodctx->runctx->agent;
     cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
     atomic_ullong  val    = atomic_load(&agent->instr.num_ctrls_succeeded);
     cace_ari_set_uvast(&result, val);
@@ -943,7 +943,7 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t 
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    refda_agent_t *agent  = ctx->prodctx->runctx->agent;
     cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
     atomic_ullong  val    = atomic_load(&agent->instr.num_ctrls_failed);
     cace_ari_set_uvast(&result, val);
@@ -971,7 +971,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
      * +-------------------------------------------------------------------------+
      */
 
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     if (pthread_mutex_lock(&(agent->exec_state_mutex)))
     {
         CACE_LOG_ERR("failed to lock exec_state_mutex");
@@ -1049,7 +1049,7 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_odm_list BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
@@ -1138,7 +1138,7 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
         return;
     }
 
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
@@ -1224,7 +1224,7 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
         return;
     }
 
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
@@ -1316,7 +1316,7 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
         return;
     }
 
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
@@ -1410,7 +1410,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
         return;
     }
 
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
@@ -1511,7 +1511,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
         return;
     }
 
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;

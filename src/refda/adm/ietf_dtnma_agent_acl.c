@@ -54,7 +54,7 @@
         return;                                      \
     }
 
-static void acl_remove_access(refda_acl_t *acl, refda_acl_access_t *access)
+static void refda_acl_pre_remove_access(refda_acl_t *acl, refda_acl_access_t *access)
 {
     // TODO can simplify if existing index is valid for groups
     refda_acl_access_by_group_it_t pair_it;
@@ -66,7 +66,7 @@ static void acl_remove_access(refda_acl_t *acl, refda_acl_access_t *access)
         refda_acl_access_ptr_set_pop_at(NULL, *pair->value_ptr, access);
     }
 }
-static void acl_add_access(refda_acl_t *acl, refda_acl_access_t *access)
+static void refda_acl_post_add_access(refda_acl_t *acl, refda_acl_access_t *access)
 {
     refda_acl_id_tree_it_t grp_it;
     for (refda_acl_id_tree_it(grp_it, access->groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
@@ -100,7 +100,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_access_list BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     AGENT_ACL_LOCK(agent)
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
@@ -178,7 +178,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_current_groups(refda_edd_prod_ctx
     cace_ari_ac_t *grp_ac = cace_ari_set_ac(&result, NULL);
 
     refda_acl_id_tree_it_t grp_it;
-    for (refda_acl_id_tree_it(grp_it, ctx->prodctx->parent->acl_groups); !refda_acl_id_tree_end_p(grp_it);
+    for (refda_acl_id_tree_it(grp_it, ctx->prodctx->runctx->acl_groups); !refda_acl_id_tree_end_p(grp_it);
          refda_acl_id_tree_next(grp_it))
     {
         const refda_acl_id_t *grp = refda_acl_id_tree_cref(grp_it);
@@ -214,7 +214,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_acl_edd_group_list BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
     AGENT_ACL_LOCK(agent)
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
@@ -324,7 +324,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
 
     if (found)
     {
-        acl_remove_access(&agent->acl, found);
+        refda_acl_pre_remove_access(&agent->acl, found);
         refda_acl_id_tree_reset(found->groups);
     }
     else
@@ -367,7 +367,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
     }
 
     // still add it, just fail the execution
-    acl_add_access(&agent->acl, found);
+    refda_acl_post_add_access(&agent->acl, found);
     cace_get_system_time(&found->updated_at);
 
     if (!failure)
@@ -432,7 +432,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_discard_access(refda_ctrl_exec_c
     if (found)
     {
         // remove references to this
-        acl_remove_access(&agent->acl, found);
+        refda_acl_pre_remove_access(&agent->acl, found);
 
         refda_acl_access_list_remove(agent->acl.access, found_it);
     }

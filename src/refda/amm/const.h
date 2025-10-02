@@ -39,9 +39,7 @@ typedef struct
     cace_amm_type_t val_type;
 
     /** Storage for the constant value.
-     * This is type-converted at initialization time so the parent
-     * struct has no explicit ::cace_amm_type_t because it is assumed that the
-     * value has been converted externally.
+     * This is type-converted at initialization time to match #val_type.
      */
     cace_ari_t value;
 

@@ -16,17 +16,12 @@
  * limitations under the License.
  */
 #include "util/ari.h"
+#include "util/agent.h"
 #include "util/runctx.h"
 #include <refda/eval.h>
 #include <refda/register.h>
 #include <refda/edd_prod_ctx.h>
 #include <refda/oper_eval_ctx.h>
-#include <refda/adm/ietf_amm.h>
-#include <refda/adm/ietf_amm_base.h>
-#include <refda/adm/ietf_amm_semtype.h>
-#include <refda/adm/ietf_network_base.h>
-#include <refda/adm/ietf_dtnma_agent.h>
-#include <refda/adm/ietf_dtnma_agent_acl.h>
 #include <refda/amm/const.h>
 #include <refda/amm/edd.h>
 #include <cace/amm/semtype.h>
@@ -52,6 +47,8 @@ void suiteSetUp(void)
     cace_openlog();
 
     refda_agent_init(&agent);
+    test_util_agent_crit_adms(&agent);
+    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
     suite_adms_init(&agent);
 }
 
@@ -169,14 +166,6 @@ static void test_reporting_oper_add(refda_oper_eval_ctx_t *ctx)
 
 static void suite_adms_init(refda_agent_t *agent)
 {
-    // ADM initialization
-    assert(0 == refda_adm_ietf_amm_init(agent));
-    assert(0 == refda_adm_ietf_amm_base_init(agent));
-    assert(0 == refda_adm_ietf_amm_semtype_init(agent));
-    assert(0 == refda_adm_ietf_network_base_init(agent));
-    assert(0 == refda_adm_ietf_dtnma_agent_init(agent));
-    assert(0 == refda_adm_ietf_dtnma_agent_acl_init(agent));
-
     {
         // ADM for this test fixture
         cace_amm_obj_ns_t *adm =
@@ -194,12 +183,12 @@ static void suite_adms_init(refda_agent_t *agent)
                 cace_ari_ac_t *acinit = cace_ari_set_ac(&(objdata->value), NULL);
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit->items);
-                    // ari://example-adm/EDD/edd1
+                    // ari://example/adm/EDD/edd1
                     cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_EDD, 2);
                 }
                 {
                     cace_ari_t *item = cace_ari_list_push_back_new(acinit->items);
-                    // ari://example-adm/VAR/var1
+                    // ari://example/adm/VAR/var1
                     cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_VAR, 1);
                 }
             }

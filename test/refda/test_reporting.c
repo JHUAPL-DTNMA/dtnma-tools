@@ -16,16 +16,11 @@
  * limitations under the License.
  */
 #include "util/ari.h"
+#include "util/agent.h"
 #include "util/runctx.h"
 #include <refda/reporting.h>
 #include <refda/register.h>
 #include <refda/edd_prod_ctx.h>
-#include <refda/adm/ietf_amm.h>
-#include <refda/adm/ietf_amm_base.h>
-#include <refda/adm/ietf_amm_semtype.h>
-#include <refda/adm/ietf_network_base.h>
-#include <refda/adm/ietf_dtnma_agent.h>
-#include <refda/adm/ietf_dtnma_agent_acl.h>
 #include <refda/amm/const.h>
 #include <refda/amm/edd.h>
 #include <cace/amm/semtype.h>
@@ -53,6 +48,8 @@ void suiteSetUp(void)
     cace_openlog();
 
     refda_agent_init(&agent);
+    test_util_agent_crit_adms(&agent);
+    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
     suite_adms_init(&agent);
 }
 

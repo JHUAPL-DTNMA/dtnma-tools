@@ -21,7 +21,7 @@
 void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *parent)
 {
     CHKVOID(obj);
-    obj->parent = parent;
+    obj->runctx = parent;
     cace_ari_list_init(obj->items);
 }
 
@@ -29,5 +29,5 @@ void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj)
 {
     CHKVOID(obj);
     cace_ari_list_clear(obj->items);
-    obj->parent = NULL;
+    obj->runctx = NULL;
 }

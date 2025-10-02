@@ -16,16 +16,11 @@
  * limitations under the License.
  */
 #include "util/ari.h"
+#include "util/agent.h"
 #include <refda/exec.h>
 #include <refda/register.h>
 #include <refda/edd_prod_ctx.h>
 #include <refda/ctrl_exec_ctx.h>
-#include <refda/adm/ietf_amm.h>
-#include <refda/adm/ietf_amm_base.h>
-#include <refda/adm/ietf_amm_semtype.h>
-#include <refda/adm/ietf_network_base.h>
-#include <refda/adm/ietf_dtnma_agent.h>
-#include <refda/adm/ietf_dtnma_agent_acl.h>
 #include <refda/amm/const.h>
 #include <refda/amm/ctrl.h>
 #include <cace/amm/semtype.h>
@@ -57,13 +52,17 @@ void suiteSetUp(void)
     cace_openlog();
 
     cace_ari_list_init(exec_log);
+
     refda_agent_init(&agent);
+    test_util_agent_crit_adms(&agent);
+    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
     suite_adms_init(&agent);
 }
 
 int suiteTearDown(int failures)
 {
     cace_ari_list_clear(exec_log);
+
     refda_agent_deinit(&agent);
 
     cace_closelog();
@@ -106,14 +105,6 @@ static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
 
 static void suite_adms_init(refda_agent_t *agent)
 {
-    // ADM initialization
-    assert(0 == refda_adm_ietf_amm_init(agent));
-    assert(0 == refda_adm_ietf_amm_base_init(agent));
-    assert(0 == refda_adm_ietf_amm_semtype_init(agent));
-    assert(0 == refda_adm_ietf_network_base_init(agent));
-    assert(0 == refda_adm_ietf_dtnma_agent_init(agent));
-    assert(0 == refda_adm_ietf_dtnma_agent_acl_init(agent));
-
     {
         // ADM for this test fixture
         cace_amm_obj_ns_t *adm =

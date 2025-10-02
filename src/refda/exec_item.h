@@ -60,10 +60,12 @@ typedef struct
     refda_exec_seq_t *seq;
 
     /** A copy of the single-CTRL reference which created this item.
+     * This includes given parameters for the execution.
      */
     cace_ari_t ref;
 
     /** Dereference result for CTRL of this item.
+     * This includes actual parameters for the execution.
      */
     cace_amm_lookup_t deref;
 

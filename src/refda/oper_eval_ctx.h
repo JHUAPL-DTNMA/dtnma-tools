@@ -39,6 +39,7 @@ typedef struct refda_oper_eval_ctx_s
     refda_eval_ctx_t *evalctx;
 
     /** Dereference result for OPER which led to this evaluation.
+     * This includes actual parameters for the evaluation.
      * This will never be NULL.
      */
     const cace_amm_lookup_t *deref;
@@ -50,6 +51,7 @@ typedef struct refda_oper_eval_ctx_s
 
     /** Operands which have already been popped from the stack and
      * converted to the OPER-specific operand types.
+     * Operands are different from parameters in #deref.
      * The order of these operands is the same as the OPER definition.
      */
     cace_ari_itemized_t operands;

@@ -32,7 +32,7 @@ typedef struct
     /** Parent running context.
      * This will never be null.
      */
-    refda_runctx_t *parent;
+    refda_runctx_t *runctx;
 
     /** Storage for the items of a report layer.
      * This is initialized as empty and is pushed back as items are added.
@@ -44,11 +44,11 @@ typedef struct
  * a target object's formal parameters.
  *
  * @param[out] obj The context to initialize.
- * @param[in] parent The parent runtime context.
+ * @param[in] runctx The parent runtime context.
  * @param[in] deref The dereference result.
  * The result must outlive this context.
  */
-void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *parent);
+void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *runctx);
 
 void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj);
 

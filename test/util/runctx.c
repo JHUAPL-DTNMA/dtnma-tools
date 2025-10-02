@@ -28,5 +28,8 @@ int test_util_runctx_init(refda_runctx_t *ctx, refda_agent_t *agent)
 
     cace_ari_set_tstr(&ctx->mgr_ident, mgr_ident, false);
 
+    // agent group 0
+    refda_acl_id_tree_push(ctx->acl_groups, 0);
+
     return 0;
 }

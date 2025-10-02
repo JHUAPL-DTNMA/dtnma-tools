@@ -107,13 +107,13 @@ int refda_agent_nowtime(refda_agent_t *agent _U_, cace_ari_t *val)
     return 0;
 }
 
-refda_amm_ident_desc_t *refda_agent_get_ident(refda_agent_t *agent, cace_ari_int_id_t org_id,
-                                              cace_ari_int_id_t model_id, cace_ari_int_id_t obj_id)
+cace_amm_obj_desc_t *refda_agent_get_object(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
+                                            cace_ari_type_t type_id, cace_ari_int_id_t obj_id)
 {
-    refda_amm_ident_desc_t *found = NULL;
+    cace_amm_obj_desc_t *found = NULL;
 
     cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_objref_path_intid(&ref, org_id, model_id, CACE_ARI_TYPE_TYPEDEF, obj_id);
+    cace_ari_set_objref_path_intid(&ref, org_id, model_id, type_id, obj_id);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -129,7 +129,7 @@ refda_amm_ident_desc_t *refda_agent_get_ident(refda_agent_t *agent, cace_ari_int
     }
     else
     {
-        found = deref.obj->app_data.ptr;
+        found = deref.obj;
     }
 
     cace_amm_lookup_deinit(&deref);
@@ -141,36 +141,13 @@ refda_amm_ident_desc_t *refda_agent_get_ident(refda_agent_t *agent, cace_ari_int
 cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
                                          cace_ari_int_id_t obj_id)
 {
-    cace_amm_type_t *found = NULL;
+    cace_amm_obj_desc_t *obj = refda_agent_get_object(agent, org_id, model_id, CACE_ARI_TYPE_TYPEDEF, obj_id);
 
-    cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_objref_path_intid(&ref, org_id, model_id, CACE_ARI_TYPE_TYPEDEF, obj_id);
+    refda_amm_typedef_desc_t *typedesc = obj ? obj->app_data.ptr : NULL;
 
-    cace_amm_lookup_t deref;
-    cace_amm_lookup_init(&deref);
+    cace_amm_type_t *typeobj = typedesc ? &(typedesc->typeobj) : NULL;
 
-    int res = cace_amm_lookup_deref(&deref, &(agent->objs), &ref);
-    if (res)
-    {
-        string_t buf;
-        string_init(buf);
-        cace_ari_text_encode(buf, &ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
-        string_clear(buf);
-    }
-    else
-    {
-        refda_amm_typedef_desc_t *typedesc = deref.obj->app_data.ptr;
-        if (typedesc)
-        {
-            found = &(typedesc->typeobj);
-        }
-    }
-
-    cace_amm_lookup_deinit(&deref);
-    cace_ari_deinit(&ref);
-
-    return found;
+    return typeobj;
 }
 
 int refda_agent_bindrefs(refda_agent_t *agent)
@@ -199,9 +176,18 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         ++failcnt;
     }
 
-    agent->acl.perm_base = refda_agent_get_ident(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM,
-                                                 REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PERMISSION);
+    agent->acl.perm_base =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PERMISSION);
     if (!agent->acl.perm_base)
+    {
+        ++failcnt;
+    }
+
+    agent->acl.perm_produce =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
+    if (!agent->acl.perm_produce)
     {
         ++failcnt;
     }
