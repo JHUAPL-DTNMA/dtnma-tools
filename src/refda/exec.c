@@ -858,39 +858,11 @@ int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     return 0;
 }
 
-/** Execute an action that has already been verified
- * Based on code from refda_exec_exp_execset
- */
-static int refda_exec_action(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *action)
+int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
 {
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    CHKERR1(agent);
+    CHKERR1(ari);
 
-    refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
-
-    if (refda_runctx_from(runctx, agent, NULL))
-    {
-        return 2;
-    }
-
-    cace_ari_array_t invalid_items;
-    cace_ari_array_init(invalid_items);
-
-    refda_runctx_ptr_set(seq->runctx, ctxptr);
-    int res = refda_exec_exp_mac(runctx, seq, action, invalid_items);
-
-    cace_ari_array_clear(invalid_items);
-
-    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
-    return res;
-}
-
-/**
- * Internal helper function to insert execution items into seq->items such that they will
- * execute next after the currently-executing CTRL
- */
-static int exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
-{
     refda_exec_item_list_t tmp_items;
     refda_exec_item_t      tmp_item;
     refda_exec_item_list_init(tmp_items);
@@ -903,7 +875,12 @@ static int exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari
     }
 
     // Insert next execution items immediately after the currently executing item
-    int res = refda_exec_action(agent, seq, ari);
+    cace_ari_array_t invalid_items;
+    cace_ari_array_init(invalid_items);
+
+    int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, ari, invalid_items);
+
+    cace_ari_array_clear(invalid_items);
 
     // Move existing items back, so they will execute after the newly-added item(s)
     while (!refda_exec_item_list_empty_p(tmp_items))
@@ -914,37 +891,5 @@ static int exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari
     }
 
     refda_exec_item_list_clear(tmp_items);
-    return res;
-}
-
-int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
-{
-    CHKERR1(agent);
-    CHKERR1(ari);
-
-    int res = 0;
-
-    // Encapsulate ARI within an AC if needed
-    if (!cace_ari_get_ac((cace_ari_t *)ari))
-    {
-        cace_ari_ac_t acinit;
-        cace_ari_ac_init(&acinit);
-        {
-            cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
-            cace_ari_set_copy(item, ari);
-        }
-
-        cace_ari_t ari_ac = CACE_ARI_INIT_UNDEFINED;
-        cace_ari_set_ac(&ari_ac, &acinit);
-
-        // Expand target ARI and create exec items, CTRLs are run later by exec worker
-        res = exec_next(agent, seq, &ari_ac);
-    }
-    else
-    {
-        // Expand target ARI and create exec items, CTRLs are run later by exec worker
-        res = exec_next(agent, seq, ari);
-    }
-
     return res;
 }
