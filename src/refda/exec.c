@@ -719,7 +719,7 @@ int refda_exec_tbr_disable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 
 static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 
-static int refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr, cace_ari_t *result)
+static int refda_exec_check_sbr_condition(refda_agent_t *agent, const refda_amm_sbr_desc_t *sbr, cace_ari_t *result)
 {
     refda_runctx_t runctx;
     refda_runctx_init(&runctx);
@@ -730,8 +730,8 @@ static int refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_de
     }
 
     cace_ari_t ari_res = CACE_ARI_INIT_UNDEFINED;
-    int        res     = refda_eval_target(&runctx, &ari_res, &(sbr->condition));
 
+    int res = refda_eval_target(&runctx, &ari_res, &(sbr->condition));
     if (res)
     {
         CACE_LOG_ERR("Unable to evaluate SBR condition");
@@ -739,7 +739,8 @@ static int refda_exec_check_sbr_condition(refda_agent_t *agent, refda_amm_sbr_de
     else
     {
         const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
-        res                            = cace_amm_type_convert(typeobj, result, &ari_res);
+
+        res = cace_amm_type_convert(typeobj, result, &ari_res);
         if (res)
         {
             CACE_LOG_ERR("Unable to convert SBR condition result to boolean");
@@ -779,8 +780,8 @@ static void refda_exec_run_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 
     // Check condition and execute action if necessary
     cace_ari_t ari_result = CACE_ARI_INIT_UNDEFINED;
-    int        result     = refda_exec_check_sbr_condition(agent, sbr, &ari_result);
 
+    int result = refda_exec_check_sbr_condition(agent, sbr, &ari_result);
     if (!result)
     {
         bool bool_result = false;

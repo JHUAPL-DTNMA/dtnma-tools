@@ -172,7 +172,7 @@ int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endp
  * @param[in] acc_obj The object being accessed.
  * @param[in] perm_objs The set of permission objects to filter-in.
  * @param[out] match The matching permissions.
- * @return True if permisison is present and the @c match is non-empty.
+ * @return True if permission is present and the @c match is non-empty.
  */
 bool refda_acl_search_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups,
                                  const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,

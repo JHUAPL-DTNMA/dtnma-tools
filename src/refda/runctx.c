@@ -91,6 +91,9 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
     {
         cace_ari_reset(&(ctx->mgr_ident));
         cace_ari_reset(&(ctx->nonce));
+        // agent group 0
+        ctx->acl_gen = 0;
+        refda_acl_id_tree_push(ctx->acl_groups, 0);
     }
 
     return 0;
