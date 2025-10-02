@@ -119,6 +119,7 @@ static void check_produce(const char *refhex, const char *outhex, int expect_res
     TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&outval, &(ctx.value)), "produced value mismatch");
 
     refda_valprod_ctx_deinit(&ctx);
+    refda_runctx_deinit(&runctx);
     cace_amm_lookup_deinit(&deref);
 
     cace_ari_deinit(&outval);

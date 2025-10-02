@@ -369,7 +369,7 @@ int refda_agent_stop(refda_agent_t *agent)
         // Send sentinel to end thread execution
         refda_msgdata_t undef;
         refda_msgdata_init(&undef);
-        refda_msgdata_queue_push_move(&agent->execs[0], &undef);
+        refda_msgdata_queue_push_move(agent->execs, &undef);
         sem_post(&(agent->execs_sem));
     }
 

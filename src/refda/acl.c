@@ -81,7 +81,7 @@ int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endp
 {
     CHKERR1(agent);
     CHKERR1(endpoint);
-    CACE_LOG_INFO("searching groups");
+    CACE_LOG_DEBUG("searching groups");
 
     refda_acl_id_tree_reset(groups);
 
@@ -102,6 +102,15 @@ int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endp
                 refda_acl_id_tree_push(groups, grp->id);
             }
         }
+    }
+
+    if (cace_log_is_enabled_for(LOG_INFO))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        refda_acl_id_tree_get_str(buf, groups, false);
+        CACE_LOG_INFO("matched to %zu groups: %s", refda_acl_id_tree_size(groups), m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     return 0;
