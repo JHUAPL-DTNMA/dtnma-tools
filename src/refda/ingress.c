@@ -39,6 +39,12 @@ void *refda_ingress_worker(void *arg)
         cace_ari_list_reset(values);
         int recv_res = agent->mif.recv(values, &meta, &agent->running, agent->mif.ctx);
 
+        if (cace_ari_is_undefined(&(meta.src)))
+        {
+            CACE_LOG_ERR("Ignoring undefined source endpoint");
+            continue;
+        }
+
         // process received items even if failed status
         if (!cace_ari_list_empty_p(values))
         {
@@ -95,6 +101,11 @@ void refda_ingress_push_move(refda_agent_t *agent, const cace_amm_msg_if_metadat
     if (cace_ari_get_execset(ari) == NULL)
     {
         CACE_LOG_ERR("Ignoring input ARI that is not an EXECSET");
+        return;
+    }
+    if (cace_ari_is_undefined(&(meta->src)))
+    {
+        CACE_LOG_ERR("Ignoring undefined source endpoint");
         return;
     }
 

@@ -137,7 +137,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         if (res)
         {
             // handled as failure
-            CACE_LOG_ERR("Failed clock_gettime()");
+            CACE_LOG_CRIT("Failed clock_gettime()");
         }
         else
         {

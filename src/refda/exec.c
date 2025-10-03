@@ -719,7 +719,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
 int refda_exec_tbr_enable(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
 {
     CHKERR1(tbr);
-    if (tbr->action.is_ref || tbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    if (!cace_ari_cget_ac(&tbr->action))
     {
         CACE_LOG_ERR("Invalid TBR %p action, unable to enable the rule", tbr);
         return 1;
@@ -878,13 +878,13 @@ static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *s
 
 int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 {
-    if (sbr->action.is_ref || sbr->action.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    if (!cace_ari_cget_ac(&sbr->action))
     {
         CACE_LOG_ERR("Invalid SBR %p action, unable to enable the rule", sbr);
         return 1;
     }
 
-    if (sbr->condition.is_ref || sbr->condition.as_lit.ari_type != CACE_ARI_TYPE_AC)
+    if (!cace_ari_cget_ac(&sbr->condition))
     {
         CACE_LOG_ERR("Invalid SBR %p condition, unable to enable the rule", sbr);
         return 1;

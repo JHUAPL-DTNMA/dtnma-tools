@@ -72,6 +72,7 @@ int suiteTearDown(int failures)
 void tearDown(void)
 {
     cace_ari_list_reset(exec_log);
+    refda_timeline_reset(agent.exec_timeline);
 }
 
 #define EXAMPLE_ORG_ENUM 65535
@@ -205,7 +206,7 @@ static void suite_adms_init(refda_agent_t *agent)
     assert(0 == res);
 }
 
-/** Perform a single execution on a single target.
+/** Perform a single execution on a single target from a dummy manager.
  *
  * @param[in] target The target to execute.
  * @param expect_exp The expected refda_exec_exp_target() return code.
@@ -518,6 +519,9 @@ void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex
         }
     }
 
+    // one event for this rule
+    TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
+
     for (int i = 0; i < expect_exec_count && i < max_exec_count; i++)
     {
         // Execute the rule
@@ -551,7 +555,7 @@ TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "821181820401", "820D01", 2, tru
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/AC/(/BOOL/false), ari:/TD/1
 TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818201F4", "820D01", 1, true, 0, 0)
 void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex, const char *min_interval_hex,
-                                      int max_exec_count, bool init_enabled, int expect_result, int expect_exec_count)
+                                      int max_exec_count, bool init_enabled, int expect_enable, int expect_exec_count)
 {
     refda_amm_sbr_desc_t sbr;
     {
@@ -564,10 +568,13 @@ void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.min_interval), min_interval_hex));
         sbr.max_exec_count = max_exec_count;
 
-        TEST_ASSERT_EQUAL_INT(expect_result, refda_exec_sbr_enable(&agent, &sbr));
+        TEST_ASSERT_EQUAL_INT(expect_enable, refda_exec_sbr_enable(&agent, &sbr));
     }
 
-    if (!expect_result)
+    // one event for this rule
+    TEST_ASSERT_EQUAL_INT(!expect_enable ? 1 : 0, refda_timeline_size(agent.exec_timeline));
+
+    if (!expect_enable)
     {
         for (int i = 0; i < expect_exec_count && i < max_exec_count; i++)
         {
@@ -593,7 +600,7 @@ void test_refda_exec_state_based_rule(const char *actionhex, const char *condhex
 TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "8211818519FFFF0A23028100", "820D01", 1, true, 0, 1)
 void test_refda_exec_state_based_rule_cond_false_then_true(const char *actionhex, const char *condhex,
                                                            const char *min_interval_hex, int max_exec_count,
-                                                           bool init_enabled, int expect_result, int expect_exec_count)
+                                                           bool init_enabled, int expect_enable, int expect_exec_count)
 {
     // Reset EDD value
     atomic_store(&edd_backing_value, 0);
@@ -609,7 +616,7 @@ void test_refda_exec_state_based_rule_cond_false_then_true(const char *actionhex
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(sbr.min_interval), min_interval_hex));
         sbr.max_exec_count = max_exec_count;
 
-        TEST_ASSERT_EQUAL_INT(expect_result, refda_exec_sbr_enable(&agent, &sbr));
+        TEST_ASSERT_EQUAL_INT(expect_enable, refda_exec_sbr_enable(&agent, &sbr));
     }
 
     // Execute the rule

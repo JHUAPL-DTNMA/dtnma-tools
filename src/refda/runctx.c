@@ -82,28 +82,34 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
         {
             cace_ari_reset(&(ctx->nonce));
         }
-
-        // Lookup ACL groups once now
-        ctx->acl_gen = atomic_load(&agent->acl.generation);
-        refda_acl_search_endpoint(agent, &ctx->mgr_ident, ctx->acl_groups);
     }
     else
     {
         // Agent-directed, no manager
         cace_ari_reset(&(ctx->mgr_ident));
         cace_ari_reset(&(ctx->nonce));
-        // agent group 0
-        ctx->acl_gen = 0;
-        refda_acl_id_tree_push(ctx->acl_groups, 0);
     }
+
+    // Lookup ACL groups once now
+    refda_runctx_check_acl(ctx);
 
     return 0;
 }
 
 void refda_runctx_check_acl(refda_runctx_t *ctx)
 {
-    if (ctx->acl_gen != atomic_load(&ctx->agent->acl.generation))
+    if (cace_ari_is_undefined(&(ctx->mgr_ident)))
     {
-        refda_acl_search_endpoint(ctx->agent, &ctx->mgr_ident, ctx->acl_groups);
+        ctx->acl_gen = 0;
+        // agent group 0
+        refda_acl_id_tree_push(ctx->acl_groups, 0);
+    }
+    else
+    {
+        if (ctx->acl_gen != atomic_load(&ctx->agent->acl.generation))
+        {
+            ctx->acl_gen = atomic_load(&ctx->agent->acl.generation);
+            refda_acl_search_endpoint(ctx->agent, &ctx->mgr_ident, ctx->acl_groups);
+        }
     }
 }
