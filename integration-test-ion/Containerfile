@@ -160,6 +160,7 @@ RUN systemctl enable ion bpecho@4 refda-ion dumpcap && \
     mkdir -p /var/run/ion
 
 # Runtime config for this container
+COPY integration-test-ion/startup.uri /etc/refda/startup.uri
 COPY integration-test-ion/node-*.rc /etc/ion/
 
 EXPOSE 4556/udp

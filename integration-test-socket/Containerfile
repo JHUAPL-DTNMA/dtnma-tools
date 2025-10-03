@@ -132,8 +132,10 @@ EXPOSE 8089/tcp
 
 FROM testenv AS agent
 
-COPY --chmod=644 integration-test-socket/startup.uri /etc/refda/startup.uri
 # Systemd services
 COPY --chmod=644 systemd/refda-socket.service \
     /usr/local/lib/systemd/system/
 RUN systemctl enable refda-socket
+
+# Runtime config for this container
+COPY integration-test-socket/startup.uri /etc/refda/startup.uri
