@@ -38,7 +38,7 @@ static void daemon_signal_handler(int signum)
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} -a <listen-path>\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} -a <listen-EID>\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
 
     /* Process Command Line Arguments. */
     int        log_limit = LOG_WARNING;
-    m_string_t sock_path;
-    m_string_init(sock_path);
+    m_string_t own_eid;
+    m_string_init(own_eid);
     {
         {
             int opt;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(sock_path, optarg);
+                        string_set_str(own_eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -83,9 +83,9 @@ int main(int argc, char *argv[])
     CACE_LOG_DEBUG("Manager starting up with log limit %d", log_limit);
 
     // check arguments
-    if (!retval && m_string_empty_p(sock_path))
+    if (!retval && m_string_empty_p(own_eid))
     {
-        fprintf(stderr, "A socket path must be supplied");
+        fprintf(stderr, "A socket endpoint URI must be supplied");
         retval = 1;
     }
 
@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
     cace_amp_socket_state_init(&sock);
     if (!retval)
     {
+        const char *sock_path = cace_amp_socket_strip_scheme(m_string_get_cstr(own_eid));
         if (cace_amp_socket_state_bind(&sock, sock_path))
         {
             retval = 4;
@@ -101,13 +102,13 @@ int main(int argc, char *argv[])
 
     if (!retval)
     {
-        m_string_printf(mgr.own_eid, "file:%s", string_get_cstr(sock_path));
+        m_string_set(mgr.own_eid, own_eid);
         CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(mgr.own_eid));
         mgr.mif.send = cace_amp_socket_send;
         mgr.mif.recv = cace_amp_socket_recv;
         mgr.mif.ctx  = &sock;
     }
-    m_string_clear(sock_path);
+    m_string_clear(own_eid);
 
     if (!retval)
     {

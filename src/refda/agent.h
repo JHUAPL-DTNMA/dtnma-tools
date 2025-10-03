@@ -105,7 +105,7 @@ typedef struct refda_agent_s
     refda_timeline_t exec_timeline;
 
     /** Agent-directed completion queue.
-     * The message idents will always be undefined, message values will be
+     * The refda_msgdata_t::ident will always be undefined, message values will be
      * either RPTSET, indicating CTRL completion, or direct nonce values,
      * indicating entire sequence completion.
      */

@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     // check arguments
     if (!retval && m_string_empty_p(own_eid))
     {
-        fprintf(stderr, "An EID URI must be supplied");
+        fprintf(stderr, "A BP endpoint URI must be supplied");
         retval = 1;
     }
 

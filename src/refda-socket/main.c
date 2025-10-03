@@ -47,7 +47,7 @@ static void daemon_signal_handler(int signum)
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} {-s <startup-file>} -a <listen-path> {-m <hello-path>}\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} {-s <startup-file>} -a <listen-EID> {-m <hello-EID>}\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -63,8 +63,8 @@ int main(int argc, char *argv[])
 
     m_string_t startup_exec;
     m_string_init(startup_exec);
-    m_string_t sock_path;
-    m_string_init(sock_path);
+    m_string_t own_eid;
+    m_string_init(own_eid);
     m_string_t hello_eid;
     m_string_init(hello_eid);
     {
@@ -85,10 +85,10 @@ int main(int argc, char *argv[])
                         m_string_set_cstr(startup_exec, optarg);
                         break;
                     case 'a':
-                        m_string_set_cstr(sock_path, optarg);
+                        m_string_set_cstr(own_eid, optarg);
                         break;
                     case 'm':
-                        m_string_printf(hello_eid, "file:%s", optarg);
+                        m_string_set_cstr(hello_eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -103,9 +103,9 @@ int main(int argc, char *argv[])
     CACE_LOG_DEBUG("Agent starting up with log limit %d", log_limit);
 
     // check arguments
-    if (!retval && m_string_empty_p(sock_path))
+    if (!retval && m_string_empty_p(own_eid))
     {
-        fprintf(stderr, "A socket path must be supplied");
+        fprintf(stderr, "A socket endpoint URI must be supplied");
         retval = 1;
     }
 
@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
     cace_amp_socket_state_init(&sock);
     if (!retval)
     {
+        const char *sock_path = cace_amp_socket_strip_scheme(m_string_get_cstr(own_eid));
         if (cace_amp_socket_state_bind(&sock, sock_path))
         {
             retval = 4;
@@ -121,13 +122,13 @@ int main(int argc, char *argv[])
 
     if (!retval)
     {
-        m_string_printf(agent.agent_eid, "file:%s", string_get_cstr(sock_path));
+        m_string_set(agent.agent_eid, own_eid);
         CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(agent.agent_eid));
         agent.mif.send = cace_amp_socket_send;
         agent.mif.recv = cace_amp_socket_recv;
         agent.mif.ctx  = &sock;
     }
-    m_string_clear(sock_path);
+    m_string_clear(own_eid);
 
     if (!retval)
     {

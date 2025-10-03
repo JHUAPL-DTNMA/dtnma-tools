@@ -161,6 +161,7 @@ EXPOSE 4556/udp
 
 FROM testenv AS agent
 
+COPY --chmod=644 integration-test-socket/startup.uri /etc/refda/startup.uri
 # Systemd services
 COPY integration-test-ion/tmpfiles.conf /etc/tmpfiles.d/ion.conf
 COPY --chmod=644 systemd/ion.service systemd/refda-ion.service systemd/bpecho@.service systemd/dumpcap.service \
