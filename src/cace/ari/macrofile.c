@@ -20,6 +20,8 @@
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 
+#if defined(ARI_TEXT_PARSE)
+
 int cace_ari_macrofile_read(FILE *file, cace_ari_list_t items)
 {
     CHKERR1(file);
@@ -61,3 +63,5 @@ int cace_ari_macrofile_read(FILE *file, cace_ari_list_t items)
     }
     return 0;
 }
+
+#endif /* ARI_TEXT_PARSE */
