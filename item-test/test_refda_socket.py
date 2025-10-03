@@ -58,7 +58,7 @@ class TestRefdaSocket(unittest.TestCase):
 
     def setUp(self) -> None:
         tmp_kwargs = {}
-        if sys.version_info >= (3, 9):
+        if sys.version_info >= (3, 12):
             tmp_kwargs['delete'] = os.environ.get('TEST_DIR_KEEP') is None
         self._tmp = tempfile.TemporaryDirectory(**tmp_kwargs)
         self._agent_sock_path = os.path.join(self._tmp.name, 'agent.sock')
