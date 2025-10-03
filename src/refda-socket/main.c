@@ -25,6 +25,7 @@
 #include "refda/adm/ietf_dtnma_agent_acl.h"
 #include <cace/amp/socket.h>
 #include <cace/ari/text.h>
+#include <cace/ari/macrofile.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 #include <signal.h>
@@ -221,10 +222,11 @@ int main(int argc, char *argv[])
             cace_ari_set_uint(&execset->nonce, 1);
             cace_ari_ac_t *tgt_ac = cace_ari_set_ac(cace_ari_list_push_back_new(execset->targets), NULL);
 
-            if (cace_ari_text_read_macrofile(startup_file, tgt_ac->items))
+            if (cace_ari_macrofile_read(startup_file, tgt_ac->items))
             {
                 retval = 3;
             }
+            fclose(startup_file);
 
             CACE_LOG_DEBUG("Waiting on startup execution");
             refda_msgdata_t item;
@@ -271,7 +273,7 @@ int main(int argc, char *argv[])
             }
             CACE_LOG_INFO("Finished startup execution");
         }
-#else // defined(ARI_TEXT_PARSE)
+#else  // defined(ARI_TEXT_PARSE)
         CACE_LOG_CRIT("This build of REFDA and CACE is not able to parse text ARIs");
         retval = 3;
 #endif // defined(ARI_TEXT_PARSE)

@@ -25,6 +25,7 @@
 #include "refda/adm/ietf_dtnma_agent_acl.h"
 #include <cace/amp/ion_bp.h>
 #include <cace/ari/text.h>
+#include <cace/ari/macrofile.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 #include <bp.h>
@@ -216,11 +217,12 @@ int main(int argc, char *argv[])
 
     if (!retval && !m_string_empty_p(startup_exec))
     {
+#if defined(ARI_TEXT_PARSE)
         CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(startup_exec));
         FILE *startup_file = fopen(m_string_get_cstr(startup_exec), "r");
         if (!startup_file)
         {
-            retval = 1;
+            retval = 3;
         }
         else
         {
@@ -231,63 +233,61 @@ int main(int argc, char *argv[])
             cace_ari_set_uint(&execset->nonce, 1);
             cace_ari_ac_t *tgt_ac = cace_ari_set_ac(cace_ari_list_push_back_new(execset->targets), NULL);
 
-            size_t lineno = 0;
-            while (true)
+            if (cace_ari_macrofile_read(startup_file, tgt_ac->items))
             {
-                // assume that if something is ready to read that a whole line will come
-                char  *lineptr   = NULL;
-                size_t linealloc = 0;
-                char  *errm      = NULL;
-
-                int res = getline(&lineptr, &linealloc, startup_file);
-                if (res < 0)
-                {
-                    CACE_LOG_DEBUG("returning due to end of input %d", res);
-                    free(lineptr);
-                    break;
-                }
-                else
-                {
-                    ++lineno;
-                    CACE_LOG_DEBUG("read line %zu with %zd characters", lineno, res);
-                    cace_ari_t *item = cace_ari_list_push_back_new(tgt_ac->items);
-                    if (cace_ari_text_decode_cstr(item, lineptr, res + 1, &errm))
-                    {
-                        CACE_LOG_ERR("Failed decoding one startup item on line %zu: %s", lineno, errm);
-                        CACE_FREE(errm);
-
-                        cace_ari_list_pop_back(NULL, tgt_ac->items);
-                    }
-                    free(lineptr);
-                }
+                retval = 3;
             }
             fclose(startup_file);
 
             CACE_LOG_DEBUG("Waiting on startup execution");
-            cace_amm_msg_if_metadata_t meta;
-            cace_amm_msg_if_metadata_init(&meta);
-            refda_ingress_push_move(&agent, &meta, &run);
-            cace_amm_msg_if_metadata_deinit(&meta);
-
-            // TODO wait on execution
-            sem_wait(&(agent.self_rptgs_sem));
             refda_msgdata_t item;
-            if (!refda_msgdata_queue_pop(&item, agent.self_rptgs))
+            refda_msgdata_init(&item);
+            cace_ari_set_move(&item.value, &run);
+
+            refda_msgdata_queue_push_move(agent.execs, &item);
+            sem_post(&agent.execs_sem);
+
+            while (true)
             {
-                // shouldn't happen
-                CACE_LOG_CRIT("failed to pop from self_rptgs queue");
-            }
-            else
-            {
-                // do nothing
-                cace_ari_uint nonce;
-                if (cace_ari_get_uint(&item.value, &nonce) || (nonce != 1))
+                sem_wait(&(agent.self_rptgs_sem));
+                if (!refda_msgdata_queue_pop(&item, agent.self_rptgs))
                 {
-                    CACE_LOG_ERR("nonce mismatch, expected 1 got %u", nonce);
+                    // shouldn't happen
+                    CACE_LOG_CRIT("failed to pop from self_rptgs queue");
+                    retval = 3;
                 }
-                refda_msgdata_deinit(&item);
+                else
+                {
+                    cace_ari_rptset_t *rptset = cace_ari_get_rptset(&item.value);
+                    if (rptset)
+                    {
+                        const cace_ari_report_t *rpt = cace_ari_report_list_front(rptset->reports);
+                        if (cace_ari_is_undefined(cace_ari_list_front(rpt->items)))
+                        {
+                            CACE_LOG_ERR("startup execution failed");
+                            retval = 3;
+                        }
+                    }
+                    else
+                    {
+                        cace_ari_uint nonce;
+                        if (cace_ari_get_uint(&item.value, &nonce) || (nonce != 1))
+                        {
+                            CACE_LOG_ERR("type or nonce mismatch, expected 1 got %u", nonce);
+                            retval = 3;
+                        }
+                        // finished with whole sequence
+                        break;
+                    }
+                    refda_msgdata_deinit(&item);
+                }
             }
+            CACE_LOG_INFO("Finished startup execution");
         }
+#else  // defined(ARI_TEXT_PARSE)
+        CACE_LOG_CRIT("This build of REFDA and CACE is not able to parse text ARIs");
+        retval = 3;
+#endif // defined(ARI_TEXT_PARSE)
     }
     m_string_clear(startup_exec);
 
