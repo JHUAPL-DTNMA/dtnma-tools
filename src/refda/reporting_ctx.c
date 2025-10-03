@@ -39,6 +39,7 @@ void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj)
     CHKVOID(obj);
     cace_ari_list_clear(obj->items);
 
+    refda_runctx_deinit(obj->runctx);
     CACE_FREE(obj->runctx);
     obj->runctx = NULL;
 }
