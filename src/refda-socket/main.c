@@ -242,8 +242,7 @@ int main(int argc, char *argv[])
                 if (!refda_msgdata_queue_pop(&item, agent.self_rptgs))
                 {
                     // shouldn't happen
-                    CACE_LOG_CRIT("failed to pop from self_rptgs queue");
-                    retval = 3;
+                    CACE_LOG_DEBUG("failed to pop from self_rptgs queue");
                 }
                 else
                 {
@@ -257,9 +256,14 @@ int main(int argc, char *argv[])
                             retval = 3;
                         }
                     }
+                    else if (cace_ari_is_undefined(&item.value))
+                    {
+                        // shutdown
+                        break;
+                    }
                     else
                     {
-                        cace_ari_uint nonce;
+                        cace_ari_uint nonce = 0;
                         if (cace_ari_get_uint(&item.value, &nonce) || (nonce != 1))
                         {
                             CACE_LOG_ERR("type or nonce mismatch, expected 1 got %u", nonce);
@@ -268,8 +272,8 @@ int main(int argc, char *argv[])
                         // finished with whole sequence
                         break;
                     }
-                    refda_msgdata_deinit(&item);
                 }
+                refda_msgdata_deinit(&item);
             }
             CACE_LOG_INFO("Finished startup execution");
         }

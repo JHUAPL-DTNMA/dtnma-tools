@@ -95,6 +95,9 @@ class TestRefdaSocket(unittest.TestCase):
         ])
         self._agent = CmdRunner(args)
 
+        # buffer of received RPTSET pending _wait_reports
+        self._rptsets = {}
+
     def tearDown(self) -> None:
         agent_exit = self._agent.stop()
         self._agent = None
@@ -236,10 +239,18 @@ class TestRefdaSocket(unittest.TestCase):
         timer = Timer(timeout)
         try:
             while timer:
-                values = self._wait_msg(mgr_ix=mgr_ix, timeout=timer.remaining())
-                for val in values:
+
+                if not self._rptsets.setdefault(mgr_ix, []):
+                    self._rptsets[mgr_ix] += self._wait_msg(mgr_ix=mgr_ix, timeout=timer.remaining())
+
+                remain = []
+                for val in self._rptsets[mgr_ix]:
                     if nonce is None or val.value.nonce == nonce:
                         reports += val.value.reports
+                    else:
+                        remain.append(val)
+                self._rptsets[mgr_ix] = remain
+
                 if stop_count > 0 and len(reports) >= stop_count:
                     break
         except TimeoutError:
@@ -280,12 +291,23 @@ class TestRefdaSocket(unittest.TestCase):
     def test_exec_report_on_valid(self):
         self._start()
 
-        mgr_eid = quote('"file:' + self._mgr_bind[0]['path'] + '"')
+        mgr_eids = [
+            quote('"file:' + self._mgr_bind[0]['path'] + '"'),
+            quote('"file:' + self._mgr_bind[1]['path'] + '"'),
+        ]
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,' + mgr_eid + '))')]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,/ac/(' + ','.join(mgr_eids) + ')))')]
         )
 
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.NULL)
+        self.assertEqual(1, len(rpts))
+        # RPTSET for the generated report
+        rpt = rpts[0]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
+        # items of the report
+        self.assertLessEqual(3, len(rpt.items))
+
+        rpts = self._wait_reports(mgr_ix=1, nonce=ari.NULL)
         self.assertEqual(1, len(rpts))
         # RPTSET for the generated report
         rpt = rpts[0]
@@ -313,7 +335,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on(//ietf/dtnma-agent/CONST/hello)'), rpt.source)
         # items of the report
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual([ari.NULL], rpt.items)
 
     def test_exec_delayed(self):
         self._start()
@@ -419,6 +441,7 @@ class TestRefdaSocket(unittest.TestCase):
     def test_exec_introspection(self):
         self._start()
 
+        # two separate sequences with different nonces
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/edd/exec-running))')]
         )
@@ -430,9 +453,10 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 3), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
-        pid_col = rpt.items[0].value[:, 0]
-        self.assertEqual([ari.uvast(1)], pid_col)
+        pid_col = list(rpt.items[0].value[:, 0])
+        self.assertListEqual([ari.uvast(2)], pid_col)  # PID 1 is startup
 
+        # two separate targets
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;('
@@ -449,12 +473,8 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((2, 3), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
-        pid_col = rpt.items[0].value[:, 0]
-        self.assertEqual([ari.uvast(2), ari.uvast(3)], pid_col)
-
-        # TODO fix this shutdown error
-        import time
-        time.sleep(1)
+        pid_col = list(rpt.items[0].value[:, 0])
+        self.assertListEqual([ari.uvast(3), ari.uvast(4)], pid_col)
 
     def test_odm(self):
         self._start()
@@ -600,7 +620,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, int)
-        self.assertLessEqual(1, rpt.items[0].value)  # 1 because it counts inspect call above
+        self.assertLessEqual(1, rpt.items[0].value)  # 4 from startup macro, 1 from <inspect> above
 
         # Count number of successful exec's
         self._send_msg(
@@ -610,7 +630,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpts))
         rpt = rpts[0]
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual(1, rpt.items[0].value)
+        self.assertLessEqual(1, rpt.items[0].value)
 
         # Count number of failed exec's
         self._send_msg(

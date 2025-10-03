@@ -989,16 +989,29 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
     cace_ari_tbl_reset(table, 3, 0);
 
+    refda_exec_seq_ptr_tree_t seq_sort;
+    refda_exec_seq_ptr_tree_init(seq_sort);
+
     refda_exec_seq_list_it_t seq_it;
     for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);
          refda_exec_seq_list_next(seq_it))
     {
-        const refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
+        refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
         if (refda_exec_item_list_empty_p(seq->items))
         {
-            // intermediate state
+            // intermediate state is ignored
             continue;
         }
+
+        refda_exec_seq_ptr_tree_push(seq_sort, seq);
+    }
+
+    refda_exec_seq_ptr_tree_it_t sort_it;
+    for (refda_exec_seq_ptr_tree_it(sort_it, seq_sort); !refda_exec_seq_ptr_tree_end_p(sort_it);
+         refda_exec_seq_ptr_tree_next(sort_it))
+    {
+        refda_exec_seq_t *seq = *refda_exec_seq_ptr_tree_ref(sort_it);
+
         const refda_exec_item_t *front = refda_exec_item_list_front(seq->items);
 
         cace_ari_array_t row;
@@ -1024,6 +1037,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
         // append the row
         cace_ari_tbl_move_row_array(table, row);
     }
+    refda_exec_seq_ptr_tree_clear(seq_sort);
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 

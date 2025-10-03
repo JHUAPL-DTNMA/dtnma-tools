@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
                     }
                     else
                     {
-                        cace_ari_uint nonce;
+                        cace_ari_uint nonce = 0;
                         if (cace_ari_get_uint(&item.value, &nonce) || (nonce != 1))
                         {
                             CACE_LOG_ERR("type or nonce mismatch, expected 1 got %u", nonce);

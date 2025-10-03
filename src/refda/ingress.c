@@ -39,16 +39,16 @@ void *refda_ingress_worker(void *arg)
         cace_ari_list_reset(values);
         int recv_res = agent->mif.recv(values, &meta, &agent->running, agent->mif.ctx);
 
-        if (cace_ari_is_undefined(&(meta.src)))
-        {
-            CACE_LOG_ERR("Ignoring undefined source endpoint");
-            continue;
-        }
-
         // process received items even if failed status
         if (!cace_ari_list_empty_p(values))
         {
             CACE_LOG_INFO("Message has %d ARIs", cace_ari_list_size(values));
+
+            if (cace_ari_is_undefined(&(meta.src)))
+            {
+                CACE_LOG_ERR("Ignoring undefined source endpoint");
+                continue;
+            }
 
             cace_ari_list_it_t val_it;
             /* For each received ARI, validate it */

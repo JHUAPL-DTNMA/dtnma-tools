@@ -33,3 +33,16 @@ void refda_exec_seq_deinit(refda_exec_seq_t *obj)
     obj->pid = 0;
     refda_runctx_ptr_clear(obj->runctx);
 }
+
+int refda_exec_seq_cmp(const refda_exec_seq_t *lt, const refda_exec_seq_t *rt)
+{
+    CHKRET(lt, 1);
+    CHKRET(rt, -1);
+    if (lt->pid < rt->pid){
+        return -1;
+    }
+    else if (lt->pid > rt->pid){
+        return 1;
+    }
+    return 0;
+}
