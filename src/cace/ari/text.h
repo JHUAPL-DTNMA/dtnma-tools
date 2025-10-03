@@ -159,6 +159,15 @@ int cace_ari_text_decode(cace_ari_t *ari, const string_t text, char **errm);
  */
 int cace_ari_text_decode_cstr(cace_ari_t *ari, const char *text_ptr, size_t text_len, char **errm);
 
+/** Read lines from a file as text ARIs into a list.
+ * The file must be encoded as text/uri-list media type according to RFC 2483.
+ *
+ * @param[in] file The file to read lines from.
+ * @param[out] list The list to push into.
+ * @return Zero upon success.
+ */
+int             cace_ari_text_read_macrofile(FILE *file, cace_ari_list_t items);
+
 #endif /* ARI_TEXT_PARSE */
 
 #ifdef __cplusplus

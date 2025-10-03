@@ -205,11 +205,12 @@ int main(int argc, char *argv[])
 
     if (!retval && !m_string_empty_p(startup_exec))
     {
+#if defined(ARI_TEXT_PARSE)
         CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(startup_exec));
         FILE *startup_file = fopen(m_string_get_cstr(startup_exec), "r");
         if (!startup_file)
         {
-            retval = 2;
+            retval = 3;
         }
         else
         {
@@ -220,37 +221,10 @@ int main(int argc, char *argv[])
             cace_ari_set_uint(&execset->nonce, 1);
             cace_ari_ac_t *tgt_ac = cace_ari_set_ac(cace_ari_list_push_back_new(execset->targets), NULL);
 
-            size_t lineno = 0;
-            while (true)
+            if (cace_ari_text_read_macrofile(startup_file, tgt_ac->items))
             {
-                // assume that if something is ready to read that a whole line will come
-                char  *lineptr   = NULL;
-                size_t linealloc = 0;
-                char  *errm      = NULL;
-
-                int res = getline(&lineptr, &linealloc, startup_file);
-                if (res < 0)
-                {
-                    CACE_LOG_DEBUG("returning due to end of input %d", res);
-                    free(lineptr);
-                    break;
-                }
-                else
-                {
-                    ++lineno;
-                    CACE_LOG_DEBUG("read line %zu with %zd characters", lineno, res);
-                    cace_ari_t *item = cace_ari_list_push_back_new(tgt_ac->items);
-                    if (cace_ari_text_decode_cstr(item, lineptr, res + 1, &errm))
-                    {
-                        CACE_LOG_ERR("Failed decoding one startup item on line %zu: %s", lineno, errm);
-                        CACE_FREE(errm);
-
-                        cace_ari_list_pop_back(NULL, tgt_ac->items);
-                    }
-                    free(lineptr);
-                }
+                retval = 3;
             }
-            fclose(startup_file);
 
             CACE_LOG_DEBUG("Waiting on startup execution");
             refda_msgdata_t item;
@@ -297,6 +271,10 @@ int main(int argc, char *argv[])
             }
             CACE_LOG_INFO("Finished startup execution");
         }
+#else // defined(ARI_TEXT_PARSE)
+        CACE_LOG_CRIT("This build of REFDA and CACE is not able to parse text ARIs");
+        retval = 3;
+#endif // defined(ARI_TEXT_PARSE)
     }
     m_string_clear(startup_exec);
 
