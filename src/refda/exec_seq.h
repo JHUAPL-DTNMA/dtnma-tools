@@ -60,7 +60,8 @@ void refda_exec_seq_deinit(refda_exec_seq_t *obj);
 int refda_exec_seq_cmp(const refda_exec_seq_t *lt, const refda_exec_seq_t *rt);
 
 /// M*LIB OPLIST for refda_exec_seq_t
-#define M_OPL_refda_exec_seq_t() (INIT(API_2(refda_exec_seq_init)), CLEAR(API_2(refda_exec_seq_deinit)), CMP(API_6(refda_exec_seq_cmp)))
+#define M_OPL_refda_exec_seq_t() \
+    (INIT(API_2(refda_exec_seq_init)), CLEAR(API_2(refda_exec_seq_deinit)), CMP(API_6(refda_exec_seq_cmp)))
 
 /// @cond Doxygen_Suppress
 M_DEQUE_DEF(refda_exec_seq_list, refda_exec_seq_t)
