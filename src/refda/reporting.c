@@ -25,12 +25,6 @@
 
 int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_ari_t *result)
 {
-    if (cace_ari_is_undefined(&runctx->mgr_ident))
-    {
-        // nothing to do
-        return 0;
-    }
-
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
     cace_ari_set_copy(&msg.ident, &runctx->mgr_ident);
@@ -47,8 +41,17 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_
     }
     CACE_LOG_DEBUG("generated an execution report");
 
-    refda_msgdata_queue_push_move(runctx->agent->rptgs, &msg);
-    sem_post(&(runctx->agent->rptgs_sem));
+    if (cace_ari_is_undefined(&runctx->mgr_ident))
+    {
+        // Agent-directed execution
+        refda_msgdata_queue_push_move(runctx->agent->self_rptgs, &msg);
+        sem_post(&(runctx->agent->self_rptgs_sem));
+    }
+    else
+    {
+        refda_msgdata_queue_push_move(runctx->agent->rptgs, &msg);
+        sem_post(&(runctx->agent->rptgs_sem));
+    }
 
     return 0;
 }
@@ -233,22 +236,33 @@ static int refda_reporting_rptt_ref(refda_reporting_ctx_t *rptctx, const cace_ar
     return retval;
 }
 
-int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target)
+int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target, const cace_ari_t *destination)
 {
     CHKERR1(runctx);
     CHKERR1(target);
+    if (!cace_ari_not_undefined(destination))
+    {
+        // nothing to do
+        CACE_LOG_WARNING("attempted to report to undefined manager");
+        return 0;
+    }
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
+        string_t dest_buf;
+        string_init(dest_buf);
+        cace_ari_text_encode(dest_buf, destination, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+
         string_t buf;
         string_init(buf);
         cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Reporting on target %s", string_get_cstr(buf));
+        CACE_LOG_DEBUG("Reporting to %s for target %s", dest_buf, string_get_cstr(buf));
         string_clear(buf);
+        string_clear(dest_buf);
     }
 
     refda_reporting_ctx_t rptctx;
-    refda_reporting_ctx_init(&rptctx, runctx);
+    refda_reporting_ctx_init(&rptctx, runctx, destination);
 
     int retval = 0;
     if (target->is_ref)
@@ -262,25 +276,26 @@ int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target)
 
     if (!retval)
     {
-        refda_reporting_gen(runctx->agent, &runctx->mgr_ident, target, rptctx.items);
+        refda_reporting_gen(runctx->agent, destination, target, rptctx.items);
     }
 
     refda_reporting_ctx_deinit(&rptctx);
     return retval;
 }
 
-int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const cace_ari_t *src, cace_ari_list_t items)
+int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *destination, const cace_ari_t *src,
+                        cace_ari_list_t items)
 {
-    if (!mgr_ident || cace_ari_is_undefined(mgr_ident))
+    if (!cace_ari_not_undefined(destination))
     {
         // nothing to do
-        CACE_LOG_WARNING("attempted to report to undefined manager");
+        CACE_LOG_WARNING("attempted to report to undefined destination");
         return 0;
     }
 
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
-    cace_ari_set_copy(&msg.ident, mgr_ident);
+    cace_ari_set_copy(&msg.ident, destination);
 
     cace_ari_rptset_t *rpts = cace_ari_set_rptset(&msg.value);
     cace_ari_set_null(&(rpts->nonce));

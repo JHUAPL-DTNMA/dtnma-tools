@@ -20,6 +20,7 @@
 
 #include "amm/ident.h"
 #include "cace/ari/base.h"
+#include <m-atomic.h>
 #include <m-deque.h>
 #include <m-rbtree.h>
 #include <m-bptree.h>
@@ -121,7 +122,7 @@ typedef struct
      * This value is internal and runtime dependent, so not persisted across
      * agent processes.
      */
-    uint64_t generation;
+    atomic_size_t generation;
 
     /** Base IDENT for permissions.
      */
@@ -163,7 +164,7 @@ typedef struct refda_agent_s refda_agent_t;
  * @param[out] groups The set of groups to add to.
  * @return Zero if successful, which may result in empty groups.
  */
-int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endpoint, refda_acl_id_tree_t groups);
+int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, refda_acl_id_tree_t groups);
 
 /** Search in an ACL for specific access.
  *
@@ -174,11 +175,11 @@ int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endp
  * @param[out] match The matching permissions.
  * @return True if permission is present and the @c match is non-empty.
  */
-bool refda_acl_search_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups,
+bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
                                  const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
                                  refda_amm_ident_base_ptr_set_t match);
-
-bool refda_acl_search_one_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups,
+/// @overload
+bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
                                      const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
                                      refda_amm_ident_base_ptr_set_t match);
 

@@ -91,6 +91,7 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
 {
     refda_exec_item_t *item = refda_exec_item_list_front(seq->items);
     CHKERR1(item->deref.obj);
+
     refda_amm_ctrl_desc_t *ctrl = item->deref.obj->app_data.ptr;
     CHKERR1(ctrl);
     CHKERR1(ctrl->execute);
@@ -302,15 +303,18 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, con
     // FIXME: lock more fine-grained level
     REFDA_AGENT_UNLOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
-    // report on any failed expansions
-    cace_ari_array_it_t inval_it;
-    for (cace_ari_array_it(inval_it, invalid_items); !cace_ari_array_end_p(inval_it); cace_ari_array_next(inval_it))
+    if (!cace_ari_is_null(&(runctx->nonce)))
     {
-        const cace_ari_t *item = cace_ari_array_cref(inval_it);
+        // report on any failed expansions
+        cace_ari_array_it_t inval_it;
+        for (cace_ari_array_it(inval_it, invalid_items); !cace_ari_array_end_p(inval_it); cace_ari_array_next(inval_it))
+        {
+            const cace_ari_t *item = cace_ari_array_cref(inval_it);
 
-        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-        // this moves the result value
-        refda_reporting_ctrl(runctx, item, &result);
+            cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+            // this moves the result value
+            refda_reporting_ctrl(runctx, item, &result);
+        }
     }
     cace_ari_array_clear(invalid_items);
 
@@ -350,11 +354,29 @@ int refda_exec_waiting(refda_agent_t *agent)
     }
 
     // Safely clear any completed sequences from the front of the queue
-    while (!refda_exec_seq_list_empty_p(agent->exec_state)
-           && refda_exec_item_list_empty_p(refda_exec_seq_list_front(agent->exec_state)->items))
+    while (!refda_exec_seq_list_empty_p(agent->exec_state))
     {
+        const refda_exec_seq_t *seq = refda_exec_seq_list_front(agent->exec_state);
+        if (!refda_exec_item_list_empty_p(seq->items))
+        {
+            break;
+        }
+
+        // inform when Agent-directed sequences finish
+        const refda_runctx_t *runctx = refda_runctx_ptr_cref(seq->runctx);
+        if (cace_ari_is_undefined(&runctx->mgr_ident))
+        {
+            CACE_LOG_DEBUG("Agent-directed sequence finished");
+            refda_msgdata_t msg;
+            refda_msgdata_init(&msg);
+            cace_ari_set_copy(&msg.value, &runctx->nonce);
+
+            refda_msgdata_queue_push_move(runctx->agent->self_rptgs, &msg);
+            sem_post(&(runctx->agent->self_rptgs_sem));
+        }
+
         refda_exec_seq_list_pop_front(NULL, agent->exec_state);
-        CACE_LOG_DEBUG("Removed completed item from agent exec_state queue");
+        CACE_LOG_DEBUG("Removed completed sequence from agent exec_state queue");
     }
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
@@ -405,7 +427,7 @@ static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *m
 
         if (pthread_mutex_lock(&(agent->exec_state_mutex)))
         {
-            CACE_LOG_ERR("failed to lock exec_state_mutex");
+            CACE_LOG_CRIT("failed to lock exec_state_mutex");
             continue;
         }
 
@@ -422,7 +444,7 @@ static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *m
 
         if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
         {
-            CACE_LOG_ERR("failed to unlock exec_state_mutex");
+            CACE_LOG_CRIT("failed to unlock exec_state_mutex");
         }
     }
 
@@ -543,6 +565,10 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
             refda_msgdata_init(&undef);
             refda_msgdata_queue_push_move(agent->rptgs, &undef);
             sem_post(&(agent->rptgs_sem));
+
+            refda_msgdata_init(&undef);
+            refda_msgdata_queue_push_move(agent->self_rptgs, &undef);
+            sem_post(&(agent->self_rptgs_sem));
 
             return false;
         }

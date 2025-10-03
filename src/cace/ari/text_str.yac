@@ -591,10 +591,16 @@ params:
 
 int cace_ari_text_decode(cace_ari_t *ari, const string_t text, char **errm)
 {
+    return cace_ari_text_decode_cstr(ari, m_string_get_cstr(text), m_string_size(text) + 1, errm);
+}
+
+int cace_ari_text_decode_cstr(cace_ari_t *ari, const char *text_ptr, size_t text_len, char **errm)
+{
+
     yyscan_t scanner;
     int res;
     cace_ari_text_str_t input = {
-      .src = fmemopen((void *)string_get_cstr(text), string_size(text) + 1, "r"),
+      .src = fmemopen((void *)text_ptr, text_len, "r"),
       .ari = ari,
       .errm = errm,
     };

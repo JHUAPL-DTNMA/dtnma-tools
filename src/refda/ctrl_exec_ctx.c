@@ -29,8 +29,11 @@ void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *ite
     CHKVOID(item);
 
     obj->runctx = refda_runctx_ptr_ref(item->seq->runctx);
-    obj->ctrl   = item->deref.obj ? item->deref.obj->app_data.ptr : NULL;
-    obj->item   = item;
+    // check ACL cache at last moment
+    refda_runctx_check_acl(obj->runctx);
+
+    obj->ctrl = item->deref.obj ? item->deref.obj->app_data.ptr : NULL;
+    obj->item = item;
 }
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj)

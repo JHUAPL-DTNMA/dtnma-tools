@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "refda/agent.h"
+#include "refda/ingress.h"
 #include "refda/adm/ietf_amm.h"
 #include "refda/adm/ietf_amm_base.h"
 #include "refda/adm/ietf_amm_semtype.h"
@@ -23,6 +24,7 @@
 #include "refda/adm/ietf_dtnma_agent.h"
 #include "refda/adm/ietf_dtnma_agent_acl.h"
 #include <cace/amp/socket.h>
+#include <cace/ari/text.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 #include <signal.h>
@@ -44,7 +46,7 @@ static void daemon_signal_handler(int signum)
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <listen-path> {-m <hello-path>}\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} {-s <startup-file>} -a <listen-path> {-m <hello-path>}\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -58,6 +60,8 @@ int main(int argc, char *argv[])
     /* Process Command Line Arguments. */
     int log_limit = LOG_WARNING;
 
+    m_string_t startup_exec;
+    m_string_init(startup_exec);
     m_string_t sock_path;
     m_string_init(sock_path);
     m_string_t hello_eid;
@@ -65,7 +69,7 @@ int main(int argc, char *argv[])
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, ":hl:a:m:")) != -1)
+            while ((opt = getopt(argc, argv, ":hl:s:a:m:")) != -1)
             {
                 switch (opt)
                 {
@@ -76,8 +80,11 @@ int main(int argc, char *argv[])
                             retval = 1;
                         }
                         break;
+                    case 's':
+                        m_string_set_cstr(startup_exec, optarg);
+                        break;
                     case 'a':
-                        string_set_str(sock_path, optarg);
+                        m_string_set_cstr(sock_path, optarg);
                         break;
                     case 'm':
                         m_string_printf(hello_eid, "file:%s", optarg);
@@ -195,6 +202,103 @@ int main(int argc, char *argv[])
     sd_notify(0, "READY=1");
 #endif
     CACE_LOG_INFO("READY");
+
+    if (!retval && !m_string_empty_p(startup_exec))
+    {
+        CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(startup_exec));
+        FILE *startup_file = fopen(m_string_get_cstr(startup_exec), "r");
+        if (!startup_file)
+        {
+            retval = 2;
+        }
+        else
+        {
+            // synthesize execset with one target
+            cace_ari_t run = CACE_ARI_INIT_UNDEFINED;
+
+            cace_ari_execset_t *execset = cace_ari_set_execset(&run);
+            cace_ari_set_uint(&execset->nonce, 1);
+            cace_ari_ac_t *tgt_ac = cace_ari_set_ac(cace_ari_list_push_back_new(execset->targets), NULL);
+
+            size_t lineno = 0;
+            while (true)
+            {
+                // assume that if something is ready to read that a whole line will come
+                char  *lineptr   = NULL;
+                size_t linealloc = 0;
+                char  *errm      = NULL;
+
+                int res = getline(&lineptr, &linealloc, startup_file);
+                if (res < 0)
+                {
+                    CACE_LOG_DEBUG("returning due to end of input %d", res);
+                    free(lineptr);
+                    break;
+                }
+                else
+                {
+                    ++lineno;
+                    CACE_LOG_DEBUG("read line %zu with %zd characters", lineno, res);
+                    cace_ari_t *item = cace_ari_list_push_back_new(tgt_ac->items);
+                    if (cace_ari_text_decode_cstr(item, lineptr, res + 1, &errm))
+                    {
+                        CACE_LOG_ERR("Failed decoding one startup item on line %zu: %s", lineno, errm);
+                        CACE_FREE(errm);
+
+                        cace_ari_list_pop_back(NULL, tgt_ac->items);
+                    }
+                    free(lineptr);
+                }
+            }
+            fclose(startup_file);
+
+            CACE_LOG_DEBUG("Waiting on startup execution");
+            refda_msgdata_t item;
+            refda_msgdata_init(&item);
+            cace_ari_set_move(&item.value, &run);
+
+            refda_msgdata_queue_push_move(agent.execs, &item);
+            sem_post(&agent.execs_sem);
+
+            while (true)
+            {
+                sem_wait(&(agent.self_rptgs_sem));
+                if (!refda_msgdata_queue_pop(&item, agent.self_rptgs))
+                {
+                    // shouldn't happen
+                    CACE_LOG_CRIT("failed to pop from self_rptgs queue");
+                    retval = 3;
+                }
+                else
+                {
+                    cace_ari_rptset_t *rptset = cace_ari_get_rptset(&item.value);
+                    if (rptset)
+                    {
+                        const cace_ari_report_t *rpt = cace_ari_report_list_front(rptset->reports);
+                        if (cace_ari_is_undefined(cace_ari_list_front(rpt->items)))
+                        {
+                            CACE_LOG_ERR("startup execution failed");
+                            retval = 3;
+                        }
+                    }
+                    else
+                    {
+                        cace_ari_uint nonce;
+                        if (cace_ari_get_uint(&item.value, &nonce) || (nonce != 1))
+                        {
+                            CACE_LOG_ERR("type or nonce mismatch, expected 1 got %u", nonce);
+                            retval = 3;
+                        }
+                        // finished with whole sequence
+                        break;
+                    }
+                    refda_msgdata_deinit(&item);
+                }
+            }
+            CACE_LOG_INFO("Finished startup execution");
+        }
+    }
+    m_string_clear(startup_exec);
 
     if (!retval && !m_string_empty_p(hello_eid))
     {

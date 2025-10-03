@@ -27,6 +27,8 @@ extern "C" {
 
 typedef struct
 {
+    /// True if this data is Agent-internal and endpoints are not used
+    bool is_self;
     /// Source endpoint ID (opaque text)
     cace_ari_t src;
     /// Destination endpoint ID (opaque text)

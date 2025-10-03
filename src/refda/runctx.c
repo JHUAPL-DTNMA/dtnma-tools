@@ -89,6 +89,7 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
     }
     else
     {
+        // Agent-directed, no manager
         cace_ari_reset(&(ctx->mgr_ident));
         cace_ari_reset(&(ctx->nonce));
         // agent group 0
@@ -97,4 +98,12 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
     }
 
     return 0;
+}
+
+void refda_runctx_check_acl(refda_runctx_t *ctx)
+{
+    if (ctx->acl_gen != ctx->agent->acl.generation)
+    {
+        refda_acl_search_endpoint(ctx->agent, &ctx->mgr_ident, ctx->acl_groups);
+    }
 }

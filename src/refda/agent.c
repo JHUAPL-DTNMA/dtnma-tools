@@ -55,6 +55,8 @@ void refda_agent_init(refda_agent_t *agent)
     pthread_mutex_init(&(agent->exec_state_mutex), NULL);
     refda_timeline_init(agent->exec_timeline);
 
+    refda_msgdata_queue_init(agent->self_rptgs, AGENT_QUEUE_SIZE);
+    sem_init(&(agent->self_rptgs_sem), 0, 0);
     refda_msgdata_queue_init(agent->rptgs, AGENT_QUEUE_SIZE);
     sem_init(&(agent->rptgs_sem), 0, 0);
 }
@@ -63,6 +65,8 @@ void refda_agent_deinit(refda_agent_t *agent)
 {
     sem_destroy(&(agent->rptgs_sem));
     refda_msgdata_queue_clear(agent->rptgs);
+    sem_destroy(&(agent->self_rptgs_sem));
+    refda_msgdata_queue_clear(agent->self_rptgs);
 
     refda_timeline_clear(agent->exec_timeline);
     pthread_mutex_destroy(&(agent->exec_state_mutex));
@@ -410,7 +414,7 @@ int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
         // always run as agent group
         refda_acl_id_tree_push(runctx.acl_groups, 0);
 
-        res = refda_reporting_target(&runctx, &ref);
+        res = refda_reporting_target(&runctx, &ref, NULL);
         if (res)
         {
             retval = 3;

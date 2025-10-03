@@ -17,6 +17,7 @@
  */
 #include "acl.h"
 #include "endpoint.h"
+#include "cace/ari/text.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 
@@ -77,13 +78,26 @@ void refda_acl_deinit(refda_acl_t *obj)
     obj->perm_base    = NULL;
 }
 
-int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endpoint, refda_acl_id_tree_t groups)
+int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, refda_acl_id_tree_t groups)
 {
     CHKERR1(agent);
     CHKERR1(endpoint);
-    CACE_LOG_DEBUG("searching groups");
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, endpoint, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("searching groups for %s", m_string_get_cstr(buf));
+        string_clear(buf);
+    }
 
     refda_acl_id_tree_reset(groups);
+
+    if (pthread_mutex_lock(&(agent->acl_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock agent ACL");
+        return 2;
+    }
 
     refda_acl_group_list_it_t grp_it;
     for (refda_acl_group_list_it(grp_it, agent->acl.groups); !refda_acl_group_list_end_p(grp_it);
@@ -104,6 +118,12 @@ int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endp
         }
     }
 
+    if (pthread_mutex_unlock(&(agent->acl_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock agent ACL");
+        return 2;
+    }
+
     if (cace_log_is_enabled_for(LOG_INFO))
     {
         m_string_t buf;
@@ -112,15 +132,20 @@ int refda_acl_search_endpoint(const refda_agent_t *agent, const cace_ari_t *endp
         CACE_LOG_INFO("matched to %zu groups: %s", refda_acl_id_tree_size(groups), m_string_get_cstr(buf));
         m_string_clear(buf);
     }
-
     return 0;
 }
 
-bool refda_acl_search_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups,
+bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
                                  const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
                                  refda_amm_ident_base_ptr_set_t match)
 {
     bool found = false;
+    CACE_LOG_DEBUG("matched from %zu groups", refda_acl_id_tree_size(groups));
+    if (pthread_mutex_lock(&(agent->acl_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock agent ACL");
+        return false;
+    }
 
     refda_acl_id_tree_it_t grp_it;
     for (refda_acl_id_tree_it(grp_it, groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
@@ -133,6 +158,7 @@ bool refda_acl_search_permission(const refda_agent_t *agent, const refda_acl_id_
         {
             continue;
         }
+        CACE_LOG_DEBUG("matched to %zu accesses", refda_acl_access_ptr_set_size(*accesses));
 
         refda_acl_access_ptr_set_it_t acc_it;
         for (refda_acl_access_ptr_set_it(acc_it, *accesses); !refda_acl_access_ptr_set_end_p(acc_it);
@@ -160,10 +186,17 @@ bool refda_acl_search_permission(const refda_agent_t *agent, const refda_acl_id_
         }
     }
 
+    if (pthread_mutex_unlock(&(agent->acl_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock agent ACL");
+        return false;
+    }
+
+    CACE_LOG_DEBUG("matched to %zu permissions", refda_amm_ident_base_ptr_set_size(match));
     return found;
 }
 
-bool refda_acl_search_one_permission(const refda_agent_t *agent, const refda_acl_id_tree_t groups,
+bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
                                      const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
                                      refda_amm_ident_base_ptr_set_t match)
 {

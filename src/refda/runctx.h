@@ -79,7 +79,7 @@ typedef struct
     cace_ari_t nonce;
 
     /// refda_acl_t::generation for the cached data
-    uint64_t acl_gen;
+    size_t acl_gen;
     /** Cached ACL-derived group ID.
      */
     refda_acl_id_tree_t acl_groups;
@@ -101,6 +101,10 @@ void refda_runctx_deinit(refda_runctx_t *ctx);
  * @return Zero if successful.
  */
 int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
+
+/** Verify the ACL cache is valid.
+ */
+void refda_runctx_check_acl(refda_runctx_t *ctx);
 
 /// M*LIB OPLIST for refda_runctx_t
 #define M_OPL_refda_runctx_t() (INIT(API_2(refda_runctx_init)), INIT_SET(0), CLEAR(API_2(refda_runctx_deinit)), SET(0))

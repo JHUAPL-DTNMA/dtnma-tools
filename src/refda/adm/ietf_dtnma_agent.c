@@ -693,8 +693,13 @@ static void refda_adm_ietf_dtnma_agent_edd_sw_version(refda_edd_prod_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Produced type: TBLT with 6 columns (use of ari:/ARITYPE/TEXTSTR, use of ari:/ARITYPE/VAST, use of
- * ari:/ARITYPE/TEXTSTR, use of ari:/ARITYPE/VAST, use of ari:/ARITYPE/TEXTSTR, ulist of use of ari:/ARITYPE/TEXTSTR)
+ * Produced type: TBLT with 6 columns:
+ *   - Index 0, name "org-name", type use of ari:/ARITYPE/TEXTSTR
+ *   - Index 1, name "org-enum", type use of ari:/ARITYPE/VAST
+ *   - Index 2, name "model-name", type use of ari:/ARITYPE/TEXTSTR
+ *   - Index 3, name "model-enum", type use of ari:/ARITYPE/VAST
+ *   - Index 4, name "revision", type use of ari:/ARITYPE/TEXTSTR
+ *   - Index 5, name "features", type ulist of use of ari:/ARITYPE/TEXTSTR
  */
 static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
 {
@@ -960,8 +965,10 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t 
  *
  * Parameters: none
  *
- * Produced type: TBLT with 3 columns (use of ari:/ARITYPE/UVAST, use of ari://ietf/amm-base/TYPEDEF/ANY, use of
- * ari:/ARITYPE/BYTE)
+ * Produced type: TBLT with 3 columns:
+ *   - Index 0, name "pid", type use of ari:/ARITYPE/UVAST
+ *   - Index 1, name "target", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ *   - Index 2, name "state", type use of ari:/ARITYPE/BYTE
  */
 static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ctx)
 {
@@ -1038,9 +1045,12 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
  *
  * Parameters: none
  *
- * Produced type: TBLT with 5 columns (use of ari://ietf/amm-base/TYPEDEF/id-text, use of
- * ari://ietf/amm-base/TYPEDEF/id-int, use of ari://ietf/amm-base/TYPEDEF/id-text, use of
- * ari://ietf/amm-base/TYPEDEF/id-int, use of ari:/ARITYPE/TEXTSTR)
+ * Produced type: TBLT with 5 columns:
+ *   - Index 0, name "org-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 1, name "org-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 2, name "model-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 3, name "model-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 4, name "revision", type use of ari:/ARITYPE/TEXTSTR
  */
 static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1120,9 +1130,10 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
  *   A table of TYPEDEF within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 1 columns (use of ari:/ARITYPE/TYPEDEF)
+ * Produced type: TBLT with 1 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/TYPEDEF
  */
 static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1206,9 +1217,11 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
  *   A table of CONST within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/CONST, use of ari://ietf/amm-semtype/TYPEDEF/semtype)
+ * Produced type: TBLT with 2 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/CONST
+ *   - Index 1, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
  */
 static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1298,9 +1311,11 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
  *   A table of VAR within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/VAR, use of ari://ietf/amm-semtype/TYPEDEF/semtype)
+ * Produced type: TBLT with 2 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/VAR
+ *   - Index 1, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
  */
 static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1390,11 +1405,16 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
  *   A table of SBR within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 7 columns (use of ari:/ARITYPE/SBR, use of ari://ietf/amm-base/TYPEDEF/MAC, use of
- * ari://ietf/amm-base/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST, use of ari:/ARITYPE/BOOL, use of
- * ari:/ARITYPE/BOOL)
+ * Produced type: TBLT with 7 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/SBR
+ *   - Index 1, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 2, name "condition", type use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 3, name "min-interval", type use of ari:/ARITYPE/TD
+ *   - Index 4, name "max-count", type use of ari:/ARITYPE/UVAST
+ *   - Index 5, name "init-enabled", type use of ari:/ARITYPE/BOOL
+ *   - Index 6, name "enabled", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1491,11 +1511,16 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
  *   A table of TBR within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 7 columns (use of ari:/ARITYPE/TBR, use of ari://ietf/amm-base/TYPEDEF/MAC, use of
- * ari://ietf/amm-base/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST, use of ari:/ARITYPE/BOOL, use of
- * ari:/ARITYPE/BOOL)
+ * Produced type: TBLT with 7 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/TBR
+ *   - Index 1, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 2, name "start-time", type use of ari://ietf/amm-base/TYPEDEF/TIME
+ *   - Index 3, name "period", type use of ari:/ARITYPE/TD
+ *   - Index 4, name "max-count", type use of ari:/ARITYPE/UVAST
+ *   - Index 5, name "init-enabled", type use of ari:/ARITYPE/BOOL
+ *   - Index 6, name "enabled", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1594,13 +1619,13 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
  *   evaluation.
  *
  * Parameters list:
- *  * Index 0, name "condition", type: use of ari://ietf/amm-base/TYPEDEF/eval-tgt
- *  * Index 1, name "on-truthy", type: union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
+ *   - Index 0, name "condition", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
+ *   - Index 1, name "on-truthy", type union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
  * ari:/ARITYPE/NULL)
- *  * Index 2, name "on-falsy", type: union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
+ *   - Index 2, name "on-falsy", type union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
  * ari:/ARITYPE/NULL)
  *
- * Result name "branch", type: use of ari:/ARITYPE/BOOL
+ * Result name "branch", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -1622,11 +1647,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
  *   execute an alternative target.
  *
  * Parameters list:
- *  * Index 0, name "try", type: use of ari://ietf/amm-base/TYPEDEF/exec-tgt
- *  * Index 1, name "on-failure", type: union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
+ *   - Index 0, name "try", type use of ari://ietf/amm-base/TYPEDEF/exec-tgt
+ *   - Index 1, name "on-failure", type union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
  * ari:/ARITYPE/NULL)
  *
- * Result name "try-success", type: use of ari:/ARITYPE/BOOL
+ * Result name "try-success", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -1649,7 +1674,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
  *   time.
  *
  * Parameters list:
- *  * Index 0, name "duration", type: use of ari:/ARITYPE/TD
+ *   - Index 0, name "duration", type use of ari:/ARITYPE/TD
  *
  * Result: none
  */
@@ -1699,7 +1724,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
  *   time of reception.
  *
  * Parameters list:
- *  * Index 0, name "time", type: use of ari:/ARITYPE/TP
+ *   - Index 0, name "time", type use of ari:/ARITYPE/TP
  *
  * Result: none
  */
@@ -1741,7 +1766,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
  *   execution until the condition is met.
  *
  * Parameters list:
- *  * Index 0, name "condition", type: use of ari://ietf/amm-base/TYPEDEF/eval-tgt
+ *   - Index 0, name "condition", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
  *
  * Result: none
  */
@@ -1767,9 +1792,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx
  *   perform any EXPR evaluation or RPTT handling.
  *
  * Parameters list:
- *  * Index 0, name "ref", type: use of ari://ietf/amm-base/TYPEDEF/VALUE-OBJ
+ *   - Index 0, name "ref", type use of ari://ietf/amm-base/TYPEDEF/VALUE-OBJ
  *
- * Result name "val", type: use of ari://ietf/amm-base/TYPEDEF/ANY
+ * Result name "val", type use of ari://ietf/amm-base/TYPEDEF/ANY
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -1828,16 +1853,16 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 
 /* Name: report-on
  * Description:
- *   Agent-wide control to generate a report from a report template (RPTT).
- *   The parameter is a single RPTT list that would be produced by an
- *   object. If used for more than one-shot diagnostics, defining a RPTT
+ *   Agent-wide control to generate a report from a report template (RPTT)
+ *   value. The parameter is a single RPTT list that would be produced by
+ *   an object. If used for more than one-shot diagnostics, defining a RPTT
  *   (e.g. in a CONST within an ODM) is more efficient because the RPTT
- *   value would not need be present in the EXECSET or RPTSET.
+ *   value would not need be present in the EXECSET or corresponding
+ *   RPTSET.
  *
  * Parameters list:
- *  * Index 0, name "template", type: use of ari://ietf/amm-base/TYPEDEF/rpt-tgt
- *  * Index 1, name "destinations", type: union of 2 types (use of ari://ietf/network-base/TYPEDEF/endpoint-or-uri, use
- * of ari:/ARITYPE/NULL)
+ *   - Index 0, name "template", type use of ari://ietf/amm-base/TYPEDEF/rpt-tgt
+ *   - Index 1, name "destinations", type ulist of use of ari://ietf/network-base/TYPEDEF/endpoint-or-uri
  *
  * Result: none
  */
@@ -1854,19 +1879,36 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
         CACE_LOG_ERR("no template");
         return;
     }
-    const cace_ari_t *dests = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
-    if (!cace_ari_not_undefined(dests))
+    const cace_ari_t *p_dests = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    if (!cace_ari_not_undefined(p_dests))
     {
         CACE_LOG_ERR("no destinations");
         return;
     }
 
-    // ignore return code because failure cannot be handled here
-    if (refda_reporting_target(ctx->runctx, template))
+    const cace_ari_ac_t *dest_ac = cace_ari_cget_ac(p_dests);
+    if (dest_ac)
     {
+        // Explicit list
+        cace_ari_list_it_t dest_it;
+        for (cace_ari_list_it(dest_it, dest_ac->items); !cace_ari_list_end_p(dest_it); cace_ari_list_next(dest_it))
+        {
+            const cace_ari_t *dest = cace_ari_list_cref(dest_it);
+            refda_reporting_target(ctx->runctx, template, dest);
+        }
+    }
+    else if (cace_ari_is_null(&ctx->runctx->mgr_ident))
+    {
+        // default to executing manager
+        refda_reporting_target(ctx->runctx, template, &ctx->runctx->mgr_ident);
+    }
+    else
+    {
+        // actual failure
         return;
     }
 
+    // ignore reporting return codes because failure cannot be handled here
     refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
@@ -1880,10 +1922,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
  *   Ensure a specific ODM is present.
  *
  * Parameters list:
- *  * Index 0, name "org-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 1, name "org-id", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 2, name "model-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 3, name "model-id", type: use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 0, name "org-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 1, name "org-id", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 2, name "model-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 3, name "model-id", type use of ari://ietf/amm-base/TYPEDEF/id-int
  *
  * Result: none
  */
@@ -1982,7 +2024,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
  *   Mark a specific ODM as obsolete if it is present.
  *
  * Parameters list:
- *  * Index 0, name "odm-ns", type: use of ari:/ARITYPE/NAMESPACE
+ *   - Index 0, name "odm-ns", type use of ari:/ARITYPE/NAMESPACE
  *
  * Result: none
  */
@@ -2025,7 +2067,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
  *   Modify a VAR state to its default value.
  *
  * Parameters list:
- *  * Index 0, name "target", type: use of ari:/ARITYPE/VAR
+ *   - Index 0, name "target", type use of ari:/ARITYPE/VAR
  *
  * Result: none
  */
@@ -2089,8 +2131,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
  *   Modify a VAR state to a specific value.
  *
  * Parameters list:
- *  * Index 0, name "target", type: use of ari:/ARITYPE/VAR
- *  * Index 1, name "value", type: use of ari://ietf/amm-base/TYPEDEF/ANY
+ *   - Index 0, name "target", type use of ari:/ARITYPE/VAR
+ *   - Index 1, name "value", type use of ari://ietf/amm-base/TYPEDEF/ANY
  *
  * Result: none
  */
@@ -2155,11 +2197,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
  *   Ensure a specific CONST is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "namespace", type: use of ari:/ARITYPE/NAMESPACE
- *  * Index 1, name "obj-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 2, name "obj-enum", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 3, name "type", type: use of ari://ietf/amm-semtype/TYPEDEF/semtype
- *  * Index 4, name "init", type: use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
+ *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 3, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
+ *   - Index 4, name "init", type use of ari://ietf/amm-base/TYPEDEF/EXPR
  *
  * Result: none
  */
@@ -2274,7 +2316,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
  *   Mark a specific CONST as obsolete if it is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "obj", type: use of ari:/ARITYPE/CONST
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/CONST
  *
  * Result: none
  */
@@ -2334,11 +2376,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
  *   Ensure a specific VAR is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "namespace", type: use of ari:/ARITYPE/NAMESPACE
- *  * Index 1, name "obj-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 2, name "obj-enum", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 3, name "type", type: use of ari://ietf/amm-semtype/TYPEDEF/semtype
- *  * Index 4, name "init", type: union of 2 types (use of ari:/ARITYPE/NULL, use of ari://ietf/amm-base/TYPEDEF/EXPR)
+ *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
+ *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 3, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
+ *   - Index 4, name "init", type union of 2 types (use of ari:/ARITYPE/NULL, use of ari://ietf/amm-base/TYPEDEF/EXPR)
  *
  * Result: none
  */
@@ -2453,7 +2495,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
  *   Mark a specific VAR as obsolete if it is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "obj", type: use of ari:/ARITYPE/VAR
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/VAR
  *
  * Result: none
  */
@@ -2515,16 +2557,16 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
  *   within an ODM.
  *
  * Parameters list:
- *  * Index 0, name "namespace", type: use of ari:/ARITYPE/NAMESPACE
- *  * Index 1, name "obj-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 2, name "obj-enum", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 3, name "action", type: use of ari://ietf/amm-base/TYPEDEF/MAC
- *  * Index 4, name "condition", type: use of ari://ietf/amm-base/TYPEDEF/EXPR
- *  * Index 5, name "min-interval", type: use of ari:/ARITYPE/TD
- *  * Index 6, name "max-count", type: use of ari:/ARITYPE/UVAST
- *  * Index 7, name "init-enabled", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
+ *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 3, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 4, name "condition", type use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 5, name "min-interval", type use of ari:/ARITYPE/TD
+ *   - Index 6, name "max-count", type use of ari:/ARITYPE/UVAST
+ *   - Index 7, name "init-enabled", type use of ari:/ARITYPE/BOOL
  *
- * Result name "res", type: use of ari:/ARITYPE/UINT
+ * Result name "res", type use of ari:/ARITYPE/UINT
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -2720,16 +2762,16 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
  *   an ODM.
  *
  * Parameters list:
- *  * Index 0, name "namespace", type: use of ari:/ARITYPE/NAMESPACE
- *  * Index 1, name "obj-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 2, name "obj-enum", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 3, name "action", type: use of ari://ietf/amm-base/TYPEDEF/MAC
- *  * Index 4, name "start-time", type: use of ari://ietf/amm-base/TYPEDEF/TIME
- *  * Index 5, name "period", type: use of ari:/ARITYPE/TD
- *  * Index 6, name "max-count", type: use of ari:/ARITYPE/UVAST
- *  * Index 7, name "init-enabled", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
+ *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 3, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 4, name "start-time", type use of ari://ietf/amm-base/TYPEDEF/TIME
+ *   - Index 5, name "period", type use of ari:/ARITYPE/TD
+ *   - Index 6, name "max-count", type use of ari:/ARITYPE/UVAST
+ *   - Index 7, name "init-enabled", type use of ari:/ARITYPE/BOOL
  *
- * Result name "res", type: use of ari:/ARITYPE/UINT
+ * Result name "res", type use of ari:/ARITYPE/UINT
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -2936,10 +2978,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
  *   Ensure rule is enabled or disabled.
  *
  * Parameters list:
- *  * Index 0, name "obj-id", type: union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
- *  * Index 1, name "enabled", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "obj-id", type union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
+ *   - Index 1, name "enabled", type use of ari:/ARITYPE/BOOL
  *
- * Result name "res", type: use of ari:/ARITYPE/UINT
+ * Result name "res", type use of ari:/ARITYPE/UINT
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -3041,9 +3083,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
  *   Reset rule enabled to initial setting.
  *
  * Parameters list:
- *  * Index 0, name "obj-id", type: union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
+ *   - Index 0, name "obj-id", type union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
  *
- * Result name "res", type: use of ari:/ARITYPE/UINT
+ * Result name "res", type use of ari:/ARITYPE/UINT
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -3131,9 +3173,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
  *   Mark a specific SBR or TBR as obsolete if it is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "obj-id", type: union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
+ *   - Index 0, name "obj-id", type union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
  *
- * Result name "success", type: use of ari:/ARITYPE/BOOL
+ * Result name "success", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -3222,7 +3264,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
 {
@@ -3273,7 +3315,7 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
 {
@@ -3302,7 +3344,7 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
 {
@@ -3331,7 +3373,7 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
 {
@@ -3360,7 +3402,7 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
 {
@@ -3391,7 +3433,7 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx)
 {
@@ -3422,7 +3464,7 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
 {
@@ -3468,7 +3510,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
 {
@@ -3496,7 +3538,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
 {
@@ -3524,7 +3566,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
 {
@@ -3552,7 +3594,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
 {
@@ -3583,7 +3625,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
 {
@@ -3615,7 +3657,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
 {
@@ -3647,7 +3689,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
 {
@@ -3679,7 +3721,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ctx)
 {
@@ -3710,7 +3752,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ctx)
 {
@@ -3739,12 +3781,12 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ct
 /* Name: compare-gt
  * Description:
  *   Compare two numbers by value. The result is true if the left value is
- *   greater than the right. The operands are cast to the least compatible
- *   numeric type before the comparison.
+ *   greater than the right value. The operands are cast to the least
+ *   compatible numeric type before the comparison.
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ctx)
 {
@@ -3776,7 +3818,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ctx)
 {
@@ -3808,7 +3850,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ctx)
 {
@@ -3840,7 +3882,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ctx)
 {
@@ -3869,10 +3911,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
  *   Filter a table first by rows and then by columns.
  *
  * Parameters list:
- *  * Index 0, name "row-match", type: ulist of use of ari://ietf/amm-base/TYPEDEF/EXPR
- *  * Index 1, name "columns", type: ulist of use of ari://ietf/dtnma-agent/TYPEDEF/column-id
+ *   - Index 0, name "row-match", type ulist of use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 1, name "columns", type ulist of use of ari://ietf/dtnma-agent/TYPEDEF/column-id
  *
- * Result name "out", type: use of ari:/ARITYPE/TBL
+ * Result name "out", type use of ari:/ARITYPE/TBL
  */
 static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ctx)
 {
@@ -3901,6 +3943,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
+        (void)obj;
 
         /**
          * Register TYPEDEF objects
@@ -3908,24 +3951,26 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         { // For ./TYPEDEF/column-id
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
                 // union
                 cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 2);
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_UVAST);
-                        cace_amm_type_set_use_ref_move(choice, &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/UVAST
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UVAST);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                        cace_amm_type_set_use_ref_move(choice, &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TEXTSTR
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
             }
@@ -3944,22 +3989,24 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_const_desc_init(objdata);
             // constant value:
             {
-                cace_ari_ac_t *acinit0 = cace_ari_set_ac(&(objdata->value), NULL);
+                cace_ari_ac_t acinit;
+                cace_ari_ac_init(&acinit);
                 {
-                    cace_ari_t *item0 = cace_ari_list_push_back_new(acinit0->items);
-                    // ari://ietf/dtnma-agent/EDD/sw-vendor
-                    cace_ari_set_objref_path_intid(item0, 1, 1, CACE_ARI_TYPE_EDD, 0);
+                    cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
+                    // reference to ari://ietf/dtnma-agent/EDD/sw-vendor
+                    cace_ari_set_objref_path_intid(item, 1, 1, CACE_ARI_TYPE_EDD, 0);
                 }
                 {
-                    cace_ari_t *item0 = cace_ari_list_push_back_new(acinit0->items);
-                    // ari://ietf/dtnma-agent/EDD/sw-version
-                    cace_ari_set_objref_path_intid(item0, 1, 1, CACE_ARI_TYPE_EDD, 1);
+                    cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
+                    // reference to ari://ietf/dtnma-agent/EDD/sw-version
+                    cace_ari_set_objref_path_intid(item, 1, 1, CACE_ARI_TYPE_EDD, 1);
                 }
                 {
-                    cace_ari_t *item0 = cace_ari_list_push_back_new(acinit0->items);
-                    // ari://ietf/dtnma-agent/EDD/capability
-                    cace_ari_set_objref_path_intid(item0, 1, 1, CACE_ARI_TYPE_EDD, 2);
+                    cace_ari_t *item = cace_ari_list_push_back_new(acinit.items);
+                    // reference to ari://ietf/dtnma-agent/EDD/capability
+                    cace_ari_set_objref_path_intid(item, 1, 1, CACE_ARI_TYPE_EDD, 2);
                 }
+                cace_ari_set_ac(&(objdata->value), &acinit);
             }
 
             obj = refda_register_const(
@@ -3975,9 +4022,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/TEXTSTR
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_sw_vendor;
@@ -3992,9 +4040,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/TEXTSTR
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_sw_version;
@@ -4015,56 +4064,63 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "org-name");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TEXTSTR
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "org-enum");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_VAST);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/VAST
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_VAST);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "model-name");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TEXTSTR
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "model-enum");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_VAST);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/VAST
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_VAST);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
                     m_string_set_cstr(col->name, "revision");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TEXTSTR
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 5);
                     m_string_set_cstr(col->name, "features");
                     {
-                        cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(col->typeobj));
+                        // uniform list
+                        cace_amm_semtype_ulist_t *semtype_d1 = cace_amm_type_set_ulist(&(col->typeobj));
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                            cace_amm_type_set_use_ref_move(&(semtype->item_type), &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/TEXTSTR
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                            cace_amm_type_set_use_ref_move(&(semtype_d1->item_type), &typeref);
                         }
                     }
                 }
@@ -4082,10 +4138,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/counter64
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/counter64
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_msg_rx;
@@ -4100,10 +4156,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/counter64
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/counter64
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed;
@@ -4120,10 +4176,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/counter64
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/counter64
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_msg_tx;
@@ -4138,10 +4194,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/counter64
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/counter64
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed;
@@ -4158,10 +4214,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/counter64
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/counter64
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_exec_started;
@@ -4178,10 +4234,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/counter64
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/counter64
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded;
@@ -4198,10 +4254,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_edd_desc_init(objdata);
             // produced type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/counter64
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/counter64
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 12);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_num_exec_failed;
@@ -4223,28 +4279,30 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "pid");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_UVAST);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/UVAST
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UVAST);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "target");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/ANY
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "state");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_BYTE);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/BYTE
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BYTE);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
             }
@@ -4268,49 +4326,50 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "org-name");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/id-text
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/id-text
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "org-enum");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/id-int
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "model-name");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/id-text
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/id-text
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "model-enum");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/id-int
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
                     m_string_set_cstr(col->name, "revision");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TEXTSTR
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
             }
@@ -4333,9 +4392,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TYPEDEF);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TYPEDEF
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TYPEDEF);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
             }
@@ -4350,9 +4410,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
                 cace_ari_set_bool(&(fparam->defval), false);
             }
@@ -4368,19 +4429,20 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_CONST);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/CONST
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_CONST);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "type");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-semtype/TYPEDEF/semtype
-                        cace_ari_set_objref_path_intid(&name, 1, 24, CACE_ARI_TYPE_TYPEDEF, 25);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-semtype/TYPEDEF/semtype
+                        cace_ari_set_objref_path_intid(&typeref, 1, 24, CACE_ARI_TYPE_TYPEDEF, 25);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
             }
@@ -4394,9 +4456,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
                 cace_ari_set_bool(&(fparam->defval), false);
             }
@@ -4412,19 +4475,20 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_VAR);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/VAR
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_VAR);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "type");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-semtype/TYPEDEF/semtype
-                        cace_ari_set_objref_path_intid(&name, 1, 24, CACE_ARI_TYPE_TYPEDEF, 25);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-semtype/TYPEDEF/semtype
+                        cace_ari_set_objref_path_intid(&typeref, 1, 24, CACE_ARI_TYPE_TYPEDEF, 25);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
             }
@@ -4438,9 +4502,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
                 cace_ari_set_bool(&(fparam->defval), false);
             }
@@ -4456,65 +4521,70 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_SBR);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/SBR
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_SBR);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "action");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/MAC
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/MAC
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "condition");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/EXPR
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/EXPR
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "min-interval");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TD);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TD
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TD);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
                     m_string_set_cstr(col->name, "max-count");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_UVAST);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/UVAST
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UVAST);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 5);
                     m_string_set_cstr(col->name, "init-enabled");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/BOOL
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 6);
                     m_string_set_cstr(col->name, "enabled");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/BOOL
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
             }
@@ -4528,9 +4598,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
                 cace_ari_set_bool(&(fparam->defval), false);
             }
@@ -4546,65 +4617,70 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "obj");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TBR);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TBR
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TBR);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "action");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/MAC
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/MAC
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "start-time");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/TIME
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 5);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/TIME
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 5);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 3);
                     m_string_set_cstr(col->name, "period");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TD);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TD
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TD);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 4);
                     m_string_set_cstr(col->name, "max-count");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_UVAST);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/UVAST
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UVAST);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 5);
                     m_string_set_cstr(col->name, "init-enabled");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/BOOL
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 6);
                     m_string_set_cstr(col->name, "enabled");
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/BOOL
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
             }
@@ -4618,9 +4694,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "include-adm");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
                 cace_ari_set_bool(&(fparam->defval), false);
             }
@@ -4634,9 +4711,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_ctrl_desc_init(objdata);
             // result type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_if_then_else;
@@ -4649,10 +4727,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "condition");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/eval-tgt
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
@@ -4663,18 +4741,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            // ari://ietf/amm-base/TYPEDEF/exec-tgt
-                            cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                            cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NULL
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                 }
@@ -4688,18 +4767,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            // ari://ietf/amm-base/TYPEDEF/exec-tgt
-                            cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                            cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NULL
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                 }
@@ -4711,9 +4791,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_ctrl_desc_init(objdata);
             // result type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_catch;
@@ -4724,10 +4805,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "try");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/exec-tgt
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
@@ -4738,18 +4819,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            // ari://ietf/amm-base/TYPEDEF/exec-tgt
-                            cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                            cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NULL
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                 }
@@ -4770,9 +4852,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "duration");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_TD);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TD
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TD);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -4790,9 +4873,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "time");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_TP);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TP
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TP);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -4810,10 +4894,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "condition");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/eval-tgt
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -4822,10 +4906,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_ctrl_desc_init(objdata);
             // result type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/ANY
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_inspect;
@@ -4837,10 +4921,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "ref");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/VALUE-OBJ
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 9);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/VALUE-OBJ
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 9);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -4858,34 +4942,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "template");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/rpt-tgt
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 22);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/rpt-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 22);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "destinations");
                 {
-                    // union
-                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(fparam->typeobj), 2);
+                    // uniform list
+                    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
                     {
-                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
-                        {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            // ari://ietf/network-base/TYPEDEF/endpoint-or-uri
-                            cace_ari_set_objref_path_intid(&name, 1, 26, CACE_ARI_TYPE_TYPEDEF, 3);
-                            cace_amm_type_set_use_ref_move(choice, &name);
-                        }
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/network-base/TYPEDEF/endpoint-or-uri
+                        cace_ari_set_objref_path_intid(&typeref, 1, 26, CACE_ARI_TYPE_TYPEDEF, 3);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
                     }
-                    {
-                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
-                        {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
-                            cace_amm_type_set_use_ref_move(choice, &name);
-                        }
-                    }
+                }
+                {
+                    cace_ari_ac_t acinit;
+                    cace_ari_ac_init(&acinit);
+                    cace_ari_set_ac(&(fparam->defval), &acinit);
                 }
             }
         }
@@ -4903,37 +4981,37 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "org-name");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-text
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-text
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "org-id");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-int
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "model-name");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-text
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-text
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "model-id");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-int
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -4952,9 +5030,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "odm-ns");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_NAMESPACE);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/NAMESPACE
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -4972,9 +5051,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_VAR);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/VAR
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_VAR);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -4992,18 +5072,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_VAR);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/VAR
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_VAR);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "value");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -5022,45 +5103,46 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "namespace");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_NAMESPACE);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/NAMESPACE
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj-name");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-text
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-text
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj-enum");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-int
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "type");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-semtype/TYPEDEF/semtype
-                    cace_ari_set_objref_path_intid(&name, 1, 24, CACE_ARI_TYPE_TYPEDEF, 25);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-semtype/TYPEDEF/semtype
+                    cace_ari_set_objref_path_intid(&typeref, 1, 24, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "init");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/EXPR
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/EXPR
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -5079,9 +5161,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_CONST);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/CONST
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_CONST);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -5099,36 +5182,37 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "namespace");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_NAMESPACE);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/NAMESPACE
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj-name");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-text
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-text
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj-enum");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-int
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "type");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-semtype/TYPEDEF/semtype
-                    cace_ari_set_objref_path_intid(&name, 1, 24, CACE_ARI_TYPE_TYPEDEF, 25);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-semtype/TYPEDEF/semtype
+                    cace_ari_set_objref_path_intid(&typeref, 1, 24, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
@@ -5139,18 +5223,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NULL
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            // ari://ietf/amm-base/TYPEDEF/EXPR
-                            cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // reference to ari://ietf/amm-base/TYPEDEF/EXPR
+                            cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                 }
@@ -5172,9 +5257,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_VAR);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/VAR
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_VAR);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -5183,9 +5269,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_ctrl_desc_init(objdata);
             // result type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_UINT);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/UINT
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr;
@@ -5197,69 +5284,73 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "namespace");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_NAMESPACE);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/NAMESPACE
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj-name");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-text
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-text
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj-enum");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-int
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "action");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/MAC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/MAC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "condition");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/EXPR
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/EXPR
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "min-interval");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_TD);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TD
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TD);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "max-count");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_UVAST);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/UVAST
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UVAST);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "init-enabled");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -5268,9 +5359,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_ctrl_desc_init(objdata);
             // result type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_UINT);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/UINT
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr;
@@ -5282,69 +5374,73 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "namespace");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_NAMESPACE);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/NAMESPACE
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj-name");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-text
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-text
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "obj-enum");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/id-int
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "action");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/MAC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/MAC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "start-time");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/TIME
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 5);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/TIME
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 5);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "period");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_TD);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TD
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TD);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "max-count");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_UVAST);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/UVAST
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UVAST);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "init-enabled");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -5353,9 +5449,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_ctrl_desc_init(objdata);
             // result type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_UINT);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/UINT
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled;
@@ -5374,17 +5471,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_SBR);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/SBR
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_SBR);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_TBR);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/TBR
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TBR);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                 }
@@ -5392,9 +5491,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "enabled");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -5403,9 +5503,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_ctrl_desc_init(objdata);
             // result type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_UINT);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/UINT
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled;
@@ -5424,17 +5525,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_SBR);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/SBR
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_SBR);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_TBR);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/TBR
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TBR);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                 }
@@ -5445,9 +5548,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             refda_amm_ctrl_desc_init(objdata);
             // result type
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule;
@@ -5465,17 +5569,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_SBR);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/SBR
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_SBR);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_TBR);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/TBR
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TBR);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                 }
@@ -5494,18 +5600,18 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "val");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_negate;
@@ -5523,28 +5629,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/ANY
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_add;
@@ -5562,28 +5668,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/ANY
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_sub;
@@ -5601,28 +5707,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/ANY
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_multiply;
@@ -5641,28 +5747,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/ANY
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_divide;
@@ -5680,28 +5786,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_remainder;
@@ -5720,18 +5826,18 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "val");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/INTEGER
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/INTEGER
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bit_not;
@@ -5750,28 +5856,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/INTEGER
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/INTEGER
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/INTEGER
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bit_and;
@@ -5790,28 +5896,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/INTEGER
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/INTEGER
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/INTEGER
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bit_or;
@@ -5829,28 +5935,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/INTEGER
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/INTEGER
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/amm-base/TYPEDEF/INTEGER
-                cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bit_xor;
@@ -5869,16 +5975,18 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "val");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bool_not;
@@ -5897,25 +6005,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bool_and;
@@ -5934,25 +6045,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bool_or;
@@ -5971,25 +6085,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/BOOL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_bool_xor;
@@ -6008,27 +6125,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_eq;
@@ -6047,27 +6165,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/ANY
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_ne;
@@ -6086,27 +6205,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_gt;
@@ -6125,27 +6245,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_ge;
@@ -6164,27 +6285,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_lt;
@@ -6203,27 +6325,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "left");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 string_set_str(operand->name, "right");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BOOL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_compare_le;
@@ -6242,16 +6365,18 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 string_set_str(operand->name, "in");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_TBL);
-                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TBL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TBL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
             // result type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_TBL);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/TBL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TBL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
             objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_tbl_filter;
@@ -6263,24 +6388,26 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "row-match");
                 {
+                    // uniform list
                     cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/amm-base/TYPEDEF/EXPR
-                        cace_ari_set_objref_path_intid(&name, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
-                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/EXPR
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
                     }
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "columns");
                 {
+                    // uniform list
                     cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/dtnma-agent/TYPEDEF/column-id
-                        cace_ari_set_objref_path_intid(&name, 1, 1, CACE_ARI_TYPE_TYPEDEF, 1);
-                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/dtnma-agent/TYPEDEF/column-id
+                        cace_ari_set_objref_path_intid(&typeref, 1, 1, CACE_ARI_TYPE_TYPEDEF, 1);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
                     }
                 }
             }

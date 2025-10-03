@@ -205,7 +205,7 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     refda_runctx_t runctx;
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
-    int res = refda_reporting_target(&runctx, &target);
+    int res = refda_reporting_target(&runctx, &target, NULL);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");
 
     // extract agent state

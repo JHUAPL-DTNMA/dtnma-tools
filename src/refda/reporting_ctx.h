@@ -40,15 +40,14 @@ typedef struct
     cace_ari_list_t items;
 } refda_reporting_ctx_t;
 
-/** Initialize a context based on an object reference ARI and
- * a target object's formal parameters.
+/** Initialize a context based on an parent runtime context and a destination
+ * .
  *
  * @param[out] obj The context to initialize.
  * @param[in] runctx The parent runtime context.
- * @param[in] deref The dereference result.
- * The result must outlive this context.
+ * @param[in] mgr_ident The destination manager.
  */
-void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *runctx);
+void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, const refda_runctx_t *runctx, const cace_ari_t *mgr_ident);
 
 void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj);
 

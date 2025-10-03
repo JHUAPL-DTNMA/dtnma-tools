@@ -137,9 +137,10 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
         if (poll_stdin->revents & POLLIN)
         {
             // assume that if something is ready to read that a whole line will come
-            char  *lineptr = NULL;
-            size_t got     = 0;
-            res            = getline(&lineptr, &got, stdin);
+            char  *lineptr   = NULL;
+            size_t linealloc = 0;
+
+            res = getline(&lineptr, &linealloc, stdin);
             if (res < 0)
             {
                 CACE_LOG_DEBUG("returning due to end of input %d", res);
@@ -148,9 +149,9 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
             }
             else
             {
-                CACE_LOG_DEBUG("read line with %zu characters", got);
+                CACE_LOG_DEBUG("read line with %zu characters", res);
                 char *curs = lineptr;
-                char *end  = lineptr + got;
+                char *end  = lineptr + res;
 
                 int lineret = 0;
                 while (curs < end)
@@ -257,10 +258,13 @@ int main(int argc, char *argv[])
 
     /* Process Command Line Arguments. */
     int log_limit = LOG_WARNING;
+
+    m_string_t startup_exec;
+    m_string_init(startup_exec);
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, ":hl:a:")) != -1)
+            while ((opt = getopt(argc, argv, ":hl:s:a:")) != -1)
             {
                 switch (opt)
                 {
@@ -270,6 +274,9 @@ int main(int argc, char *argv[])
                             show_usage(argv[0]);
                             retval = 1;
                         }
+                        break;
+                    case 's':
+                        m_string_set_cstr(startup_exec, optarg);
                         break;
                     case 'a':
                         string_set_str(agent.agent_eid, optarg);
@@ -367,7 +374,7 @@ int main(int argc, char *argv[])
     if (!retval)
     {
         // stdio uses non-specific EIDs
-        if (refda_agent_send_hello(&agent, "any"))
+        if (refda_agent_send_hello(&agent, "data:stdio"))
         {
             CACE_LOG_ERR("Agent hello failed");
             retval = 3;

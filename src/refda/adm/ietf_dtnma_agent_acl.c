@@ -73,6 +73,7 @@ static void refda_acl_post_add_access(refda_acl_t *acl, refda_acl_access_t *acce
     {
         const refda_acl_id_tree_subtype_ct *grp = refda_acl_id_tree_cref(grp_it);
 
+        CACE_LOG_DEBUG("Adding access for group %u", *grp);
         refda_acl_access_ptr_set_t *set = refda_acl_access_by_group_safe_get(acl->access_by_group, *grp);
         refda_acl_access_ptr_set_push(*set, access);
     }
@@ -344,8 +345,9 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
         const cace_ari_t *gid_val = cace_ari_list_cref(gid_it);
 
         refda_acl_id_t gid;
-        if (!cace_ari_get_uint(gid_val, &gid))
+        if (cace_ari_get_uint(gid_val, &gid))
         {
+            CACE_LOG_WARNING("Ignoring non-uint group-id value");
             continue;
         }
 
