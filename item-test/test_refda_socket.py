@@ -24,6 +24,7 @@ import os
 import signal
 import socket
 import subprocess
+import sys
 import tempfile
 from typing import List, Optional, Set
 import urllib.parse
@@ -56,8 +57,10 @@ class TestRefdaSocket(unittest.TestCase):
         logging.getLogger('ace').setLevel(logging.ERROR)
 
     def setUp(self) -> None:
-        tmp_del = os.environ.get('TEST_DIR_KEEP') is None
-        self._tmp = tempfile.TemporaryDirectory(delete=tmp_del)
+        tmp_kwargs = {}
+        if sys.version_info >= (3, 9):
+            tmp_kwargs['delete'] = os.environ.get('TEST_DIR_KEEP') is None
+        self._tmp = tempfile.TemporaryDirectory(**tmp_kwargs)
         self._agent_sock_path = os.path.join(self._tmp.name, 'agent.sock')
 
         def bound_sock(name):
