@@ -60,7 +60,6 @@ void suiteSetUp(void)
 
     refda_agent_init(&agent);
     test_util_agent_crit_adms(&agent);
-    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 
     ex_adm = cace_amm_obj_store_add_ns(&(agent.objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
                                        cace_amm_idseg_ref_withenum("adm", EXAMPLE_ADM_ENUM), "2025-01-03");
@@ -87,6 +86,8 @@ void suiteSetUp(void)
 
     int res = refda_agent_bindrefs(&agent);
     assert(0 == res);
+
+    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 }
 
 int suiteTearDown(int failures)

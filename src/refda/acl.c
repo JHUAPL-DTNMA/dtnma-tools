@@ -60,7 +60,7 @@ void refda_acl_access_deinit(refda_acl_access_t *obj)
 void refda_acl_init(refda_acl_t *obj)
 {
     CHKVOID(obj);
-    obj->generation   = 0;
+    atomic_store(&obj->generation, 0);
     obj->perm_base    = NULL;
     obj->perm_produce = NULL;
     refda_acl_group_list_init(obj->groups);

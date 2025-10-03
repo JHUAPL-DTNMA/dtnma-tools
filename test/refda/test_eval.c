@@ -48,8 +48,8 @@ void suiteSetUp(void)
 
     refda_agent_init(&agent);
     test_util_agent_crit_adms(&agent);
-    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
     suite_adms_init(&agent);
+    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 }
 
 int suiteTearDown(int failures)

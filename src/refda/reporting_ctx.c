@@ -25,6 +25,7 @@ void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, const refda_runctx_t *
 
     obj->runctx = CACE_MALLOC(sizeof(refda_runctx_t));
     refda_runctx_init(obj->runctx);
+
     obj->runctx->agent = runctx->agent;
     cace_ari_init_copy(&obj->runctx->mgr_ident, mgr_ident);
     cace_ari_set_null(&obj->runctx->nonce);

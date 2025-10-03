@@ -84,7 +84,7 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
         }
 
         // Lookup ACL groups once now
-        ctx->acl_gen = agent->acl.generation;
+        ctx->acl_gen = atomic_load(&agent->acl.generation);
         refda_acl_search_endpoint(agent, &ctx->mgr_ident, ctx->acl_groups);
     }
     else
@@ -102,7 +102,7 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
 
 void refda_runctx_check_acl(refda_runctx_t *ctx)
 {
-    if (ctx->acl_gen != ctx->agent->acl.generation)
+    if (ctx->acl_gen != atomic_load(&ctx->agent->acl.generation))
     {
         refda_acl_search_endpoint(ctx->agent, &ctx->mgr_ident, ctx->acl_groups);
     }

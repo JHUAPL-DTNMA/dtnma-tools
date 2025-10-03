@@ -81,7 +81,11 @@ static cace_amm_type_match_res_t cace_amm_semtype_use_match(const cace_amm_type_
     const cace_amm_semtype_use_t *semtype = self->as_semtype;
     CHKRET(semtype, CACE_AMM_TYPE_MATCH_NEGATIVE);
     const cace_amm_type_t *base = semtype->base;
-    CHKRET(base, CACE_AMM_TYPE_MATCH_NEGATIVE);
+    if (!base)
+    {
+        CACE_LOG_CRIT("base type pointer invalid, binding must have failed");
+        return CACE_AMM_TYPE_MATCH_NEGATIVE;
+    }
 
     cace_amm_type_match_res_t got = cace_amm_type_match(base, ari);
     if (got == CACE_AMM_TYPE_MATCH_NEGATIVE)
@@ -97,7 +101,11 @@ static int cace_amm_semtype_use_convert(const cace_amm_type_t *self, cace_ari_t 
     const cace_amm_semtype_use_t *semtype = self->as_semtype;
     CHKERR1(semtype);
     const cace_amm_type_t *base = semtype->base;
-    CHKERR1(base);
+    if (!base)
+    {
+        CACE_LOG_CRIT("base type pointer invalid, binding must have failed");
+        return CACE_AMM_ERR_CONVERT_NULLFUNC;
+    }
 
     int res = cace_amm_type_convert(base, out, in);
     CHKERRVAL(res);

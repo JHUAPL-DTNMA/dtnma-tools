@@ -49,8 +49,10 @@ void suiteSetUp(void)
 
     refda_agent_init(&agent);
     test_util_agent_crit_adms(&agent);
-    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
     suite_adms_init(&agent);
+    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
+    test_util_group_add(&agent, 1, "data:.*");
+    test_util_group_permission(&agent, 1, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 }
 
 int suiteTearDown(int failures)
@@ -197,6 +199,9 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
 
+    cace_ari_t destination = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tstr(&destination, "data:foo", false);
+
     cace_ari_t expect_rpt_items = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_rpt_items, expectloghex));
     cace_ari_ac_t *expect_seq = cace_ari_get_ac(&expect_rpt_items);
@@ -205,7 +210,7 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     refda_runctx_t runctx;
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
-    int res = refda_reporting_target(&runctx, &target, NULL);
+    int res = refda_reporting_target(&runctx, &target, &destination);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");
 
     // extract agent state

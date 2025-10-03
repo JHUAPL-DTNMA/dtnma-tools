@@ -519,7 +519,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group(refda_ctrl_exec_ctx
     }
     else
     {
-        agent->acl.generation += 1;
+        atomic_fetch_add(&agent->acl.generation, 1);
 
         if (found_id)
         {
@@ -534,8 +534,6 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group(refda_ctrl_exec_ctx
         else
         {
             // new item
-            agent->acl.generation += 1;
-
             found_id = refda_acl_group_list_push_back_new(agent->acl.groups);
             cace_get_system_time(&found_id->added_at);
 
@@ -610,7 +608,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group_members(refda_ctrl_
     }
     if (found_id)
     {
-        agent->acl.generation += 1;
+        atomic_fetch_add(&agent->acl.generation, 1);
 
         // exact copy
         refda_amm_ident_base_list_reset(found_id->member_pats);
@@ -682,7 +680,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_discard_group(refda_ctrl_exec_ct
 
     if (!refda_acl_group_list_end_p(found_it))
     {
-        agent->acl.generation += 1;
+        atomic_fetch_add(&agent->acl.generation, 1);
 
         refda_acl_group_list_remove(agent->acl.groups, grp_it);
 

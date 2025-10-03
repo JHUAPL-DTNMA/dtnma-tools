@@ -36,6 +36,12 @@ void test_util_agent_crit_adms(refda_agent_t *agent);
 /// Add access permissions to agent group 0
 void test_util_agent_permission(refda_agent_t *agent, cace_ari_int_id_t obj_id);
 
+/// Add group for specific URI pattern
+void test_util_group_add(refda_agent_t *agent, refda_acl_id_t group_id, const char *uri_pattern);
+
+/// Add access permission for specific group
+void test_util_group_permission(refda_agent_t *agent, refda_acl_id_t group_id, cace_ari_int_id_t obj_id);
+
 #ifdef __cplusplus
 } // extern C
 #endif

@@ -244,7 +244,7 @@ int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target, con
     {
         // nothing to do
         CACE_LOG_WARNING("attempted to report to undefined manager");
-        return 0;
+        return 1;
     }
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
@@ -256,7 +256,7 @@ int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target, con
         string_t buf;
         string_init(buf);
         cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Reporting to %s for target %s", dest_buf, string_get_cstr(buf));
+        CACE_LOG_DEBUG("Reporting to %s for target %s", m_string_get_cstr(dest_buf), m_string_get_cstr(buf));
         string_clear(buf);
         string_clear(dest_buf);
     }
@@ -290,7 +290,7 @@ int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *destination, con
     {
         // nothing to do
         CACE_LOG_WARNING("attempted to report to undefined destination");
-        return 0;
+        return 1;
     }
 
     refda_msgdata_t msg;
