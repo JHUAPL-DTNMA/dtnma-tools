@@ -231,7 +231,7 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     for (; !cace_ari_list_end_p(expect_it) && !cace_ari_list_end_p(got_it);
          cace_ari_list_next(expect_it), cace_ari_list_next(got_it))
     {
-        TEST_PRINTF("Checking ARI %z", item_ix++);
+        TEST_PRINTF("Checking ARI %zu", item_ix++);
         const bool equal = cace_ari_equal(cace_ari_list_cref(expect_it), cace_ari_list_cref(got_it));
         TEST_ASSERT_TRUE_MESSAGE(equal, "RPT ARI is different");
     }

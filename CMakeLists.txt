@@ -198,9 +198,9 @@ include(FindPkgConfig)
 find_package(QCBOR REQUIRED)
 find_package(MLIB REQUIRED)
 find_package(timespec REQUIRED)
-# Optional dependencies
-pkg_search_module(PCRE libpcre2-8 IMPORTED_TARGET)
+pkg_search_module(PCRE libpcre2-8 REQUIRED IMPORTED_TARGET)
 message(STATUS "Found PCRE version ${PCRE_VERSION}")
+# Optional dependencies
 pkg_search_module(LIBSYSTEMD libsystemd IMPORTED_TARGET)
 message(STATUS "Found libsystemd version ${LIBSYSTEMD_VERSION}")
 
