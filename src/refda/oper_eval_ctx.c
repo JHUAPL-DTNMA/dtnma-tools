@@ -61,7 +61,7 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
 
     cace_ari_array_resize(obj->operands.ordered, operand_size);
 
-    int                            failcnt = 0;
+    int failcnt = 0;
 
     cace_amm_named_type_array_it_t typ_it;
     cace_ari_array_it_t            val_it;
@@ -84,7 +84,8 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
                 string_t buf;
                 string_init(buf);
                 cace_ari_text_encode(buf, &orig, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_WARNING("failed to convert operand \"%s\" code %d from value %s", m_string_get_cstr(typ->name), res, m_string_get_cstr(buf));
+                CACE_LOG_WARNING("failed to convert operand \"%s\" code %d from value %s", m_string_get_cstr(typ->name),
+                                 res, m_string_get_cstr(buf));
                 string_clear(buf);
             }
 

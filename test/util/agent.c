@@ -74,9 +74,10 @@ void test_util_group_add(refda_agent_t *agent, refda_acl_id_t group_id, const ch
     m_string_printf(grp->name, "%" PRIu32, group_id);
 
     {
-        cace_ari_t pat_name = CACE_ARI_INIT_UNDEFINED;
-        cace_ari_ref_t *ref = cace_ari_set_objref_path_intid(&pat_name, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_NETWORK_BASE_ENUM_ADM,
-                                       CACE_ARI_TYPE_IDENT, REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_URI_REGEXP_PATTERN);
+        cace_ari_t      pat_name = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_ref_t *ref      = cace_ari_set_objref_path_intid(
+            &pat_name, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_NETWORK_BASE_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+            REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_URI_REGEXP_PATTERN);
 
         cace_ari_list_t params;
         cace_ari_list_init(params);
@@ -89,7 +90,7 @@ void test_util_group_add(refda_agent_t *agent, refda_acl_id_t group_id, const ch
         refda_amm_ident_base_t *pat = refda_amm_ident_base_list_push_new(grp->member_pats);
         if (refda_amm_ident_base_populate(pat, &pat_name, &agent->objs))
         {
-            //CACE_LOG_CRIT("no uri_regexp_pattern found");
+            // CACE_LOG_CRIT("no uri_regexp_pattern found");
             assert(false);
         }
         cace_ari_deinit(&pat_name);
@@ -114,7 +115,7 @@ void test_util_group_permission(refda_agent_t *agent, refda_acl_id_t group_id, c
         refda_amm_ident_base_t *perm = refda_amm_ident_base_list_push_new(access->permissions);
         if (refda_amm_ident_base_populate(perm, &perm_name, &agent->objs))
         {
-            //CACE_LOG_CRIT("no permission found");
+            // CACE_LOG_CRIT("no permission found");
             assert(false);
         }
         cace_ari_deinit(&perm_name);
