@@ -83,7 +83,7 @@ then
     URIBASE="http://manager:8089/nm/api"
 
     CMD="curl ${CURLOPTS} -XPOST ${URIBASE}/agents -H 'Content-Type: text/plain' --expand-data '{{REFDA_EID}}'"
-    echo $CMD | ${DEXEC} bash
+    echo $CMD | ${DEXEC} bash || true
     echo
 
     CMD="curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/clear_reports"
@@ -93,14 +93,14 @@ then
     # Verify empty listing
     CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=text"
     RPTLINES=$(echo $CMD | ${DEXEC} bash)
-    if [ -n "$RPTLINES" ]
+    if [ -n "${RPTLINES}" ]
     then
         exit 4
     fi
 
     # send an inspect execution with a nonce, expecting a report back
-    CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version))' | \
-        ace_ari --inform text --outform cborhex --must-nickname | \
+    CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/report-on(/ac/(//ietf/dtnma-agent/EDD/sw-version)))' | \
+        ace_ari --log-level=warning --inform text --outform cborhex --must-nickname | \
         curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/send?form=hex -H 'Content-Type: text/plain' --data-binary @-; echo"
     echo $CMD | ${DEXEC} bash
     echo
@@ -108,28 +108,32 @@ then
     RPTOBJ=""
     for IX in $(seq 10)
     do
-        echo "Waiting on report back..."
+        echo "Waiting on reports back..."
         sleep 1
 
         CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=text"
         RPTLINES=$(echo $CMD | ${DEXEC} bash)
-        if [ -n "$RPTLINES" ]
+        LINECOUNT=$(echo "${RPTLINES}" | wc -l)
+        echo "Got ${LINECOUNT} lines"
+        if [ ${LINECOUNT} -ge 2 ]
         then
             break
         fi
     done
 
-    if [ -n "$RPTLINES" ]
+    if [ -n "${RPTLINES}" ]
     then
       echo "Got Report lines:"
-      echo ${RPTLINES}
+      echo "${RPTLINES}"
       echo
-    else
+    fi
+    if [ ${LINECOUNT} -lt 2 ]
+    then
       exit 3
     fi
 
     # view the hex-binary version also
-    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=hex | xxd -r -p | cborseq2diag.rb"
+    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=hex | ace_ari --log-level=warning --inform cborhex --outform text"
     echo $CMD | ${DEXEC} bash
 
 fi
