@@ -160,7 +160,7 @@ void *refdm_ingress_worker(void *arg)
             CACE_LOG_INFO("Got mif.recv result=%d, stopping", recv_res);
 
             // flush the input queue but keep the daemon running
-            break;
+            continue;
         }
     }
 

@@ -79,7 +79,7 @@ void *refda_ingress_worker(void *arg)
             refda_msgdata_queue_push_move(agent->execs, &undef);
             sem_post(&(agent->execs_sem));
 
-            break;
+            continue;
         }
     }
 
