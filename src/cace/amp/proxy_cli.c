@@ -201,83 +201,101 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
     cace_amp_proxy_cli_state_t *state = ctx;
     CHKERR1(state);
 
-    int sock_fd = cace_amp_proxy_cli_real_connect(state);
-
-    // first peek at message size
-    int     flags = MSG_PEEK | MSG_TRUNC;
-    ssize_t got   = recv(sock_fd, NULL, 0, flags);
-    if (got == 0)
-    {
-        CACE_LOG_INFO("empty recv() message");
-        return CACE_AMM_MSG_IF_RECV_END;
-    }
-    else if (got < 0)
-    {
-        CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
-        cace_amp_proxy_cli_state_disconnect(state);
-        return CACE_AMM_MSG_IF_RECV_END;
-    }
-    CACE_LOG_INFO("Peeked socket datagram with %zd octets", got);
-
     int result = 0;
 
     m_bstring_t msgbuf;
     m_bstring_init(msgbuf);
-    {
-        m_bstring_resize(msgbuf, got);
-        const size_t msg_size  = m_bstring_size(msgbuf);
-        uint8_t     *msg_begin = m_bstring_acquire_access(msgbuf, 0, msg_size);
 
-        flags = 0;
-        got   = recv(sock_fd, msg_begin, msg_size, flags);
-        m_bstring_release_access(msgbuf);
-        if (got < 0)
+    while (true)
+    {
+        // try connection each iteration
+        int sock_fd = cace_amp_proxy_cli_real_connect(state);
+
+        // first peek at message size
+        int     flags = MSG_PEEK | MSG_TRUNC;
+        ssize_t got   = recv(sock_fd, NULL, 0, flags);
+        if (got == 0)
         {
-            CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
-            result = CACE_AMM_MSG_IF_RECV_END;
-        }
-        else if (got == 0)
-        {
+            CACE_LOG_INFO("empty recv() message");
             if (!cace_daemon_run_get(running))
             {
                 CACE_LOG_DEBUG("returning due to running state change");
                 result = CACE_AMM_MSG_IF_RECV_END;
+                break;
+            }
+            else
+            {
+                continue;
             }
         }
-    }
-    CACE_LOG_INFO("Received socket datagram with %zd octets", got);
-
-    // Decode the proxy header
-    const uint8_t *msg_begin = m_bstring_view(msgbuf, 0, got);
-    size_t         head_len;
-    if (!result)
-    {
-        cace_data_t view;
-        cace_data_init_view(&view, got, (uint8_t *)msg_begin);
-        cace_get_system_time(&meta->timestamp);
-        if (cace_ari_cbor_decode(&meta->src, &view, &head_len, NULL))
+        else if (got < 0)
         {
-            result = 3;
+            CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
+            cace_amp_proxy_cli_state_disconnect(state);
+            result = CACE_AMM_MSG_IF_RECV_END;
+            break;
         }
-        cace_data_deinit(&view);
-    }
+        CACE_LOG_INFO("Peeked socket datagram with %zd octets", got);
 
-    if (!result)
-    {
-        // view past the proxy header
-        const size_t   msgbuf_len = got - head_len;
-        const uint8_t *msgbuf_ptr = m_bstring_view(msgbuf, head_len, msgbuf_len);
-        if (cace_amp_msg_decode(data, msgbuf_ptr, msgbuf_len))
         {
-            CACE_LOG_ERR("failed message decode");
-            result = 4;
+            m_bstring_resize(msgbuf, got);
+            const size_t msg_size  = m_bstring_size(msgbuf);
+            uint8_t     *msg_begin = m_bstring_acquire_access(msgbuf, 0, msg_size);
+
+            flags = 0;
+            got   = recv(sock_fd, msg_begin, msg_size, flags);
+            m_bstring_release_access(msgbuf);
+            if (got <= 0)
+            {
+                CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
+                result = CACE_AMM_MSG_IF_RECV_END;
+                break;
+            }
+        }
+        CACE_LOG_INFO("Received socket datagram with %zd octets", got);
+
+        // Decode the proxy header
+        const uint8_t *msg_begin = m_bstring_view(msgbuf, 0, got);
+        size_t         head_len;
+        {
+            cace_data_t view;
+            cace_data_init_view(&view, got, (uint8_t *)msg_begin);
+            cace_get_system_time(&meta->timestamp);
+            int ret = cace_ari_cbor_decode(&meta->src, &view, &head_len, NULL);
+            if (ret)
+            {
+                CACE_LOG_ERR("Peer EID decoding error code %d", ret);
+                result = 3;
+            }
+            cace_data_deinit(&view);
+            if (result)
+            {
+                continue;
+            }
         }
 
-        string_t buf;
-        string_init(buf);
-        cace_ari_text_encode(buf, &meta->src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_INFO("Received proxy datagram with %zd octets to %s", got, m_string_get_cstr(buf));
-        string_clear(buf);
+        if (!result)
+        {
+            // view past the proxy header
+            const size_t   msgbuf_len = got - head_len;
+            const uint8_t *msgbuf_ptr = m_bstring_view(msgbuf, head_len, msgbuf_len);
+            if (cace_amp_msg_decode(data, msgbuf_ptr, msgbuf_len))
+            {
+                CACE_LOG_ERR("failed message decode");
+                result = 4;
+            }
+
+            if (cace_log_is_enabled_for(LOG_INFO))
+            {
+                string_t buf;
+                string_init(buf);
+                cace_ari_text_encode(buf, &meta->src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_INFO("Received proxy datagram with %zd octets to %s", got, m_string_get_cstr(buf));
+                string_clear(buf);
+            }
+            // got valid message
+            break;
+        }
     }
 
     m_bstring_clear(msgbuf);
