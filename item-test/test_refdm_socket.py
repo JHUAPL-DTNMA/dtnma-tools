@@ -20,7 +20,10 @@
 This uses the environment variable DB_HOST to determine whether to spawn a
 private PostgreSQL server or use an external one.
 '''
+import datetime
+from enum import Enum
 import glob
+from http import HTTPStatus
 import io
 import logging
 import os
@@ -50,6 +53,91 @@ def split_content_type(text):
     if ';' in text:
         text = text.split(';', 2)[0]
     return text
+
+
+
+
+class FetchType(Enum):
+    '''Defines the type of content to fetch.
+    '''
+    BOTH = 1
+    HEX = 2
+    TEXT = 3
+
+
+def validate_num_reports(self, nonce, time_beg, time_end, expect_reports_cnt, status_code = HTTPStatus.OK, fetch_type = FetchType.BOTH):
+    ''' Sends a request for reports and performs validation on the result.
+    The following validation is performed:
+    - Check that the response status code matches the expected status code. If the expected status
+    code is not HTTP_OK (200) then bail.
+    - Check that the number of returned reports == expect_num_reports Note that
+    this check does not look at the content of the individual report (In HEX mode it just checks for number of items returned.
+
+    :param self: This should be a reference to the TestRefdmSocket object. This is needed since PyTest seems to remove the
+                member method before execution. By placing it here it seems not to be removed.
+    :param nonce: The exact nonce value to filter on. Pass None, for no filtering. Pass [None] to filter
+                  explicitly on values of null.
+    :param time_beg: The start time (inclusive) to filter on. Pass None, for no filtering.
+    :param time_end: The end time (exclusive) to filter on. Pass None, for no filtering.
+    :param expect_reports_cnt: The number of expected reports to be returned.
+    :param status_code: The expected HTTP status code. Note if passed in result is not HTTP_OK (200) then the returned content
+    will not be checked. This method will return immediately (presumably because the expected code was returned).
+    :param fetch_type: The type of content to fetch (and check).
+    '''
+    ###
+    ###
+    ###
+    ### NOTE THE NON-CONVENTIONAL USE OF self: This method is not a member of the class TestRefdmSocket - but it acts like it is....
+    ###
+    ###
+    ###
+    # Form the query component (of the URL)
+    query_str = ""
+    if isinstance(nonce, int) == True:
+        query_str += '&nonce=' + str(nonce)
+    elif nonce == [None]:
+        # Hack to allow explicit nonce == None (and be differentiated from 'do not utilize nonce filter')
+        query_str += '&nonce=None'
+    elif isinstance(nonce, str)  == True:
+        query_str += '&nonce=' + "'{}'".format(nonce)
+
+    if time_beg != None:
+        query_str += '&time_beg=' + time_beg
+    if time_end != None:
+        query_str += '&time_end=' + time_end
+
+    # Request the HEX content and validate
+    if fetch_type == FetchType.HEX or fetch_type == FetchType.BOTH:
+        # Request the (HEX) content and validate a proper response
+        request_url = self._base_url + f'agents/idx/0/reports?form=hex' + query_str
+        resp = self._req.get(request_url)
+        self.assertEqual(status_code, resp.status_code)
+        if status_code != HTTPStatus.OK:
+            # Bail if we did not get HTTP_OK
+            return
+
+        # Ensure we have the correct number of lines
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        lines_hex = resp.text.splitlines()
+        self.assertEqual(expect_reports_cnt, len(lines_hex))
+
+    # Request the TEXT content and validate
+    if fetch_type == FetchType.TEXT or fetch_type == FetchType.BOTH:
+        # Request the (TEXT) content and validate a proper response
+        request_url = self._base_url + f'agents/idx/0/reports?form=text' + query_str
+        resp = self._req.get(request_url)
+        self.assertEqual(status_code, resp.status_code)
+        if status_code != HTTPStatus.OK:
+            # Bail if we did not get HTTP_OK
+            return
+
+       # Ensure we have the correct number of lines (and validate that they start with ari:/RPTSET/
+        self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
+        lines_text = resp.text.splitlines()
+        self.assertEqual(expect_reports_cnt, len(lines_text))
+        for line in lines_text:
+            self.assertTrue(line.startswith('ari:/RPTSET/'))
+
 
 
 class TestRefdmSocket(unittest.TestCase):
@@ -561,6 +649,108 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual(1, len(lines))
         for line in lines:
             self.assertTrue(line.startswith('ari:/RPTSET/'))
+
+
+
+
+
+    def test_rptset_filter_logic(self):
+        self._start()
+
+        # Generate and install several reports with the following pattern:
+        # - All reports will be generated for the month: 2025Jul
+        #
+        # - Generate 31 reports that have the following:
+        # --- These reports will occur at the time 12:30:45
+        # --- The nonce value will be: the 3-char day-of-week
+        #
+        # - Generate 10 reports that have the following:
+        # --- They will occur on days that are divisib]e by 3
+        # --- These reports will occur at the time: 12:00:00
+        # --- The nonce value will be: null
+        #
+        # - Generate 93 reports that have the following:
+        # --- They will occur 3 times each day on the hour, if
+        #     that hour is divisible by 7
+        # --- The nonce value will be: integer value of the hour
+
+        # Our non-localized (lowercase) day-of-week
+        dow_arr = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+        # The base start time
+        init_dt = datetime.datetime(2025, 7, 1, 12, 30, 45)
+
+        # TODO: Each report is individually sent - perhaps there is a way to
+        # TODO: send the list of reports to improve performance...
+        for idx in range(0, 31):
+            # Generate the daily day-of-week report
+            tmp_dt = init_dt + datetime.timedelta(days=idx)
+            tmp_dt_str = tmp_dt.strftime('%Y%m%dT%H%M%SZ');
+            tmp_nonce = dow_arr[tmp_dt.weekday()]
+            tmp_nonce = "'{}'".format(dow_arr[tmp_dt.weekday()])
+#            # 'ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))'
+            ari_str = 'ari:/RPTSET/n={};r=/TP/{};(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))'.format(tmp_nonce, tmp_dt_str)
+            sock_path = self._send_msg([self._ari_text_to_obj(ari_str)])
+
+            # Generate one of the null reports (if day is visible by 3)
+            if tmp_dt.day % 3 == 0:
+                tmp_dt = tmp_dt.replace(hour=12, minute=0, second=0)
+                tmp_dt_str = tmp_dt.strftime('%Y%m%dT%H%M%SZ');
+                tmp_nonce = 'null'
+                ari_str = 'ari:/RPTSET/n={};r=/TP/{};(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))'.format(tmp_nonce, tmp_dt_str)
+                self._send_msg([self._ari_text_to_obj(ari_str)])
+
+            # Generate the 3 (divide-by-7) on-the-hour daily reports
+            for aHour in [7, 14, 21]:
+                tmp_dt = tmp_dt.replace(hour=aHour, minute=0, second=0)
+                tmp_dt_str = tmp_dt.strftime('%Y%m%dT%H%M%SZ');
+                tmp_nonce = aHour
+                ari_str = 'ari:/RPTSET/n={};r=/TP/{};(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))'.format(tmp_nonce, tmp_dt_str)
+                self._send_msg([self._ari_text_to_obj(ari_str)])
+
+        # Wait for the reports to be stored
+        rptset_count = 31 + 10 + 93
+        self._wait_for_db_table('ari_rptset', rptset_count)
+
+        # Test 1: Ensure that all 134 reports are recorded
+        validate_num_reports(self, None, None, None, 134)
+
+        # Test 2: Check filter by Nonce
+        validate_num_reports(self, [None], None, None, 10)
+        validate_num_reports(self, 'mon', None, None, 4)
+        validate_num_reports(self, 'wed', None, None, 5)
+        validate_num_reports(self, 'fri', None, None, 4)
+        validate_num_reports(self, 14, None, None, 31)
+
+        # Test 3: Check filter by TimeRange
+        validate_num_reports(self, None, None, "20250701T000000Z", 0)   # Items before: 2025-07-01 00:00:00
+        validate_num_reports(self, None, None, "20250703T000000Z", 8)   # Items before: 2025-07-03 00:00:00
+        validate_num_reports(self, None, "20250801T000000Z", None, 0)   # Items after: 2025-08-01 00:00:00
+        validate_num_reports(self, None, "20250731T120001Z", None, 3)   # Items after: 2025-07-31 12:00:01
+        validate_num_reports(self, None, "20250701T000000Z", "20250801T000000Z", 134)   # Items in time range
+        validate_num_reports(self, None, "20250701T070000Z", "20250801T000000Z", 134)   # Items in time range
+        validate_num_reports(self, None, "20250701T070001Z", "20250801T000000Z", 133)   # Items in time range
+        validate_num_reports(self, None, "20250701T070001Z", "20250801T210000Z", 132)   # Items in time range
+        validate_num_reports(self, None, "20250707T000000Z", "20250710T235959Z", 17)    # Items in time range
+        validate_num_reports(self, None, "20250707T000000Z", "20250710T210000Z", 16)    # Items in time range
+
+        # Test 4: Check filter by: Nonce, TimeRange
+        validate_num_reports(self, [None], "20250707T000000Z", "20250710T210000Z", 4)
+        validate_num_reports(self, 7, "20250707T000000Z", "20250710T210000Z", 4)
+        validate_num_reports(self, 21, "20250707T000000Z", "20250710T210000Z", 3)
+        validate_num_reports(self, 'wed', "20250709T000000Z", "20250714T235959Z", 0)
+        validate_num_reports(self, 'tue', "20250709T000000Z", "20250714T235959Z", 1)
+        validate_num_reports(self, 'tue', "20250709T000000Z", "20250714T123045Z", 0)
+        validate_num_reports(self, 'tue', "20250709T000000Z", "20250721T123046Z", 2)
+
+        # Test 5: Bad request
+        validate_num_reports(self, None, "20250801T000000", "20250701T000000", 134, status_code=400)  # TimeBeg and TimeEnd are swapped
+        validate_num_reports(self, None, "2025Jul01 00:00:00", "2025-08-01 00:00:00", 134, status_code=400)   # Invalid date specification
+        validate_num_reports(self, None, None, "Today at 12:00", 134, status_code=400)                        # Invalid date specification
+
+
+
+
 
     def test_recv_one_agent_three_rptset(self):
         self._start()
