@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-''' Test the local socket transport of the REFDM.
+''' Test the local socket and proxy socket transport of the REFDM.
 
 This uses the environment variable DB_HOST to determine whether to spawn a
 private PostgreSQL server or use an external one.
@@ -28,6 +28,7 @@ import signal
 import socket
 import subprocess
 import tempfile
+import time
 from typing import List, Set
 from urllib.parse import quote
 import unittest
@@ -52,8 +53,8 @@ def split_content_type(text):
     return text
 
 
-class TestRefdmSocket(unittest.TestCase):
-    ''' Verify whole-agent behavior with the refdm-socket '''
+class BaseRefdm(unittest.TestCase):
+    ''' General purpose REFDM support state and functions '''
 
     @classmethod
     def _sql_start(cls):
@@ -182,6 +183,90 @@ class TestRefdmSocket(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls._sql_stop()
 
+    def _get_agent_names(self) -> Set[str]:
+        resp = self._req.get(self._base_url + 'agents')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
+        data = resp.json()
+        return set([agt['name'] for agt in data['agents']])
+
+    def _wait_for_db_table(self, table_name: str, need_count: int):
+        LOGGER.info('Waiting for DB table %s with %d rows', table_name, need_count)
+        with self._db_eng.connect() as conn:
+            query = sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.literal_column('1'))).select_from(sqlalchemy.table(table_name))
+            timer = Timer(5)
+            while timer:
+                timer.sleep(0.1)
+                count = conn.execute(query).scalar()
+                if count == need_count:
+                    timer.finish()
+                    break
+
+            LOGGER.info('Have %d rows after %0.1f s', count, timer.elapsed())
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                query = sqlalchemy.select(sqlalchemy.literal_column('*')).select_from(sqlalchemy.table(table_name))
+                for row in conn.execute(query).fetchall():
+                    LOGGER.debug('Row: %s', row)
+
+    def _ari_text_to_obj(self, text: str, nn: bool = True) -> ARI:
+        with io.StringIO(text) as buf:
+            val = ari_text.Decoder().decode(buf)
+
+        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=nn)
+        val = nn_func(val)
+
+        return val
+
+    def _ari_obj_to_text(self, val: ARI) -> str:
+        buf = io.StringIO()
+        ari_text.Encoder().encode(val, buf)
+        return buf.getvalue()
+
+    def _ari_obj_to_cbor(self, val: ARI) -> bytes:
+        buf = io.BytesIO()
+        ari_cbor.Encoder().encode(val, buf)
+        return buf.getvalue()
+
+    def _ari_obj_from_cbor(self, databuf: bytes) -> ARI:
+        with io.BytesIO(databuf) as buf:
+            val = ari_cbor.Decoder().decode(buf)
+        return val
+
+    def _start(self) -> None:
+        ''' Spawn the REFDM process. '''
+        raise NotImplementedError()
+
+    # Below are common tests that rely on the _start() interface and
+    # the public REST API alone
+
+    def test_start_terminate(self):
+        self._start()
+
+        LOGGER.info('Sending SIGINT')
+        self._mgr.proc.send_signal(signal.SIGINT)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=5))
+        self.assertEqual(0, self._mgr.proc.returncode)
+
+    def test_rest_version(self):
+        self._start()
+        resp = self._req.get(self._base_url + 'version')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
+        LOGGER.info(resp.json())
+
+        # invalid methods
+        resp = self._req.post(self._base_url + 'version')
+        self.assertEqual(405, resp.status_code)
+        resp = self._req.put(self._base_url + 'version')
+        self.assertEqual(405, resp.status_code)
+
+        resp = self._req.get(self._base_url + 'versionplus')
+        self.assertEqual(404, resp.status_code)
+
+
+class TestRefdmSocket(BaseRefdm):
+    ''' Verify whole-agent behavior with the refdm-socket '''
+
     def setUp(self) -> None:
         self._req = requests.Session()
         self._base_url = 'http://localhost:8089/nm/api/'
@@ -236,7 +321,7 @@ class TestRefdmSocket(unittest.TestCase):
         self.assertEqual(0, mgr_exit)
 
     def _start(self) -> None:
-        ''' Spawn the process. '''
+        ''' Spawn the REFDM process. '''
         self._mgr.start()
 
         delay = 0.1
@@ -265,30 +350,6 @@ class TestRefdmSocket(unittest.TestCase):
 
         self.fail(f'Manager did not create socket at {self._mgr_sock_path}')
 
-    def _ari_text_to_obj(self, text: str, nn: bool = True) -> ARI:
-        with io.StringIO(text) as buf:
-            val = ari_text.Decoder().decode(buf)
-
-        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=nn)
-        val = nn_func(val)
-
-        return val
-
-    def _ari_obj_to_text(self, val: ARI) -> str:
-        buf = io.StringIO()
-        ari_text.Encoder().encode(val, buf)
-        return buf.getvalue()
-
-    def _ari_obj_to_cbor(self, val: ARI) -> bytes:
-        buf = io.BytesIO()
-        ari_cbor.Encoder().encode(val, buf)
-        return buf.getvalue()
-
-    def _ari_obj_from_cbor(self, databuf: bytes) -> ARI:
-        with io.BytesIO(databuf) as buf:
-            val = ari_cbor.Decoder().decode(buf)
-        return val
-
     def _send_msg(self, values: List[ARI], agent_ix: int = 0) -> str:
         ''' Send an AMP message with RPTSET values.
 
@@ -296,14 +357,14 @@ class TestRefdmSocket(unittest.TestCase):
         :param agent_ix: The agent index to send from.
         :return: The socket path from which it was sent.
         '''
-        data = cbor2.dumps(1)
+        msg_data = cbor2.dumps(1)
         for val in values:
             LOGGER.info('Sending value %s', self._ari_obj_to_text(val))
-            data += self._ari_obj_to_cbor(val)
+            msg_data += self._ari_obj_to_cbor(val)
         addr = self._mgr_sock_path
         bind = self._agent_bind[agent_ix]
-        LOGGER.info('Sending message %s from %s to %s', data.hex(), bind['path'], addr)
-        bind['sock'].sendto(data, addr)
+        LOGGER.info('Sending message %s from %s to %s', msg_data.hex(), bind['path'], addr)
+        bind['sock'].sendto(msg_data, addr)
         return bind['path']
 
     def _wait_msg(self, agent_ix: int, timeout: float=1) -> List[ARI]:
@@ -340,58 +401,9 @@ class TestRefdmSocket(unittest.TestCase):
 
         return values
 
-    def test_start_terminate(self):
-        self._start()
-
-        LOGGER.info('Sending SIGINT')
-        self._mgr.proc.send_signal(signal.SIGINT)
-        self.assertEqual(0, self._mgr.proc.wait(timeout=5))
-        self.assertEqual(0, self._mgr.proc.returncode)
-
-    def test_rest_version(self):
-        self._start()
-        resp = self._req.get(self._base_url + 'version')
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
-        LOGGER.info(resp.json())
-
-        # invalid methods
-        resp = self._req.post(self._base_url + 'version')
-        self.assertEqual(405, resp.status_code)
-        resp = self._req.put(self._base_url + 'version')
-        self.assertEqual(405, resp.status_code)
-
-        resp = self._req.get(self._base_url + 'versionplus')
-        self.assertEqual(404, resp.status_code)
-
-    def _get_agent_names(self) -> Set[str]:
-        resp = self._req.get(self._base_url + 'agents')
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
-        data = resp.json()
-        return set([agt['name'] for agt in data['agents']])
-
-    def _wait_for_db_table(self, table_name: str, need_count: int):
-        LOGGER.info('Waiting for DB table %s with %d rows', table_name, need_count)
-        with self._db_eng.connect() as conn:
-            query = sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.literal_column('1'))).select_from(sqlalchemy.table(table_name))
-            timer = Timer(5)
-            while timer:
-                timer.sleep(0.1)
-                count = conn.execute(query).scalar()
-                if count == need_count:
-                    timer.finish()
-                    break
-
-            LOGGER.info('Have %d rows after %0.1f s', count, timer.elapsed())
-            if LOGGER.isEnabledFor(logging.DEBUG):
-                query = sqlalchemy.select(sqlalchemy.literal_column('*')).select_from(sqlalchemy.table(table_name))
-                for row in conn.execute(query).fetchall():
-                    LOGGER.debug('Row: %s', row)
-
     def test_rest_agents_add_valid(self):
         self._start()
-        self.assertEqual(set(), self._get_agent_names())
+        self.assertSetEqual(set(), self._get_agent_names())
 
         resp = self._req.post(
             self._base_url + 'agents',
@@ -411,7 +423,7 @@ class TestRefdmSocket(unittest.TestCase):
         )
         self.assertEqual(200, resp.status_code)
 
-        self.assertEqual(set(['file:/tmp/invalid1', 'file:/tmp/invalid2']), self._get_agent_names())
+        self.assertSetEqual(set(['file:/tmp/invalid1', 'file:/tmp/invalid2']), self._get_agent_names())
 
     def test_rest_agents_add_invalid(self):
         self._start()
@@ -467,7 +479,7 @@ class TestRefdmSocket(unittest.TestCase):
         )
         self.assertEqual(400, resp.status_code)
 
-        self.assertEqual(set(['file:/tmp/invalid']), self._get_agent_names())
+        self.assertSetEqual(set(['file:/tmp/invalid']), self._get_agent_names())
 
     def test_agents_eid_reports_404(self):
         self._start()
@@ -521,7 +533,7 @@ class TestRefdmSocket(unittest.TestCase):
         self._start()
 
         # initial state
-        self.assertEqual(set(), self._get_agent_names())
+        self.assertSetEqual(set(), self._get_agent_names())
 
         # first check behavior with one report
         sock_path = self._send_msg(
@@ -762,3 +774,217 @@ ari:/EXECSET/n='test';(//ietf/dtnma-agent/CTRL/inspect)\r\n\
         # no other datagrams
         with self.assertRaises(TimeoutError):
             self._wait_msg(agent_ix=0)
+
+
+class TestRefdmProxy(BaseRefdm):
+    ''' Verify whole-agent behavior with the refdm-proxy '''
+
+    def setUp(self) -> None:
+        self._req = requests.Session()
+        self._base_url = 'http://localhost:8089/nm/api/'
+
+        db_uri = self._database_create()
+        self._db_eng = sqlalchemy.create_engine(db_uri)
+
+        self._tmp = tempfile.TemporaryDirectory()
+        self._proxy_sock_path = os.path.join(self._tmp.name, 'proxy.sock')
+
+        self._proxy_sock = None
+        # Name for accepted connection
+        self._proxy_sock_conn = None
+
+        args = compose_args([
+            'refdm-proxy',
+            '-l', 'debug',
+            '-a', self._proxy_sock_path,
+        ])
+        self._mgr = CmdRunner(args)
+
+    def tearDown(self) -> None:
+        mgr_exit = self._mgr.stop()
+        self._mgr = None
+
+        if self._proxy_sock_conn:
+            self._proxy_sock_conn.close()
+            self._proxy_sock_conn = None
+        if self._proxy_sock:
+            self._proxy_sock.close()
+            self._proxy_sock = None
+
+        self._tmp = None
+
+        if self._db_eng:
+            self._db_eng.dispose()
+        self._db_eng = None
+        self._database_drop()
+
+        self._req = None
+
+        # assert after all other shutdown
+        self.assertEqual(0, mgr_exit)
+
+    def _proxy_listen(self):
+        self._proxy_sock = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        LOGGER.info('binding to socket at %s', self._proxy_sock_path)
+        self._proxy_sock.bind(self._proxy_sock_path)
+        self._proxy_sock.listen(1)
+
+    def _start(self) -> None:
+        ''' Spawn the REFDM process. '''
+        self._proxy_listen()
+
+        self._mgr.start()
+
+        delay = 0.1
+        timer = Timer(10)
+        while timer:
+            # linear back-off
+            timer.sleep(delay)
+            delay += 0.1
+
+            if self._proxy_sock_conn is None:
+                self._proxy_sock.settimeout(timer.remaining())
+                self._proxy_sock_conn, addr = self._proxy_sock.accept()
+                self.assertEqual(addr, '')
+                sock_ready = True
+            else:
+                sock_ready = False
+
+            try:
+                resp = self._req.options(self._base_url)
+                rest_ready = True
+            except requests.exceptions.ConnectionError:
+                rest_ready = False
+
+            if sock_ready and rest_ready:
+                timer.finish()
+                return
+
+            if not sock_ready:
+                LOGGER.info('waiting for manager connection to %s', self._proxy_sock_path)
+            if not rest_ready:
+                LOGGER.info('waiting for manager response on %s', self._base_url)
+
+        self.fail(f'Manager did not connect to socket at {self._proxy_sock_path}')
+
+    def _send_msg(self, values: List[ARI], agent_eid: str) -> None:
+        ''' Send an AMP message with RPTSET values.
+
+        :param values: The ARI items to send.
+        :param agent_eid: The agent EID to proxy from.
+        '''
+        msg_data = cbor2.dumps(1)
+        for val in values:
+            LOGGER.info('Sending value %s', self._ari_obj_to_text(val))
+            msg_data += self._ari_obj_to_cbor(val)
+        LOGGER.info('Sending message %s from %s', msg_data.hex(), agent_eid)
+        prox_data = cbor2.dumps(agent_eid) + msg_data
+        self._proxy_sock_conn.send(prox_data)
+
+    def _wait_msg(self, agent_eid: str, timeout: float=1) -> List[ARI]:
+        ''' Wait for an AMP message with EXECSET values and decode it.
+
+        :param agent_eid: The agent EID to proxy for.
+        :param timeout: The time to wait in seconds.
+        :return: The contained ARIs in decoded form.
+        :raise TimeoutError: If not received in time.
+        '''
+        self._proxy_sock_conn.settimeout(timeout)
+
+        try:
+            prox_data = self._proxy_sock_conn.recv(10240)
+        except (socket.timeout, TimeoutError) as err:
+            raise TimeoutError("No message received") from err
+
+        with io.BytesIO(prox_data) as infile:
+            prox_eid = cbor2.load(infile)
+            # remainder
+            msg_data = infile.read()
+
+        LOGGER.info('Received message %s from %s', msg_data.hex(), prox_eid)
+
+        values = []
+        dec = ari_cbor.Decoder()
+        with io.BytesIO(msg_data) as infile:
+            vers = cbor2.load(infile)
+            self.assertEqual(1, vers, msg='Invalid AMP version')
+
+            while infile.tell() < len(msg_data):
+                val = dec.decode(infile)
+                LOGGER.info('Received value %s', self._ari_obj_to_text(val))
+                self.assertIsInstance(val.value, ari.ExecutionSet)
+                values.append(val)
+
+        return values
+
+    def test_reconnect_proxy(self):
+        self._start()
+        self.assertSetEqual(set(), self._get_agent_names())
+
+        time.sleep(0.1)
+        # close connection, still listen
+        self._proxy_sock_conn.close()
+
+        self._proxy_sock_conn, addr = self._proxy_sock.accept()
+        self.assertIsNotNone(self._proxy_sock_conn)
+        self.assertEqual(addr, '')
+
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
+            agent_eid='data:peer'
+        )
+        self._wait_for_db_table('ari_rptset', 1)
+        self.assertSetEqual(set(['data:peer']), self._get_agent_names())
+
+    def test_start_before_proxy(self):
+        # start daemon before listen
+        self._mgr.start()
+
+        self._proxy_listen()
+        self._proxy_sock_conn, addr = self._proxy_sock.accept()
+        self.assertIsNotNone(self._proxy_sock_conn)
+        self.assertEqual(addr, '')
+        self.assertSetEqual(set(), self._get_agent_names())
+
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
+            agent_eid='data:peer'
+        )
+        self._wait_for_db_table('ari_rptset', 1)
+        self.assertSetEqual(set(["data:peer"]), self._get_agent_names())
+
+    def test_agents_send_hex(self):
+        self._start()
+
+        agent_eid = 'data:agent'
+        eid_seg = quote(agent_eid, safe="")
+
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data=(agent_eid + '\r\n'),
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
+        send_ari = self._ari_text_to_obj(textform)
+        send_data = self._ari_obj_to_cbor(send_ari)
+
+        resp = self._req.post(
+            self._base_url + f'agents/eid/{eid_seg}/send?form=hex',
+            data=f'{send_data.hex()}\r\n',
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+
+        msg_vals = self._wait_msg(agent_eid)
+        self.assertEqual([send_ari], msg_vals)
+
+        # no other datagrams
+        with self.assertRaises(TimeoutError):
+            self._wait_msg(agent_eid)

@@ -29,12 +29,19 @@
 
 /// Per-process state
 static refdm_mgr_t mgr;
+/// Proxy client
+static cace_amp_proxy_cli_state_t proxy;
 
 static void daemon_signal_handler(int signum)
 {
     CACE_LOG_DEBUG("Received signal %d", signum);
     CACE_LOG_INFO("Signaling shutdown");
     cace_daemon_run_stop(&mgr.running);
+    int sockfd = cace_amp_proxy_cli_state_getfd(&proxy);
+    if (sockfd >= 0)
+    {
+        shutdown(sockfd, SHUT_RD);
+    }
 }
 
 static void show_usage(const char *argv0)
@@ -90,7 +97,6 @@ int main(int argc, char *argv[])
         retval = 1;
     }
 
-    cace_amp_proxy_cli_state_t proxy;
     cace_amp_proxy_cli_state_init(&proxy);
     if (!retval)
     {
@@ -100,16 +106,11 @@ int main(int argc, char *argv[])
             CACE_LOG_ERR("Failed to connect socket after all retries");
             retval = 4;
         }
-        else
-        {
-            CACE_LOG_INFO("Connected to socket");
-        }
     }
 
     if (!retval)
     {
-        m_string_printf(mgr.own_eid, "file:%s", m_string_get_cstr(sock_path));
-        CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(mgr.own_eid));
+        CACE_LOG_DEBUG("Running with proxy %s", m_string_get_cstr(sock_path));
         mgr.mif.send = cace_amp_proxy_cli_send;
         mgr.mif.recv = cace_amp_proxy_cli_recv;
         mgr.mif.ctx  = &proxy;

@@ -99,9 +99,6 @@ M_DICT_DEF2(refdm_agent_dict, const char *, M_CSTR_OPLIST, refdm_agent_t *, M_PT
 
 typedef struct refdm_mgr_s
 {
-    /// Manager endpoint ID as URI text
-    m_string_t own_eid;
-
     // FIXME: this is not thread safe storage
     mgr_ui_mode_enum mgr_ui_mode;
     /// Message logging options

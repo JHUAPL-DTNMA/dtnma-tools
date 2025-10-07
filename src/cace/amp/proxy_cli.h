@@ -66,6 +66,8 @@ int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_
  */
 void cace_amp_proxy_cli_state_disconnect(cace_amp_proxy_cli_state_t *state);
 
+int cace_amp_proxy_cli_state_getfd(cace_amp_proxy_cli_state_t *state);
+
 /** Provider of cace_amm_msg_if_t::send interface for BP-proxy socket transport.
  * The user data for this function is a ::cace_amp_proxy_cli_state_t instance.
  */
