@@ -19,6 +19,7 @@
 #include <cace/amp/proxy_cli.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
+#include <sys/socket.h>
 #include <signal.h>
 #include <unistd.h>
 #include <errno.h>
@@ -37,6 +38,7 @@ static void daemon_signal_handler(int signum)
     CACE_LOG_DEBUG("Received signal %d", signum);
     CACE_LOG_INFO("Signaling shutdown");
     cace_daemon_run_stop(&mgr.running);
+    // ensure socket read failure
     int sockfd = cace_amp_proxy_cli_state_getfd(&proxy);
     if (sockfd >= 0)
     {
