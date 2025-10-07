@@ -121,7 +121,7 @@ class TestRefdaSocket(unittest.TestCase):
                 LOGGER.info('waiting for agent socket at %s', self._agent_sock_path)
 
         # Initial HELLO
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.NULL, timeout=5)
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), timeout=5)
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
         self.assertIsInstance(rpt, ari.Report)
