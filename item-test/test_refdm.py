@@ -41,10 +41,13 @@ from helpers import CmdRunner, Timer, compose_args
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
 
-# ADM handling outside of tests
 ADMS = AdmSet(cache_dir=False)
+''' ADM handling outside of tests '''
 logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
 ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
+
+ORIG_DB_HOST = os.environ.get('DB_HOST')
+''' Environment at start of process '''
 
 
 def split_content_type(text):
@@ -60,8 +63,7 @@ class BaseRefdm(unittest.TestCase):
     def _sql_start(cls):
         ''' Spawn an SQL server if necessary.
         '''
-        db_host = os.environ.get('DB_HOST')
-        if db_host is not None:
+        if ORIG_DB_HOST is not None:
             # nothing to do for processes
             cls._sqldir = None
             cls._sqldb = None
@@ -232,37 +234,6 @@ class BaseRefdm(unittest.TestCase):
             val = ari_cbor.Decoder().decode(buf)
         return val
 
-    def _start(self) -> None:
-        ''' Spawn the REFDM process. '''
-        raise NotImplementedError()
-
-    # Below are common tests that rely on the _start() interface and
-    # the public REST API alone
-
-    def test_start_terminate(self):
-        self._start()
-
-        LOGGER.info('Sending SIGINT')
-        self._mgr.proc.send_signal(signal.SIGINT)
-        self.assertEqual(0, self._mgr.proc.wait(timeout=5))
-        self.assertEqual(0, self._mgr.proc.returncode)
-
-    def test_rest_version(self):
-        self._start()
-        resp = self._req.get(self._base_url + 'version')
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
-        LOGGER.info(resp.json())
-
-        # invalid methods
-        resp = self._req.post(self._base_url + 'version')
-        self.assertEqual(405, resp.status_code)
-        resp = self._req.put(self._base_url + 'version')
-        self.assertEqual(405, resp.status_code)
-
-        resp = self._req.get(self._base_url + 'versionplus')
-        self.assertEqual(404, resp.status_code)
-
 
 class TestRefdmSocket(BaseRefdm):
     ''' Verify whole-agent behavior with the refdm-socket '''
@@ -400,6 +371,30 @@ class TestRefdmSocket(BaseRefdm):
                 values.append(val)
 
         return values
+
+    def test_start_terminate(self):
+        self._start()
+
+        LOGGER.info('Sending SIGINT')
+        self._mgr.proc.send_signal(signal.SIGINT)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=5))
+        self.assertEqual(0, self._mgr.proc.returncode)
+
+    def test_rest_version(self):
+        self._start()
+        resp = self._req.get(self._base_url + 'version')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
+        LOGGER.info(resp.json())
+
+        # invalid methods
+        resp = self._req.post(self._base_url + 'version')
+        self.assertEqual(405, resp.status_code)
+        resp = self._req.put(self._base_url + 'version')
+        self.assertEqual(405, resp.status_code)
+
+        resp = self._req.get(self._base_url + 'versionplus')
+        self.assertEqual(404, resp.status_code)
 
     def test_rest_agents_add_valid(self):
         self._start()
@@ -916,6 +911,30 @@ class TestRefdmProxy(BaseRefdm):
                 values.append(val)
 
         return values
+
+    def test_start_terminate(self):
+        self._start()
+
+        LOGGER.info('Sending SIGINT')
+        self._mgr.proc.send_signal(signal.SIGINT)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=5))
+        self.assertEqual(0, self._mgr.proc.returncode)
+
+    def test_rest_version(self):
+        self._start()
+        resp = self._req.get(self._base_url + 'version')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('application/json', split_content_type(resp.headers['content-type']))
+        LOGGER.info(resp.json())
+
+        # invalid methods
+        resp = self._req.post(self._base_url + 'version')
+        self.assertEqual(405, resp.status_code)
+        resp = self._req.put(self._base_url + 'version')
+        self.assertEqual(405, resp.status_code)
+
+        resp = self._req.get(self._base_url + 'versionplus')
+        self.assertEqual(404, resp.status_code)
 
     def test_reconnect_proxy(self):
         self._start()
