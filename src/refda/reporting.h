@@ -47,17 +47,19 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_
  *
  * @param[in] runctx The context for reporting.
  * @param[in] target The ARI to generate a report for.
+ * @param[in] destination A destination endpoint to report to.
+ * A null value or pointer sends to the manager in refda_runctx_t::mgr_ident.
  * @return Zero if successful.
  */
-int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target);
+int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target, const cace_ari_t *destination);
 
 /** Generate and queue a one-report RPTSET value.
  *
  * @param[in] agent The agent doing the reporting.
- * @param[in] mgr_ident The identity of the manager to send to.
+ * @param[in] destination The identity of the manager to send to.
  * @param[in,out] items The item list for the new report, which is moved out of.
  */
-int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const cace_ari_t *src,
+int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *destination, const cace_ari_t *src,
                         cace_ari_list_t items);
 
 #ifdef __cplusplus
