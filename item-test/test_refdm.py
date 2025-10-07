@@ -841,9 +841,7 @@ class TestRefdmProxy(BaseRefdm):
                 self._proxy_sock.settimeout(timer.remaining())
                 self._proxy_sock_conn, addr = self._proxy_sock.accept()
                 self.assertEqual(addr, '')
-                sock_ready = True
-            else:
-                sock_ready = False
+            sock_ready = (self._proxy_sock_conn is not None)
 
             try:
                 resp = self._req.options(self._base_url)
