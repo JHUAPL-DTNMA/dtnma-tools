@@ -312,7 +312,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpts))
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on'), self._ari_strip_params(rpt.source))
-        self.assertEqual([ari.NULL], rpt.items)
+        self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
     def test_exec_report_on_no_destination(self):
         self._start()
@@ -335,7 +335,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on(//ietf/dtnma-agent/CONST/hello)'), rpt.source)
         # items of the report
-        self.assertEqual([ari.NULL], rpt.items)
+        self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
     def test_exec_delayed(self):
         self._start()
