@@ -1897,18 +1897,29 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
     const cace_ari_ac_t *dest_ac = cace_ari_cget_ac(p_dests);
     if (dest_ac)
     {
-        // Explicit list
-        cace_ari_list_it_t dest_it;
-        for (cace_ari_list_it(dest_it, dest_ac->items); !cace_ari_list_end_p(dest_it); cace_ari_list_next(dest_it))
+        if (cace_ari_list_empty_p(dest_ac->items))
         {
-            const cace_ari_t *dest = cace_ari_list_cref(dest_it);
-            refda_reporting_target(ctx->runctx, template, dest);
+            if (cace_ari_not_undefined(&ctx->runctx->mgr_ident))
+            {
+                // default to executing manager
+                refda_reporting_target(ctx->runctx, template, &ctx->runctx->mgr_ident);
+            }
+            else
+            {
+                // actual failure
+                return;
+            }
         }
-    }
-    else if (cace_ari_is_null(&ctx->runctx->mgr_ident))
-    {
-        // default to executing manager
-        refda_reporting_target(ctx->runctx, template, &ctx->runctx->mgr_ident);
+        else
+        {
+            // Explicit list
+            cace_ari_list_it_t dest_it;
+            for (cace_ari_list_it(dest_it, dest_ac->items); !cace_ari_list_end_p(dest_it); cace_ari_list_next(dest_it))
+            {
+                const cace_ari_t *dest = cace_ari_list_cref(dest_it);
+                refda_reporting_target(ctx->runctx, template, dest);
+            }
+        }
     }
     else
     {
@@ -4920,25 +4931,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "destinations");
                 {
-                    // union
-                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(fparam->typeobj), 2);
+                    // uniform list
+                    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
                     {
-                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
-                        {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            // ari://ietf/network-base/TYPEDEF/endpoint-or-uri
-                            cace_ari_set_objref_path_intid(&name, 1, 26, CACE_ARI_TYPE_TYPEDEF, 3);
-                            cace_amm_type_set_use_ref_move(choice, &name);
-                        }
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/network-base/TYPEDEF/endpoint-or-uri
+                        cace_ari_set_objref_path_intid(&typeref, 1, 26, CACE_ARI_TYPE_TYPEDEF, 3);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
                     }
-                    {
-                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
-                        {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
-                            cace_amm_type_set_use_ref_move(choice, &name);
-                        }
-                    }
+                }
+                {
+                    cace_ari_ac_t acinit;
+                    cace_ari_ac_init(&acinit);
+                    cace_ari_set_ac(&(fparam->defval), &acinit);
                 }
             }
         }
