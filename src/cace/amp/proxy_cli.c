@@ -75,17 +75,17 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state)
                 return -1;
             }
 
-            CACE_LOG_INFO("Connecting to socket %s", laddr.sun_path);
+            CACE_LOG_INFO("Connecting to proxy %s", laddr.sun_path);
             int res = connect(state->sock_fd, (struct sockaddr *)&laddr, sizeof(laddr));
             if (res)
             {
-                CACE_LOG_ERR("Failed to connect socket %s with errno %d", laddr.sun_path, errno);
+                CACE_LOG_ERR("Failed to connect proxy %s with errno %d", laddr.sun_path, errno);
                 close(state->sock_fd);
                 state->sock_fd = -2;
             }
             else
             {
-                CACE_LOG_INFO("Connected as client");
+                CACE_LOG_INFO("Connected to proxy %s", laddr.sun_path);
                 ret = state->sock_fd;
                 break;
             }
@@ -105,7 +105,7 @@ static void cace_amp_proxy_cli_real_disconnect(cace_amp_proxy_cli_state_t *state
     if (state->sock_fd >= 0)
     {
         const char *path = m_string_get_cstr(state->path);
-        CACE_LOG_DEBUG("Disconnecting from proxy %s", path);
+        CACE_LOG_INFO("Disconnecting from proxy %s", path);
         shutdown(state->sock_fd, SHUT_RDWR);
         close(state->sock_fd);
         state->sock_fd = -1;
@@ -235,7 +235,7 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
         ssize_t got   = recv(sock_fd, NULL, 0, flags);
         if (got == 0)
         {
-            CACE_LOG_INFO("empty recv() message");
+            CACE_LOG_DEBUG("empty recv() message");
             if (!cace_daemon_run_get(running))
             {
                 CACE_LOG_DEBUG("returning due to running state change");

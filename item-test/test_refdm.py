@@ -827,9 +827,11 @@ class TestRefdmProxy(BaseRefdm):
     def _start(self) -> None:
         ''' Spawn the REFDM process. '''
         self._proxy_listen()
-
         self._mgr.start()
+        self._wait_mgr()
 
+    def _wait_mgr(self):
+        ''' Wait for the manager interfaces to be active '''
         delay = 0.1
         timer = Timer(10)
         while timer:
@@ -938,42 +940,40 @@ class TestRefdmProxy(BaseRefdm):
         self._start()
         self.assertSetEqual(set(), self._get_agent_names())
 
-        time.sleep(0.1)
+        time.sleep(0.01)
         # close connection, still listen
         self._proxy_sock_conn.close()
+        self._proxy_sock_conn = None
 
-        self._proxy_sock_conn, addr = self._proxy_sock.accept()
-        self.assertIsNotNone(self._proxy_sock_conn)
-        self.assertEqual(addr, '')
+        self._wait_mgr()
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
-            agent_eid='data:peer'
+            agent_eid='data:agent0'
         )
         self._wait_for_db_table('ari_rptset', 1)
-        self.assertSetEqual(set(['data:peer']), self._get_agent_names())
+        self.assertSetEqual(set(['data:agent0']), self._get_agent_names())
 
     def test_start_before_proxy(self):
         # start daemon before listen
         self._mgr.start()
+        time.sleep(0.01)
 
         self._proxy_listen()
-        self._proxy_sock_conn, addr = self._proxy_sock.accept()
-        self.assertIsNotNone(self._proxy_sock_conn)
-        self.assertEqual(addr, '')
+        self._wait_mgr()
         self.assertSetEqual(set(), self._get_agent_names())
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
-            agent_eid='data:peer'
+            agent_eid='data:agent0'
         )
         self._wait_for_db_table('ari_rptset', 1)
-        self.assertSetEqual(set(["data:peer"]), self._get_agent_names())
+        self.assertSetEqual(set(["data:agent0"]), self._get_agent_names())
 
     def test_agents_send_hex(self):
         self._start()
 
-        agent_eid = 'data:agent'
+        agent_eid = 'data:agent0'
         eid_seg = quote(agent_eid, safe="")
 
         resp = self._req.post(
