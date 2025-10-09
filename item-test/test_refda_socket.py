@@ -19,13 +19,15 @@
 '''
 import io
 import logging
+import numpy
 import os
 import signal
 import socket
 import subprocess
+import sys
 import tempfile
-from typing import List, Set
-from urllib.parse import quote
+from typing import List, Optional, Set
+import urllib.parse
 import unittest
 import cbor2
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
@@ -40,13 +42,19 @@ logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
 ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
 
 
+def quote(text: str)->str:
+    ''' URL-encode all non-unreserved characters. '''
+    return urllib.parse.quote(text, safe="")
+
+
 class TestRefdaSocket(unittest.TestCase):
     ''' Verify whole-agent behavior with the refda-socket '''
+    maxDiff = None
 
     @classmethod
     def setUpClass(cls) -> None:
         logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-        logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
+        logging.getLogger('ace').setLevel(logging.ERROR)
 
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -74,6 +82,9 @@ class TestRefdaSocket(unittest.TestCase):
         ])
         self._agent = CmdRunner(args)
 
+        # buffer of received RPTSET pending _wait_reports
+        self._rptsets = {}
+
     def tearDown(self) -> None:
         agent_exit = self._agent.stop()
         self._agent = None
@@ -90,7 +101,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(0, agent_exit)
 
     def _start(self) -> None:
-        ''' Spawn the process and wait for the startup HELLO report. '''
+        ''' Spawn the process and wait for the startup report. '''
         self._agent.start()
 
         delay = 0.1
@@ -110,13 +121,9 @@ class TestRefdaSocket(unittest.TestCase):
                 LOGGER.info('waiting for agent socket at %s', self._agent_sock_path)
 
         # Initial HELLO
-        msg_vals = self._wait_msg(mgr_ix=0, timeout=5)
-        self.assertEqual(1, len(msg_vals))
-        rptset = msg_vals[0].value
-        self.assertIsInstance(rptset, ari.ReportSet)
-        self.assertEqual(ari.LiteralARI(None), rptset.nonce)
-        self.assertEqual(1, len(rptset.reports))
-        rpt = rptset.reports[0]
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), timeout=5)
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
 
@@ -144,6 +151,12 @@ class TestRefdaSocket(unittest.TestCase):
             val = ari_cbor.Decoder().decode(buf)
         return val
 
+    def _ari_strip_params(self, val: ARI) -> ARI:
+        ''' Remove any parameters from a reference value. '''
+        if isinstance(val, ari.ReferenceARI):
+            val.params = None
+        return val
+
     def _send_msg(self, values: List[ARI], mgr_ix: int = 0) -> str:
         ''' Send an AMP message with EXECSET values.
 
@@ -164,7 +177,7 @@ class TestRefdaSocket(unittest.TestCase):
     def _wait_msg(self, mgr_ix: int, timeout: float=1) -> List[ARI]:
         ''' Wait for an AMP message with RPTSET values and decode it.
 
-        :param agent_ix: The agent index to receive on.
+        :param mgr_ix: The manager index to receive on.
         :param timeout: The time to wait in seconds.
         :return: The contained ARIs in decoded form.
         :raise TimeoutError: If not received in time.
@@ -194,6 +207,44 @@ class TestRefdaSocket(unittest.TestCase):
                 values.append(val)
 
         return values
+
+    def _wait_reports(self, mgr_ix: int, nonce: Optional[ARI], timeout: float=1, stop_count: int=1) -> List[ari.Report]:
+        ''' Wait for all RPTSETs within a time window and unwrap all contained
+        reports.
+
+        :param mgr_ix: The manager index to receive on.
+        :param nonce: The nonce value to match for.
+        :param timeout: The total time to wait in seconds.
+        :param stop_count: If positive, the waiting will stop upon receiving
+            at least this many matching reports.
+        :return: All contained Report instances in the order in which
+            they were received.
+        :raise TimeoutError: If not received in time.
+        '''
+        reports = []
+
+        timer = Timer(timeout)
+        try:
+            while timer:
+
+                if not self._rptsets.setdefault(mgr_ix, []):
+                    self._rptsets[mgr_ix] += self._wait_msg(mgr_ix=mgr_ix, timeout=timer.remaining())
+
+                remain = []
+                for val in self._rptsets[mgr_ix]:
+                    if nonce is None or val.value.nonce == nonce:
+                        reports += val.value.reports
+                    else:
+                        remain.append(val)
+                self._rptsets[mgr_ix] = remain
+
+                if stop_count > 0 and len(reports) >= stop_count:
+                    break
+        except TimeoutError:
+            # simply stop listening
+            pass
+
+        return reports
 
     def test_start_sigint(self):
         self._start()
@@ -232,34 +283,35 @@ class TestRefdaSocket(unittest.TestCase):
     def test_exec_report_on_valid(self):
         self._start()
 
+        mgr_eids = [
+            quote('"file:' + self._mgr_bind[0]['path'] + '"'),
+            quote('"file:' + self._mgr_bind[1]['path'] + '"'),
+        ]
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,%22file%3Astdio%22))')]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,/ac/(' + ','.join(mgr_eids) + ')))')]
         )
 
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None))
+        self.assertEqual(1, len(rpts))
         # RPTSET for the generated report
-        msg_vals = self._wait_msg(mgr_ix=0)
-        self.assertEqual(1, len(msg_vals))
-        rptset = msg_vals[0].value
-        self.assertIsInstance(rptset, ari.ReportSet)
-        self.assertEqual(ari.LiteralARI(None), rptset.nonce)
-        self.assertEqual(1, len(rptset.reports))
-        rpt = rptset.reports[0]
-        self.assertIsInstance(rpt, ari.Report)
+        rpt = rpts[0]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
+        # items of the report
+        self.assertLessEqual(3, len(rpt.items))
+
+        rpts = self._wait_reports(mgr_ix=1, nonce=ari.LiteralARI(None))
+        self.assertEqual(1, len(rpts))
+        # RPTSET for the generated report
+        rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
         # items of the report
         self.assertLessEqual(3, len(rpt.items))
 
         # RPTSET for the execution itself
-        msg_vals = self._wait_msg(mgr_ix=0)
-        self.assertEqual(1, len(msg_vals))
-        rptset = msg_vals[0].value
-        self.assertIsInstance(rptset, ari.ReportSet)
-        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
-        self.assertEqual(1, len(rptset.reports))
-        rpt = rptset.reports[0]
-        self.assertIsInstance(rpt, ari.Report)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on(//ietf/dtnma-agent/CONST/hello,%22file%3Astdio%22)'), rpt.source)
-        # items of the report
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts[0]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on'), self._ari_strip_params(rpt.source))
         self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
     def test_exec_report_on_no_destination(self):
@@ -269,18 +321,21 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello))')]
         )
 
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None))
+        self.assertEqual(1, len(rpts))
+        # RPTSET for the generated report
+        rpt = rpts[0]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
+        # items of the report
+        self.assertLessEqual(3, len(rpt.items))
+
         # RPTSET for the execution itself
-        msg_vals = self._wait_msg(mgr_ix=0)
-        self.assertEqual(1, len(msg_vals))
-        rptset = msg_vals[0].value
-        self.assertIsInstance(rptset, ari.ReportSet)
-        self.assertEqual(ari.LiteralARI(123), rptset.nonce)
-        self.assertEqual(1, len(rptset.reports))
-        rpt = rptset.reports[0]
-        self.assertIsInstance(rpt, ari.Report)
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on(//ietf/dtnma-agent/CONST/hello)'), rpt.source)
         # items of the report
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
     def test_exec_delayed(self):
         self._start()
