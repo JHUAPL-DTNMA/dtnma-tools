@@ -332,6 +332,14 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello))')]
         )
 
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.NULL)
+        self.assertEqual(1, len(rpts))
+        # RPTSET for the generated report
+        rpt = rpts[0]
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
+        # items of the report
+        self.assertLessEqual(3, len(rpt.items))
+
         # RPTSET for the execution itself
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))

@@ -239,5 +239,6 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     refda_msgdata_deinit(&got_rptset);
     refda_runctx_deinit(&runctx);
     cace_ari_deinit(&expect_rpt_items);
+    cace_ari_deinit(&destination);
     cace_ari_deinit(&target);
 }

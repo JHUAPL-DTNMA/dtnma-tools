@@ -1903,18 +1903,29 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
     const cace_ari_ac_t *dest_ac = cace_ari_cget_ac(p_dests);
     if (dest_ac)
     {
-        // Explicit list
-        cace_ari_list_it_t dest_it;
-        for (cace_ari_list_it(dest_it, dest_ac->items); !cace_ari_list_end_p(dest_it); cace_ari_list_next(dest_it))
+        if (cace_ari_list_empty_p(dest_ac->items))
         {
-            const cace_ari_t *dest = cace_ari_list_cref(dest_it);
-            refda_reporting_target(ctx->runctx, template, dest);
+            if (cace_ari_not_undefined(&ctx->runctx->mgr_ident))
+            {
+                // default to executing manager
+                refda_reporting_target(ctx->runctx, template, &ctx->runctx->mgr_ident);
+            }
+            else
+            {
+                // actual failure
+                return;
+            }
         }
-    }
-    else if (cace_ari_is_null(&ctx->runctx->mgr_ident))
-    {
-        // default to executing manager
-        refda_reporting_target(ctx->runctx, template, &ctx->runctx->mgr_ident);
+        else
+        {
+            // Explicit list
+            cace_ari_list_it_t dest_it;
+            for (cace_ari_list_it(dest_it, dest_ac->items); !cace_ari_list_end_p(dest_it); cace_ari_list_next(dest_it))
+            {
+                const cace_ari_t *dest = cace_ari_list_cref(dest_it);
+                refda_reporting_target(ctx->runctx, template, dest);
+            }
+        }
     }
     else
     {

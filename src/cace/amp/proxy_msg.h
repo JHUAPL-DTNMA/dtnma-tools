@@ -36,7 +36,7 @@ extern "C" {
  * The socket must be ready for writing (e.g. determined via poll() and
  * POLLOUT event) before this call.
  * @param[in] dst The ultimate destination endpoint to send to.
- * @return Zero if successful.
+ * @return Zero if successful, non-zero if sending is no longer possible.
  */
 int cace_amp_proxy_msg_send(int sock_fd, const cace_ari_t *dst, const uint8_t *data_ptr, size_t data_len);
 
@@ -47,7 +47,7 @@ int cace_amp_proxy_msg_send(int sock_fd, const cace_ari_t *dst, const uint8_t *d
  * POLLIN event) before this call.
  * @param[out] src The ultimate source endpoint being received from.
  * @param[out] data The data to populate, which must already be initialized.
- * @return Zero if successful.
+ * @return Zero if successful, non-zero if reception is no longer possible.
  */
 int cace_amp_proxy_msg_recv(int sock_fd, cace_ari_t *src, m_bstring_t data);
 
