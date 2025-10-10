@@ -858,10 +858,10 @@ int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     return 0;
 }
 
-int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *ari)
+int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *target)
 {
     CHKERR1(agent);
-    CHKERR1(ari);
+    CHKERR1(target);
 
     refda_exec_item_list_t tmp_items;
     refda_exec_item_t      tmp_item;
@@ -878,7 +878,7 @@ int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
 
-    int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, ari, invalid_items);
+    int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, target, invalid_items);
 
     cace_ari_array_clear(invalid_items);
 
