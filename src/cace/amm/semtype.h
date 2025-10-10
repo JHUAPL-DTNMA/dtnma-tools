@@ -67,7 +67,7 @@ static inline void cace_amm_semtype_use_deinit(cace_amm_semtype_use_t *obj)
     obj->base = NULL;
 }
 
-typedef struct cace_amm_lookup_s cace_amm_lookup_t;
+typedef struct cace_amm_lookup_s    cace_amm_lookup_t;
 typedef struct cace_amm_obj_store_s cace_amm_obj_store_t;
 
 /** Create a default initialized type use.
@@ -76,7 +76,7 @@ typedef struct cace_amm_obj_store_s cace_amm_obj_store_t;
  * @param[out] type The type to initialize and populate.
  * @param[in] name The ARITYPE literal or TYPEDEF reference value.
  */
-cace_amm_semtype_use_t * cace_amm_type_set_use(cace_amm_type_t *type);
+cace_amm_semtype_use_t *cace_amm_type_set_use(cace_amm_type_t *type);
 
 /** Read a named config from its serialized name.
  *
@@ -84,7 +84,8 @@ cace_amm_semtype_use_t * cace_amm_type_set_use(cace_amm_type_t *type);
  * @param[in] deref The name to draw parameters from.
  * @return Zero if successful.
  */
-int cace_amm_type_set_use_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store);
+int cace_amm_type_set_use_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                    const cace_amm_obj_store_t *store);
 
 /** Create a use type based on a type reference.
  *
@@ -143,7 +144,8 @@ static inline void cace_amm_semtype_ulist_deinit(cace_amm_semtype_ulist_t *obj)
  */
 cace_amm_semtype_ulist_t *cace_amm_type_set_ulist(cace_amm_type_t *type);
 
-int cace_amm_type_set_ulist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store);
+int cace_amm_type_set_ulist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                      const cace_amm_obj_store_t *store);
 
 /// Configuration for a diverse list within an AC
 typedef struct
@@ -181,7 +183,8 @@ cace_amm_semtype_dlist_t *cace_amm_type_set_dlist(cace_amm_type_t *type, size_t 
  * @param[in] deref The name to draw parameters from.
  * @return Zero if successful.
  */
-int cace_amm_type_set_dlist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store);
+int cace_amm_type_set_dlist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                      const cace_amm_obj_store_t *store);
 
 /// Configuration for a uniform list within an AM
 typedef struct
@@ -224,7 +227,8 @@ cace_amm_semtype_umap_t *cace_amm_type_set_umap(cace_amm_type_t *type);
  * @param[in] deref The name to draw parameters from.
  * @return Zero if successful.
  */
-int cace_amm_type_set_umap_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store);
+int cace_amm_type_set_umap_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                     const cace_amm_obj_store_t *store);
 
 /// Configuration for a table template
 typedef struct
@@ -259,7 +263,8 @@ cace_amm_semtype_tblt_t *cace_amm_type_set_tblt_size(cace_amm_type_t *type, size
  * @param[in] deref The name to draw parameters from.
  * @return Zero if successful.
  */
-int cace_amm_type_set_tblt_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store);
+int cace_amm_type_set_tblt_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                     const cace_amm_obj_store_t *store);
 
 /// Configuration for a union of other types
 typedef struct
@@ -295,7 +300,8 @@ cace_amm_semtype_union_t *cace_amm_type_set_union_size(cace_amm_type_t *type, si
  * @param[in] deref The name to draw parameters from.
  * @return Zero if successful.
  */
-int cace_amm_type_set_union_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store);
+int cace_amm_type_set_union_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                      const cace_amm_obj_store_t *store);
 
 /** Configuration for a sub-sequence list within an AC.
  * This is similar to an cace_amm_semtype_ulist_t but does not capture the
@@ -340,7 +346,8 @@ cace_amm_semtype_seq_t *cace_amm_type_set_seq(cace_amm_type_t *type);
  * @param[in] deref The name to draw parameters from.
  * @return Zero if successful.
  */
-int cace_amm_type_set_seq_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store);
+int cace_amm_type_set_seq_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                    const cace_amm_obj_store_t *store);
 
 #ifdef __cplusplus
 }

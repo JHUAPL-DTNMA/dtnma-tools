@@ -42,7 +42,8 @@ static bool cace_amm_semtype_use_constraints(const cace_amm_semtype_use_t *semty
     return true;
 }
 
-int cace_amm_type_set_use_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store _U_)
+int cace_amm_type_set_use_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                    const cace_amm_obj_store_t *store _U_)
 {
     cace_amm_semtype_use_t *semtype = cace_amm_type_set_use(type);
     {
@@ -127,7 +128,7 @@ static int cace_amm_semtype_use_convert(const cace_amm_type_t *self, cace_ari_t 
     return 0;
 }
 
-cace_amm_semtype_use_t * cace_amm_type_set_use(cace_amm_type_t *type)
+cace_amm_semtype_use_t *cace_amm_type_set_use(cace_amm_type_t *type)
 {
     CHKNULL(type);
     cace_amm_type_reset(type);
@@ -180,7 +181,8 @@ int cace_amm_type_set_use_builtin(cace_amm_type_t *type, cace_ari_type_t ari_typ
     return semtype->base ? 0 : 3;
 }
 
-int cace_amm_type_set_ulist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+int cace_amm_type_set_ulist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                      const cace_amm_obj_store_t *store)
 {
     cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(type);
     {
@@ -408,7 +410,8 @@ static bool cace_amm_semtype_seq_convert_it(const cace_amm_semtype_seq_t *seq, c
     return true;
 }
 
-int cace_amm_type_set_dlist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+int cace_amm_type_set_dlist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                      const cace_amm_obj_store_t *store)
 {
     cace_amm_semtype_dlist_t *semtype = cace_amm_type_set_dlist(type, 0);
     {
@@ -765,7 +768,8 @@ cace_amm_semtype_umap_t *cace_amm_type_set_umap(cace_amm_type_t *type)
     return semtype;
 }
 
-int cace_amm_type_set_umap_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+int cace_amm_type_set_umap_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                const cace_amm_obj_store_t *store)
 {
     cace_amm_semtype_umap_t *semtype = cace_amm_type_set_umap(type);
     {
@@ -789,7 +793,8 @@ int cace_amm_type_set_umap_name(cace_amm_type_t *type, const cace_amm_lookup_t *
     return 0;
 }
 
-int cace_amm_type_set_umap_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+int cace_amm_type_set_umap_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                     const cace_amm_obj_store_t *store)
 {
     cace_amm_semtype_umap_t *semtype = cace_amm_type_set_umap(type);
     {
@@ -813,7 +818,8 @@ int cace_amm_type_set_umap_from_name(cace_amm_type_t *type, const cace_amm_looku
     return 0;
 }
 
-int cace_amm_type_set_tblt_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+int cace_amm_type_set_tblt_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                     const cace_amm_obj_store_t *store)
 {
     cace_amm_semtype_tblt_t *semtype = cace_amm_type_set_tblt_size(type, 0);
     {
@@ -1049,7 +1055,8 @@ cace_amm_semtype_tblt_t *cace_amm_type_set_tblt_size(cace_amm_type_t *type, size
     return semtype;
 }
 
-int cace_amm_type_set_union_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+int cace_amm_type_set_union_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                      const cace_amm_obj_store_t *store)
 {
     cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(type, 0);
     {
@@ -1222,7 +1229,8 @@ cace_amm_semtype_union_t *cace_amm_type_set_union_size(cace_amm_type_t *type, si
     return semtype;
 }
 
-int cace_amm_type_set_seq_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+int cace_amm_type_set_seq_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
+                                    const cace_amm_obj_store_t *store)
 {
     cace_amm_semtype_seq_t *semtype = cace_amm_type_set_seq(type);
     {

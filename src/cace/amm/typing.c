@@ -1121,7 +1121,8 @@ static int cace_amm_type_set_name_aritype(cace_amm_type_t *type, const cace_ari_
     return 0;
 }
 
-static int cace_amm_type_set_name_semtype(cace_amm_type_t *type, const cace_ari_t *name, const cace_amm_obj_store_t *store)
+static int cace_amm_type_set_name_semtype(cace_amm_type_t *type, const cace_ari_t *name,
+                                          const cace_amm_obj_store_t *store)
 {
     int retval = 0;
 
