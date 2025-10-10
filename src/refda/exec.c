@@ -492,7 +492,7 @@ static void refda_exec_run_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     {
         bool bool_result = false;
         result           = cace_ari_get_bool(&ari_result, &bool_result);
-        CACE_LOG_INFO("SBR %p condition is %d", sbr, bool_result);
+        CACE_LOG_INFO("SBR %p condition is err %d, bool %d, current count %" PRIu64, sbr, result, bool_result, sbr->exec_count);
 
         if (!result && bool_result)
         {

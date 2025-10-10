@@ -50,7 +50,7 @@ static void suite_adms_init(refda_agent_t *agent);
 
 void suiteSetUp(void)
 {
-    cace_openlog();
+//    cace_openlog();
 
     cace_ari_list_init(exec_log);
 
@@ -66,7 +66,7 @@ int suiteTearDown(int failures)
 
     refda_agent_deinit(&agent);
 
-    cace_closelog();
+//    cace_closelog();
     return failures;
 }
 
