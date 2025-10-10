@@ -1086,6 +1086,7 @@ bool cace_amm_type_get_name(const cace_amm_type_t *type, cace_ari_t *name)
     CHKFALSE(name);
     if (!(type->ari_name))
     {
+        cace_ari_set_undefined(name);
         return false;
     }
 
@@ -1120,7 +1121,7 @@ static int cace_amm_type_set_name_aritype(cace_amm_type_t *type, const cace_ari_
     return 0;
 }
 
-int cace_amm_type_set_name_semtype(cace_amm_type_t *type, const cace_ari_t *name, const cace_amm_obj_store_t *store)
+static int cace_amm_type_set_name_semtype(cace_amm_type_t *type, const cace_ari_t *name, const cace_amm_obj_store_t *store)
 {
     int retval = 0;
 
@@ -1155,73 +1156,27 @@ int cace_amm_type_set_name_semtype(cace_amm_type_t *type, const cace_ari_t *name
         switch (deref.obj->obj_id.intenum)
         {
             case 2: // type-use
-            {
-                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use(type);
-                {
-                    cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref.aparams.named, "name");
-                    if (!pval)
-                    {
-                        CACE_LOG_ERR("No name parameter");
-                        retval = 3;
-                    }
-                    else
-                    {
-                        cace_ari_set_copy(&(semtype->name), *pval);
-                    }
-                }
-                // TODO add constraints
+                retval = cace_amm_type_set_use_from_name(type, &deref, store);
                 break;
-            }
             case 3: // ulist
-            {
-                cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(type);
-                {
-                    cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref.aparams.named, "item-type");
-                    if (!pval)
-                    {
-                        CACE_LOG_ERR("No item-type parameter");
-                        retval = 3;
-                    }
-                    else
-                    {
-                        cace_amm_type_set_name(&(semtype->item_type), *pval, store);
-                    }
-                }
+                retval = cace_amm_type_set_ulist_from_name(type, &deref, store);
                 break;
-            }
             case 4: // dlist
-                retval = 99; //TODO replace
+                retval = cace_amm_type_set_dlist_from_name(type, &deref, store);
                 break;
             case 5: // umap
-            {
-                cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(type);
-                {
-                    cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref.aparams.named, "key-type");
-                    if (!pval)
-                    {
-                        CACE_LOG_ERR("No item-type parameter");
-                        retval = 3;
-                    }
-                    else
-                    {
-                        cace_amm_type_set_name(&(semtype->item_type), *pval, store);
-                    }
-                }
+                retval = cace_amm_type_set_umap_from_name(type, &deref, store);
                 break;
-            }
             case 6: // tblt
-                retval = 99; //TODO replace
-                break;
-            case 7: // tblt-col
-                retval = 99; //TODO replace
+                retval = cace_amm_type_set_tblt_from_name(type, &deref, store);
                 break;
             case 8: // union
-                retval = 99; //TODO replace
+                retval = cace_amm_type_set_union_from_name(type, &deref, store);
                 break;
             case 9: // seq
-                retval = 99; //TODO replace
+                retval = cace_amm_type_set_seq_from_name(type, &deref, store);
                 break;
-            default: // type-use
+            default:
                 CACE_LOG_ERR("Semantic type reference not a known object enumeration %" PRId64,
                              deref.obj->obj_id.intenum);
                 retval = 3;
@@ -1238,7 +1193,7 @@ int cace_amm_type_set_name(cace_amm_type_t *type, const cace_ari_t *name, const 
     CHKERR1(name);
     CHKERR1(store);
 
-    cace_amm_type_deinit(type);
+    cace_amm_type_reset(type);
 
     if (cace_ari_is_lit_typed(name, CACE_ARI_TYPE_ARITYPE))
     {

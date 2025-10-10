@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "semtype.h"
+#include "lookup.h"
 #include "cace/ari/algo.h"
 #include "cace/ari/text.h"
 #include "cace/util/defs.h"
@@ -41,13 +42,29 @@ static bool cace_amm_semtype_use_constraints(const cace_amm_semtype_use_t *semty
     return true;
 }
 
+int cace_amm_type_set_use_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store _U_)
+{
+    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use(type);
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "name");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No name parameter");
+            return 3;
+        }
+        cace_ari_set_copy(&(semtype->name), *pval);
+    }
+    // TODO add constraints
+    return 0;
+}
+
 static void cace_amm_semtype_use_name(const cace_amm_type_t *self, cace_ari_t *name)
 {
     const cace_amm_semtype_use_t *semtype = self->as_semtype;
     CHKVOID(semtype);
 
     cace_ari_ref_t *ref = cace_ari_set_objref(name);
-    cace_ari_objpath_set_textid(&(ref->objpath), "ietf", "amm-semtype", CACE_ARI_TYPE_IDENT, "use");
+    cace_ari_objpath_set_textid(&(ref->objpath), "ietf", "amm-semtype", CACE_ARI_TYPE_IDENT, "type-use");
 
     cace_ari_tree_t params;
     cace_ari_tree_init(params);
@@ -131,10 +148,13 @@ cace_amm_semtype_use_t * cace_amm_type_set_use(cace_amm_type_t *type)
 
 void cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name)
 {
+    CHKVOID(type);
     CHKVOID(name);
-    cace_ari_t tmp;
-    cace_ari_init_copy(&tmp, name);
-    cace_amm_type_set_use_ref_move(type, &tmp);
+    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use(type);
+    if (semtype)
+    {
+        cace_ari_set_copy(&(semtype->name), name);
+    }
 }
 
 void cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name)
@@ -158,6 +178,21 @@ int cace_amm_type_set_use_builtin(cace_amm_type_t *type, cace_ari_type_t ari_typ
     semtype->base                   = cace_amm_type_get_builtin(ari_type);
 
     return semtype->base ? 0 : 3;
+}
+
+int cace_amm_type_set_ulist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+{
+    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(type);
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "item-type");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No item-type parameter");
+            return 3;
+        }
+        cace_amm_type_set_name(&(semtype->item_type), *pval, store);
+    }
+    return 0;
 }
 
 static void cace_amm_semtype_ulist_name(const cace_amm_type_t *self, cace_ari_t *name)
@@ -371,6 +406,36 @@ static bool cace_amm_semtype_seq_convert_it(const cace_amm_semtype_seq_t *seq, c
     }
 
     return true;
+}
+
+int cace_amm_type_set_dlist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+{
+    cace_amm_semtype_dlist_t *semtype = cace_amm_type_set_dlist(type, 0);
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "item-types");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No item-types parameter");
+            return 3;
+        }
+        const cace_ari_ac_t *pval_ac = cace_ari_cget_ac(*pval);
+        if (!pval_ac)
+        {
+            CACE_LOG_ERR("No item-types parameter as AC");
+            return 3;
+        }
+
+        // grow the types list as needed
+        cace_ari_list_it_t it;
+        for (cace_ari_list_it(it, pval_ac->items); !cace_ari_list_end_p(it); cace_ari_list_next(it))
+        {
+            const cace_ari_t *pval_item = cace_ari_list_cref(it);
+
+            cace_amm_type_t *typeobj = cace_amm_type_array_push_new(semtype->types);
+            cace_amm_type_set_name(typeobj, pval_item, store);
+        }
+    }
+    return 0;
 }
 
 static void cace_amm_semtype_dlist_name(const cace_amm_type_t *self, cace_ari_t *name)
@@ -700,6 +765,106 @@ cace_amm_semtype_umap_t *cace_amm_type_set_umap(cace_amm_type_t *type)
     return semtype;
 }
 
+int cace_amm_type_set_umap_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+{
+    cace_amm_semtype_umap_t *semtype = cace_amm_type_set_umap(type);
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "key-type");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No key-type parameter");
+            return 3;
+        }
+        cace_amm_type_set_name(&(semtype->key_type), *pval, store);
+    }
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "value-type");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No value-type parameter");
+            return 3;
+        }
+        cace_amm_type_set_name(&(semtype->val_type), *pval, store);
+    }
+    return 0;
+}
+
+int cace_amm_type_set_umap_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+{
+    cace_amm_semtype_umap_t *semtype = cace_amm_type_set_umap(type);
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "key-type");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No key-type parameter");
+            return 3;
+        }
+        cace_amm_type_set_name(&(semtype->key_type), *pval, store);
+    }
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "value-type");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No value-type parameter");
+            return 3;
+        }
+        cace_amm_type_set_name(&(semtype->val_type), *pval, store);
+    }
+    return 0;
+}
+
+int cace_amm_type_set_tblt_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+{
+    cace_amm_semtype_tblt_t *semtype = cace_amm_type_set_tblt_size(type, 0);
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "columns");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No columns parameter");
+            return 3;
+        }
+        const cace_ari_tbl_t *pval_tbl = cace_ari_get_tbl(*pval);
+        if (!pval_tbl)
+        {
+            CACE_LOG_ERR("No columns parameter as TBL");
+            return 3;
+        }
+        if (pval_tbl->ncols != 2)
+        {
+            CACE_LOG_ERR("No columns parameter as valid TBL");
+            return 3;
+        }
+
+        cace_ari_array_it_t tbl_it;
+        cace_ari_array_it(tbl_it, pval_tbl->items);
+        while (!cace_ari_array_end_p(tbl_it))
+        {
+            const cace_ari_t *name_item = cace_ari_array_cref(tbl_it);
+            cace_ari_array_next(tbl_it);
+            if (cace_ari_array_end_p(tbl_it))
+            {
+                CACE_LOG_ERR("Inconsistent items in TBL");
+                break;
+            }
+
+            const cace_ari_t *datatype_item = cace_ari_array_cref(tbl_it);
+            cace_ari_array_next(tbl_it);
+
+            cace_amm_named_type_t *col_item = cace_amm_named_type_array_push_new(semtype->columns);
+            {
+                const char *cstr = cace_ari_cget_tstr_cstr(name_item);
+                if (cstr)
+                {
+                    m_string_set_cstr(col_item->name, cstr);
+                }
+            }
+            cace_amm_type_set_name(&(col_item->typeobj), datatype_item, store);
+        }
+    }
+    // TODO add constraints
+    return 0;
+}
+
 static void cace_amm_semtype_tblt_name(const cace_amm_type_t *self, cace_ari_t *name)
 {
     const cace_amm_semtype_tblt_t *semtype = self->as_semtype;
@@ -716,46 +881,29 @@ static void cace_amm_semtype_tblt_name(const cace_amm_type_t *self, cace_ari_t *
         cace_ari_t *val = cace_ari_tree_safe_get(params, key);
         cace_ari_deinit(&key);
 
+        cace_ari_tbl_t col_table;
+        cace_ari_tbl_init(&col_table, 2, 0);
+
+        cace_amm_named_type_array_it_t it;
+        for (cace_amm_named_type_array_it(it, semtype->columns); !cace_amm_named_type_array_end_p(it);
+             cace_amm_named_type_array_next(it))
         {
-            cace_ari_ac_t name_ac;
-            cace_ari_ac_init(&name_ac);
+            const cace_amm_named_type_t *col_item = cace_amm_named_type_array_ref(it);
 
-            cace_amm_named_type_array_it_t it;
-            for (cace_amm_named_type_array_it(it, semtype->columns); !cace_amm_named_type_array_end_p(it);
-                 cace_amm_named_type_array_next(it))
-            {
-                const cace_amm_named_type_t *col_item = cace_amm_named_type_array_ref(it);
+            cace_ari_array_t row;
+            cace_ari_array_init(row);
+            cace_ari_array_resize(row, 2);
 
-                cace_ari_t *name_item = cace_ari_list_push_back_new(name_ac.items);
+            // name
+            cace_ari_set_tstr(cace_ari_array_get(row, 0), m_string_get_cstr(col_item->name), true);
+            // datatype
+            cace_amm_type_get_name(&col_item->typeobj, cace_ari_array_get(row, 1));
 
-                // FIXME can this itself be a table?
-                cace_ari_ref_t *col_ref = cace_ari_set_objref(name_item);
-                cace_ari_objpath_set_textid(&(col_ref->objpath), "ietf", "amm-semtype", CACE_ARI_TYPE_IDENT,
-                                            "tblt-col");
-
-                cace_ari_tree_t col_params;
-                cace_ari_tree_init(col_params);
-                {
-                    cace_ari_t key = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_tstr(&key, "name", false);
-                    cace_ari_t *val = cace_ari_tree_safe_get(col_params, key);
-                    cace_ari_deinit(&key);
-
-                    cace_ari_set_tstr(val, m_string_get_cstr(col_item->name), true);
-                }
-                {
-                    cace_ari_t key = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_tstr(&key, "datatype", false);
-                    cace_ari_t *val = cace_ari_tree_safe_get(col_params, key);
-                    cace_ari_deinit(&key);
-
-                    cace_amm_type_get_name(&col_item->typeobj, val);
-                }
-                cace_ari_params_set_am(&(col_ref->params), col_params);
-            }
-
-            cace_ari_set_ac(val, &name_ac);
+            cace_ari_tbl_move_row_array(&col_table, row);
+            cace_ari_array_clear(row);
         }
+
+        cace_ari_set_tbl(val, &col_table);
     }
     // FIXME add other parameters
     cace_ari_params_set_am(&(ref->params), params);
@@ -901,6 +1049,36 @@ cace_amm_semtype_tblt_t *cace_amm_type_set_tblt_size(cace_amm_type_t *type, size
     return semtype;
 }
 
+int cace_amm_type_set_union_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+{
+    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(type, 0);
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "choices");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No choices parameter");
+            return 3;
+        }
+        const cace_ari_ac_t *pval_ac = cace_ari_cget_ac(*pval);
+        if (!pval_ac)
+        {
+            CACE_LOG_ERR("No choices parameter as AC");
+            return 3;
+        }
+
+        // grow the choices list as needed
+        cace_ari_list_it_t it;
+        for (cace_ari_list_it(it, pval_ac->items); !cace_ari_list_end_p(it); cace_ari_list_next(it))
+        {
+            const cace_ari_t *pval_item = cace_ari_list_cref(it);
+
+            cace_amm_type_t *typeobj = cace_amm_type_array_push_new(semtype->choices);
+            cace_amm_type_set_name(typeobj, pval_item, store);
+        }
+    }
+    return 0;
+}
+
 static void cace_amm_semtype_union_name(const cace_amm_type_t *self, cace_ari_t *name)
 {
     const cace_amm_semtype_union_t *semtype = self->as_semtype;
@@ -1044,11 +1222,48 @@ cace_amm_semtype_union_t *cace_amm_type_set_union_size(cace_amm_type_t *type, si
     return semtype;
 }
 
+int cace_amm_type_set_seq_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref, const cace_amm_obj_store_t *store)
+{
+    cace_amm_semtype_seq_t *semtype = cace_amm_type_set_seq(type);
+    {
+        cace_ari_t **pval = cace_named_ari_ptr_dict_get(deref->aparams.named, "item-type");
+        if (!pval)
+        {
+            CACE_LOG_ERR("No item-type parameter");
+            return 3;
+        }
+        cace_amm_type_set_name(&(semtype->item_type), *pval, store);
+    }
+    return 0;
+}
+
+static void cace_amm_semtype_seq_name(const cace_amm_type_t *self, cace_ari_t *name)
+{
+    const cace_amm_semtype_seq_t *semtype = self->as_semtype;
+    CHKVOID(semtype);
+
+    cace_ari_ref_t *ref = cace_ari_set_objref(name);
+    cace_ari_objpath_set_textid(&(ref->objpath), "ietf", "amm-semtype", CACE_ARI_TYPE_IDENT, "seq");
+
+    cace_ari_tree_t params;
+    cace_ari_tree_init(params);
+    {
+        cace_ari_t key = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_tstr(&key, "item-type", false);
+        cace_ari_t *val = cace_ari_tree_safe_get(params, key);
+        cace_ari_deinit(&key);
+
+        cace_amm_type_get_name(&semtype->item_type, val);
+    }
+    cace_ari_params_set_am(&(ref->params), params);
+}
+
 cace_amm_semtype_seq_t *cace_amm_type_set_seq(cace_amm_type_t *type)
 {
     CHKNULL(type);
     cace_amm_type_reset(type);
 
+    type->ari_name = cace_amm_semtype_seq_name;
     // not usable as a direct semantic type, see cace_amm_semtype_dlist_match() and cace_amm_semtype_dlist_convert()
     type->match      = NULL;
     type->convert    = NULL;

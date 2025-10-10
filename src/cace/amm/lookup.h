@@ -31,7 +31,7 @@ extern "C" {
 /** Result of dereferencing an object-reference ARI to an object
  * descriptor within a specific namespace.
  */
-typedef struct
+typedef struct cace_amm_lookup_s
 {
     /// The found namespace, or a null pointer
     cace_amm_obj_ns_t *ns;

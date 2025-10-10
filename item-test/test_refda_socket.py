@@ -127,12 +127,13 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
 
-    def _ari_text_to_obj(self, text: str, nn: bool = True) -> ARI:
+    def _ari_text_to_obj(self, text: str, id_convert: bool=True, nn: bool=True) -> ARI:
         with io.StringIO(text) as buf:
             val = ari_text.Decoder().decode(buf)
 
-        nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=nn)
-        val = nn_func(val)
+        if id_convert:
+            nn_func = nickname.Converter(nickname.Mode.TO_NN, ADMS.db_session(), must_nickname=nn)
+            val = nn_func(val)
 
         return val
 
@@ -659,6 +660,14 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
+        self.assertEqual(
+            self._ari_text_to_obj('//1/-1/var/1', nn=False),
+            rpt.items[0].value[0, 0]
+        )
+        self.assertEqual(
+            self._ari_text_to_obj('//ietf/amm-semtype/IDENT/type-use(name=/ARITYPE/int)', id_convert=False),
+            rpt.items[0].value[0, 1]
+        )
 
         # Obsolete the VAR
         self._send_msg(
@@ -722,8 +731,14 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((1, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
-        print(rpt.items[0].value)
-        self.fail()
+        self.assertEqual(
+            self._ari_text_to_obj('//1/-1/const/1', nn=False),
+            rpt.items[0].value[0, 0]
+        )
+        self.assertEqual(
+            self._ari_text_to_obj('//ietf/amm-semtype/IDENT/type-use(name=/ARITYPE/int)', id_convert=False),
+            rpt.items[0].value[0, 1]
+        )
 
         # Obsolete the CONST
         self._send_msg(
