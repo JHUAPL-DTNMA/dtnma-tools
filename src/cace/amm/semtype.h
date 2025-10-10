@@ -67,17 +67,26 @@ static inline void cace_amm_semtype_use_deinit(cace_amm_semtype_use_t *obj)
     obj->base = NULL;
 }
 
-/** Create a use type based on a type reference.
+/** Create a default initialized type use.
  * A use type adds annotations and constraints onto a base type.
  *
  * @param[out] type The type to initialize and populate.
  * @param[in] name The ARITYPE literal or TYPEDEF reference value.
  */
-int cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name);
+cace_amm_semtype_use_t * cace_amm_type_set_use(cace_amm_type_t *type);
+
+/** Create a use type based on a type reference.
+ *
+ * @note This does not actually dereference the name, it only stores it.
+ *
+ * @param[out] type The type to initialize and populate.
+ * @param[in] name The ARITYPE literal or TYPEDEF reference value.
+ */
+void cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name);
 /** @overload
  * Set the name with move semantics.
  */
-int cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name);
+void cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name);
 
 /** Create a use type based on a base type object.
  * A use type adds annotations and constraints onto a base type.
@@ -85,6 +94,7 @@ int cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name);
  *
  * @param[out] type The type to initialize and populate.
  * @param ari_type The builtin type to create a use of.
+ * @return Zero if successful.
  */
 int cace_amm_type_set_use_builtin(cace_amm_type_t *type, cace_ari_type_t ari_type);
 

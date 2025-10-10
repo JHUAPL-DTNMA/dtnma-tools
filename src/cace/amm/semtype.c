@@ -110,17 +110,9 @@ static int cace_amm_semtype_use_convert(const cace_amm_type_t *self, cace_ari_t 
     return 0;
 }
 
-int cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name)
+cace_amm_semtype_use_t * cace_amm_type_set_use(cace_amm_type_t *type)
 {
-    cace_ari_t tmp;
-    cace_ari_init_copy(&tmp, name);
-    return cace_amm_type_set_use_ref_move(type, &tmp);
-}
-
-int cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name)
-{
-    CHKERR1(type);
-    CHKERR1(name);
+    CHKNULL(type);
     cace_amm_type_reset(type);
 
     type->ari_name   = cace_amm_semtype_use_name;
@@ -130,23 +122,37 @@ int cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name)
 
     cace_amm_semtype_use_t *semtype = CACE_MALLOC(sizeof(cace_amm_semtype_use_t));
     cace_amm_semtype_use_init(semtype);
-    cace_ari_set_move(&(semtype->name), name);
 
     type->as_semtype        = semtype;
     type->as_semtype_deinit = (cace_amm_semtype_deinit_f)cace_amm_semtype_use_deinit;
 
-    return 0;
+    return semtype;
+}
+
+void cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name)
+{
+    CHKVOID(name);
+    cace_ari_t tmp;
+    cace_ari_init_copy(&tmp, name);
+    cace_amm_type_set_use_ref_move(type, &tmp);
+}
+
+void cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name)
+{
+    CHKVOID(type);
+    CHKVOID(name);
+    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use(type);
+    if (semtype)
+    {
+        cace_ari_set_move(&(semtype->name), name);
+    }
 }
 
 int cace_amm_type_set_use_builtin(cace_amm_type_t *type, cace_ari_type_t ari_type)
 {
     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_aritype_text(&typeref, ari_type);
-    int res = cace_amm_type_set_use_ref_move(type, &typeref);
-    if (res)
-    {
-        return 2;
-    }
+    cace_amm_type_set_use_ref_move(type, &typeref);
 
     cace_amm_semtype_use_t *semtype = type->as_semtype;
     semtype->base                   = cace_amm_type_get_builtin(ari_type);

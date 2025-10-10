@@ -89,7 +89,7 @@ static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace
     }
     else
     {
-        const int64_t *aritype = cace_ari_get_aritype(&(semtype->name));
+        const int64_t *aritype = cace_ari_get_aritype_int(&(semtype->name));
         if (aritype)
         {
             semtype->base = cace_amm_type_get_builtin((cace_ari_type_t)*aritype);

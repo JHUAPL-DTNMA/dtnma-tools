@@ -130,7 +130,7 @@ bool cace_ari_is_lit_typed(const cace_ari_t *ari, cace_ari_type_t typ);
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained type value, if present, otherwise NULL.
  */
-const int64_t *cace_ari_get_aritype(const cace_ari_t *ari);
+const int64_t *cace_ari_get_aritype_int(const cace_ari_t *ari);
 
 /** Set an ARI as an untyped literal value.
  *
@@ -229,8 +229,20 @@ void cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src);
  * @notice This data will always have a terminating null byte.
  */
 const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari);
+/** @overload
+ * This form casts to const C-string pointer.
+ */
+const char *cace_ari_cget_tstr_cstr(const cace_ari_t *ari);
+/** @overload
+ * This form casts to mutable C-string pointer.
+ */
+const char *cace_ari_get_tstr_cstr(cace_ari_t *ari);
 
-/// @overload
+/** Require a BYTESTR value and get the pointer to its storage.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained data, if present, otherwise NULL.
+ */
 const cace_data_t *cace_ari_cget_bstr(const cace_ari_t *ari);
 
 /** Require an AC value and extract a pointer to its item list.
