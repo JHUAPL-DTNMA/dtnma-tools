@@ -977,7 +977,7 @@ class TestRefdmProxy(BaseRefdm):
         self._start()
 
         agent_eid = 'data:agent0'
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         resp = self._req.post(
             self._base_url + 'agents',
