@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "refda/agent.h"
+#include "refda/adm/ietf.h"
 #include "refda/adm/ietf_amm.h"
 #include "refda/adm/ietf_amm_base.h"
 #include "refda/adm/ietf_amm_semtype.h"
@@ -26,6 +27,7 @@
 #include "cace/util/defs.h"
 #include "cace/ari/text_util.h"
 #include "cace/ari/text.h"
+#include <cace/ari/macrofile.h>
 #include "cace/ari/time_util.h"
 #include "cace/ari/cbor.h"
 #include <sys/poll.h>
@@ -309,7 +311,6 @@ int main(int argc, char *argv[])
         refda_adm_ietf_network_base_init(&agent);
         refda_adm_ietf_dtnma_agent_init(&agent);
         refda_adm_ietf_dtnma_agent_acl_init(&agent);
-    }
 #if 0
   dtn_bp_agent_init();
   dtn_ion_ionadmin_init();
@@ -324,6 +325,7 @@ int main(int argc, char *argv[])
 //  dtn_bpsec_init();
 #endif
 #endif
+    }
 
     if (!retval)
     {
@@ -343,22 +345,15 @@ int main(int argc, char *argv[])
         {
             // Warn but continue on
             CACE_LOG_ERR("ADM reference binding failed for %d type references", failures);
+            retval = 2;
         }
         else
         {
             CACE_LOG_INFO("ADM reference binding succeeded");
         }
-
-        if (refda_agent_start(&agent))
-        {
-            CACE_LOG_ERR("Agent startup failed");
-            retval = 2;
-        }
-        else
-        {
-            CACE_LOG_INFO("Agent startup completed");
-        }
-
+    }
+    if (!retval)
+    {
         if (refda_agent_init_objs(&agent))
         {
             CACE_LOG_ERR("Agent object initialization failed");
@@ -369,28 +364,61 @@ int main(int argc, char *argv[])
             CACE_LOG_INFO("Agent object initialization completed");
         }
     }
-    CACE_LOG_INFO("READY");
-
     if (!retval)
     {
-        // stdio uses non-specific EIDs
-        if (refda_agent_send_hello(&agent, "data:stdio"))
+        if (refda_agent_start(&agent))
         {
-            CACE_LOG_ERR("Agent hello failed");
+            CACE_LOG_ERR("Agent startup failed");
+            retval = 2;
+        }
+        else
+        {
+            CACE_LOG_INFO("Agent startup completed");
+        }
+    }
+
+    CACE_LOG_INFO("READY");
+
+    if (!retval && !m_string_empty_p(startup_exec))
+    {
+#if defined(ARI_TEXT_PARSE)
+        CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(startup_exec));
+        FILE *startup_file = fopen(m_string_get_cstr(startup_exec), "r");
+        if (!startup_file)
+        {
             retval = 3;
         }
         else
         {
-            CACE_LOG_INFO("Sent hello report");
+            // synthesize macro
+            cace_ari_t     target = CACE_ARI_INIT_UNDEFINED;
+            cace_ari_ac_t *tgt_ac = cace_ari_set_ac(&target, NULL);
+
+            if (cace_ari_macrofile_read(startup_file, tgt_ac->items))
+            {
+                retval = 3;
+            }
+            fclose(startup_file);
+
+            if (refda_agent_startup_exec(&agent, &target))
+            {
+                retval = 3;
+            }
         }
+#else  // defined(ARI_TEXT_PARSE)
+        CACE_LOG_CRIT("This build of REFDA and CACE is not able to parse text ARIs");
+        retval = 3;
+#endif // defined(ARI_TEXT_PARSE)
     }
+    m_string_clear(startup_exec);
 
     if (!retval)
     {
         // Block until stopped
         cace_daemon_run_wait(&agent.running);
-        CACE_LOG_INFO("Agent is shutting down");
     }
+
+    CACE_LOG_INFO("Agent is shutting down");
 
     /* Join threads and wait for them to complete. */
     if (!retval)

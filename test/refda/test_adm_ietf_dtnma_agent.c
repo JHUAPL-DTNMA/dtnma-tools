@@ -21,7 +21,7 @@
 #include <refda/register.h>
 #include <refda/binding.h>
 #include <refda/valprod.h>
-#include <refda/exec.h>
+#include <refda/exec_proc.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_amm_base.h>
 #include <refda/adm/ietf_amm_semtype.h>
@@ -109,10 +109,10 @@ static void check_execute(const cace_ari_t *target)
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
 
-    int res = refda_exec_exp_target(&eseq, ctxptr, target);
+    int res = refda_exec_proc_expand(&eseq, ctxptr, target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_exec_exp_target() failed");
 
-    res = refda_exec_run_seq(&eseq);
+    res = refda_exec_proc_run(&eseq);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_exec_run_seq() failed");
 
     refda_exec_seq_deinit(&eseq);

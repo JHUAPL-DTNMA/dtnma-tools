@@ -19,7 +19,7 @@
 #include "util/agent.h"
 #include "util/runctx.h"
 #include <refda/ctrl_exec_ctx.h>
-#include <refda/exec.h>
+#include <refda/exec_proc.h>
 #include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -161,7 +161,7 @@ static void check_execute(const char *refhex, const char *outhex)
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));
     TEST_ASSERT_EQUAL_INT(0, cace_ari_set_copy(&mock_result_store, &outval));
 
-    refda_exec_run_seq(&eseq);
+    refda_exec_proc_run(&eseq);
 
 #if 0
     TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&outval, &(eitem.result)), "result value mismatch");

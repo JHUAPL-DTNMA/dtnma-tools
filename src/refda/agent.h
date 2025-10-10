@@ -88,7 +88,9 @@ typedef struct refda_agent_s
 
     /// Ingress EXECSET queue
     refda_msgdata_queue_t execs;
-    /// Semaphore for items in #execs
+    /// Startup state to disable use of #execs
+    atomic_bool execs_enable;
+    /// Semaphore for items in #execs and change of #execs_enable
     sem_t execs_sem;
 
     /// The next-to-use execution PID
@@ -103,15 +105,6 @@ typedef struct refda_agent_s
      * This is owned by the refda_exec_worker() thread.
      */
     refda_timeline_t exec_timeline;
-
-    /** Agent-directed completion queue.
-     * The refda_msgdata_t::ident will always be undefined, message values will be
-     * either RPTSET, indicating CTRL completion, or direct nonce values,
-     * indicating entire sequence completion.
-     */
-    refda_msgdata_queue_t self_rptgs;
-    /// Semaphore for items in #self_rptgs
-    sem_t self_rptgs_sem;
 
     /// Egress RPTSET queue
     refda_msgdata_queue_t rptgs;
@@ -193,17 +186,39 @@ int refda_agent_bindrefs(refda_agent_t *agent);
  */
 int refda_agent_init_objs(refda_agent_t *agent);
 
-int refda_agent_start(refda_agent_t *agent);
-
-int refda_agent_stop(refda_agent_t *agent);
-
-/** Send an initial "hello" message RPTSET for a standard agent report.
+/** Called to start worker threads.
  *
- * @param[in] agent The agent to send from.
- * @param[in] dest The destination endpoint.
+ * @param[in] agent The agent state.
  * @return Zero if successful.
  */
-int refda_agent_send_hello(refda_agent_t *agent, const char *dest);
+int refda_agent_start(refda_agent_t *agent);
+
+/** Called to join worker threads.
+ * This should be called after refda_agent_start().
+ *
+ * @param[in] agent The agent state.
+ * @return Zero if successful.
+ */
+int refda_agent_stop(refda_agent_t *agent);
+
+/** Queue a startup macro to be executed after worker threads are running.
+ *
+ * @pre This must be called after refda_agent_start().
+ * @param[in] agent The agent to send from.
+ * @param[in] target The target to execute.
+ * This object is moved from.
+ * @return Zero if successful.
+ */
+int refda_agent_startup_exec(refda_agent_t *agent, cace_ari_t *target);
+
+/** Enable ingress processing after work threads are started and all startup is completed.
+ *
+ * @pre This is called after all refda_agent_startup_exec() uses.
+ * @param[in] agent The agent to send from.
+ * @param[in] target The target to execute.
+ * This object is moved from.
+ */
+void refda_agent_enable_exec(refda_agent_t *agent);
 
 #ifdef __cplusplus
 } // extern C

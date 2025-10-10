@@ -25,6 +25,12 @@
 
 int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_ari_t *result)
 {
+    if (cace_ari_is_undefined(&runctx->mgr_ident))
+    {
+        // nothing to do
+        return 0;
+    }
+
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
     cace_ari_set_copy(&msg.ident, &runctx->mgr_ident);
@@ -41,17 +47,8 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_
     }
     CACE_LOG_DEBUG("generated an execution report");
 
-    if (cace_ari_is_undefined(&runctx->mgr_ident))
-    {
-        // Agent-directed execution
-        refda_msgdata_queue_push_move(runctx->agent->self_rptgs, &msg);
-        sem_post(&(runctx->agent->self_rptgs_sem));
-    }
-    else
-    {
-        refda_msgdata_queue_push_move(runctx->agent->rptgs, &msg);
-        sem_post(&(runctx->agent->rptgs_sem));
-    }
+    refda_msgdata_queue_push_move(runctx->agent->rptgs, &msg);
+    sem_post(&(runctx->agent->rptgs_sem));
 
     return 0;
 }

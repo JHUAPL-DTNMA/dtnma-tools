@@ -181,10 +181,11 @@ int cace_ari_params_copy(cace_ari_params_t *obj, const cace_ari_params_t *src);
  * @param[in,out] obj The state to modify, which must already be
  * initialized.
  * @param[in,out] src An optional existing value struct to move from.
+ * @return The new parameters.
  */
-void cace_ari_params_set_ac(cace_ari_params_t *obj, struct cace_ari_list_s *src);
+struct cace_ari_ac_s *cace_ari_params_set_ac(cace_ari_params_t *obj, struct cace_ari_list_s *src);
 /// @overload
-void cace_ari_params_set_am(cace_ari_params_t *obj, struct cace_ari_tree_s *src);
+struct cace_ari_am_s *cace_ari_params_set_am(cace_ari_params_t *obj, struct cace_ari_tree_s *src);
 
 /** Represent an object reference or namespace reference ARI in accordance with
  * @cite ietf-dtn-ari-06.

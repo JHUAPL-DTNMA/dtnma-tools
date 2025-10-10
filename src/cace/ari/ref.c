@@ -333,9 +333,9 @@ int cace_ari_params_copy(cace_ari_params_t *obj, const cace_ari_params_t *src)
     return 0;
 }
 
-void cace_ari_params_set_ac(cace_ari_params_t *obj, struct cace_ari_list_s *src)
+cace_ari_ac_t *cace_ari_params_set_ac(cace_ari_params_t *obj, struct cace_ari_list_s *src)
 {
-    CHKVOID(obj);
+    CHKNULL(obj);
     cace_ari_params_deinit(obj);
 
     cace_ari_ac_t *ctr = CACE_MALLOC(sizeof(cace_ari_ac_t));
@@ -343,13 +343,21 @@ void cace_ari_params_set_ac(cace_ari_params_t *obj, struct cace_ari_list_s *src)
     {
         obj->state = CACE_ARI_PARAMS_AC;
         obj->as_ac = ctr;
-        cace_ari_list_init_move(ctr->items, src);
+        if (src)
+        {
+            cace_ari_list_init_move(ctr->items, src);
+        }
+        else
+        {
+            cace_ari_list_init(ctr->items);
+        }
     }
+    return ctr;
 }
 
-void cace_ari_params_set_am(cace_ari_params_t *obj, struct cace_ari_tree_s *src)
+cace_ari_am_t *cace_ari_params_set_am(cace_ari_params_t *obj, struct cace_ari_tree_s *src)
 {
-    CHKVOID(obj);
+    CHKNULL(obj);
     cace_ari_params_deinit(obj);
 
     cace_ari_am_t *ctr = CACE_MALLOC(sizeof(cace_ari_am_t));
@@ -357,8 +365,16 @@ void cace_ari_params_set_am(cace_ari_params_t *obj, struct cace_ari_tree_s *src)
     {
         obj->state = CACE_ARI_PARAMS_AM;
         obj->as_am = ctr;
-        cace_ari_tree_init_move(ctr->items, src);
+        if (src)
+        {
+            cace_ari_tree_init_move(ctr->items, src);
+        }
+        else
+        {
+            cace_ari_tree_init(ctr->items);
+        }
     }
+    return ctr;
 }
 
 void cace_ari_ref_deinit(cace_ari_ref_t *obj)

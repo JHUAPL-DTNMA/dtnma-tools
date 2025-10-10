@@ -80,22 +80,15 @@ int main(int argc _U_, char *argv[] _U_)
         {
             // Warn but continue on
             CACE_LOG_ERR("ADM reference binding failed for %d type references", failures);
+            retval = 2;
         }
         else
         {
             CACE_LOG_INFO("ADM reference binding succeeded");
         }
-
-        if (refda_agent_start(&agent))
-        {
-            CACE_LOG_ERR("Agent startup failed");
-            retval = 2;
-        }
-        else
-        {
-            CACE_LOG_INFO("Agent startup completed");
-        }
-
+    }
+    if (!retval)
+    {
         if (refda_agent_init_objs(&agent))
         {
             CACE_LOG_ERR("Agent object initialization failed");
@@ -106,27 +99,29 @@ int main(int argc _U_, char *argv[] _U_)
             CACE_LOG_INFO("Agent object initialization completed");
         }
     }
-    CACE_LOG_INFO("READY");
-
     if (!retval)
     {
-        if (refda_agent_send_hello(&agent, "any"))
+        if (refda_agent_start(&agent))
         {
-            CACE_LOG_ERR("Agent hello failed");
-            retval = 3;
+            CACE_LOG_ERR("Agent startup failed");
+            retval = 2;
         }
         else
         {
-            CACE_LOG_INFO("Sent hello report");
+            CACE_LOG_INFO("Agent startup completed");
         }
     }
+
+    CACE_LOG_INFO("READY");
+    refda_agent_enable_exec(&agent);
 
     if (!retval)
     {
         // Block until stopped
         cace_daemon_run_wait(&agent.running);
-        CACE_LOG_INFO("Agent is shutting down");
     }
+
+    CACE_LOG_INFO("Agent is shutting down");
 
     /* Join threads and wait for them to complete. */
     if (!retval)

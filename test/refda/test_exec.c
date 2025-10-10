@@ -18,6 +18,7 @@
 #include "util/ari.h"
 #include "util/agent.h"
 #include <refda/exec.h>
+#include <refda/exec_proc.h>
 #include <refda/register.h>
 #include <refda/edd_prod_ctx.h>
 #include <refda/ctrl_exec_ctx.h>
@@ -232,7 +233,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
 
-    int res = refda_exec_exp_target(&eseq, ctxptr, target);
+    int res = refda_exec_proc_expand(&eseq, ctxptr, target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_exp, res, "refda_exec_exp_target() failed");
 
     bool success = false;
@@ -245,7 +246,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
     // limit test scale
     for (int ix = 0; !success && (ix < wait_limit); ++ix)
     {
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, refda_exec_run_seq(&eseq), "refda_exec_run_seq() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, refda_exec_proc_run(&eseq), "refda_exec_run_seq() failed");
 
         if (refda_exec_item_list_empty_p(eseq.items))
         {

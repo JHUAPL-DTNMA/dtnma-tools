@@ -20,6 +20,7 @@
 #define REFDA_EXEC_SEQ_H_
 
 #include "exec_item.h"
+#include "exec_status.h"
 #include "runctx.h"
 #include <m-deque.h>
 
@@ -49,6 +50,10 @@ typedef struct refda_exec_seq_s
      * front item.
      */
     refda_exec_item_list_t items;
+
+    /** Pointer to optional externally-owned finish state tracker.
+     */
+    refda_exec_status_t *status;
 
 } refda_exec_seq_t;
 

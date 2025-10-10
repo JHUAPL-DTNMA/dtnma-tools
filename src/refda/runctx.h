@@ -98,9 +98,8 @@ void refda_runctx_deinit(refda_runctx_t *ctx);
  * When this is provided, the refda_runctx_t::nonce and
  * refda_runctx_t::acl_groups fields are populated.
  * When absent, the nonce is always null and group zero (the Agent) is assumed.
- * @return Zero if successful.
  */
-int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
+void refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
 
 /** Verify the ACL cache is valid.
  */

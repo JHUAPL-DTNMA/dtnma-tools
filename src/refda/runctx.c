@@ -62,9 +62,9 @@ void refda_runctx_deinit(refda_runctx_t *ctx)
     ctx->agent = NULL;
 }
 
-int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg)
+void refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg)
 {
-    CHKERR1(ctx);
+    CHKVOID(ctx);
 
     ctx->agent = agent;
 
@@ -92,8 +92,6 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
 
     // Lookup ACL groups once now
     refda_runctx_check_acl(ctx);
-
-    return 0;
 }
 
 void refda_runctx_check_acl(refda_runctx_t *ctx)

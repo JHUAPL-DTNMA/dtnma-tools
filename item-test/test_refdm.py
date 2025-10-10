@@ -40,10 +40,11 @@ from helpers import CmdRunner, Timer, compose_args
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+logging.getLogger('ace').setLevel(logging.ERROR)
 
 ADMS = AdmSet(cache_dir=False)
 ''' ADM handling outside of tests '''
-logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
 ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
 
 ORIG_DB_HOST = os.environ.get('DB_HOST')
@@ -181,9 +182,6 @@ class BaseRefdm(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-        logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
-
         cls._sql_start()
 
     @classmethod

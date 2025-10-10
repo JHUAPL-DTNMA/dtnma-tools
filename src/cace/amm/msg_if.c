@@ -19,7 +19,6 @@
 
 void cace_amm_msg_if_metadata_init(cace_amm_msg_if_metadata_t *meta)
 {
-    meta->is_self = false;
     cace_ari_init(&meta->src);
     cace_ari_init(&meta->dest);
     cace_ari_init(&meta->timestamp);

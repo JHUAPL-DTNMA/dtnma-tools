@@ -48,6 +48,7 @@ void refda_agent_init(refda_agent_t *agent)
     pthread_mutex_init(&(agent->objs_mutex), NULL);
 
     refda_msgdata_queue_init(agent->execs, AGENT_QUEUE_SIZE);
+    atomic_store(&agent->execs_enable, false);
     sem_init(&(agent->execs_sem), 0, 0);
 
     agent->exec_next_pid = 1;
@@ -55,8 +56,6 @@ void refda_agent_init(refda_agent_t *agent)
     pthread_mutex_init(&(agent->exec_state_mutex), NULL);
     refda_timeline_init(agent->exec_timeline);
 
-    refda_msgdata_queue_init(agent->self_rptgs, AGENT_QUEUE_SIZE);
-    sem_init(&(agent->self_rptgs_sem), 0, 0);
     refda_msgdata_queue_init(agent->rptgs, AGENT_QUEUE_SIZE);
     sem_init(&(agent->rptgs_sem), 0, 0);
 }
@@ -65,8 +64,6 @@ void refda_agent_deinit(refda_agent_t *agent)
 {
     sem_destroy(&(agent->rptgs_sem));
     refda_msgdata_queue_clear(agent->rptgs);
-    sem_destroy(&(agent->self_rptgs_sem));
-    refda_msgdata_queue_clear(agent->self_rptgs);
 
     refda_timeline_clear(agent->exec_timeline);
     pthread_mutex_destroy(&(agent->exec_state_mutex));
@@ -74,6 +71,7 @@ void refda_agent_deinit(refda_agent_t *agent)
     agent->exec_next_pid = 0;
 
     sem_destroy(&(agent->execs_sem));
+    // ignore execs_enable
     refda_msgdata_queue_clear(agent->execs);
 
     pthread_mutex_destroy(&(agent->objs_mutex));
@@ -366,6 +364,9 @@ int refda_agent_stop(refda_agent_t *agent)
     CHKERR1(agent);
     CACE_LOG_INFO("Work threads stopping...");
 
+    // ensure this isn't blocking after startup failure
+    atomic_store(&agent->execs_enable, true);
+
     // If the ingress system has been overwritten, then the undefined message needs to be
     // pushed in to signal shutdown.
     if (agent->mif.recv == NULL)
@@ -386,41 +387,47 @@ int refda_agent_stop(refda_agent_t *agent)
     return 0;
 }
 
-int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
+int refda_agent_startup_exec(refda_agent_t *agent, cace_ari_t *target)
 {
-    cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
-    // ari:/ietf/dtnma-agent/CONST/hello
-    cace_ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CONST,
-                                   REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
-
-    cace_ari_t mgr_ident = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_tstr(&mgr_ident, dest, false);
-
-    refda_runctx_t runctx;
-    refda_runctx_init(&runctx);
+    CHKERR1(agent);
+    CHKERR1(target);
     int retval = 0;
 
-    int res = refda_runctx_from(&runctx, agent, NULL);
-    if (res)
+    refda_exec_status_t status;
+    refda_exec_status_init(&status);
+
+    refda_runctx_ptr_t ctxptr;
+    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, NULL);
+    CACE_LOG_DEBUG("Sending startup target");
+    if (refda_exec_add_target(ctxptr, target, &status))
     {
-        retval = 2;
+        CACE_LOG_ERR("Failed adding startup target");
+        retval = 3;
     }
+    refda_runctx_ptr_clear(ctxptr);
+    cace_ari_deinit(target);
 
     if (!retval)
     {
-        // always run as agent group
-        refda_acl_id_tree_push(runctx.acl_groups, 0);
-
-        res = refda_reporting_target(&runctx, &ref, &mgr_ident);
-        if (res)
+        bool failure = refda_exec_status_wait(&status);
+        if (failure)
         {
+            CACE_LOG_ERR("Failed executing startup target");
             retval = 3;
         }
+        else
+        {
+            CACE_LOG_INFO("Finished startup target");
+        }
     }
-
-    refda_runctx_deinit(&runctx);
-    cace_ari_deinit(&mgr_ident);
-    cace_ari_deinit(&ref);
-
+    refda_exec_status_deinit(&status);
     return retval;
+}
+
+void refda_agent_enable_exec(refda_agent_t *agent)
+{
+    CACE_LOG_INFO("Enabled execution ingress");
+    atomic_store(&agent->execs_enable, true);
+    sem_post(&agent->execs_sem);
 }

@@ -35,10 +35,10 @@ from helpers import CmdRunner, Timer, compose_args
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
+logging.getLogger('ace').setLevel(logging.ERROR)
 
 # ADM handling outside of tests
 ADMS = AdmSet(cache_dir=False)
-logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
 ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
 
 
@@ -50,11 +50,6 @@ def quote(text: str)->str:
 class TestRefdaSocket(unittest.TestCase):
     ''' Verify whole-agent behavior with the refda-socket '''
     maxDiff = None
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-        logging.getLogger('ace').setLevel(logging.ERROR)
 
     def setUp(self) -> None:
         tmp_kwargs = {}
@@ -79,7 +74,6 @@ class TestRefdaSocket(unittest.TestCase):
 
         startup_path = os.path.join(self._tmp.name, 'startup.uri')
         with open(startup_path, 'w') as startup_file:
-            mgr_eid = quote('"file:' + self._mgr_bind[0]['path'] + '"')
             startup_file.writelines([
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group(1,test-agents)\n',
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/ident/uri-regexp-pattern(%22file%3A.%2A%22)))\n',
@@ -87,14 +81,14 @@ class TestRefdaSocket(unittest.TestCase):
                 + '//ietf/dtnma-agent-acl/ident/execute,'
                 + '//ietf/dtnma-agent-acl/ident/produce'
                 + '))\n',
-                '//ietf/dtnma-agent/CTRL/report-on(//1/1/CONST/0,/ac/(' + mgr_eid + '))\n',
             ])
 
         args = compose_args([
             'refda-socket',
             '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
             '-s', startup_path,
-            '-a', self._agent_sock_path,
+            '-a', ('file:' + self._agent_sock_path),
+            '-m', ('file:' + self._mgr_bind[0]['path']),
         ])
         self._agent = CmdRunner(args)
 
@@ -465,7 +459,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual((1, 3), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         pid_col = list(rpt.items[0].value[:, 0])
-        self.assertListEqual([ari.typed_uvast(2)], pid_col)  # PID 1 is startup
+        self.assertListEqual([ari.typed_uvast(3)], pid_col)  # PID 1 and 2 is startup
 
         # two separate targets
         self._send_msg(
@@ -485,7 +479,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual((2, 3), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         pid_col = list(rpt.items[0].value[:, 0])
-        self.assertListEqual([ari.typed_uvast(3), ari.typed_uvast(4)], pid_col)
+        self.assertListEqual([ari.typed_uvast(4), ari.typed_uvast(5)], pid_col)
 
     def test_odm(self):
         self._start()
@@ -665,8 +659,6 @@ class TestRefdaSocket(unittest.TestCase):
 
     def test_odm_var_const(self):
         self._start()
-
-        LOGGER.setLevel(logging.INFO)
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm(ietf, 1, !test-model-1, -1))')]

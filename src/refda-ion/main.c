@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include "refda/agent.h"
-#include "refda/ingress.h"
+#include "refda/adm/ietf.h"
 #include "refda/adm/ietf_amm.h"
 #include "refda/adm/ietf_amm_base.h"
 #include "refda/adm/ietf_amm_semtype.h"
@@ -183,22 +183,15 @@ int main(int argc, char *argv[])
         {
             // Warn but continue on
             CACE_LOG_ERR("ADM reference binding failed for %d type references", failures);
+            retval = 2;
         }
         else
         {
             CACE_LOG_INFO("ADM reference binding succeeded");
         }
-
-        if (refda_agent_start(&agent))
-        {
-            CACE_LOG_ERR("Agent startup failed");
-            retval = 2;
-        }
-        else
-        {
-            CACE_LOG_INFO("Agent startup completed");
-        }
-
+    }
+    if (!retval)
+    {
         if (refda_agent_init_objs(&agent))
         {
             CACE_LOG_ERR("Agent object initialization failed");
@@ -207,6 +200,18 @@ int main(int argc, char *argv[])
         else
         {
             CACE_LOG_INFO("Agent object initialization completed");
+        }
+    }
+    if (!retval)
+    {
+        if (refda_agent_start(&agent))
+        {
+            CACE_LOG_ERR("Agent startup failed");
+            retval = 2;
+        }
+        else
+        {
+            CACE_LOG_INFO("Agent startup completed");
         }
     }
 
@@ -226,12 +231,9 @@ int main(int argc, char *argv[])
         }
         else
         {
-            // synthesize execset with one target
-            cace_ari_t run = CACE_ARI_INIT_UNDEFINED;
-
-            cace_ari_execset_t *execset = cace_ari_set_execset(&run);
-            cace_ari_set_uint(&execset->nonce, 1);
-            cace_ari_ac_t *tgt_ac = cace_ari_set_ac(cace_ari_list_push_back_new(execset->targets), NULL);
+            // synthesize macro
+            cace_ari_t     target = CACE_ARI_INIT_UNDEFINED;
+            cace_ari_ac_t *tgt_ac = cace_ari_set_ac(&target, NULL);
 
             if (cace_ari_macrofile_read(startup_file, tgt_ac->items))
             {
@@ -239,50 +241,10 @@ int main(int argc, char *argv[])
             }
             fclose(startup_file);
 
-            CACE_LOG_DEBUG("Waiting on startup execution");
-            refda_msgdata_t item;
-            refda_msgdata_init(&item);
-            cace_ari_set_move(&item.value, &run);
-
-            refda_msgdata_queue_push_move(agent.execs, &item);
-            sem_post(&agent.execs_sem);
-
-            while (true)
+            if (refda_agent_startup_exec(&agent, &target))
             {
-                sem_wait(&(agent.self_rptgs_sem));
-                if (!refda_msgdata_queue_pop(&item, agent.self_rptgs))
-                {
-                    // shouldn't happen
-                    CACE_LOG_CRIT("failed to pop from self_rptgs queue");
-                    retval = 3;
-                }
-                else
-                {
-                    cace_ari_rptset_t *rptset = cace_ari_get_rptset(&item.value);
-                    if (rptset)
-                    {
-                        const cace_ari_report_t *rpt = cace_ari_report_list_front(rptset->reports);
-                        if (cace_ari_is_undefined(cace_ari_list_front(rpt->items)))
-                        {
-                            CACE_LOG_ERR("startup execution failed");
-                            retval = 3;
-                        }
-                    }
-                    else
-                    {
-                        cace_ari_uint nonce = 0;
-                        if (cace_ari_get_uint(&item.value, &nonce) || (nonce != 1))
-                        {
-                            CACE_LOG_ERR("type or nonce mismatch, expected 1 got %u", nonce);
-                            retval = 3;
-                        }
-                        // finished with whole sequence
-                        break;
-                    }
-                    refda_msgdata_deinit(&item);
-                }
+                retval = 3;
             }
-            CACE_LOG_INFO("Finished startup execution");
         }
 #else  // defined(ARI_TEXT_PARSE)
         CACE_LOG_CRIT("This build of REFDA and CACE is not able to parse text ARIs");
@@ -293,29 +255,46 @@ int main(int argc, char *argv[])
 
     if (!retval && !m_string_empty_p(hello_eid))
     {
-        CACE_LOG_DEBUG("Sending hello report to %s", m_string_get_cstr(hello_eid));
-        if (refda_agent_send_hello(&agent, m_string_get_cstr(hello_eid)))
+        cace_ari_t      target = CACE_ARI_INIT_UNDEFINED;
+        // reference ari:/ietf/dtnma-agent/CTRL/report-on
+        cace_ari_ref_t *tgt_ref =
+            cace_ari_set_objref_path_intid(&target, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                           CACE_ARI_TYPE_CTRL, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_REPORT_ON);
+        cace_ari_ac_t *param_ac = cace_ari_params_set_ac(&tgt_ref->params, NULL);
         {
-            CACE_LOG_ERR("Agent hello failed");
-            retval = 3;
+            cace_ari_t *item = cace_ari_list_push_back_new(param_ac->items);
+            // reference ari:/ietf/dtnma-agent/CONST/hello
+            cace_ari_set_objref_path_intid(item, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                           CACE_ARI_TYPE_CONST, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
         }
-        else
         {
-            CACE_LOG_INFO("Sent hello report");
+            cace_ari_t *item = cace_ari_list_push_back_new(param_ac->items);
+            cace_ari_ac_t *item_ac = cace_ari_set_ac(item, NULL);
+            {
+                cace_ari_t *mgr_ident = cace_ari_list_push_back_new(item_ac->items);
+                cace_ari_set_tstr(mgr_ident, m_string_get_cstr(hello_eid), false);
+            }
+        }
+
+        if (refda_agent_startup_exec(&agent, &target))
+        {
+            retval = 3;
         }
     }
     m_string_clear(hello_eid);
+
+    refda_agent_enable_exec(&agent);
 
     if (!retval)
     {
         // Block until stopped
         cace_daemon_run_wait(&agent.running);
-        CACE_LOG_INFO("Agent is shutting down");
     }
 
 #if defined(HAVE_LIBSYSTEMD)
     sd_notify(0, "STOPPING=1");
 #endif
+    CACE_LOG_INFO("Agent is shutting down");
 
     /* Join threads and wait for them to complete. */
     if (!retval)
