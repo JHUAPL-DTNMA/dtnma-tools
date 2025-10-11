@@ -119,7 +119,7 @@ void cace_ari_tbl_deinit(cace_ari_tbl_t *obj);
 bool cace_ari_tbl_cmp(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right);
 bool cace_ari_tbl_equal(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right);
 
-/** Compute the nubmer of rows in this table.
+/** Compute the number of rows in this table.
  *
  * @param[in] obj The table to inspect.
  * @return The row count.
