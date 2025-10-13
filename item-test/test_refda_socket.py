@@ -795,3 +795,23 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
         self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        # attempt to create with an invalid type
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/-100),/AC/(//ietf/dtnma-agent/EDD/num-msg-rx)))', nn=False)]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
+
+        # attempt to create with an invalid value
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/RPTT),/AC/(10)))', nn=False)]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual([ari.UNDEFINED], rpt.items)

@@ -312,6 +312,14 @@ const cace_ari_objpath_t *cace_ari_cget_ref_objpath(const cace_ari_t *ari);
 
 /** Convenience setter.
  */
+static inline cace_ari_ref_t *cace_ari_set_nsref_path_intid(cace_ari_t *ari, cace_ari_int_id_t org_id,
+                                                            cace_ari_int_id_t model_id)
+{
+    cace_ari_ref_t *ref = cace_ari_set_objref(ari);
+    cace_ari_objpath_set_intid_opt(&(ref->objpath), &org_id, &model_id, NULL, NULL);
+    return ref;
+}
+/// @overload
 static inline cace_ari_ref_t *cace_ari_set_objref_path_intid(cace_ari_t *ari, cace_ari_int_id_t org_id,
                                                              cace_ari_int_id_t model_id, cace_ari_type_t type_id,
                                                              cace_ari_int_id_t obj_id)

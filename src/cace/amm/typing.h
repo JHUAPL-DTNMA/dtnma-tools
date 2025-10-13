@@ -66,8 +66,9 @@ void cace_amm_type_deinit(cace_amm_type_t *type);
 void cace_amm_type_reset(cace_amm_type_t *type);
 
 /// M*LIB OPLIST for the cace_amm_type_t
-#define M_OPL_cace_amm_type_t() \
-    (INIT(API_2(cace_amm_type_init)), CLEAR(API_2(cace_amm_type_deinit)), RESET(API_2(cace_amm_type_reset)))
+#define M_OPL_cace_amm_type_t()                                                                \
+    (INIT(API_2(cace_amm_type_init)), INIT_SET(0), CLEAR(API_2(cace_amm_type_deinit)), SET(0), \
+     RESET(API_2(cace_amm_type_reset)))
 
 /// Configuration for a built-in type
 struct cace_amm_type_builtin_s

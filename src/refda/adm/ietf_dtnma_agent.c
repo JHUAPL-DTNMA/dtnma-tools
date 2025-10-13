@@ -974,7 +974,7 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t 
  *
  * Produced type: TBLT with 3 columns:
  *   - Index 0, name "pid", type use of ari:/ARITYPE/UVAST
- *   - Index 1, name "target", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ *   - Index 1, name "target", type use of ari://ietf/amm-base/TYPEDEF/any
  *   - Index 2, name "state", type use of ari:/ARITYPE/BYTE
  */
 static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ctx)
@@ -1814,7 +1814,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx
  * Parameters list:
  *   - Index 0, name "ref", type use of ari://ietf/amm-base/TYPEDEF/VALUE-OBJ
  *
- * Result name "val", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ * Result name "val", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -2163,7 +2163,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
  *
  * Parameters list:
  *   - Index 0, name "target", type use of ari:/ARITYPE/VAR
- *   - Index 1, name "value", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ *   - Index 1, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result: none
  */
@@ -2235,7 +2235,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
  *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
  *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
  *   - Index 3, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
- *   - Index 4, name "value", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ *   - Index 4, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result: none
  */
@@ -2254,7 +2254,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
     refda_agent_t *agent = ctx->runctx->agent;
 
-    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    // ari_value can be undefined
+    if (!(cace_ari_not_undefined(ari_namespace) && cace_ari_not_undefined(ari_obj_name)
+          && cace_ari_not_undefined(ari_obj_enum) && cace_ari_not_undefined(ari_type)))
     {
         CACE_LOG_ERR("Invalid parameter, unable to continue");
         return;
@@ -2316,6 +2318,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
         }
     }
 
+    bool is_valid = true;
     if (cnst == NULL)
     {
         refda_amm_const_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
@@ -2330,34 +2333,60 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
             string_clear(buf);
         }
 
-        // recursively fetch type
-        if (!cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs))
+        // recursively fetch type and bind now so that match will work
+        if (cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs)
+            || refda_binding_typeobj(&(objdata->val_type), &agent->objs))
         {
             string_t buf;
             string_init(buf);
             cace_ari_text_encode(buf, ari_type, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_ERR("Failed lookup of type of %s from %s", obj_name, string_get_cstr(buf));
+            CACE_LOG_ERR("Failed lookup for type of %s from %s", obj_name, string_get_cstr(buf));
             string_clear(buf);
+
+            is_valid = false;
         }
 
-        // direct value
-        cace_ari_set_copy(&(objdata->value), ari_value);
-
-        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
-        m_string_set_cstr(*cnst_name, obj_name);
-
-        cace_amm_obj_desc_t *obj =
-            refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
-        int res = refda_binding_const(obj, &agent->objs);
-        if (res)
+        if (is_valid)
         {
-            CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
+            // check the given value against given type
+            int match = cace_amm_type_match(&(objdata->val_type), ari_value);
+            if (!((match == CACE_AMM_TYPE_MATCH_POSITIVE) || (match == CACE_AMM_TYPE_MATCH_UNDEFINED)))
+            {
+                string_t buf;
+                string_init(buf);
+                cace_ari_text_encode(buf, ari_value, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_ERR("Failed type match of VAR %s for value %s got %d", obj_name, string_get_cstr(buf), match);
+                string_clear(buf);
+
+                is_valid = false;
+            }
+        }
+
+        if (is_valid)
+        {
+            // direct value
+            cace_ari_set_copy(&(objdata->value), ari_value);
+
+            m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+            m_string_set_cstr(*cnst_name, obj_name);
+
+            cace_amm_obj_desc_t *obj =
+                refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
+            int res = refda_binding_const(obj, &agent->objs);
+            if (res)
+            {
+                CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
+                is_valid = false;
+            }
         }
     }
 
     REFDA_AGENT_UNLOCK(agent, );
 
-    refda_ctrl_exec_ctx_set_result_null(ctx);
+    if (is_valid)
+    {
+        refda_ctrl_exec_ctx_set_result_null(ctx);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
@@ -2440,7 +2469,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
  *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
  *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
  *   - Index 3, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
- *   - Index 4, name "init-value", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ *   - Index 4, name "init-value", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result: none
  */
@@ -2459,7 +2488,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
 
     refda_agent_t *agent = ctx->runctx->agent;
 
-    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    // ari_init can be undefined
+    if (!(cace_ari_not_undefined(ari_namespace) && cace_ari_not_undefined(ari_obj_name)
+          && cace_ari_not_undefined(ari_obj_enum) && cace_ari_not_undefined(ari_type)))
     {
         CACE_LOG_ERR("Invalid parameter, unable to continue");
         return;
@@ -2521,6 +2552,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
         }
     }
 
+    bool is_valid = true;
     if (var == NULL)
     {
         refda_amm_var_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_var_desc_t));
@@ -2535,35 +2567,61 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
             string_clear(buf);
         }
 
-        // recursively fetch type
-        if (!cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs))
+        // recursively fetch type and bind now so that match will work
+        if (cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs)
+            || refda_binding_typeobj(&(objdata->val_type), &agent->objs))
         {
             string_t buf;
             string_init(buf);
             cace_ari_text_encode(buf, ari_type, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
             CACE_LOG_ERR("Failed lookup for type of VAR %s from %s", obj_name, string_get_cstr(buf));
             string_clear(buf);
+
+            is_valid = false;
         }
 
-        // init value and state value
-        cace_ari_set_copy(&(objdata->init_val), ari_init);
-        cace_ari_set_copy(&(objdata->value), ari_init);
-
-        m_string_t *var_name = string_list_push_new(agent->odm_names);
-        m_string_set_cstr(*var_name, obj_name);
-
-        cace_amm_obj_desc_t *obj =
-            refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*var_name), obj_id), objdata);
-        int res = refda_binding_var(obj, &agent->objs);
-        if (res)
+        if (is_valid)
         {
-            CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
+            // check the given value against given type
+            int match = cace_amm_type_match(&(objdata->val_type), ari_init);
+            if (!((match == CACE_AMM_TYPE_MATCH_POSITIVE) || (match == CACE_AMM_TYPE_MATCH_UNDEFINED)))
+            {
+                string_t buf;
+                string_init(buf);
+                cace_ari_text_encode(buf, ari_init, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_ERR("Failed type match of VAR %s for value %s got %d", obj_name, string_get_cstr(buf), match);
+                string_clear(buf);
+
+                is_valid = false;
+            }
+        }
+
+        if (is_valid)
+        {
+            // init value and state value
+            cace_ari_set_copy(&(objdata->init_val), ari_init);
+            cace_ari_set_copy(&(objdata->value), ari_init);
+
+            m_string_t *var_name = string_list_push_new(agent->odm_names);
+            m_string_set_cstr(*var_name, obj_name);
+
+            cace_amm_obj_desc_t *obj =
+                refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*var_name), obj_id), objdata);
+            int res = refda_binding_var(obj, &agent->objs);
+            if (res)
+            {
+                CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
+                is_valid = false;
+            }
         }
     }
 
     REFDA_AGENT_UNLOCK(agent, );
 
-    refda_ctrl_exec_ctx_set_result_null(ctx);
+    if (is_valid)
+    {
+        refda_ctrl_exec_ctx_set_result_null(ctx);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
@@ -3396,7 +3454,7 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
 {
@@ -3425,7 +3483,7 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
 {
@@ -3454,7 +3512,7 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
 {
@@ -3483,7 +3541,7 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
 {
@@ -4371,7 +4429,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "target");
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                        // reference to ari://ietf/amm-base/TYPEDEF/any
                         cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                         cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
@@ -4988,7 +5046,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // result type
             {
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                // reference to ari://ietf/amm-base/TYPEDEF/any
                 cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
@@ -5163,7 +5221,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "value");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
@@ -5221,7 +5279,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "value");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
@@ -5300,7 +5358,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "init-value");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
@@ -5694,7 +5752,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -5704,7 +5762,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -5712,7 +5770,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // result type:
             {
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                // reference to ari://ietf/amm-base/TYPEDEF/any
                 cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
@@ -5733,7 +5791,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -5743,7 +5801,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -5751,7 +5809,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // result type:
             {
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                // reference to ari://ietf/amm-base/TYPEDEF/any
                 cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
@@ -5772,7 +5830,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -5782,7 +5840,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -5790,7 +5848,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // result type:
             {
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                // reference to ari://ietf/amm-base/TYPEDEF/any
                 cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
@@ -5812,7 +5870,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -5822,7 +5880,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -5830,7 +5888,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             // result type:
             {
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                // reference to ari://ietf/amm-base/TYPEDEF/any
                 cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
@@ -6190,7 +6248,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -6200,7 +6258,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -6230,7 +6288,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -6240,7 +6298,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 string_set_str(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/ANY
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }

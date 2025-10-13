@@ -251,8 +251,8 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
                         m_string_set_cstr(col->name, "name");
                         {
                             cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                            // use of ari:/ARITYPE/LABEL
-                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_LABEL);
+                            // reference to ari://ietf/amm-base/TYPEDEF/id-text
+                            cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 25);
                             cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                         }
                     }

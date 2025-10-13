@@ -99,7 +99,11 @@ static cace_amm_type_match_res_t cace_amm_semtype_use_match(const cace_amm_type_
     const cace_amm_semtype_use_t *semtype = self->as_semtype;
     CHKRET(semtype, CACE_AMM_TYPE_MATCH_NEGATIVE);
     const cace_amm_type_t *base = semtype->base;
-    CHKRET(base, CACE_AMM_TYPE_MATCH_NEGATIVE);
+    if (!base)
+    {
+        CACE_LOG_CRIT("Attempting match on unbound type use");
+        return CACE_AMM_TYPE_MATCH_NEGATIVE;
+    }
 
     cace_amm_type_match_res_t got = cace_amm_type_match(base, ari);
     if (got == CACE_AMM_TYPE_MATCH_NEGATIVE)
@@ -115,7 +119,11 @@ static int cace_amm_semtype_use_convert(const cace_amm_type_t *self, cace_ari_t 
     const cace_amm_semtype_use_t *semtype = self->as_semtype;
     CHKERR1(semtype);
     const cace_amm_type_t *base = semtype->base;
-    CHKERR1(base);
+    if (!base)
+    {
+        CACE_LOG_CRIT("Attempting convert on unbound type use");
+        return CACE_AMM_TYPE_MATCH_NEGATIVE;
+    }
 
     int res = cace_amm_type_convert(base, out, in);
     CHKERRVAL(res);
@@ -232,6 +240,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_ulist_match(const cace_amm_typ
     const struct cace_ari_ac_s *val = cace_ari_cget_ac(ari);
     if (!val)
     {
+        CACE_LOG_DEBUG("value is not an AC");
         return CACE_AMM_TYPE_MATCH_NEGATIVE;
     }
 
@@ -241,6 +250,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_ulist_match(const cace_amm_typ
     {
         if (valsize < semtype->size.i_min)
         {
+            CACE_LOG_DEBUG("AC size too small: %zu", valsize);
             return CACE_AMM_TYPE_MATCH_NEGATIVE;
         }
     }
@@ -248,6 +258,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_ulist_match(const cace_amm_typ
     {
         if (valsize > semtype->size.i_max)
         {
+            CACE_LOG_DEBUG("AC size too large: %zu", valsize);
             return CACE_AMM_TYPE_MATCH_NEGATIVE;
         }
     }
