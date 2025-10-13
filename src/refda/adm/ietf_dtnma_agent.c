@@ -2379,6 +2379,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
                 is_valid = false;
             }
         }
+        else
+        {
+            refda_amm_const_desc_deinit(objdata);
+            CACE_FREE(objdata);
+        }
     }
 
     REFDA_AGENT_UNLOCK(agent, );
@@ -2613,6 +2618,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
                 CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
                 is_valid = false;
             }
+        }
+        else
+        {
+            refda_amm_var_desc_deinit(objdata);
+            CACE_FREE(objdata);
         }
     }
 
