@@ -263,8 +263,9 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
         }
         {
             // if there are more items the first must be waiting
-            const refda_exec_item_t *item = refda_exec_item_list_front(eseq.items);
-            TEST_ASSERT_TRUE(atomic_load(&(item->execution_stage)) == REFDA_EXEC_WAITING);
+            refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(eseq.items);
+            const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
+            TEST_ASSERT_TRUE(atomic_load(&(front->execution_stage)) == REFDA_EXEC_WAITING);
         }
 
         TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));

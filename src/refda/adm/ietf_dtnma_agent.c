@@ -999,7 +999,8 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
             // intermediate state
             continue;
         }
-        const refda_exec_item_t *front = refda_exec_item_list_front(seq->items);
+        refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(seq->items);
+        const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
 
         cace_ari_array_t row;
         cace_ari_array_init(row);

@@ -105,8 +105,7 @@ void cace_log_event_deinit(cace_log_event_t *obj)
      INIT_MOVE(API_6(cace_log_event_init_move)), SET(API_6(cace_log_event_set)), CLEAR(API_2(cace_log_event_deinit)))
 
 /// @cond Doxygen_Suppress
-M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE,
-             M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
+M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_PUSH_INIT_POP_MOVE)
 /// @endcond
 
 /// Shared least severity

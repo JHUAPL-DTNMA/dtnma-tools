@@ -70,20 +70,20 @@ extern "C" {
 /** Define to override value/struct allocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_ALLOC(type) ((type *) CACE_MALLOC(sizeof(type)))
+#define M_MEMORY_ALLOC(ctx, type) ((type *) CACE_MALLOC(sizeof(type)))
 /** Define to override value/struct deallocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_DEL(ptr) CACE_FREE(ptr)
+#define M_MEMORY_DEL(ctx, ptr) CACE_FREE(ptr)
 
 /** Define to override array allocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? (type *) NULL : (type *) CACE_REALLOC((ptr), (n)*sizeof (type)))
+#define M_MEMORY_REALLOC(ctx, type, ptr, o, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? (type *) NULL : (type *) CACE_REALLOC((ptr), (n)*sizeof (type)))
 /** Define to override array deallocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_FREE(ptr) CACE_FREE(ptr)
+#define M_MEMORY_FREE(ctx, type, ptr, o) CACE_FREE(ptr)
 
 #ifdef __cplusplus
 } // extern C

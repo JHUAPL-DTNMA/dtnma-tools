@@ -22,7 +22,7 @@ void refda_exec_seq_init(refda_exec_seq_t *obj)
 {
     CHKVOID(obj);
     obj->runctx = refda_runctx_ptr_new();
-    obj->pid = 0;
+    obj->pid    = 0;
     refda_exec_item_list_init(obj->items);
 }
 

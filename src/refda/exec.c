@@ -83,7 +83,8 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
  */
 static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
 {
-    refda_exec_item_t *item = refda_exec_item_list_front(seq->items);
+    refda_exec_item_ptr_t **ptr  = refda_exec_item_list_front(seq->items);
+    refda_exec_item_t      *item = refda_exec_item_ptr_ref(*ptr);
     CHKERR1(item->deref.obj);
     refda_amm_ctrl_desc_t *ctrl = item->deref.obj->app_data.ptr;
     CHKERR1(ctrl);
@@ -124,7 +125,10 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
     int retval = 0;
     while (!refda_exec_item_list_empty_p(seq->items))
     {
-        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == REFDA_EXEC_WAITING)
+        refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(seq->items);
+        const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
+
+        if (atomic_load(&(front->execution_stage)) == REFDA_EXEC_WAITING)
         {
             // cannot complete at this time
             return 0;
@@ -170,7 +174,8 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
             case CACE_ARI_TYPE_CTRL:
             {
                 // expansion finished, execution comes later
-                refda_exec_item_t *item = refda_exec_item_list_push_back_new(seq->items);
+                refda_exec_item_ptr_t **ptr  = refda_exec_item_list_push_back_new(seq->items);
+                refda_exec_item_t      *item = refda_exec_item_ptr_ref(*ptr);
 
                 item->seq = seq;
                 cace_ari_set_copy(&(item->ref), target);
@@ -335,11 +340,16 @@ int refda_exec_waiting(refda_agent_t *agent)
         //
         // Do not remove completed item now because it will relocate seq in memory and cause
         // problems with pointers within items. We clean up after iterating.
-        if (!refda_exec_item_list_empty_p(seq->items)
-            && atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) != REFDA_EXEC_WAITING)
+        if (!refda_exec_item_list_empty_p(seq->items))
         {
-            CACE_LOG_DEBUG("pushing to ready");
-            refda_exec_seq_ptr_list_push_back(ready, seq);
+            refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(seq->items);
+            const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
+
+            if (atomic_load(&(front->execution_stage)) != REFDA_EXEC_WAITING)
+            {
+                CACE_LOG_DEBUG("pushing to ready");
+                refda_exec_seq_ptr_list_push_back(ready, seq);
+            }
         }
     }
 
