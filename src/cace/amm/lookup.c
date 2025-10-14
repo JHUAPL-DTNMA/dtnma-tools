@@ -130,7 +130,7 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
             res->obj = cace_amm_obj_ns_find_obj_enum(res->ns, path->ari_type, path->obj_id.as_int);
             break;
         case CACE_ARI_IDSEG_TEXT:
-            res->obj = cace_amm_obj_ns_find_obj_name(res->ns, path->ari_type, string_get_cstr(path->obj_id.as_text));
+            res->obj = cace_amm_obj_ns_find_obj_name(res->ns, path->ari_type, m_string_get_cstr(path->obj_id.as_text));
             break;
         default:
             break;

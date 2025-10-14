@@ -223,7 +223,7 @@ bool cace_amm_type_is_valid(const cace_amm_type_t *type);
  * An array of type structs.
  */
 /// @cond Doxygen_Suppress
-ARRAY_DEF(cace_amm_type_array, cace_amm_type_t)
+M_ARRAY_DEF(cace_amm_type_array, cace_amm_type_t)
 /// @endcond
 
 /** Get a human-friendly name for a type object.

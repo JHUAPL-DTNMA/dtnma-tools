@@ -131,9 +131,9 @@ void cace_ari_text_val_error(yyscan_t *scanner _U_, const cace_ari_text_val_t *i
         return;
     }
 
-    string_t str;
-    string_init(str);
-    string_cat_printf(str, "Parse error: %s", msg);
+    m_string_t str;
+    m_string_init(str);
+    m_string_cat_printf(str, "Parse error: %s", msg);
 
     *(input->errm) = m_string_clear_get_cstr(str);
 }

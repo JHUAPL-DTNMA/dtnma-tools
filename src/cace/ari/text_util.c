@@ -1052,7 +1052,7 @@ int cace_date_decode(struct tm *out, const cace_data_t *in)
     return retval;
 }
 
-int cace_utctime_encode(string_t out, const struct timespec *in, bool usesep)
+int cace_utctime_encode(m_string_t out, const struct timespec *in, bool usesep)
 {
     CHKERR1(out);
     CHKERR1(in);

@@ -128,7 +128,7 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
                 }
             }
         }
-        int res = snprintf(filepath, sizeof(filepath), "%s/%s%c%d.log", cfg->dir, string_get_cstr(eid_path_seg),
+        int res = snprintf(filepath, sizeof(filepath), "%s/%s%c%d.log", cfg->dir, m_string_get_cstr(eid_path_seg),
                            agent_autologging_sep, // Set to "/" to use separate directories per agent
                            agent->log_file_num);
         if (res >= (int)sizeof(filepath))
@@ -145,7 +145,8 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
             }
             else
             {
-                CACE_LOG_ERR("Failed to open report log file (%s) for agent %s", filepath, string_get_cstr(agent->eid));
+                CACE_LOG_ERR("Failed to open report log file (%s) for agent %s", filepath,
+                             m_string_get_cstr(agent->eid));
             }
         }
 

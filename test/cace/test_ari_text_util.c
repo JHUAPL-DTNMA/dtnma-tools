@@ -52,13 +52,13 @@ void test_cace_uri_percent_encode_valid(const char *text, const char *safe, cons
     cace_data_t in_text;
     cace_data_init_view(&in_text, strlen(text) + 1, (cace_data_ptr_t)text);
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_EQUAL_INT(0, cace_uri_percent_encode(out_text, &in_text, safe));
 
-    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
 
-    string_clear(out_text);
+    m_string_clear(out_text);
     cace_data_deinit(&in_text);
 }
 
@@ -71,13 +71,13 @@ void test_cace_uri_percent_decode_valid(const char *text, const char *expect)
     cace_data_t in_text;
     cace_data_init_view(&in_text, strlen(text) + 1, (cace_data_ptr_t)text);
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_EQUAL_INT(0, cace_uri_percent_decode(out_text, &in_text));
 
-    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
 
-    string_clear(out_text);
+    m_string_clear(out_text);
     cace_data_deinit(&in_text);
 }
 
@@ -88,10 +88,10 @@ void test_cace_uri_percent_decode_invalid(const char *text)
     cace_data_t in_data;
     cace_data_init_view(&in_data, strlen(text) + 1, (cace_data_ptr_t)text);
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_NOT_EQUAL_INT(0, cace_uri_percent_decode(out_text, &in_data));
-    string_clear(out_text);
+    m_string_clear(out_text);
     cace_data_deinit(&in_data);
 }
 
@@ -109,19 +109,19 @@ void test_cace_slash_escape_valid(const char *text, const char quote, const char
     cace_data_t in_text;
     cace_data_init_view(&in_text, strlen(text) + 1, (cace_data_ptr_t)text);
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_EQUAL_INT(0, cace_slash_escape(out_text, &in_text, quote));
 
     if (expect)
     {
-        TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
+        TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
     }
     else
     {
-        TEST_ASSERT_EQUAL_INT(0, string_size(out_text));
+        TEST_ASSERT_EQUAL_INT(0, m_string_size(out_text));
     }
-    string_clear(out_text);
+    m_string_clear(out_text);
     cace_data_deinit(&in_text);
 }
 
@@ -137,19 +137,19 @@ void test_cace_slash_unescape_valid(const char *text, const char *expect)
     cace_data_t in_text;
     cace_data_init_view(&in_text, strlen(text) + 1, (cace_data_ptr_t)text);
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_EQUAL_INT(0, cace_slash_unescape(out_text, &in_text));
 
     if (expect)
     {
-        TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
+        TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
     }
     else
     {
-        TEST_ASSERT_EQUAL_INT(0, string_size(out_text));
+        TEST_ASSERT_EQUAL_INT(0, m_string_size(out_text));
     }
-    string_clear(out_text);
+    m_string_clear(out_text);
     cace_data_deinit(&in_text);
 }
 
@@ -159,10 +159,10 @@ void test_cace_slash_unescape_invalid(const char *text)
     cace_data_t in_data;
     cace_data_init_view(&in_data, strlen(text) + 1, (cace_data_ptr_t)text);
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_NOT_EQUAL_INT(0, cace_slash_unescape(out_text, &in_data));
-    string_clear(out_text);
+    m_string_clear(out_text);
     cace_data_deinit(&in_data);
 }
 
@@ -173,12 +173,12 @@ void test_cace_base16_encode(const char *data, size_t data_len, bool uppercase, 
     cace_data_t src;
     cace_data_init_view(&src, data_len, (cace_data_ptr_t)data);
 
-    string_t out;
-    string_init(out);
+    m_string_t out;
+    m_string_init(out);
     TEST_ASSERT_EQUAL_INT(0, cace_base16_encode(out, &src, uppercase));
 
-    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out));
-    string_clear(out);
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out));
+    m_string_clear(out);
     cace_data_deinit(&src);
 }
 
@@ -187,8 +187,8 @@ TEST_CASE("00", "\x00", 1)
 TEST_CASE("6869", "hi", 2)
 void test_cace_base16_decode_valid(const char *text, const char *expect, size_t expect_len)
 {
-    string_t in_text;
-    string_init_set_str(in_text, text);
+    m_string_t in_text;
+    m_string_init_set_cstr(in_text, text);
     cace_data_t out_data;
     cace_data_init(&out_data);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_decode(&out_data, in_text), "cace_base16_decode() failed");
@@ -209,20 +209,20 @@ void test_cace_base16_decode_valid(const char *text, const char *expect, size_t 
         TEST_ASSERT_NULL(out_data.ptr);
     }
     cace_data_deinit(&out_data);
-    string_clear(in_text);
+    m_string_clear(in_text);
 }
 
 TEST_CASE("1")
 TEST_CASE("asd")
 void test_cace_base16_decode_invalid(const char *text)
 {
-    string_t in_text;
-    string_init_set_str(in_text, text);
+    m_string_t in_text;
+    m_string_init_set_cstr(in_text, text);
     cace_data_t out_data;
     cace_data_init(&out_data);
     TEST_ASSERT_NOT_EQUAL_INT(0, cace_base16_decode(&out_data, in_text));
     cace_data_deinit(&out_data);
-    string_clear(in_text);
+    m_string_clear(in_text);
 }
 
 // vectors from Section 10 of RFC 4648
@@ -248,12 +248,12 @@ void test_cace_base64_encode(const char *data, size_t data_len, bool useurl, boo
     cace_data_t src;
     cace_data_init_view(&src, data_len, (cace_data_ptr_t)data);
 
-    string_t out;
-    string_init(out);
+    m_string_t out;
+    m_string_init(out);
     TEST_ASSERT_EQUAL_INT(0, cace_base64_encode(out, &src, useurl, usepad));
 
-    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out));
-    string_clear(out);
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out));
+    m_string_clear(out);
     cace_data_deinit(&src);
 }
 
@@ -278,8 +278,8 @@ TEST_CASE("wQTEz7d3D_C-uqLpX7wsGA==", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\
 TEST_CASE("wQTEz7d3D_C-uqLpX7wsGA", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16)
 void test_cace_base64_decode_valid(const char *text, const char *expect, size_t expect_len)
 {
-    string_t in_text;
-    string_init_set_str(in_text, text);
+    m_string_t in_text;
+    m_string_init_set_cstr(in_text, text);
     cace_data_t out_data;
     cace_data_init(&out_data);
     TEST_ASSERT_EQUAL_INT(0, cace_base64_decode(&out_data, in_text));
@@ -300,7 +300,7 @@ void test_cace_base64_decode_valid(const char *text, const char *expect, size_t 
         TEST_ASSERT_NULL(out_data.ptr);
     }
     cace_data_deinit(&out_data);
-    string_clear(in_text);
+    m_string_clear(in_text);
 }
 
 TEST_CASE(".")
@@ -309,13 +309,13 @@ TEST_CASE("AB.")
 TEST_CASE("ABC.")
 void test_cace_base64_decode_invalid(const char *text)
 {
-    string_t in_text;
-    string_init_set_str(in_text, text);
+    m_string_t in_text;
+    m_string_init_set_cstr(in_text, text);
     cace_data_t out_data;
     cace_data_init(&out_data);
     TEST_ASSERT_NOT_EQUAL_INT(0, cace_base64_decode(&out_data, in_text));
     cace_data_deinit(&out_data);
-    string_clear(in_text);
+    m_string_clear(in_text);
 }
 
 // Integer parameters according to POSIX `struct tm`
@@ -325,12 +325,12 @@ void test_cace_date_encode_valid(int year, int mon, int mday, bool usesep, const
 {
     struct tm in = { .tm_year = year, .tm_mon = mon, .tm_mday = mday };
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_EQUAL_INT(0, cace_date_encode(out_text, &in, usesep));
-    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
 
-    string_clear(out_text);
+    m_string_clear(out_text);
 }
 TEST_CASE("2024-06-24", 124, 5, 24)
 TEST_CASE("20240624", 124, 5, 24)
@@ -372,12 +372,12 @@ void test_cace_utctime_encode_valid(time_t in_sec, long in_nsec, bool usesep, co
 {
     struct timespec in = { .tv_sec = in_sec, .tv_nsec = in_nsec };
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_EQUAL_INT(0, cace_utctime_encode(out_text, &in, usesep));
-    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
 
-    string_clear(out_text);
+    m_string_clear(out_text);
 }
 
 TEST_CASE("2000-01-01T00:00:20Z", 20, 0)
@@ -428,12 +428,12 @@ void test_cace_timeperiod_encode_valid(time_t in_sec, long in_nsec, const char *
 {
     struct timespec in = { .tv_sec = in_sec, .tv_nsec = in_nsec };
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_EQUAL_INT(0, cace_timeperiod_encode(out_text, &in));
-    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
 
-    string_clear(out_text);
+    m_string_clear(out_text);
 }
 
 TEST_CASE("PT", 0, 0)
@@ -488,11 +488,11 @@ TEST_CASE(1.1e6, 'e', "1.100000e+06")
 TEST_CASE(1.1e6, 'a', "0x1.0c8ep+20")
 void test_cace_ari_float64_encode(double in, char form, const char *expect)
 {
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_EQUAL_INT(0, cace_ari_float64_encode(out_text, in, form));
-    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
-    string_clear(out_text);
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
+    m_string_clear(out_text);
 }
 
 TEST_CASE(20, 0, "20")
@@ -505,12 +505,12 @@ void test_cace_decfrac_encode_valid(time_t in_sec, long in_nsec, const char *exp
 {
     struct timespec in = { .tv_sec = in_sec, .tv_nsec = in_nsec };
 
-    string_t out_text;
-    string_init(out_text);
+    m_string_t out_text;
+    m_string_init(out_text);
     TEST_ASSERT_EQUAL_INT(0, cace_decfrac_encode(out_text, &in));
-    TEST_ASSERT_EQUAL_STRING(expect, string_get_cstr(out_text));
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
 
-    string_clear(out_text);
+    m_string_clear(out_text);
 }
 
 TEST_CASE("20.0", 20, 0)

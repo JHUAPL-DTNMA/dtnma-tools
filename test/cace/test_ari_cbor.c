@@ -63,13 +63,13 @@ static void check_encoding(const cace_ari_t *ari, const char *expect_hex)
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_ari_cbor_encode(&buf, ari), "cace_ari_cbor_encode() failed");
 
-    string_t outhex;
-    string_init(outhex);
+    m_string_t outhex;
+    m_string_init(outhex);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_encode(outhex, &buf, true), "cace_ari_cbor_encode() failed");
 
-    TEST_ASSERT_EQUAL_STRING_MESSAGE(expect_hex, string_get_cstr(outhex), "Mismatch in encoded data");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(expect_hex, m_string_get_cstr(outhex), "Mismatch in encoded data");
 
-    string_clear(outhex);
+    m_string_clear(outhex);
     cace_data_deinit(&buf);
 }
 
@@ -225,12 +225,12 @@ void test_cace_ari_cbor_encode_objref_path_int(bool has_org, cace_ari_int_id_t o
 
 static void check_decoding(cace_ari_t *ari, const char *inhex)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
-    string_clear(intext);
+    m_string_clear(intext);
 
     const size_t inlen = indata.len;
     size_t       used;
@@ -643,12 +643,12 @@ TEST_CASE("8214841904d28519ffff01220c8af7f7f58214841904d28519ff2e01220c"
           "0d822582148419044060f97ef92b0440820960f97e008209f92b15")
 void test_cace_ari_cbor_decode_failure(const char *inhex)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
-    string_clear(intext);
+    m_string_clear(intext);
 
     const size_t inlen = indata.len;
     cace_ari_t   ari   = CACE_ARI_INIT_UNDEFINED;
@@ -669,12 +669,12 @@ void test_cace_ari_cbor_decode_failure(const char *inhex)
 TEST_CASE("0001") // too much data
 void test_cace_ari_cbor_decode_partial(const char *inhex)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
-    string_clear(intext);
+    m_string_clear(intext);
 
     const size_t inlen = indata.len;
     cace_ari_t   ari   = CACE_ARI_INIT_UNDEFINED;
@@ -704,12 +704,12 @@ TEST_CASE("8208FBC7EFFFFFE091FF3D") // ari:/REAL32/-3.40282347E+38
 TEST_CASE("8208FB47EFFFFFE091FF3D") // ari:/REAL32/3.40282347E+38
 void test_cace_ari_cbor_decode_invalid(const char *inhex)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, intext));
-    string_clear(intext);
+    m_string_clear(intext);
 
     const size_t inlen = indata.len;
     cace_ari_t   ari   = CACE_ARI_INIT_UNDEFINED;
@@ -791,12 +791,12 @@ TEST_CASE("820F410A")                                       // ari:/CBOR/h'0A'
 TEST_CASE("820F4BA164746573748203F94480")                   // ari:/CBOR/h'A164746573748203F94480'
 void test_cace_ari_cbor_loopback(const char *inhex)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_decode(&indata, intext), "cace_base16_decode() failed");
-    string_clear(intext);
+    m_string_clear(intext);
 
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
     int        res = cace_ari_cbor_decode(&ari, &indata, NULL, &errm);

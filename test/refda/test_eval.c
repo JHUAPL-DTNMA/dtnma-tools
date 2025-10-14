@@ -62,11 +62,11 @@ static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
     const cace_ari_t *param = refda_edd_prod_ctx_get_aparam_index(ctx, 0);
     CHKVOID(param);
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, param, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        TEST_PRINTF("EDD production with parameter %s", string_get_cstr(buf));
-        string_clear(buf);
+        TEST_PRINTF("EDD production with parameter %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     refda_edd_prod_ctx_set_result_copy(ctx, param);
 }
@@ -125,11 +125,11 @@ static void test_reporting_oper_add(refda_oper_eval_ctx_t *ctx)
 
     const cace_ari_t *more = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, more, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        TEST_PRINTF("OPER evaluation with parameter %s", string_get_cstr(buf));
-        string_clear(buf);
+        TEST_PRINTF("OPER evaluation with parameter %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     int        retval = 0;
@@ -241,12 +241,12 @@ void setUp(void)
             cace_amm_named_type_array_resize(objdata->operand_types, 2);
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
-                string_set_str(operand->name, "left");
+                m_string_set_cstr(operand->name, "left");
                 TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(operand->typeobj), CACE_ARI_TYPE_VAST));
             }
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
-                string_set_str(operand->name, "right");
+                m_string_set_cstr(operand->name, "right");
                 TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(operand->typeobj), CACE_ARI_TYPE_VAST));
             }
             TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_VAST));

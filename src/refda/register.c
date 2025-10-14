@@ -263,7 +263,7 @@ cace_amm_formal_param_t *refda_register_add_param(cace_amm_obj_desc_t *obj, cons
     cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj->fparams);
 
     fparam->index = new_idx;
-    string_set_str(fparam->name, name);
+    m_string_set_cstr(fparam->name, name);
 
     return fparam;
 }

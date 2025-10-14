@@ -175,7 +175,7 @@ static int agentsGetHandler(struct mg_connection *conn)
         const refdm_agent_t *agent = *refdm_agent_list_ref(agent_it);
 
         cJSON *agentObj = cJSON_CreateObject();
-        cJSON_AddStringToObject(agentObj, "name", string_get_cstr(agent->eid));
+        cJSON_AddStringToObject(agentObj, "name", m_string_get_cstr(agent->eid));
         {
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
             int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
@@ -184,7 +184,7 @@ static int agentsGetHandler(struct mg_connection *conn)
             int    ecode = refdm_db_fetch_rptset_count(idx, &count);
             if (ecode != RET_PASS)
             {
-                CACE_LOG_ERR("Failed to obtain RPTSET count for %s", string_get_cstr(agent->eid));
+                CACE_LOG_ERR("Failed to obtain RPTSET count for %s", m_string_get_cstr(agent->eid));
             }
             else
             {
@@ -348,11 +348,11 @@ static int agentParseHex(struct mg_connection *conn, cace_ari_list_t tosend)
             }
             if (cace_log_is_enabled_for(LOG_DEBUG))
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_ari_text_encode(buf, item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_DEBUG("decoded ARI as %s", string_get_cstr(buf));
-                string_clear(buf);
+                CACE_LOG_DEBUG("decoded ARI as %s", m_string_get_cstr(buf));
+                m_string_clear(buf);
             }
 
             if (!cace_ari_is_lit_typed(item, CACE_ARI_TYPE_EXECSET))
@@ -369,7 +369,7 @@ static int agentParseHex(struct mg_connection *conn, cace_ari_list_t tosend)
         }
 
         cace_data_deinit(&databuf);
-        string_clear(hexbuf);
+        m_string_clear(hexbuf);
     }
 
     m_bstring_clear(body);
@@ -436,7 +436,7 @@ static int agentParseText(struct mg_connection *conn, cace_ari_list_t tosend)
             curs += sep_len;
         }
 
-        string_clear(linebuf);
+        m_string_clear(linebuf);
     }
 
     m_bstring_clear(body);

@@ -33,7 +33,7 @@
 
 void refda_agent_init(refda_agent_t *agent)
 {
-    string_init(agent->agent_eid);
+    m_string_init(agent->agent_eid);
     cace_daemon_run_init(&(agent->running));
     refda_instr_init(&(agent->instr));
     cace_threadset_init(agent->threads);
@@ -74,7 +74,7 @@ void refda_agent_deinit(refda_agent_t *agent)
     refda_instr_deinit(&(agent->instr));
     cace_threadset_clear(agent->threads);
     cace_daemon_run_cleanup(&(agent->running));
-    string_clear(agent->agent_eid);
+    m_string_clear(agent->agent_eid);
 }
 
 /// Time of the DTN epoch (2000-01-01T00:00:00Z) in the POSIX clock

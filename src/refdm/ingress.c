@@ -72,12 +72,13 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
         pthread_mutex_lock(&agent->log_mutex);
         if (agent->log_fd && mgr->agent_log_cfg.rx_rpt)
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_INFO("Received value from %s with %s", string_get_cstr(agent->eid), string_get_cstr(buf));
-            fprintf(agent->log_fd, "Received value from %s with %s", string_get_cstr(agent->eid), string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_INFO("Received value from %s with %s", m_string_get_cstr(agent->eid), m_string_get_cstr(buf));
+            fprintf(agent->log_fd, "Received value from %s with %s", m_string_get_cstr(agent->eid),
+                    m_string_get_cstr(buf));
+            m_string_clear(buf);
 
             agent->log_fd_cnt++;
             wrote = true;
@@ -116,11 +117,11 @@ void *refdm_ingress_worker(void *arg)
 
         if (cace_log_is_enabled_for(LOG_INFO))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &meta.src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
             CACE_LOG_INFO("Message from %s has %zd ARIs", m_string_get_cstr(buf), cace_ari_list_size(values));
-            string_clear(buf);
+            m_string_clear(buf);
         }
 
         // Only handle text form endpoints

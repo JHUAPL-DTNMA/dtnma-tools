@@ -50,7 +50,7 @@ void suiteSetUp(void)
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj->fparams);
 
         fparam->index = 0;
-        string_set_str(fparam->name, "hi");
+        m_string_set_cstr(fparam->name, "hi");
 
         TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
     }
@@ -68,12 +68,12 @@ int suiteTearDown(int failures)
 
 static void check_lookup(const char *inhex, int expect_cbor_decode, int expect_res)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     int res = cace_base16_decode(&indata, intext);
-    string_clear(intext);
+    m_string_clear(intext);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_decode() failed");
 
     cace_ari_t inval = CACE_ARI_INIT_UNDEFINED;

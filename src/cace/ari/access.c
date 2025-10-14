@@ -564,7 +564,7 @@ void cace_ari_set_ac(cace_ari_t *ari, struct cace_ari_ac_s *src)
     CHKVOID(ari);
     cace_ari_deinit(ari);
 
-    cace_ari_ac_t *ctr = M_MEMORY_ALLOC(cace_ari_ac_t);
+    cace_ari_ac_t *ctr = CACE_MALLOC(sizeof(cace_ari_ac_t));
     cace_ari_ac_init(ctr);
     if (src)
     {
@@ -602,7 +602,7 @@ void cace_ari_set_am(cace_ari_t *ari, struct cace_ari_am_s *src)
     CHKVOID(ari);
     cace_ari_deinit(ari);
 
-    cace_ari_am_t *ctr = M_MEMORY_ALLOC(cace_ari_am_t);
+    cace_ari_am_t *ctr = CACE_MALLOC(sizeof(cace_ari_am_t));
     cace_ari_am_init(ctr);
     if (src)
     {
@@ -640,7 +640,7 @@ void cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src)
     CHKVOID(ari);
     cace_ari_deinit(ari);
 
-    cace_ari_tbl_t *ctr = M_MEMORY_ALLOC(cace_ari_tbl_t);
+    cace_ari_tbl_t *ctr = CACE_MALLOC(sizeof(cace_ari_tbl_t));
     cace_ari_tbl_init(ctr, 0, 0);
     if (src)
     {

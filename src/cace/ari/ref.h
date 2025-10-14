@@ -83,7 +83,7 @@ bool cace_ari_idseg_equal(const cace_ari_idseg_t *left, const cace_ari_idseg_t *
  * @param[out] obj The segment to initialize.
  * @param[in,out] text The text to take from and clear.
  */
-void cace_ari_idseg_init_text(cace_ari_idseg_t *obj, string_t text);
+void cace_ari_idseg_init_text(cace_ari_idseg_t *obj, m_string_t text);
 
 /** Derive an integer value if the segment contains text that matches an integer pattern.
  * @param[in,out] idset The object to update.

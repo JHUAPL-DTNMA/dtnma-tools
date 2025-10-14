@@ -186,11 +186,11 @@ int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_me
         const uint8_t *msg_begin = m_bstring_view(msgbuf, 0, msg_size);
 
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &meta->dest, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
             CACE_LOG_INFO("Sending proxy datagram with %zd octets to %s", msg_size, m_string_get_cstr(buf));
-            string_clear(buf);
+            m_string_clear(buf);
         }
 
         int flags = 0;
@@ -311,11 +311,11 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
 
             if (cace_log_is_enabled_for(LOG_INFO))
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_ari_text_encode(buf, &meta->src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                 CACE_LOG_INFO("Received proxy datagram with %zd octets to %s", got, m_string_get_cstr(buf));
-                string_clear(buf);
+                m_string_clear(buf);
             }
             // got valid message
             break;

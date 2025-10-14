@@ -31,6 +31,9 @@ extern "C" {
 // Forward declaration
 typedef struct refda_exec_seq_s refda_exec_seq_t;
 
+/** Possible execution states for a single CTRL item ::refda_exec_item_t.
+ * The final state of finished is when the item gets deleted.
+ */
 typedef enum
 {
     /**
@@ -93,20 +96,11 @@ void refda_exec_item_init(refda_exec_item_t *obj);
 
 /** Interface for M*LIB use.
  */
-void refda_exec_item_init_set(refda_exec_item_t *obj, const refda_exec_item_t *src);
-
-/** Interface for M*LIB use.
- */
 void refda_exec_item_deinit(refda_exec_item_t *obj);
 
-/** Interface for M*LIB use.
- */
-void refda_exec_item_set(refda_exec_item_t *obj, const refda_exec_item_t *src);
-
 /// M*LIB OPLIST for refda_exec_item_t
-#define M_OPL_refda_exec_item_t()                                                                                   \
-    (INIT(API_2(refda_exec_item_init)), INIT_SET(API_6(refda_exec_item_init_set)), SET(API_6(refda_exec_item_set)), \
-     CLEAR(API_2(refda_exec_item_deinit)))
+#define M_OPL_refda_exec_item_t() \
+    (INIT(API_2(refda_exec_item_init)), CLEAR(API_2(refda_exec_item_deinit)), INIT_SET(0), SET(0), INIT_SET(0), SET(0))
 
 #ifdef __cplusplus
 } // extern C

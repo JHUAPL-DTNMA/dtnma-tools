@@ -25,7 +25,7 @@ void cace_amm_formal_param_init(cace_amm_formal_param_t *obj)
     CHKVOID(obj);
     memset(obj, 0, sizeof(cace_amm_formal_param_t));
 
-    string_init(obj->name);
+    m_string_init(obj->name);
     cace_amm_type_init(&(obj->typeobj));
     obj->defval = CACE_ARI_INIT_UNDEFINED;
 }
@@ -35,7 +35,7 @@ void cace_amm_formal_param_deinit(cace_amm_formal_param_t *obj)
     CHKVOID(obj);
     cace_ari_deinit(&(obj->defval));
     cace_amm_type_deinit(&(obj->typeobj));
-    string_clear(obj->name);
+    m_string_clear(obj->name);
 
     memset(obj, 0, sizeof(cace_amm_formal_param_t));
 }
@@ -98,7 +98,7 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                 const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
 
                 cace_ari_t *aparam = cace_ari_array_get(obj->ordered, pix);
-                cace_named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
+                cace_named_ari_ptr_dict_set_at(obj->named, m_string_get_cstr(fparam->name), aparam);
 
                 // No given parameter, take default even if it is undefined value
                 cace_ari_set_copy(aparam, &(fparam->defval));
@@ -123,7 +123,8 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                  cace_amm_formal_param_list_next(fit), ++pix)
             {
                 const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
-                CACE_LOG_DEBUG("converting formal parameter #%d \"%s\"", fparam->index, string_get_cstr(fparam->name));
+                CACE_LOG_DEBUG("converting formal parameter #%d \"%s\"", fparam->index,
+                               m_string_get_cstr(fparam->name));
                 if (cace_log_is_enabled_for(LOG_DEBUG))
                 {
                     cace_ari_t ariname = CACE_ARI_INIT_UNDEFINED;
@@ -131,11 +132,11 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
 
                     if (valid)
                     {
-                        string_t buf;
-                        string_init(buf);
+                        m_string_t buf;
+                        m_string_init(buf);
                         cace_ari_text_encode(buf, &ariname, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                        CACE_LOG_DEBUG("  type %s", string_get_cstr(buf));
-                        string_clear(buf);
+                        CACE_LOG_DEBUG("  type %s", m_string_get_cstr(buf));
+                        m_string_clear(buf);
                     }
                     else
                     {
@@ -145,7 +146,7 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                 }
 
                 cace_ari_t *aparam = cace_ari_array_get(obj->ordered, pix);
-                cace_named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
+                cace_named_ari_ptr_dict_set_at(obj->named, m_string_get_cstr(fparam->name), aparam);
 
                 if (cace_ari_list_end_p(gparam_it))
                 {
@@ -158,11 +159,11 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                     const cace_ari_t *gparam = cace_ari_list_cref(gparam_it);
                     if (cace_log_is_enabled_for(LOG_DEBUG))
                     {
-                        string_t buf;
-                        string_init(buf);
+                        m_string_t buf;
+                        m_string_init(buf);
                         cace_ari_text_encode(buf, gparam, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                        CACE_LOG_DEBUG("  given parameter %s", string_get_cstr(buf));
-                        string_clear(buf);
+                        CACE_LOG_DEBUG("  given parameter %s", m_string_get_cstr(buf));
+                        m_string_clear(buf);
                     }
                     if (cace_amm_type_convert(&(fparam->typeobj), aparam, gparam))
                     {
@@ -172,11 +173,11 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                     }
                     if (cace_log_is_enabled_for(LOG_DEBUG))
                     {
-                        string_t buf;
-                        string_init(buf);
+                        m_string_t buf;
+                        m_string_init(buf);
                         cace_ari_text_encode(buf, aparam, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                        CACE_LOG_DEBUG("  actual parameter %s", string_get_cstr(buf));
-                        string_clear(buf);
+                        CACE_LOG_DEBUG("  actual parameter %s", m_string_get_cstr(buf));
+                        m_string_clear(buf);
                     }
 
                     cace_ari_list_next(gparam_it);
@@ -233,7 +234,7 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                 const cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_cref(fit);
 
                 cace_ari_t *aparam = cace_ari_array_get(obj->ordered, pix);
-                cace_named_ari_ptr_dict_set_at(obj->named, string_get_cstr(fparam->name), aparam);
+                cace_named_ari_ptr_dict_set_at(obj->named, m_string_get_cstr(fparam->name), aparam);
 
                 // try integer key
                 cace_ari_t key_uvast;
@@ -244,7 +245,7 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                 // try text key
                 cace_ari_t key_tstr;
                 cace_ari_init(&key_tstr);
-                cace_ari_set_tstr(&key_tstr, string_get_cstr(fparam->name), false);
+                cace_ari_set_tstr(&key_tstr, m_string_get_cstr(fparam->name), false);
                 const cace_ari_t *gparam_tstr = cace_ari_tree_cget(norm_map, key_tstr);
 
                 if (gparam_uvast && gparam_tstr)

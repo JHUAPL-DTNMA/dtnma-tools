@@ -157,11 +157,11 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const cace_ar
         {
             if (cace_log_is_enabled_for(LOG_DEBUG))
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_ari_text_encode(buf, &rpt_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_DEBUG("report item result %s", string_get_cstr(buf));
-                string_clear(buf);
+                CACE_LOG_DEBUG("report item result %s", m_string_get_cstr(buf));
+                m_string_clear(buf);
             }
         }
 
@@ -246,16 +246,16 @@ int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target, con
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t dest_buf;
-        string_init(dest_buf);
+        m_string_t dest_buf;
+        m_string_init(dest_buf);
         cace_ari_text_encode(dest_buf, destination, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("Reporting to %s for target %s", m_string_get_cstr(dest_buf), m_string_get_cstr(buf));
-        string_clear(buf);
-        string_clear(dest_buf);
+        m_string_clear(buf);
+        m_string_clear(dest_buf);
     }
 
     refda_reporting_ctx_t rptctx;
@@ -307,18 +307,18 @@ int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *destination, con
 
         if (cace_log_is_enabled_for(LOG_INFO))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
-            string_t mgr_buf;
-            string_init(mgr_buf);
+            m_string_t mgr_buf;
+            m_string_init(mgr_buf);
             cace_ari_text_encode(mgr_buf, &msg.ident, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
-            CACE_LOG_INFO("Generated a report destined to %s from source %s with %d items", string_get_cstr(mgr_buf),
-                          string_get_cstr(buf), cace_ari_list_size(rpt->items));
-            string_clear(mgr_buf);
-            string_clear(buf);
+            CACE_LOG_INFO("Generated a report destined to %s from source %s with %d items", m_string_get_cstr(mgr_buf),
+                          m_string_get_cstr(buf), cace_ari_list_size(rpt->items));
+            m_string_clear(mgr_buf);
+            m_string_clear(buf);
         }
     }
 

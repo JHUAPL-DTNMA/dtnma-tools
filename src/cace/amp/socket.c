@@ -127,11 +127,11 @@ int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
         }
         else
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &meta->dest, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
             CACE_LOG_ERR("This transport can only send to text URI destinations, not %s", m_string_get_cstr(buf));
-            string_clear(buf);
+            m_string_clear(buf);
 
             return 6;
         }

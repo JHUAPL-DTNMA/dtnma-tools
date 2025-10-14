@@ -22,7 +22,12 @@
 #ifndef REFDA_INSTR_H_
 #define REFDA_INSTR_H_
 
+#include <cace/config.h>
 #include <m-atomic.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Instrumentation counters for an Agent.
  */
@@ -55,5 +60,9 @@ void refda_instr_init(refda_instr_t *obj);
 /** Reset counters to zero.
  */
 void refda_instr_deinit(refda_instr_t *obj);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* REFDA_INSTR_H_ */

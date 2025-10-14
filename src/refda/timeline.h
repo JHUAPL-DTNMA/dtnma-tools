@@ -102,7 +102,7 @@ int refda_timeline_event_cmp(const refda_timeline_event_t *lt, const refda_timel
 #define M_OPL_refda_timeline_event_t() M_OPEXTEND(M_POD_OPLIST, CMP(API_6(refda_timeline_event_cmp)))
 
 /// @cond Doxygen_Suppress
-RBTREE_DEF(refda_timeline, refda_timeline_event_t)
+M_RBTREE_DEF(refda_timeline, refda_timeline_event_t)
 /// @endcond
 
 #ifdef __cplusplus

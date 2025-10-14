@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(sock_path, optarg);
+                        m_string_set_cstr(sock_path, optarg);
                         break;
                     case 'm':
                         m_string_printf(hello_eid, "file:%s", optarg);
@@ -112,8 +112,8 @@ int main(int argc, char *argv[])
 
     if (!retval)
     {
-        m_string_printf(agent.agent_eid, "file:%s", string_get_cstr(sock_path));
-        CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(agent.agent_eid));
+        m_string_printf(agent.agent_eid, "file:%s", m_string_get_cstr(sock_path));
+        CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(agent.agent_eid));
         agent.mif.send = cace_amp_socket_send;
         agent.mif.recv = cace_amp_socket_recv;
         agent.mif.ctx  = &sock;

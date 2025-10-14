@@ -35,11 +35,11 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
 {
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("execution finished with result %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("execution finished with result %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     const bool is_failure = cace_ari_is_undefined(&(item->result));
 
@@ -83,7 +83,8 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
  */
 static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
 {
-    refda_exec_item_t *item = refda_exec_item_list_front(seq->items);
+    refda_exec_item_ptr_t **ptr  = refda_exec_item_list_front(seq->items);
+    refda_exec_item_t      *item = refda_exec_item_ptr_ref(*ptr);
     CHKERR1(item->deref.obj);
     refda_amm_ctrl_desc_t *ctrl = item->deref.obj->app_data.ptr;
     CHKERR1(ctrl);
@@ -91,11 +92,11 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
 
     if (cace_log_is_enabled_for(LOG_INFO))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(item->ref), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Execution item %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("Execution item %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_PENDING)
     {
@@ -124,7 +125,10 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
     int retval = 0;
     while (!refda_exec_item_list_empty_p(seq->items))
     {
-        if (atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) == REFDA_EXEC_WAITING)
+        refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(seq->items);
+        const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
+
+        if (atomic_load(&(front->execution_stage)) == REFDA_EXEC_WAITING)
         {
             // cannot complete at this time
             return 0;
@@ -170,7 +174,8 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
             case CACE_ARI_TYPE_CTRL:
             {
                 // expansion finished, execution comes later
-                refda_exec_item_t *item = refda_exec_item_list_push_back_new(seq->items);
+                refda_exec_item_ptr_t **ptr  = refda_exec_item_list_push_back_new(seq->items);
+                refda_exec_item_t      *item = refda_exec_item_ptr_ref(*ptr);
 
                 item->seq = seq;
                 cace_ari_set_copy(&(item->ref), target);
@@ -262,28 +267,28 @@ static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, co
     return retval;
 }
 
-int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const cace_ari_t *target)
+int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t *runctxp, const cace_ari_t *target)
 {
     CHKERR1(target);
     refda_runctx_t *runctx = refda_runctx_ptr_ref(runctxp);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
-        string_t mgr_buf;
-        string_init(mgr_buf);
+        m_string_t mgr_buf;
+        m_string_init(mgr_buf);
         cace_ari_text_encode(mgr_buf, &runctx->mgr_ident, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
         CACE_LOG_DEBUG("Expanding PID %" PRIu64 " target %s from manager %s", seq->pid, m_string_get_cstr(buf),
                        m_string_get_cstr(mgr_buf));
-        string_clear(mgr_buf);
-        string_clear(buf);
+        m_string_clear(mgr_buf);
+        m_string_clear(buf);
     }
 
-    refda_runctx_ptr_set(seq->runctx, runctxp);
+    refda_runctx_ptr_set(&seq->runctx, runctxp);
 
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
@@ -335,11 +340,16 @@ int refda_exec_waiting(refda_agent_t *agent)
         //
         // Do not remove completed item now because it will relocate seq in memory and cause
         // problems with pointers within items. We clean up after iterating.
-        if (!refda_exec_item_list_empty_p(seq->items)
-            && atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) != REFDA_EXEC_WAITING)
+        if (!refda_exec_item_list_empty_p(seq->items))
         {
-            CACE_LOG_DEBUG("pushing to ready");
-            refda_exec_seq_ptr_list_push_back(ready, seq);
+            refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(seq->items);
+            const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
+
+            if (atomic_load(&(front->execution_stage)) != REFDA_EXEC_WAITING)
+            {
+                CACE_LOG_DEBUG("pushing to ready");
+                refda_exec_seq_ptr_list_push_back(ready, seq);
+            }
         }
     }
 
@@ -382,8 +392,7 @@ static int refda_exec_exp_execset(refda_agent_t *agent, const refda_msgdata_t *m
     CHKERR1(agent);
     CHKERR1(msg);
 
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
 
     if (refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, msg))
     {
@@ -453,11 +462,11 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
 
             struct timespec diff = timespec_sub(next->ts, nowtime);
 
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_timeperiod_encode(buf, &diff);
-            CACE_LOG_DEBUG("waiting for exec event or %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("waiting for exec event or %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         sem_timedwait(&(agent->execs_sem), &(next->ts));
@@ -554,8 +563,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
  */
 static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *action)
 {
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
 
     refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
 
@@ -564,7 +572,7 @@ static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, c
         return 2;
     }
 
-    refda_runctx_ptr_set(seq->runctx, ctxptr);
+    refda_runctx_ptr_set(&seq->runctx, ctxptr);
 
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
