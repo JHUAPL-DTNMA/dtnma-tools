@@ -71,8 +71,8 @@ static void cace_log_event_init_set(cace_log_event_t *obj, const cace_log_event_
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_init_set(obj->context, src->context);
-    string_init_set(obj->message, src->message);
+    m_string_init_set(obj->context, src->context);
+    m_string_init_set(obj->message, src->message);
 }
 
 static void cace_log_event_init_move(cace_log_event_t *obj, cace_log_event_t *src)
@@ -80,8 +80,8 @@ static void cace_log_event_init_move(cace_log_event_t *obj, cace_log_event_t *sr
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_init_move(obj->context, src->context);
-    string_init_move(obj->message, src->message);
+    m_string_init_move(obj->context, src->context);
+    m_string_init_move(obj->message, src->message);
 }
 
 static void cace_log_event_set(cace_log_event_t *obj, const cace_log_event_t *src)
@@ -89,8 +89,8 @@ static void cace_log_event_set(cace_log_event_t *obj, const cace_log_event_t *sr
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_set(obj->context, src->context);
-    string_set(obj->message, src->message);
+    m_string_set(obj->context, src->context);
+    m_string_set(obj->message, src->message);
 }
 
 void cace_log_event_deinit(cace_log_event_t *obj)

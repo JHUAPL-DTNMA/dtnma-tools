@@ -35,11 +35,11 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
 {
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("execution finished with result %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("execution finished with result %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     const bool is_failure = cace_ari_is_undefined(&(item->result));
 
@@ -92,11 +92,11 @@ static int refda_exec_ctrl_start(refda_exec_seq_t *seq)
 
     if (cace_log_is_enabled_for(LOG_INFO))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(item->ref), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Execution item %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("Execution item %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_PENDING)
     {
@@ -274,18 +274,18 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t *runctxp, co
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
-        string_t mgr_buf;
-        string_init(mgr_buf);
+        m_string_t mgr_buf;
+        m_string_init(mgr_buf);
         cace_ari_text_encode(mgr_buf, &runctx->mgr_ident, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
         CACE_LOG_DEBUG("Expanding PID %" PRIu64 " target %s from manager %s", seq->pid, m_string_get_cstr(buf),
                        m_string_get_cstr(mgr_buf));
-        string_clear(mgr_buf);
-        string_clear(buf);
+        m_string_clear(mgr_buf);
+        m_string_clear(buf);
     }
 
     refda_runctx_ptr_set(&seq->runctx, runctxp);
@@ -462,11 +462,11 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
 
             struct timespec diff = timespec_sub(next->ts, nowtime);
 
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_timeperiod_encode(buf, &diff);
-            CACE_LOG_DEBUG("waiting for exec event or %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("waiting for exec event or %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         sem_timedwait(&(agent->execs_sem), &(next->ts));

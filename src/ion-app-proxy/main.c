@@ -297,12 +297,12 @@ static void *bp_send_worker(void *ctx _U_)
                 }
                 else
                 {
-                    string_t buf;
-                    string_init(buf);
+                    m_string_t buf;
+                    m_string_init(buf);
                     cace_ari_text_encode(buf, &item->peer, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                     CACE_LOG_ERR("This transport can only send to text URI destinations, not %s",
                                  m_string_get_cstr(buf));
-                    string_clear(buf);
+                    m_string_clear(buf);
 
                     result = 4;
                 }

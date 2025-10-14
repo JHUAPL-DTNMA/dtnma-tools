@@ -90,11 +90,11 @@ static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
     const cace_ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     CHKVOID(val)
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        TEST_PRINTF("execution with parameter %s", string_get_cstr(buf));
-        string_clear(buf);
+        TEST_PRINTF("execution with parameter %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     // record this execution
@@ -226,11 +226,11 @@ static void suite_adms_init(refda_agent_t *agent)
 static void check_execute(const cace_ari_t *target, int expect_exp, int wait_limit, int wait_ms[])
 {
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        TEST_PRINTF("execution target %s", string_get_cstr(buf));
-        string_clear(buf);
+        TEST_PRINTF("execution target %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
@@ -282,11 +282,11 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
             struct timespec remain = timespec_sub(next->ts, nowtime);
 
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_timeperiod_encode(buf, &remain);
-                CACE_LOG_DEBUG("remaining time %s", string_get_cstr(buf));
-                string_clear(buf);
+                CACE_LOG_DEBUG("remaining time %s", m_string_get_cstr(buf));
+                m_string_clear(buf);
             }
 
             // absolute difference within 20ms of expected
@@ -384,13 +384,13 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
         const bool equal = cace_ari_equal(cace_ari_list_cref(expect_it), cace_ari_list_cref(got_it));
         if (!equal)
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, cace_ari_list_cref(expect_it), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            TEST_PRINTF("exec_log expect %s", string_get_cstr(buf));
+            TEST_PRINTF("exec_log expect %s", m_string_get_cstr(buf));
             cace_ari_text_encode(buf, cace_ari_list_cref(got_it), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            TEST_PRINTF("exec_log item %s", string_get_cstr(buf));
-            string_clear(buf);
+            TEST_PRINTF("exec_log item %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
         TEST_ASSERT_TRUE_MESSAGE(equal, "exec_log item is different");
     }

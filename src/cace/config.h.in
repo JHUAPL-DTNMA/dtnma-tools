@@ -65,7 +65,7 @@ extern "C" {
 
 /** Force the use of M_ prefixed macros for M*LIB
  */
-//#define M_USE_SMALL_NAME 0
+#define M_USE_SMALL_NAME 0
 
 /** Define to override value/struct allocation.
  * See m-core.h for details.

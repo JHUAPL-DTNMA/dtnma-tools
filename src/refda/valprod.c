@@ -35,11 +35,11 @@ static int refda_valprod_const_run(const refda_amm_const_desc_t *obj, refda_valp
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(ctx->value), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("production finished with value %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     return 0;
@@ -55,11 +55,11 @@ static int refda_valprod_var_run(const refda_amm_var_desc_t *obj, refda_valprod_
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(ctx->value), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("production finished with value %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     return 0;
@@ -79,11 +79,11 @@ static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(prodctx->value), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("production finished with value %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("production finished with value %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     return 0;
@@ -116,11 +116,11 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, ctx->ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("production for object %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("production for object %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     int retval = 0;

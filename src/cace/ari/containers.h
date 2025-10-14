@@ -66,7 +66,7 @@ extern "C" {
 // GCOV_EXCL_START
 M_DEQUE_DEF(cace_ari_list, cace_ari_t)
 M_DICT_DEF2(cace_ari_dict, cace_ari_t, M_OPL_cace_ari_t(), cace_ari_t, M_OPL_cace_ari_t())
-M_DICT_DEF2(cace_named_ari_dict, string_t, M_STRING_OPLIST, cace_ari_t, M_OPL_cace_ari_t())
+M_DICT_DEF2(cace_named_ari_dict, m_string_t, M_STRING_OPLIST, cace_ari_t, M_OPL_cace_ari_t())
 M_BPTREE_DEF2(cace_ari_tree, 4, cace_ari_t, M_OPL_cace_ari_t(), cace_ari_t, M_OPL_cace_ari_t())
 M_ARRAY_DEF(cace_ari_array, cace_ari_t)
 M_ARRAY_DEF(cace_ari_ptr_array, cace_ari_t *, M_PTR_OPLIST)

@@ -33,7 +33,7 @@ extern "C" {
 #endif
 
 /// @cond Doxygen_Suppress
-ARRAY_DEF(cace_amm_semtype_cnst_array, cace_amm_semtype_cnst_t)
+M_ARRAY_DEF(cace_amm_semtype_cnst_array, cace_amm_semtype_cnst_t)
 /// @endcond
 
 /// Configuration for an augmented use of another type

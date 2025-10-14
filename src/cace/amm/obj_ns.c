@@ -62,11 +62,11 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, cace_ari_typ
         cace_ari_objpath_set_textid(&(cace_ari_set_objref(&ref)->objpath), m_string_get_cstr(ns->org_id.name),
                                     m_string_get_cstr(ns->model_id.name), obj_type, obj_id.name);
 
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("registering object at %s", m_string_get_cstr(buf));
-        string_clear(buf);
+        m_string_clear(buf);
 
         cace_ari_deinit(&ref);
     }
@@ -93,7 +93,7 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, cace_ari_typ
     cace_amm_obj_desc_t      *obj = cace_amm_obj_desc_ptr_ref(*ptr);
     cace_amm_idseg_val_set_fromref(&obj->obj_id, &obj_id);
 
-    cace_amm_obj_desc_by_name_set_at(ctr->obj_by_name, string_get_cstr(obj->obj_id.name), obj);
+    cace_amm_obj_desc_by_name_set_at(ctr->obj_by_name, m_string_get_cstr(obj->obj_id.name), obj);
     if (obj->obj_id.has_intenum)
     {
         cace_amm_obj_desc_by_enum_set_at(ctr->obj_by_enum, obj->obj_id.intenum, obj);

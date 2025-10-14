@@ -45,11 +45,11 @@ static cace_ari_t mock_result_store;
 static void mock_ctrl_exec_none(refda_ctrl_exec_ctx_t *ctx)
 {
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &mock_result_store, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("execution with mock result %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("execution with mock result %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     refda_ctrl_exec_ctx_set_result_copy(ctx, &mock_result_store);
 }
@@ -59,11 +59,11 @@ static void mock_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
     const cace_ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     CHKVOID(val)
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("execution with parameter %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("execution with parameter %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     refda_ctrl_exec_ctx_set_result_copy(ctx, val);
 }
@@ -175,7 +175,7 @@ void test_ctrl_execute_param_one_int(const char *refhex, const char *outhex)
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(fparams);
 
         fparam->index = 0;
-        string_set_str(fparam->name, "hi");
+        m_string_set_cstr(fparam->name, "hi");
 
         TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
         cace_ari_set_int(&(fparam->defval), 3); // arbitrary default

@@ -50,7 +50,7 @@ void cace_amm_named_type_deinit(cace_amm_named_type_t *obj);
  * An array of cace_amm_named_type_t instances.
  */
 /// @cond Doxygen_Suppress
-ARRAY_DEF(cace_amm_named_type_array, cace_amm_named_type_t)
+M_ARRAY_DEF(cace_amm_named_type_array, cace_amm_named_type_t)
 /// @endcond
 
 #ifdef __cplusplus

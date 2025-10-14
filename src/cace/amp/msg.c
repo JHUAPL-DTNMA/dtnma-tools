@@ -39,11 +39,11 @@ int cace_amp_msg_encode(m_bstring_t msgbuf, const cace_ari_list_t items)
 
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("encoding ARI item: %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("encoding ARI item: %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         if (cace_ari_cbor_encode(&outbin, item))
@@ -133,11 +133,11 @@ int cace_amp_msg_decode(cace_ari_list_t items, const uint8_t *msgbuf_ptr, size_t
 
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("decoded ARI item: %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("decoded ARI item: %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         cace_ari_list_push_back_move(items, &item);

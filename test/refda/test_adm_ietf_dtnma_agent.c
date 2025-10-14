@@ -153,7 +153,7 @@ void test_refda_adm_ietf_dtnma_agent_edd_produce(const char *targethex, int expe
     {
         m_string_t buf;
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_encode(buf, &(prodctx.value)));
-        TEST_PRINTF("Produced value %s", string_get_cstr(buf));
+        TEST_PRINTF("Produced value %s", m_string_get_cstr(buf));
         m_string_clear(buf);
     }
     TEST_ASSERT_FALSE(prodctx.value.is_ref);

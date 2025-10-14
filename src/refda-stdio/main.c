@@ -56,18 +56,18 @@ static int stdout_send(const cace_ari_list_t data, const cace_amm_msg_if_metadat
             retval = 3;
         }
 
-        string_t outhex;
-        string_init(outhex);
+        m_string_t outhex;
+        m_string_init(outhex);
         if (cace_base16_encode(outhex, &outbin, true))
         {
             CACE_LOG_ERR("Failed to base-16 encode ARI");
             retval = 4;
         }
-        CACE_LOG_DEBUG("encoded ARI item to base-16: %s", string_get_cstr(outhex));
+        CACE_LOG_DEBUG("encoded ARI item to base-16: %s", m_string_get_cstr(outhex));
 
         if (!retval)
         {
-            if (fputs(string_get_cstr(outhex), stdout) <= 0)
+            if (fputs(m_string_get_cstr(outhex), stdout) <= 0)
             {
                 retval = 2;
             }
@@ -78,7 +78,7 @@ static int stdout_send(const cace_ari_list_t data, const cace_amm_msg_if_metadat
             }
         }
 
-        string_clear(outhex);
+        m_string_clear(outhex);
         cace_data_deinit(&outbin);
     }
 
@@ -166,8 +166,8 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
                         plen -= 2;
                     }
 
-                    string_t inhex;
-                    string_init(inhex);
+                    m_string_t inhex;
+                    m_string_init(inhex);
                     m_string_set_cstrn(inhex, curs, plen);
                     CACE_LOG_DEBUG("decoding ARI item from base-16: %s", m_string_get_cstr(inhex));
 
@@ -199,11 +199,11 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
                     {
                         if (cace_log_is_enabled_for(LOG_DEBUG))
                         {
-                            string_t buf;
-                            string_init(buf);
+                            m_string_t buf;
+                            m_string_init(buf);
                             cace_ari_text_encode(buf, &item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                            CACE_LOG_DEBUG("decoded ARI item: %s", string_get_cstr(buf));
-                            string_clear(buf);
+                            CACE_LOG_DEBUG("decoded ARI item: %s", m_string_get_cstr(buf));
+                            m_string_clear(buf);
                         }
 
                         cace_ari_list_push_back_move(data, &item);
@@ -214,7 +214,7 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
                     }
 
                     cace_data_deinit(&inbin);
-                    string_clear(inhex);
+                    m_string_clear(inhex);
 
                     curs += plen;
                 }
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(agent.agent_eid, optarg);
+                        m_string_set_cstr(agent.agent_eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
 
     if (!retval)
     {
-        CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(agent.agent_eid));
+        CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(agent.agent_eid));
         agent.mif.send = stdout_send;
         agent.mif.recv = stdin_recv;
     }

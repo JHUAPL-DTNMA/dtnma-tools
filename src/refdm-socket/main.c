@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(sock_path, optarg);
+                        m_string_set_cstr(sock_path, optarg);
                         break;
                     case 'h':
                     default:
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
     if (!retval)
     {
-        CACE_LOG_DEBUG("Running as endpoint file:%s", string_get_cstr(sock_path));
+        CACE_LOG_DEBUG("Running as endpoint file:%s", m_string_get_cstr(sock_path));
         mgr.mif.send = cace_amp_socket_send;
         mgr.mif.recv = cace_amp_socket_recv;
         mgr.mif.ctx  = &sock;

@@ -71,11 +71,11 @@ static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
     const cace_ari_t *param = refda_edd_prod_ctx_get_aparam_index(ctx, 0);
     CHKVOID(param)
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, param, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        TEST_PRINTF("EDD production with parameter %s", string_get_cstr(buf));
-        string_clear(buf);
+        TEST_PRINTF("EDD production with parameter %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     refda_edd_prod_ctx_set_result_copy(ctx, param);
 }

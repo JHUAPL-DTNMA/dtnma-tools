@@ -985,7 +985,7 @@ static cace_amm_type_t cace_amm_builtins[] = {
 
 #ifdef ENABLE_LUT_CACHE
 
-DICT_DEF2(cace_amm_type_lookup, cace_ari_type_t, M_BASIC_OPLIST, const cace_amm_type_t *, M_PTR_OPLIST)
+M_DICT_DEF2(cace_amm_type_lookup, cace_ari_type_t, M_BASIC_OPLIST, const cace_amm_type_t *, M_PTR_OPLIST)
 
 /// Cached type dictionary
 static cace_amm_type_lookup_t cace_amm_builtin_dict;

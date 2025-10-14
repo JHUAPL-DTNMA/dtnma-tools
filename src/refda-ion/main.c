@@ -77,10 +77,10 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(own_eid, optarg);
+                        m_string_set_cstr(own_eid, optarg);
                         break;
                     case 'm':
-                        string_set_str(hello_eid, optarg);
+                        m_string_set_cstr(hello_eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
     if (!retval)
     {
         m_string_set(agent.agent_eid, own_eid);
-        CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(agent.agent_eid));
+        CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(agent.agent_eid));
         agent.mif.send = cace_amp_ion_bp_send;
         agent.mif.recv = cace_amp_ion_bp_recv;
         agent.mif.ctx  = &app;

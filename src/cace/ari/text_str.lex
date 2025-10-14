@@ -12,7 +12,7 @@
 #include "cace/util/defs.h"
 #include <stdio.h>
 
-static int cace_ari_valseg_decode(string_t out, const char *in, size_t inlen);
+static int cace_ari_valseg_decode(m_string_t out, const char *in, size_t inlen);
 %}
 
 /* This is the same as RFC 3986 'segment-nz' production with some excluded
@@ -83,7 +83,7 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
     // Literal type ID, match leading and trailing slash also
     cace_ari_idseg_t typeid;
     {
-        string_t decoded;
+        m_string_t decoded;
         if (cace_ari_valseg_decode(decoded, yytext + 1, yyleng - 3))
         {
             cace_ari_text_str_error(yyscanner, yyextra, "TYPE-ID segment failed to percent-decode");
@@ -101,7 +101,7 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
         break;
     case CACE_ARI_IDSEG_TEXT:
     {
-        int res = cace_ari_type_from_name(&(yylval->ari_type), string_get_cstr(typeid.as_text));
+        int res = cace_ari_type_from_name(&(yylval->ari_type), m_string_get_cstr(typeid.as_text));
         if (res)
         {
             cace_ari_idseg_deinit(&typeid);
@@ -140,8 +140,8 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
     const char *text_begin = yytext;
     const size_t text_len = yyleng;
 
-    string_t *value = &(yylval->text);
-    string_init(*value);
+    m_string_t *value = &(yylval->text);
+    m_string_init(*value);
     if (text_len > 0)
     {
         cace_data_t text_view;
@@ -180,15 +180,15 @@ void cace_ari_text_str_free(void *ptr, yyscan_t yyscanner _U_)
     CACE_FREE(ptr);
 }
 
-static int cace_ari_valseg_decode(string_t out, const char *in, size_t inlen)
+static int cace_ari_valseg_decode(m_string_t out, const char *in, size_t inlen)
 {
     cace_data_t text_view;
     cace_data_init_view(&text_view, inlen + 1, (cace_data_ptr_t)in);
 
-    string_init(out);
+    m_string_init(out);
     if (cace_uri_percent_decode(out, &text_view))
     {
-        string_clear(out);
+        m_string_clear(out);
         return 2;
     }
     return 0;

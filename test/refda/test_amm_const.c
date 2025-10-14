@@ -119,7 +119,7 @@ void test_const_produce_param_one_int(const char *valhex, const char *refhex, co
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj.fparams);
 
         fparam->index = 0;
-        string_set_str(fparam->name, "hi");
+        m_string_set_cstr(fparam->name, "hi");
 
         TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
     }
