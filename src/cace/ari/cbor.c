@@ -939,6 +939,13 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *enc, const cace_ari_t *ari)
 
             switch (obj->ari_type)
             {
+                case CACE_ARI_TYPE_LABEL:
+                case CACE_ARI_TYPE_ARITYPE:
+                    if (cace_ari_cbor_encode_primval(enc, obj))
+                    {
+                        return 2;
+                    }
+                    break;
                 case CACE_ARI_TYPE_AC:
                     if (cace_ari_cbor_encode_ac(enc, obj->value.as_ac))
                     {
@@ -1186,6 +1193,7 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
                     }
                     break;
                 case CACE_ARI_TYPE_LABEL:
+                case CACE_ARI_TYPE_ARITYPE:
                     if (cace_ari_cbor_decode_label(dec, obj))
                     {
                         retval = 3;

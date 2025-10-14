@@ -124,11 +124,10 @@ void *refdm_ingress_worker(void *arg)
         }
 
         // Only handle text form endpoints
-        const cace_data_t *tstr = cace_ari_cget_tstr(&meta.src);
+        const char *eid = cace_ari_cget_tstr_cstr(&meta.src);
 
-        if (!cace_ari_list_empty_p(values) && tstr)
+        if (!cace_ari_list_empty_p(values) && eid)
         {
-            const char *eid = (const char *)tstr->ptr;
             CACE_LOG_DEBUG("Recording reports from agent at %s", eid);
 
             // might be unknown and NULL

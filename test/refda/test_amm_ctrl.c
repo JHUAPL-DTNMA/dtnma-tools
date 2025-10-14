@@ -95,7 +95,7 @@ static void check_execute(cace_ari_t *result, const refda_amm_ctrl_desc_t *ctrl,
 
     cace_ari_t outval = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));
-    TEST_ASSERT_EQUAL_INT(0, cace_ari_set_copy(&mock_result_store, &outval));
+    cace_ari_set_copy(&mock_result_store, &outval);
 
     eitem.deref.obj_type = CACE_ARI_TYPE_CTRL;
     eitem.deref.obj      = &obj;
@@ -112,7 +112,7 @@ static void check_execute(cace_ari_t *result, const refda_amm_ctrl_desc_t *ctrl,
     if (result)
     {
         // move out result value
-        TEST_ASSERT_EQUAL_INT(0, cace_ari_set_move(result, &(eitem.result)));
+        cace_ari_set_move(result, &(eitem.result));
     }
 
     refda_exec_item_deinit(&eitem);
