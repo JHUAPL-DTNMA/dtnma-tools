@@ -337,6 +337,77 @@ class TestRefdaSocket(unittest.TestCase):
         # items of the report
         self.assertEqual([ari.LiteralARI(None)], rpt.items)
 
+    def test_exec_report_on_variations(self):
+        self._start()
+
+        # macro to configure preconditions:
+        #  ../!odm/const/rptt-two contains RPTT with two counter items
+        #  ../!odm/const/expr contains EXPR resolving to one counter
+        #  ../!odm/var/rptt-sum contains EXPR resolving to one counter
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(/ac/('
+                + '//ietf/dtnma-agent/CTRL/ensure-odm(ietf,1,!odm,-1),'
+                + '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,rptt-two,1,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)),'
+                + '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,expr-sum,2,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/expr),/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)),'
+                + '//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!odm,rptt-sum,3,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(//ietf/!odm/const/expr-sum))'
+                + '))',
+                nn=False
+            )]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=4)
+        self.assertEqual(4, len(rpts))
+
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=null;('
+                + '//ietf/dtnma-agent/CTRL/report-on(/ac/(undefined,//ietf/dtnma-agent/EDD/num-msg-rx-failed)),'
+                + '//ietf/dtnma-agent/CTRL/report-on(/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)),'
+                + '//ietf/dtnma-agent/CTRL/report-on(//ietf/!odm/const/rptt-two),'
+                + '//ietf/dtnma-agent/CTRL/report-on(/ac/(//ietf/!odm/const/expr-sum)),'
+                + '//ietf/dtnma-agent/CTRL/report-on(//ietf/!odm/var/rptt-sum)'
+                + ')',
+                nn=False
+            )]
+        )
+
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=5)
+        self.assertEqual(5, len(rpts))
+
+        rpt = rpts.pop(0)
+        self.assertEqual(
+            self._ari_text_to_obj('/ac/(undefined,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'),
+            rpt.source
+        )
+        self.assertEqual(2, len(rpt.items))
+        self.assertEqual(ari.UNDEFINED, rpt.items[0])
+        self.assertIsInstance(rpt.items[1].value, int)
+
+        rpt = rpts.pop(0)
+        self.assertEqual(
+            self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'),
+            rpt.source
+        )
+        self.assertEqual(2, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, int)
+        self.assertIsInstance(rpt.items[1].value, int)
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/const/rptt-two', nn=False), rpt.source)
+        self.assertEqual(2, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, int)
+        self.assertIsInstance(rpt.items[1].value, int)
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/!odm/const/expr-sum)', nn=False), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        # self.assertIsInstance(rpt.items[0].value, int)
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/var/rptt-sum', nn=False), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, int)
+
     def test_exec_delayed(self):
         self._start()
 
