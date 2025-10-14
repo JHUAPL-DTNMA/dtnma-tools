@@ -141,32 +141,32 @@ void cace_ari_reset(cace_ari_t *ari)
     cace_ari_state_reset(ari);
 }
 
-int cace_ari_set_copy(cace_ari_t *ari, const cace_ari_t *src)
+void cace_ari_set_copy(cace_ari_t *ari, const cace_ari_t *src)
 {
-    CHKERR1(ari);
-    CHKERR1(src);
+    CHKVOID(ari);
+    CHKVOID(src);
     if (ari == src)
     {
-        return 0;
+        // nothing to do
+        return;
     }
 
     cace_ari_deinit_parts(ari);
     cace_ari_copy_deep(ari, src);
-    return 0;
 }
 
-int cace_ari_set_move(cace_ari_t *ari, cace_ari_t *src)
+void cace_ari_set_move(cace_ari_t *ari, cace_ari_t *src)
 {
-    CHKERR1(ari);
-    CHKERR1(src);
+    CHKVOID(ari);
+    CHKVOID(src);
     if (ari == src)
     {
-        return 0;
+        // nothing to do
+        return;
     }
 
     cace_ari_deinit_parts(ari);
     cace_ari_copy_shallow(ari, src);
     // reset the state of the src (not deinit)
     cace_ari_state_reset(src);
-    return 0;
 }

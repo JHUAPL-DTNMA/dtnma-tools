@@ -142,7 +142,7 @@ cace_ari_ref_t *cace_ari_set_objref(cace_ari_t *ari);
  * @param[in,out] ari The ARI to modify. The previous value is de-initialized prior to copy.
  * @param src The source to deep copy from.
  */
-int cace_ari_set_copy(cace_ari_t *ari, const cace_ari_t *src);
+void cace_ari_set_copy(cace_ari_t *ari, const cace_ari_t *src);
 
 /** Move an ARI value into another ARI.
  *
@@ -150,7 +150,7 @@ int cace_ari_set_copy(cace_ari_t *ari, const cace_ari_t *src);
  * @param[in,out] src The source to move from and reset.
  * @post Source ARI is left as the undefined value.
  */
-int cace_ari_set_move(cace_ari_t *ari, cace_ari_t *src);
+void cace_ari_set_move(cace_ari_t *ari, cace_ari_t *src);
 
 #ifdef __cplusplus
 }
