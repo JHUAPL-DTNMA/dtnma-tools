@@ -147,7 +147,10 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
     }
 
 #ifdef USE_CIVETWEB
-    refdm_nm_rest_start(&(mgr->rest), mgr);
+    if (refdm_nm_rest_start(&(mgr->rest), mgr))
+    {
+        return 3;
+    }
 #endif
 
     return 0;

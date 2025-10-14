@@ -101,8 +101,7 @@ int main(int argc, char *argv[])
 
     if (!retval)
     {
-        m_string_printf(mgr.own_eid, "file:%s", string_get_cstr(sock_path));
-        CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(mgr.own_eid));
+        CACE_LOG_DEBUG("Running as endpoint file:%s", string_get_cstr(sock_path));
         mgr.mif.send = cace_amp_socket_send;
         mgr.mif.recv = cace_amp_socket_recv;
         mgr.mif.ctx  = &sock;

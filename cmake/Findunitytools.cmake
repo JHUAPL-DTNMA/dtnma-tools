@@ -46,9 +46,9 @@ function(add_unity_test)
     set(UNITYTEST_TARGET "${BASENAME}")
   endif()
   
-  set(GEN_PARAMS "--use_param_tests=1")
+  set(EXTRA_ARGS "--use_param_tests=1")
   if(UNITYTEST_MAIN_NAME)
-      list(APPEND GEN_PARAMS "--main_name=${MAIN_NAME}")
+      list(APPEND EXTRA_ARGS "--main_name=${MAIN_NAME}")
   endif()
   
   message(STATUS "Adding unit test ${UNITYTEST_TARGET} from ${ABSOLUTE_SOURCE}")
@@ -57,10 +57,11 @@ function(add_unity_test)
   add_custom_command(
     OUTPUT "${RUNNER_FILE}"
     DEPENDS "${ABSOLUTE_SOURCE}"
-    COMMAND ${RUBY_BIN} ${UNITY_GENERATOR_BIN} "${ABSOLUTE_SOURCE}" "${RUNNER_FILE}" ${GEN_PARAMS}
+    COMMAND ${RUBY_BIN} ${UNITY_GENERATOR_BIN} "${ABSOLUTE_SOURCE}" "${RUNNER_FILE}" ${EXTRA_ARGS}
   )
   add_executable(${BASENAME} ${UNITYTEST_SOURCE} ${RUNNER_FILE})
-  target_compile_definitions(${BASENAME} PRIVATE 
+  target_compile_definitions(${BASENAME} PRIVATE
+    UNITY_USE_COMMAND_LINE_ARGS
     UNITY_INCLUDE_PRINT_FORMATTED
     UNITY_INCLUDE_FLOAT
     UNITY_INCLUDE_DOUBLE
