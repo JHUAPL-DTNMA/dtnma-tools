@@ -53,32 +53,10 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_
     return 0;
 }
 
-/** Require any literal to be an EXPR and evaluate the expression.
- */
-static int refda_reporting_item_lit(refda_runctx_t *parent, cace_ari_t *rpt_item, const cace_ari_t *rptt_item)
-{
-    int retval = 0;
-    if (CACE_AMM_TYPE_MATCH_POSITIVE != cace_amm_type_match(parent->agent->expr_type, rptt_item))
-    {
-        CACE_LOG_WARNING("Attempted reporting on a non-EXPR literal");
-        retval = REFDA_REPORTING_ERR_BAD_TYPE;
-    }
-    else
-    {
-        CACE_LOG_DEBUG("Reporting on item literal");
-        if (refda_eval_target(parent, rpt_item, rptt_item))
-        {
-            cace_ari_reset(rpt_item);
-            retval = REFDA_REPORTING_ERR_EVAL_FAILED;
-        }
-    }
-    return retval;
-}
-
 /** Treat any object reference as a value-producing activity, with the
  * produced value reported on directly.
  */
-static int refda_reporting_item_ref(refda_runctx_t *runctx, cace_ari_t *rpt_item, const cace_ari_t *rptt_item)
+static int refda_reporting_item_ref(refda_runctx_t *runctx, cace_ari_t *prod_val, const cace_ari_t *rptt_item)
 {
     CACE_LOG_DEBUG("Reporting on item reference");
     int retval = 0;
@@ -107,7 +85,7 @@ static int refda_reporting_item_ref(refda_runctx_t *runctx, cace_ari_t *rpt_item
                 if (!retval)
                 {
                     // include the produced value directly
-                    cace_ari_set_copy(rpt_item, &(prodctx.value));
+                    cace_ari_set_move(prod_val, &(prodctx.value));
                 }
                 refda_valprod_ctx_deinit(&prodctx);
                 break;
@@ -133,37 +111,59 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const cace_ar
     for (cace_ari_list_it(rptt_it, tgt_ac->items); !cace_ari_list_end_p(rptt_it); cace_ari_list_next(rptt_it))
     {
         const cace_ari_t *rptt_item = cace_ari_list_cref(rptt_it);
-        cace_ari_t        rpt_item  = CACE_ARI_INIT_UNDEFINED;
 
-        int res = 0;
+        // intermediate item from the template
+        cace_ari_t inter_item = CACE_ARI_INIT_UNDEFINED;
         if (rptt_item->is_ref)
         {
-            // item is a reference to be produced
-            res = refda_reporting_item_ref(rptctx->runctx, &rpt_item, rptt_item);
-        }
-        else
-        {
-            // item is an expression to be evaluated
-            res = refda_reporting_item_lit(rptctx->runctx, &rpt_item, rptt_item);
-        }
-
-        if (res)
-        {
-            // failures in individual items result in undefined value
-            CACE_LOG_WARNING("reporting failed for a single item with result %d", res);
-            cace_ari_reset(&rpt_item);
-        }
-        else
-        {
-            if (cace_log_is_enabled_for(LOG_DEBUG))
+            // item is a reference to be produced, then possibly evaluated
+            if (refda_reporting_item_ref(rptctx->runctx, &inter_item, rptt_item))
             {
-                string_t buf;
-                string_init(buf);
-                cace_ari_text_encode(buf, &rpt_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_DEBUG("report item result %s", string_get_cstr(buf));
-                string_clear(buf);
+                // failures in individual items result in undefined value
+                CACE_LOG_WARNING("failed to dereference item");
+                cace_ari_reset(&inter_item);
             }
         }
+        else
+        {
+            // just use the template item
+            cace_ari_set_copy(&inter_item, rptt_item);
+        }
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            string_t buf;
+            string_init(buf);
+            cace_ari_text_encode(buf, &inter_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("intermediate item %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+
+        cace_ari_t rpt_item = CACE_ARI_INIT_UNDEFINED;
+        if (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(rptctx->runctx->agent->expr_type, &inter_item))
+        {
+            // item is an expression to be evaluated
+            CACE_LOG_DEBUG("Reporting on expression");
+            if (refda_eval_target(rptctx->runctx, &rpt_item, &inter_item))
+            {
+                CACE_LOG_WARNING("reporting failed to evaluate expression");
+                cace_ari_reset(&rpt_item);
+            }
+        }
+        else
+        {
+            // intermediate is directly reported
+            CACE_LOG_DEBUG("Reporting on literal");
+            cace_ari_set_move(&rpt_item, &inter_item);
+        }
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            string_t buf;
+            string_init(buf);
+            cace_ari_text_encode(buf, &rpt_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("reporting intermediate %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+        cace_ari_deinit(&inter_item);
 
         cace_ari_list_push_back_move(rptctx->items, &rpt_item);
     }
