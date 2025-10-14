@@ -24,6 +24,7 @@
 #include "cace/util/defs.h"
 #include "cace/ari/text_util.h"
 #include "cace/ari/text.h"
+#include "cace/ari/time_util.h"
 #include "cace/ari/cbor.h"
 #include <sys/poll.h>
 #include <signal.h>
@@ -104,6 +105,7 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
 
     static const char *src = "stdin";
     cace_ari_set_tstr(&meta->src, src, false);
+    cace_get_system_time(&meta->timestamp);
 
     // Watch stdin (fd 0) for input, assuming whole-lines are given
     struct pollfd pfds[] = {

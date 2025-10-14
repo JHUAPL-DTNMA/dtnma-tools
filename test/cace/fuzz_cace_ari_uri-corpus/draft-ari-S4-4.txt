@@ -1,0 +1,5 @@
+ari://example/adm-a@2024-06-25/
+ari://example/adm-a/
+ari://65535/1/
+ari://example/!odm-b/
+ari://65535/-20/

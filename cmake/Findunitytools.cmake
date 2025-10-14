@@ -1,7 +1,9 @@
 # Defines the function add_unity_test() for generating test executables.
 # This requires the cmake variable UNITY_ROOT to point to the source tree.
 # The variable TEST_EXEC_PREFIX can be set to cause the test executables to be
-# run under another tool (e.g. valgrind)
+# run under another tool (e.g. valgrind).
+# The variable TEST_INSTALL_PREFIX can be set to have the unit tests installed
+# by cmake under that executable prefix path.
 #
 message(STATUS "Searching for Unity tools in ${UNITY_ROOT}")
 
@@ -26,7 +28,7 @@ find_file(UNITY_PARSER_BIN "parse_output.rb"
 )
 
 # Compile time package
-find_package(unity REQUIRED)
+find_package(unity REQUIRED CONFIG)
 message(STATUS "Found unity at ${unity_DIR}")
 
 function(add_unity_test)
@@ -44,9 +46,9 @@ function(add_unity_test)
     set(UNITYTEST_TARGET "${BASENAME}")
   endif()
   
-  set(GEN_PARAMS "--use_param_tests=1")
+  set(EXTRA_ARGS "--use_param_tests=1")
   if(UNITYTEST_MAIN_NAME)
-      list(APPEND GEN_PARAMS "--main_name=${MAIN_NAME}")
+      list(APPEND EXTRA_ARGS "--main_name=${MAIN_NAME}")
   endif()
   
   message(STATUS "Adding unit test ${UNITYTEST_TARGET} from ${ABSOLUTE_SOURCE}")
@@ -55,10 +57,11 @@ function(add_unity_test)
   add_custom_command(
     OUTPUT "${RUNNER_FILE}"
     DEPENDS "${ABSOLUTE_SOURCE}"
-    COMMAND ${RUBY_BIN} ${UNITY_GENERATOR_BIN} "${ABSOLUTE_SOURCE}" "${RUNNER_FILE}" ${GEN_PARAMS}
+    COMMAND ${RUBY_BIN} ${UNITY_GENERATOR_BIN} "${ABSOLUTE_SOURCE}" "${RUNNER_FILE}" ${EXTRA_ARGS}
   )
   add_executable(${BASENAME} ${UNITYTEST_SOURCE} ${RUNNER_FILE})
-  target_compile_definitions(${BASENAME} PRIVATE 
+  target_compile_definitions(${BASENAME} PRIVATE
+    UNITY_USE_COMMAND_LINE_ARGS
     UNITY_INCLUDE_PRINT_FORMATTED
     UNITY_INCLUDE_FLOAT
     UNITY_INCLUDE_DOUBLE
@@ -69,4 +72,13 @@ function(add_unity_test)
     NAME ${BASENAME}
     COMMAND ${TEST_EXEC_PREFIX} "${CMAKE_CURRENT_BINARY_DIR}/${BASENAME}"
   )
+
+  if(TEST_INSTALL_PREFIX)
+    install(
+      TARGETS ${BASENAME}
+      RUNTIME
+        DESTINATION ${TEST_INSTALL_PREFIX}
+        COMPONENT test
+    )
+  endif(TEST_INSTALL_PREFIX)
 endfunction()

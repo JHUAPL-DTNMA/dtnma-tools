@@ -21,10 +21,12 @@ void cace_amm_msg_if_metadata_init(cace_amm_msg_if_metadata_t *meta)
 {
     cace_ari_init(&meta->src);
     cace_ari_init(&meta->dest);
+    cace_ari_init(&meta->timestamp);
 }
 
 void cace_amm_msg_if_metadata_deinit(cace_amm_msg_if_metadata_t *meta)
 {
     cace_ari_deinit(&meta->dest);
     cace_ari_deinit(&meta->src);
+    cace_ari_deinit(&meta->timestamp);
 }

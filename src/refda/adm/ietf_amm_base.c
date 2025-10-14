@@ -56,6 +56,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
+        (void)obj;
 
         /**
          * Register IDENT objects

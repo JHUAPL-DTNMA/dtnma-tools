@@ -125,7 +125,7 @@ RUN cd /usr/local/src/nm && \
       -DTRANSPORT_UNIX_SOCKET=OFF \
       -DTRANSPORT_PROXY_SOCKET=OFF \
       -DTRANSPORT_ION_BP=ON \
-      -DBUILD_TESTING=OFF \
+      -DBUILD_UNITTEST=OFF -DBUILD_FUZZING=OFF \
       -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF \
       -G Ninja && \
     cmake --build build/default && \

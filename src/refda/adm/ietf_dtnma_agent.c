@@ -137,7 +137,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         if (res)
         {
             // handled as failure
-            CACE_LOG_ERR("Failed clock_gettime()");
+            CACE_LOG_CRIT("Failed clock_gettime()");
         }
         else
         {
@@ -361,12 +361,18 @@ static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, co
     // Determine the cace_ari_type_t of the result
     cace_ari_type_t ari_type;
     if (is_result_TD == true)
+    {
         ari_type = CACE_ARI_TYPE_TD;
+    }
     else if (is_result_TP == true)
+    {
         ari_type = CACE_ARI_TYPE_TP;
+    }
     else
+    {
         // Bail if the result will not be a TD or TP
         return RET_FAIL_UNDEFINED;
+    }
 
     // Delegate the addition
     struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
@@ -401,9 +407,27 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     bool is_result_TD = false;
     is_result_TD |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TP;
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
-    if (is_result_TD == false)
-        // Bail if the result will not be a TD
+
+    // Note the following will result in TP:
+    // - Subtraction of TD from TP
+    bool is_result_TP = false;
+    is_result_TP |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TD;
+
+    // Determine the cace_ari_type_t of the result
+    cace_ari_type_t ari_type;
+    if (is_result_TD == true)
+    {
+        ari_type = CACE_ARI_TYPE_TD;
+    }
+    else if (is_result_TP == true)
+    {
+        ari_type = CACE_ARI_TYPE_TP;
+    }
+    else
+    {
+        // Bail if the result will not be a TD or TP
         return RET_FAIL_UNDEFINED;
+    }
 
     // Delegate the subtraction
     struct timespec valueA_TS = valueA->as_lit.value.as_timespec;
@@ -418,7 +442,7 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
 
     res_lit->has_ari_type      = true;
-    res_lit->ari_type          = CACE_ARI_TYPE_TD;
+    res_lit->ari_type          = ari_type;
     res_lit->prim_type         = CACE_ARI_PRIM_TIMESPEC;
     res_lit->value.as_timespec = result_TS;
 
@@ -440,8 +464,10 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
     bool is_result_TD = false;
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
     if (is_result_TD == false)
+    {
         // Bail if the result will not be a TD
         return RET_FAIL_UNDEFINED;
+    }
 
     time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
     long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
@@ -469,7 +495,9 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
             double scalar_double = valueB->as_lit.value.as_float64;
             int    scalar_class  = fpclassify(scalar_double);
             if (scalar_class == FP_INFINITE || scalar_class == FP_NAN)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             // Calculate the seconds (as a double) and extract the integral and the fraction parts out.
             // Note we assign the integral part to result_TS.tv_sec, and the fractional part is sent to
@@ -519,8 +547,10 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     bool is_result_TD = false;
     is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
     if (is_result_TD == false)
+    {
         // Bail if the result will not be a TD
         return RET_FAIL_UNDEFINED;
+    }
 
     time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
     long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
@@ -533,7 +563,9 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             // Bail if scalar is 0
             uint64_t scalar_uint64 = valueB->as_lit.value.as_uint64;
             if (scalar_uint64 == 0)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             result_TS.tv_sec  = valueA_sec / scalar_uint64;
             result_TS.tv_nsec = valueA_nano / scalar_uint64;
@@ -546,7 +578,9 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             // Bail if scalar is 0
             int64_t scalar_int64 = valueB->as_lit.value.as_int64;
             if (scalar_int64 == 0)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             result_TS.tv_sec  = valueA_sec / scalar_int64;
             result_TS.tv_nsec = valueA_nano / scalar_int64;
@@ -560,14 +594,18 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             double scalar_double = valueB->as_lit.value.as_float64;
             int    scalar_class  = fpclassify(scalar_double);
             if (scalar_class == FP_ZERO || scalar_class == FP_NAN)
+            {
                 return RET_FAIL_UNDEFINED;
+            }
 
             result_TS.tv_sec  = valueA_sec / scalar_double;
             result_TS.tv_nsec = valueA_nano / scalar_double;
             // Adjust nanos to take into account the factional second component. Note do not adjust if the
             // scalar is infinite (since the above 2 lines will resolve to 0) but the line below may not.
             if (scalar_class != FP_INFINITE)
+            {
                 result_TS.tv_nsec += ((valueA_sec - (result_TS.tv_sec * scalar_double)) * NANOS_IN_SEC) / scalar_double;
+            }
             break;
         }
         default:
@@ -591,7 +629,7 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     return RET_PASS;
 }
 
-static int timespec_numeric_mod(cace_ari_t *_U_, const cace_ari_t *_U_, const cace_ari_t *_U_)
+static int timespec_numeric_mod(cace_ari_t *result _U_, const cace_ari_t *left _U_, const cace_ari_t *right _U_)
 {
     // Calculating the remainder associated with timespec objects is unsupported
     return RET_FAIL_UNDEFINED;
@@ -833,6 +871,11 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed(refda_edd_prod_ctx_
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
+    atomic_ullong  val    = atomic_load(&agent->instr.num_rptset_sent_failure);
+    cace_ari_set_uvast(&result, val);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
@@ -880,6 +923,11 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(refda_edd_prod_ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
+    atomic_ullong  val    = atomic_load(&agent->instr.num_ctrls_succeeded);
+    cace_ari_set_uvast(&result, val);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded BODY
@@ -901,6 +949,11 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t 
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent  = ctx->prodctx->parent->agent;
+    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
+    atomic_ullong  val    = atomic_load(&agent->instr.num_ctrls_failed);
+    cace_ari_set_uvast(&result, val);
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_exec_failed BODY
@@ -913,8 +966,10 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t 
  *
  * Parameters: none
  *
- * Produced type: TBLT with 3 columns (use of ari:/ARITYPE/UVAST, use of ari://ietf/amm-base/TYPEDEF/ANY, use of
- * ari:/ARITYPE/BYTE)
+ * Produced type: TBLT with 3 columns:
+ *   - Index 0, name "pid", type use of ari:/ARITYPE/UVAST
+ *   - Index 1, name "target", type use of ari://ietf/amm-base/TYPEDEF/ANY
+ *   - Index 2, name "state", type use of ari:/ARITYPE/BYTE
  */
 static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ctx)
 {
@@ -993,9 +1048,12 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
  *
  * Parameters: none
  *
- * Produced type: TBLT with 5 columns (use of ari://ietf/amm-base/TYPEDEF/id-text, use of
- * ari://ietf/amm-base/TYPEDEF/id-int, use of ari://ietf/amm-base/TYPEDEF/id-text, use of
- * ari://ietf/amm-base/TYPEDEF/id-int, use of ari:/ARITYPE/TEXTSTR)
+ * Produced type: TBLT with 5 columns:
+ *   - Index 0, name "org-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 1, name "org-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 2, name "model-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 3, name "model-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 4, name "revision", type use of ari:/ARITYPE/TEXTSTR
  */
 static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1077,9 +1135,10 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
  *   A table of TYPEDEF within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 1 columns (use of ari:/ARITYPE/TYPEDEF)
+ * Produced type: TBLT with 1 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/TYPEDEF
  */
 static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1164,9 +1223,11 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
  *   A table of CONST within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/CONST, use of ari://ietf/amm-semtype/TYPEDEF/semtype)
+ * Produced type: TBLT with 2 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/CONST
+ *   - Index 1, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
  */
 static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1218,6 +1279,12 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
         {
             const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
+            const refda_amm_const_desc_t *cnst = obj->app_data.ptr;
+            if (!cnst || cnst->obsolete)
+            {
+                continue;
+            }
+
             cace_ari_array_t row;
             cace_ari_array_init(row);
             cace_ari_array_resize(row, 2);
@@ -1226,12 +1293,7 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-
-            const refda_amm_const_desc_t *cnst = obj->app_data.ptr;
-            if (cnst)
-            {
-                cace_amm_type_get_name(&(cnst->val_type), cace_ari_array_get(row, 1));
-            }
+            cace_amm_type_get_name(&(cnst->val_type), cace_ari_array_get(row, 1));
 
             // append the row
             cace_ari_tbl_move_row_array(&table, row);
@@ -1256,9 +1318,11 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
  *   A table of VAR within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 2 columns (use of ari:/ARITYPE/VAR, use of ari://ietf/amm-semtype/TYPEDEF/semtype)
+ * Produced type: TBLT with 2 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/VAR
+ *   - Index 1, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
  */
 static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1310,6 +1374,12 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
         {
             const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
+            const refda_amm_var_desc_t *var = obj->app_data.ptr;
+            if (!var || var->obsolete)
+            {
+                continue;
+            }
+
             cace_ari_array_t row;
             cace_ari_array_init(row);
             cace_ari_array_resize(row, 2);
@@ -1318,12 +1388,7 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-
-            const refda_amm_var_desc_t *var = obj->app_data.ptr;
-            if (var)
-            {
-                cace_amm_type_get_name(&(var->val_type), cace_ari_array_get(row, 1));
-            }
+            cace_amm_type_get_name(&(var->val_type), cace_ari_array_get(row, 1));
 
             // append the row
             cace_ari_tbl_move_row_array(&table, row);
@@ -1348,11 +1413,16 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
  *   A table of SBR within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 7 columns (use of ari:/ARITYPE/SBR, use of ari://ietf/amm-base/TYPEDEF/MAC, use of
- * ari://ietf/amm-base/TYPEDEF/EXPR, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST, use of ari:/ARITYPE/BOOL, use of
- * ari:/ARITYPE/BOOL)
+ * Produced type: TBLT with 7 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/SBR
+ *   - Index 1, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 2, name "condition", type use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 3, name "min-interval", type use of ari:/ARITYPE/TD
+ *   - Index 4, name "max-count", type use of ari:/ARITYPE/UVAST
+ *   - Index 5, name "init-enabled", type use of ari:/ARITYPE/BOOL
+ *   - Index 6, name "enabled", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1372,7 +1442,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_tbl_t table;
-    cace_ari_tbl_init(&table, 6, 0);
+    cace_ari_tbl_init(&table, 7, 0);
     const cace_ari_type_t obj_type = CACE_ARI_TYPE_SBR;
 
     cace_amm_obj_ns_list_it_t ns_it;
@@ -1404,30 +1474,30 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
         {
             const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
+            const refda_amm_sbr_desc_t *sbr = obj->app_data.ptr;
+            if (!sbr || sbr->obsolete)
+            {
+                continue;
+            }
+
             cace_ari_array_t row;
             cace_ari_array_init(row);
-            cace_ari_array_resize(row, 6);
-
+            cace_ari_array_resize(row, 7);
             {
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-
-            const refda_amm_sbr_desc_t *sbr = obj->app_data.ptr;
-            if (sbr)
             {
                 cace_ari_set_copy(cace_ari_array_get(row, 1), &(sbr->action));
                 cace_ari_set_copy(cace_ari_array_get(row, 2), &(sbr->condition));
                 cace_ari_set_copy(cace_ari_array_get(row, 3), &(sbr->min_interval));
                 cace_ari_set_uvast(cace_ari_array_get(row, 4), sbr->max_exec_count);
-                cace_ari_set_bool(cace_ari_array_get(row, 5), sbr->enabled);
+                cace_ari_set_bool(cace_ari_array_get(row, 5), sbr->init_enabled);
+                cace_ari_set_bool(cace_ari_array_get(row, 6), sbr->enabled);
             }
 
             // append the row
-            if (sbr && !sbr->obsolete)
-            {
-                cace_ari_tbl_move_row_array(&table, row);
-            }
+            cace_ari_tbl_move_row_array(&table, row);
             cace_ari_array_clear(row);
         }
     }
@@ -1449,11 +1519,16 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
  *   A table of TBR within the agent.
  *
  * Parameters list:
- *  * Index 0, name "include-adm", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "include-adm", type use of ari:/ARITYPE/BOOL
  *
- * Produced type: TBLT with 7 columns (use of ari:/ARITYPE/TBR, use of ari://ietf/amm-base/TYPEDEF/MAC, use of
- * ari://ietf/amm-base/TYPEDEF/TIME, use of ari:/ARITYPE/TD, use of ari:/ARITYPE/UVAST, use of ari:/ARITYPE/BOOL, use of
- * ari:/ARITYPE/BOOL)
+ * Produced type: TBLT with 7 columns:
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/TBR
+ *   - Index 1, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 2, name "start-time", type use of ari://ietf/amm-base/TYPEDEF/TIME
+ *   - Index 3, name "period", type use of ari:/ARITYPE/TD
+ *   - Index 4, name "max-count", type use of ari:/ARITYPE/UVAST
+ *   - Index 5, name "init-enabled", type use of ari:/ARITYPE/BOOL
+ *   - Index 6, name "enabled", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
 {
@@ -1473,7 +1548,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
     REFDA_AGENT_LOCK(agent, );
 
     cace_ari_tbl_t table;
-    cace_ari_tbl_init(&table, 6, 0);
+    cace_ari_tbl_init(&table, 7, 0);
     const cace_ari_type_t obj_type = CACE_ARI_TYPE_TBR;
 
     cace_amm_obj_ns_list_it_t ns_it;
@@ -1505,30 +1580,30 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
         {
             const cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_cref(obj_it));
 
+            const refda_amm_tbr_desc_t *tbr = obj->app_data.ptr;
+            if (!tbr || tbr->obsolete)
+            {
+                continue;
+            }
+
             cace_ari_array_t row;
             cace_ari_array_init(row);
-            cace_ari_array_resize(row, 6);
-
+            cace_ari_array_resize(row, 7);
             {
                 cace_ari_ref_t *ref = cace_ari_set_objref(cace_ari_array_get(row, 0));
                 refda_adm_ietf_dtnma_agent_set_objpath(&(ref->objpath), ns, obj_type, obj);
             }
-
-            const refda_amm_tbr_desc_t *tbr = obj->app_data.ptr;
-            if (tbr)
             {
                 cace_ari_set_copy(cace_ari_array_get(row, 1), &(tbr->action));
                 cace_ari_set_copy(cace_ari_array_get(row, 2), &(tbr->start_time));
                 cace_ari_set_copy(cace_ari_array_get(row, 3), &(tbr->period));
                 cace_ari_set_uvast(cace_ari_array_get(row, 4), tbr->max_exec_count);
-                cace_ari_set_bool(cace_ari_array_get(row, 5), tbr->enabled);
+                cace_ari_set_bool(cace_ari_array_get(row, 5), tbr->init_enabled);
+                cace_ari_set_bool(cace_ari_array_get(row, 6), tbr->enabled);
             }
 
             // append the row
-            if (tbr && !tbr->obsolete)
-            {
-                cace_ari_tbl_move_row_array(&table, row);
-            }
+            cace_ari_tbl_move_row_array(&table, row);
             cace_ari_array_clear(row);
         }
     }
@@ -1552,13 +1627,13 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
  *   evaluation.
  *
  * Parameters list:
- *  * Index 0, name "condition", type: use of ari://ietf/amm-base/TYPEDEF/eval-tgt
- *  * Index 1, name "on-truthy", type: union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
+ *   - Index 0, name "condition", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
+ *   - Index 1, name "on-truthy", type union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
  * ari:/ARITYPE/NULL)
- *  * Index 2, name "on-falsy", type: union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
+ *   - Index 2, name "on-falsy", type union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
  * ari:/ARITYPE/NULL)
  *
- * Result name "branch", type: use of ari:/ARITYPE/BOOL
+ * Result name "branch", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -1580,11 +1655,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
  *   execute an alternative target.
  *
  * Parameters list:
- *  * Index 0, name "try", type: use of ari://ietf/amm-base/TYPEDEF/exec-tgt
- *  * Index 1, name "on-failure", type: union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
+ *   - Index 0, name "try", type use of ari://ietf/amm-base/TYPEDEF/exec-tgt
+ *   - Index 1, name "on-failure", type union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
  * ari:/ARITYPE/NULL)
  *
- * Result name "try-success", type: use of ari:/ARITYPE/BOOL
+ * Result name "try-success", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -1607,7 +1682,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
  *   time.
  *
  * Parameters list:
- *  * Index 0, name "duration", type: use of ari:/ARITYPE/TD
+ *   - Index 0, name "duration", type use of ari:/ARITYPE/TD
  *
  * Result: none
  */
@@ -1657,7 +1732,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
  *   time of reception.
  *
  * Parameters list:
- *  * Index 0, name "time", type: use of ari:/ARITYPE/TP
+ *   - Index 0, name "time", type use of ari:/ARITYPE/TP
  *
  * Result: none
  */
@@ -1699,7 +1774,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
  *   execution until the condition is met.
  *
  * Parameters list:
- *  * Index 0, name "condition", type: use of ari://ietf/amm-base/TYPEDEF/eval-tgt
+ *   - Index 0, name "condition", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
  *
  * Result: none
  */
@@ -1725,9 +1800,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx
  *   perform any EXPR evaluation or RPTT handling.
  *
  * Parameters list:
- *  * Index 0, name "ref", type: use of ari://ietf/amm-base/TYPEDEF/VALUE-OBJ
+ *   - Index 0, name "ref", type use of ari://ietf/amm-base/TYPEDEF/VALUE-OBJ
  *
- * Result name "val", type: use of ari://ietf/amm-base/TYPEDEF/ANY
+ * Result name "val", type use of ari://ietf/amm-base/TYPEDEF/ANY
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -1748,17 +1823,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 
     REFDA_AGENT_UNLOCK(agent, );
 
-    if (cace_log_is_enabled_for(LOG_DEBUG))
+    if (res)
     {
         string_t buf;
         string_init(buf);
-        cace_ari_text_encode_objpath(buf, &(ref->as_ref.objpath), CACE_ARI_TEXT_ARITYPE_TEXT);
-        CACE_LOG_DEBUG("Lookup reference to %s", string_get_cstr(buf));
+        cace_ari_text_encode(buf, ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
         string_clear(buf);
-    }
-    if (res)
-    {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
     }
     else
     {
@@ -1790,16 +1861,16 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 
 /* Name: report-on
  * Description:
- *   Agent-wide control to generate a report from a report template (RPTT).
- *   The parameter is a single RPTT list that would be produced by an
- *   object. If used for more than one-shot diagnostics, defining a RPTT
+ *   Agent-wide control to generate a report from a report template (RPTT)
+ *   value. The parameter is a single RPTT list that would be produced by
+ *   an object. If used for more than one-shot diagnostics, defining a RPTT
  *   (e.g. in a CONST within an ODM) is more efficient because the RPTT
- *   value would not need be present in the EXECSET or RPTSET.
+ *   value would not need be present in the EXECSET or corresponding
+ *   RPTSET.
  *
  * Parameters list:
- *  * Index 0, name "template", type: use of ari://ietf/amm-base/TYPEDEF/rpt-tgt
- *  * Index 1, name "destinations", type: union of 2 types (use of ari://ietf/network-base/TYPEDEF/endpoint-or-uri, use
- * of ari:/ARITYPE/NULL)
+ *   - Index 0, name "template", type use of ari://ietf/amm-base/TYPEDEF/rpt-tgt
+ *   - Index 1, name "destinations", type ulist of use of ari://ietf/network-base/TYPEDEF/endpoint-or-uri
  *
  * Result: none
  */
@@ -1816,21 +1887,47 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
         CACE_LOG_ERR("no template");
         return;
     }
-    const cace_ari_t *dests = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
-    if (!cace_ari_not_undefined(dests))
+    const cace_ari_t *p_dests = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    if (!cace_ari_not_undefined(p_dests))
     {
         CACE_LOG_ERR("no destinations");
         return;
     }
 
-    refda_agent_t *agent = ctx->runctx->agent;
-
-    // ignore return code because failure cannot be handled here
-    if (refda_reporting_target(ctx->runctx, template))
+    const cace_ari_ac_t *dest_ac = cace_ari_cget_ac(p_dests);
+    if (dest_ac)
     {
+        if (cace_ari_list_empty_p(dest_ac->items))
+        {
+            if (cace_ari_not_undefined(&ctx->runctx->mgr_ident))
+            {
+                // default to executing manager
+                refda_reporting_target(ctx->runctx, template, &ctx->runctx->mgr_ident);
+            }
+            else
+            {
+                // actual failure
+                return;
+            }
+        }
+        else
+        {
+            // Explicit list
+            cace_ari_list_it_t dest_it;
+            for (cace_ari_list_it(dest_it, dest_ac->items); !cace_ari_list_end_p(dest_it); cace_ari_list_next(dest_it))
+            {
+                const cace_ari_t *dest = cace_ari_list_cref(dest_it);
+                refda_reporting_target(ctx->runctx, template, dest);
+            }
+        }
+    }
+    else
+    {
+        // actual failure
         return;
     }
 
+    // ignore reporting return codes because failure cannot be handled here
     refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
@@ -1844,10 +1941,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
  *   Ensure a specific ODM is present.
  *
  * Parameters list:
- *  * Index 0, name "org-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 1, name "org-id", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 2, name "model-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 3, name "model-id", type: use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 0, name "org-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 1, name "org-id", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 2, name "model-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 3, name "model-id", type use of ari://ietf/amm-base/TYPEDEF/id-int
  *
  * Result: none
  */
@@ -1931,8 +2028,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         string_list_pop_back(NULL, agent->odm_names);
     }
 
-    cace_ari_t result = CACE_ARI_INIT_NULL;
-    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+    refda_ctrl_exec_ctx_set_result_null(ctx);
 
     REFDA_AGENT_UNLOCK(agent, );
     /*
@@ -1947,7 +2043,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
  *   Mark a specific ODM as obsolete if it is present.
  *
  * Parameters list:
- *  * Index 0, name "odm-ns", type: use of ari:/ARITYPE/NAMESPACE
+ *   - Index 0, name "odm-ns", type use of ari:/ARITYPE/NAMESPACE
  *
  * Result: none
  */
@@ -1960,8 +2056,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
      */
     const cace_ari_t *odm_ns = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     refda_agent_t    *agent  = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
 
+    REFDA_AGENT_LOCK(agent, );
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
 
     if (odm)
@@ -1969,8 +2065,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
         CACE_LOG_INFO("ODM found, marking as obsolete");
         odm->obsolete = true;
 
-        cace_ari_t result = CACE_ARI_INIT_NULL; // Indicate successful result
-        refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+        // Indicate successful result
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
     else
     {
@@ -1990,7 +2086,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
  *   Modify a VAR state to its default value.
  *
  * Parameters list:
- *  * Index 0, name "target", type: use of ari:/ARITYPE/VAR
+ *   - Index 0, name "target", type use of ari:/ARITYPE/VAR
  *
  * Result: none
  */
@@ -2013,7 +2109,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else
     {
@@ -2026,11 +2126,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
             {
                 string_t buf;
                 string_init(buf);
-                cace_ari_text_encode_objpath(buf, &(target->as_ref.objpath), CACE_ARI_TEXT_ARITYPE_TEXT);
-                CACE_LOG_DEBUG("resetting state of %s", string_get_cstr(buf));
+                cace_ari_text_encode_objpath(buf, cace_ari_cget_ref_objpath(target), CACE_ARI_TEXT_ARITYPE_TEXT);
+                CACE_LOG_DEBUG("resetting state of %s (as %s)", string_get_cstr(deref.obj->obj_id.name),
+                               string_get_cstr(buf));
                 string_clear(buf);
             }
             cace_ari_set_copy(&(var->value), &(var->init_val));
+            refda_ctrl_exec_ctx_set_result_null(ctx);
         }
     }
     cace_amm_lookup_deinit(&deref);
@@ -2048,8 +2150,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
  *   Modify a VAR state to a specific value.
  *
  * Parameters list:
- *  * Index 0, name "target", type: use of ari:/ARITYPE/VAR
- *  * Index 1, name "value", type: use of ari://ietf/amm-base/TYPEDEF/ANY
+ *   - Index 0, name "target", type use of ari:/ARITYPE/VAR
+ *   - Index 1, name "value", type use of ari://ietf/amm-base/TYPEDEF/ANY
  *
  * Result: none
  */
@@ -2073,7 +2175,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else
     {
@@ -2086,11 +2192,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
             {
                 string_t buf;
                 string_init(buf);
-                cace_ari_text_encode_objpath(buf, &(target->as_ref.objpath), CACE_ARI_TEXT_ARITYPE_TEXT);
-                CACE_LOG_DEBUG("setting state of %s", string_get_cstr(buf));
+                cace_ari_text_encode_objpath(buf, cace_ari_cget_ref_objpath(target), CACE_ARI_TEXT_ARITYPE_TEXT);
+                CACE_LOG_DEBUG("setting state of %s (as %s)", string_get_cstr(deref.obj->obj_id.name),
+                               string_get_cstr(buf));
                 string_clear(buf);
             }
             cace_ari_set_copy(&(var->value), value);
+            refda_ctrl_exec_ctx_set_result_null(ctx);
         }
     }
     cace_amm_lookup_deinit(&deref);
@@ -2108,11 +2216,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
  *   Ensure a specific CONST is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "namespace", type: use of ari:/ARITYPE/NAMESPACE
- *  * Index 1, name "obj-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 2, name "obj-enum", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 3, name "type", type: use of ari://ietf/amm-semtype/TYPEDEF/semtype
- *  * Index 4, name "init", type: use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
+ *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 3, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
+ *   - Index 4, name "init", type use of ari://ietf/amm-base/TYPEDEF/EXPR
  *
  * Result: none
  */
@@ -2123,6 +2231,98 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *ari_namespace = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_obj_name  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_obj_enum  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+    const cace_ari_t *ari_type      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+    const cace_ari_t *ari_init      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
+
+    refda_agent_t *agent = ctx->runctx->agent;
+
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    REFDA_AGENT_LOCK(agent, );
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
+
+    if (!odm)
+    {
+        CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    if (!cace_amm_obj_ns_is_odm(odm))
+    {
+        CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    const cace_data_t *obj_name = cace_ari_cget_tstr(ari_obj_name);
+    if (obj_name == NULL || obj_name->ptr == NULL)
+    {
+        CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    cace_ari_int obj_id;
+    if (cace_ari_get_int(ari_obj_enum, &obj_id))
+    {
+        CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    refda_amm_const_desc_t *cnst = NULL;
+    {
+        cace_amm_obj_desc_t *obj = NULL;
+        obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_CONST, (const char *)obj_name->ptr);
+        if (obj)
+        {
+            CACE_LOG_INFO("CONST already exists");
+        }
+        else
+        {
+            obj = cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_CONST, obj_id);
+            if (obj)
+            {
+                CACE_LOG_INFO("CONST already exists");
+            }
+        }
+
+        if (obj)
+        {
+            cnst = obj->app_data.ptr;
+        }
+    }
+
+    if (cnst == NULL)
+    {
+        refda_amm_const_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
+        refda_amm_const_desc_init(objdata);
+
+        cace_amm_type_set_use_ref(&(objdata->val_type), ari_type);
+
+        int res = refda_eval_target(ctx->runctx, &(objdata->value), ari_init);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to evaluate CONST initial value");
+        }
+
+        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*cnst_name, (char *)obj_name->ptr);
+
+        refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
+
+    refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_const BODY
@@ -2135,7 +2335,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
  *   Mark a specific CONST as obsolete if it is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "obj", type: use of ari:/ARITYPE/CONST
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/CONST
  *
  * Result: none
  */
@@ -2146,6 +2346,43 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_const BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+    if (res)
+    {
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
+    }
+    else if (!cace_amm_obj_ns_is_odm(deref.ns))
+    {
+        CACE_LOG_WARNING("unable to obsolete an ADM object");
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_CONST)
+    {
+        refda_amm_const_desc_t *cnst = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (cnst)
+        {
+            CACE_LOG_DEBUG("Marking CONST as obsolete");
+            cnst->obsolete = true;
+        }
+        refda_ctrl_exec_ctx_set_result_null(ctx);
+    }
+
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_const BODY
@@ -2158,11 +2395,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
  *   Ensure a specific VAR is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "namespace", type: use of ari:/ARITYPE/NAMESPACE
- *  * Index 1, name "obj-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 2, name "obj-enum", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 3, name "type", type: use of ari://ietf/amm-semtype/TYPEDEF/semtype
- *  * Index 4, name "init", type: union of 2 types (use of ari:/ARITYPE/NULL, use of ari://ietf/amm-base/TYPEDEF/EXPR)
+ *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
+ *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 3, name "type", type use of ari://ietf/amm-semtype/TYPEDEF/semtype
+ *   - Index 4, name "init", type union of 2 types (use of ari:/ARITYPE/NULL, use of ari://ietf/amm-base/TYPEDEF/EXPR)
  *
  * Result: none
  */
@@ -2173,6 +2410,98 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *ari_namespace = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_obj_name  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_obj_enum  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+    const cace_ari_t *ari_type      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 3);
+    const cace_ari_t *ari_init      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 4);
+
+    refda_agent_t *agent = ctx->runctx->agent;
+
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    REFDA_AGENT_LOCK(agent, );
+    cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
+
+    if (!odm)
+    {
+        CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    if (!cace_amm_obj_ns_is_odm(odm))
+    {
+        CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    const cace_data_t *obj_name = cace_ari_cget_tstr(ari_obj_name);
+    if (obj_name == NULL || obj_name->ptr == NULL)
+    {
+        CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    cace_ari_int obj_id;
+    if (cace_ari_get_int(ari_obj_enum, &obj_id))
+    {
+        CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    refda_amm_var_desc_t *var = NULL;
+    {
+        cace_amm_obj_desc_t *obj = NULL;
+        obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_VAR, (const char *)obj_name->ptr);
+        if (obj)
+        {
+            CACE_LOG_INFO("VAR already exists");
+        }
+        else
+        {
+            obj = cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_VAR, obj_id);
+            if (obj)
+            {
+                CACE_LOG_INFO("VAR already exists");
+            }
+        }
+
+        if (obj)
+        {
+            var = obj->app_data.ptr;
+        }
+    }
+
+    if (var == NULL)
+    {
+        refda_amm_var_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_var_desc_t));
+        refda_amm_var_desc_init(objdata);
+
+        cace_amm_type_set_use_ref(&(objdata->val_type), ari_type);
+
+        int res = refda_eval_target(ctx->runctx, &(objdata->value), ari_init);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to evaluate VAR initial value");
+        }
+
+        m_string_t *var_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*var_name, (char *)obj_name->ptr);
+
+        refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*var_name), obj_id), objdata);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
+
+    refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_var BODY
@@ -2185,7 +2514,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
  *   Mark a specific VAR as obsolete if it is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "obj", type: use of ari:/ARITYPE/VAR
+ *   - Index 0, name "obj", type use of ari:/ARITYPE/VAR
  *
  * Result: none
  */
@@ -2196,6 +2525,44 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_var BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
+
+    if (res)
+    {
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
+    }
+    else if (!cace_amm_obj_ns_is_odm(deref.ns))
+    {
+        CACE_LOG_WARNING("unable to obsolete an ADM object");
+    }
+    else if (deref.obj_type == CACE_ARI_TYPE_VAR)
+    {
+        refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
+        // FIXME need agent access control
+
+        if (var)
+        {
+            CACE_LOG_DEBUG("Marking VAR as obsolete");
+            var->obsolete = true;
+        }
+        refda_ctrl_exec_ctx_set_result_null(ctx);
+    }
+
+    cace_amm_lookup_deinit(&deref);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_var BODY
@@ -2209,16 +2576,16 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
  *   within an ODM.
  *
  * Parameters list:
- *  * Index 0, name "namespace", type: use of ari:/ARITYPE/NAMESPACE
- *  * Index 1, name "obj-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 2, name "obj-enum", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 3, name "action", type: use of ari://ietf/amm-base/TYPEDEF/MAC
- *  * Index 4, name "condition", type: use of ari://ietf/amm-base/TYPEDEF/EXPR
- *  * Index 5, name "min-interval", type: use of ari:/ARITYPE/TD
- *  * Index 6, name "max-count", type: use of ari:/ARITYPE/UVAST
- *  * Index 7, name "init-enabled", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
+ *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 3, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 4, name "condition", type use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 5, name "min-interval", type use of ari:/ARITYPE/TD
+ *   - Index 6, name "max-count", type use of ari:/ARITYPE/UVAST
+ *   - Index 7, name "init-enabled", type use of ari:/ARITYPE/BOOL
  *
- * Result name "res", type: use of ari:/ARITYPE/UINT
+ * Result name "res", type use of ari:/ARITYPE/UINT
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -2241,17 +2608,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
 
     REFDA_AGENT_LOCK(agent, );
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
-    REFDA_AGENT_UNLOCK(agent, );
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
     if (odm->model_id.intenum >= 0)
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2259,6 +2627,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     if (obj_name == NULL || obj_name->ptr == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2266,10 +2635,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
     bool valid = true, rule_exists = false;
     {
         if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_SBR, (const char *)obj_name->ptr))
@@ -2375,7 +2744,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
 
         if (valid)
         {
-            obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum((char *)obj_name->ptr, obj_id), objdata);
+            m_string_t *sbr_name = string_list_push_new(agent->odm_names);
+            m_string_set_cstr(*sbr_name, (char *)obj_name->ptr);
+
+            obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*sbr_name), obj_id), objdata);
 
             if (obj && obj->app_data.ptr)
             {
@@ -2409,16 +2781,16 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
  *   an ODM.
  *
  * Parameters list:
- *  * Index 0, name "namespace", type: use of ari:/ARITYPE/NAMESPACE
- *  * Index 1, name "obj-name", type: use of ari://ietf/amm-base/TYPEDEF/id-text
- *  * Index 2, name "obj-enum", type: use of ari://ietf/amm-base/TYPEDEF/id-int
- *  * Index 3, name "action", type: use of ari://ietf/amm-base/TYPEDEF/MAC
- *  * Index 4, name "start-time", type: use of ari://ietf/amm-base/TYPEDEF/TIME
- *  * Index 5, name "period", type: use of ari:/ARITYPE/TD
- *  * Index 6, name "max-count", type: use of ari:/ARITYPE/UVAST
- *  * Index 7, name "init-enabled", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
+ *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
+ *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 3, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 4, name "start-time", type use of ari://ietf/amm-base/TYPEDEF/TIME
+ *   - Index 5, name "period", type use of ari:/ARITYPE/TD
+ *   - Index 6, name "max-count", type use of ari:/ARITYPE/UVAST
+ *   - Index 7, name "init-enabled", type use of ari:/ARITYPE/BOOL
  *
- * Result name "res", type: use of ari:/ARITYPE/UINT
+ * Result name "res", type use of ari:/ARITYPE/UINT
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -2442,17 +2814,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
 
     REFDA_AGENT_LOCK(agent, );
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
-    REFDA_AGENT_UNLOCK(agent, );
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
     if (!cace_amm_obj_ns_is_odm(odm))
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2460,6 +2833,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     if (obj_name == NULL || obj_name->ptr == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
@@ -2467,10 +2841,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
     bool valid = true, rule_exists = false;
     {
         if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_TBR, (const char *)obj_name->ptr))
@@ -2587,7 +2961,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
 
         if (valid)
         {
-            obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum((char *)obj_name->ptr, obj_id), objdata);
+            m_string_t *tbr_name = string_list_push_new(agent->odm_names);
+            m_string_set_cstr(*tbr_name, (char *)obj_name->ptr);
+
+            obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*tbr_name), obj_id), objdata);
 
             if (obj && obj->app_data.ptr)
             {
@@ -2620,10 +2997,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
  *   Ensure rule is enabled or disabled.
  *
  * Parameters list:
- *  * Index 0, name "obj-id", type: union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
- *  * Index 1, name "enabled", type: use of ari:/ARITYPE/BOOL
+ *   - Index 0, name "obj-id", type union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
+ *   - Index 1, name "enabled", type use of ari:/ARITYPE/BOOL
  *
- * Result name "res", type: use of ari:/ARITYPE/UINT
+ * Result name "res", type use of ari:/ARITYPE/UINT
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -2662,7 +3039,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else if (deref.obj_type == CACE_ARI_TYPE_SBR)
     {
@@ -2721,9 +3102,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
  *   Reset rule enabled to initial setting.
  *
  * Parameters list:
- *  * Index 0, name "obj-id", type: union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
+ *   - Index 0, name "obj-id", type union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
  *
- * Result name "res", type: use of ari:/ARITYPE/UINT
+ * Result name "res", type use of ari:/ARITYPE/UINT
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -2748,7 +3129,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else if (deref.obj_type == CACE_ARI_TYPE_SBR)
     {
@@ -2807,9 +3192,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
  *   Mark a specific SBR or TBR as obsolete if it is present in an ODM.
  *
  * Parameters list:
- *  * Index 0, name "obj-id", type: union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
+ *   - Index 0, name "obj-id", type union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
  *
- * Result name "success", type: use of ari:/ARITYPE/BOOL
+ * Result name "success", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -2834,7 +3219,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
 
     if (res)
     {
-        CACE_LOG_WARNING("lookup failed with status %d", res);
+        string_t buf;
+        string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
+        string_clear(buf);
     }
     else if (!cace_amm_obj_ns_is_odm(deref.ns))
     {
@@ -2894,7 +3283,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
 {
@@ -2945,7 +3334,7 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
 {
@@ -2974,7 +3363,7 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
 {
@@ -3003,7 +3392,7 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
 {
@@ -3032,7 +3421,7 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
 {
@@ -3063,7 +3452,7 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx)
 {
@@ -3094,7 +3483,7 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
 {
@@ -3140,7 +3529,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
 {
@@ -3168,7 +3557,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
 {
@@ -3196,7 +3585,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
 {
@@ -3224,7 +3613,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
 {
@@ -3255,7 +3644,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
 {
@@ -3287,7 +3676,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
 {
@@ -3319,7 +3708,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
 {
@@ -3351,7 +3740,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ctx)
 {
@@ -3382,7 +3771,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ctx)
 {
@@ -3411,12 +3800,12 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ct
 /* Name: compare-gt
  * Description:
  *   Compare two numbers by value. The result is true if the left value is
- *   greater than the right. The operands are cast to the least compatible
- *   numeric type before the comparison.
+ *   greater than the right value. The operands are cast to the least
+ *   compatible numeric type before the comparison.
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ctx)
 {
@@ -3448,7 +3837,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ctx)
 {
@@ -3480,7 +3869,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ctx)
 {
@@ -3512,7 +3901,7 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
- * Result name "result", type: use of ari:/ARITYPE/BOOL
+ * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ctx)
 {
@@ -3541,10 +3930,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
  *   Filter a table first by rows and then by columns.
  *
  * Parameters list:
- *  * Index 0, name "row-match", type: ulist of use of ari://ietf/amm-base/TYPEDEF/EXPR
- *  * Index 1, name "columns", type: ulist of use of ari://ietf/dtnma-agent/TYPEDEF/column-id
+ *   - Index 0, name "row-match", type ulist of use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 1, name "columns", type ulist of use of ari://ietf/dtnma-agent/TYPEDEF/column-id
  *
- * Result name "out", type: use of ari:/ARITYPE/TBL
+ * Result name "out", type use of ari:/ARITYPE/TBL
  */
 static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ctx)
 {
@@ -3573,6 +3962,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
+        (void)obj;
 
         /**
          * Register TYPEDEF objects
@@ -4541,25 +4931,19 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "destinations");
                 {
-                    // union
-                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(fparam->typeobj), 2);
+                    // uniform list
+                    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
                     {
-                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
-                        {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            // ari://ietf/network-base/TYPEDEF/endpoint-or-uri
-                            cace_ari_set_objref_path_intid(&name, 1, 26, CACE_ARI_TYPE_TYPEDEF, 3);
-                            cace_amm_type_set_use_ref_move(choice, &name);
-                        }
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/network-base/TYPEDEF/endpoint-or-uri
+                        cace_ari_set_objref_path_intid(&typeref, 1, 26, CACE_ARI_TYPE_TYPEDEF, 3);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
                     }
-                    {
-                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
-                        {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
-                            cace_amm_type_set_use_ref_move(choice, &name);
-                        }
-                    }
+                }
+                {
+                    cace_ari_ac_t acinit;
+                    cace_ari_ac_init(&acinit);
+                    cace_ari_set_ac(&(fparam->defval), &acinit);
                 }
             }
         }

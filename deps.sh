@@ -42,10 +42,11 @@ then
   patch -p1 <${SELFDIR}/deps/ion-4.1.2-local-deliver.patch
   patch -p1 <${SELFDIR}/deps/ion-4.1.2-private-headers.patch
   autoreconf -vif
+  export CC="gcc" CXX="g++"
   export CFLAGS="-std=gnu99"
   ./configure --prefix=/usr
   make -j$(nproc)
-  export -n CFLAGS
+  export -n CC CXX CFLAGS
   make install DESTDIR=${DESTDIR}
   make -j$(nproc) clean
   popd
@@ -83,7 +84,7 @@ if [ ! -e ${DESTDIR}/usr/include/unity ]
 then
   echo "Building Unity..."
   pushd ${DEPSDIR}/unity
-  export CFLAGS="-DUNITY_INCLUDE_PRINT_FORMATTED -DUNITY_INCLUDE_FLOAT -DUNITY_INCLUDE_DOUBLE"
+  export CFLAGS="-DUNITY_USE_COMMAND_LINE_ARGS -DUNITY_INCLUDE_PRINT_FORMATTED -DUNITY_INCLUDE_FLOAT -DUNITY_INCLUDE_DOUBLE"
   cmake -S . -B ${BUILDDIR}/unity \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}

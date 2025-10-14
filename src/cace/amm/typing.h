@@ -120,6 +120,7 @@ typedef enum
     CACE_AMM_TYPE_MATCH_NEGATIVE,
     /// The result was a positive (match)
     CACE_AMM_TYPE_MATCH_POSITIVE,
+    /// The input is the undefined value and was not checked
     CACE_AMM_TYPE_MATCH_UNDEFINED,
 } cace_amm_type_match_res_t;
 
