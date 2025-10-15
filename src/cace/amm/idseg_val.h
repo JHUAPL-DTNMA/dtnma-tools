@@ -19,6 +19,7 @@
 #define CACE_AMM_IDSEG_VAL_H_
 
 #include "idseg_ref.h"
+#include "cace/util/defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +38,7 @@ typedef struct
 
 static inline void cace_amm_idseg_val_init(cace_amm_idseg_val_t *obj)
 {
+    CHKVOID(obj);
     m_string_init(obj->name);
     obj->has_intenum = false;
     obj->intenum     = 0;
@@ -44,6 +46,7 @@ static inline void cace_amm_idseg_val_init(cace_amm_idseg_val_t *obj)
 
 static inline void cace_amm_idseg_val_deinit(cace_amm_idseg_val_t *obj)
 {
+    CHKVOID(obj);
     m_string_clear(obj->name);
     obj->has_intenum = false;
     obj->intenum     = 0;
@@ -56,6 +59,8 @@ static inline void cace_amm_idseg_val_deinit(cace_amm_idseg_val_t *obj)
  */
 static inline void cace_amm_idseg_val_set(cace_amm_idseg_val_t *obj, const cace_amm_idseg_val_t *src)
 {
+    CHKVOID(obj);
+    CHKVOID(src);
     m_string_set(obj->name, src->name);
     obj->has_intenum = src->has_intenum;
     obj->intenum     = src->intenum;
@@ -68,9 +73,23 @@ static inline void cace_amm_idseg_val_set(cace_amm_idseg_val_t *obj, const cace_
  */
 static inline void cace_amm_idseg_val_set_fromref(cace_amm_idseg_val_t *obj, const cace_amm_idseg_ref_t *src)
 {
+    CHKVOID(obj);
+    CHKVOID(src);
     m_string_set_cstr(obj->name, src->name);
     obj->has_intenum = src->has_intenum;
     obj->intenum     = src->intenum;
+}
+
+/** Check if this ID segment matches a specific integer enumeration.
+ *
+ * @param[in] obj The object to check.
+ * @param id The integer value to check.
+ * @return True if the object has the given value.
+ */
+static inline bool cace_amm_idseg_val_match_int(const cace_amm_idseg_val_t *obj, cace_ari_int_id_t id)
+{
+    CHKRET(obj, false);
+    return (obj->has_intenum && (obj->intenum == id));
 }
 
 #ifdef __cplusplus

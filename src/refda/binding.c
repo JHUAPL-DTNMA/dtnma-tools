@@ -33,8 +33,6 @@
 #include <cace/util/defs.h>
 #include <cace/util/logging.h>
 
-static int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *store);
-
 static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace_amm_obj_store_t *store)
 {
     // do not rebind
@@ -100,7 +98,7 @@ static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace
     }
     else
     {
-        const int64_t *aritype = cace_ari_get_aritype(&(semtype->name));
+        const int64_t *aritype = cace_ari_get_aritype_int(&(semtype->name));
         if (aritype)
         {
             semtype->base = cace_amm_type_get_builtin((cace_ari_type_t)*aritype);
@@ -182,7 +180,7 @@ static int refda_binding_semtype_seq(cace_amm_semtype_seq_t *semtype, const cace
     return refda_binding_typeobj(&(semtype->item_type), store);
 }
 
-static int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *store)
+int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *store)
 {
     switch (typeobj->type_class)
     {

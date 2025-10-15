@@ -121,6 +121,16 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, 
                                                    cace_ari_int_id_t intenum);
 
 /**
+ * Determine if the object namespace has specific enumerations.
+ *
+ * @param[in] The namespace to inspect.
+ * @param org_id The organization enumeration.
+ * @param model_id The model enumeration.
+ * @return True if the namespace has the given identifiers.
+ */
+bool cace_amm_obj_ns_is_match(const cace_amm_obj_ns_t *ns, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id);
+
+/**
  * Determine if the object namespace is an ODM.
  *
  * @param[in] The namespace to inspect.

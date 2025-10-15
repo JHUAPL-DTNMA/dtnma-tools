@@ -223,6 +223,16 @@ void cace_ari_tbl_reset(cace_ari_tbl_t *obj, size_t ncols, size_t nrows)
     }
 }
 
+size_t cace_ari_tbl_num_rows(const cace_ari_tbl_t *obj)
+{
+    if (!obj)
+    {
+        return 0;
+    }
+
+    return cace_ari_array_size(obj->items) / obj->ncols;
+}
+
 int cace_ari_tbl_move_row_ac(cace_ari_tbl_t *obj, cace_ari_ac_t *row)
 {
     CHKERR1(obj);

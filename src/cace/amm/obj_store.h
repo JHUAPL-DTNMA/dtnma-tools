@@ -49,7 +49,7 @@ M_BPTREE_DEF2(cace_amm_obj_org_by_name, 4, const char *, M_CSTR_NOCASE_OPLIST, c
 
 /** A container for AMM object descriptors within separate namespaces.
  */
-typedef struct
+typedef struct cace_amm_obj_store_s
 {
     /// Actual storage for all registered NS
     cace_amm_obj_ns_list_t ns_list;

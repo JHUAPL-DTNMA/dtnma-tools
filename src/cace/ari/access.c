@@ -542,7 +542,7 @@ bool cace_ari_is_lit_typed(const cace_ari_t *ari, cace_ari_type_t typ)
     return (ari && !(ari->is_ref) && ari->as_lit.has_ari_type && (ari->as_lit.ari_type == typ));
 }
 
-const int64_t *cace_ari_get_aritype(const cace_ari_t *ari)
+const int64_t *cace_ari_get_aritype_int(const cace_ari_t *ari)
 {
     if (!cace_ari_is_lit_typed(ari, CACE_ARI_TYPE_ARITYPE))
     {

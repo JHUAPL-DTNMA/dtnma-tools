@@ -22,6 +22,7 @@
 #include <refda/binding.h>
 #include <refda/valprod.h>
 #include <refda/exec_proc.h>
+#include <refda/adm/ietf.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_amm_base.h>
 #include <refda/adm/ietf_amm_semtype.h>
@@ -46,13 +47,17 @@
 static refda_agent_t agent;
 // Example ADM
 static cace_amm_obj_ns_t *ex_adm = NULL;
+/// Example ODM
+static cace_amm_obj_ns_t *ex_odm = NULL;
 
 // Org number for #ex_adm
 #define EXAMPLE_ORG_ENUM 65535
 // Model number for #ex_adm
 #define EXAMPLE_ADM_ENUM 10
-// Variable number
+// Object number for VAR in ADM
 #define EXAMPLE_VAR_ENUM 1
+// Model number for #ex_odm
+#define EXAMPLE_ODM_ENUM -5
 
 void suiteSetUp(void)
 {
@@ -84,6 +89,10 @@ void suiteSetUp(void)
         assert(0 == res);
     }
 
+    ex_odm = cace_amm_obj_store_add_ns(&(agent.objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
+                                       cace_amm_idseg_ref_withenum("!odm", EXAMPLE_ODM_ENUM), "2025-01-03");
+    assert(NULL != ex_adm);
+
     int res = refda_agent_bindrefs(&agent);
     assert(0 == res);
 
@@ -92,6 +101,7 @@ void suiteSetUp(void)
 
 int suiteTearDown(int failures)
 {
+    ex_odm = NULL;
     ex_adm = NULL;
     refda_agent_deinit(&agent);
 
@@ -99,6 +109,9 @@ int suiteTearDown(int failures)
     return failures;
 }
 
+/** Execute a target in the main test thread.
+ * This assumes the target does not contain any deferred callbacks.
+ */
 static void check_execute(const cace_ari_t *target)
 {
     refda_runctx_ptr_t ctxptr;
@@ -114,6 +127,8 @@ static void check_execute(const cace_ari_t *target)
 
     res = refda_exec_proc_run(&eseq);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_exec_run_seq() failed");
+
+    // TODO assert sequence is successful
 
     refda_exec_seq_deinit(&eseq);
     refda_runctx_ptr_clear(ctxptr);
@@ -187,6 +202,83 @@ void test_refda_adm_ietf_dtnma_agent_edd_produce(const char *targethex, int expe
     cace_ari_deinit(&target);
 }
 
+void test_refda_adm_ietf_dtnma_agent_ctrl_ensure_var(void)
+{
+    const cace_ari_int_id_t test_var_enum = 1;
+
+    // new VAR object creation and initialization
+    {
+        cace_ari_t ctrl_ref = CACE_ARI_INIT_UNDEFINED;
+        {
+            cace_ari_ref_t *ref = cace_ari_set_objref_path_intid(
+                &ctrl_ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
+                REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_VAR);
+
+            cace_ari_list_t params;
+            cace_ari_list_init(params);
+            { // namespace
+                cace_ari_t *param = cace_ari_list_push_back_new(params);
+                cace_ari_set_nsref_path_intid(param, EXAMPLE_ORG_ENUM, EXAMPLE_ODM_ENUM);
+            }
+            { // obj-name
+                cace_ari_t *param = cace_ari_list_push_back_new(params);
+                cace_ari_set_tstr(param, "newvar", true);
+            }
+            { // obj-enum
+                cace_ari_t *param = cace_ari_list_push_back_new(params);
+                cace_ari_set_vast(param, test_var_enum);
+            }
+            { // type
+                cace_ari_t     *param       = cace_ari_list_push_back_new(params);
+                cace_ari_ref_t *semtype_ref = cace_ari_set_objref_path_intid(
+                    param, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_SEMTYPE_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                    REFDA_ADM_IETF_AMM_SEMTYPE_ENUM_OBJID_IDENT_TYPE_USE);
+
+                cace_ari_list_t semtype_params;
+                cace_ari_list_init(semtype_params);
+
+                // use of ari://ietf/amm-base/typedef/rptt
+                cace_ari_t *semtype_param = cace_ari_list_push_back_new(semtype_params);
+                cace_ari_set_objref_path_intid(semtype_param, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_BASE_ENUM_ADM,
+                                               CACE_ARI_TYPE_TYPEDEF, REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_RPTT);
+                cace_ari_params_set_ac(&(semtype_ref->params), semtype_params);
+            }
+            { // value
+                cace_ari_t *param = cace_ari_list_push_back_new(params);
+
+                cace_ari_ac_t rptt;
+                cace_ari_ac_init(&rptt);
+                {
+                    cace_ari_t *item = cace_ari_list_push_back_new(rptt.items);
+                    // can reference a not-yet-existant EDD
+                    cace_ari_set_objref_path_intid(item, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_EDD, 100);
+                }
+                cace_ari_set_ac(param, &rptt);
+            }
+            cace_ari_params_set_ac(&(ref->params), params);
+        }
+
+        check_execute(&ctrl_ref);
+        cace_ari_deinit(&ctrl_ref);
+    }
+
+#if 0
+    // view new state
+    {
+        refda_valprod_ctx_t prodctx;
+        refda_valprod_ctx_init(&prodctx, &runctx, &var_ref, &deref);
+
+        int res = refda_valprod_run(&prodctx);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_valprod_run() failed");
+
+        cace_ari_int got;
+        TEST_ASSERT_EQUAL_INT(0, cace_ari_get_int(&prodctx.value, &got));
+        TEST_ASSERT_EQUAL_INT(100, got);
+        refda_valprod_ctx_deinit(&prodctx);
+    }
+#endif
+}
+
 void test_refda_adm_ietf_dtnma_agent_ctrl_var_store_reset(void)
 {
     cace_ari_t var_ref;
@@ -213,7 +305,7 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_store_reset(void)
 
     // store specific value
     {
-        cace_ari_t ctrl_ref;
+        cace_ari_t ctrl_ref = CACE_ARI_INIT_UNDEFINED;
         {
             cace_ari_ref_t *ref = cace_ari_init_objref(&ctrl_ref);
             cace_ari_objpath_set_intid(&(ref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,

@@ -26,6 +26,15 @@
 extern "C" {
 #endif
 
+/** Perform a type binding on a semantic type object.
+ *
+ * @param[in,out] typeobj The object to bind.
+ * @param[in] store The object store to lookup within.
+ * @return Zero if successful.
+ * Otherwise, the number of individual bindings which have failed.
+ */
+int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *store);
+
 /** Perform a type binding into an object store.
  *
  * @param[in,out] obj The object to bind.

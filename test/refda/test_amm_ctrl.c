@@ -159,7 +159,7 @@ static void check_execute(const char *refhex, const char *outhex)
 
     cace_ari_t outval = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));
-    TEST_ASSERT_EQUAL_INT(0, cace_ari_set_copy(&mock_result_store, &outval));
+    cace_ari_set_copy(&mock_result_store, &outval);
 
     refda_exec_proc_run(&eseq);
 
@@ -168,7 +168,7 @@ static void check_execute(const char *refhex, const char *outhex)
     if (result)
     {
         // move out result value
-        TEST_ASSERT_EQUAL_INT(0, cace_ari_set_move(result, &(eitem.result)));
+        cace_ari_set_move(result, &(eitem.result));
     }
 #endif
 

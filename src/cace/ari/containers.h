@@ -128,6 +128,13 @@ bool cace_ari_tbl_equal(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right)
  */
 void cace_ari_tbl_reset(cace_ari_tbl_t *obj, size_t ncols, size_t nrows);
 
+/** Compute the number of rows in this table.
+ *
+ * @param[in] obj The table to inspect.
+ * @return The row count.
+ */
+size_t cace_ari_tbl_num_rows(const cace_ari_tbl_t *obj);
+
 /** Append a row to a table, moving data from the source.
  *
  * @param[in,out] obj The table to append to.
