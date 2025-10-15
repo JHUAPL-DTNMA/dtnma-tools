@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 
     if (!retval && !m_string_empty_p(hello_eid))
     {
-        cace_ari_t      target = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
         // reference ari:/ietf/dtnma-agent/CTRL/report-on
         cace_ari_ref_t *tgt_ref =
             cace_ari_set_objref_path_intid(&target, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
                                            CACE_ARI_TYPE_CONST, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
         }
         {
-            cace_ari_t *item = cace_ari_list_push_back_new(param_ac->items);
+            cace_ari_t    *item    = cace_ari_list_push_back_new(param_ac->items);
             cace_ari_ac_t *item_ac = cace_ari_set_ac(item, NULL);
             {
                 cace_ari_t *mgr_ident = cace_ari_list_push_back_new(item_ac->items);

@@ -214,6 +214,10 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
 
         // execute appropriate callbacks (up to and including nowtime)
         refda_timeline_it(tl_it, agent->exec_timeline);
+        if (refda_timeline_end_p(tl_it))
+        {
+            CACE_LOG_DEBUG("timeline empty");
+        }
         while (!refda_timeline_end_p(tl_it))
         {
             const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
@@ -222,7 +226,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                 break;
             }
 
-            CACE_LOG_DEBUG("running deferred callback");
+            CACE_LOG_DEBUG("running timeline event, purpose %d", next->purpose);
             switch (next->purpose)
             {
                 case REFDA_TIMELINE_EXEC:
@@ -251,9 +255,8 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                     break;
                 }
                 default:
-                {
                     CACE_LOG_ERR("Unknown type of deferred callback %d", next->purpose);
-                }
+                    break;
             }
 
             refda_timeline_remove(agent->exec_timeline, tl_it);
@@ -492,7 +495,8 @@ static void refda_exec_run_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     {
         bool bool_result = false;
         result           = cace_ari_get_bool(&ari_result, &bool_result);
-        CACE_LOG_INFO("SBR %p condition is err %d, bool %d, current count %" PRIu64, sbr, result, bool_result, sbr->exec_count);
+        CACE_LOG_INFO("SBR %p condition is err %d, bool %d, current count %" PRIu64, sbr, result, bool_result,
+                      sbr->exec_count);
 
         if (!result && bool_result)
         {
