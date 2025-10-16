@@ -49,19 +49,22 @@ void refda_runctx_init(refda_runctx_t *ctx)
     ctx->agent = NULL;
     cace_ari_init(&(ctx->mgr_ident));
     cace_ari_init(&(ctx->nonce));
+    ctx->acl_gen = 0;
+    refda_acl_id_tree_init(ctx->acl_groups);
 }
 
 void refda_runctx_deinit(refda_runctx_t *ctx)
 {
     CHKVOID(ctx);
+    refda_acl_id_tree_clear(ctx->acl_groups);
     cace_ari_deinit(&(ctx->nonce));
     cace_ari_deinit(&(ctx->mgr_ident));
     ctx->agent = NULL;
 }
 
-int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg)
+void refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg)
 {
-    CHKERR1(ctx);
+    CHKVOID(ctx);
 
     ctx->agent = agent;
 
@@ -82,9 +85,29 @@ int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msg
     }
     else
     {
+        // Agent-directed, no manager
         cace_ari_reset(&(ctx->mgr_ident));
         cace_ari_reset(&(ctx->nonce));
     }
 
-    return 0;
+    // Lookup ACL groups once now
+    refda_runctx_check_acl(ctx);
+}
+
+void refda_runctx_check_acl(refda_runctx_t *ctx)
+{
+    if (cace_ari_is_undefined(&(ctx->mgr_ident)))
+    {
+        ctx->acl_gen = 0;
+        // agent group 0
+        refda_acl_id_tree_push(ctx->acl_groups, 0);
+    }
+    else
+    {
+        if (ctx->acl_gen != atomic_load(&ctx->agent->acl.generation))
+        {
+            ctx->acl_gen = atomic_load(&ctx->agent->acl.generation);
+            refda_acl_search_endpoint(ctx->agent, &ctx->mgr_ident, ctx->acl_groups);
+        }
+    }
 }

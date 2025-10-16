@@ -205,22 +205,25 @@ void cace_ari_set_aritype_text(cace_ari_t *ari, cace_ari_type_t type);
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in,out] src An optional existing value struct to move from.
+ * @return The new AC value struct.
  */
-void cace_ari_set_ac(cace_ari_t *ari, struct cace_ari_ac_s *src);
+struct cace_ari_ac_s *cace_ari_set_ac(cace_ari_t *ari, struct cace_ari_ac_s *src);
 
 /** Set the ARI as an AM, optionally moving values from an external source.
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in,out] src An optional existing value struct to move from.
+ * @return The new AC value struct.
  */
-void cace_ari_set_am(cace_ari_t *ari, struct cace_ari_am_s *src);
+struct cace_ari_am_s *cace_ari_set_am(cace_ari_t *ari, struct cace_ari_am_s *src);
 
 /** Set the ARI as a TBL, optionally moving values from an external source.
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in,out] src An optional existing value struct to move from.
+ * @return The new AC value struct.
  */
-void cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src);
+struct cace_ari_tbl_s *cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src);
 
 /** Require a TEXTSTR value and get the pointer to its storage.
  *

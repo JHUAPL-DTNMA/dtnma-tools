@@ -34,7 +34,30 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define URI_PREFIX "file:"
+static const char *URI_PREFIX = "file:";
+
+const char *cace_amp_socket_strip_scheme(const char *uri)
+{
+    const size_t prefix_len = strlen(URI_PREFIX);
+
+    if (!uri)
+    {
+        CACE_LOG_ERR("Given null URI");
+        return NULL;
+    }
+    if (strncasecmp(uri, URI_PREFIX, prefix_len) == 0)
+    {
+        return uri + prefix_len;
+    }
+    CACE_LOG_ERR("given dest that is not a \"%s\" scheme: %s", URI_PREFIX, uri);
+
+    if (strncmp(uri, "/", 1) == 0)
+    {
+        // looks like a path
+        return uri;
+    }
+    return NULL;
+}
 
 void cace_amp_socket_state_init(cace_amp_socket_state_t *state)
 {
@@ -50,21 +73,21 @@ void cace_amp_socket_state_deinit(cace_amp_socket_state_t *state)
     m_string_clear(state->path);
 }
 
-int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const m_string_t sock_path)
+int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const char *sock_path)
 {
     CHKERR1(state);
     CHKERR1(sock_path);
 
     struct sockaddr_un laddr;
     laddr.sun_family = AF_UNIX;
-    char *sun_end    = stpncpy(laddr.sun_path, m_string_get_cstr(sock_path), sizeof(laddr.sun_path));
+    char *sun_end    = stpncpy(laddr.sun_path, sock_path, sizeof(laddr.sun_path));
     if (sun_end - laddr.sun_path >= (ssize_t)sizeof(laddr.sun_path))
     {
         CACE_LOG_ERR("given path that is too long to fit in sockaddr_un");
         return 1;
     }
     // now copy the path
-    m_string_set(state->path, sock_path);
+    m_string_set_cstr(state->path, sock_path);
 
     // Set up listen socket
     state->sock_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
@@ -130,15 +153,7 @@ int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
         return 6;
     }
 
-    const size_t prefix_len = strlen(URI_PREFIX);
-    size_t       dst_len    = strlen(dest_eid);
-    if ((dst_len < prefix_len) || (strncasecmp(dest_eid, URI_PREFIX, prefix_len) != 0))
-    {
-        CACE_LOG_ERR("given dest that is not a \"file\" scheme: %s", dest_eid);
-        return 1;
-    }
-    dest_eid += strlen(URI_PREFIX);
-    dst_len -= prefix_len;
+    dest_eid = cace_amp_socket_strip_scheme(dest_eid);
 
     struct sockaddr_un daddr;
     daddr.sun_family = AF_UNIX;
@@ -254,7 +269,7 @@ int cace_amp_socket_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta,
 
             m_string_t srcbuf;
             m_string_init(srcbuf);
-            m_string_printf(srcbuf, URI_PREFIX "%s", saddr.sun_path);
+            m_string_printf(srcbuf, "%s%s", URI_PREFIX, saddr.sun_path);
             CACE_LOG_DEBUG("read datagram with %zd octets from %s", got, m_string_get_cstr(srcbuf));
             cace_ari_set_tstr(&meta->src, m_string_get_cstr(srcbuf), true);
             cace_get_system_time(&meta->timestamp);

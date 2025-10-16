@@ -44,6 +44,12 @@ void *refda_ingress_worker(void *arg)
         {
             CACE_LOG_INFO("Message has %d ARIs", cace_ari_list_size(values));
 
+            if (cace_ari_is_undefined(&(meta.src)))
+            {
+                CACE_LOG_ERR("Ignoring undefined source endpoint");
+                continue;
+            }
+
             cace_ari_list_it_t val_it;
             /* For each received ARI, validate it */
             for (cace_ari_list_it(val_it, values); !cace_ari_list_end_p(val_it); cace_ari_list_next(val_it))
@@ -95,6 +101,11 @@ void refda_ingress_push_move(refda_agent_t *agent, const cace_amm_msg_if_metadat
     if (cace_ari_get_execset(ari) == NULL)
     {
         CACE_LOG_ERR("Ignoring input ARI that is not an EXECSET");
+        return;
+    }
+    if (cace_ari_is_undefined(&(meta->src)))
+    {
+        CACE_LOG_ERR("Ignoring undefined source endpoint");
         return;
     }
 

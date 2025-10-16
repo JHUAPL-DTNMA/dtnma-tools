@@ -145,6 +145,7 @@ int cace_amp_ion_bp_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
         ancData.flags                       = BP_RELIABLE | BP_BEST_EFFORT;
 
         int res = bp_send(state->sap,
+                          // TODO fix ION API
                           (char *)dest_eid, // destination
                           NULL,             // report-to
                           lifetime_s,       // lifetime in seconds

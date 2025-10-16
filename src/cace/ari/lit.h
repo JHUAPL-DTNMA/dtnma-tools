@@ -23,6 +23,7 @@
 #define CACE_ARI_LIT_H_
 
 #include "type.h"
+#include "idseg.h"
 #include "cace/config.h"
 #include "cace/cace_data.h"
 #include <m-string.h>

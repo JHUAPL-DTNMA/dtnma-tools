@@ -33,7 +33,7 @@ typedef struct refda_msgdata_s
 {
     /// The peer identity as opaque value
     cace_ari_t ident;
-    /// The message value
+    /// The message value (single EXECSET or RPTSET)
     cace_ari_t value;
 } refda_msgdata_t;
 

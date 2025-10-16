@@ -65,7 +65,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-integer
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 1);
             }
@@ -82,7 +82,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-integer
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 1);
             }
@@ -99,7 +99,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-integer
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 1);
             }
@@ -116,7 +116,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-float
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 2);
             }
@@ -133,7 +133,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-float
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 2);
             }
@@ -150,7 +150,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-float
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 2);
             }
@@ -167,7 +167,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-bstr
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
@@ -184,7 +184,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-bstr
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
@@ -201,7 +201,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-bstr
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
@@ -218,7 +218,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-time
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 4);
             }
@@ -235,7 +235,7 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             refda_amm_ident_desc_init(objdata);
             // IDENT bases:
             {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_back_new(objdata->bases);
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
                 // ari://ietf/amm-base/IDENT/display-hint-time
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 4);
             }

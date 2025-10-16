@@ -30,7 +30,7 @@ import subprocess
 import tempfile
 import time
 from typing import List, Set
-from urllib.parse import quote
+import urllib.parse
 import unittest
 import cbor2
 import requests
@@ -40,14 +40,20 @@ from helpers import CmdRunner, Timer, compose_args
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+logging.getLogger('ace').setLevel(logging.ERROR)
 
 ADMS = AdmSet(cache_dir=False)
 ''' ADM handling outside of tests '''
-logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
 ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
 
 ORIG_DB_HOST = os.environ.get('DB_HOST')
 ''' Environment at start of process '''
+
+
+def quote(text: str)->str:
+    ''' URL-encode all non-unreserved characters. '''
+    return urllib.parse.quote(text, safe="")
 
 
 def split_content_type(text):
@@ -176,9 +182,6 @@ class BaseRefdm(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-        logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
-
         cls._sql_start()
 
     @classmethod
@@ -264,7 +267,7 @@ class TestRefdmSocket(BaseRefdm):
 
         args = compose_args([
             'refdm-socket',
-            '-l', 'debug',
+            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
             '-a', self._mgr_sock_path
         ])
         self._mgr = CmdRunner(args)
@@ -535,7 +538,7 @@ class TestRefdmSocket(BaseRefdm):
             [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
         )
         agent_eid = 'file:' + sock_path
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         LOGGER.info('Waiting for agent %s', agent_eid)
         timer = Timer(5)
@@ -582,7 +585,7 @@ class TestRefdmSocket(BaseRefdm):
         sock_path = self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
         )
-        eid_seg = quote('file:' + sock_path, safe="")
+        eid_seg = quote('file:' + sock_path)
         rptset_count = 3
 
         self._wait_for_db_table('ari_rptset', rptset_count)
@@ -622,13 +625,13 @@ class TestRefdmSocket(BaseRefdm):
         sock_path = self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
         )
-        eid_seg0 = quote('file:' + sock_path, safe="")
+        eid_seg0 = quote('file:' + sock_path)
 
         sock_path = self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
             agent_ix=1
         )
-        eid_seg1 = quote('file:' + sock_path, safe="")
+        eid_seg1 = quote('file:' + sock_path)
 
         self._wait_for_db_table('ari_rptset', 2)
         resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
@@ -659,7 +662,7 @@ class TestRefdmSocket(BaseRefdm):
 
         agent_bind = self._agent_bind[0]
         agent_eid = 'file:' + agent_bind["path"]
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         resp = self._req.post(
             self._base_url + 'agents',
@@ -696,7 +699,7 @@ class TestRefdmSocket(BaseRefdm):
 
         agent_bind = self._agent_bind[0]
         agent_eid = 'file:' + agent_bind["path"]
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         resp = self._req.post(
             self._base_url + 'agents',
@@ -733,7 +736,7 @@ class TestRefdmSocket(BaseRefdm):
 
         agent_bind = self._agent_bind[0]
         agent_eid = 'file:' + agent_bind["path"]
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         resp = self._req.post(
             self._base_url + 'agents',
@@ -974,7 +977,7 @@ class TestRefdmProxy(BaseRefdm):
         self._start()
 
         agent_eid = 'data:agent0'
-        eid_seg = quote(agent_eid, safe="")
+        eid_seg = quote(agent_eid)
 
         resp = self._req.post(
             self._base_url + 'agents',

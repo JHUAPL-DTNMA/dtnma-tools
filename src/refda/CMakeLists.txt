@@ -18,6 +18,8 @@ limitations under the License.
 
 set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/endpoint.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/acl.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/instr.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/binding.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/msgdata.h"
@@ -31,6 +33,7 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/exec.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/exec_item.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/exec_seq.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/exec_proc.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/oper_eval_ctx.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/eval.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/eval_ctx.h"
@@ -49,9 +52,12 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_amm_semtype.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_network_base.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_dtnma_agent.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_dtnma_agent_acl.h"
 )
 set(CFILES
     "agent.c"
+    "endpoint.c"
+    "acl.c"
     "instr.c"
     "binding.c"
     "msgdata.c"
@@ -65,6 +71,7 @@ set(CFILES
     "exec.c"
     "exec_item.c"
     "exec_seq.c"
+    "exec_proc.c"
     "oper_eval_ctx.c"
     "eval.c"
     "eval_ctx.c"
@@ -85,6 +92,7 @@ set(CFILES
     "adm/ietf_amm_semtype.c"
     "adm/ietf_network_base.c"
     "adm/ietf_dtnma_agent.c"
+    "adm/ietf_dtnma_agent_acl.c"
 )
 add_library(refda)
 target_sources(refda PUBLIC ${HFILES})

@@ -202,6 +202,7 @@ static int builtin_bool_convert(const cace_amm_type_t *self, cace_ari_t *out, co
             case CACE_ARI_PRIM_OTHER:
                 switch (in->as_lit.ari_type)
                 {
+                    case CACE_ARI_TYPE_ARITYPE:
                     case CACE_ARI_TYPE_AC:
                     case CACE_ARI_TYPE_AM:
                     case CACE_ARI_TYPE_TBL:
@@ -390,7 +391,7 @@ static int builtin_byte_convert(const cace_amm_type_t *self, cace_ari_t *out, co
         {
             return CACE_AMM_ERR_CONVERT_BADVALUE;
         }
-        BUILTIN_ANYINT_EXTRACT(cace_ari_byte, cace_ari_set_int);
+        BUILTIN_ANYINT_EXTRACT(cace_ari_byte, cace_ari_set_byte);
         return 0;
     }
 }
@@ -701,13 +702,9 @@ static cace_amm_type_match_res_t builtin_object_match(const cace_amm_type_t *sel
     {
         return CACE_AMM_TYPE_MATCH_UNDEFINED;
     }
-    if (!(ari->is_ref))
-    {
-        return CACE_AMM_TYPE_MATCH_NEGATIVE;
-    }
-    const cace_ari_objpath_t *path = &(ari->as_ref.objpath);
+    const cace_ari_objpath_t *path = cace_ari_cget_ref_objpath(ari);
     // must have object parts
-    if ((path->type_id.form == CACE_ARI_IDSEG_NULL) || (path->obj_id.form == CACE_ARI_IDSEG_NULL))
+    if (!path || (path->type_id.form == CACE_ARI_IDSEG_NULL) || (path->obj_id.form == CACE_ARI_IDSEG_NULL))
     {
         return CACE_AMM_TYPE_MATCH_NEGATIVE;
     }
@@ -720,13 +717,9 @@ static cace_amm_type_match_res_t builtin_namespace_match(const cace_amm_type_t *
     {
         return CACE_AMM_TYPE_MATCH_UNDEFINED;
     }
-    if (!(ari->is_ref))
-    {
-        return CACE_AMM_TYPE_MATCH_NEGATIVE;
-    }
-    const cace_ari_objpath_t *path = &(ari->as_ref.objpath);
+    const cace_ari_objpath_t *path = cace_ari_cget_ref_objpath(ari);
     // must not have object parts
-    if ((path->type_id.form != CACE_ARI_IDSEG_NULL) || (path->obj_id.form != CACE_ARI_IDSEG_NULL))
+    if (!path || (path->type_id.form != CACE_ARI_IDSEG_NULL) || (path->obj_id.form != CACE_ARI_IDSEG_NULL))
     {
         return CACE_AMM_TYPE_MATCH_NEGATIVE;
     }
