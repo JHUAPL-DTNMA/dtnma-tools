@@ -20,17 +20,23 @@ ENV DEBIAN_FRONTEND="noninteractive"
 
 # APL network configuration from
 # https://aplprod.servicenowservices.com/sp?id=kb_article&sys_id=c0de6fe91b83d85071b143bae54bcb34
-RUN apt-get update && apt-get install -y ca-certificates curl && \
+RUN --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y ca-certificates curl && \
     (curl -sL http://apllinuxdepot.jhuapl.edu/linux/APL-root-cert/JHUAPL-MS-Root-CA-05-21-2038-B64-text.cer -o /usr/local/share/ca-certificates/JHUAPL-MS-Root-CA-05-21-2038-B64-text.crt || true) && \
     update-ca-certificates
 ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt
 ENV PIP_DEFAULT_TIMEOUT=300
 
 # Distro upgrade for security patches
-RUN apt-get update && apt-get upgrade -y
+RUN --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get upgrade -y
 
 # Use systemd as top-level process
-RUN apt-get update && apt-get install -y systemd systemd-sysv
+RUN --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y systemd systemd-sysv
 RUN systemctl mask systemd-logind && \
     systemctl mask console-getty && \
     systemctl disable getty@tty1 && \
@@ -41,7 +47,9 @@ RUN systemctl mask systemd-logind && \
 CMD [ "/sbin/init" ]
 
 # Testing utilities
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     net-tools iproute2 iputils-ping \
     lsof iftop gdb valgrind xxd socat jq ruby && \
     gem install cbor-diag
@@ -49,7 +57,9 @@ RUN apt-get update && apt-get install -y \
 
 FROM ubuntu:24.04 AS deps-local
 
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     build-essential \
     cmake autoconf libtool && \
     echo "/usr/local/lib" >/etc/ld.so.conf.d/local.conf
@@ -86,18 +96,24 @@ FROM systemd-base AS testenv
 COPY --from=deps-local /usr/local /usr/local
 
 # Helper utilities
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     python3 python3-pip
 COPY --chmod=755 systemd/service_is_running.sh /usr/local/bin/service_is_running
 
 # Test tools
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     curl git tshark postgresql-client
 RUN pip3 install --break-system-packages git+https://github.com/JHUAPL-DTNMA/dtnma-ace.git@main
 RUN git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-adms.git /usr/local/share/ace/adms
 
 # REFDA and REFDM to test
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     cmake ninja-build ruby pkg-config \
     flex libfl-dev bison libpcre2-dev libpq-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev
 COPY deps /usr/local/src/nm/deps
