@@ -38,7 +38,7 @@ then
 fi
 if [[ ! -d ./deps/dtnma-ace ]]
 then
-    git clone --branch ari-comparison https://github.com/JHUAPL-DTNMA/dtnma-ace.git ./deps/dtnma-ace
+    git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-ace.git ./deps/dtnma-ace
 fi
 ${PYTHON} -m pip install -e ./deps/dtnma-ace
 ${PYTHON} -m pip install -r requirements.txt
