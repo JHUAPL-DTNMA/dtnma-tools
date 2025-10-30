@@ -47,6 +47,18 @@ extern "C" {
  */
 int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *ari);
 
+/** Evaluate given conditional ARI expression and return a boolean ARI indicating whether
+ * the condition was true or false.
+ *
+ * @param[in] runctx The run context.
+ * @param[out] result The single result value from the evaluation.
+ * This ARI must be initialized before the call and will be valid if the
+ * return code is zero but must be deinitialized regardless.
+ * @param[in] condition The ARI to dereference, if necessary, and evaluate.
+ * @return Zero if successful.
+ */
+int refda_eval_condition(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *condition);
+
 #ifdef __cplusplus
 } // extern C
 #endif

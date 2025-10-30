@@ -874,6 +874,32 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((0, 2), rpt.items[0].value.shape)
 
+    def test_agent_control_flow_ctrls(self):
+        self._start()
+
+        LOGGER.setLevel(logging.INFO)
+
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), null, null))')]
+        )
+        msg_vals = self._wait_msg(mgr_ix=0)
+        self.assertEqual(1, len(msg_vals))
+        rptset = msg_vals[0].value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, bool)
+        self.assertEqual(True, rpt.items[0].value)
+
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), //ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version), null))')]
+        )
+        msg_vals = self._wait_msg(mgr_ix=0)
+        rptset = msg_vals[0].value
+        rpt = rptset.reports[0]
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, bool)
+        self.assertEqual(True, rpt.items[0].value)
+
     def test_odm_const_invalid(self):
         self._start()
 
