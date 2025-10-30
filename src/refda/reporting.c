@@ -53,32 +53,10 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_
     return 0;
 }
 
-/** Require any literal to be an EXPR and evaluate the expression.
- */
-static int refda_reporting_item_lit(refda_runctx_t *parent, cace_ari_t *rpt_item, const cace_ari_t *rptt_item)
-{
-    int retval = 0;
-    if (CACE_AMM_TYPE_MATCH_POSITIVE != cace_amm_type_match(parent->agent->expr_type, rptt_item))
-    {
-        CACE_LOG_WARNING("Attempted reporting on a non-EXPR literal");
-        retval = REFDA_REPORTING_ERR_BAD_TYPE;
-    }
-    else
-    {
-        CACE_LOG_DEBUG("Reporting on item literal");
-        if (refda_eval_target(parent, rpt_item, rptt_item))
-        {
-            cace_ari_reset(rpt_item);
-            retval = REFDA_REPORTING_ERR_EVAL_FAILED;
-        }
-    }
-    return retval;
-}
-
 /** Treat any object reference as a value-producing activity, with the
  * produced value reported on directly.
  */
-static int refda_reporting_item_ref(refda_runctx_t *parent, cace_ari_t *rpt_item, const cace_ari_t *rptt_item)
+static int refda_reporting_item_ref(refda_runctx_t *runctx, cace_ari_t *prod_val, const cace_ari_t *rptt_item)
 {
     CACE_LOG_DEBUG("Reporting on item reference");
     int retval = 0;
@@ -86,7 +64,7 @@ static int refda_reporting_item_ref(refda_runctx_t *parent, cace_ari_t *rpt_item
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
 
-    int res = cace_amm_lookup_deref(&deref, &(parent->agent->objs), rptt_item);
+    int res = cace_amm_lookup_deref(&deref, &(runctx->agent->objs), rptt_item);
     CACE_LOG_DEBUG("Lookup result %d", res);
     if (res)
     {
@@ -102,12 +80,12 @@ static int refda_reporting_item_ref(refda_runctx_t *parent, cace_ari_t *rpt_item
             case CACE_ARI_TYPE_EDD:
             {
                 refda_valprod_ctx_t prodctx;
-                refda_valprod_ctx_init(&prodctx, parent, rptt_item, &deref);
+                refda_valprod_ctx_init(&prodctx, runctx, rptt_item, &deref);
                 retval = refda_valprod_run(&prodctx);
                 if (!retval)
                 {
                     // include the produced value directly
-                    cace_ari_set_copy(rpt_item, &(prodctx.value));
+                    cace_ari_set_move(prod_val, &(prodctx.value));
                 }
                 refda_valprod_ctx_deinit(&prodctx);
                 break;
@@ -133,37 +111,59 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const cace_ar
     for (cace_ari_list_it(rptt_it, tgt_ac->items); !cace_ari_list_end_p(rptt_it); cace_ari_list_next(rptt_it))
     {
         const cace_ari_t *rptt_item = cace_ari_list_cref(rptt_it);
-        cace_ari_t        rpt_item  = CACE_ARI_INIT_UNDEFINED;
 
-        int res = 0;
+        // intermediate item from the template
+        cace_ari_t inter_item = CACE_ARI_INIT_UNDEFINED;
         if (rptt_item->is_ref)
         {
-            // item is a reference to be produced
-            res = refda_reporting_item_ref(rptctx->parent, &rpt_item, rptt_item);
-        }
-        else
-        {
-            // item is an expression to be evaluated
-            res = refda_reporting_item_lit(rptctx->parent, &rpt_item, rptt_item);
-        }
-
-        if (res)
-        {
-            // failures in individual items result in undefined value
-            CACE_LOG_WARNING("reporting failed for a single item with result %d", res);
-            cace_ari_reset(&rpt_item);
-        }
-        else
-        {
-            if (cace_log_is_enabled_for(LOG_DEBUG))
+            // item is a reference to be produced, then possibly evaluated
+            if (refda_reporting_item_ref(rptctx->runctx, &inter_item, rptt_item))
             {
-                string_t buf;
-                string_init(buf);
-                cace_ari_text_encode(buf, &rpt_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_DEBUG("report item result %s", string_get_cstr(buf));
-                string_clear(buf);
+                // failures in individual items result in undefined value
+                CACE_LOG_WARNING("failed to dereference item");
+                cace_ari_reset(&inter_item);
             }
         }
+        else
+        {
+            // just use the template item
+            cace_ari_set_copy(&inter_item, rptt_item);
+        }
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            string_t buf;
+            string_init(buf);
+            cace_ari_text_encode(buf, &inter_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("intermediate item %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+
+        cace_ari_t rpt_item = CACE_ARI_INIT_UNDEFINED;
+        if (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(rptctx->runctx->agent->expr_type, &inter_item))
+        {
+            // item is an expression to be evaluated
+            CACE_LOG_DEBUG("Reporting on expression");
+            if (refda_eval_target(rptctx->runctx, &rpt_item, &inter_item))
+            {
+                CACE_LOG_WARNING("reporting failed to evaluate expression");
+                cace_ari_reset(&rpt_item);
+            }
+        }
+        else
+        {
+            // intermediate is directly reported
+            CACE_LOG_DEBUG("Reporting on literal");
+            cace_ari_set_move(&rpt_item, &inter_item);
+        }
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            string_t buf;
+            string_init(buf);
+            cace_ari_text_encode(buf, &rpt_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("reporting intermediate %s", string_get_cstr(buf));
+            string_clear(buf);
+        }
+        cace_ari_deinit(&inter_item);
 
         cace_ari_list_push_back_move(rptctx->items, &rpt_item);
     }
@@ -174,7 +174,7 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const cace_ar
 static int refda_reporting_rptt_lit(refda_reporting_ctx_t *rptctx, const cace_ari_t *value)
 {
     int retval = 0;
-    if (CACE_AMM_TYPE_MATCH_POSITIVE != cace_amm_type_match(rptctx->parent->agent->rptt_type, value))
+    if (CACE_AMM_TYPE_MATCH_POSITIVE != cace_amm_type_match(rptctx->runctx->agent->rptt_type, value))
     {
         CACE_LOG_WARNING("Attempted reporting on a non-RPTT literal");
         retval = REFDA_REPORTING_ERR_BAD_TYPE;
@@ -197,7 +197,7 @@ static int refda_reporting_rptt_ref(refda_reporting_ctx_t *rptctx, const cace_ar
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
 
-    int res = cace_amm_lookup_deref(&deref, &(rptctx->parent->agent->objs), target);
+    int res = cace_amm_lookup_deref(&deref, &(rptctx->runctx->agent->objs), target);
     CACE_LOG_DEBUG("Lookup result %d", res);
     if (res)
     {
@@ -213,7 +213,7 @@ static int refda_reporting_rptt_ref(refda_reporting_ctx_t *rptctx, const cace_ar
             case CACE_ARI_TYPE_EDD:
             {
                 refda_valprod_ctx_t prodctx;
-                refda_valprod_ctx_init(&prodctx, rptctx->parent, target, &deref);
+                refda_valprod_ctx_init(&prodctx, rptctx->runctx, target, &deref);
                 retval = refda_valprod_run(&prodctx);
                 if (!retval)
                 {
@@ -233,22 +233,33 @@ static int refda_reporting_rptt_ref(refda_reporting_ctx_t *rptctx, const cace_ar
     return retval;
 }
 
-int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target)
+int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target, const cace_ari_t *destination)
 {
     CHKERR1(runctx);
     CHKERR1(target);
+    if (!cace_ari_not_undefined(destination))
+    {
+        // nothing to do
+        CACE_LOG_WARNING("attempted to report to undefined manager");
+        return 1;
+    }
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
+        string_t dest_buf;
+        string_init(dest_buf);
+        cace_ari_text_encode(dest_buf, destination, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+
         string_t buf;
         string_init(buf);
         cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Reporting on target %s", string_get_cstr(buf));
+        CACE_LOG_DEBUG("Reporting to %s for target %s", m_string_get_cstr(dest_buf), m_string_get_cstr(buf));
         string_clear(buf);
+        string_clear(dest_buf);
     }
 
     refda_reporting_ctx_t rptctx;
-    refda_reporting_ctx_init(&rptctx, runctx);
+    refda_reporting_ctx_init(&rptctx, runctx, destination);
 
     int retval = 0;
     if (target->is_ref)
@@ -262,25 +273,26 @@ int refda_reporting_target(refda_runctx_t *runctx, const cace_ari_t *target)
 
     if (!retval)
     {
-        refda_reporting_gen(runctx->agent, &runctx->mgr_ident, target, rptctx.items);
+        refda_reporting_gen(runctx->agent, destination, target, rptctx.items);
     }
 
     refda_reporting_ctx_deinit(&rptctx);
     return retval;
 }
 
-int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const cace_ari_t *src, cace_ari_list_t items)
+int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *destination, const cace_ari_t *src,
+                        cace_ari_list_t items)
 {
-    if (!mgr_ident || cace_ari_is_undefined(mgr_ident))
+    if (!cace_ari_not_undefined(destination))
     {
         // nothing to do
-        CACE_LOG_WARNING("attempted to report to undefined manager");
-        return 0;
+        CACE_LOG_WARNING("attempted to report to undefined destination");
+        return 1;
     }
 
     refda_msgdata_t msg;
     refda_msgdata_init(&msg);
-    cace_ari_set_copy(&msg.ident, mgr_ident);
+    cace_ari_set_copy(&msg.ident, destination);
 
     cace_ari_rptset_t *rpts = cace_ari_set_rptset(&msg.value);
     cace_ari_set_null(&(rpts->nonce));
@@ -293,13 +305,19 @@ int refda_reporting_gen(refda_agent_t *agent, const cace_ari_t *mgr_ident, const
         cace_ari_list_move(rpt->items, items);
         cace_ari_list_init(items);
 
-        if (cace_log_is_enabled_for(LOG_DEBUG))
+        if (cace_log_is_enabled_for(LOG_INFO))
         {
             string_t buf;
             string_init(buf);
             cace_ari_text_encode(buf, src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("Generated a report for source %s with %d items", string_get_cstr(buf),
-                           cace_ari_list_size(rpt->items));
+
+            string_t mgr_buf;
+            string_init(mgr_buf);
+            cace_ari_text_encode(mgr_buf, &msg.ident, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+
+            CACE_LOG_INFO("Generated a report destined to %s from source %s with %d items", string_get_cstr(mgr_buf),
+                          string_get_cstr(buf), cace_ari_list_size(rpt->items));
+            string_clear(mgr_buf);
             string_clear(buf);
         }
     }

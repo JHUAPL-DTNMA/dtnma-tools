@@ -66,10 +66,10 @@ Some of these are command-line tools meant to be used either interactively or fo
 ## ARI Processing Library and Tool
 
 The processing of encoded ARI values and the associated AMM typing system are built as the stand-alone `cace` library, which is used by all of the other portions of this project.
+Details about this library are described in the @ref cace page.
 
 The tool `cace_ari` is for checking encoded ARI values (both URI text form and CBOR binary form) and for converting between the two forms.
-
-More details are described in the @ref cace page.
+Details about this command are described in the @ref cace_ari page.
 
 ## Reference Agent Library and Bindings
 

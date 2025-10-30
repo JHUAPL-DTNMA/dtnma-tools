@@ -328,7 +328,7 @@ int refda_agent_stop(refda_agent_t *agent)
         // Send sentinel to end thread execution
         refda_msgdata_t undef;
         refda_msgdata_init(&undef);
-        refda_msgdata_queue_push_move(&agent->execs[0], &undef);
+        refda_msgdata_queue_push_move(agent->execs, &undef);
         sem_post(&(agent->execs_sem));
     }
 
@@ -348,16 +348,14 @@ int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
     cace_ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CONST,
                                    REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
 
-    // dummy message source
-    refda_msgdata_t msg;
-    refda_msgdata_init(&msg);
-    cace_ari_set_tstr(&msg.ident, dest, true);
+    cace_ari_t mgr_ident = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tstr(&mgr_ident, dest, false);
 
     refda_runctx_t runctx;
     refda_runctx_init(&runctx);
     int retval = 0;
 
-    int res = refda_runctx_from(&runctx, agent, &msg);
+    int res = refda_runctx_from(&runctx, agent, NULL);
     if (res)
     {
         retval = 2;
@@ -365,7 +363,7 @@ int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
 
     if (!retval)
     {
-        res = refda_reporting_target(&runctx, &ref);
+        res = refda_reporting_target(&runctx, &ref, &mgr_ident);
         if (res)
         {
             retval = 3;
@@ -373,7 +371,8 @@ int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
     }
 
     refda_runctx_deinit(&runctx);
-    refda_msgdata_deinit(&msg);
+    cace_ari_deinit(&mgr_ident);
+    cace_ari_deinit(&ref);
 
     return retval;
 }

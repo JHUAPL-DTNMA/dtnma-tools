@@ -195,6 +195,9 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
 
+    cace_ari_t destination = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_tstr(&destination, "data:foo", false);
+
     cace_ari_t expect_rpt_items = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&expect_rpt_items, expectloghex));
     cace_ari_ac_t *expect_seq = cace_ari_get_ac(&expect_rpt_items);
@@ -203,7 +206,7 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     refda_runctx_t runctx;
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
-    int res = refda_reporting_target(&runctx, &target);
+    int res = refda_reporting_target(&runctx, &target, &destination);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_exec_target() disagrees");
 
     // extract agent state
@@ -224,7 +227,7 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     for (; !cace_ari_list_end_p(expect_it) && !cace_ari_list_end_p(got_it);
          cace_ari_list_next(expect_it), cace_ari_list_next(got_it))
     {
-        TEST_PRINTF("Checking ARI %z", item_ix++);
+        TEST_PRINTF("Checking ARI %zu", item_ix++);
         const bool equal = cace_ari_equal(cace_ari_list_cref(expect_it), cace_ari_list_cref(got_it));
         TEST_ASSERT_TRUE_MESSAGE(equal, "RPT ARI is different");
     }
@@ -232,5 +235,6 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     refda_msgdata_deinit(&got_rptset);
     refda_runctx_deinit(&runctx);
     cace_ari_deinit(&expect_rpt_items);
+    cace_ari_deinit(&destination);
     cace_ari_deinit(&target);
 }

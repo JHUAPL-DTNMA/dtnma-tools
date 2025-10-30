@@ -377,6 +377,20 @@ const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari)
     return &(ari->as_lit.value.as_data);
 }
 
+const char *cace_ari_cget_tstr_cstr(const cace_ari_t *ari)
+{
+    if (ari->is_ref || (ari->as_lit.prim_type != CACE_ARI_PRIM_TSTR))
+    {
+        return NULL;
+    }
+    return (const char *)(ari->as_lit.value.as_data.ptr);
+}
+
+const char *cace_ari_get_tstr_cstr(cace_ari_t *ari)
+{
+    return (char *)cace_ari_cget_tstr_cstr(ari);
+}
+
 void cace_ari_set_tstr(cace_ari_t *ari, const char *buf, bool copy)
 {
     CHKVOID(ari);
@@ -528,7 +542,7 @@ bool cace_ari_is_lit_typed(const cace_ari_t *ari, cace_ari_type_t typ)
     return (ari && !(ari->is_ref) && ari->as_lit.has_ari_type && (ari->as_lit.ari_type == typ));
 }
 
-const int64_t *cace_ari_get_aritype(const cace_ari_t *ari)
+const int64_t *cace_ari_get_aritype_int(const cace_ari_t *ari)
 {
     if (!cace_ari_is_lit_typed(ari, CACE_ARI_TYPE_ARITYPE))
     {
@@ -726,4 +740,20 @@ struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari)
                                                  } };
 
     return ctr;
+}
+
+const cace_ari_ref_t *cace_ari_cget_ref(const cace_ari_t *ari)
+
+{
+    if (!ari || !(ari->is_ref))
+    {
+        return NULL;
+    }
+    return &ari->as_ref;
+}
+
+const cace_ari_objpath_t *cace_ari_cget_ref_objpath(const cace_ari_t *ari)
+{
+    const cace_ari_ref_t *ref = cace_ari_cget_ref(ari);
+    return ref ? &ref->objpath : NULL;
 }
