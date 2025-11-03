@@ -591,12 +591,7 @@ int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_
     }
 
     // Insert next execution items immediately after the currently executing item
-    cace_ari_array_t invalid_items;
-    cace_ari_array_init(invalid_items);
-
-    int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, target, invalid_items);
-
-    cace_ari_array_clear(invalid_items);
+    int res = refda_exec_proc_expand(seq, seq->runctx, target);
 
     // Move existing items back, so they will execute after the newly-added item(s)
     while (!refda_exec_item_list_empty_p(tmp_items))
