@@ -1681,7 +1681,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
     result = CACE_ARI_INIT_UNDEFINED;
 
     if (condition)
@@ -1700,8 +1699,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
         }
         cace_ari_set_bool(&result, false);
     }
+
     refda_ctrl_exec_ctx_set_result_move(ctx, &result);
-    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY

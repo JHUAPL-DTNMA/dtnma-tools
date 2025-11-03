@@ -47,12 +47,13 @@ int refda_exec_add_target(refda_runctx_ptr_t runctxp, const cace_ari_t *target, 
 
     refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
 
+    refda_runctx_ptr_set(seq->runctx, runctxp);
     seq->pid = agent->exec_next_pid++;
-    // no dereference here
+    // no dereference here, allowed to be null
     seq->status = status;
 
     // Expand now and wait for actual run later
-    int res = refda_exec_proc_expand(seq, runctxp, target);
+    int res = refda_exec_proc_expand(seq, target);
     if (res)
     {
         // clean up useless sequence
@@ -591,7 +592,7 @@ int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_
     }
 
     // Insert next execution items immediately after the currently executing item
-    int res = refda_exec_proc_expand(seq, seq->runctx, target);
+    int res = refda_exec_proc_expand(seq, target);
 
     // Move existing items back, so they will execute after the newly-added item(s)
     while (!refda_exec_item_list_empty_p(tmp_items))

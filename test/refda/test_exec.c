@@ -231,8 +231,9 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
 
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
+    refda_runctx_ptr_set(eseq.runctx, ctxptr);
 
-    int res = refda_exec_proc_expand(&eseq, ctxptr, target);
+    int res = refda_exec_proc_expand(&eseq, target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_exp, res, "refda_exec_exp_target() failed");
 
     bool success = false;

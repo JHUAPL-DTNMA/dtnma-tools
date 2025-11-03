@@ -277,12 +277,12 @@ static int refda_exec_proc_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *se
     return retval;
 }
 
-int refda_exec_proc_expand(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const cace_ari_t *target)
+int refda_exec_proc_expand(refda_exec_seq_t *seq, const cace_ari_t *target)
 {
     CHKERR1(seq);
-    CHKERR1(runctxp);
     CHKERR1(target);
-    refda_runctx_t *runctx = refda_runctx_ptr_ref(runctxp);
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(seq->runctx);
+    CHKERR1(runctx);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
@@ -299,8 +299,6 @@ int refda_exec_proc_expand(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, co
         string_clear(mgr_buf);
         string_clear(buf);
     }
-
-    refda_runctx_ptr_set(seq->runctx, runctxp);
 
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);

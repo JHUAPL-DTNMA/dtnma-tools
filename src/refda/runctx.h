@@ -108,6 +108,9 @@ void refda_runctx_check_acl(refda_runctx_t *ctx);
 /// M*LIB OPLIST for refda_runctx_t
 #define M_OPL_refda_runctx_t() (INIT(API_2(refda_runctx_init)), INIT_SET(0), CLEAR(API_2(refda_runctx_deinit)), SET(0))
 
+/** @struct refda_runctx_ptr_t
+ * Thread-safe shared pointer to an execution run context.
+ */
 /// @cond Doxygen_Suppress
 M_SHARED_PTR_DEF(refda_runctx_ptr, refda_runctx_t)
 /// @endcond

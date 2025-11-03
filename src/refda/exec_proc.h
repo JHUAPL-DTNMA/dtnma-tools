@@ -34,12 +34,13 @@ extern "C" {
 
 /** Implement the expansion procedure from Section TBD of @cite ietf-dtn-amm-01.
  *
- * @param[in,out] seq A freshly initialized sequence to expand into.
+ * @param[in,out] seq A freshly initialized sequence to expand into
+ * with its refda_exec_seq_t::runctx already set.
  * @param[in] runctxp The agent state for ARI lookup.
  * @param[in] target The target to dereference, if necessary, and expand.
  * @return Zero if successful.
  */
-int refda_exec_proc_expand(refda_exec_seq_t *seq, refda_runctx_ptr_t runctxp, const cace_ari_t *target);
+int refda_exec_proc_expand(refda_exec_seq_t *seq, const cace_ari_t *target);
 
 /** Implement the running procedure from Section TBD of @cite ietf-dtn-amm-01.
  * This executes items in a sequence until the first deferred completion.
