@@ -66,41 +66,9 @@ void cace_amm_type_deinit(cace_amm_type_t *type);
 void cace_amm_type_reset(cace_amm_type_t *type);
 
 /// M*LIB OPLIST for the cace_amm_type_t
-#define M_OPL_cace_amm_type_t() \
-    (INIT(API_2(cace_amm_type_init)), CLEAR(API_2(cace_amm_type_deinit)), RESET(API_2(cace_amm_type_reset)))
-
-/** A pointer to cace_amm_type_t with ownership semantics.
- *
- * The M_SHARED_PTR_RELAXED_DEF cannot be used here because it requires a
- * concrete type definition and cannot be used with forward-declared types.
- */
-typedef struct
-{
-    /// Pointer to the managed object
-    cace_amm_type_t *obj;
-} cace_amm_typeptr_t;
-
-/** Initialize a type pointer to an allocated and initialized type object.
- *
- * @param[out] ptr The type to initialize.
- */
-void cace_amm_typeptr_init(cace_amm_typeptr_t *ptr);
-
-/** Free any allocated type object.
- *
- * @param[in,out] ptr The object to de-initialize.
- */
-void cace_amm_typeptr_deinit(cace_amm_typeptr_t *ptr);
-
-/** Take ownership of a pointed-to object.
- *
- * @param[in,out] ptr The object to set.
- * @param[in] obj The object to own.
- */
-void cace_amm_typeptr_take(cace_amm_typeptr_t *ptr, cace_amm_type_t *obj);
-
-/// OPLIST for the cace_amm_typeptr_t
-#define M_OPL_cace_amm_typeptr_t() (INIT(API_2(cace_amm_typeptr_init)), CLEAR(API_2(cace_amm_typeptr_deinit)))
+#define M_OPL_cace_amm_type_t()                                                                \
+    (INIT(API_2(cace_amm_type_init)), INIT_SET(0), CLEAR(API_2(cace_amm_type_deinit)), SET(0), \
+     RESET(API_2(cace_amm_type_reset)))
 
 /// Configuration for a built-in type
 struct cace_amm_type_builtin_s
@@ -130,6 +98,29 @@ static inline cace_amm_type_match_res_t cace_amm_type_match_pos_neg(bool cond)
 {
     return cond ? CACE_AMM_TYPE_MATCH_POSITIVE : CACE_AMM_TYPE_MATCH_NEGATIVE;
 }
+
+/// Possible classes of AMM types
+typedef enum
+{
+    /// An initialized but not valid type
+    CACE_AMM_TYPE_INVALID,
+    /// A built-in type using the #as_builtin member
+    CACE_AMM_TYPE_BUILTIN,
+    /// An augmented use of another type using the #as_semtype member
+    CACE_AMM_TYPE_USE,
+    /// A uniform list using the #as_semtype member
+    CACE_AMM_TYPE_ULIST,
+    /// A diverse list using the #as_semtype member
+    CACE_AMM_TYPE_DLIST,
+    /// A uniform map using the #as_semtype member
+    CACE_AMM_TYPE_UMAP,
+    /// A table template using the #as_semtype member
+    CACE_AMM_TYPE_TBLT,
+    /// A union type using the #as_semtype member
+    CACE_AMM_TYPE_UNION,
+    /// A sub-sequence using the #as_semtype member
+    CACE_AMM_TYPE_SEQ,
+} cace_amm_type_class_t;
 
 /** Descriptor for each built-in (ARI type) and semantic type within the AMM.
  * Users of this struct must treat it as opaque and not access any individual
@@ -169,30 +160,10 @@ struct cace_amm_type_s
     int (*convert)(const cace_amm_type_t *self, cace_ari_t *out, const cace_ari_t *in);
 
     /// Determine which of the following union member is valid
-    enum cace_amm_type_class_e
-    {
-        /// An initialized but not valid type
-        CACE_AMM_TYPE_INVALID,
-        /// A built-in type using the #as_builtin member
-        CACE_AMM_TYPE_BUILTIN,
-        /// An augmented use of another type using the #as_semtype member
-        CACE_AMM_TYPE_USE,
-        /// A uniform list using the #as_semtype member
-        CACE_AMM_TYPE_ULIST,
-        /// A diverse list using the #as_semtype member
-        CACE_AMM_TYPE_DLIST,
-        /// A uniform map using the #as_semtype member
-        CACE_AMM_TYPE_UMAP,
-        /// A table template using the #as_semtype member
-        CACE_AMM_TYPE_TBLT,
-        /// A union type using the #as_semtype member
-        CACE_AMM_TYPE_UNION,
-        /// A sub-sequence using the #as_semtype member
-        CACE_AMM_TYPE_SEQ,
-    } type_class;
+    cace_amm_type_class_t type_class;
     union
     {
-        /// Valid when #type_class is cace_amm_type_s::CACE_AMM_TYPE_BUILTIN
+        /// Valid when #type_class is ::CACE_AMM_TYPE_BUILTIN
         struct cace_amm_type_builtin_s as_builtin;
         /** Non-null for all other cace_amm_type_s values.
          * Cast to specific internal configuration struct for each class of
@@ -226,13 +197,30 @@ bool cace_amm_type_is_valid(const cace_amm_type_t *type);
 M_ARRAY_DEF(cace_amm_type_array, cace_amm_type_t)
 /// @endcond
 
-/** Get a human-friendly name for a type object.
+/** Get an ARI name for a type object.
+ * This is the inverse of cace_amm_type_set_name().
  *
  * @param[in] type The type to name.
  * @param[out] name The generated name.
  * @return True if a name was set.
  */
 bool cace_amm_type_get_name(const cace_amm_type_t *type, cace_ari_t *name);
+
+// forward declare
+struct cace_amm_obj_store_s;
+
+/** Set a type object from an ARI name.
+ * This is the inverse of cace_amm_type_get_name().
+ *
+ * @note This function alone does not do any name binding based on referenced
+ * objects. That must be done in the associated agent (see @ref refda/binding.h).
+ *
+ * @param[in,out] type The type to replace based on the name.
+ * @param[in] name The input type name.
+ * @param[in] store Object store for reference lookup.
+ * @return Zero if successful.
+ */
+int cace_amm_type_set_name(cace_amm_type_t *type, const cace_ari_t *name, const struct cace_amm_obj_store_s *store);
 
 /** Determine if a type (built-in or semantic) matches a specific value.
  *

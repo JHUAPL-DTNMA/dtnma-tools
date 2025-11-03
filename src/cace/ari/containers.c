@@ -217,6 +217,16 @@ bool cace_ari_tbl_equal(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right)
     return ((left->ncols == right->ncols) && cace_ari_array_equal_p(left->items, right->items));
 }
 
+size_t cace_ari_tbl_num_rows(const cace_ari_tbl_t *obj)
+{
+    if (!obj)
+    {
+        return 0;
+    }
+
+    return cace_ari_array_size(obj->items) / obj->ncols;
+}
+
 int cace_ari_tbl_move_row_ac(cace_ari_tbl_t *obj, cace_ari_ac_t *row)
 {
     CHKERR1(obj);

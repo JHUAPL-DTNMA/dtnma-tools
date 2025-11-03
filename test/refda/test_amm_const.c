@@ -86,7 +86,7 @@ static void check_produce(cace_ari_t *value, const char *refhex, const char *out
     TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&outval, &(ctx.value)), "produced value mismatch");
 
     // move out produced value
-    TEST_ASSERT_EQUAL_INT(0, cace_ari_set_move(value, &(ctx.value)));
+    cace_ari_set_move(value, &(ctx.value));
 
     refda_valprod_ctx_deinit(&ctx);
     cace_amm_lookup_deinit(&deref);

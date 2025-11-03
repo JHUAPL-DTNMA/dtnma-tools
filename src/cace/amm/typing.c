@@ -16,7 +16,11 @@
  * limitations under the License.
  */
 #include "typing.h"
+#include "lookup.h"
+#include "semtype.h"
+#include "cace/ari/type.h"
 #include "cace/ari/algo.h"
+#include "cace/ari/text.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
 #include "cace/config.h"
@@ -1035,35 +1039,6 @@ const cace_amm_type_t *cace_amm_type_get_builtin(cace_ari_type_t ari_type)
 
 #endif /* ENABLE_LUT_CACHE */
 
-void cace_amm_typeptr_init(cace_amm_typeptr_t *ptr)
-{
-    CHKVOID(ptr);
-
-    ptr->obj = CACE_MALLOC(sizeof(cace_amm_type_t));
-    if (ptr->obj)
-    {
-        cace_amm_type_init(ptr->obj);
-    }
-}
-
-void cace_amm_typeptr_deinit(cace_amm_typeptr_t *ptr)
-{
-    CHKVOID(ptr);
-    if (ptr->obj)
-    {
-        CACE_FREE(ptr->obj);
-        ptr->obj = NULL;
-    }
-}
-
-void cace_amm_typeptr_take(cace_amm_typeptr_t *ptr, cace_amm_type_t *obj)
-{
-    CHKVOID(ptr);
-    cace_amm_typeptr_deinit(ptr);
-
-    ptr->obj = obj;
-}
-
 void cace_amm_type_init(cace_amm_type_t *type)
 {
     CHKVOID(type)
@@ -1111,11 +1086,134 @@ bool cace_amm_type_get_name(const cace_amm_type_t *type, cace_ari_t *name)
     CHKFALSE(name);
     if (!(type->ari_name))
     {
+        cace_ari_set_undefined(name);
         return false;
     }
 
     type->ari_name(type, name);
     return true;
+}
+
+/// non-recursive builtin
+static int cace_amm_type_set_name_aritype(cace_amm_type_t *type, const cace_ari_t *name)
+{
+    int aritype_int;
+    if (cace_ari_get_int(name, &aritype_int))
+    {
+        // not an int, can only be tstr
+        const char *tstr = cace_ari_cget_tstr_cstr(name);
+        if (cace_ari_type_from_name(&aritype_int, tstr))
+        {
+            CACE_LOG_ERR("Invalid ARITYPE text value %s", tstr);
+            return 3;
+        }
+    }
+
+    const cace_amm_type_t *src = cace_amm_type_get_builtin(aritype_int);
+    if (!src)
+    {
+        CACE_LOG_ERR("Cannot convert from ARITYPE value %" PRId64, aritype_int);
+        return 3;
+    }
+
+    // copy as plain-old-data
+    *type = *src;
+    return 0;
+}
+
+static int cace_amm_type_set_name_semtype(cace_amm_type_t *type, const cace_ari_t *name,
+                                          const cace_amm_obj_store_t *store)
+{
+    int retval = 0;
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    int res = cace_amm_lookup_deref(&deref, store, name);
+    if (res)
+    {
+        CACE_LOG_ERR("Failed to dereference semantic type with error %d", res);
+        retval = 3;
+    }
+
+    if (!retval)
+    {
+        if (!cace_amm_obj_ns_is_match(deref.ns, 1, 24))
+        {
+            CACE_LOG_ERR("Semantic type reference not in the namespace ari://ietf/amm-semtype/");
+            retval = 3;
+        }
+    }
+    if (!retval)
+    {
+        // some object in that NS
+        if (!deref.obj->obj_id.has_intenum)
+        {
+            CACE_LOG_CRIT("No registration for amm-semtype");
+            retval = 3;
+        }
+    }
+    if (!retval)
+    {
+        switch (deref.obj->obj_id.intenum)
+        {
+            case 2: // type-use
+                retval = cace_amm_type_set_use_from_name(type, &deref, store);
+                break;
+            case 3: // ulist
+                retval = cace_amm_type_set_ulist_from_name(type, &deref, store);
+                break;
+            case 4: // dlist
+                retval = cace_amm_type_set_dlist_from_name(type, &deref, store);
+                break;
+            case 5: // umap
+                retval = cace_amm_type_set_umap_from_name(type, &deref, store);
+                break;
+            case 6: // tblt
+                retval = cace_amm_type_set_tblt_from_name(type, &deref, store);
+                break;
+            case 8: // union
+                retval = cace_amm_type_set_union_from_name(type, &deref, store);
+                break;
+            case 9: // seq
+                retval = cace_amm_type_set_seq_from_name(type, &deref, store);
+                break;
+            default:
+                CACE_LOG_ERR("Semantic type reference not a known object enumeration %" PRId64,
+                             deref.obj->obj_id.intenum);
+                retval = 3;
+                break;
+        }
+    }
+    cace_amm_lookup_deinit(&deref);
+    return retval;
+}
+
+int cace_amm_type_set_name(cace_amm_type_t *type, const cace_ari_t *name, const cace_amm_obj_store_t *store)
+{
+    CHKERR1(type);
+    CHKERR1(name);
+    CHKERR1(store);
+
+    cace_amm_type_reset(type);
+
+    if (cace_ari_is_lit_typed(name, CACE_ARI_TYPE_ARITYPE))
+    {
+        return cace_amm_type_set_name_aritype(type, name);
+    }
+
+    // recursive semantic type
+    const cace_ari_ref_t *ref = cace_ari_cget_ref(name);
+    if (ref)
+    {
+        return cace_amm_type_set_name_semtype(type, name, store);
+    }
+
+    string_t buf;
+    string_init(buf);
+    cace_ari_text_encode(buf, name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    CACE_LOG_ERR("Cannot convert from type name %s", m_string_get_cstr(buf));
+    string_clear(buf);
+    return 2;
 }
 
 cace_amm_type_match_res_t cace_amm_type_match(const cace_amm_type_t *type, const cace_ari_t *ari)
@@ -1127,6 +1225,7 @@ cace_amm_type_match_res_t cace_amm_type_match(const cace_amm_type_t *type, const
         return CACE_AMM_TYPE_MATCH_NEGATIVE;
     }
 
+    CACE_LOG_DEBUG("matching with type class %d", type->type_class);
     return type->match(type, ari);
 }
 
@@ -1138,6 +1237,7 @@ int cace_amm_type_convert(const cace_amm_type_t *type, cace_ari_t *out, const ca
 
     CHKRET(type->convert, CACE_AMM_ERR_CONVERT_NULLFUNC);
 
+    CACE_LOG_DEBUG("converting with type class %d", type->type_class);
     return type->convert(type, out, in);
 }
 

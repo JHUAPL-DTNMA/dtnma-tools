@@ -83,13 +83,13 @@ static int cace_ari_text_encode_ac(cace_ari_text_enc_state_t *state, const cace_
     cace_ari_list_it_t item_it;
     for (cace_ari_list_it(item_it, ctr->items); !cace_ari_list_end_p(item_it); cace_ari_list_next(item_it))
     {
+        const cace_ari_t *item = cace_ari_list_cref(item_it);
+
         if (sep)
         {
             m_string_push_back(state->out, ',');
         }
         sep = true;
-
-        const cace_ari_t *item = cace_ari_list_cref(item_it);
 
         int ret = cace_ari_text_encode_stream(state, item);
         if (ret)
@@ -115,13 +115,13 @@ static int cace_ari_text_encode_am(cace_ari_text_enc_state_t *state, const cace_
     cace_ari_tree_it_t item_it;
     for (cace_ari_tree_it(item_it, ctr->items); !cace_ari_tree_end_p(item_it); cace_ari_tree_next(item_it))
     {
+        const cace_ari_tree_itref_t *pair = cace_ari_tree_cref(item_it);
+
         if (sep)
         {
             m_string_push_back(state->out, ',');
         }
         sep = true;
-
-        const cace_ari_tree_itref_t *pair = cace_ari_tree_cref(item_it);
 
         int ret = cace_ari_text_encode_stream(state, pair->key_ptr);
         if (ret)
@@ -169,13 +169,13 @@ static int cace_ari_text_encode_tbl(cace_ari_text_enc_state_t *state, const cace
         bool sep = false;
         for (size_t col_ix = 0; col_ix < ctr->ncols; ++col_ix)
         {
+            const cace_ari_t *item = cace_ari_array_cref(item_it);
+
             if (sep)
             {
                 m_string_push_back(state->out, ',');
             }
             sep = true;
-
-            const cace_ari_t *item = cace_ari_array_cref(item_it);
 
             int ret = cace_ari_text_encode_stream(state, item);
             if (ret)
@@ -220,13 +220,13 @@ static int cace_ari_text_encode_execset(cace_ari_text_enc_state_t *state, const 
     cace_ari_list_it_t item_it;
     for (cace_ari_list_it(item_it, ctr->targets); !cace_ari_list_end_p(item_it); cace_ari_list_next(item_it))
     {
+        const cace_ari_t *item = cace_ari_list_cref(item_it);
+
         if (sep)
         {
             m_string_push_back(state->out, ',');
         }
         sep = true;
-
-        const cace_ari_t *item = cace_ari_list_cref(item_it);
 
         int ret = cace_ari_text_encode_stream(state, item);
         if (ret)
@@ -243,7 +243,6 @@ static int cace_ari_text_encode_execset(cace_ari_text_enc_state_t *state, const 
 
 static int cace_ari_text_encode_report(cace_ari_text_enc_state_t *state, const cace_ari_report_t *rpt)
 {
-    m_string_push_back(state->out, '(');
     {
         cace_ari_text_enc_opts_t saveopts = *(state->opts);
         state->opts->scheme_prefix        = CACE_ARI_TEXT_SCHEME_NONE;
@@ -267,13 +266,13 @@ static int cace_ari_text_encode_report(cace_ari_text_enc_state_t *state, const c
     cace_ari_list_it_t item_it;
     for (cace_ari_list_it(item_it, rpt->items); !cace_ari_list_end_p(item_it); cace_ari_list_next(item_it))
     {
+        const cace_ari_t *item = cace_ari_list_cref(item_it);
+
         if (sep)
         {
             m_string_push_back(state->out, ',');
         }
         sep = true;
-
-        const cace_ari_t *item = cace_ari_list_cref(item_it);
 
         int ret = cace_ari_text_encode_stream(state, item);
         if (ret)
@@ -283,7 +282,6 @@ static int cace_ari_text_encode_report(cace_ari_text_enc_state_t *state, const c
         }
     }
 
-    m_string_push_back(state->out, ')');
     m_string_push_back(state->out, ')');
     return retval;
 }
@@ -307,13 +305,22 @@ static int cace_ari_text_encode_rptset(cace_ari_text_enc_state_t *state, const c
         *(state->opts) = saveopts;
     }
 
-    int retval = 0;
+    m_string_push_back(state->out, '(');
+
+    int  retval = 0;
+    bool sep    = false;
 
     cace_ari_report_list_it_t rpt_it;
     for (cace_ari_report_list_it(rpt_it, ctr->reports); !cace_ari_report_list_end_p(rpt_it);
          cace_ari_report_list_next(rpt_it))
     {
         const cace_ari_report_t *rpt = cace_ari_report_list_cref(rpt_it);
+
+        if (sep)
+        {
+            string_push_back(state->out, ',');
+        }
+        sep = true;
 
         int ret = cace_ari_text_encode_report(state, rpt);
         if (ret)
@@ -322,6 +329,8 @@ static int cace_ari_text_encode_rptset(cace_ari_text_enc_state_t *state, const c
             break;
         }
     }
+
+    string_push_back(state->out, ')');
 
     --(state->depth);
     return retval;

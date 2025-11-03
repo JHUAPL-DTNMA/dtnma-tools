@@ -89,7 +89,8 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 %type <lit> amlist
 %type <litparams> litparamlist
 %type <lit> tblrowlist
-%type <lit> reportlist
+%type <lit> reportsbracket
+%type <lit> reportslist
 %type <report> report
 %token <ari_type> T_LITTYPE
 %token T_LITTYPE_AC
@@ -228,7 +229,7 @@ ssp-literal:
         cace_ari_list_init($3.value.as_ac->items);
         cace_ari_lit_deinit(&$3);
     }
-    | T_LITTYPE_RPTSET litparamlist reportlist {
+    | T_LITTYPE_RPTSET litparamlist reportsbracket {
         m_string_t key;
         m_string_init_set_cstr(key, "n");
         cace_ari_t *found_n = cace_named_ari_dict_get($2, key);
@@ -400,29 +401,40 @@ tblrowlist:
     }
 ;
 
-reportlist:
-    %empty {
+reportsbracket:
+    T_LPAREN T_RPAREN {
         cace_ari_lit_init_container(&$$, CACE_ARI_TYPE_RPTSET);
     }
-    | reportlist report {
+    | T_LPAREN reportslist T_RPAREN {
+        $$ = $2;
+    }
+;
+
+reportslist:
+    report {
+        cace_ari_lit_init_container(&$$, CACE_ARI_TYPE_RPTSET);
+        cace_ari_report_list_push_back_move($$.value.as_rptset->reports, $1);
+        CACE_FREE($1);
+    }
+    | reportslist T_COMMA report {
         $$ = $1;
-        cace_ari_report_list_push_back_move($$.value.as_rptset->reports, $2);
-        CACE_FREE($2);
+        cace_ari_report_list_push_back_move($$.value.as_rptset->reports, $3);
+        CACE_FREE($3);
     }
 ;
 
 report:
-    T_LPAREN litparamlist acbracket T_RPAREN {
+    litparamlist acbracket {
         $$ = CACE_MALLOC(sizeof(struct cace_ari_report_s));
         cace_ari_report_init($$);
 
         m_string_t key;
-        m_string_init_set_cstr(key, "t");
-        cace_ari_t *found_t = cace_named_ari_dict_get($2, key);
+        m_string_init_set_str(key, "t");
+        cace_ari_t *found_t = cace_named_ari_dict_get($1, key);
         m_string_clear(key);
 
-        m_string_init_set_cstr(key, "s");
-        cace_ari_t *found_s = cace_named_ari_dict_get($2, key);
+        m_string_init_set_str(key, "s");
+        cace_ari_t *found_s = cace_named_ari_dict_get($1, key);
         m_string_clear(key);
 
         if (found_t)
@@ -452,8 +464,8 @@ report:
         }
         if (!found_t)
         {
-            cace_named_ari_dict_clear($2);
-            cace_ari_lit_deinit(&$3);
+            cace_named_ari_dict_clear($1);
+            cace_ari_lit_deinit(&$2);
             cace_ari_text_str_error(scanner, input, "RPT has invalid key \"t\": %s", m_string_get_cstr(key));
             YYERROR;
         }
@@ -476,19 +488,19 @@ report:
         }
         if (!found_s)
         {
-            cace_named_ari_dict_clear($2);
-            cace_ari_lit_deinit(&$3);
+            cace_named_ari_dict_clear($1);
+            cace_ari_lit_deinit(&$2);
             cace_ari_text_str_error(scanner, input, "RPT has invalid key \"s\": %s", m_string_get_cstr(key));
             YYERROR;
         }
 
         cace_ari_init_move(&($$->reltime), found_t);
         cace_ari_init_move(&($$->source), found_s);
-        cace_named_ari_dict_clear($2);
+        cace_named_ari_dict_clear($1);
 
-        cace_ari_list_move($$->items, $3.value.as_ac->items);
-        cace_ari_list_init($3.value.as_ac->items);
-        cace_ari_lit_deinit(&$3);
+        cace_ari_list_move($$->items, $2.value.as_ac->items);
+        cace_ari_list_init($2.value.as_ac->items);
+        cace_ari_lit_deinit(&$2);
     }
 ;
 

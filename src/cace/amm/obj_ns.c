@@ -144,14 +144,18 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_find_obj_enum(const cace_amm_obj_ns_t *ns, 
     return *found;
 }
 
+bool cace_amm_obj_ns_is_match(const cace_amm_obj_ns_t *ns, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id)
+{
+    CHKFALSE(ns);
+
+    return ((ns->org_id.has_intenum && (ns->org_id.intenum == org_id))
+            && (ns->model_id.has_intenum && (ns->model_id.intenum == model_id)));
+}
+
 bool cace_amm_obj_ns_is_odm(const cace_amm_obj_ns_t *ns)
 {
     CHKFALSE(ns);
 
-    if ((ns->model_id.has_intenum && (ns->model_id.intenum < 0)) || m_string_start_with_str_p(ns->model_id.name, "!"))
-    {
-        return true;
-    }
-
-    return false;
+    return ((ns->model_id.has_intenum && (ns->model_id.intenum < 0))
+            || m_string_start_with_str_p(ns->model_id.name, "!"));
 }
