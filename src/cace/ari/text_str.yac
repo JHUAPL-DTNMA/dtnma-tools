@@ -429,11 +429,11 @@ report:
         cace_ari_report_init($$);
 
         m_string_t key;
-        m_string_init_set_str(key, "t");
+        m_string_init_set_cstr(key, "t");
         cace_ari_t *found_t = cace_named_ari_dict_get($1, key);
         m_string_clear(key);
 
-        m_string_init_set_str(key, "s");
+        m_string_init_set_cstr(key, "s");
         cace_ari_t *found_s = cace_named_ari_dict_get($1, key);
         m_string_clear(key);
 

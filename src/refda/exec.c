@@ -73,7 +73,7 @@ static int refda_exec_ctrl_finish(refda_exec_item_t *item)
     else if (item->seq)
     {
         // done with this item
-        refda_exec_item_list_pop_front(NULL, item->seq->items);
+        refda_exec_item_list_pop_at(NULL, item->seq->items, 0);
     }
 
     return 0;
@@ -146,12 +146,12 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
 
 /** Expand any ARI target (reference or literal).
  */
-static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target,
+static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t seq_ix, const cace_ari_t *target,
                                cace_ari_array_t invalid_items);
 
 /** Expand an arbitrary object reference.
  */
-static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target,
+static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t seq_ix, const cace_ari_t *target,
                               cace_ari_array_t invalid_items)
 {
     int retval = 0;
@@ -174,8 +174,9 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
             case CACE_ARI_TYPE_CTRL:
             {
                 // expansion finished, execution comes later
-                refda_exec_item_ptr_t **ptr  = refda_exec_item_list_push_back_new(seq->items);
-                refda_exec_item_t      *item = refda_exec_item_ptr_ref(*ptr);
+                refda_exec_item_ptr_t *ptr = refda_exec_item_ptr_new();
+                refda_exec_item_list_push_at(seq->items, seq_ix, ptr);
+                refda_exec_item_t *item = refda_exec_item_ptr_ref(ptr);
 
                 item->seq = seq;
                 cace_ari_set_copy(&(item->ref), target);
@@ -197,7 +198,7 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
                 else
                 {
                     // execute the produced value as a target
-                    retval = refda_exec_exp_item(runctx, seq, &(prodctx.value), invalid_items);
+                    retval = refda_exec_exp_item(runctx, seq, seq_ix, &(prodctx.value), invalid_items);
                 }
                 refda_valprod_ctx_deinit(&prodctx);
                 break;
@@ -216,7 +217,7 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
 
 /** Expand a MAC-typed literal value.
  */
-static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *ari,
+static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t seq_ix, const cace_ari_t *ari,
                               cace_ari_array_t invalid_items)
 {
     const struct cace_ari_ac_s *inval = cace_ari_cget_ac(ari);
@@ -229,7 +230,7 @@ static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     {
         const cace_ari_t *item = cace_ari_list_cref(it);
 
-        retval = refda_exec_exp_item(runctx, seq, item, invalid_items);
+        retval = refda_exec_exp_item(runctx, seq, seq_ix, item, invalid_items);
         if (retval)
         {
             break;
@@ -239,14 +240,14 @@ static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, con
     return retval;
 }
 
-static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, const cace_ari_t *target,
+static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t seq_ix, const cace_ari_t *target,
                                cace_ari_array_t invalid_items)
 {
     int retval = 0;
     if (target->is_ref)
     {
         CACE_LOG_DEBUG("Expanding as reference");
-        retval = refda_exec_exp_ref(runctx, seq, target, invalid_items);
+        retval = refda_exec_exp_ref(runctx, seq, seq_ix, target, invalid_items);
     }
     else
     {
@@ -260,7 +261,7 @@ static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, co
         else
         {
             CACE_LOG_DEBUG("Expanding as MAC");
-            retval = refda_exec_exp_mac(runctx, seq, target, invalid_items);
+            retval = refda_exec_exp_mac(runctx, seq, seq_ix, target, invalid_items);
         }
     }
 
@@ -296,7 +297,7 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t *runctxp, co
     // FIXME: lock more fine-grained level
     REFDA_AGENT_LOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
-    int retval = refda_exec_exp_item(runctx, seq, target, invalid_items);
+    int retval = refda_exec_exp_item(runctx, seq, 0, target, invalid_items);
 
     // FIXME: lock more fine-grained level
     REFDA_AGENT_UNLOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
@@ -561,7 +562,7 @@ static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *t
 /** Expand a rule's action that has already been verified.
  * Based on code from refda_exec_exp_execset
  */
-static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *action)
+static int refda_exec_rule_action(refda_agent_t *agent, const cace_ari_t *action)
 {
     refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
 
@@ -572,11 +573,14 @@ static int refda_exec_rule_action(refda_agent_t *agent, refda_exec_seq_t *seq, c
         return 2;
     }
 
+    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+    seq->pid              = agent->exec_next_pid++;
+
     refda_runctx_ptr_set(&seq->runctx, ctxptr);
 
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
-    int res = refda_exec_exp_item(runctx, seq, action, invalid_items);
+    int res = refda_exec_exp_item(runctx, seq, 0, action, invalid_items);
 
     if (!cace_ari_array_empty_p(invalid_items))
     {
@@ -608,14 +612,11 @@ static void refda_exec_run_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
         return;
     }
 
-    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
-    seq->pid              = agent->exec_next_pid++;
-
     // Schedule next exec of rule now so time period is independent of macro expansion
     refda_exec_schedule_tbr(agent, tbr, false);
 
     // Expand rule and create exec items, CTRLs are run later by exec worker
-    if (!refda_exec_rule_action(agent, seq, &(tbr->action)))
+    if (!refda_exec_rule_action(agent, &(tbr->action)))
     {
         tbr->exec_count++;
         atomic_fetch_add(&agent->instr.num_tbrs_trig, 1);
@@ -774,10 +775,7 @@ static void refda_exec_run_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 
         if (!result && bool_result)
         {
-            refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
-            seq->pid              = agent->exec_next_pid++;
-
-            if (!refda_exec_rule_action(agent, seq, &(sbr->action)))
+            if (!refda_exec_rule_action(agent, &(sbr->action)))
             {
                 sbr->exec_count++;
                 atomic_fetch_add(&agent->instr.num_sbrs_trig, 1);
@@ -871,33 +869,14 @@ int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_
     CHKERR1(agent);
     CHKERR1(target);
 
-    refda_exec_item_list_t tmp_items;
-    refda_exec_item_t      tmp_item;
-    refda_exec_item_list_init(tmp_items);
-
-    // Remove subsequent execution items
-    while (refda_exec_item_list_size(seq->items) > 1)
-    {
-        refda_exec_item_list_pop_back_move(&tmp_item, seq->items);
-        refda_exec_item_list_push_front_move(tmp_items, &tmp_item);
-    }
-
-    // Insert next execution items immediately after the currently executing item
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
 
-    int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, target, invalid_items);
+    // Insert next execution items immediately after the currently executing item
+    int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, 1, target, invalid_items);
 
+    // do not care about invalid target contents
     cace_ari_array_clear(invalid_items);
 
-    // Move existing items back, so they will execute after the newly-added item(s)
-    while (!refda_exec_item_list_empty_p(tmp_items))
-    {
-        refda_exec_item_list_pop_front_move(&tmp_item, tmp_items);
-        refda_exec_item_list_push_back_move(seq->items, &tmp_item);
-        refda_exec_item_list_back(seq->items)->seq = seq; // Need to manually set this again
-    }
-
-    refda_exec_item_list_clear(tmp_items);
     return res;
 }

@@ -1208,11 +1208,11 @@ int cace_amm_type_set_name(cace_amm_type_t *type, const cace_ari_t *name, const 
         return cace_amm_type_set_name_semtype(type, name, store);
     }
 
-    string_t buf;
-    string_init(buf);
+    m_string_t buf;
+    m_string_init(buf);
     cace_ari_text_encode(buf, name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
     CACE_LOG_ERR("Cannot convert from type name %s", m_string_get_cstr(buf));
-    string_clear(buf);
+    m_string_clear(buf);
     return 2;
 }
 

@@ -16,17 +16,38 @@
  * limitations under the License.
  */
 #include "ident.h"
+#include <cace/util/defs.h>
 
 void refda_amm_ident_base_init(refda_amm_ident_base_t *obj)
 {
+    CHKVOID(obj);
     cace_ari_init(&(obj->name));
     obj->ident = NULL;
 }
 
 void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj)
 {
+    CHKVOID(obj);
     obj->ident = NULL;
     cace_ari_deinit(&(obj->name));
+}
+
+void refda_amm_ident_base_init_set(refda_amm_ident_base_t *obj, const refda_amm_ident_base_t *src)
+{
+    refda_amm_ident_base_init(obj);
+    refda_amm_ident_base_set(obj, src);
+}
+
+void refda_amm_ident_base_set(refda_amm_ident_base_t *obj, const refda_amm_ident_base_t *src)
+{
+    if (obj == src)
+    {
+        return;
+    }
+    CHKVOID(obj);
+    CHKVOID(src);
+    cace_ari_set_copy(&(obj->name), &(src->name));
+    obj->ident = src->ident;
 }
 
 void refda_amm_ident_desc_init(refda_amm_ident_desc_t *obj)

@@ -131,11 +131,11 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const cace_ar
         }
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &inter_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("intermediate item %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("intermediate item %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         cace_ari_t rpt_item = CACE_ARI_INIT_UNDEFINED;
@@ -157,11 +157,11 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const cace_ar
         }
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &rpt_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("reporting intermediate %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("reporting intermediate %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
         cace_ari_deinit(&inter_item);
 

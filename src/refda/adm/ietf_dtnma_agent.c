@@ -2396,22 +2396,22 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, ari_value, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("creating CONST object %s with value %s", obj_name, string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("creating CONST object %s with value %s", obj_name, m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         // recursively fetch type and bind now so that match will work
         if (cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs)
             || refda_binding_typeobj(&(objdata->val_type), &agent->objs))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, ari_type, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_ERR("Failed lookup for type of %s from %s", obj_name, string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_ERR("Failed lookup for type of %s from %s", obj_name, m_string_get_cstr(buf));
+            m_string_clear(buf);
 
             is_valid = false;
         }
@@ -2422,11 +2422,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
             int match = cace_amm_type_match(&(objdata->val_type), ari_value);
             if (!((match == CACE_AMM_TYPE_MATCH_POSITIVE) || (match == CACE_AMM_TYPE_MATCH_UNDEFINED)))
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_ari_text_encode(buf, ari_value, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_ERR("Failed type match of VAR %s for value %s got %d", obj_name, string_get_cstr(buf), match);
-                string_clear(buf);
+                CACE_LOG_ERR("Failed type match of VAR %s for value %s got %d", obj_name, m_string_get_cstr(buf),
+                             match);
+                m_string_clear(buf);
 
                 is_valid = false;
             }
@@ -2635,22 +2636,22 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
 
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, ari_init, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("creating VAR object %s with value %s", obj_name, string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("creating VAR object %s with value %s", obj_name, m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         // recursively fetch type and bind now so that match will work
         if (cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs)
             || refda_binding_typeobj(&(objdata->val_type), &agent->objs))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, ari_type, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_ERR("Failed lookup for type of VAR %s from %s", obj_name, string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_ERR("Failed lookup for type of VAR %s from %s", obj_name, m_string_get_cstr(buf));
+            m_string_clear(buf);
 
             is_valid = false;
         }
@@ -2661,11 +2662,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
             int match = cace_amm_type_match(&(objdata->val_type), ari_init);
             if (!((match == CACE_AMM_TYPE_MATCH_POSITIVE) || (match == CACE_AMM_TYPE_MATCH_UNDEFINED)))
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_ari_text_encode(buf, ari_init, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_ERR("Failed type match of VAR %s for value %s got %d", obj_name, string_get_cstr(buf), match);
-                string_clear(buf);
+                CACE_LOG_ERR("Failed type match of VAR %s for value %s got %d", obj_name, m_string_get_cstr(buf),
+                             match);
+                m_string_clear(buf);
 
                 is_valid = false;
             }

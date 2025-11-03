@@ -318,7 +318,7 @@ static int cace_ari_text_encode_rptset(cace_ari_text_enc_state_t *state, const c
 
         if (sep)
         {
-            string_push_back(state->out, ',');
+            m_string_push_back(state->out, ',');
         }
         sep = true;
 
@@ -330,7 +330,7 @@ static int cace_ari_text_encode_rptset(cace_ari_text_enc_state_t *state, const c
         }
     }
 
-    string_push_back(state->out, ')');
+    m_string_push_back(state->out, ')');
 
     --(state->depth);
     return retval;

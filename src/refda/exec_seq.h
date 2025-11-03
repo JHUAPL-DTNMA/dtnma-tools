@@ -37,7 +37,7 @@ extern "C" {
  */
 /// @cond Doxygen_Suppress
 M_SHARED_WEAK_PTR_DEF(refda_exec_item_ptr, refda_exec_item_t)
-M_DEQUE_DEF(refda_exec_item_list, refda_exec_item_ptr_t *,
+M_ARRAY_DEF(refda_exec_item_list, refda_exec_item_ptr_t *,
             M_SHARED_PTR_OPLIST(refda_exec_item_ptr, M_OPL_refda_exec_item_t()))
 /// @endcond
 
