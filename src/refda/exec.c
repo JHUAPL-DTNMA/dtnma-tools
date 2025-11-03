@@ -438,25 +438,7 @@ static int refda_exec_check_sbr_condition(refda_agent_t *agent, const refda_amm_
     refda_runctx_init(&runctx);
     refda_runctx_from(&runctx, agent, NULL);
 
-    cace_ari_t ari_res = CACE_ARI_INIT_UNDEFINED;
-
-    int res = refda_eval_target(&runctx, &ari_res, &(sbr->condition));
-    if (res)
-    {
-        CACE_LOG_ERR("Unable to evaluate SBR condition");
-    }
-    else
-    {
-        const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
-
-        res = cace_amm_type_convert(typeobj, result, &ari_res);
-        if (res)
-        {
-            CACE_LOG_ERR("Unable to convert SBR condition result to boolean");
-        }
-    }
-
-    cace_ari_deinit(&ari_res);
+    int res = refda_eval_condition(&runctx, result, &(sbr->condition));
     refda_runctx_deinit(&runctx);
 
     return res;
@@ -590,4 +572,40 @@ int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     sbr->enabled = false;
     atomic_fetch_sub(&agent->instr.num_sbrs, 1);
     return 0;
+}
+
+int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *target)
+{
+    CHKERR1(agent);
+    CHKERR1(target);
+
+    refda_exec_item_list_t tmp_items;
+    refda_exec_item_t      tmp_item;
+    refda_exec_item_list_init(tmp_items);
+
+    // Remove subsequent execution items
+    while (refda_exec_item_list_size(seq->items) > 1)
+    {
+        refda_exec_item_list_pop_back_move(&tmp_item, seq->items);
+        refda_exec_item_list_push_front_move(tmp_items, &tmp_item);
+    }
+
+    // Insert next execution items immediately after the currently executing item
+    cace_ari_array_t invalid_items;
+    cace_ari_array_init(invalid_items);
+
+    int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, target, invalid_items);
+
+    cace_ari_array_clear(invalid_items);
+
+    // Move existing items back, so they will execute after the newly-added item(s)
+    while (!refda_exec_item_list_empty_p(tmp_items))
+    {
+        refda_exec_item_list_pop_front_move(&tmp_item, tmp_items);
+        refda_exec_item_list_push_back_move(seq->items, &tmp_item);
+        refda_exec_item_list_back(seq->items)->seq = seq; // Need to manually set this again
+    }
+
+    refda_exec_item_list_clear(tmp_items);
+    return res;
 }

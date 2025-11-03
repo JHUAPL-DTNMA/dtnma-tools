@@ -1655,6 +1655,53 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *ari_condition = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_on_truthy = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *ari_on_falsy  = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+
+    refda_agent_t *agent = ctx->runctx->agent;
+
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (refda_eval_condition(ctx->runctx, &result, ari_condition))
+    {
+        CACE_LOG_ERR("Unable to evaluate if-then-else condition");
+        return;
+    }
+
+    bool condition;
+    if (cace_ari_get_bool(&result, &condition))
+    {
+        CACE_LOG_ERR("Unable to unpack boolean returned from refda_eval_condition");
+        return;
+    }
+
+    REFDA_AGENT_LOCK(agent, );
+    result = CACE_ARI_INIT_UNDEFINED;
+
+    if (condition)
+    {
+        if (!cace_ari_is_null(ari_on_truthy))
+        {
+            refda_exec_next(agent, ctx->item->seq, ari_on_truthy);
+        }
+        cace_ari_set_bool(&result, true);
+    }
+    else
+    {
+        if (!cace_ari_is_null(ari_on_falsy))
+        {
+            refda_exec_next(agent, ctx->item->seq, ari_on_falsy);
+        }
+        cace_ari_set_bool(&result, false);
+    }
+    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_if_then_else BODY
@@ -1681,6 +1728,28 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
      * +-------------------------------------------------------------------------+
      */
+    const cace_ari_t *ari_try        = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *ari_on_failure = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+
+    refda_agent_t *agent = ctx->runctx->agent;
+
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    int  res         = refda_exec_next(agent, ctx->item->seq, ari_try);
+    bool try_success = true;
+
+    if (res)
+    {
+        res         = refda_exec_next(agent, ctx->item->seq, ari_on_failure);
+        try_success = false;
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, try_success);
+    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
