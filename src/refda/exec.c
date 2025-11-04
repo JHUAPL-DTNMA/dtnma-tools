@@ -146,12 +146,12 @@ int refda_exec_run_seq(refda_exec_seq_t *seq)
 
 /** Expand any ARI target (reference or literal).
  */
-static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t seq_ix, const cace_ari_t *target,
+static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *target,
                                cace_ari_array_t invalid_items);
 
 /** Expand an arbitrary object reference.
  */
-static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t seq_ix, const cace_ari_t *target,
+static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *target,
                               cace_ari_array_t invalid_items)
 {
     int retval = 0;
@@ -175,13 +175,16 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, siz
             {
                 // expansion finished, execution comes later
                 refda_exec_item_ptr_t *ptr = refda_exec_item_ptr_new();
-                refda_exec_item_list_push_at(seq->items, seq_ix, ptr);
-                refda_exec_item_t *item = refda_exec_item_ptr_ref(ptr);
+                refda_exec_item_list_push_at(seq->items, *seq_ix, ptr);
+                ++(*seq_ix);
 
+                refda_exec_item_t *item = refda_exec_item_ptr_ref(ptr);
                 item->seq = seq;
                 cace_ari_set_copy(&(item->ref), target);
                 cace_amm_lookup_set_move(&(item->deref), &deref);
                 cace_amm_lookup_init(&deref);
+
+                refda_exec_item_ptr_clear(ptr);
                 break;
             }
             case CACE_ARI_TYPE_CONST:
@@ -217,7 +220,7 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, siz
 
 /** Expand a MAC-typed literal value.
  */
-static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t seq_ix, const cace_ari_t *ari,
+static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *ari,
                               cace_ari_array_t invalid_items)
 {
     const struct cace_ari_ac_s *inval = cace_ari_cget_ac(ari);
@@ -240,7 +243,7 @@ static int refda_exec_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq, siz
     return retval;
 }
 
-static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t seq_ix, const cace_ari_t *target,
+static int refda_exec_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *target,
                                cace_ari_array_t invalid_items)
 {
     int retval = 0;
@@ -297,7 +300,8 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t *runctxp, co
     // FIXME: lock more fine-grained level
     REFDA_AGENT_LOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
-    int retval = refda_exec_exp_item(runctx, seq, 0, target, invalid_items);
+    size_t seq_ix = 0;
+    int retval = refda_exec_exp_item(runctx, seq, &seq_ix, target, invalid_items);
 
     // FIXME: lock more fine-grained level
     REFDA_AGENT_UNLOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
@@ -580,7 +584,9 @@ static int refda_exec_rule_action(refda_agent_t *agent, const cace_ari_t *action
 
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
-    int res = refda_exec_exp_item(runctx, seq, 0, action, invalid_items);
+
+    size_t seq_ix = 0;
+    int res = refda_exec_exp_item(runctx, seq, &seq_ix, action, invalid_items);
 
     if (!cace_ari_array_empty_p(invalid_items))
     {
@@ -873,7 +879,8 @@ int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_
     cace_ari_array_init(invalid_items);
 
     // Insert next execution items immediately after the currently executing item
-    int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, 1, target, invalid_items);
+    size_t seq_ix = 1;
+    int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, &seq_ix, target, invalid_items);
 
     // do not care about invalid target contents
     cace_ari_array_clear(invalid_items);
