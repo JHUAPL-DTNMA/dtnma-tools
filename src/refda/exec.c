@@ -178,12 +178,14 @@ static int refda_exec_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, siz
                 refda_exec_item_list_push_at(seq->items, *seq_ix, ptr);
                 ++(*seq_ix);
 
-                refda_exec_item_t *item = refda_exec_item_ptr_ref(ptr);
-                item->seq = seq;
-                cace_ari_set_copy(&(item->ref), target);
-                cace_amm_lookup_set_move(&(item->deref), &deref);
-                cace_amm_lookup_init(&deref);
+                {
+                    refda_exec_item_t *item = refda_exec_item_ptr_ref(ptr);
 
+                    item->seq = seq;
+                    cace_ari_set_copy(&(item->ref), target);
+                    cace_amm_lookup_set_move(&(item->deref), &deref);
+                    cace_amm_lookup_init(&deref);
+                }
                 refda_exec_item_ptr_clear(ptr);
                 break;
             }
@@ -301,6 +303,7 @@ int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t *runctxp, co
     REFDA_AGENT_LOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     size_t seq_ix = 0;
+    // insert at the end of an empty sequence
     int retval = refda_exec_exp_item(runctx, seq, &seq_ix, target, invalid_items);
 
     // FIXME: lock more fine-grained level
@@ -586,6 +589,7 @@ static int refda_exec_rule_action(refda_agent_t *agent, const cace_ari_t *action
     cace_ari_array_init(invalid_items);
 
     size_t seq_ix = 0;
+    // insert at the end of an empty sequence
     int res = refda_exec_exp_item(runctx, seq, &seq_ix, action, invalid_items);
 
     if (!cace_ari_array_empty_p(invalid_items))
@@ -878,8 +882,8 @@ int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
 
-    // Insert next execution items immediately after the currently executing item
     size_t seq_ix = 1;
+    // Insert next execution items immediately after the currently executing front item
     int res = refda_exec_exp_item(refda_runctx_ptr_ref(seq->runctx), seq, &seq_ix, target, invalid_items);
 
     // do not care about invalid target contents
