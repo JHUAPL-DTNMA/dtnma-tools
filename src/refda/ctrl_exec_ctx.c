@@ -81,7 +81,6 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
         string_clear(buf);
     }
 
-    // TODO come back to this undefined result handling
     bool valid = false;
     if (cace_amm_type_is_valid(&(ctx->ctrl->res_type)))
     {
@@ -98,23 +97,9 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
     }
     else
     {
-        // success is treated as a null value
-        if (cace_ari_is_undefined(&(ctx->item->result)))
-        {
-            CACE_LOG_WARNING("CTRL result type not set, defaulting to null value");
-            cace_ari_set_null(&(ctx->item->result));
-            valid = true;
-        }
-        else if (cace_ari_is_null(&(ctx->item->result)))
-        {
-            valid = true;
-        }
-        else
-        {
-            CACE_LOG_ERR("CTRL result value without result type");
-            // should not have a result
-            cace_ari_set_undefined(&(ctx->item->result));
-        }
+        // this should never happen, it is a failure of ACE+CAMP to register the CTRL
+        CACE_LOG_CRIT("CTRL result type not set at registration");
+        cace_ari_set_undefined(&(ctx->item->result));
     }
 
     atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
