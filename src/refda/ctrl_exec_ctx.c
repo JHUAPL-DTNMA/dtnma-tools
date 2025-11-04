@@ -97,9 +97,17 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
     }
     else
     {
-        // this should never happen, it is a failure of ACE+CAMP to register the CTRL
-        CACE_LOG_CRIT("CTRL result type not set at registration");
-        cace_ari_set_undefined(&(ctx->item->result));
+        // no explicit result type means only the null value is acceptable
+        if (cace_ari_is_null(&(ctx->item->result)))
+        {
+            valid = true;
+        }
+        else
+        {
+            CACE_LOG_ERR("CTRL result value without result type");
+            // should not have a result
+            cace_ari_set_undefined(&(ctx->item->result));
+        }
     }
 
     atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
