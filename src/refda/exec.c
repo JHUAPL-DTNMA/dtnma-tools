@@ -221,7 +221,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
         }
         while (!refda_timeline_end_p(tl_it))
         {
-            const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+            refda_timeline_event_t *next = refda_timeline_ref(tl_it);
             if (timespec_gt(next->ts, nowtime))
             {
                 break;
@@ -236,7 +236,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                         refda_ctrl_exec_ctx_t ctx;
                         refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
                         atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
-                        (next->exec.callback)(&ctx);
+                        (next->exec.callback)(&ctx, next->exec.user_data);
                         refda_ctrl_exec_ctx_deinit(&ctx);
                     }
                     if (!((atomic_load(&(next->exec.item->execution_stage))) == REFDA_EXEC_WAITING))

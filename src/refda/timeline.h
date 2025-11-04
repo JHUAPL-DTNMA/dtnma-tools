@@ -37,12 +37,19 @@ typedef struct refda_timeline_exec_event_s
 {
     /// Execution item which created the wait
     refda_exec_item_t *item;
+
+    /** Optional user data for the wait.
+     * This must be cleaned up (as needed) by the #callback.
+     */
+    void *user_data;
+
     /** Execution-defined callback, which should not be null.
      *
      * @param[in,out] ctx The associated execution context.
      * A result value is set when the execution has finished.
+     * @param[in] user_data The associated #user data pointer.
      */
-    void (*callback)(refda_ctrl_exec_ctx_t *ctx);
+    void (*callback)(refda_ctrl_exec_ctx_t *ctx, void *user_data);
 } refda_timeline_exec_event_t;
 
 typedef struct refda_timeline_sbr_event_s

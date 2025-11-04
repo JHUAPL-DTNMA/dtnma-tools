@@ -93,7 +93,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_ctrl_exec_ctx_t 
     refda_ctrl_exec_ctx_set_result_null(ctx);
 }
 
-static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_t *ctx)
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_t *ctx, void *user_data)
 {
     const cace_ari_t *cond = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     if (!cond)
@@ -144,10 +144,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         {
             // check again in 1s
             refda_timeline_event_t event = {
-                .purpose       = REFDA_TIMELINE_EXEC,
-                .ts            = timespec_add(nowtime, timespec_from_ms(1000)),
-                .exec.item     = ctx->item,
-                .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
+                .purpose        = REFDA_TIMELINE_EXEC,
+                .ts             = timespec_add(nowtime, timespec_from_ms(1000)),
+                .exec.item      = ctx->item,
+                .exec.user_data = user_data,
+                .exec.callback  = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
             };
             refda_ctrl_exec_ctx_set_waiting(ctx, &event);
         }
@@ -155,6 +156,63 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
 
     cace_ari_deinit(&as_bool);
     cace_ari_deinit(&result);
+}
+
+static void refda_adm_ietf_dtnma_agent_ctrl_catch_try_check(refda_ctrl_exec_ctx_t *ctx, void *user_data)
+{
+    refda_exec_status_t *status = user_data;
+
+    if (!sem_trywait(&status->finished))
+    {
+        // finished already
+        bool failure = atomic_load(&status->failed);
+        if (failure)
+        {
+            CACE_LOG_ERR("Failed executing try target");
+
+            // queue the failure target but do not wait on it here
+            int res = refda_exec_next(agent, ctx->item->seq, ari_on_failure);
+            if (res)
+            {
+                CACE_LOG_ERR("Failed expanding failure target");
+            }
+        }
+        else
+        {
+            CACE_LOG_INFO("Finished try target, nothing more to do");
+        }
+
+        refda_exec_status_deinit(status);
+        CACE_FREE(status);
+
+        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_bool(&result, !failure);
+        refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+    }
+    else
+    {
+        // still waiting, callback later
+        struct timespec nowtime;
+
+        int res = clock_gettime(CLOCK_REALTIME, &nowtime);
+        if (res)
+        {
+            // handled as failure
+            CACE_LOG_CRIT("Failed clock_gettime()");
+        }
+        else
+        {
+            // check again in 100ms
+            refda_timeline_event_t event = {
+                .purpose        = REFDA_TIMELINE_EXEC,
+                .ts             = timespec_add(nowtime, timespec_from_ms(100)),
+                .exec.item      = ctx->item,
+                .exec.user_data = user_data,
+                .exec.callback  = refda_adm_ietf_dtnma_agent_ctrl_catch_try_check,
+            };
+            refda_ctrl_exec_ctx_set_waiting(ctx, &event);
+        }
+    }
 }
 
 static void refda_adm_ietf_dtnma_agent_set_objpath(cace_ari_objpath_t *path, const cace_amm_obj_ns_t *ns,
@@ -1737,18 +1795,29 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
         CACE_LOG_ERR("Invalid parameter, unable to continue");
         return;
     }
-    int  res         = refda_exec_next(agent, ctx->item->seq, ari_try);
-    bool try_success = true;
 
-    if (res)
+    // Run try target as a separate sequence and wait on its finish
+    bool try_success = true;
     {
-        res         = refda_exec_next(agent, ctx->item->seq, ari_on_failure);
-        try_success = false;
+        // free this in callback when finished
+        refda_exec_status_t *status = CACE_MALLOC(sizeof(refda_exec_status_t));
+        refda_exec_status_init(status);
+
+        CACE_LOG_DEBUG("Sending try target");
+        if (refda_exec_add_target(ctx->item->seq->runctx, ari_try, status))
+        {
+            CACE_LOG_ERR("Failed adding try target");
+            try_success = false;
+        }
+
+        if (try_success)
+        {
+            // synchronize on finish of entire target
+            refda_adm_ietf_dtnma_agent_ctrl_catch_try_check(item, status);
+        }
     }
 
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_bool(&result, try_success);
-    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+    refda_ctrl_exec_ctx_set_waiting(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
@@ -1867,7 +1936,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx
      * +-------------------------------------------------------------------------+
      */
     // initial check and kickoff timers
-    refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(ctx);
+    refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(ctx, NULL);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
