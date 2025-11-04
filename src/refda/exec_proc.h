@@ -35,8 +35,7 @@ extern "C" {
 /** Implement the expansion procedure from Section TBD of @cite ietf-dtn-amm-01.
  *
  * @param[in,out] seq A freshly initialized sequence to expand into
- * with its refda_exec_seq_t::runctx already set.
- * @param[in] runctxp The agent state for ARI lookup.
+ * with its @c runctx already set.
  * @param[in] target The target to dereference, if necessary, and expand.
  * @return Zero if successful.
  */
