@@ -438,19 +438,6 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
                     }
                 }
                 break;
-#if 0
-            case CACE_ARI_TYPE_ARITYPE:
-            {
-                // Pretty-print the ARI type
-                cace_ari_int intval;
-                if (!cace_ari_get_int(ari, &intval))
-                {
-                    cace_ari_text_encode_aritype(state->out, state->opts->show_ari_type, intval, NULL);
-                    return 0;
-                }
-                break;
-            }
-#endif
             case CACE_ARI_TYPE_AC:
                 cace_ari_text_encode_ac(state, obj->value.as_ac);
                 break;

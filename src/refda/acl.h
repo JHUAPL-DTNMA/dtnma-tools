@@ -178,7 +178,10 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
 bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
                                  const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
                                  refda_amm_ident_base_ptr_set_t match);
-/// @overload
+/** @overload
+ * This searches for a single permission @c perm_obj which avoids needing
+ * to construct a permission set.
+ */
 bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
                                      const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
                                      refda_amm_ident_base_ptr_set_t match);
