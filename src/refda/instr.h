@@ -34,7 +34,9 @@
  */
 typedef struct
 {
-    /// Mutex to protect non atomic state
+    /** Mutex to protect non atomic state.
+     * That includes the #last_time_recv member.
+     */
     pthread_mutex_t mutex;
 
     /// Holds the local time associated with the last received message
