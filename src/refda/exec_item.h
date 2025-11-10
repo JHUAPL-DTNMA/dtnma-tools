@@ -102,7 +102,7 @@ void refda_exec_item_deinit(refda_exec_item_t *obj);
 
 /// M*LIB OPLIST for refda_exec_item_t
 #define M_OPL_refda_exec_item_t() \
-    (INIT(API_2(refda_exec_item_init)), CLEAR(API_2(refda_exec_item_deinit)), INIT_SET(0), SET(0), INIT_SET(0), SET(0))
+    (INIT(API_2(refda_exec_item_init)), CLEAR(API_2(refda_exec_item_deinit)), INIT_SET(0), SET(0))
 
 #ifdef __cplusplus
 } // extern C
