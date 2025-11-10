@@ -1739,12 +1739,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
     }
     bool try_success = true;
 
-    int  res         = refda_exec_next(ctx->item->seq, ari_try);
+    int res = refda_exec_next(ctx->item->seq, ari_try);
     if (res)
     {
         try_success = false;
 
-        res         = refda_exec_next(ctx->item->seq, ari_on_failure);
+        res = refda_exec_next(ctx->item->seq, ari_on_failure);
     }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;

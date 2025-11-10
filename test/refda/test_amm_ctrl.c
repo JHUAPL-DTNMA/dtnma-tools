@@ -155,7 +155,7 @@ static void check_execute(const char *refhex, const char *outhex)
     TEST_ASSERT_NOT_NULL(eitem_ptr);
     refda_exec_item_t *eitem = refda_exec_item_ptr_ref(*eitem_ptr);
     TEST_ASSERT_NOT_NULL(eitem);
-    eitem->seq               = &eseq;
+    eitem->seq = &eseq;
     cace_ari_set_move(&eitem->ref, &inref);
     cace_amm_lookup_set_move(&eitem->deref, &deref);
 

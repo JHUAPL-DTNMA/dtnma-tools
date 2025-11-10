@@ -121,7 +121,7 @@ bool cace_ari_idseg_equal(const cace_ari_idseg_t *left, const cace_ari_idseg_t *
 
 void cace_ari_idseg_init_text(cace_ari_idseg_t *idseg, m_string_t text)
 {
-    idseg->form     = CACE_ARI_IDSEG_TEXT;
+    idseg->form       = CACE_ARI_IDSEG_TEXT;
     m_string_t *value = &(idseg->as_text);
     m_string_init_move(*value, text);
 }

@@ -242,7 +242,7 @@ static void suite_adms_init(refda_agent_t *agent)
             {
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
                 m_string_set_cstr(operand->name, "right");
-                assert(0 ==  cace_amm_type_set_use_builtin(&(operand->typeobj), CACE_ARI_TYPE_VAST));
+                assert(0 == cace_amm_type_set_use_builtin(&(operand->typeobj), CACE_ARI_TYPE_VAST));
             }
             assert(0 == cace_amm_type_set_use_builtin(&(objdata->res_type), CACE_ARI_TYPE_VAST));
 

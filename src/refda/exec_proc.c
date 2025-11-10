@@ -97,7 +97,7 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
 
 int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
 {
-    refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(seq->items);
+    refda_exec_item_ptr_t **front_ptr = refda_exec_item_list_front(seq->items);
 
     CHKERR1(front_ptr);
     refda_exec_item_t *item = refda_exec_item_ptr_ref(*front_ptr);
@@ -162,13 +162,13 @@ int refda_exec_proc_run(refda_exec_seq_t *seq)
 
 /** Expand any ARI target (reference or literal).
  */
-static int refda_exec_proc_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *target,
-                                    cace_ari_array_t invalid_items);
+static int refda_exec_proc_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix,
+                                    const cace_ari_t *target, cace_ari_array_t invalid_items);
 
 /** Expand an arbitrary object reference.
  */
-static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *target,
-                                   cace_ari_array_t invalid_items)
+static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix,
+                                   const cace_ari_t *target, cace_ari_array_t invalid_items)
 {
     int retval = 0;
 
@@ -261,8 +261,8 @@ static int refda_exec_proc_exp_mac(refda_runctx_t *runctx, refda_exec_seq_t *seq
     return retval;
 }
 
-static int refda_exec_proc_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *target,
-                                    cace_ari_array_t invalid_items)
+static int refda_exec_proc_exp_item(refda_runctx_t *runctx, refda_exec_seq_t *seq, size_t *seq_ix,
+                                    const cace_ari_t *target, cace_ari_array_t invalid_items)
 {
     int retval = 0;
     if (target->is_ref)
