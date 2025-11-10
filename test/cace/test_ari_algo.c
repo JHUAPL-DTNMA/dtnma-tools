@@ -29,7 +29,7 @@
 // Allow this macro
 #define TEST_CASE(...)
 
-M_BPTREE_DEF2(test_seen_ari, 4, string_t, STRING_OPLIST, cace_ari_t, M_OPL_cace_ari_t())
+M_BPTREE_DEF2(test_seen_ari, 4, m_string_t, M_STRING_OPLIST, cace_ari_t, M_OPL_cace_ari_t())
 
 /// A collection of unique ARIs in binary form for testing comparisons
 static const char *different_aris[] = {
@@ -79,8 +79,8 @@ void suiteSetUp(void)
     {
         TEST_PRINTF("Adding value %s", *curs);
 
-        string_t intext;
-        string_init_set_str(intext, *curs);
+        m_string_t intext;
+        m_string_init_set_cstr(intext, *curs);
         cace_data_t indata;
         cace_data_init(&indata);
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_decode(&indata, intext), "cace_base16_decode() failed");
@@ -100,7 +100,7 @@ void suiteSetUp(void)
         cace_ari_t *val = test_seen_ari_safe_get(decode_cache, intext);
         TEST_ASSERT_NOT_NULL(val);
         cace_ari_set_move(val, &ari);
-        string_clear(intext);
+        m_string_clear(intext);
     }
 }
 

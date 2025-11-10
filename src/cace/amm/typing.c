@@ -982,7 +982,7 @@ static cace_amm_type_t cace_amm_builtins[] = {
 
 #ifdef ENABLE_LUT_CACHE
 
-DICT_DEF2(cace_amm_type_lookup, cace_ari_type_t, M_BASIC_OPLIST, const cace_amm_type_t *, M_PTR_OPLIST)
+M_DICT_DEF2(cace_amm_type_lookup, cace_ari_type_t, M_BASIC_OPLIST, const cace_amm_type_t *, M_PTR_OPLIST)
 
 /// Cached type dictionary
 static cace_amm_type_lookup_t cace_amm_builtin_dict;
@@ -1201,11 +1201,11 @@ int cace_amm_type_set_name(cace_amm_type_t *type, const cace_ari_t *name, const 
         return cace_amm_type_set_name_semtype(type, name, store);
     }
 
-    string_t buf;
-    string_init(buf);
+    m_string_t buf;
+    m_string_init(buf);
     cace_ari_text_encode(buf, name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
     CACE_LOG_ERR("Cannot convert from type name %s", m_string_get_cstr(buf));
-    string_clear(buf);
+    m_string_clear(buf);
     return 2;
 }
 

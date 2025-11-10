@@ -33,7 +33,7 @@ extern "C" {
 typedef struct
 {
     /// The unique name of the parameter.
-    string_t name;
+    m_string_t name;
     /// The list index (ordinal) of the parameter.
     size_t index;
 
@@ -54,7 +54,7 @@ void cace_amm_formal_param_deinit(cace_amm_formal_param_t *obj);
     (INIT(API_2(cace_amm_formal_param_init)), CLEAR(API_2(cace_amm_formal_param_deinit)))
 
 /// @cond Doxygen_Suppress
-DEQUE_DEF(cace_amm_formal_param_list, cace_amm_formal_param_t)
+M_DEQUE_DEF(cace_amm_formal_param_list, cace_amm_formal_param_t)
 /// @endcond
 
 /** Populate actual parameters.

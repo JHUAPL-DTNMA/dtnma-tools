@@ -66,45 +66,45 @@ DECDIG [0-9]
 }
 
 <LT_LABEL>(0|[1-9]{DECDIG}*) {
-        string_t text;
-          string_init_set_str(text, yytext);
+    m_string_t text;
+    m_string_init_set_cstr(text, yytext);
 
-        uint64_t val;
-        int ret = cace_ari_uint64_decode(&val, text);
-        string_clear(text);
-        if (ret)
-        {
-            cace_ari_text_val_error(yyscanner, yyextra, "number too large to parse");
-            return YYerror;
-        }
+    uint64_t val;
+    int ret = cace_ari_uint64_decode(&val, text);
+    m_string_clear(text);
+    if (ret)
+    {
+        cace_ari_text_val_error(yyscanner, yyextra, "number too large to parse");
+        return YYerror;
+    }
 
-        // prefer signed integer use
-        if (val <= INT64_MAX)
-        {
-            yylval->lit = (cace_ari_lit_t){
-                .prim_type = CACE_ARI_PRIM_INT64,
-                .value.as_int64 = (int64_t)val,
-            };
-            return T_INT;
-        }
-        else
-        {
-            yylval->lit = (cace_ari_lit_t){
-                .prim_type = CACE_ARI_PRIM_UINT64,
-                .value.as_uint64 = val,
-            };
-            return T_UINT;
-        }
+    // prefer signed integer use
+    if (val <= INT64_MAX)
+    {
+        yylval->lit = (cace_ari_lit_t){
+            .prim_type = CACE_ARI_PRIM_INT64,
+            .value.as_int64 = (int64_t)val,
+        };
+        return T_INT;
+    }
+    else
+    {
+        yylval->lit = (cace_ari_lit_t){
+            .prim_type = CACE_ARI_PRIM_UINT64,
+            .value.as_uint64 = val,
+        };
+        return T_UINT;
+    }
 }
 <PRIMITIVE,LT_ANYINT,LT_ARITYPE>[+-]?(0[bB][01]+|0[xX]{HEXDIG}+|{DECDIG}+) {
     // infer the base from the text
     if (yytext[0] == '-')
     {
-        string_t text;
-        string_init_set_str(text, yytext + 1);
+        m_string_t text;
+        m_string_init_set_cstr(text, yytext + 1);
         uint64_t neg;
         int ret = cace_ari_uint64_decode(&neg, text);
-        string_clear(text);
+        m_string_clear(text);
         if (ret)
         {
             cace_ari_text_val_error(yyscanner, yyextra, "number too large to parse");
@@ -126,15 +126,15 @@ DECDIG [0-9]
     }
     else
     {
-        string_t text;
+        m_string_t text;
         if (yytext[0] == '+') { 
-          string_init_set_str(text, yytext + 1);
+          m_string_init_set_cstr(text, yytext + 1);
         } else {
-          string_init_set_str(text, yytext);
+          m_string_init_set_cstr(text, yytext);
         }
         uint64_t val;
         int ret = cace_ari_uint64_decode(&val, text);
-        string_clear(text);
+        m_string_clear(text);
         if (ret)
         {
             cace_ari_text_val_error(yyscanner, yyextra, "number too large to parse");
@@ -182,13 +182,13 @@ DECDIG [0-9]
         cace_data_t text_view;
         cace_data_init_view(&text_view, text_len, (cace_data_ptr_t)text_begin);
 
-        string_t text_unesc;
-        string_init(text_unesc);
+        m_string_t text_unesc;
+        m_string_init(text_unesc);
         cace_slash_unescape(text_unesc, &text_view);
         cace_data_deinit(&text_view);
 
         cace_data_from_m_string(&data, text_unesc);
-        string_clear(text_unesc);
+        m_string_clear(text_unesc);
     }
 
     yylval->lit = (cace_ari_lit_t){
@@ -214,11 +214,11 @@ DECDIG [0-9]
     {
         if (strcmp(form_begin, "h") == 0)
         {
-            string_t clean;
-            string_init(clean);
+            m_string_t clean;
+            m_string_init(clean);
             cace_strip_space(clean, text_begin, text_len);
             int ret = cace_base16_decode(&data, clean);
-            string_clear(clean);
+            m_string_clear(clean);
             if (ret)
             {
                 cace_data_deinit(&data);
@@ -228,11 +228,11 @@ DECDIG [0-9]
         }
         else if (strcmp(form_begin, "b64") == 0)
         {
-            string_t clean;
-            string_init(clean);
+            m_string_t clean;
+            m_string_init(clean);
             cace_strip_space(clean, text_begin, text_len);
             int ret = cace_base64_decode(&data, clean);
-            string_clear(clean);
+            m_string_clear(clean);
             if (ret)
             {
                 cace_data_deinit(&data);
@@ -245,14 +245,14 @@ DECDIG [0-9]
             cace_data_t text_view;
             cace_data_init_view(&text_view, text_len, (cace_data_ptr_t)text_begin);
 
-            string_t text_unesc;
-            string_init(text_unesc);
+            m_string_t text_unesc;
+            m_string_init(text_unesc);
             cace_slash_unescape(text_unesc, &text_view);
             cace_data_deinit(&text_view);
         
             // direct copy
             cace_data_from_m_string(&data, text_unesc);
-            string_clear(text_unesc);
+            m_string_clear(text_unesc);
             // strip the trailing null
             cace_data_extend_back(&data, -1);
         }
@@ -340,13 +340,13 @@ DECDIG [0-9]
 }
 
 <*>. {
-    string_t str;
-    string_init(str);
-    string_cat_printf(str, "Unexpected character at %d: %s (%d)",
+    m_string_t str;
+    m_string_init(str);
+    m_string_cat_printf(str, "Unexpected character at %d: %s (%d)",
                       yycolumn, yytext, yytext[0]);
 
-    cace_ari_text_val_error(yyscanner, yyextra, string_get_cstr(str));
-    string_clear(str);
+    cace_ari_text_val_error(yyscanner, yyextra, m_string_get_cstr(str));
+    m_string_clear(str);
     return YYerror;
 }
 

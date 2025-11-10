@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(sock_path, optarg);
+                        m_string_set_cstr(sock_path, optarg);
                         break;
                     case 'h':
                     default:

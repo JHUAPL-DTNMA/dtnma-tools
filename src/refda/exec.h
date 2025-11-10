@@ -48,7 +48,7 @@ extern "C" {
  * @param[in] finish An optional execution-finished state for the whole target,
  * or a null pointer to not track this state.
  */
-int refda_exec_add_target(refda_runctx_ptr_t runctxp, const cace_ari_t *target, refda_exec_status_t *finish);
+int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target, refda_exec_status_t *finish);
 
 /** Work thread function for the Agent execution manager.
  *
@@ -108,13 +108,15 @@ int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 
 /**
- * Setup an ARI to execute next in the sequence
+ * Setup an ARI to execute next in the sequence.
+ * The front of the execution sequence, the current item, is not modified.
+ *
  * @param[in] agent    The agent context pointer
  * @param[in] seq      The sequence within which to inject the ARI target(s)
  * @param[in] target   The ARI to execute
  * @return Non-zero if the ARI could not be queued for execution
  */
-int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *target);
+int refda_exec_next(refda_exec_seq_t *seq, const cace_ari_t *target);
 
 #ifdef __cplusplus
 } // extern C

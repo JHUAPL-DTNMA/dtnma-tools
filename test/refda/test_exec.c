@@ -93,11 +93,11 @@ static void test_exec_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
     const cace_ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     CHKVOID(val)
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        TEST_PRINTF("execution with parameter %s", string_get_cstr(buf));
-        string_clear(buf);
+        TEST_PRINTF("execution with parameter %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     // record this execution
@@ -214,26 +214,24 @@ static void suite_adms_init(refda_agent_t *agent)
 static void check_execute(const cace_ari_t *target, int expect_exp, int wait_limit, int wait_ms[])
 {
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        TEST_PRINTF("execution target %s", string_get_cstr(buf));
-        string_clear(buf);
+        TEST_PRINTF("execution target %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
-    {
-        refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
-        // no nonce for test
-        refda_runctx_from(runctx, &agent, NULL);
-    }
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
+    // no nonce for test
+    refda_runctx_from(refda_runctx_ptr_ref(ctxptr), &agent, NULL);
 
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
-    refda_runctx_ptr_set(eseq.runctx, ctxptr);
+    refda_runctx_ptr_set(&eseq.runctx, ctxptr);
 
-    int res = refda_exec_proc_expand(&eseq, target);
+    size_t seq_ix = 0;
+
+    int res = refda_exec_proc_expand(&eseq, &seq_ix, target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_exp, res, "refda_exec_exp_target() failed");
 
     bool success = false;
@@ -256,8 +254,9 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
         }
         {
             // if there are more items the first must be waiting
-            const refda_exec_item_t *item = refda_exec_item_list_front(eseq.items);
-            TEST_ASSERT_TRUE(atomic_load(&(item->execution_stage)) == REFDA_EXEC_WAITING);
+            refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(eseq.items);
+            const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
+            TEST_ASSERT_TRUE(atomic_load(&(front->execution_stage)) == REFDA_EXEC_WAITING);
         }
 
         TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
@@ -274,11 +273,11 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
             struct timespec remain = timespec_sub(next->ts, nowtime);
 
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_timeperiod_encode(buf, &remain);
-                CACE_LOG_DEBUG("remaining time %s", string_get_cstr(buf));
-                string_clear(buf);
+                CACE_LOG_DEBUG("remaining time %s", m_string_get_cstr(buf));
+                m_string_clear(buf);
             }
 
             // absolute difference within 20ms of expected
@@ -296,7 +295,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
 
                 refda_ctrl_exec_ctx_t ctx;
                 refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
-                (next->exec.callback)(&ctx);
+                (next->exec.callback)(&ctx, next->exec.user_data);
                 refda_ctrl_exec_ctx_deinit(&ctx);
 
                 if (!(atomic_load(&(next->exec.item->execution_stage)) == REFDA_EXEC_WAITING))
@@ -386,13 +385,13 @@ void test_refda_exec_target(const char *targethex, int expect_exp, const char *e
         const bool equal = cace_ari_equal(cace_ari_list_cref(expect_it), cace_ari_list_cref(got_it));
         if (!equal)
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, cace_ari_list_cref(expect_it), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            TEST_PRINTF("exec_log expect %s", string_get_cstr(buf));
+            TEST_PRINTF("exec_log expect %s", m_string_get_cstr(buf));
             cace_ari_text_encode(buf, cace_ari_list_cref(got_it), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            TEST_PRINTF("exec_log item %s", string_get_cstr(buf));
-            string_clear(buf);
+            TEST_PRINTF("exec_log item %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
         TEST_ASSERT_TRUE_MESSAGE(equal, "exec_log item is different");
     }

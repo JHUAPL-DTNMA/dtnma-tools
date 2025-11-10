@@ -56,7 +56,7 @@ M_LIST_DEF(string_list, m_string_t, M_STRING_OPLIST)
 typedef struct refda_agent_s
 {
     /// Agent endpoint ID as URI text
-    string_t agent_eid;
+    m_string_t agent_eid;
 
     /// Running state
     cace_daemon_run_t running;

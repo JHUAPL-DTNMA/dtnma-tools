@@ -62,11 +62,11 @@ static cace_ari_t mock_result_store;
 static void mock_ctrl_exec_none(refda_ctrl_exec_ctx_t *ctx)
 {
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &mock_result_store, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("execution with mock result %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("execution with mock result %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     refda_ctrl_exec_ctx_set_result_copy(ctx, &mock_result_store);
 }
@@ -76,11 +76,11 @@ static void mock_ctrl_exec_one_int(refda_ctrl_exec_ctx_t *ctx)
     const cace_ari_t *val = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     CHKVOID(val)
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("execution with parameter %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("execution with parameter %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     refda_ctrl_exec_ctx_set_result_copy(ctx, val);
 }
@@ -143,17 +143,19 @@ static void check_execute(const char *refhex, const char *outhex)
     TEST_ASSERT_EQUAL_INT(0, pthread_mutex_unlock(&agent.objs_mutex));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_lookup_deref() failed");
 
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
     // no nonce for test
     refda_runctx_from(refda_runctx_ptr_ref(ctxptr), &agent, NULL);
 
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
-    refda_runctx_ptr_set(eseq.runctx, ctxptr);
+    refda_runctx_ptr_set(&eseq.runctx, ctxptr);
 
-    refda_exec_item_t *eitem = refda_exec_item_list_push_back_new(eseq.items);
-    eitem->seq               = &eseq;
+    refda_exec_item_ptr_t **eitem_ptr = refda_exec_item_list_push_new(eseq.items);
+    TEST_ASSERT_NOT_NULL(eitem_ptr);
+    refda_exec_item_t *eitem = refda_exec_item_ptr_ref(*eitem_ptr);
+    TEST_ASSERT_NOT_NULL(eitem);
+    eitem->seq = &eseq;
     cace_ari_set_move(&eitem->ref, &inref);
     cace_amm_lookup_set_move(&eitem->deref, &deref);
 

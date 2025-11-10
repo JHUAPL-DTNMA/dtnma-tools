@@ -35,7 +35,7 @@
 
 void refda_agent_init(refda_agent_t *agent)
 {
-    string_init(agent->agent_eid);
+    m_string_init(agent->agent_eid);
     cace_daemon_run_init(&(agent->running));
     refda_instr_init(&(agent->instr));
     cace_threadset_init(agent->threads);
@@ -84,7 +84,7 @@ void refda_agent_deinit(refda_agent_t *agent)
     refda_instr_deinit(&(agent->instr));
     cace_threadset_clear(agent->threads);
     cace_daemon_run_cleanup(&(agent->running));
-    string_clear(agent->agent_eid);
+    m_string_clear(agent->agent_eid);
 }
 
 /// Time of the DTN epoch (2000-01-01T00:00:00Z) in the POSIX clock
@@ -123,11 +123,11 @@ cace_amm_obj_desc_t *refda_agent_get_object(refda_agent_t *agent, cace_ari_int_i
     int res = cace_amm_lookup_deref(&deref, &(agent->objs), &ref);
     if (res)
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     else
     {
@@ -396,8 +396,7 @@ int refda_agent_startup_exec(refda_agent_t *agent, cace_ari_t *target)
     refda_exec_status_t status;
     refda_exec_status_init(&status);
 
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
     refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, NULL);
     CACE_LOG_DEBUG("Sending startup target");
     if (refda_exec_add_target(ctxptr, target, &status))

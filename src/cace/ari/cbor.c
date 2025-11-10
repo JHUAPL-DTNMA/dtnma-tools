@@ -71,7 +71,7 @@ static int cace_ari_cbor_encode_idseg(QCBOREncodeContext *enc, const cace_ari_id
         case CACE_ARI_IDSEG_TEXT:
         {
             // trim off trailing null
-            const UsefulBufC buf = { .ptr = string_get_cstr(obj->as_text), .len = string_size(obj->as_text) };
+            const UsefulBufC buf = { .ptr = m_string_get_cstr(obj->as_text), .len = m_string_size(obj->as_text) };
             QCBOREncode_AddText(enc, buf);
             break;
         }
@@ -106,7 +106,7 @@ static int cace_ari_cbor_decode_idseg(QCBORDecodeContext *dec, cace_ari_idseg_t 
             UsefulBufC buf;
             QCBORDecode_GetTextString(dec, &buf);
             // add trailing null
-            string_init_printf(obj->as_text, "%.*s", buf.len, buf.ptr);
+            m_string_init_printf(obj->as_text, "%.*s", buf.len, buf.ptr);
             break;
         }
         case QCBOR_TYPE_INT64:
@@ -414,11 +414,11 @@ static int cace_ari_cbor_decode_am(QCBORDecodeContext *dec, cace_ari_am_t *obj)
         }
 
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &key, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("  key %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("  key %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         // push only after fully reading
@@ -1110,9 +1110,9 @@ int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, 
     {
         if (errm)
         {
-            string_t err;
-            string_init_printf(err, "parser error %d", parse_res);
-            *errm = string_clear_get_str(err);
+            m_string_t err;
+            m_string_init_printf(err, "parser error %d", parse_res);
+            *errm = m_string_clear_get_cstr(err);
         }
         retval = 3;
     }
@@ -1135,9 +1135,9 @@ int cace_ari_cbor_decode(cace_ari_t *ari, const cace_data_t *buf, size_t *used, 
 
         if (retval && errm)
         {
-            string_t err;
-            string_init_printf(err, "decoder error %d: %s", dec_res, qcbor_err_to_str(dec_res));
-            *errm = string_clear_get_str(err);
+            m_string_t err;
+            m_string_init_printf(err, "decoder error %d: %s", dec_res, qcbor_err_to_str(dec_res));
+            *errm = m_string_clear_get_cstr(err);
         }
     }
     else

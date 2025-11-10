@@ -143,11 +143,11 @@ int cace_amp_proxy_msg_recv(int sock_fd, cace_ari_t *src, m_bstring_t data)
 
             if (cace_log_is_enabled_for(LOG_INFO))
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_ari_text_encode(buf, src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                 CACE_LOG_INFO("Received message with peer %s data length %zd", m_string_get_cstr(buf), data_size);
-                string_clear(buf);
+                m_string_clear(buf);
             }
             // got valid message
             break;

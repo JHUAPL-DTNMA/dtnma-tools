@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     if (!retval)
     {
         m_string_set(agent.agent_eid, own_eid);
-        CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(agent.agent_eid));
+        CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(agent.agent_eid));
         agent.mif.send = cace_amp_socket_send;
         agent.mif.recv = cace_amp_socket_recv;
         agent.mif.ctx  = &sock;

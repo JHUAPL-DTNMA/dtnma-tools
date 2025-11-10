@@ -114,16 +114,17 @@ int suiteTearDown(int failures)
  */
 static void check_execute(const cace_ari_t *target)
 {
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
     // no nonce for test
     refda_runctx_from(refda_runctx_ptr_ref(ctxptr), &agent, NULL);
 
     refda_exec_seq_t eseq;
     refda_exec_seq_init(&eseq);
-    refda_runctx_ptr_set(eseq.runctx, ctxptr);
+    refda_runctx_ptr_set(&eseq.runctx, ctxptr);
 
-    int res = refda_exec_proc_expand(&eseq, target);
+    size_t seq_ix = 0;
+
+    int res = refda_exec_proc_expand(&eseq, &seq_ix, target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_exec_exp_target() failed");
 
     res = refda_exec_proc_run(&eseq);
@@ -186,7 +187,7 @@ void test_refda_adm_ietf_dtnma_agent_edd_produce(const char *targethex, int expe
     {
         m_string_t buf;
         TEST_ASSERT_EQUAL_INT(0, test_util_ari_encode(buf, &(prodctx.value)));
-        TEST_PRINTF("Produced value %s", string_get_cstr(buf));
+        TEST_PRINTF("Produced value %s", m_string_get_cstr(buf));
         m_string_clear(buf);
     }
     TEST_ASSERT_FALSE(prodctx.value.is_ref);

@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        string_set_str(own_eid, optarg);
+                        m_string_set_cstr(own_eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
     if (!retval)
     {
-        CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(own_eid));
+        CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(own_eid));
         mgr.mif.send = cace_amp_socket_send;
         mgr.mif.recv = cace_amp_socket_recv;
         mgr.mif.ctx  = &sock;

@@ -29,7 +29,7 @@
 #include <cace/util/defs.h>
 #include <timespec.h>
 
-int refda_exec_add_target(refda_runctx_ptr_t runctxp, const cace_ari_t *target, refda_exec_status_t *status)
+int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target, refda_exec_status_t *status)
 {
     CHKERR1(runctxp);
     CHKERR1(target);
@@ -47,13 +47,14 @@ int refda_exec_add_target(refda_runctx_ptr_t runctxp, const cace_ari_t *target, 
 
     refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
 
-    refda_runctx_ptr_set(seq->runctx, runctxp);
+    refda_runctx_ptr_set(&seq->runctx, runctxp);
     seq->pid = agent->exec_next_pid++;
     // no dereference here, allowed to be null
     seq->status = status;
 
+    size_t seq_ix = 0;
     // Expand now and wait for actual run later
-    int res = refda_exec_proc_expand(seq, target);
+    int res = refda_exec_proc_expand(seq, &seq_ix, target);
     if (res)
     {
         // clean up useless sequence
@@ -91,8 +92,7 @@ static int refda_exec_add_execset(refda_agent_t *agent, const refda_msgdata_t *m
     {
         const cace_ari_t *tgt = cace_ari_list_cref(tgtit);
 
-        refda_runctx_ptr_t ctxptr;
-        refda_runctx_ptr_init_new(ctxptr);
+        refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
         refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, msg);
 
         // errors in one target do not inhibit other targets
@@ -128,11 +128,16 @@ int refda_exec_waiting(refda_agent_t *agent)
         //
         // Do not remove completed item now because it will relocate seq in memory and cause
         // problems with pointers within items. We clean up after iterating.
-        if (!refda_exec_item_list_empty_p(seq->items)
-            && atomic_load(&(refda_exec_item_list_front(seq->items)->execution_stage)) != REFDA_EXEC_WAITING)
+        if (!refda_exec_item_list_empty_p(seq->items))
         {
-            CACE_LOG_DEBUG("pushing to ready");
-            refda_exec_seq_ptr_list_push_back(ready, seq);
+            refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(seq->items);
+            const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
+
+            if (atomic_load(&(front->execution_stage)) != REFDA_EXEC_WAITING)
+            {
+                CACE_LOG_DEBUG("pushing to ready");
+                refda_exec_seq_ptr_list_push_back(ready, seq);
+            }
         }
     }
 
@@ -201,11 +206,11 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
 
             struct timespec diff = timespec_sub(next->ts, nowtime);
 
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_timeperiod_encode(buf, &diff);
-            CACE_LOG_DEBUG("waiting for exec event or %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("waiting for exec event or %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         sem_timedwait(&(agent->execs_sem), &(next->ts));
@@ -298,6 +303,29 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
     return true;
 }
 
+/** Expand a rule's action that has already been verified.
+ * Based on code from refda_exec_exp_execset
+ */
+static int refda_exec_rule_action(refda_agent_t *agent, const cace_ari_t *action)
+{
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
+
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
+    refda_runctx_from(runctx, agent, NULL);
+
+    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+    seq->pid              = agent->exec_next_pid++;
+
+    refda_runctx_ptr_set(&seq->runctx, ctxptr);
+
+    size_t seq_ix = 0;
+    // insert at the end of an empty sequence
+    int res = refda_exec_proc_expand(seq, &seq_ix, action);
+
+    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
+    return res;
+}
+
 static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting);
 
 /** Begin a single execution of a time based rule
@@ -324,14 +352,11 @@ static void refda_exec_run_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr)
     refda_exec_schedule_tbr(agent, tbr, false);
 
     // Expand rule and create exec items, CTRLs are run later by exec worker
-    refda_runctx_ptr_t ctxptr;
-    refda_runctx_ptr_init_new(ctxptr);
-    refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, NULL);
-    refda_exec_add_target(ctxptr, &(tbr->action), NULL);
-    refda_runctx_ptr_clear(ctxptr); // Clean up extra reference
-
-    tbr->exec_count++;
-    atomic_fetch_add(&agent->instr.num_tbrs_trig, 1);
+    if (!refda_exec_rule_action(agent, &(tbr->action)))
+    {
+        tbr->exec_count++;
+        atomic_fetch_add(&agent->instr.num_tbrs_trig, 1);
+    }
 
     return;
 }
@@ -483,14 +508,11 @@ static void refda_exec_run_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 
         if (!result && bool_result)
         {
-            refda_runctx_ptr_t ctxptr;
-            refda_runctx_ptr_init_new(ctxptr);
-            refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, NULL);
-            refda_exec_add_target(ctxptr, &(sbr->action), NULL);
-            refda_runctx_ptr_clear(ctxptr); // Clean up extra reference
-
-            sbr->exec_count++;
-            atomic_fetch_add(&agent->instr.num_sbrs_trig, 1);
+            if (!refda_exec_rule_action(agent, &(sbr->action)))
+            {
+                sbr->exec_count++;
+                atomic_fetch_add(&agent->instr.num_sbrs_trig, 1);
+            }
         }
     }
 
@@ -575,33 +597,13 @@ int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     return 0;
 }
 
-int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *target)
+int refda_exec_next(refda_exec_seq_t *seq, const cace_ari_t *target)
 {
-    CHKERR1(agent);
     CHKERR1(target);
 
-    refda_exec_item_list_t tmp_items;
-    refda_exec_item_t      tmp_item;
-    refda_exec_item_list_init(tmp_items);
+    size_t seq_ix = 1;
+    // Insert next execution items immediately after the currently executing front item
+    int res = refda_exec_proc_expand(seq, &seq_ix, target);
 
-    // Remove subsequent execution items
-    while (refda_exec_item_list_size(seq->items) > 1)
-    {
-        refda_exec_item_list_pop_back_move(&tmp_item, seq->items);
-        refda_exec_item_list_push_front_move(tmp_items, &tmp_item);
-    }
-
-    // Insert next execution items immediately after the currently executing item
-    int res = refda_exec_proc_expand(seq, target);
-
-    // Move existing items back, so they will execute after the newly-added item(s)
-    while (!refda_exec_item_list_empty_p(tmp_items))
-    {
-        refda_exec_item_list_pop_front_move(&tmp_item, tmp_items);
-        refda_exec_item_list_push_back_move(seq->items, &tmp_item);
-        refda_exec_item_list_back(seq->items)->seq = seq; // Need to manually set this again
-    }
-
-    refda_exec_item_list_clear(tmp_items);
     return res;
 }

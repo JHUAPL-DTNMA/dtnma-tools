@@ -45,6 +45,10 @@ void refda_amm_ident_base_init(refda_amm_ident_base_t *obj);
 
 void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj);
 
+void refda_amm_ident_base_init_set(refda_amm_ident_base_t *obj, const refda_amm_ident_base_t *src);
+
+void refda_amm_ident_base_set(refda_amm_ident_base_t *obj, const refda_amm_ident_base_t *src);
+
 /** Set the name and perform a reference lookup on this object.
  *
  * @param[in,out] obj The object to set.
@@ -55,8 +59,9 @@ void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj);
 int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t *ref, const cace_amm_obj_store_t *objs);
 
 /// M*LIB OPLIST for refda_amm_ident_base_t
-#define M_OPL_refda_amm_ident_base_t() \
-    (INIT(API_2(refda_amm_ident_base_init)), INIT_SET(0), CLEAR(API_2(refda_amm_ident_base_deinit)), SET(0))
+#define M_OPL_refda_amm_ident_base_t()                                                       \
+    (INIT(API_2(refda_amm_ident_base_init)), INIT_SET(API_6(refda_amm_ident_base_init_set)), \
+     CLEAR(API_2(refda_amm_ident_base_deinit)), SET(API_6(refda_amm_ident_base_set)))
 
 /** @struct refda_amm_ident_base_list_t
  * A list of dereferenced IDENT objects.

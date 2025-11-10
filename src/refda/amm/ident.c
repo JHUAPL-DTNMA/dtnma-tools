@@ -21,6 +21,7 @@
 
 void refda_amm_ident_base_init(refda_amm_ident_base_t *obj)
 {
+    CHKVOID(obj);
     cace_ari_init(&(obj->name));
     cace_amm_lookup_init(&obj->deref);
     obj->ident = NULL;
@@ -28,9 +29,28 @@ void refda_amm_ident_base_init(refda_amm_ident_base_t *obj)
 
 void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj)
 {
+    CHKVOID(obj);
     cace_amm_lookup_deinit(&obj->deref);
     obj->ident = NULL;
     cace_ari_deinit(&(obj->name));
+}
+
+void refda_amm_ident_base_init_set(refda_amm_ident_base_t *obj, const refda_amm_ident_base_t *src)
+{
+    refda_amm_ident_base_init(obj);
+    refda_amm_ident_base_set(obj, src);
+}
+
+void refda_amm_ident_base_set(refda_amm_ident_base_t *obj, const refda_amm_ident_base_t *src)
+{
+    if (obj == src)
+    {
+        return;
+    }
+    CHKVOID(obj);
+    CHKVOID(src);
+    cace_ari_set_copy(&(obj->name), &(src->name));
+    obj->ident = src->ident;
 }
 
 int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t *ref, const cace_amm_obj_store_t *objs)
@@ -40,11 +60,11 @@ int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t 
     int res = cace_amm_lookup_deref(&obj->deref, objs, &obj->name);
     if (res)
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &obj->name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, m_string_get_cstr(buf));
+        m_string_clear(buf);
 
         obj->ident = NULL;
     }

@@ -74,14 +74,13 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
 {
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(ctx->item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("CTRL result value %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("CTRL result value %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
-    // TODO come back to this undefined result handling
     bool valid = false;
     if (cace_amm_type_is_valid(&(ctx->ctrl->res_type)))
     {
@@ -98,14 +97,8 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
     }
     else
     {
-        // success is treated as a null value
-        if (cace_ari_is_undefined(&(ctx->item->result)))
-        {
-            CACE_LOG_WARNING("CTRL result type not set, defaulting to null value");
-            cace_ari_set_null(&(ctx->item->result));
-            valid = true;
-        }
-        else if (cace_ari_is_null(&(ctx->item->result)))
+        // no explicit result type means only the null value is acceptable
+        if (cace_ari_is_null(&(ctx->item->result)))
         {
             valid = true;
         }
