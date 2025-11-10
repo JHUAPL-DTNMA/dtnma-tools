@@ -24,12 +24,29 @@ void refda_exec_seq_init(refda_exec_seq_t *obj)
     refda_runctx_ptr_init(obj->runctx);
     obj->pid = 0;
     refda_exec_item_list_init(obj->items);
+    obj->status = NULL;
 }
 
 void refda_exec_seq_deinit(refda_exec_seq_t *obj)
 {
     CHKVOID(obj);
+    obj->status = NULL;
     refda_exec_item_list_clear(obj->items);
     obj->pid = 0;
     refda_runctx_ptr_clear(obj->runctx);
+}
+
+int refda_exec_seq_cmp(const refda_exec_seq_t *lt, const refda_exec_seq_t *rt)
+{
+    CHKRET(lt, 1);
+    CHKRET(rt, -1);
+    if (lt->pid < rt->pid)
+    {
+        return -1;
+    }
+    else if (lt->pid > rt->pid)
+    {
+        return 1;
+    }
+    return 0;
 }

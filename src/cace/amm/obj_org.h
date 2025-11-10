@@ -38,12 +38,14 @@ extern "C" {
  * Index of models by their name.
  */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_SHARED_PTR_DEF(cace_amm_obj_ns_ptr, cace_amm_obj_ns_t)
 M_DEQUE_DEF(cace_amm_obj_ns_list, cace_amm_obj_ns_ptr_t *,
             M_SHARED_PTR_OPLIST(cace_amm_obj_ns_ptr, M_OPL_cace_amm_obj_ns_t()))
 // allow multiple revisions present but expect only one
 M_BPTREE_MULTI_DEF2(cace_amm_obj_ns_by_enum, 4, int64_t, M_BASIC_OPLIST, cace_amm_obj_ns_t *, M_PTR_OPLIST)
 M_BPTREE_MULTI_DEF2(cace_amm_obj_ns_by_name, 4, const char *, M_CSTR_NOCASE_OPLIST, cace_amm_obj_ns_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /** An organization as an index for model namespaces.

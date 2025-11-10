@@ -39,13 +39,19 @@ extern "C" {
  * The list owns the object lifetimes and is indexed by pointers to
  * list members.
  */
+/** @struct cace_amm_obj_desc_ptr_set_t
+ * Unique set of object descriptor pointers.
+ */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_RBTREE_DEF(string_tree_set, m_string_t)
 M_SHARED_WEAK_PTR_DEF(cace_amm_obj_desc_ptr, cace_amm_obj_desc_t)
 M_DEQUE_DEF(cace_amm_obj_desc_list, cace_amm_obj_desc_ptr_t *,
             M_SHARED_PTR_OPLIST(cace_amm_obj_desc_ptr, M_OPL_cace_amm_obj_desc_t()))
+M_RBTREE_DEF(cace_amm_obj_desc_ptr_set, cace_amm_obj_desc_t *, M_PTR_OPLIST)
 M_BPTREE_DEF2(cace_amm_obj_desc_by_enum, 4, int64_t, M_BASIC_OPLIST, cace_amm_obj_desc_t *, M_PTR_OPLIST)
 M_BPTREE_DEF2(cace_amm_obj_desc_by_name, 4, const char *, M_CSTR_NOCASE_OPLIST, cace_amm_obj_desc_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /** A container of object descriptors all of a single type within a namespace.

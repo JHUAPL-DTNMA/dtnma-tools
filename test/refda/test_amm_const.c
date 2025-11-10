@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 #include "util/ari.h"
+#include "util/agent.h"
+#include "util/runctx.h"
 #include <refda/amm/const.h>
+#include <refda/agent.h>
 #include <refda/valprod.h>
 #include <cace/amm/semtype.h>
-#include <cace/amm/parameters.h>
-#include <cace/amm/lookup.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
 #include <cace/util/logging.h>
@@ -30,37 +31,66 @@
 // Allow this macro
 #define TEST_CASE(...)
 
+// Agent context for testing
+static refda_agent_t agent;
+// Initialize the test #agent
+static void suite_adms_init(refda_agent_t *agent);
+
 void suiteSetUp(void)
 {
     cace_openlog();
+
+    refda_agent_init(&agent);
+    test_util_agent_crit_adms(&agent);
+    suite_adms_init(&agent);
+    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 }
 
 int suiteTearDown(int failures)
 {
+    refda_agent_deinit(&agent);
+
     cace_closelog();
     return failures;
 }
 
-static cace_amm_obj_desc_t    obj;
-static refda_amm_const_desc_t desc;
+#define EXAMPLE_ORG_ENUM 65535
+#define EXAMPLE_ADM_ENUM 10
 
-void setUp(void)
+// No-parameter object
+static refda_amm_const_desc_t *obj_noparam = NULL;
+// Flow-down parameter object
+static refda_amm_const_desc_t *obj_intparam = NULL;
+
+static void suite_adms_init(refda_agent_t *agent)
 {
-    cace_amm_obj_desc_init(&obj);
+    // ADM for this test fixture
+    cace_amm_obj_ns_t *adm =
+        cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
+                                  cace_amm_idseg_ref_withenum("adm", EXAMPLE_ADM_ENUM), "2025-02-10");
+    cace_amm_obj_desc_t *obj;
 
-    refda_amm_const_desc_init(&desc);
-    obj.app_data.ptr = &desc;
+    /**
+     * Register CONST objects
+     */
+    {
+        refda_amm_const_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
+        refda_amm_const_desc_init(objdata);
+        // initial state
+        cace_ari_set_int(&(objdata->value), 10);
 
-    // leave formal parameter list empty
+        obj = refda_register_const(adm, cace_amm_idseg_ref_withenum("noparam", 4), objdata);
+        assert(NULL != obj);
+        // no parameters
+
+        obj_noparam = objdata;
+    }
+
+    int res = refda_agent_bindrefs(agent);
+    assert(0 == res);
 }
 
-void tearDown(void)
-{
-    refda_amm_const_desc_deinit(&desc);
-    cace_amm_obj_desc_deinit(&obj);
-}
-
-static void check_produce(cace_ari_t *value, const char *refhex, const char *outhex, int expect_res)
+static void check_produce(const char *refhex, const char *outhex, int expect_res)
 {
     cace_ari_t inref = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&inref, refhex));
@@ -68,67 +98,45 @@ static void check_produce(cace_ari_t *value, const char *refhex, const char *out
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
-    deref.obj_type = CACE_ARI_TYPE_CONST;
-    deref.obj      = &obj;
 
-    int res = cace_amm_actual_param_set_populate(&(deref.aparams), obj.fparams, &(inref.as_ref.params));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_actual_param_set_populate() failed");
+    TEST_ASSERT_EQUAL_INT(0, pthread_mutex_lock(&agent.objs_mutex));
+    int res = cace_amm_lookup_deref(&deref, &agent.objs, &inref);
+    TEST_ASSERT_EQUAL_INT(0, pthread_mutex_unlock(&agent.objs_mutex));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_amm_lookup_deref() failed");
+
+    refda_runctx_t runctx;
+    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
     refda_valprod_ctx_t ctx;
-    refda_valprod_ctx_init(&ctx, NULL, NULL, &deref);
+    refda_valprod_ctx_init(&ctx, &runctx, NULL, &deref);
 
     res = refda_valprod_run(&ctx);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_amm_const_desc_produce() mismatch");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_valprod_run() mismatch");
 
     cace_ari_t outval = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));
 
     TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&outval, &(ctx.value)), "produced value mismatch");
 
-    // move out produced value
-    cace_ari_set_move(value, &(ctx.value));
-
     refda_valprod_ctx_deinit(&ctx);
+    refda_runctx_deinit(&runctx);
     cace_amm_lookup_deinit(&deref);
 
     cace_ari_deinit(&outval);
     cace_ari_deinit(&inref);
 }
 
-// References are based on ari://2/2/CONST/4
-TEST_CASE("0A", "8402022104", "0A", 0)
-void test_const_produce_param_none(const char *valhex, const char *refhex, const char *outhex, int expect_res)
+// References are based on ari://65535/10/CONST/4
+TEST_CASE("8419FFFF0A2104", "0A", 0, "0A")
+TEST_CASE("8419FFFF0A2104", "F7", 0, "F7") // undefined state
+TEST_CASE("8419FFFF0A2104", "F4", 0, "F4") // mismatched type not checked
+void test_const_produce_noparam(const char *refhex, const char *valhex, int expect_res, const char *outhex)
 {
-    // initial state
-    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(desc.value), valhex));
+    // force value state
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(obj_noparam->value), valhex));
 
-    cace_ari_t value = CACE_ARI_INIT_UNDEFINED;
-    check_produce(&value, refhex, outhex, expect_res);
-
-    cace_ari_deinit(&value);
+    check_produce(refhex, outhex, expect_res);
 }
 
-// References are based on ari://2/CONST/4
-TEST_CASE("0A", "8402022104", "0A", 0)
-TEST_CASE("0A", "8502022104810A", "0A", 0) // [10] not used, but not an error
-// FIXME: TEST_CASE("820E00", "8502022104810A", "0A", 0)     // [10] label substituted by index
-// FIXME: TEST_CASE("820E626869", "8502022104810A", "0A", 0) // [10] label substituted by name
-void test_const_produce_param_one_int(const char *valhex, const char *refhex, const char *outhex, int expect_res)
-{
-    {
-        cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj.fparams);
-
-        fparam->index = 0;
-        string_set_str(fparam->name, "hi");
-
-        TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
-    }
-
-    // initial state
-    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(desc.value), valhex));
-
-    cace_ari_t value = CACE_ARI_INIT_UNDEFINED;
-    check_produce(&value, refhex, outhex, expect_res);
-
-    cace_ari_deinit(&value);
-}
+// FIXME: TEST_CASE("8519FFFF0A2105810A", "0A", 0) // [10] label substituted by index
+// FIXME: TEST_CASE("8519FFFF0A2106810A", "0A", 0) // [10] label substituted by name

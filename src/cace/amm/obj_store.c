@@ -95,6 +95,8 @@ cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const 
         }
     }
 
+    CACE_LOG_INFO("Adding namespace org-ID %s (%" PRId64 "), model-ID %s (%" PRId64 "), revision %s", org_id.name,
+                  org_id.intenum, model_id.name, model_id.intenum, revision);
     cace_amm_obj_ns_ptr_t **ns_ptr = cace_amm_obj_ns_list_push_back_new(store->ns_list);
     cace_amm_obj_ns_t      *ns     = cace_amm_obj_ns_ptr_ref(*ns_ptr);
 
@@ -165,6 +167,8 @@ cace_amm_obj_ns_t *cace_amm_obj_store_find_ns(cace_amm_obj_store_t *store, const
 
 cace_amm_obj_org_t *cace_amm_obj_store_find_org_name(const cace_amm_obj_store_t *store, const char *name)
 {
+    CHKNULL(store);
+    CHKNULL(name);
     cace_amm_obj_org_t **found = cace_amm_obj_org_by_name_get(store->org_by_name, name);
     if (!found)
     {
@@ -175,6 +179,7 @@ cace_amm_obj_org_t *cace_amm_obj_store_find_org_name(const cace_amm_obj_store_t 
 
 cace_amm_obj_org_t *cace_amm_obj_store_find_org_enum(const cace_amm_obj_store_t *store, cace_ari_int_id_t intenum)
 {
+    CHKNULL(store);
     cace_amm_obj_org_t **found = cace_amm_obj_org_by_enum_get(store->org_by_enum, intenum);
     if (!found)
     {

@@ -123,7 +123,7 @@ void test_bind_valid(void)
 
     m_string_t sock_path;
     m_string_init_printf(sock_path, "%s/test.sock", m_string_get_cstr(tmp_path));
-    TEST_ASSERT_EQUAL_INT(0, cace_amp_socket_state_bind(&state, sock_path));
+    TEST_ASSERT_EQUAL_INT(0, cace_amp_socket_state_bind(&state, m_string_get_cstr(sock_path)));
 
     struct stat info;
     TEST_ASSERT_EQUAL_INT(0, stat(m_string_get_cstr(sock_path), &info));
@@ -146,7 +146,7 @@ void test_bind_path_toolong(void)
     m_string_init_printf(
         sock_path, "%s/test-with-long-long-long-long-long-long-long-long-long-long-long-long-long-long-long-name.sock",
         m_string_get_cstr(tmp_path));
-    TEST_ASSERT_EQUAL_INT(1, cace_amp_socket_state_bind(&state, sock_path));
+    TEST_ASSERT_EQUAL_INT(1, cace_amp_socket_state_bind(&state, m_string_get_cstr(sock_path)));
 
     struct stat info;
     TEST_ASSERT_EQUAL_INT(-1, stat(m_string_get_cstr(sock_path), &info));

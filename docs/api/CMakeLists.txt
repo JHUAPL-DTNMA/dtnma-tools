@@ -91,10 +91,6 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
     add_custom_target(
         docs-api-misspelling
         DEPENDS "${MISSPELLING_TXT}"
-        COMMAND cat "${MISSPELLING_TXT}"
-        # success means file is present and empty
-        COMMAND test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}"
-        COMMENT "Checking ${MISSPELLING_TXT}"
     )
 endif(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
 

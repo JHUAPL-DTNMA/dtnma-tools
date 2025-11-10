@@ -66,7 +66,11 @@ static int normalize_key(cace_ari_t *out, const cace_ari_t *in)
         cace_ari_init(out);
         if (cace_amm_type_convert(typeobj, out, in))
         {
-            CACE_LOG_WARNING("Failed to convert key to UVAST type");
+            string_t buf;
+            string_init(buf);
+            cace_ari_text_encode(buf, in, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_WARNING("Failed to convert key %s to UVAST type", m_string_get_cstr(buf));
+            string_clear(buf);
             return 3;
         }
     }
@@ -166,7 +170,8 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                     }
                     if (cace_amm_type_convert(&(fparam->typeobj), aparam, gparam))
                     {
-                        CACE_LOG_WARNING("  given parameter failed to convert");
+                        CACE_LOG_WARNING("given parameter for \"%s\" failed to convert",
+                                         m_string_get_cstr(fparam->name));
                         retval = 2;
                         break;
                     }

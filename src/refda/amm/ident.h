@@ -18,6 +18,8 @@
 #ifndef REFDA_AMM_IDENT_H_
 #define REFDA_AMM_IDENT_H_
 
+#include "cace/amm/lookup.h"
+#include "cace/amm/obj_store.h"
 #include "cace/amm/user_data.h"
 #include <m-deque.h>
 
@@ -31,6 +33,8 @@ typedef struct
 {
     /// Reference to the object
     cace_ari_t name;
+    /// Lookup result
+    cace_amm_lookup_t deref;
     /** The bound object being used, which is bound based on #name.
      * This is always a reference to an externally-owned object.
      */
@@ -41,15 +45,28 @@ void refda_amm_ident_base_init(refda_amm_ident_base_t *obj);
 
 void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj);
 
+/** Set the name and perform a reference lookup on this object.
+ *
+ * @param[in,out] obj The object to set.
+ * @param[in] ref The new name.
+ * @param[in] objs The object store to search.
+ * @return Zero if the lookup was fully successful.
+ */
+int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t *ref, const cace_amm_obj_store_t *objs);
+
 /// M*LIB OPLIST for refda_amm_ident_base_t
 #define M_OPL_refda_amm_ident_base_t() \
     (INIT(API_2(refda_amm_ident_base_init)), INIT_SET(0), CLEAR(API_2(refda_amm_ident_base_deinit)), SET(0))
 
-/** @struct refda_amm_ident_base_list
- * A list of possible base objects.
+/** @struct refda_amm_ident_base_list_t
+ * A list of dereferenced IDENT objects.
+ */
+/** @struct refda_amm_ident_base_ptr_set_t
+ * A set of pointers to dereferenced IDENT objects.
  */
 /// @cond Doxygen_Suppress
 M_ARRAY_DEF(refda_amm_ident_base_list, refda_amm_ident_base_t)
+M_RBTREE_DEF(refda_amm_ident_base_ptr_set, refda_amm_ident_base_t *, M_PTR_OPLIST)
 /// @endcond
 
 /** An IDENT descriptor.

@@ -38,8 +38,8 @@ void *refda_ingress_worker(void *arg);
  * starting the ingress thread.
  *
  * @param agent a pointer to the agent
- * @param meta structure containing the manager's id
- * @param ari the ARI to insert
+ * @param meta structure containing the manager's endpoint ID.
+ * @param ari The value to insert, which will be moved from.
  */
 void refda_ingress_push_move(refda_agent_t *agent, const cace_amm_msg_if_metadata_t *meta, cace_ari_t *ari);
 
