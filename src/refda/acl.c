@@ -84,11 +84,11 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
     CHKERR1(endpoint);
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, endpoint, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("searching groups for %s", m_string_get_cstr(buf));
-        string_clear(buf);
+        m_string_clear(buf);
     }
 
     refda_acl_id_tree_reset(groups);

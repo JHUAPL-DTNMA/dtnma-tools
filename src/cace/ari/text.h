@@ -78,7 +78,7 @@ enum cace_ari_bstr_form_e
 /** Encode just an object path, which can be useful for debugging output.
  *
  */
-int cace_ari_text_encode_objpath(string_t text, const cace_ari_objpath_t *path, enum cace_ari_text_aritype_e show);
+int cace_ari_text_encode_objpath(m_string_t text, const cace_ari_objpath_t *path, enum cace_ari_text_aritype_e show);
 
 /** Parameters for ARI text encoding.
  * Use ::CACE_ARI_TEXT_ENC_OPTS_DEFAULT to initialize these contents.
@@ -129,7 +129,7 @@ typedef struct
  * @param opts Encoding parameters.
  * @return Zero upon success.
  */
-int cace_ari_text_encode(string_t text, const cace_ari_t *ari, cace_ari_text_enc_opts_t opts);
+int cace_ari_text_encode(m_string_t text, const cace_ari_t *ari, cace_ari_text_enc_opts_t opts);
 
 #if defined(ARI_TEXT_PARSE)
 
@@ -143,7 +143,7 @@ int cace_ari_text_encode(string_t text, const cace_ari_t *ari, cace_ari_text_enc
  * must be freed using ::CACE_FREE().
  * @return Zero upon success.
  */
-int cace_ari_text_decode(cace_ari_t *ari, const string_t text, char **errm);
+int cace_ari_text_decode(cace_ari_t *ari, const m_string_t text, char **errm);
 
 /** @overload
  * Decode from a bare C string.

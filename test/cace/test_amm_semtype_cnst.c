@@ -37,12 +37,12 @@ int suiteTearDown(int failures)
 
 static void check_cnst(const cace_amm_semtype_cnst_t *cnst, const char *inhex, bool expect)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     int res = cace_base16_decode(&indata, intext);
-    string_clear(intext);
+    m_string_clear(intext);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_decode() failed");
 
     cace_ari_t val = CACE_ARI_INIT_UNDEFINED;

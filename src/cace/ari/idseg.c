@@ -34,7 +34,7 @@ void cace_ari_idseg_deinit(cace_ari_idseg_t *obj)
     CHKVOID(obj);
     if (obj->form == CACE_ARI_IDSEG_TEXT)
     {
-        string_clear(obj->as_text);
+        m_string_clear(obj->as_text);
     }
 }
 
@@ -48,7 +48,7 @@ void cace_ari_idseg_copy(cace_ari_idseg_t *obj, const cace_ari_idseg_t *src)
         case CACE_ARI_IDSEG_NULL:
             break;
         case CACE_ARI_IDSEG_TEXT:
-            string_set(obj->as_text, src->as_text);
+            m_string_set(obj->as_text, src->as_text);
             break;
         case CACE_ARI_IDSEG_INT:
             obj->as_int = src->as_int;
@@ -67,7 +67,7 @@ size_t cace_ari_idseg_hash(const cace_ari_idseg_t *obj)
         case CACE_ARI_IDSEG_NULL:
             break;
         case CACE_ARI_IDSEG_TEXT:
-            M_HASH_UP(accum, string_hash(obj->as_text));
+            M_HASH_UP(accum, m_string_hash(obj->as_text));
             break;
         case CACE_ARI_IDSEG_INT:
             M_HASH_UP(accum, M_HASH_DEFAULT(obj->as_int));
@@ -92,7 +92,7 @@ int cace_ari_idseg_cmp(const cace_ari_idseg_t *left, const cace_ari_idseg_t *rig
         case CACE_ARI_IDSEG_INT:
             return M_CMP_DEFAULT(left->as_int, right->as_int);
         case CACE_ARI_IDSEG_TEXT:
-            return string_cmp(left->as_text, right->as_text);
+            return m_string_cmp(left->as_text, right->as_text);
         default:
             return -2;
     }
@@ -111,7 +111,7 @@ bool cace_ari_idseg_equal(const cace_ari_idseg_t *left, const cace_ari_idseg_t *
         case CACE_ARI_IDSEG_NULL:
             return true;
         case CACE_ARI_IDSEG_TEXT:
-            return string_equal_p(left->as_text, right->as_text);
+            return m_string_equal_p(left->as_text, right->as_text);
         case CACE_ARI_IDSEG_INT:
             return left->as_int == right->as_int;
         default:
@@ -119,11 +119,11 @@ bool cace_ari_idseg_equal(const cace_ari_idseg_t *left, const cace_ari_idseg_t *
     }
 }
 
-void cace_ari_idseg_init_text(cace_ari_idseg_t *idseg, string_t text)
+void cace_ari_idseg_init_text(cace_ari_idseg_t *idseg, m_string_t text)
 {
-    idseg->form     = CACE_ARI_IDSEG_TEXT;
-    string_t *value = &(idseg->as_text);
-    string_init_move(*value, text);
+    idseg->form       = CACE_ARI_IDSEG_TEXT;
+    m_string_t *value = &(idseg->as_text);
+    m_string_init_move(*value, text);
 }
 
 void cace_ari_idseg_derive_form(cace_ari_idseg_t *idseg)
@@ -135,7 +135,7 @@ void cace_ari_idseg_derive_form(cace_ari_idseg_t *idseg)
         return;
     }
 
-    const char *instr = string_get_cstr(idseg->as_text);
+    const char *instr = m_string_get_cstr(idseg->as_text);
     // text IDs are disjoint from numeric IDs
     if ((instr[0] == '-') || isdigit(instr[0]))
     {

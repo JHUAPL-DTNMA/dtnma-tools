@@ -27,12 +27,12 @@ int test_util_ari_decode(cace_ari_t *ari, const char *inhex)
     CHKERR1(ari);
     CHKERR1(inhex);
 
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     int res = cace_base16_decode(&indata, intext);
-    string_clear(intext);
+    m_string_clear(intext);
     if (res)
     {
         CACE_LOG_ERR("cace_base16_decode() failed");

@@ -136,7 +136,7 @@ int cace_ari_objpath_derive_type(cace_ari_objpath_t *path)
         case CACE_ARI_IDSEG_TEXT:
         {
             cace_ari_type_t found;
-            const char     *name = string_get_cstr(path->type_id.as_text);
+            const char     *name = m_string_get_cstr(path->type_id.as_text);
             if (!cace_ari_type_from_name(&found, name))
             {
                 if (!cace_ari_valid_type_for_objpath(found))
@@ -197,22 +197,22 @@ void cace_ari_objpath_set_textid_opt(cace_ari_objpath_t *path, const char *org_i
     if (org_id)
     {
         path->org_id.form = CACE_ARI_IDSEG_TEXT;
-        string_t *value   = &(path->org_id.as_text);
-        string_init_set_str(*value, org_id);
+        m_string_t *value = &(path->org_id.as_text);
+        m_string_init_set_cstr(*value, org_id);
     }
     if (model_id)
     {
         path->model_id.form = CACE_ARI_IDSEG_TEXT;
-        string_t *value     = &(path->model_id.as_text);
-        string_init_set_str(*value, model_id);
+        m_string_t *value   = &(path->model_id.as_text);
+        m_string_init_set_cstr(*value, model_id);
     }
     if (type_id)
     {
         // FIXME better way to handle this?
         const char *type_name = cace_ari_type_to_name(*type_id);
         path->type_id.form    = CACE_ARI_IDSEG_TEXT;
-        string_t *value       = &(path->type_id.as_text);
-        string_init_set_str(*value, type_name);
+        m_string_t *value     = &(path->type_id.as_text);
+        m_string_init_set_cstr(*value, type_name);
 
         path->has_ari_type = true;
         path->ari_type     = *type_id;
@@ -220,8 +220,8 @@ void cace_ari_objpath_set_textid_opt(cace_ari_objpath_t *path, const char *org_i
     if (obj_id)
     {
         path->obj_id.form = CACE_ARI_IDSEG_TEXT;
-        string_t *value   = &(path->obj_id.as_text);
-        string_init_set_str(*value, obj_id);
+        m_string_t *value = &(path->obj_id.as_text);
+        m_string_init_set_cstr(*value, obj_id);
     }
 }
 

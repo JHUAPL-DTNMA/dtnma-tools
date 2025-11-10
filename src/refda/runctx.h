@@ -21,7 +21,7 @@
 #include "acl.h"
 #include "cace/ari/base.h"
 #include "cace/amm/lookup.h"
-#include <m-shared.h>
+#include <m-shared-ptr.h>
 
 #ifdef __cplusplus
 extern "C" {

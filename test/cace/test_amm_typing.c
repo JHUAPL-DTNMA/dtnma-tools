@@ -44,12 +44,12 @@ int suiteTearDown(int failures)
 
 static void check_match(const cace_amm_type_t *type, const char *inhex, cace_amm_type_match_res_t expect)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     int res = cace_base16_decode(&indata, intext);
-    string_clear(intext);
+    m_string_clear(intext);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_decode() failed");
 
     cace_ari_t val = CACE_ARI_INIT_UNDEFINED;
@@ -65,12 +65,12 @@ static void check_match(const cace_amm_type_t *type, const char *inhex, cace_amm
 
 static void check_convert(const cace_amm_type_t *type, const char *inhex, const char *expecthex)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     int res = cace_base16_decode(&indata, intext);
-    string_clear(intext);
+    m_string_clear(intext);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_decode() failed");
 
     cace_ari_t inval = CACE_ARI_INIT_UNDEFINED;
@@ -96,14 +96,14 @@ static void check_convert(const cace_amm_type_t *type, const char *inhex, const 
     res = cace_ari_cbor_encode(&outdata, &outval);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_encode() failed");
 
-    string_t outhex;
-    string_init(outhex);
+    m_string_t outhex;
+    m_string_init(outhex);
     res = cace_base16_encode(outhex, &outdata, true);
     cace_data_deinit(&outdata);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_encode() failed");
 
-    TEST_ASSERT_EQUAL_STRING(expecthex, string_get_cstr(outhex));
-    string_clear(outhex);
+    TEST_ASSERT_EQUAL_STRING(expecthex, m_string_get_cstr(outhex));
+    m_string_clear(outhex);
     cace_ari_deinit(&outval);
 }
 

@@ -968,16 +968,16 @@ static cace_amm_type_match_res_t cace_amm_semtype_tblt_match(const cace_amm_type
             cace_amm_type_get_name(typeobj, &ariname);
 
             m_string_t buf;
-            string_init(buf);
+            m_string_init(buf);
             cace_ari_text_encode(buf, &ariname, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("TBLT match for column %s, type %s", string_get_cstr(col->name), string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("TBLT match for column %s, type %s", m_string_get_cstr(col->name), m_string_get_cstr(buf));
+            m_string_clear(buf);
             cace_ari_deinit(&ariname);
 
-            string_init(buf);
+            m_string_init(buf);
             cace_ari_text_encode(buf, val_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("for value %s match %d", string_get_cstr(buf), (int)got);
-            string_clear(buf);
+            CACE_LOG_DEBUG("for value %s match %d", m_string_get_cstr(buf), (int)got);
+            m_string_clear(buf);
         }
         if (got == CACE_AMM_TYPE_MATCH_NEGATIVE)
         {
@@ -1189,17 +1189,17 @@ static int cace_amm_semtype_union_convert(const cace_amm_type_t *self, cace_ari_
             cace_ari_t ariname = CACE_ARI_INIT_UNDEFINED;
             cace_amm_type_get_name(found, &ariname);
 
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &ariname, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("type union converted for choice %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("type union converted for choice %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
             cace_ari_deinit(&ariname);
 
-            string_init(buf);
+            m_string_init(buf);
             cace_ari_text_encode(buf, out, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("got value %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("got value %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
         return 0;
     }

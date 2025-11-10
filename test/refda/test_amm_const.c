@@ -85,6 +85,25 @@ static void suite_adms_init(refda_agent_t *agent)
 
         obj_noparam = objdata;
     }
+    {
+        refda_amm_const_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
+        refda_amm_const_desc_init(objdata);
+        // initial state
+        cace_ari_set_int(&(objdata->value), 10);
+
+        obj = refda_register_const(adm, cace_amm_idseg_ref_withenum("intparam", 5), objdata);
+        assert(NULL != obj);
+        {
+            cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj->fparams);
+
+            fparam->index = 0;
+            m_string_set_cstr(fparam->name, "hi");
+
+            assert(0 == cace_amm_type_set_use_builtin(&(fparam->typeobj), CACE_ARI_TYPE_INT));
+        }
+
+        obj_intparam = objdata;
+    }
 
     int res = refda_agent_bindrefs(agent);
     assert(0 == res);
@@ -138,5 +157,15 @@ void test_const_produce_noparam(const char *refhex, const char *valhex, int expe
     check_produce(refhex, outhex, expect_res);
 }
 
-// FIXME: TEST_CASE("8519FFFF0A2105810A", "0A", 0) // [10] label substituted by index
-// FIXME: TEST_CASE("8519FFFF0A2106810A", "0A", 0) // [10] label substituted by name
+// References are based on ari://65535/10/CONST/5
+TEST_CASE("0A", "8419FFFF0A2105", "0A", 0)
+TEST_CASE("0A", "8519FFFF0A2105810A", "0A", 0) // [10] not used, but not an error
+// FIXME: TEST_CASE("820E00", "8519FFFF0A2105810A", "0A", 0)     // [10] label substituted by index
+// FIXME: TEST_CASE("820E626869", "8519FFFF0A2105810A", "0A", 0) // [10] label substituted by name
+void test_const_produce_param_one_int(const char *valhex, const char *refhex, const char *outhex, int expect_res)
+{
+    // force value state
+    TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&(obj_intparam->value), valhex));
+
+    check_produce(refhex, outhex, expect_res);
+}

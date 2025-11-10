@@ -74,11 +74,11 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
 {
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(ctx->item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("CTRL result value %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("CTRL result value %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     bool valid = false;

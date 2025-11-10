@@ -22,14 +22,24 @@
 #include "exec_item.h"
 #include "exec_status.h"
 #include "runctx.h"
+#include <m-shared-ptr.h>
 #include <m-deque.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/** @struct refda_exec_item_ptr
+ * A shared pointer to a ::refda_exec_item_t instance guarded by external
+ * thread mutex.
+ */
+/** @struct refda_exec_item_list_t
+ * A list of execution items ::refda_exec_item_t managed by shared pointers.
+ */
 /// @cond Doxygen_Suppress
-DEQUE_DEF(refda_exec_item_list, refda_exec_item_t)
+M_SHARED_WEAK_PTR_DEF(refda_exec_item_ptr, refda_exec_item_t)
+M_ARRAY_DEF(refda_exec_item_list, refda_exec_item_ptr_t *,
+            M_SHARED_PTR_OPLIST(refda_exec_item_ptr, M_OPL_refda_exec_item_t()))
 /// @endcond
 
 /** The state of a single execution within an Agent.
@@ -39,7 +49,7 @@ typedef struct refda_exec_seq_s
 {
     /** Context for the source of this sequence.
      */
-    refda_runctx_ptr_t runctx;
+    refda_runctx_ptr_t *runctx;
 
     /** Internal unique processing identifier for the execution.
      * Zero is an invalid value and will not be assigned.

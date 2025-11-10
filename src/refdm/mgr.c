@@ -188,12 +188,12 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
         // agent does not already exist
         agent = CACE_MALLOC(sizeof(refdm_agent_t));
         refdm_agent_init(agent);
-        string_set_str(agent->eid, agent_eid);
+        m_string_set_cstr(agent->eid, agent_eid);
 
         // key is pointer to own member data
-        CACE_LOG_INFO("adding agent for %s", string_get_cstr(agent->eid));
+        CACE_LOG_INFO("adding agent for %s", m_string_get_cstr(agent->eid));
         refdm_agent_list_push_back(mgr->agent_list, agent);
-        refdm_agent_dict_set_at(mgr->agent_dict, string_get_cstr(agent->eid), agent);
+        refdm_agent_dict_set_at(mgr->agent_dict, m_string_get_cstr(agent->eid), agent);
     }
 
     if (pthread_mutex_unlock(&(mgr->agent_mutex)))
@@ -212,7 +212,7 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
 
     m_string_t eid;
     m_string_init(eid);
-    string_set_str(eid, agent_eid);
+    m_string_set_cstr(eid, agent_eid);
     refdm_db_insert_agent(eid);
     m_string_clear(eid);
     CACE_LOG_INFO("logging agent in db finished");

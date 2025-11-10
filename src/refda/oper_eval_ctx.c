@@ -81,12 +81,12 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
         {
             if (cace_log_is_enabled_for(LOG_WARNING))
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_ari_text_encode(buf, &orig, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                 CACE_LOG_WARNING("failed to convert operand \"%s\" code %d from value %s", m_string_get_cstr(typ->name),
                                  res, m_string_get_cstr(buf));
-                string_clear(buf);
+                m_string_clear(buf);
             }
 
             failcnt += 1;
