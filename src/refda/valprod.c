@@ -25,12 +25,12 @@
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
 
-static int refda_valprod_const_run(const refda_amm_const_desc_t *obj, refda_valprod_ctx_t *ctx)
+static int refda_valprod_const_run(const refda_amm_const_desc_t *cnst, refda_valprod_ctx_t *ctx)
 {
-    CHKERR1(obj);
+    CHKERR1(cnst);
     CHKERR1(ctx);
 
-    cace_ari_set_copy(&(ctx->value), &(obj->value));
+    cace_ari_set_copy(&(ctx->value), &(cnst->value));
     // FIXME use ctx parameters to substitute
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
@@ -45,12 +45,12 @@ static int refda_valprod_const_run(const refda_amm_const_desc_t *obj, refda_valp
     return 0;
 }
 
-static int refda_valprod_var_run(const refda_amm_var_desc_t *obj, refda_valprod_ctx_t *ctx)
+static int refda_valprod_var_run(const refda_amm_var_desc_t *var, refda_valprod_ctx_t *ctx)
 {
-    CHKERR1(obj);
+    CHKERR1(var);
     CHKERR1(ctx);
 
-    cace_ari_set_copy(&(ctx->value), &(obj->value));
+    cace_ari_set_copy(&(ctx->value), &(var->value));
     // FIXME use ctx parameters to substitute
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
@@ -89,13 +89,12 @@ static int refda_valprod_edd_run(const refda_amm_edd_desc_t *obj, refda_valprod_
     return 0;
 }
 
-void refda_valprod_ctx_init(refda_valprod_ctx_t *obj, refda_runctx_t *parent, const cace_ari_t *ref,
+void refda_valprod_ctx_init(refda_valprod_ctx_t *obj, refda_runctx_t *runctx, const cace_ari_t *ref,
                             const cace_amm_lookup_t *deref)
 {
     CHKVOID(obj);
-    CHKVOID(deref);
 
-    obj->parent = parent;
+    obj->runctx = runctx;
     obj->ref    = ref;
     obj->deref  = deref;
     cace_ari_init(&(obj->value));
@@ -121,6 +120,18 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
         cace_ari_text_encode(buf, ctx->ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("production for object %s", m_string_get_cstr(buf));
         m_string_clear(buf);
+    }
+
+    // access check, this permission has no parameters
+    refda_amm_ident_base_ptr_set_t acl_match;
+    refda_amm_ident_base_ptr_set_init(acl_match);
+    bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, ctx->deref->obj,
+                                                     ctx->runctx->agent->acl.perm_produce, acl_match);
+    refda_amm_ident_base_ptr_set_clear(acl_match);
+    if (!acl_found)
+    {
+        CACE_LOG_ERR("Lack of permission for: produce");
+        return 3;
     }
 
     int retval = 0;

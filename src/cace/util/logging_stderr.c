@@ -117,6 +117,8 @@ static cace_log_queue_t event_queue;
 static pthread_t thr_sink;
 /// True if ::thr_sink is valid
 static atomic_bool thr_valid = ATOMIC_VAR_INIT(false);
+/// Log internal error once
+static atomic_bool did_crit = ATOMIC_VAR_INIT(false);
 
 static void write_log(const cace_log_event_t *event)
 {
@@ -307,13 +309,17 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
         }
         else
         {
-            cace_log_event_t manual;
-            cace_log_event_init(&manual);
-            manual.severity = LOG_CRIT;
-            m_string_set_cstr(manual.message, "cace_log() called before cace_openlog()");
-            write_log(&manual);
-            cace_log_event_deinit(&manual);
+            if (!atomic_load(&did_crit))
+            {
+                cace_log_event_t manual;
+                cace_log_event_init(&manual);
+                manual.severity = LOG_CRIT;
+                m_string_set_cstr(manual.message, "cace_log() called before cace_openlog()");
+                write_log(&manual);
+                cace_log_event_deinit(&manual);
 
+                atomic_store(&did_crit, true);
+            }
             write_log(&event);
         }
     }

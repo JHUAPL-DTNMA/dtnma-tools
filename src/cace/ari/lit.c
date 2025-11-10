@@ -131,7 +131,8 @@ int cace_ari_lit_copy(cace_ari_lit_t *lit, const cace_ari_lit_t *src)
             case CACE_ARI_TYPE_TBL:
             {
                 cace_ari_tbl_t *ctr = CACE_MALLOC(sizeof(cace_ari_tbl_t));
-                cace_ari_tbl_init(ctr, src->value.as_tbl->ncols, 0);
+                cace_ari_tbl_init(ctr);
+                cace_ari_tbl_reset(ctr, src->value.as_tbl->ncols, 0);
                 cace_ari_array_set(ctr->items, src->value.as_tbl->items);
                 lit->value.as_tbl = ctr;
                 break;

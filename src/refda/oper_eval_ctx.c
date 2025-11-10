@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "oper_eval_ctx.h"
+#include <cace/ari/text.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
@@ -60,7 +61,8 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
 
     cace_ari_array_resize(obj->operands.ordered, operand_size);
 
-    int                            failcnt = 0;
+    int failcnt = 0;
+
     cace_amm_named_type_array_it_t typ_it;
     cace_ari_array_it_t            val_it;
     for (cace_amm_named_type_array_it(typ_it, oper->operand_types), cace_ari_array_it(val_it, obj->operands.ordered);
@@ -75,12 +77,21 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
         cace_named_ari_ptr_dict_set_at(obj->operands.named, m_string_get_cstr(typ->name), operand);
 
         int res = cace_amm_type_convert(&(typ->typeobj), operand, &orig);
-        cace_ari_deinit(&orig);
         if (res)
         {
-            CACE_LOG_WARNING("failed to convert operand \"%s\" code %d", m_string_get_cstr(typ->name), res);
+            if (cace_log_is_enabled_for(LOG_WARNING))
+            {
+                m_string_t buf;
+                m_string_init(buf);
+                cace_ari_text_encode(buf, &orig, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_WARNING("failed to convert operand \"%s\" code %d from value %s", m_string_get_cstr(typ->name),
+                                 res, m_string_get_cstr(buf));
+                m_string_clear(buf);
+            }
+
             failcnt += 1;
         }
+        cace_ari_deinit(&orig);
     }
 
     return failcnt ? 3 : 0;

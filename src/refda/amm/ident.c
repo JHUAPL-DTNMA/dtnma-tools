@@ -16,18 +16,21 @@
  * limitations under the License.
  */
 #include "ident.h"
-#include <cace/util/defs.h>
+#include "cace/ari/text.h"
+#include "cace/util/logging.h"
 
 void refda_amm_ident_base_init(refda_amm_ident_base_t *obj)
 {
     CHKVOID(obj);
     cace_ari_init(&(obj->name));
+    cace_amm_lookup_init(&obj->deref);
     obj->ident = NULL;
 }
 
 void refda_amm_ident_base_deinit(refda_amm_ident_base_t *obj)
 {
     CHKVOID(obj);
+    cace_amm_lookup_deinit(&obj->deref);
     obj->ident = NULL;
     cace_ari_deinit(&(obj->name));
 }
@@ -48,6 +51,29 @@ void refda_amm_ident_base_set(refda_amm_ident_base_t *obj, const refda_amm_ident
     CHKVOID(src);
     cace_ari_set_copy(&(obj->name), &(src->name));
     obj->ident = src->ident;
+}
+
+int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t *ref, const cace_amm_obj_store_t *objs)
+{
+    cace_ari_set_copy(&obj->name, ref);
+
+    int res = cace_amm_lookup_deref(&obj->deref, objs, &obj->name);
+    if (res)
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, &obj->name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, m_string_get_cstr(buf));
+        m_string_clear(buf);
+
+        obj->ident = NULL;
+    }
+    else
+    {
+        obj->ident = obj->deref.obj->app_data.ptr;
+    }
+
+    return res;
 }
 
 void refda_amm_ident_desc_init(refda_amm_ident_desc_t *obj)

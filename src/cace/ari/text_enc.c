@@ -17,6 +17,7 @@
  */
 #include "text.h"
 #include "text_util.h"
+#include "access.h"
 #include "cace/util/defs.h"
 #include <inttypes.h>
 
@@ -392,7 +393,7 @@ static void cace_ari_text_encode_aritype(m_string_t text, enum cace_ari_text_ari
     }
 }
 
-static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace_ari_lit_t *obj)
+static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace_ari_lit_t *obj, const cace_ari_t *ari)
 {
     cace_ari_text_encode_prefix(state);
 
@@ -452,6 +453,7 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
             case CACE_ARI_TYPE_RPTSET:
                 cace_ari_text_encode_rptset(state, obj->value.as_rptset);
                 break;
+
             default:
                 // Fall through to primitives below
                 break;
@@ -680,7 +682,7 @@ static int cace_ari_text_encode_stream(cace_ari_text_enc_state_t *state, const c
     else
     {
         const cace_ari_lit_t *obj = &(ari->as_lit);
-        cace_ari_text_encode_lit(state, obj);
+        cace_ari_text_encode_lit(state, obj, ari);
     }
 
     return 0;

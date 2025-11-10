@@ -18,10 +18,12 @@ limitations under the License.
 
 set(HFILES
     ari.h
+    agent.h
     runctx.h
 )
 set(CFILES
     ari.c
+    agent.c
     runctx.c
 )
 add_library(test_util)

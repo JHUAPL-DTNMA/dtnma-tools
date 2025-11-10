@@ -21,10 +21,10 @@ This software package contains tools related to the Delay-Tolerant Networking Ma
 
 The current tools are based on the following specifications:
 
-* [draft-ietf-dtn-amm-02](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-amm) for behavioral models
-* [draft-ietf-dtn-ari-03](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-ari) for value encoding and typing
-* [draft-ietf-dtn-adm-yang-02](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-adm-yang) for ADM definitions
-* [draft-ietf-dtn-amp-00](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-amp) for messaging
+* [draft-ietf-dtn-amm-05](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-amm-05) for behavioral models
+* [draft-ietf-dtn-ari-06](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-ari-06) for value encoding and typing
+* [draft-ietf-dtn-adm-yang-04](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-adm-yang-04) for ADM definitions
+* [draft-ietf-dtn-amp-02](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-amp-02) for messaging
 
 :warning: These documents are not published standards and are subject to change over time as the standards are developed and finalized.
 
@@ -83,7 +83,11 @@ For further details, see the example in [integration-test-socket/Dockerfile](int
 For testing the REFDA library and the [stand-alone agent](#stand-alone-agent), there is an _item test suite_ defined in the [item-test](item-test) directory.
 Test are defined in the python modules under that directory and run using the `item-test/run.sh` script, which will pass through any of its command line arguments to the pytest facility.
 
-The environment variable `TEST_MEMCHECK`, if set to any value, will cause the item tests to run their executable-under-test within Valgrind memcheck.
+Specific environment variables used by the test fixture are:
+
+ - `TEST_LOG_LEVEL` controls the child process logging severity level. This defaults to "info" but can be set to "debug" for more detail.
+ - `TEST_MEMCHECK`, if set to any value, will cause the item tests to run their executable-under-test within Valgrind memcheck. This defaults to disabled.
+ - `TEST_DIR_KEEP`, if set to any value, will not delete the temporary directory after tests are finished. This defaults to deleting the directory.
 
 An example full shell command to build and run specific (pytest-filtered) test cases is:
 ```sh

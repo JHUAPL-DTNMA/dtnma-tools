@@ -101,7 +101,7 @@ static cace_amm_type_match_res_t cace_amm_semtype_use_match(const cace_amm_type_
     const cace_amm_type_t *base = semtype->base;
     if (!base)
     {
-        CACE_LOG_CRIT("Attempting match on unbound type use");
+        CACE_LOG_CRIT("base type pointer invalid, binding must have failed");
         return CACE_AMM_TYPE_MATCH_NEGATIVE;
     }
 
@@ -121,8 +121,8 @@ static int cace_amm_semtype_use_convert(const cace_amm_type_t *self, cace_ari_t 
     const cace_amm_type_t *base = semtype->base;
     if (!base)
     {
-        CACE_LOG_CRIT("Attempting convert on unbound type use");
-        return CACE_AMM_TYPE_MATCH_NEGATIVE;
+        CACE_LOG_CRIT("base type pointer invalid, binding must have failed");
+        return CACE_AMM_ERR_CONVERT_NULLFUNC;
     }
 
     int res = cace_amm_type_convert(base, out, in);
@@ -307,8 +307,8 @@ static int cace_amm_semtype_ulist_convert(const cace_amm_type_t *self, cace_ari_
         }
     }
 
-    cace_ari_ac_t outval;
-    cace_ari_ac_init(&outval);
+    cace_ari_ac_t *out_ac = cace_ari_set_ac(out, NULL);
+
     int retval = 0;
 
     // input and output have exact same size
@@ -327,11 +327,8 @@ static int cace_amm_semtype_ulist_convert(const cace_amm_type_t *self, cace_ari_
             break;
         }
 
-        cace_ari_list_push_back_move(outval.items, &out_item);
+        cace_ari_list_push_back_move(out_ac->items, &out_item);
     }
-
-    // always pass ownership to the output value
-    cace_ari_set_ac(out, &outval);
 
     return retval;
 }
@@ -565,8 +562,8 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
 
-    cace_ari_ac_t outval;
-    cace_ari_ac_init(&outval);
+    cace_ari_ac_t *out_ac = cace_ari_set_ac(out, NULL);
+
     int retval = 0;
 
     cace_ari_list_it_t inval_it;
@@ -582,7 +579,7 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
         if (typ_item->type_class == CACE_AMM_TYPE_SEQ)
         {
             cace_amm_semtype_seq_t *seq = typ_item->as_semtype;
-            if (!cace_amm_semtype_seq_convert_it(seq, outval.items, inval_it))
+            if (!cace_amm_semtype_seq_convert_it(seq, out_ac->items, inval_it))
             {
                 retval = CACE_AMM_ERR_CONVERT_BADVALUE;
                 break;
@@ -608,7 +605,7 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
                 break;
             }
 
-            cace_ari_list_push_back_move(outval.items, &out_item);
+            cace_ari_list_push_back_move(out_ac->items, &out_item);
             cace_ari_list_next(inval_it);
         }
     }
@@ -618,9 +615,6 @@ static int cace_amm_semtype_dlist_convert(const cace_amm_type_t *self, cace_ari_
     {
         retval = CACE_AMM_ERR_CONVERT_BADVALUE;
     }
-
-    // always pass ownership to the output value
-    cace_ari_set_ac(out, &outval);
 
     return retval;
 }
@@ -899,7 +893,8 @@ static void cace_amm_semtype_tblt_name(const cace_amm_type_t *self, cace_ari_t *
         cace_ari_deinit(&key);
 
         cace_ari_tbl_t col_table;
-        cace_ari_tbl_init(&col_table, 2, 0);
+        cace_ari_tbl_init(&col_table);
+        cace_ari_tbl_reset(&col_table, 2, 0);
 
         cace_amm_named_type_array_it_t it;
         for (cace_amm_named_type_array_it(it, semtype->columns); !cace_amm_named_type_array_end_p(it);
@@ -917,7 +912,6 @@ static void cace_amm_semtype_tblt_name(const cace_amm_type_t *self, cace_ari_t *
             cace_amm_type_get_name(&col_item->typeobj, cace_ari_array_get(row, 1));
 
             cace_ari_tbl_move_row_array(&col_table, row);
-            cace_ari_array_clear(row);
         }
 
         cace_ari_set_tbl(val, &col_table);
@@ -1010,9 +1004,11 @@ static int cace_amm_semtype_tblt_convert(const cace_amm_type_t *self, cace_ari_t
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
 
-    cace_ari_tbl_t outval;
-    const size_t   nrows = cace_ari_array_size(inval->items) / inval->ncols;
-    cace_ari_tbl_init(&outval, inval->ncols, nrows);
+    const size_t nrows = cace_ari_array_size(inval->items) / inval->ncols;
+
+    cace_ari_tbl_t *outval = cace_ari_set_tbl(out, NULL);
+    cace_ari_tbl_reset(outval, inval->ncols, nrows);
+
     int retval = 0;
 
     cace_amm_named_type_array_it_t col_it;
@@ -1020,7 +1016,7 @@ static int cace_amm_semtype_tblt_convert(const cace_amm_type_t *self, cace_ari_t
 
     // input and output have exact same size
     cace_ari_array_it_t inval_it, outval_it;
-    for (cace_ari_array_it(inval_it, inval->items), cace_ari_array_it(outval_it, outval.items);
+    for (cace_ari_array_it(inval_it, inval->items), cace_ari_array_it(outval_it, outval->items);
          !cace_ari_array_end_p(inval_it);
          cace_ari_array_next(inval_it), cace_ari_array_next(outval_it), cace_amm_named_type_array_next(col_it))
     {
@@ -1041,8 +1037,6 @@ static int cace_amm_semtype_tblt_convert(const cace_amm_type_t *self, cace_ari_t
         }
     }
 
-    // always pass ownership to the output value
-    cace_ari_set_tbl(out, &outval);
     return retval;
 }
 
@@ -1114,20 +1108,16 @@ static void cace_amm_semtype_union_name(const cace_amm_type_t *self, cace_ari_t 
         cace_ari_deinit(&key);
 
         {
-            cace_ari_ac_t name_ac;
-            cace_ari_ac_init(&name_ac);
+            cace_ari_ac_t *name_ac = cace_ari_set_ac(val, NULL);
 
             cace_amm_type_array_it_t it;
             for (cace_amm_type_array_it(it, semtype->choices); !cace_amm_type_array_end_p(it);
                  cace_amm_type_array_next(it))
             {
-                const cace_amm_type_t *choice = cace_amm_type_array_ref(it);
-
-                cace_ari_t *name_item = cace_ari_list_push_back_new(name_ac.items);
+                const cace_amm_type_t *choice    = cace_amm_type_array_ref(it);
+                cace_ari_t            *name_item = cace_ari_list_push_back_new(name_ac->items);
                 cace_amm_type_get_name(choice, name_item);
             }
-
-            cace_ari_set_ac(val, &name_ac);
         }
     }
     cace_ari_params_set_am(&(ref->params), params);

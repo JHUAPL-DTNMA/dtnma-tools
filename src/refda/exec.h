@@ -19,11 +19,13 @@
 #ifndef REFDA_EXEC_H_
 #define REFDA_EXEC_H_
 
+#include "exec_status.h"
 #include "agent.h"
 #include "runctx.h"
 #include "amm/sbr.h"
 #include "amm/tbr.h"
 #include <cace/ari.h>
+#include <m-atomic.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,22 +38,17 @@ extern "C" {
 /// Error result when value production fails
 #define REFDA_EXEC_ERR_PROD_FAILED 5
 
-/** Implement the expansion procedure from Section TBD of @cite ietf-dtn-amm-01.
+/** From outside the exec worker thread, inject a single execution target
+ * and allow its sequence to be tracked to its finish.
  *
- * @param[in,out] seq A freshly initialized sequence to expand into.
- * @param[in] runctxp The agent state for ARI lookup.
- * @param[in] ari The ARI to dereference, if necessary, and execute.
- * @return Zero if successful.
- */
-int refda_exec_exp_target(refda_exec_seq_t *seq, refda_runctx_ptr_t *runctxp, const cace_ari_t *ari);
-
-/** Implement the running procedure from Section TBD of @cite ietf-dtn-amm-01.
- * This executes items in a sequence until the first deferred completion.
+ * This function is thread safe on the agent.
  *
- * @param[in,out] seq The sequence which will be popped as items are executed.
- * @return Zero if this sequence executed without error (so far).
+ * @param[in] runctxp The run context, which includes the agent pointer.
+ * @param[in] target The execution target (CTRL ref or macro).
+ * @param[in] finish An optional execution-finished state for the whole target,
+ * or a null pointer to not track this state.
  */
-int refda_exec_run_seq(refda_exec_seq_t *seq);
+int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target, refda_exec_status_t *finish);
 
 /** Work thread function for the Agent execution manager.
  *
@@ -60,14 +57,23 @@ int refda_exec_run_seq(refda_exec_seq_t *seq);
  */
 void *refda_exec_worker(void *arg);
 
-/** Helper function to run a single iteration of the exec worker thread
+/** Execute any waiting sequences as part of normal worker iteration.
  *
- * @param[in] arg The context ::refda_agent_t pointer.
+ * @note This is for unit testing only, not used by agent directly.
+ *
+ * @param[in] agent The agent state.
+ * @return Zero if successful.
+ */
+int refda_exec_waiting(refda_agent_t *agent);
+
+/** Helper function to run a single iteration of the exec worker thread.
+ *
+ * @note This is for unit testing only, not used by agent directly.
+ *
+ * @param[in] agent The agent state.
  * @return True to continue the loop, false to stop
  */
 bool refda_exec_worker_iteration(refda_agent_t *agent);
-
-int refda_exec_waiting(refda_agent_t *agent);
 
 /**
  * Begin periodic execution of a time based rule
@@ -102,13 +108,15 @@ int refda_exec_sbr_enable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 int refda_exec_sbr_disable(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr);
 
 /**
- * Setup an ARI to execute next in the sequence
+ * Setup an ARI to execute next in the sequence.
+ * The front of the execution sequence, the current item, is not modified.
+ *
  * @param[in] agent    The agent context pointer
  * @param[in] seq      The sequence within which to inject the ARI target(s)
  * @param[in] target   The ARI to execute
  * @return Non-zero if the ARI could not be queued for execution
  */
-int refda_exec_next(refda_agent_t *agent, refda_exec_seq_t *seq, const cace_ari_t *target);
+int refda_exec_next(refda_exec_seq_t *seq, const cace_ari_t *target);
 
 #ifdef __cplusplus
 } // extern C

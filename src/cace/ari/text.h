@@ -145,6 +145,20 @@ int cace_ari_text_encode(m_string_t text, const cace_ari_t *ari, cace_ari_text_e
  */
 int cace_ari_text_decode(cace_ari_t *ari, const m_string_t text, char **errm);
 
+/** @overload
+ * Decode from a bare C string.
+ *
+ * @param[out] ari The struct to decode into.
+ * @param[in] text_ptr A null-terminated UTF-8 text string.
+ * @param text_len The length of text, including including the null terminator.
+ * @param[out] errm If non-null, this will be set to a specific error message
+ * associated with any failure.
+ * When the return code is non-zero, if the pointed-to pointer is non-null it
+ * must be freed using ::CACE_FREE().
+ * @return Zero upon success.
+ */
+int cace_ari_text_decode_cstr(cace_ari_t *ari, const char *text_ptr, size_t text_len, char **errm);
+
 #endif /* ARI_TEXT_PARSE */
 
 #ifdef __cplusplus

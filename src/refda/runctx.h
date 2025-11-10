@@ -18,6 +18,7 @@
 #ifndef REFDA_RUNCTX_H_
 #define REFDA_RUNCTX_H_
 
+#include "acl.h"
 #include "cace/ari/base.h"
 #include "cace/amm/lookup.h"
 #include <m-shared-ptr.h>
@@ -59,7 +60,6 @@ void refda_amm_modval_state_deinit(refda_amm_modval_state_t *obj);
 void refda_amm_modval_state_inc(refda_amm_modval_state_t *obj);
 
 /** Context for all agent runtime activities.
- * Because all contents are external pointers, no deinit function is needed.
  */
 typedef struct
 {
@@ -78,6 +78,12 @@ typedef struct
      */
     cace_ari_t nonce;
 
+    /// refda_acl_t::generation for the cached data
+    size_t acl_gen;
+    /** Cached ACL-derived group ID.
+     */
+    refda_acl_id_tree_t acl_groups;
+
 } refda_runctx_t;
 
 void refda_runctx_init(refda_runctx_t *ctx);
@@ -89,13 +95,22 @@ void refda_runctx_deinit(refda_runctx_t *ctx);
  * @param[out] ctx The context to initialize.
  * @param[in] agent The agent being run within.
  * @param[in] msg The optional EXECSET message being run within.
- * @return Zero if successful.
+ * When this is provided, the refda_runctx_t::nonce and
+ * refda_runctx_t::acl_groups fields are populated.
+ * When absent, the nonce is always null and group zero (the Agent) is assumed.
  */
-int refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
+void refda_runctx_from(refda_runctx_t *ctx, refda_agent_t *agent, const refda_msgdata_t *msg);
+
+/** Verify the ACL cache is valid.
+ */
+void refda_runctx_check_acl(refda_runctx_t *ctx);
 
 /// M*LIB OPLIST for refda_runctx_t
 #define M_OPL_refda_runctx_t() (INIT(API_2(refda_runctx_init)), INIT_SET(0), CLEAR(API_2(refda_runctx_deinit)), SET(0))
 
+/** @struct refda_runctx_ptr_t
+ * Thread-safe shared pointer to an execution run context.
+ */
 /// @cond Doxygen_Suppress
 M_SHARED_PTR_DEF(refda_runctx_ptr, refda_runctx_t)
 /// @endcond
