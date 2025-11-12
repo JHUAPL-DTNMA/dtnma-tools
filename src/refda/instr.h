@@ -24,6 +24,12 @@
 
 #include <cace/config.h>
 #include <m-atomic.h>
+#include <pthread.h>
+#include <cace/ari.h>
+
+// Error messages
+#define REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE "Failed to acquire mutex."
+#define REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE "Failed to release mutex."
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +39,14 @@ extern "C" {
  */
 typedef struct
 {
+    /** Mutex to protect non atomic state.
+     * That includes the #last_time_recv member.
+     */
+    pthread_mutex_t mutex;
+
+    /// Holds the local time associated with the last received message
+    cace_ari_t last_time_recv;
+
     /// Count of EXECSET values received from any manager
     atomic_ullong num_execset_recv;
     /// Count of EXECSET values failed to receive
