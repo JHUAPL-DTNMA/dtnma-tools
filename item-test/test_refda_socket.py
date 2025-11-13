@@ -24,6 +24,7 @@ import signal
 import socket
 import subprocess
 import tempfile
+import time
 from typing import List, Set
 from urllib.parse import quote
 import unittest
@@ -645,6 +646,21 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertEqual(0, rpt.items[0].value)
+
+        # Send EXECSET request to get last message receive time
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/last-msg-rx-time))')]
+        )
+        # Wait for RPTSET response
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        # Verify response structure
+        self.assertEqual(1, len(rpts))
+        self.assertEqual(1, len(rpts[0].items))
+        # Get the timestamp value
+        timestamp = float(rpts[0].items[0].value)
+        # Verify timestamp is within last few seconds
+        current_time = time.time()
+        self.assertLess(current_time - timestamp, 5.0)  # Allow 5 seconds difference
 
     def test_odm_var_const(self):
         self._start()
