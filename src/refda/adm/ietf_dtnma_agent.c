@@ -4144,6 +4144,26 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_filter BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+    const cace_ari_t *tbl    = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    if (cace_ari_get_tbl((cace_ari_t *)tbl) == NULL){
+        CACE_LOG_ERR("operand is not a TBL, unable to continue");
+        return;
+    }
+
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_copy(&result, tbl); // TODO: build out
+
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_filter BODY
