@@ -260,9 +260,8 @@ static void suite_adms_init(refda_agent_t *agent)
     assert(0 == res);
 }
 
-// TODO: test table not filtered right now
-// ari:/AC/(TBL/c=3;(1,1,1)(2,2,2),//1/1/OPER/tbl-filter(?,?) -> TBL
-
+// ari:/AC/(/TBL/c=3;(1,1,1)(2,2,2),//1/1/OPER/tbl-filter(/AC/(),/AC/())) -> /TBL/c=3;(1,1,1)(2,2,2)
+TEST_CASE("82118282138703010101020202850101256A74626C2D66696C74657282821180821180", "82138703010101020202")
 // direct EXPR ari:/AC/(/VAST/1) -> /VAST/1
 TEST_CASE("821181820601", "820601")
 // ref EXPR ari:/AC/(//65535/10/EDD/2(10)) -> /VAST/10
