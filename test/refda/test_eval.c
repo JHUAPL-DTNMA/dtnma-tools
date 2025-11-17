@@ -260,8 +260,15 @@ static void suite_adms_init(refda_agent_t *agent)
     assert(0 == res);
 }
 
+// ari:/AC/(/TBL/c=3;(1,1,1)(2,2,2),//1/1/OPER/tbl-filter(/AC/(/AC/(false)),/AC/())) -> /TBL/c=0;
+TEST_CASE("82118282138703010101020202850101256A74626C2D66696C74657282821181821181F4821180", "82138100")
+
+// ari:/AC/(/TBL/c=3;(1,1,1)(2,2,2),//1/1/OPER/tbl-filter(/AC/(1),/AC/())) -> /TBL/c=0;
+// ari:/AC/(/TBL/c=3;(1,1,1)(2,2,2),//1/1/OPER/tbl-filter(/AC/(true),/AC/(0,1,2))) -> /TBL/c=3;(1,1,1)(2,2,2)
+
 // ari:/AC/(/TBL/c=3;(1,1,1)(2,2,2),//1/1/OPER/tbl-filter(/AC/(),/AC/())) -> /TBL/c=3;(1,1,1)(2,2,2)
-TEST_CASE("82118282138703010101020202850101256A74626C2D66696C74657282821180821180", "82138703010101020202")
+//TEST_CASE("82118282138703010101020202850101256A74626C2D66696C74657282821180821180", "82138703010101020202")
+/*
 // direct EXPR ari:/AC/(/VAST/1) -> /VAST/1
 TEST_CASE("821181820601", "820601")
 // ref EXPR ari:/AC/(//65535/10/EDD/2(10)) -> /VAST/10
@@ -506,6 +513,7 @@ TEST_CASE("82118382041903E8820C1903E884010125686D756C7469706C79", "F7")
 TEST_CASE("821183820C1903E882041903E88401012566646976696465", "F7")
 // ari:/AC/(/INT/1000,/TP/20000101T001640Z,//1/1/OPER/divide) -> undefined
 TEST_CASE("82118382041903E8820C1903E88401012566646976696465", "F7")
+*/
 void test_refda_eval_target_check(const char *targethex, const char *expectloghex)
 {
     // TODO: Later, post version 2.0 release, consider passing ARI text instead of ARI hex

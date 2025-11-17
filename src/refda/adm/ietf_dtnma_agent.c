@@ -4154,6 +4154,12 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
         CACE_LOG_ERR("Invalid operand, unable to continue");
         return;
     }
+    const cace_ari_t *row_match = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *columns = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
+
+    struct cace_ari_ac_s* columns_ac = cace_ari_get_ac(columns);
+    int num_cols = cace_ari_list_size(columns_ac->items);
+
     const cace_ari_t *tbl    = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     if (cace_ari_get_tbl((cace_ari_t *)tbl) == NULL){
         CACE_LOG_ERR("operand is not a TBL, unable to continue");
@@ -4161,8 +4167,59 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     }
 
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_copy(&result, tbl); // TODO: build out
+    cace_ari_tbl_t result_tbl;
+    cace_ari_tbl_init(&result_tbl);
+    cace_ari_tbl_reset(&result_tbl, num_cols, 0);
 
+
+    // for each row of the table
+    size_t num_rows = cace_ari_tbl_num_rows(cace_ari_get_tbl((cace_ari_t *)tbl)); 
+    for (int r = 0; r < num_rows; r++){
+        // 1. Substitute row values for LABEL items within EXPR
+        // 2. Evaluate the expression
+        // if expression is truthy
+            // add data values from 'columns' to the output
+
+        cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
+        int res = refda_eval_target(ctx->evalctx->parent, &eval_result, row_match);
+        if (res)
+        {
+            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
+            return; //cace_ari_set_bool(&result, false);
+        }
+
+        const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
+        cace_ari_t outval = CACE_ARI_INIT_UNDEFINED;
+        res               = cace_amm_type_convert(type, &outval, &eval_result);
+        if (res)
+        {
+            CACE_LOG_ERR("failed to convert eval result, error %d", res);
+            return; //cace_ari_set_bool(&result, false);
+        }
+
+        // TODO: extract is_truthy out to a utility function (TBD: where??)
+        cace_ari_bool is_truthy = false;
+        cace_ari_get_bool(&outval, &is_truthy);
+
+        if (is_truthy){
+            // Copy current row into result set
+            
+            cace_ari_array_t row;
+            cace_ari_array_init(&row);
+            cace_ari_array_resize(&row, num_cols);
+            for (int c = 0; c < num_cols; c++)
+            {
+                // TODO: get value from table row/col, add to output row
+                // TBD: need to adjust indexes here to make it work, see adm docs
+
+                    //cace_ari_array_get(&row, c)
+            }
+            cace_ari_tbl_move_row_array(&result_tbl, &row);
+            cace_ari_arraY_clear(&row);
+        }
+    }
+
+    cace_ari_set_tbl(&result, &result_tbl);
     refda_oper_eval_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
