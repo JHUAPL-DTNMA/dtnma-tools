@@ -1730,7 +1730,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
     const cace_ari_t *ari_try        = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *ari_on_failure = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
 
-    refda_agent_t *agent = ctx->runctx->agent;
+    //refda_agent_t *agent = ctx->runctx->agent;
 
     if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
     {
@@ -4156,12 +4156,17 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     }
     const cace_ari_t *row_match = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *columns = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
+    cace_ari_ac_t *columns_ac = cace_ari_get_ac((cace_ari_t *)columns);
+    if (columns_ac == NULL){
+        CACE_LOG_ERR("Column is not an AC");
+        return;
+    }
 
-    struct cace_ari_ac_s* columns_ac = cace_ari_get_ac(columns);
     int num_cols = cace_ari_list_size(columns_ac->items);
 
     const cace_ari_t *tbl    = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    if (cace_ari_get_tbl((cace_ari_t *)tbl) == NULL){
+    cace_ari_tbl_t *tbl_data = cace_ari_get_tbl((cace_ari_t *)tbl);
+    if (tbl_data == NULL){
         CACE_LOG_ERR("operand is not a TBL, unable to continue");
         return;
     }
@@ -4173,7 +4178,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
 
 
     // for each row of the table
-    size_t num_rows = cace_ari_tbl_num_rows(cace_ari_get_tbl((cace_ari_t *)tbl)); 
+    int num_rows = cace_ari_tbl_num_rows(cace_ari_get_tbl((cace_ari_t *)tbl)); 
     for (int r = 0; r < num_rows; r++){
         // 1. Substitute row values for LABEL items within EXPR
         // 2. Evaluate the expression
@@ -4205,17 +4210,26 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
             // Copy current row into result set
             
             cace_ari_array_t row;
-            cace_ari_array_init(&row);
-            cace_ari_array_resize(&row, num_cols);
+            cace_ari_array_init(row);
+            cace_ari_array_resize(row, num_cols);
             for (int c = 0; c < num_cols; c++)
             {
+                cace_ari_t *col_filter_item = cace_ari_list_get(columns_ac->items, c);
+                cace_ari_uvast col_filter_index;
+                res = cace_ari_get_uvast(col_filter_item, &col_filter_index);
+                // TODO: verify res
+
                 // TODO: get value from table row/col, add to output row
                 // TBD: need to adjust indexes here to make it work, see adm docs
 
-                    //cace_ari_array_get(&row, c)
+                // Get data from input TBL for the current column
+                cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, (r*num_cols) + col_filter_index);
+
+                // Copy data from input TBL to output TBL row
+                res = cace_ari_init_copy(cace_ari_array_get(row, c), tbl_data_item);
             }
-            cace_ari_tbl_move_row_array(&result_tbl, &row);
-            cace_ari_arraY_clear(&row);
+            cace_ari_tbl_move_row_array(&result_tbl, row);
+            cace_ari_array_clear(row);
         }
     }
 
