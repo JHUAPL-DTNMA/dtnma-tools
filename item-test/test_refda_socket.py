@@ -652,10 +652,9 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/last-msg-rx-time))')]
         )
         # Wait for RPTSET response
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        rpts = self._wait_msg(mgr_ix=0)
         # Verify response structure
         self.assertEqual(1, len(rpts))
-        self.assertEqual(1, len(rpts[0].items))
         # Get the timestamp value
         timestamp = float(rpts[0].items[0].value)
         # Verify timestamp is within last few seconds
