@@ -1278,3 +1278,19 @@ bool cace_amm_builtin_validate(const cace_ari_t *ari)
     // the visit functions keep the value const
     return (cace_ari_visit((cace_ari_t *)ari, &visitor, NULL) == 0);
 }
+
+bool cace_amm_ari_is_truthy(cace_ari_t *obj)
+{
+    const cace_amm_type_t *type   = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
+    cace_ari_t             outval = CACE_ARI_INIT_UNDEFINED;
+    int                    res    = cace_amm_type_convert(type, &outval, obj);
+    if (res)
+    {
+        CACE_LOG_ERR("failed to convert object to bool, error %d", res);
+        return false;
+    }
+
+    cace_ari_bool is_truthy = false;
+    cace_ari_get_bool(&outval, &is_truthy);
+    return is_truthy;
+}

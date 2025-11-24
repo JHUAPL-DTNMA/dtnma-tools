@@ -252,6 +252,13 @@ int cace_amm_type_convert(const cace_amm_type_t *type, cace_ari_t *out, const ca
  */
 bool cace_amm_builtin_validate(const cace_ari_t *ari);
 
+/** Determine if the given ARI object is truthy
+ *
+ * @param obj Object to check for truthyness
+ * @return Boolean indicating if obj is truthy
+ */
+bool cace_amm_ari_is_truthy(cace_ari_t *obj);
+
 #ifdef __cplusplus
 }
 #endif
