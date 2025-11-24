@@ -4127,6 +4127,11 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
      */
 }
 
+static void tbl_filter_substitute_row_values(cace_ari_t *expr, cace_ari_tbl_t *tbl_data)
+{
+    // TODO
+}
+
 /* Name: tbl-filter
  * Description:
  *   Filter a table first by rows and then by columns.
@@ -4186,22 +4191,26 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     for (int r = 0; r < num_rows; r++)
     {
         // 1. Substitute row values for LABEL items within EXPR
-        // 2. Evaluate the expression
-        // if expression is truthy
-        // add data values from 'columns' to the output
 
+        cace_ari_t current_row = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_copy(&current_row, row_match);
+        tbl_filter_substitute_row_values(&current_row, tbl_data);
+
+        // Evaluate the row filter expression
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_target(ctx->evalctx->parent, &eval_result, row_match);
+        int        res         = refda_eval_target(ctx->evalctx->parent, &eval_result, &current_row);
+        cace_ari_deinit(&current_row); // No longer needed at this point
+
         if (res)
         {
             CACE_LOG_ERR("failed to evaluate condition, error %d", res);
             return; // cace_ari_set_bool(&result, false);
         }
 
+        // True result indicates row not filtered, add data values from 'columns' to result
         if (cace_amm_ari_is_truthy(&eval_result))
         {
             // Copy current row into result set
-
             cace_ari_array_t row;
             cace_ari_array_init(row);
             cace_ari_array_resize(row, num_filter_cols);
