@@ -4127,15 +4127,61 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
      */
 }
 
-static void tbl_filter_substitute_row_values(cace_ari_t *expr, cace_ari_tbl_t *tbl_data)
+static int get_label_as_int(cace_ari_t *ari, int *out)
 {
-    // TODO
+    CHKERR1(ari);
+    CHKERR1(out);
+    if (!cace_ari_is_lit_typed(ari, CACE_ARI_TYPE_LABEL))
+    {
+        return 1;
+    }
+    switch (ari->as_lit.prim_type)
+    {
+        case CACE_ARI_PRIM_INT64:
+            *out = (int)ari->as_lit.value.as_int64;
+            break;
+        case CACE_ARI_PRIM_UINT64:
+            *out = (int)ari->as_lit.value.as_uint64;
+            break;
+        default:
+            return 2;
+    }
+
+    return 0;
+}
+
+static void tbl_filter_substitute_row_values(cace_ari_t *expr, cace_ari_tbl_t *tbl_data, int row_index)
+{
+    // for each item in expr
+        // if item is a label
+            // replace with value of row at label's column index
+
+    size_t pix = 0;
+    cace_ari_ac_t *list = cace_ari_get_ac(expr);
+    if (list){
+        cace_ari_list_it_t lit;
+        for (cace_ari_list_it(lit, list->items); !cace_ari_list_end_p(lit);
+             cace_ari_list_next(lit), ++pix)
+        {
+                cace_ari_t *item = cace_ari_list_ref(lit);
+                int label_id = 0;
+
+                int res = get_label_as_int(item, &label_id);
+                if (!res){
+                    // Get row value
+                    int col_index = label_id;
+                    size_t array_index =  (row_index * tbl_data->ncols) + col_index;
+                    cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, array_index);
+                    cace_ari_set_copy(item, tbl_data_item); // Replace label
+                }
+        }
+    }
 }
 
 /* Name: tbl-filter
  * Description:
  *   Filter a table first by rows and then by columns.
- *
+ *ma/boo
  * Parameters list:
  *   - Index 0, name "row-match", type use of ari://ietf/amm-base/TYPEDEF/EXPR
  *   - Index 1, name "columns", type ulist of use of ari:/ARITYPE/UVAST
@@ -4194,7 +4240,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
 
         cace_ari_t current_row = CACE_ARI_INIT_UNDEFINED;
         cace_ari_set_copy(&current_row, row_match);
-        tbl_filter_substitute_row_values(&current_row, tbl_data);
+        tbl_filter_substitute_row_values(&current_row, tbl_data, r);
 
         // Evaluate the row filter expression
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
@@ -4235,7 +4281,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
                 }
 
                 // Get data from input TBL for the current column
-                size_t array_index =  (r * num_filter_cols) + col_filter_index;
+                size_t array_index =  (r * tbl_data->ncols) + col_filter_index;
                 cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, array_index);
 
                 // Copy data from input TBL to output TBL row
