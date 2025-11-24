@@ -4127,6 +4127,9 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
      */
 }
 
+/**
+ * Helper function to get LABEL data as an integer
+ */
 static int get_label_as_int(cace_ari_t *ari, int *out)
 {
     CHKERR1(ari);
@@ -4150,30 +4153,41 @@ static int get_label_as_int(cace_ari_t *ari, int *out)
     return 0;
 }
 
+/**
+ * Helper function to substitue any LABELS in the expression with corresponding
+ * data from the current table row.
+ *
+ * Assumes the LABEL contains an index of the column which will substitute data
+ */
 static void tbl_filter_substitute_row_values(cace_ari_t *expr, cace_ari_tbl_t *tbl_data, int row_index)
 {
-    // for each item in expr
-        // if item is a label
-            // replace with value of row at label's column index
-
-    size_t pix = 0;
     cace_ari_ac_t *list = cace_ari_get_ac(expr);
-    if (list){
+    if (list)
+    {
         cace_ari_list_it_t lit;
-        for (cace_ari_list_it(lit, list->items); !cace_ari_list_end_p(lit);
-             cace_ari_list_next(lit), ++pix)
+        for (cace_ari_list_it(lit, list->items); !cace_ari_list_end_p(lit); cace_ari_list_next(lit))
         {
-                cace_ari_t *item = cace_ari_list_ref(lit);
-                int label_id = 0;
+            cace_ari_t *item     = cace_ari_list_ref(lit);
+            int         label_id = 0;
 
-                int res = get_label_as_int(item, &label_id);
-                if (!res){
-                    // Get row value
-                    int col_index = label_id;
-                    size_t array_index =  (row_index * tbl_data->ncols) + col_index;
-                    cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, array_index);
-                    cace_ari_set_copy(item, tbl_data_item); // Replace label
+            int res = get_label_as_int(item, &label_id);
+            if (!res)
+            {
+                // Get column index
+                int col_index = label_id;
+                if (col_index >= tbl_data->ncols)
+                {
+                    CACE_LOG_WARNING("Invalid colum index %d, skipping", col_index);
+                    continue; // TODO: bail?
                 }
+
+                // Get data value from table
+                size_t      array_index   = (row_index * tbl_data->ncols) + col_index;
+                cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, array_index);
+
+                // Replace label with table data
+                cace_ari_set_copy(item, tbl_data_item);
+            }
         }
     }
 }
@@ -4266,14 +4280,16 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
                 cace_ari_uvast col_filter_index;
 
                 res = cace_ari_get_uvast(col_filter_item, &col_filter_index);
-                if (res){
+                if (res)
+                {
                     CACE_LOG_WARNING("Unable to retrieve column filter at index %d", c);
                     cace_ari_tbl_deinit(&result_tbl);
                     cace_ari_array_clear(row);
                     return;
                 }
 
-                if (col_filter_index >= tbl_data->ncols){
+                if (col_filter_index >= tbl_data->ncols)
+                {
                     CACE_LOG_WARNING("Invalid colum index %d, skipping", col_filter_index);
                     cace_ari_tbl_deinit(&result_tbl);
                     cace_ari_array_clear(row);
@@ -4281,7 +4297,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
                 }
 
                 // Get data from input TBL for the current column
-                size_t array_index =  (r * tbl_data->ncols) + col_filter_index;
+                size_t      array_index   = (r * tbl_data->ncols) + col_filter_index;
                 cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, array_index);
 
                 // Copy data from input TBL to output TBL row
