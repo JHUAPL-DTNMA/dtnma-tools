@@ -1730,8 +1730,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
     const cace_ari_t *ari_try        = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *ari_on_failure = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
 
-    // refda_agent_t *agent = ctx->runctx->agent;
-
     if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
     {
         CACE_LOG_ERR("Invalid parameter, unable to continue");
@@ -4195,7 +4193,7 @@ static void tbl_filter_substitute_row_values(cace_ari_t *expr, cace_ari_tbl_t *t
 /* Name: tbl-filter
  * Description:
  *   Filter a table first by rows and then by columns.
- *ma/boo
+ *
  * Parameters list:
  *   - Index 0, name "row-match", type use of ari://ietf/amm-base/TYPEDEF/EXPR
  *   - Index 1, name "columns", type ulist of use of ari:/ARITYPE/UVAST
@@ -4250,13 +4248,12 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     int num_rows = cace_ari_tbl_num_rows(cace_ari_get_tbl((cace_ari_t *)tbl));
     for (int r = 0; r < num_rows; r++)
     {
-        // 1. Substitute row values for LABEL items within EXPR
-
+        // Substitute row values for LABEL items within row filter EXPR
         cace_ari_t current_row = CACE_ARI_INIT_UNDEFINED;
         cace_ari_set_copy(&current_row, row_match);
         tbl_filter_substitute_row_values(&current_row, tbl_data, r);
 
-        // Evaluate the row filter expression
+        // Evaluate the row filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
         int        res         = refda_eval_target(ctx->evalctx->parent, &eval_result, &current_row);
         cace_ari_deinit(&current_row); // No longer needed at this point
