@@ -4154,7 +4154,7 @@ static int get_label_as_int(cace_ari_t *ari, int *out)
 }
 
 /**
- * Helper function to substitue any LABELS in the expression with corresponding
+ * Helper function to substitute any LABELS in the expression with corresponding
  * data from the current table row.
  *
  * Assumes the LABEL contains an index of the column which will substitute data

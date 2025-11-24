@@ -254,7 +254,7 @@ bool cace_amm_builtin_validate(const cace_ari_t *ari);
 
 /** Determine if the given ARI object is truthy
  *
- * @param obj Object to check for truthyness
+ * @param obj Object to check for truthiness
  * @return Boolean indicating if obj is truthy
  */
 bool cace_amm_ari_is_truthy(cace_ari_t *obj);
