@@ -4175,7 +4175,7 @@ static void tbl_filter_substitute_row_values(cace_ari_t *expr, cace_ari_tbl_t *t
             {
                 // Get column index
                 int col_index = label_id;
-                if (col_index >= tbl_data->ncols)
+                if (col_index >= (int)tbl_data->ncols)
                 {
                     CACE_LOG_WARNING("Invalid colum index %d, skipping", col_index);
                     continue; // TODO: bail?
