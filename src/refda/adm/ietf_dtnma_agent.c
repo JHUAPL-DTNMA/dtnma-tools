@@ -4215,6 +4215,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
                 // TODO: get value from table row/col, add to output row
                 // TBD: need to adjust indexes here to make it work, see adm docs
 
+// TODO: validate filter indices are inside the tbl row bounds
                 // Get data from input TBL for the current column
                 cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, (r * num_cols) + col_filter_index);
 
@@ -4222,7 +4223,6 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
                 res = cace_ari_init_copy(cace_ari_array_get(row, c), tbl_data_item);
             }
             cace_ari_tbl_move_row_array(&result_tbl, row);
-            cace_ari_array_clear(row);
         }
     }
 

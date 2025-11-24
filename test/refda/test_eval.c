@@ -263,6 +263,15 @@ static void suite_adms_init(refda_agent_t *agent)
 // ari:/AC/(/TBL/c=3;(1,1,1)(2,2,2),//1/1/OPER/tbl-filter(/AC/(false),/AC/())) -> /TBL/c=0;
 TEST_CASE("82118282138703010101020202850101256A74626C2D66696C74657282821181F4821180", "82138100")
 
+// ari:/AC/(/TBL/c=3;(1,2,3)(4,5,6),//1/1/OPER/tbl-filter(/AC/(true),/AC/(1,2,3))) -> /TBL/c=3;(1,2,3)(4,5,6)
+
+
+// ari:/AC/(/TBL/c=3;(1,2,3)(4,5,6),//1/1/OPER/tbl-filter(/AC/(true),/AC/(1,2,3))) -> /TBL/c=3;(1,2,3)(4,5,6) -- NO, fails because invalid filter index!!
+TEST_CASE("82118282138703010203040506850101256A74626C2D66696C74657282821181F5821183010203", "82138703010203040506")
+
+// ari:/AC/(/TBL/c=3;(1,2,3)(4,5,6),//1/1/OPER/tbl-filter(/AC/(true),/AC/(1,2,3))) -> /TBL/c=3;(1,2,3)(4,5,6)
+//TEST_CASE("", "")
+
 // ari:/AC/(/TBL/c=3;(1,1,1)(2,2,2),//1/1/OPER/tbl-filter(/AC/(1),/AC/())) -> /TBL/c=0;
 // ari:/AC/(/TBL/c=3;(1,1,1)(2,2,2),//1/1/OPER/tbl-filter(/AC/(true),/AC/(0,1,2))) -> /TBL/c=3;(1,1,1)(2,2,2)
 
