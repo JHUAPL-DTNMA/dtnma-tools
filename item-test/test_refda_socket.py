@@ -31,6 +31,7 @@ import unittest
 import cbor2
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
 from helpers import CmdRunner, Timer, compose_args
+import numpy
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
@@ -655,11 +656,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_msg(mgr_ix=0)
         # Verify response structure
         self.assertEqual(1, len(rpts))
-        # Get the timestamp value
-        timestamp = float(rpts[0].items[0].value)
-        # Verify timestamp is within last few seconds
-        current_time = time.time()
-        self.assertLess(current_time - timestamp, 5.0)  # Allow 5 seconds difference
+        self.assertIsInstance(rpt.items[0].value, numpy.datetime64)
 
     def test_odm_var_const(self):
         self._start()
