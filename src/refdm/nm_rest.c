@@ -851,7 +851,7 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        mg_send_http_ok(conn, NULL, 0);
         return HTTP_NO_CONTENT;
     }
     else
