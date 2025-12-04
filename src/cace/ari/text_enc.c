@@ -17,13 +17,14 @@
  */
 #include "text.h"
 #include "text_util.h"
+#include "access.h"
 #include "cace/util/defs.h"
 #include <inttypes.h>
 
 typedef struct
 {
     /// Output string stream
-    string_t out;
+    m_string_t out;
     /// Current nesting depth. The top ARI is depth zero.
     int depth;
     /// Original encoding options
@@ -40,19 +41,19 @@ static const char uri_safe[] = "'";
  * @param[out] out The text to append to.
  * @param[in,out] buf The buffer to move from and clear.
  */
-static int cace_ari_text_percent_helper(string_t out, string_t buf)
+static int cace_ari_text_percent_helper(m_string_t out, m_string_t buf)
 {
     cace_data_t view;
-    cace_data_init_view(&view, string_size(buf) + 1, (cace_data_ptr_t)string_get_cstr(buf));
+    cace_data_init_view(&view, m_string_size(buf) + 1, (cace_data_ptr_t)m_string_get_cstr(buf));
 
     int retval = cace_uri_percent_encode(out, &view, uri_safe);
-    string_clear(buf);
+    m_string_clear(buf);
     return retval;
 }
 
 static int cace_ari_text_encode_stream(cace_ari_text_enc_state_t *state, const cace_ari_t *ari);
 
-int cace_ari_text_encode(string_t text, const cace_ari_t *ari, cace_ari_text_enc_opts_t opts)
+int cace_ari_text_encode(m_string_t text, const cace_ari_t *ari, cace_ari_text_enc_opts_t opts)
 {
     CHKERR1(text);
     CHKERR1(ari);
@@ -61,21 +62,21 @@ int cace_ari_text_encode(string_t text, const cace_ari_t *ari, cace_ari_text_enc
         .depth = 0,
         .opts  = &opts,
     };
-    string_init(state.out);
+    m_string_init(state.out);
 
     if (cace_ari_text_encode_stream(&state, ari))
     {
         return 2;
     }
 
-    string_move(text, state.out);
+    m_string_move(text, state.out);
     return 0;
 }
 
 static int cace_ari_text_encode_ac(cace_ari_text_enc_state_t *state, const cace_ari_ac_t *ctr)
 {
     ++(state->depth);
-    string_push_back(state->out, '(');
+    m_string_push_back(state->out, '(');
 
     int  retval = 0;
     bool sep    = false;
@@ -83,13 +84,13 @@ static int cace_ari_text_encode_ac(cace_ari_text_enc_state_t *state, const cace_
     cace_ari_list_it_t item_it;
     for (cace_ari_list_it(item_it, ctr->items); !cace_ari_list_end_p(item_it); cace_ari_list_next(item_it))
     {
+        const cace_ari_t *item = cace_ari_list_cref(item_it);
+
         if (sep)
         {
-            string_push_back(state->out, ',');
+            m_string_push_back(state->out, ',');
         }
         sep = true;
-
-        const cace_ari_t *item = cace_ari_list_cref(item_it);
 
         int ret = cace_ari_text_encode_stream(state, item);
         if (ret)
@@ -100,14 +101,14 @@ static int cace_ari_text_encode_ac(cace_ari_text_enc_state_t *state, const cace_
     }
 
     --(state->depth);
-    string_push_back(state->out, ')');
+    m_string_push_back(state->out, ')');
     return retval;
 }
 
 static int cace_ari_text_encode_am(cace_ari_text_enc_state_t *state, const cace_ari_am_t *ctr)
 {
     ++(state->depth);
-    string_push_back(state->out, '(');
+    m_string_push_back(state->out, '(');
 
     int  retval = 0;
     bool sep    = false;
@@ -115,13 +116,13 @@ static int cace_ari_text_encode_am(cace_ari_text_enc_state_t *state, const cace_
     cace_ari_tree_it_t item_it;
     for (cace_ari_tree_it(item_it, ctr->items); !cace_ari_tree_end_p(item_it); cace_ari_tree_next(item_it))
     {
+        const cace_ari_tree_itref_t *pair = cace_ari_tree_cref(item_it);
+
         if (sep)
         {
-            string_push_back(state->out, ',');
+            m_string_push_back(state->out, ',');
         }
         sep = true;
-
-        const cace_ari_tree_itref_t *pair = cace_ari_tree_cref(item_it);
 
         int ret = cace_ari_text_encode_stream(state, pair->key_ptr);
         if (ret)
@@ -130,7 +131,7 @@ static int cace_ari_text_encode_am(cace_ari_text_enc_state_t *state, const cace_
             break;
         }
 
-        string_push_back(state->out, '=');
+        m_string_push_back(state->out, '=');
 
         ret = cace_ari_text_encode_stream(state, pair->value_ptr);
         if (ret)
@@ -141,13 +142,13 @@ static int cace_ari_text_encode_am(cace_ari_text_enc_state_t *state, const cace_
     }
 
     --(state->depth);
-    string_push_back(state->out, ')');
+    m_string_push_back(state->out, ')');
     return retval;
 }
 
 static int cace_ari_text_encode_tbl(cace_ari_text_enc_state_t *state, const cace_ari_tbl_t *ctr)
 {
-    string_cat_printf(state->out, "c=%zu;", ctr->ncols);
+    m_string_cat_printf(state->out, "c=%zu;", ctr->ncols);
 
     if (ctr->ncols == 0)
     {
@@ -164,18 +165,18 @@ static int cace_ari_text_encode_tbl(cace_ari_text_enc_state_t *state, const cace
     cace_ari_array_it(item_it, ctr->items);
     for (size_t row_ix = 0; row_ix < nrows; ++row_ix)
     {
-        string_push_back(state->out, '(');
+        m_string_push_back(state->out, '(');
 
         bool sep = false;
         for (size_t col_ix = 0; col_ix < ctr->ncols; ++col_ix)
         {
+            const cace_ari_t *item = cace_ari_array_cref(item_it);
+
             if (sep)
             {
-                string_push_back(state->out, ',');
+                m_string_push_back(state->out, ',');
             }
             sep = true;
-
-            const cace_ari_t *item = cace_ari_array_cref(item_it);
 
             int ret = cace_ari_text_encode_stream(state, item);
             if (ret)
@@ -187,7 +188,7 @@ static int cace_ari_text_encode_tbl(cace_ari_text_enc_state_t *state, const cace
             cace_ari_array_next(item_it);
         }
 
-        string_push_back(state->out, ')');
+        m_string_push_back(state->out, ')');
         if (retval)
         {
             break;
@@ -204,15 +205,15 @@ static int cace_ari_text_encode_execset(cace_ari_text_enc_state_t *state, const 
         cace_ari_text_enc_opts_t saveopts = *(state->opts);
         state->opts->scheme_prefix        = CACE_ARI_TEXT_SCHEME_NONE;
 
-        string_cat_str(state->out, "n=");
+        m_string_cat_cstr(state->out, "n=");
         cace_ari_text_encode_stream(state, &(ctr->nonce));
-        string_push_back(state->out, ';');
+        m_string_push_back(state->out, ';');
 
         *(state->opts) = saveopts;
     }
 
     ++(state->depth);
-    string_push_back(state->out, '(');
+    m_string_push_back(state->out, '(');
 
     int  retval = 0;
     bool sep    = false;
@@ -220,13 +221,13 @@ static int cace_ari_text_encode_execset(cace_ari_text_enc_state_t *state, const 
     cace_ari_list_it_t item_it;
     for (cace_ari_list_it(item_it, ctr->targets); !cace_ari_list_end_p(item_it); cace_ari_list_next(item_it))
     {
+        const cace_ari_t *item = cace_ari_list_cref(item_it);
+
         if (sep)
         {
-            string_push_back(state->out, ',');
+            m_string_push_back(state->out, ',');
         }
         sep = true;
-
-        const cace_ari_t *item = cace_ari_list_cref(item_it);
 
         int ret = cace_ari_text_encode_stream(state, item);
         if (ret)
@@ -237,29 +238,28 @@ static int cace_ari_text_encode_execset(cace_ari_text_enc_state_t *state, const 
     }
 
     --(state->depth);
-    string_push_back(state->out, ')');
+    m_string_push_back(state->out, ')');
     return retval;
 }
 
 static int cace_ari_text_encode_report(cace_ari_text_enc_state_t *state, const cace_ari_report_t *rpt)
 {
-    string_push_back(state->out, '(');
     {
         cace_ari_text_enc_opts_t saveopts = *(state->opts);
         state->opts->scheme_prefix        = CACE_ARI_TEXT_SCHEME_NONE;
 
-        string_cat_str(state->out, "t=");
+        m_string_cat_cstr(state->out, "t=");
         cace_ari_text_encode_stream(state, &(rpt->reltime));
-        string_push_back(state->out, ';');
+        m_string_push_back(state->out, ';');
 
-        string_cat_str(state->out, "s=");
+        m_string_cat_cstr(state->out, "s=");
         cace_ari_text_encode_stream(state, &(rpt->source));
-        string_push_back(state->out, ';');
+        m_string_push_back(state->out, ';');
 
         *(state->opts) = saveopts;
     }
 
-    string_push_back(state->out, '(');
+    m_string_push_back(state->out, '(');
 
     int  retval = 0;
     bool sep    = false;
@@ -267,13 +267,13 @@ static int cace_ari_text_encode_report(cace_ari_text_enc_state_t *state, const c
     cace_ari_list_it_t item_it;
     for (cace_ari_list_it(item_it, rpt->items); !cace_ari_list_end_p(item_it); cace_ari_list_next(item_it))
     {
+        const cace_ari_t *item = cace_ari_list_cref(item_it);
+
         if (sep)
         {
-            string_push_back(state->out, ',');
+            m_string_push_back(state->out, ',');
         }
         sep = true;
-
-        const cace_ari_t *item = cace_ari_list_cref(item_it);
 
         int ret = cace_ari_text_encode_stream(state, item);
         if (ret)
@@ -283,8 +283,7 @@ static int cace_ari_text_encode_report(cace_ari_text_enc_state_t *state, const c
         }
     }
 
-    string_push_back(state->out, ')');
-    string_push_back(state->out, ')');
+    m_string_push_back(state->out, ')');
     return retval;
 }
 
@@ -296,24 +295,33 @@ static int cace_ari_text_encode_rptset(cace_ari_text_enc_state_t *state, const c
         cace_ari_text_enc_opts_t saveopts = *(state->opts);
         state->opts->scheme_prefix        = CACE_ARI_TEXT_SCHEME_NONE;
 
-        string_cat_str(state->out, "n=");
+        m_string_cat_cstr(state->out, "n=");
         cace_ari_text_encode_stream(state, &(ctr->nonce));
-        string_push_back(state->out, ';');
+        m_string_push_back(state->out, ';');
 
-        string_cat_str(state->out, "r=");
+        m_string_cat_cstr(state->out, "r=");
         cace_ari_text_encode_stream(state, &(ctr->reftime));
-        string_push_back(state->out, ';');
+        m_string_push_back(state->out, ';');
 
         *(state->opts) = saveopts;
     }
 
-    int retval = 0;
+    m_string_push_back(state->out, '(');
+
+    int  retval = 0;
+    bool sep    = false;
 
     cace_ari_report_list_it_t rpt_it;
     for (cace_ari_report_list_it(rpt_it, ctr->reports); !cace_ari_report_list_end_p(rpt_it);
          cace_ari_report_list_next(rpt_it))
     {
         const cace_ari_report_t *rpt = cace_ari_report_list_cref(rpt_it);
+
+        if (sep)
+        {
+            m_string_push_back(state->out, ',');
+        }
+        sep = true;
 
         int ret = cace_ari_text_encode_report(state, rpt);
         if (ret)
@@ -322,6 +330,8 @@ static int cace_ari_text_encode_rptset(cace_ari_text_enc_state_t *state, const c
             break;
         }
     }
+
+    m_string_push_back(state->out, ')');
 
     --(state->depth);
     return retval;
@@ -343,12 +353,12 @@ static void cace_ari_text_encode_prefix(cace_ari_text_enc_state_t *state)
             break;
     }
 
-    string_cat_str(state->out, "ari:");
+    m_string_cat_cstr(state->out, "ari:");
 }
 
-static bool cace_ari_text_encode_idseg(string_t text, const cace_ari_idseg_t *obj);
+static bool cace_ari_text_encode_idseg(m_string_t text, const cace_ari_idseg_t *obj);
 
-static void cace_ari_text_encode_aritype(string_t text, enum cace_ari_text_aritype_e show, const cace_ari_type_t val,
+static void cace_ari_text_encode_aritype(m_string_t text, enum cace_ari_text_aritype_e show, const cace_ari_type_t val,
                                          const cace_ari_idseg_t *idseg)
 {
     const char *name;
@@ -375,23 +385,23 @@ static void cace_ari_text_encode_aritype(string_t text, enum cace_ari_text_arity
 
     if (name)
     {
-        string_cat_str(text, name);
+        m_string_cat_cstr(text, name);
     }
     else
     {
-        string_cat_printf(text, "%" PRId64, val);
+        m_string_cat_printf(text, "%" PRId64, val);
     }
 }
 
-static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace_ari_lit_t *obj)
+static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace_ari_lit_t *obj, const cace_ari_t *ari)
 {
     cace_ari_text_encode_prefix(state);
 
     if (obj->has_ari_type)
     {
-        string_push_back(state->out, '/');
+        m_string_push_back(state->out, '/');
         cace_ari_text_encode_aritype(state->out, state->opts->show_ari_type, obj->ari_type, NULL);
-        string_push_back(state->out, '/');
+        m_string_push_back(state->out, '/');
 
         switch (obj->ari_type)
         {
@@ -443,6 +453,7 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
             case CACE_ARI_TYPE_RPTSET:
                 cace_ari_text_encode_rptset(state, obj->value.as_rptset);
                 break;
+
             default:
                 // Fall through to primitives below
                 break;
@@ -452,19 +463,19 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
     switch (obj->prim_type)
     {
         case CACE_ARI_PRIM_UNDEFINED:
-            string_cat_str(state->out, "undefined");
+            m_string_cat_cstr(state->out, "undefined");
             break;
         case CACE_ARI_PRIM_NULL:
-            string_cat_str(state->out, "null");
+            m_string_cat_cstr(state->out, "null");
             break;
         case CACE_ARI_PRIM_BOOL:
             if (obj->value.as_bool)
             {
-                string_cat_str(state->out, "true");
+                m_string_cat_cstr(state->out, "true");
             }
             else
             {
-                string_cat_str(state->out, "false");
+                m_string_cat_cstr(state->out, "false");
             }
             break;
         case CACE_ARI_PRIM_UINT64:
@@ -479,7 +490,7 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
             if (obj->value.as_int64 < 0)
             {
                 absval = -obj->value.as_int64;
-                string_push_back(state->out, '-');
+                m_string_push_back(state->out, '-');
             }
             else
             {
@@ -502,11 +513,11 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
             }
             else
             {
-                string_t buf;
-                string_init(buf);
-                string_push_back(buf, '"');
+                m_string_t buf;
+                m_string_init(buf);
+                m_string_push_back(buf, '"');
                 cace_slash_escape(buf, &(obj->value.as_data), '"');
-                string_push_back(buf, '"');
+                m_string_push_back(buf, '"');
 
                 cace_ari_text_percent_helper(state->out, buf);
             }
@@ -525,21 +536,21 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
                     if (cace_data_is_utf8(&terminated))
                     {
                         // leave outer quotes non-percent-encoded
-                        string_push_back(state->out, '\'');
+                        m_string_push_back(state->out, '\'');
 
-                        string_t buf;
-                        string_init(buf);
+                        m_string_t buf;
+                        m_string_init(buf);
                         cace_slash_escape(buf, &terminated, '\'');
                         cace_ari_text_percent_helper(state->out, buf);
 
-                        string_push_back(state->out, '\'');
+                        m_string_push_back(state->out, '\'');
                     }
                     else
                     {
                         // this value cannot be represented as text
-                        string_cat_str(state->out, "h'");
+                        m_string_cat_cstr(state->out, "h'");
                         cace_base16_encode(state->out, &(obj->value.as_data), true);
-                        string_push_back(state->out, '\'');
+                        m_string_push_back(state->out, '\'');
                     }
 
                     cace_data_deinit(&terminated);
@@ -547,15 +558,15 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
                 }
                 case CACE_ARI_TEXT_BSTR_BASE16:
                     // no need to percent encode
-                    string_cat_str(state->out, "h'");
+                    m_string_cat_cstr(state->out, "h'");
                     cace_base16_encode(state->out, &(obj->value.as_data), true);
-                    string_push_back(state->out, '\'');
+                    m_string_push_back(state->out, '\'');
                     break;
                 case CACE_ARI_TEXT_BSTR_BASE64URL:
                     // no need to percent encode
-                    string_cat_str(state->out, "b64'");
+                    m_string_cat_cstr(state->out, "b64'");
                     cace_base64_encode(state->out, &(obj->value.as_data), true, false);
-                    string_push_back(state->out, '\'');
+                    m_string_push_back(state->out, '\'');
                     break;
             }
             break;
@@ -567,64 +578,64 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
     return 0;
 }
 
-static bool cace_ari_text_encode_idseg(string_t text, const cace_ari_idseg_t *obj)
+static bool cace_ari_text_encode_idseg(m_string_t text, const cace_ari_idseg_t *obj)
 {
     switch (obj->form)
     {
         case CACE_ARI_IDSEG_NULL:
             break;
         case CACE_ARI_IDSEG_TEXT:
-            string_cat(text, obj->as_text);
+            m_string_cat(text, obj->as_text);
             return true;
         case CACE_ARI_IDSEG_INT:
-            string_cat_printf(text, "%" PRId64, obj->as_int);
+            m_string_cat_printf(text, "%" PRId64, obj->as_int);
             return true;
     }
     return false;
 }
 
-int cace_ari_text_encode_objpath(string_t text, const cace_ari_objpath_t *path, enum cace_ari_text_aritype_e show)
+int cace_ari_text_encode_objpath(m_string_t text, const cace_ari_objpath_t *path, enum cace_ari_text_aritype_e show)
 {
     CHKERR1(text);
     CHKERR1(path);
 
     if (path->org_id.form != CACE_ARI_IDSEG_NULL)
     {
-        string_cat_str(text, "//");
+        m_string_cat_cstr(text, "//");
         cace_ari_text_encode_idseg(text, &(path->org_id));
     }
     else
     {
         if (path->org_id.form != CACE_ARI_IDSEG_NULL)
         {
-            string_cat_str(text, "..");
+            m_string_cat_cstr(text, "..");
         }
         else
         {
-            string_cat_str(text, ".");
+            m_string_cat_cstr(text, ".");
         }
     }
-    string_push_back(text, '/');
+    m_string_push_back(text, '/');
 
     if (cace_ari_text_encode_idseg(text, &(path->model_id)))
     {
         if (path->model_rev.valid)
         {
-            string_cat_str(text, "@");
+            m_string_push_back(text, '@');
             cace_date_encode(text, &(path->model_rev.parts), true);
         }
 
-        string_cat_str(text, "/");
+        m_string_push_back(text, '/');
     }
 
     if (path->has_ari_type)
     {
         cace_ari_text_encode_aritype(text, show, path->ari_type, &(path->type_id));
-        string_push_back(text, '/');
+        m_string_push_back(text, '/');
     }
     else if (cace_ari_text_encode_idseg(text, &(path->type_id)))
     {
-        string_push_back(text, '/');
+        m_string_push_back(text, '/');
     }
 
     // may encode nothing
@@ -671,7 +682,7 @@ static int cace_ari_text_encode_stream(cace_ari_text_enc_state_t *state, const c
     else
     {
         const cace_ari_lit_t *obj = &(ari->as_lit);
-        cace_ari_text_encode_lit(state, obj);
+        cace_ari_text_encode_lit(state, obj, ari);
     }
 
     return 0;

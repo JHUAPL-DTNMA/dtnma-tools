@@ -29,15 +29,17 @@ extern "C" {
 typedef struct
 {
     /** Parent running context.
-     * This will never be null.
+     * This will never be null in operation.
      */
-    refda_runctx_t *parent;
+    refda_runctx_t *runctx;
 
     /** Pointer to the reference which led to this production.
+     * This includes given parameters for the production.
      */
     const cace_ari_t *ref;
 
     /** Dereference result which led to this production.
+     * This includes actual parameters for the production.
      * This will never be null.
      */
     const cace_amm_lookup_t *deref;
@@ -53,12 +55,12 @@ typedef struct
  * a target object's formal parameters.
  *
  * @param[out] ctx The context to initialize.
- * @param[in] parent The parent runtime context.
+ * @param[in] runctx The parent runtime context.
  * @param[in] ref The reference target.
  * @param[in] deref The dereference result.
  * The result must outlive this context.
  */
-void refda_valprod_ctx_init(refda_valprod_ctx_t *ctx, refda_runctx_t *parent, const cace_ari_t *ref,
+void refda_valprod_ctx_init(refda_valprod_ctx_t *ctx, refda_runctx_t *runctx, const cace_ari_t *ref,
                             const cace_amm_lookup_t *deref);
 
 void refda_valprod_ctx_deinit(refda_valprod_ctx_t *ctx);

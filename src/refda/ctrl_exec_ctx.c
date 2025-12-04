@@ -29,8 +29,11 @@ void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *ite
     CHKVOID(item);
 
     obj->runctx = refda_runctx_ptr_ref(item->seq->runctx);
-    obj->ctrl   = item->deref.obj ? item->deref.obj->app_data.ptr : NULL;
-    obj->item   = item;
+    // check ACL cache at last moment
+    refda_runctx_check_acl(obj->runctx);
+
+    obj->ctrl = item->deref.obj ? item->deref.obj->app_data.ptr : NULL;
+    obj->item = item;
 }
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj)
@@ -71,33 +74,31 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
 {
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(ctx->item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("CTRL result value %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("CTRL result value %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     bool valid = false;
     if (cace_amm_type_is_valid(&(ctx->ctrl->res_type)))
     {
-        valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctx->ctrl->res_type), &(ctx->item->result)));
-        if (!valid)
+        // undefined is the failure indicator
+        if (!cace_ari_is_undefined(&(ctx->item->result)))
         {
-            CACE_LOG_ERR("CTRL result type failed to match a result value");
-            cace_ari_set_undefined(&(ctx->item->result));
+            valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctx->ctrl->res_type), &(ctx->item->result)));
+            if (!valid)
+            {
+                CACE_LOG_ERR("CTRL result type failed to match a result value");
+                cace_ari_set_undefined(&(ctx->item->result));
+            }
         }
     }
     else
     {
-        // success is treated as a null value
-        if (cace_ari_is_undefined(&(ctx->item->result)))
-        {
-            CACE_LOG_WARNING("CTRL result not set, defaulting to null value");
-            cace_ari_set_null(&(ctx->item->result));
-            valid = true;
-        }
-        else if (cace_ari_is_null(&(ctx->item->result)))
+        // no explicit result type means only the null value is acceptable
+        if (cace_ari_is_null(&(ctx->item->result)))
         {
             valid = true;
         }
@@ -109,14 +110,14 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
         }
     }
 
+    atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
+
     if (valid)
     {
-        atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
         return 0;
     }
     else
     {
-        atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
         cace_ari_deinit(&(ctx->item->result));
         return REFDA_CTRL_EXEC_RESULT_TYPE_NOMATCH;
     }

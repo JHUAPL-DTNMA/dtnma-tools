@@ -22,6 +22,9 @@
  */
 #include <refda/agent.h>
 #include <refda/adm/ietf_amm.h>
+#include <refda/adm/ietf_amm_base.h>
+#include <refda/adm/ietf_amm_semtype.h>
+#include <refda/adm/ietf_network_base.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
@@ -64,6 +67,9 @@ int main(int argc _U_, char *argv[] _U_)
 
     // ADM initialization
     refda_adm_ietf_amm_init(&agent);
+    refda_adm_ietf_amm_base_init(&agent);
+    refda_adm_ietf_amm_semtype_init(&agent);
+    refda_adm_ietf_network_base_init(&agent);
     refda_adm_ietf_dtnma_agent_init(&agent);
 
     /* Start agent threads. */
@@ -73,23 +79,16 @@ int main(int argc _U_, char *argv[] _U_)
         if (failures)
         {
             // Warn but continue on
-            CACE_LOG_WARNING("ADM reference binding failed for %d type references", failures);
+            CACE_LOG_ERR("ADM reference binding failed for %d type references", failures);
+            retval = 2;
         }
         else
         {
             CACE_LOG_INFO("ADM reference binding succeeded");
         }
-
-        if (refda_agent_start(&agent))
-        {
-            CACE_LOG_ERR("Agent startup failed");
-            retval = 2;
-        }
-        else
-        {
-            CACE_LOG_INFO("Agent startup completed");
-        }
-
+    }
+    if (!retval)
+    {
         if (refda_agent_init_objs(&agent))
         {
             CACE_LOG_ERR("Agent object initialization failed");
@@ -100,27 +99,29 @@ int main(int argc _U_, char *argv[] _U_)
             CACE_LOG_INFO("Agent object initialization completed");
         }
     }
-    CACE_LOG_INFO("READY");
-
     if (!retval)
     {
-        if (refda_agent_send_hello(&agent, "any"))
+        if (refda_agent_start(&agent))
         {
-            CACE_LOG_ERR("Agent hello failed");
-            retval = 3;
+            CACE_LOG_ERR("Agent startup failed");
+            retval = 2;
         }
         else
         {
-            CACE_LOG_INFO("Sent hello report");
+            CACE_LOG_INFO("Agent startup completed");
         }
     }
+
+    CACE_LOG_INFO("READY");
+    refda_agent_enable_exec(&agent);
 
     if (!retval)
     {
         // Block until stopped
         cace_daemon_run_wait(&agent.running);
-        CACE_LOG_INFO("Agent is shutting down");
     }
+
+    CACE_LOG_INFO("Agent is shutting down");
 
     /* Join threads and wait for them to complete. */
     if (!retval)

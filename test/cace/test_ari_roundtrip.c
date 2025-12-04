@@ -88,7 +88,7 @@ TEST_CASE("ari:/TBL/c=3;(1,2,3)")
 TEST_CASE("ari:/EXECSET/n=null;()")
 TEST_CASE("ari:/EXECSET/n=1234;(//example/test/CTRL/hi)")
 TEST_CASE("ari:/EXECSET/n=h'6869';(//example/test/CTRL/hi,//example/test/CTRL/eh)")
-TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;")
+TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;()")
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/PT0S;s=//example/test/CTRL/hi;())")
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/PT0S;s=//example/test/CTRL/hi;(null,3,h'6869'))")
 TEST_CASE("ari://example/test/CTRL/that")
@@ -101,10 +101,10 @@ void test_ari_roundtrip_text_cbor(const char *intext)
     cace_ari_t ari_dn;
     cace_ari_init(&ari_dn);
     {
-        string_t inbuf;
-        string_init_set_str(inbuf, intext);
+        m_string_t inbuf;
+        m_string_init_set_cstr(inbuf, intext);
         int res = cace_ari_text_decode(&ari_dn, inbuf, &errm);
-        string_clear(inbuf);
+        m_string_clear(inbuf);
         if ((res != 0) ^ (errm != NULL)) // only error message upon failure
         {
             TEST_FAIL_MESSAGE(errm);
@@ -121,11 +121,11 @@ void test_ari_roundtrip_text_cbor(const char *intext)
         TEST_ASSERT_GREATER_THAN(0, buf.len);
         if (true)
         {
-            string_t msg;
-            string_init(msg);
+            m_string_t msg;
+            m_string_init(msg);
             cace_base16_encode(msg, &buf, true);
-            TEST_PRINTF("Encoded hex: %s", string_get_cstr(msg));
-            string_clear(msg);
+            TEST_PRINTF("Encoded hex: %s", m_string_get_cstr(msg));
+            m_string_clear(msg);
         }
 
         int res = cace_ari_cbor_decode(&ari_up, &buf, NULL, &errm);
@@ -138,13 +138,13 @@ void test_ari_roundtrip_text_cbor(const char *intext)
     }
 
     {
-        string_t outtext;
-        string_init(outtext);
+        m_string_t outtext;
+        m_string_init(outtext);
         int res = cace_ari_text_encode(outtext, &ari_dn, opts);
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_encode() failed");
 
-        TEST_ASSERT_EQUAL_STRING(intext, string_get_cstr(outtext));
-        string_clear(outtext);
+        TEST_ASSERT_EQUAL_STRING(intext, m_string_get_cstr(outtext));
+        m_string_clear(outtext);
     }
 
     if (true)
@@ -186,10 +186,10 @@ void test_ari_roundtrip_cbor_text(const char *inhex)
     cace_data_t indata;
     cace_data_init(&indata);
     {
-        string_t inbuf;
-        string_init_set_str(inbuf, inhex);
+        m_string_t inbuf;
+        m_string_init_set_cstr(inbuf, inhex);
         TEST_ASSERT_EQUAL_INT(0, cace_base16_decode(&indata, inbuf));
-        string_clear(inbuf);
+        m_string_clear(inbuf);
     }
 
     cace_ari_t ari_dn;
@@ -206,19 +206,19 @@ void test_ari_roundtrip_cbor_text(const char *inhex)
     cace_ari_t ari_up;
     cace_ari_init(&ari_up);
     {
-        string_t text;
-        string_init(text);
+        m_string_t text;
+        m_string_init(text);
         int res = cace_ari_text_encode(text, &ari_dn, opts);
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_encode() failed");
 
         TEST_ASSERT_GREATER_THAN(0, m_string_size(text));
         if (true)
         {
-            TEST_PRINTF("Encoded text: %s", string_get_cstr(text));
+            TEST_PRINTF("Encoded text: %s", m_string_get_cstr(text));
         }
 
         res = cace_ari_text_decode(&ari_up, text, &errm);
-        string_clear(text);
+        m_string_clear(text);
         if ((res != 0) ^ (errm != NULL)) // only error message upon failure
         {
             TEST_FAIL_MESSAGE(errm);

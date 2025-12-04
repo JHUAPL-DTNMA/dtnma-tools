@@ -130,7 +130,7 @@ bool cace_ari_is_lit_typed(const cace_ari_t *ari, cace_ari_type_t typ);
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained type value, if present, otherwise NULL.
  */
-const int64_t *cace_ari_get_aritype(const cace_ari_t *ari);
+const int64_t *cace_ari_get_aritype_int(const cace_ari_t *ari);
 
 /** Set an ARI as an untyped literal value.
  *
@@ -205,22 +205,25 @@ void cace_ari_set_aritype_text(cace_ari_t *ari, cace_ari_type_t type);
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in,out] src An optional existing value struct to move from.
+ * @return The new AC value struct.
  */
-void cace_ari_set_ac(cace_ari_t *ari, struct cace_ari_ac_s *src);
+struct cace_ari_ac_s *cace_ari_set_ac(cace_ari_t *ari, struct cace_ari_ac_s *src);
 
 /** Set the ARI as an AM, optionally moving values from an external source.
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in,out] src An optional existing value struct to move from.
+ * @return The new AC value struct.
  */
-void cace_ari_set_am(cace_ari_t *ari, struct cace_ari_am_s *src);
+struct cace_ari_am_s *cace_ari_set_am(cace_ari_t *ari, struct cace_ari_am_s *src);
 
 /** Set the ARI as a TBL, optionally moving values from an external source.
  *
  * @param[in,out] ari The ARI value to modify.
  * @param[in,out] src An optional existing value struct to move from.
+ * @return The new AC value struct.
  */
-void cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src);
+struct cace_ari_tbl_s *cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src);
 
 /** Require a TEXTSTR value and get the pointer to its storage.
  *
@@ -229,8 +232,20 @@ void cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *src);
  * @notice This data will always have a terminating null byte.
  */
 const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari);
+/** @overload
+ * This form casts to const C-string pointer.
+ */
+const char *cace_ari_cget_tstr_cstr(const cace_ari_t *ari);
+/** @overload
+ * This form casts to mutable C-string pointer.
+ */
+const char *cace_ari_get_tstr_cstr(cace_ari_t *ari);
 
-/// @overload
+/** Require a BYTESTR value and get the pointer to its storage.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained data, if present, otherwise NULL.
+ */
 const cace_data_t *cace_ari_cget_bstr(const cace_ari_t *ari);
 
 /** Require an AC value and extract a pointer to its item list.
@@ -289,18 +304,40 @@ const struct cace_ari_rptset_s *cace_ari_cget_rptset(const cace_ari_t *ari);
  */
 struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari);
 
+/** Require a reference value and extract a pointer to its struct.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained struct, if present, otherwise NULL.
+ */
+const cace_ari_ref_t *cace_ari_cget_ref(const cace_ari_t *ari);
+/// @overload
+const cace_ari_objpath_t *cace_ari_cget_ref_objpath(const cace_ari_t *ari);
+
 /** Convenience setter.
  */
-static inline void cace_ari_set_objref_path_intid(cace_ari_t *ari, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
-                                                  cace_ari_type_t type_id, cace_ari_int_id_t obj_id)
+static inline cace_ari_ref_t *cace_ari_set_nsref_path_intid(cace_ari_t *ari, cace_ari_int_id_t org_id,
+                                                            cace_ari_int_id_t model_id)
 {
-    cace_ari_objpath_set_intid(&(cace_ari_set_objref(ari)->objpath), org_id, model_id, type_id, obj_id);
+    cace_ari_ref_t *ref = cace_ari_set_objref(ari);
+    cace_ari_objpath_set_intid_opt(&(ref->objpath), &org_id, &model_id, NULL, NULL);
+    return ref;
 }
 /// @overload
-static inline void cace_ari_set_objref_path_textid(cace_ari_t *ari, const char *org_id, const char *model_id,
-                                                   cace_ari_type_t type_id, const char *obj_id)
+static inline cace_ari_ref_t *cace_ari_set_objref_path_intid(cace_ari_t *ari, cace_ari_int_id_t org_id,
+                                                             cace_ari_int_id_t model_id, cace_ari_type_t type_id,
+                                                             cace_ari_int_id_t obj_id)
 {
-    cace_ari_objpath_set_textid(&(cace_ari_set_objref(ari)->objpath), org_id, model_id, type_id, obj_id);
+    cace_ari_ref_t *ref = cace_ari_set_objref(ari);
+    cace_ari_objpath_set_intid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    return ref;
+}
+/// @overload
+static inline cace_ari_ref_t *cace_ari_set_objref_path_textid(cace_ari_t *ari, const char *org_id, const char *model_id,
+                                                              cace_ari_type_t type_id, const char *obj_id)
+{
+    cace_ari_ref_t *ref = cace_ari_set_objref(ari);
+    cace_ari_objpath_set_textid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    return ref;
 }
 
 #ifdef __cplusplus

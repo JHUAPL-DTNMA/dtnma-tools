@@ -66,7 +66,7 @@ extern "C" {
 // GCOV_EXCL_START
 M_DEQUE_DEF(cace_ari_list, cace_ari_t)
 M_DICT_DEF2(cace_ari_dict, cace_ari_t, M_OPL_cace_ari_t(), cace_ari_t, M_OPL_cace_ari_t())
-M_DICT_DEF2(cace_named_ari_dict, string_t, M_STRING_OPLIST, cace_ari_t, M_OPL_cace_ari_t())
+M_DICT_DEF2(cace_named_ari_dict, m_string_t, M_STRING_OPLIST, cace_ari_t, M_OPL_cace_ari_t())
 M_BPTREE_DEF2(cace_ari_tree, 4, cace_ari_t, M_OPL_cace_ari_t(), cace_ari_t, M_OPL_cace_ari_t())
 M_ARRAY_DEF(cace_ari_array, cace_ari_t)
 M_ARRAY_DEF(cace_ari_ptr_array, cace_ari_t *, M_PTR_OPLIST)
@@ -114,10 +114,26 @@ typedef struct cace_ari_tbl_s
     cace_ari_array_t items;
 } cace_ari_tbl_t;
 
-void cace_ari_tbl_init(cace_ari_tbl_t *obj, size_t ncols, size_t nrows);
+void cace_ari_tbl_init(cace_ari_tbl_t *obj);
 void cace_ari_tbl_deinit(cace_ari_tbl_t *obj);
 bool cace_ari_tbl_cmp(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right);
 bool cace_ari_tbl_equal(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right);
+
+/** Reset a table to a specific size.
+ *
+ * @param[in,out] obj The table to append to.
+ * @param ncols The number of columns.
+ * @param nrows The number of rows, which can start zero and be appended to.
+ * @sa cace_ari_tbl_move_row_ac(), cace_ari_tbl_move_row_array()
+ */
+void cace_ari_tbl_reset(cace_ari_tbl_t *obj, size_t ncols, size_t nrows);
+
+/** Compute the number of rows in this table.
+ *
+ * @param[in] obj The table to inspect.
+ * @return The row count.
+ */
+size_t cace_ari_tbl_num_rows(const cace_ari_tbl_t *obj);
 
 /** Append a row to a table, moving data from the source.
  *

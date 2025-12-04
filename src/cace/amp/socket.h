@@ -30,6 +30,13 @@
 extern "C" {
 #endif
 
+/** Detect and strip the scheme prefix from a file URI.
+ *
+ * @param[in] uri The full URI text.
+ * @return Pointer to the start of scheme-specific part or NULL if not present.
+ */
+const char *cace_amp_socket_strip_scheme(const char *uri);
+
 /** State for the socket transport.
  */
 typedef struct
@@ -52,7 +59,7 @@ void cace_amp_socket_state_deinit(cace_amp_socket_state_t *state);
  * @param[in,out] state The state to bind.
  * @param[in] sock_path The file path to bind to.
  */
-int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const m_string_t sock_path);
+int cace_amp_socket_state_bind(cace_amp_socket_state_t *state, const char *sock_path);
 
 /** Unbind any current socket and remove it if necessary.
  *

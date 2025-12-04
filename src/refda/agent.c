@@ -24,7 +24,9 @@
 #include "adm/ietf.h"
 #include "adm/ietf_amm_base.h"
 #include "adm/ietf_dtnma_agent.h"
+#include "adm/ietf_dtnma_agent_acl.h"
 #include "binding.h"
+#include "cace/ari/text.h"
 #include "cace/amm/lookup.h"
 #include "cace/util/threadset.h"
 #include "cace/util/logging.h"
@@ -33,16 +35,20 @@
 
 void refda_agent_init(refda_agent_t *agent)
 {
-    string_init(agent->agent_eid);
+    m_string_init(agent->agent_eid);
     cace_daemon_run_init(&(agent->running));
     refda_instr_init(&(agent->instr));
     cace_threadset_init(agent->threads);
+
+    refda_acl_init(&(agent->acl));
+    pthread_mutex_init(&(agent->acl_mutex), NULL);
 
     string_list_init(agent->odm_names);
     cace_amm_obj_store_init(&(agent->objs));
     pthread_mutex_init(&(agent->objs_mutex), NULL);
 
     refda_msgdata_queue_init(agent->execs, AGENT_QUEUE_SIZE);
+    atomic_store(&agent->execs_enable, false);
     sem_init(&(agent->execs_sem), 0, 0);
 
     agent->exec_next_pid = 1;
@@ -65,16 +71,20 @@ void refda_agent_deinit(refda_agent_t *agent)
     agent->exec_next_pid = 0;
 
     sem_destroy(&(agent->execs_sem));
+    // ignore execs_enable
     refda_msgdata_queue_clear(agent->execs);
 
     pthread_mutex_destroy(&(agent->objs_mutex));
     cace_amm_obj_store_deinit(&(agent->objs));
     string_list_clear(agent->odm_names);
 
+    pthread_mutex_destroy(&(agent->acl_mutex));
+    refda_acl_deinit(&(agent->acl));
+
     refda_instr_deinit(&(agent->instr));
     cace_threadset_clear(agent->threads);
     cace_daemon_run_cleanup(&(agent->running));
-    string_clear(agent->agent_eid);
+    m_string_clear(agent->agent_eid);
 }
 
 /// Time of the DTN epoch (2000-01-01T00:00:00Z) in the POSIX clock
@@ -99,30 +109,47 @@ int refda_agent_nowtime(refda_agent_t *agent _U_, cace_ari_t *val)
     return 0;
 }
 
-cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
-                                         cace_ari_int_id_t obj_id)
+cace_amm_obj_desc_t *refda_agent_get_object(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
+                                            cace_ari_type_t type_id, cace_ari_int_id_t obj_id)
 {
-    cace_amm_type_t *found = NULL;
+    cace_amm_obj_desc_t *found = NULL;
 
     cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_objref_path_intid(&ref, org_id, model_id, CACE_ARI_TYPE_TYPEDEF, obj_id);
+    cace_ari_set_objref_path_intid(&ref, org_id, model_id, type_id, obj_id);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
 
-    if (!cace_amm_lookup_deref(&deref, &(agent->objs), &ref))
+    int res = cace_amm_lookup_deref(&deref, &(agent->objs), &ref);
+    if (res)
     {
-        refda_amm_typedef_desc_t *typedesc = deref.obj->app_data.ptr;
-        if (typedesc)
-        {
-            found = &(typedesc->typeobj);
-        }
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, &ref, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+    else
+    {
+        found = deref.obj;
     }
 
     cace_amm_lookup_deinit(&deref);
     cace_ari_deinit(&ref);
 
     return found;
+}
+
+cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t org_id, cace_ari_int_id_t model_id,
+                                         cace_ari_int_id_t obj_id)
+{
+    cace_amm_obj_desc_t *obj = refda_agent_get_object(agent, org_id, model_id, CACE_ARI_TYPE_TYPEDEF, obj_id);
+
+    refda_amm_typedef_desc_t *typedesc = obj ? obj->app_data.ptr : NULL;
+
+    cace_amm_type_t *typeobj = typedesc ? &(typedesc->typeobj) : NULL;
+
+    return typeobj;
 }
 
 int refda_agent_bindrefs(refda_agent_t *agent)
@@ -147,6 +174,22 @@ int refda_agent_bindrefs(refda_agent_t *agent)
     agent->rptt_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_BASE_ENUM_ADM,
                                                REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_RPTT);
     if (!agent->rptt_type)
+    {
+        ++failcnt;
+    }
+
+    agent->acl.perm_base =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PERMISSION);
+    if (!agent->acl.perm_base)
+    {
+        ++failcnt;
+    }
+
+    agent->acl.perm_produce =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
+    if (!agent->acl.perm_produce)
     {
         ++failcnt;
     }
@@ -321,6 +364,9 @@ int refda_agent_stop(refda_agent_t *agent)
     CHKERR1(agent);
     CACE_LOG_INFO("Work threads stopping...");
 
+    // ensure this isn't blocking after startup failure
+    atomic_store(&agent->execs_enable, true);
+
     // If the ingress system has been overwritten, then the undefined message needs to be
     // pushed in to signal shutdown.
     if (agent->mif.recv == NULL)
@@ -328,7 +374,7 @@ int refda_agent_stop(refda_agent_t *agent)
         // Send sentinel to end thread execution
         refda_msgdata_t undef;
         refda_msgdata_init(&undef);
-        refda_msgdata_queue_push_move(&agent->execs[0], &undef);
+        refda_msgdata_queue_push_move(agent->execs, &undef);
         sem_post(&(agent->execs_sem));
     }
 
@@ -341,39 +387,46 @@ int refda_agent_stop(refda_agent_t *agent)
     return 0;
 }
 
-int refda_agent_send_hello(refda_agent_t *agent, const char *dest)
+int refda_agent_startup_exec(refda_agent_t *agent, cace_ari_t *target)
 {
-    cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
-    // ari:/ietf/dtnma-agent/CONST/hello
-    cace_ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CONST,
-                                   REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
-
-    // dummy message source
-    refda_msgdata_t msg;
-    refda_msgdata_init(&msg);
-    cace_ari_set_tstr(&msg.ident, dest, true);
-
-    refda_runctx_t runctx;
-    refda_runctx_init(&runctx);
+    CHKERR1(agent);
+    CHKERR1(target);
     int retval = 0;
 
-    int res = refda_runctx_from(&runctx, agent, &msg);
-    if (res)
+    refda_exec_status_t status;
+    refda_exec_status_init(&status);
+
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
+    refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, NULL);
+    CACE_LOG_DEBUG("Sending startup target");
+    if (refda_exec_add_target(ctxptr, target, &status))
     {
-        retval = 2;
+        CACE_LOG_ERR("Failed adding startup target");
+        retval = 3;
     }
+    refda_runctx_ptr_clear(ctxptr);
+    cace_ari_deinit(target);
 
     if (!retval)
     {
-        res = refda_reporting_target(&runctx, &ref);
-        if (res)
+        bool failure = refda_exec_status_wait(&status);
+        if (failure)
         {
+            CACE_LOG_ERR("Failed executing startup target");
             retval = 3;
         }
+        else
+        {
+            CACE_LOG_INFO("Finished startup target");
+        }
     }
-
-    refda_runctx_deinit(&runctx);
-    refda_msgdata_deinit(&msg);
-
+    refda_exec_status_deinit(&status);
     return retval;
+}
+
+void refda_agent_enable_exec(refda_agent_t *agent)
+{
+    CACE_LOG_INFO("Enabled execution ingress");
+    atomic_store(&agent->execs_enable, true);
+    sem_post(&agent->execs_sem);
 }

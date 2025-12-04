@@ -38,16 +38,18 @@ extern "C" {
  * Index of orgs by their name.
  */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_SHARED_PTR_DEF(cace_amm_obj_org_ptr, cace_amm_obj_org_t, M_OPL_cace_amm_obj_org_t())
 M_DEQUE_DEF(cace_amm_obj_org_list, cace_amm_obj_org_ptr_t *,
             M_SHARED_PTR_OPLIST(cace_amm_obj_org_ptr, M_OPL_cace_amm_obj_org_t()))
 M_BPTREE_DEF2(cace_amm_obj_org_by_enum, 4, cace_ari_int_id_t, M_BASIC_OPLIST, cace_amm_obj_org_t *, M_PTR_OPLIST)
 M_BPTREE_DEF2(cace_amm_obj_org_by_name, 4, const char *, M_CSTR_NOCASE_OPLIST, cace_amm_obj_org_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /** A container for AMM object descriptors within separate namespaces.
  */
-typedef struct
+typedef struct cace_amm_obj_store_s
 {
     /// Actual storage for all registered NS
     cace_amm_obj_ns_list_t ns_list;

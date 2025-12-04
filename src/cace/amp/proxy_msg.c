@@ -76,67 +76,82 @@ int cace_amp_proxy_msg_recv(int sock_fd, cace_ari_t *src, m_bstring_t data)
     CHKERR1(sock_fd >= 0);
     CHKERR1(src);
 
-    // first peek at message size
-    int     flags = MSG_PEEK | MSG_TRUNC;
-    ssize_t got   = recv(sock_fd, NULL, 0, flags);
-    if (got == 0)
-    {
-        CACE_LOG_INFO("ignorning empty recv() message");
-        return 2;
-    }
-    else if (got < 0)
-    {
-        CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
-        return 3;
-    }
-    CACE_LOG_INFO("Peeked socket datagram with %zd octets", got);
-
     int result = 0;
 
     m_bstring_t msgbuf;
     m_bstring_init(msgbuf);
-    {
-        m_bstring_resize(msgbuf, got);
-        const size_t msg_size  = m_bstring_size(msgbuf);
-        uint8_t     *msg_begin = m_bstring_acquire_access(msgbuf, 0, msg_size);
 
-        flags = 0;
-        got   = recv(sock_fd, msg_begin, msg_size, flags);
-        m_bstring_release_access(msgbuf);
-        if (got <= 0)
+    while (true)
+    {
+        // first peek at message size
+        int     flags = MSG_PEEK | MSG_TRUNC;
+        ssize_t got   = recv(sock_fd, NULL, 0, flags);
+        if (got == 0)
+        {
+            CACE_LOG_INFO("ignorning empty recv() message");
+            break;
+        }
+        else if (got < 0)
         {
             CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
-            result = 4;
+            result = 3;
+            break;
         }
-    }
-    CACE_LOG_INFO("Received socket datagram with %zd octets", got);
+        CACE_LOG_INFO("Peeked socket datagram with %zd octets", got);
 
-    const uint8_t *msg_begin = m_bstring_view(msgbuf, 0, got);
-    size_t         head_len;
-    if (!result)
-    {
-        cace_data_t view;
-        cace_data_init_view(&view, got, (uint8_t *)msg_begin);
-
-        int ret = cace_ari_cbor_decode(src, &view, &head_len, NULL);
-        if (ret)
         {
-            CACE_LOG_ERR("Source EID decoding error code %d", ret);
-            result = 5;
+            m_bstring_resize(msgbuf, got);
+            const size_t msg_size  = m_bstring_size(msgbuf);
+            uint8_t     *msg_begin = m_bstring_acquire_access(msgbuf, 0, msg_size);
+
+            flags = 0;
+            got   = recv(sock_fd, msg_begin, msg_size, flags);
+            m_bstring_release_access(msgbuf);
+            if (got <= 0)
+            {
+                CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
+                result = 3;
+                break;
+            }
         }
-    }
+        CACE_LOG_INFO("Received socket datagram with %zd octets", got);
 
-    if (!result)
-    {
-        // copy by value into result
-        const size_t data_size = got - head_len;
-        m_bstring_push_back_bytes(data, data_size, msg_begin + head_len);
+        // Decode the proxy header
+        const uint8_t *msg_begin = m_bstring_view(msgbuf, 0, got);
+        size_t         head_len;
+        {
+            cace_data_t view;
+            cace_data_init_view(&view, got, (uint8_t *)msg_begin);
 
-        string_t buf;
-        string_init(buf);
-        cace_ari_text_encode(buf, src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_INFO("Received message with peer %s data length %zd", m_string_get_cstr(buf), data_size);
-        string_clear(buf);
+            int ret = cace_ari_cbor_decode(src, &view, &head_len, NULL);
+            if (ret)
+            {
+                CACE_LOG_ERR("Peer EID decoding error code %d", ret);
+                result = 3;
+            }
+            cace_data_deinit(&view);
+            if (result)
+            {
+                continue;
+            }
+        }
+
+        {
+            // copy by value into result
+            const size_t data_size = got - head_len;
+            m_bstring_push_back_bytes(data, data_size, msg_begin + head_len);
+
+            if (cace_log_is_enabled_for(LOG_INFO))
+            {
+                m_string_t buf;
+                m_string_init(buf);
+                cace_ari_text_encode(buf, src, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_INFO("Received message with peer %s data length %zd", m_string_get_cstr(buf), data_size);
+                m_string_clear(buf);
+            }
+            // got valid message
+            break;
+        }
     }
 
     m_bstring_clear(msgbuf);

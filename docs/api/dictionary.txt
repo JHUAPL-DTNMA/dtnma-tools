@@ -1,3 +1,5 @@
+acl
+ACL
 adm
 ADMs
 agg
@@ -30,6 +32,7 @@ cace
 CACE
 Carsten
 cbor
+cborhex
 CDDL
 CFE
 CHKERR
@@ -51,6 +54,7 @@ cond
 config
 const
 CONST
+crit
 CRIT
 ctrl
 CTRL
@@ -107,6 +111,7 @@ Helvetica
 Henk
 iana
 IANA
+ident
 IDENT
 idx
 ietf
@@ -229,6 +234,7 @@ tgt
 thr
 timespec
 TP
+Transcoder
 tstr
 TSTR
 tv

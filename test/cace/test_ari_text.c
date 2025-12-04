@@ -42,17 +42,17 @@ void tearDown(void)
  */
 static void check_encode(const cace_ari_t *ari, const char *expect, const cace_ari_text_enc_opts_t opts)
 {
-    string_t got;
-    string_init(got);
+    m_string_t got;
+    m_string_init(got);
 
     int res = cace_ari_text_encode(got, ari, opts);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_encode() failed");
     // include terminating null
     //  const size_t expect_len = strlen(expect) + 1;
     //  TEST_ASSERT_EQUAL_MESSAGE(expect_len, buf.len, "Mismatch in encoded length");
-    TEST_ASSERT_EQUAL_STRING_MESSAGE(expect, string_get_cstr(got), "Mismatch in encoded data");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(expect, m_string_get_cstr(got), "Mismatch in encoded data");
 
-    string_clear(got);
+    m_string_clear(got);
 }
 
 void test_ari_text_encode_lit_prim_undefined(void)
@@ -384,13 +384,13 @@ void test_ari_text_encode_ariref(cace_ari_type_t type_id, const char *obj_id, co
     {
         const char *type_name     = cace_ari_type_to_name(type_id);
         ref->objpath.type_id.form = CACE_ARI_IDSEG_TEXT;
-        string_t *value           = &(ref->objpath.type_id.as_text);
-        string_init_set_str(*value, type_name);
+        m_string_t *value         = &(ref->objpath.type_id.as_text);
+        m_string_init_set_cstr(*value, type_name);
     }
     {
         ref->objpath.obj_id.form = CACE_ARI_IDSEG_TEXT;
-        string_t *value          = &(ref->objpath.obj_id.as_text);
-        string_init_set_str(*value, obj_id);
+        m_string_t *value        = &(ref->objpath.obj_id.as_text);
+        m_string_init_set_cstr(*value, obj_id);
     }
 
     ref->objpath.has_ari_type = true;
@@ -408,10 +408,10 @@ void test_ari_text_encode_ariref(cace_ari_type_t type_id, const char *obj_id, co
  */
 static void check_decode(cace_ari_t *ari, const char *text)
 {
-    string_t inbuf;
-    string_init_set_str(inbuf, text);
+    m_string_t inbuf;
+    m_string_init_set_cstr(inbuf, text);
     int ret = cace_ari_text_decode(ari, inbuf, &errm);
-    string_clear(inbuf);
+    m_string_clear(inbuf);
     if (ret && errm)
     {
         TEST_FAIL_MESSAGE(errm);
@@ -761,8 +761,8 @@ TEST_CASE("ari:/CBOR/h'0064746573748203F94480'", "0064746573748203F94480")
 TEST_CASE("ari:/CBOR/h'A1%2064%2074%2065%2073%2074%2082%2003%20F9%2044%20%2080'", "A164746573748203F94480")
 void test_ari_text_decode_lit_typed_cbor(const char *text, const char *expect_hex)
 {
-    string_t expect_text;
-    string_init_set_str(expect_text, expect_hex);
+    m_string_t expect_text;
+    m_string_init_set_cstr(expect_text, expect_hex);
     cace_data_t expect_data;
     cace_data_init(&expect_data);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_decode(&expect_data, expect_text), "cace_base16_decode() failed");
@@ -788,7 +788,7 @@ void test_ari_text_decode_lit_typed_cbor(const char *text, const char *expect_he
     }
     cace_ari_deinit(&ari);
     cace_data_deinit(&expect_data);
-    string_clear(expect_text);
+    m_string_clear(expect_text);
 }
 
 TEST_CASE("ari:/NULL/null")
@@ -985,14 +985,14 @@ void test_ari_text_decode_lit_typed_execset(const char *text, enum cace_ari_prim
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE("ari:/RPTSET/n=null;r=725943845;", CACE_ARI_PRIM_NULL, 0)
+TEST_CASE("ari:/RPTSET/n=null;r=725943845;()", CACE_ARI_PRIM_NULL, 0)
 TEST_CASE("ari:/RPTSET/n=1234;r=725943845;(t=0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=725943845;(t=0.0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845;(t=/TD/0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/725943845.000;(t=/TD/0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE("ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/0;s=//example/test/CTRL/hi;())", CACE_ARI_PRIM_INT64, 1)
 TEST_CASE(
-    "ari:/RPTSET/n=h'6869';r=/TP/725943845;(t=/TD/0;s=//example/test/CTRL/hi;())(t=/TD/1;s=//example/test/CTRL/eh;())",
+    "ari:/RPTSET/n=h'6869';r=/TP/725943845;(t=/TD/0;s=//example/test/CTRL/hi;(),t=/TD/1;s=//example/test/CTRL/eh;())",
     CACE_ARI_PRIM_BSTR, 2)
 void test_ari_text_decode_lit_typed_rptset(const char *text, enum cace_ari_prim_type_e expect_n, size_t expect_count)
 {
@@ -1117,10 +1117,10 @@ TEST_CASE("ari://example/test/object/hi")
 void test_ari_text_decode_objref_invalid(const char *intext)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    string_t   inbuf;
-    string_init_set_str(inbuf, intext);
+    m_string_t inbuf;
+    m_string_init_set_cstr(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
-    string_clear(inbuf);
+    m_string_clear(inbuf);
     cace_ari_deinit(&ari);
 
     TEST_ASSERT_NOT_EQUAL_INT(0, ret);
@@ -1168,10 +1168,10 @@ TEST_CASE("..//")
 void test_ari_text_decode_nsref_invalid(const char *intext)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    string_t   inbuf;
-    string_init_set_str(inbuf, intext);
+    m_string_t inbuf;
+    m_string_init_set_cstr(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
-    string_clear(inbuf);
+    m_string_clear(inbuf);
     cace_ari_deinit(&ari);
 
     TEST_ASSERT_NOT_EQUAL_INT(0, ret);
@@ -1252,24 +1252,24 @@ TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
 void test_ari_text_loopback(const char *intext)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    string_t   inbuf;
-    string_init_set_str(inbuf, intext);
+    m_string_t inbuf;
+    m_string_init_set_cstr(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
-    string_clear(inbuf);
+    m_string_clear(inbuf);
     if ((ret != 0) ^ (errm != NULL)) // only error message upon failure
     {
         TEST_FAIL_MESSAGE(errm);
     }
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "cace_ari_text_decode() failed");
 
-    string_t outtext;
-    string_init(outtext);
+    m_string_t outtext;
+    m_string_init(outtext);
     ret = cace_ari_text_encode(outtext, &ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
     cace_ari_deinit(&ari);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "cace_ari_text_encode() failed");
 
-    TEST_ASSERT_EQUAL_STRING(intext, string_get_cstr(outtext));
-    string_clear(outtext);
+    TEST_ASSERT_EQUAL_STRING(intext, m_string_get_cstr(outtext));
+    m_string_clear(outtext);
 }
 
 TEST_CASE("ari:/null/null", "ari:/NULL/null")
@@ -1316,24 +1316,24 @@ TEST_CASE("ari:./ctrl/hi", "./CTRL/hi")                // scheme elided
 void test_ari_text_reencode(const char *intext, const char *expect_outtext)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    string_t   inbuf;
-    string_init_set_str(inbuf, intext);
+    m_string_t inbuf;
+    m_string_init_set_cstr(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
-    string_clear(inbuf);
+    m_string_clear(inbuf);
     if ((ret != 0) ^ (errm != NULL)) // only error message upon failure
     {
         TEST_FAIL_MESSAGE(errm);
     }
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "cace_ari_text_decode() failed");
 
-    string_t outtext;
-    string_init(outtext);
+    m_string_t outtext;
+    m_string_init(outtext);
     ret = cace_ari_text_encode(outtext, &ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
     cace_ari_deinit(&ari);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "cace_ari_text_encode() failed");
 
-    TEST_ASSERT_EQUAL_STRING(expect_outtext, string_get_cstr(outtext));
-    string_clear(outtext);
+    TEST_ASSERT_EQUAL_STRING(expect_outtext, m_string_get_cstr(outtext));
+    m_string_clear(outtext);
 }
 
 TEST_CASE("-0x8FFFFFFFFFFFFFFF")
@@ -1380,10 +1380,10 @@ TEST_CASE("ari://example/test@1234/") // bad revision
 void test_ari_text_decode_failure(const char *intext)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    string_t   inbuf;
-    string_init_set_str(inbuf, intext);
+    m_string_t inbuf;
+    m_string_init_set_cstr(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
-    string_clear(inbuf);
+    m_string_clear(inbuf);
     cace_ari_deinit(&ari);
 
     TEST_ASSERT_NOT_EQUAL_INT(0, ret);
@@ -1405,10 +1405,10 @@ TEST_CASE("ari:/AM/(/INT/10=true)") // no typed keys
 void test_ari_text_decode_invalid(const char *intext)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    string_t   inbuf;
-    string_init_set_str(inbuf, intext);
+    m_string_t inbuf;
+    m_string_init_set_cstr(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
-    string_clear(inbuf);
+    m_string_clear(inbuf);
     if ((ret != 0) ^ (errm != NULL)) // only error message upon failure
     {
         TEST_FAIL_MESSAGE(errm);

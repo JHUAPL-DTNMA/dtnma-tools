@@ -16,11 +16,16 @@
  * limitations under the License.
  */
 #include "refda/agent.h"
+#include "refda/adm/ietf.h"
 #include "refda/adm/ietf_amm.h"
 #include "refda/adm/ietf_amm_base.h"
 #include "refda/adm/ietf_amm_semtype.h"
+#include "refda/adm/ietf_network_base.h"
 #include "refda/adm/ietf_dtnma_agent.h"
+#include "refda/adm/ietf_dtnma_agent_acl.h"
 #include <cace/amp/ion_bp.h>
+#include <cace/ari/text.h>
+#include <cace/ari/macrofile.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 #include <bp.h>
@@ -43,7 +48,7 @@ static void daemon_signal_handler(int signum)
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <listen-EID> {-m <hello-EID>}\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} {-s <startup-file>} -a <listen-EID> {-m <hello-EID>}\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -57,6 +62,8 @@ int main(int argc, char *argv[])
     /* Process Command Line Arguments. */
     int log_limit = LOG_WARNING;
 
+    m_string_t startup_exec;
+    m_string_init(startup_exec);
     m_string_t own_eid;
     m_string_init(own_eid);
     m_string_t hello_eid;
@@ -64,7 +71,7 @@ int main(int argc, char *argv[])
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, ":hl:a:m:")) != -1)
+            while ((opt = getopt(argc, argv, ":hl:s:a:m:")) != -1)
             {
                 switch (opt)
                 {
@@ -75,11 +82,14 @@ int main(int argc, char *argv[])
                             retval = 1;
                         }
                         break;
+                    case 's':
+                        m_string_set_cstr(startup_exec, optarg);
+                        break;
                     case 'a':
-                        string_set_str(own_eid, optarg);
+                        m_string_set_cstr(own_eid, optarg);
                         break;
                     case 'm':
-                        string_set_str(hello_eid, optarg);
+                        m_string_set_cstr(hello_eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -96,7 +106,7 @@ int main(int argc, char *argv[])
     // check arguments
     if (!retval && m_string_empty_p(own_eid))
     {
-        fprintf(stderr, "An EID URI must be supplied");
+        fprintf(stderr, "A BP endpoint URI must be supplied");
         retval = 1;
     }
 
@@ -123,7 +133,7 @@ int main(int argc, char *argv[])
     if (!retval)
     {
         m_string_set(agent.agent_eid, own_eid);
-        CACE_LOG_DEBUG("Running as endpoint %s", string_get_cstr(agent.agent_eid));
+        CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(agent.agent_eid));
         agent.mif.send = cace_amp_ion_bp_send;
         agent.mif.recv = cace_amp_ion_bp_recv;
         agent.mif.ctx  = &app;
@@ -136,7 +146,9 @@ int main(int argc, char *argv[])
         refda_adm_ietf_amm_init(&agent);
         refda_adm_ietf_amm_base_init(&agent);
         refda_adm_ietf_amm_semtype_init(&agent);
+        refda_adm_ietf_network_base_init(&agent);
         refda_adm_ietf_dtnma_agent_init(&agent);
+        refda_adm_ietf_dtnma_agent_acl_init(&agent);
 #if 0
   dtn_bp_agent_init();
   dtn_ion_ionadmin_init();
@@ -170,23 +182,16 @@ int main(int argc, char *argv[])
         if (failures)
         {
             // Warn but continue on
-            CACE_LOG_WARNING("ADM reference binding failed for %d type references", failures);
+            CACE_LOG_ERR("ADM reference binding failed for %d type references", failures);
+            retval = 2;
         }
         else
         {
             CACE_LOG_INFO("ADM reference binding succeeded");
         }
-
-        if (refda_agent_start(&agent))
-        {
-            CACE_LOG_ERR("Agent startup failed");
-            retval = 2;
-        }
-        else
-        {
-            CACE_LOG_INFO("Agent startup completed");
-        }
-
+    }
+    if (!retval)
+    {
         if (refda_agent_init_objs(&agent))
         {
             CACE_LOG_ERR("Agent object initialization failed");
@@ -197,36 +202,99 @@ int main(int argc, char *argv[])
             CACE_LOG_INFO("Agent object initialization completed");
         }
     }
+    if (!retval)
+    {
+        if (refda_agent_start(&agent))
+        {
+            CACE_LOG_ERR("Agent startup failed");
+            retval = 2;
+        }
+        else
+        {
+            CACE_LOG_INFO("Agent startup completed");
+        }
+    }
 
 #if defined(HAVE_LIBSYSTEMD)
     sd_notify(0, "READY=1");
 #endif
     CACE_LOG_INFO("READY");
 
-    if (!retval && !m_string_empty_p(hello_eid))
+    if (!retval && !m_string_empty_p(startup_exec))
     {
-        if (refda_agent_send_hello(&agent, m_string_get_cstr(hello_eid)))
+#if defined(ARI_TEXT_PARSE)
+        CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(startup_exec));
+        FILE *startup_file = fopen(m_string_get_cstr(startup_exec), "r");
+        if (!startup_file)
         {
-            CACE_LOG_ERR("Agent hello failed");
             retval = 3;
         }
         else
         {
-            CACE_LOG_INFO("Sent hello report");
+            // synthesize macro
+            cace_ari_t     target = CACE_ARI_INIT_UNDEFINED;
+            cace_ari_ac_t *tgt_ac = cace_ari_set_ac(&target, NULL);
+
+            if (cace_ari_macrofile_read(startup_file, tgt_ac->items))
+            {
+                retval = 3;
+            }
+            fclose(startup_file);
+
+            if (refda_agent_startup_exec(&agent, &target))
+            {
+                retval = 3;
+            }
+        }
+#else  // defined(ARI_TEXT_PARSE)
+        CACE_LOG_CRIT("This build of REFDA and CACE is not able to parse text ARIs");
+        retval = 3;
+#endif // defined(ARI_TEXT_PARSE)
+    }
+    m_string_clear(startup_exec);
+
+    if (!retval && !m_string_empty_p(hello_eid))
+    {
+        cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
+        // reference ari:/ietf/dtnma-agent/CTRL/report-on
+        cace_ari_ref_t *tgt_ref =
+            cace_ari_set_objref_path_intid(&target, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                           CACE_ARI_TYPE_CTRL, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_REPORT_ON);
+        cace_ari_ac_t *param_ac = cace_ari_params_set_ac(&tgt_ref->params, NULL);
+        {
+            cace_ari_t *item = cace_ari_list_push_back_new(param_ac->items);
+            // reference ari:/ietf/dtnma-agent/CONST/hello
+            cace_ari_set_objref_path_intid(item, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                           CACE_ARI_TYPE_CONST, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
+        }
+        {
+            cace_ari_t    *item    = cace_ari_list_push_back_new(param_ac->items);
+            cace_ari_ac_t *item_ac = cace_ari_set_ac(item, NULL);
+            {
+                cace_ari_t *mgr_ident = cace_ari_list_push_back_new(item_ac->items);
+                cace_ari_set_tstr(mgr_ident, m_string_get_cstr(hello_eid), false);
+            }
+        }
+
+        if (refda_agent_startup_exec(&agent, &target))
+        {
+            retval = 3;
         }
     }
     m_string_clear(hello_eid);
+
+    refda_agent_enable_exec(&agent);
 
     if (!retval)
     {
         // Block until stopped
         cace_daemon_run_wait(&agent.running);
-        CACE_LOG_INFO("Agent is shutting down");
     }
 
 #if defined(HAVE_LIBSYSTEMD)
     sd_notify(0, "STOPPING=1");
 #endif
+    CACE_LOG_INFO("Agent is shutting down");
 
     /* Join threads and wait for them to complete. */
     if (!retval)

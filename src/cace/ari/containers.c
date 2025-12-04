@@ -160,15 +160,10 @@ bool cace_ari_am_equal(const cace_ari_am_t *left, const cace_ari_am_t *right)
     return cace_ari_tree_equal_p(left->items, right->items);
 }
 
-void cace_ari_tbl_init(cace_ari_tbl_t *obj, size_t ncols, size_t nrows)
+void cace_ari_tbl_init(cace_ari_tbl_t *obj)
 {
     CHKVOID(obj);
-    obj->ncols = ncols;
     cace_ari_array_init(obj->items);
-    if (ncols && nrows)
-    {
-        cace_ari_array_resize(obj->items, ncols * nrows);
-    }
 }
 
 void cace_ari_tbl_deinit(cace_ari_tbl_t *obj)
@@ -217,6 +212,27 @@ bool cace_ari_tbl_equal(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right)
     return ((left->ncols == right->ncols) && cace_ari_array_equal_p(left->items, right->items));
 }
 
+void cace_ari_tbl_reset(cace_ari_tbl_t *obj, size_t ncols, size_t nrows)
+{
+    cace_ari_array_reset(obj->items);
+
+    obj->ncols = ncols;
+    if (ncols && nrows)
+    {
+        cace_ari_array_resize(obj->items, ncols * nrows);
+    }
+}
+
+size_t cace_ari_tbl_num_rows(const cace_ari_tbl_t *obj)
+{
+    if (!obj)
+    {
+        return 0;
+    }
+
+    return cace_ari_array_size(obj->items) / obj->ncols;
+}
+
 int cace_ari_tbl_move_row_ac(cace_ari_tbl_t *obj, cace_ari_ac_t *row)
 {
     CHKERR1(obj);
@@ -247,6 +263,8 @@ int cace_ari_tbl_move_row_array(cace_ari_tbl_t *obj, cace_ari_array_t row)
     }
 
     cace_ari_array_splice(obj->items, row);
+    cace_ari_array_clear(row);
+
     return 0;
 }
 
@@ -389,35 +407,35 @@ void cace_ari_lit_init_container(cace_ari_lit_t *lit, cace_ari_type_t ctype)
     {
         case CACE_ARI_TYPE_AC:
         {
-            cace_ari_ac_t *ctr = M_MEMORY_ALLOC(cace_ari_ac_t);
+            cace_ari_ac_t *ctr = CACE_MALLOC(sizeof(cace_ari_ac_t));
             cace_ari_ac_init(ctr);
             lit->value.as_ac = ctr;
             break;
         }
         case CACE_ARI_TYPE_AM:
         {
-            cace_ari_am_t *ctr = M_MEMORY_ALLOC(cace_ari_am_t);
+            cace_ari_am_t *ctr = CACE_MALLOC(sizeof(cace_ari_am_t));
             cace_ari_am_init(ctr);
             lit->value.as_am = ctr;
             break;
         }
         case CACE_ARI_TYPE_TBL:
         {
-            cace_ari_tbl_t *ctr = M_MEMORY_ALLOC(cace_ari_tbl_t);
-            cace_ari_tbl_init(ctr, 0, 0);
+            cace_ari_tbl_t *ctr = CACE_MALLOC(sizeof(cace_ari_tbl_t));
+            cace_ari_tbl_init(ctr);
             lit->value.as_tbl = ctr;
             break;
         }
         case CACE_ARI_TYPE_EXECSET:
         {
-            cace_ari_execset_t *ctr = M_MEMORY_ALLOC(cace_ari_execset_t);
+            cace_ari_execset_t *ctr = CACE_MALLOC(sizeof(cace_ari_execset_t));
             cace_ari_execset_init(ctr);
             lit->value.as_execset = ctr;
             break;
         }
         case CACE_ARI_TYPE_RPTSET:
         {
-            cace_ari_rptset_t *ctr = M_MEMORY_ALLOC(cace_ari_rptset_t);
+            cace_ari_rptset_t *ctr = CACE_MALLOC(sizeof(cace_ari_rptset_t));
             cace_ari_rptset_init(ctr);
             lit->value.as_rptset = ctr;
             break;

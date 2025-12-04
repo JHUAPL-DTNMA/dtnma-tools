@@ -63,7 +63,7 @@ static void prox_item_deinit(prox_item_t *obj)
     (INIT(API_2(prox_item_init)), CLEAR(API_2(prox_item_deinit)), INIT_SET(0), INIT_MOVE(0), SET(0), MOVE(0))
 
 // Thread-unsafe shared pointer for move semantics
-SHARED_WEAK_PTR_DEF(prox_item_ptr, prox_item_t)
+M_SHARED_WEAK_PTR_DEF(prox_item_ptr, prox_item_t)
 
 /// thread safe running state
 static cace_daemon_run_t running;
@@ -82,9 +82,8 @@ static BpSAP ion_sap;
 
 #define PROX_ITEM_QUEUE_DEPTH 10
 // Thread safe queue of shared pointers
-M_BUFFER_DEF(prox_item_queue, prox_item_ptr_t *, PROX_ITEM_QUEUE_DEPTH,
-             BUFFER_QUEUE | BUFFER_THREAD_SAFE | BUFFER_PUSH_INIT_POP_MOVE,
-             SHARED_PTR_OPLIST(prox_item_ptr, M_OPL_prox_item_t()))
+M_BUFFER_DEF(prox_item_queue, prox_item_ptr_t *, PROX_ITEM_QUEUE_DEPTH, M_BUFFER_QUEUE | M_BUFFER_PUSH_INIT_POP_MOVE,
+             M_SHARED_PTR_OPLIST(prox_item_ptr, M_OPL_prox_item_t()))
 
 /// Items outgoing to the BPA
 static prox_item_queue_t outgoing;
@@ -163,7 +162,7 @@ static void *sock_worker(void *arg _U_)
         {
             prox_item_ptr_t *item_ptr;
             // if there is actually an item present at this point
-            if (prox_item_queue_pop(&item_ptr, incoming))
+            if (prox_item_queue_pop_blocking(&item_ptr, incoming, true))
             {
                 prox_item_t *item = prox_item_ptr_ref(item_ptr);
 
@@ -219,7 +218,7 @@ static void *bp_send_worker(void *ctx _U_)
     {
         prox_item_ptr_t *item_ptr;
         // if there is actually an item present at this point
-        if (prox_item_queue_pop(&item_ptr, outgoing))
+        if (prox_item_queue_pop_blocking(&item_ptr, outgoing, true))
         {
             prox_item_t *item = prox_item_ptr_ref(item_ptr);
 
@@ -288,22 +287,18 @@ static void *bp_send_worker(void *ctx _U_)
             }
 
             // This is pointer-to-non-const because of ION API issue
-            char *dest_eid = NULL;
+            const char *dest_eid = NULL;
             if (result == 0)
             {
-                const cace_data_t *dest_data = cace_ari_cget_tstr(&item->peer);
-                if (dest_data)
+                dest_eid = cace_ari_cget_tstr_cstr(&item->peer);
+                if (!dest_eid)
                 {
-                    dest_eid = (char *)(dest_data->ptr);
-                }
-                else
-                {
-                    string_t buf;
-                    string_init(buf);
+                    m_string_t buf;
+                    m_string_init(buf);
                     cace_ari_text_encode(buf, &item->peer, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                     CACE_LOG_ERR("This transport can only send to text URI destinations, not %s",
                                  m_string_get_cstr(buf));
-                    string_clear(buf);
+                    m_string_clear(buf);
 
                     result = 4;
                 }
@@ -321,16 +316,17 @@ static void *bp_send_worker(void *ctx _U_)
                 BpAncillaryData       ancData       = { 0 };
                 ancData.flags                       = BP_RELIABLE | BP_BEST_EFFORT;
 
-                int result = bp_send(ion_sap, dest_eid, // destination
-                                     NULL,              // report-to
-                                     lifetime_s,        // lifetime in seconds
-                                     priority,          // Class-of-Service / Priority
-                                     custodySwitch,     // Custody Switch
-                                     rrFlags,           // SRR Flags
-                                     ackRequested,      // ACK Requested
-                                     &ancData,          // ancillary data
-                                     bundleZco,         // ADU
-                                     NULL               // bundleObj
+                int result = bp_send(ion_sap,
+                                     (char *)dest_eid, // destination
+                                     NULL,             // report-to
+                                     lifetime_s,       // lifetime in seconds
+                                     priority,         // Class-of-Service / Priority
+                                     custodySwitch,    // Custody Switch
+                                     rrFlags,          // SRR Flags
+                                     ackRequested,     // ACK Requested
+                                     &ancData,         // ancillary data
+                                     bundleZco,        // ADU
+                                     NULL              // bundleObj
                 );
                 if (result <= 0)
                 {

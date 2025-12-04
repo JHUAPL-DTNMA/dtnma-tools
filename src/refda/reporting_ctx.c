@@ -16,12 +16,22 @@
  * limitations under the License.
  */
 #include "reporting_ctx.h"
+#include "acl.h"
 #include "cace/util/defs.h"
 
-void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, refda_runctx_t *parent)
+void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, const refda_runctx_t *runctx, const cace_ari_t *mgr_ident)
 {
     CHKVOID(obj);
-    obj->parent = parent;
+
+    obj->runctx = CACE_MALLOC(sizeof(refda_runctx_t));
+    refda_runctx_init(obj->runctx);
+
+    obj->runctx->agent = runctx->agent;
+    cace_ari_init_copy(&obj->runctx->mgr_ident, mgr_ident);
+    cace_ari_set_null(&obj->runctx->nonce);
+    // Check ACL for this manager
+    refda_runctx_check_acl(obj->runctx);
+
     cace_ari_list_init(obj->items);
 }
 
@@ -29,5 +39,8 @@ void refda_reporting_ctx_deinit(refda_reporting_ctx_t *obj)
 {
     CHKVOID(obj);
     cace_ari_list_clear(obj->items);
-    obj->parent = NULL;
+
+    refda_runctx_deinit(obj->runctx);
+    CACE_FREE(obj->runctx);
+    obj->runctx = NULL;
 }

@@ -46,13 +46,12 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo rm /var/lib/man-db/auto-update
           sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build \
               ruby pkg-config gcc g++ ccache patch autoconf libtool \
               ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
-              ${{matrix.deps=='full' && 'flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev' || ''}} \
+              ${{matrix.deps=='full' && 'flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev' || ''}} libpcre2-dev \
               valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -64,7 +63,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
               ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
-              ${{matrix.deps=='full' && 'flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel' || ''}} \
+              ${{matrix.deps=='full' && 'flex libfl-static bison civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel' || ''}} pcre2-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
@@ -194,6 +193,7 @@ jobs:
       - name: Test
         env:
           TEST_MEMCHECK: '1'
+          TEST_LOG_LEVEL: 'info'
           DB_HOST: 'postgres'
           DB_USER: 'tester'
           DB_PASSWORD: 'tester'

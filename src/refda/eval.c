@@ -107,17 +107,17 @@ static int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        CACE_LOG_DEBUG("Evaluating OPER %s with %d operands", string_get_cstr(deref->obj->obj_id.name),
+        CACE_LOG_DEBUG("Evaluating OPER %s with %d operands", m_string_get_cstr(deref->obj->obj_id.name),
                        cace_ari_array_size(operctx.operands.ordered));
     }
     (desc->evaluate)(&operctx);
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(operctx.result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("evaluation finished with result %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("evaluation finished with result %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     int retval = 0;
@@ -148,11 +148,11 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Evaluation input %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("Evaluation input %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     /* FIXME: handle target of object reference for rule/ctrl conditions.
@@ -239,11 +239,11 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
             cace_ari_set_copy(result, cace_ari_list_front(eval_ctx.stack));
             if (cace_log_is_enabled_for(LOG_DEBUG))
             {
-                string_t buf;
-                string_init(buf);
+                m_string_t buf;
+                m_string_init(buf);
                 cace_ari_text_encode(buf, result, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_DEBUG("Evaluation result %s", string_get_cstr(buf));
-                string_clear(buf);
+                CACE_LOG_DEBUG("Evaluation result %s", m_string_get_cstr(buf));
+                m_string_clear(buf);
             }
         }
         else
@@ -254,4 +254,28 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
 
     refda_eval_ctx_deinit(&eval_ctx);
     return retval;
+}
+
+int refda_eval_condition(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *condition)
+{
+    cace_ari_t ari_res = CACE_ARI_INIT_UNDEFINED;
+    int        res     = refda_eval_target(runctx, &ari_res, condition);
+
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to evaluate condition");
+    }
+    else
+    {
+        const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
+        res                            = cace_amm_type_convert(typeobj, result, &ari_res);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to convert condition result to boolean");
+        }
+    }
+
+    cace_ari_deinit(&ari_res);
+
+    return res;
 }

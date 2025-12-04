@@ -111,13 +111,13 @@ static int read_text(cace_ari_t *inval, FILE *source)
         return -1;
     }
 
-    string_t intext;
-    string_init_set_str(intext, buf);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, buf);
     free(buf);
 
     char *errm = NULL;
     res        = cace_ari_text_decode(inval, intext, &errm);
-    string_clear(intext);
+    m_string_clear(intext);
     if (res)
     {
         fprintf(stderr, "Failed to decode text ARI (err %d): %s\n", res, errm);
@@ -185,15 +185,15 @@ static int read_cborhex(cace_ari_t *inval, FILE *source)
         return -1;
     }
 
-    string_t inhex;
-    string_init_set_str(inhex, buf);
-    string_strim(inhex); // trim spaces
+    m_string_t inhex;
+    m_string_init_set_cstr(inhex, buf);
+    m_string_strim(inhex); // trim spaces
     free(buf);
 
     cace_data_t cbordata;
     cace_data_init(&cbordata);
     res = cace_base16_decode(&cbordata, inhex);
-    string_clear(inhex);
+    m_string_clear(inhex);
     if (res)
     {
         fprintf(stderr, "Failed to decode hex input (err %d)\n", res);
@@ -260,8 +260,8 @@ static int read_auto(cace_ari_form_t *inform, cace_ari_form_t *outform, cace_ari
 
 static int write_text(const cace_ari_t *val, FILE *dest, cace_ari_text_enc_opts_t opts)
 {
-    string_t outtext;
-    string_init(outtext);
+    m_string_t outtext;
+    m_string_init(outtext);
 
     int res = cace_ari_text_encode(outtext, val, opts);
     if (res)
@@ -270,8 +270,8 @@ static int write_text(const cace_ari_t *val, FILE *dest, cace_ari_text_enc_opts_
         return 1;
     }
 
-    res = fprintf(dest, "%s\n", string_get_cstr(outtext));
-    string_clear(outtext);
+    res = fprintf(dest, "%s\n", m_string_get_cstr(outtext));
+    m_string_clear(outtext);
     if (res < 1)
     {
         char buf[256];
@@ -316,8 +316,8 @@ static int write_cborhex(const cace_ari_t *val, FILE *dest)
         return 1;
     }
 
-    string_t outhex;
-    string_init(outhex);
+    m_string_t outhex;
+    m_string_init(outhex);
     res = cace_base16_encode(outhex, &cbordata, true);
     cace_data_deinit(&cbordata);
     if (res)
@@ -325,8 +325,8 @@ static int write_cborhex(const cace_ari_t *val, FILE *dest)
         return 2;
     }
 
-    res = fprintf(dest, "%s\n", string_get_cstr(outhex));
-    string_clear(outhex);
+    res = fprintf(dest, "%s\n", m_string_get_cstr(outhex));
+    m_string_clear(outhex);
     if (res < 1)
     {
         char buf[256];
@@ -341,15 +341,15 @@ static int write_cborhex(const cace_ari_t *val, FILE *dest)
 static void show_usage(const char *argv0)
 {
     fprintf(stderr,
-            "Usage: %s {-l <log-level>} "
-            "[--source {filename or -}] "
+            "Usage: %s {--log-level,-l <log-level>} "
+            "[--source,-s {filename or -}] "
 #if defined(ARI_TEXT_PARSE)
-            "[--inform {auto,text,cbor,cborhex}] "
+            "[--inform,-i {auto,text,cbor,cborhex}] "
 #else
-            "[--inform {cbor,cborhex}] "
+            "[--inform,-i {cbor,cborhex}] "
 #endif /* ARI_TEXT_PARSE */
-            "[--dest {filename or -}] "
-            "[--outform {auto,text,cbor,cborhex}]\n",
+            "[--dest,-d {filename or -}] "
+            "[--outform,-o {auto,text,cbor,cborhex}]\n",
             argv0);
 }
 

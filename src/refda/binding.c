@@ -33,8 +33,6 @@
 #include <cace/util/defs.h>
 #include <cace/util/logging.h>
 
-static int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *store);
-
 static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace_amm_obj_store_t *store)
 {
     // do not rebind
@@ -45,11 +43,11 @@ static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(semtype->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Binding use of %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("Binding use of %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     int failcnt = 0;
@@ -69,35 +67,51 @@ static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace
                 }
                 else
                 {
-                    CACE_LOG_WARNING("Binding failed because object has no TYPEDEF descriptor");
-                    failcnt = 1;
+                    CACE_LOG_CRIT("Binding failed because object has no TYPEDEF descriptor");
+                    failcnt += 1;
                 }
             }
             else
             {
-                CACE_LOG_WARNING("Binding failed because object is not a TYPEDEF");
-                failcnt = 1;
+                m_string_t buf;
+                m_string_init(buf);
+                cace_ari_text_encode(buf, &(semtype->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_WARNING("Binding failed because object is not a TYPEDEF, referenced as %s",
+                                 m_string_get_cstr(buf));
+                m_string_clear(buf);
+
+                failcnt += 1;
             }
         }
         else
         {
-            CACE_LOG_WARNING("Binding failed because TYPEDEF lookup failed");
-            failcnt = 1;
+            m_string_t buf;
+            m_string_init(buf);
+            cace_ari_text_encode(buf, &(semtype->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_WARNING("Binding failed because type use lookup failed, need %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
+
+            failcnt += 1;
         }
 
         cace_amm_lookup_deinit(&deref);
     }
     else
     {
-        const int64_t *aritype = cace_ari_get_aritype(&(semtype->name));
+        const int64_t *aritype = cace_ari_get_aritype_int(&(semtype->name));
         if (aritype)
         {
             semtype->base = cace_amm_type_get_builtin((cace_ari_type_t)*aritype);
         }
         else
         {
-            CACE_LOG_WARNING("Binding failed because literal is not an ARITYPE");
-            failcnt = 1;
+            m_string_t buf;
+            m_string_init(buf);
+            cace_ari_text_encode(buf, &(semtype->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_WARNING("Binding failed because literal is not an ARITYPE, is %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
+
+            failcnt += 1;
         }
     }
 
@@ -166,7 +180,7 @@ static int refda_binding_semtype_seq(cace_amm_semtype_seq_t *semtype, const cace
     return refda_binding_typeobj(&(semtype->item_type), store);
 }
 
-static int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *store)
+int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *store)
 {
     switch (typeobj->type_class)
     {
@@ -202,7 +216,7 @@ static int refda_binding_fparams(cace_amm_formal_param_list_t fparams, const cac
          cace_amm_formal_param_list_next(fit))
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_ref(fit);
-        CACE_LOG_DEBUG("Binding formal parameter \"%s\" (index %zd)", string_get_cstr(fparam->name), fparam->index);
+        CACE_LOG_DEBUG("Binding formal parameter \"%s\" (index %zd)", m_string_get_cstr(fparam->name), fparam->index);
         failcnt += refda_binding_typeobj(&(fparam->typeobj), store);
     }
 
@@ -221,11 +235,11 @@ static int refda_binding_ident_bases(refda_amm_ident_base_list_t bases, const ca
 
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &(base->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("Binding IDENT base of %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("Binding IDENT base of %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
 
         cace_amm_lookup_t deref;
@@ -248,13 +262,24 @@ static int refda_binding_ident_bases(refda_amm_ident_base_list_t bases, const ca
             }
             else
             {
-                CACE_LOG_WARNING("Binding failed because object is not an IDENT");
+                m_string_t buf;
+                m_string_init(buf);
+                cace_ari_text_encode(buf, &(base->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_WARNING("Binding failed because object is not an IDENT, referenced as %s",
+                                 m_string_get_cstr(buf));
+                m_string_clear(buf);
+
                 failcnt += 1;
             }
         }
         else
         {
-            CACE_LOG_WARNING("Binding failed because IDENT lookup failed");
+            m_string_t buf;
+            m_string_init(buf);
+            cace_ari_text_encode(buf, &(base->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_WARNING("Binding failed because IDENT base lookup failed, need %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
+
             failcnt += 1;
         }
 
@@ -390,7 +415,7 @@ int refda_binding_tbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *stor
 
 int refda_binding_obj(cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
 {
-    CACE_LOG_DEBUG("Binding object ./%s/%s", cace_ari_type_to_name(obj_type), string_get_cstr(obj->obj_id.name));
+    CACE_LOG_DEBUG("Binding object ./%s/%s", cace_ari_type_to_name(obj_type), m_string_get_cstr(obj->obj_id.name));
     switch (obj_type)
     {
         case CACE_ARI_TYPE_IDENT:

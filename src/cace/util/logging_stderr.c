@@ -71,8 +71,8 @@ static void cace_log_event_init_set(cace_log_event_t *obj, const cace_log_event_
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_init_set(obj->context, src->context);
-    string_init_set(obj->message, src->message);
+    m_string_init_set(obj->context, src->context);
+    m_string_init_set(obj->message, src->message);
 }
 
 static void cace_log_event_init_move(cace_log_event_t *obj, cace_log_event_t *src)
@@ -80,8 +80,8 @@ static void cace_log_event_init_move(cace_log_event_t *obj, cace_log_event_t *sr
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_init_move(obj->context, src->context);
-    string_init_move(obj->message, src->message);
+    m_string_init_move(obj->context, src->context);
+    m_string_init_move(obj->message, src->message);
 }
 
 static void cace_log_event_set(cace_log_event_t *obj, const cace_log_event_t *src)
@@ -89,8 +89,8 @@ static void cace_log_event_set(cace_log_event_t *obj, const cace_log_event_t *sr
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_set(obj->context, src->context);
-    string_set(obj->message, src->message);
+    m_string_set(obj->context, src->context);
+    m_string_set(obj->message, src->message);
 }
 
 void cace_log_event_deinit(cace_log_event_t *obj)
@@ -105,8 +105,7 @@ void cace_log_event_deinit(cace_log_event_t *obj)
      INIT_MOVE(API_6(cace_log_event_init_move)), SET(API_6(cace_log_event_set)), CLEAR(API_2(cace_log_event_deinit)))
 
 /// @cond Doxygen_Suppress
-M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE,
-             M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
+M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_PUSH_INIT_POP_MOVE)
 /// @endcond
 
 /// Shared least severity
@@ -118,6 +117,8 @@ static cace_log_queue_t event_queue;
 static pthread_t thr_sink;
 /// True if ::thr_sink is valid
 static atomic_bool thr_valid = ATOMIC_VAR_INIT(false);
+/// Log internal error once
+static atomic_bool did_crit = ATOMIC_VAR_INIT(false);
 
 static void write_log(const cace_log_event_t *event)
 {
@@ -308,13 +309,17 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
         }
         else
         {
-            cace_log_event_t manual;
-            cace_log_event_init(&manual);
-            manual.severity = LOG_CRIT;
-            m_string_set_cstr(manual.message, "cace_log() called before cace_openlog()");
-            write_log(&manual);
-            cace_log_event_deinit(&manual);
+            if (!atomic_load(&did_crit))
+            {
+                cace_log_event_t manual;
+                cace_log_event_init(&manual);
+                manual.severity = LOG_CRIT;
+                m_string_set_cstr(manual.message, "cace_log() called before cace_openlog()");
+                write_log(&manual);
+                cace_log_event_deinit(&manual);
 
+                atomic_store(&did_crit, true);
+            }
             write_log(&event);
         }
     }

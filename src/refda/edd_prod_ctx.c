@@ -59,21 +59,21 @@ static int refda_edd_prod_check_result(refda_edd_prod_ctx_t *ctx)
         const bool valid   = cace_amm_type_get_name(&(ctx->edd->prod_type), &ariname);
         if (valid)
         {
-            string_t buf;
-            string_init(buf);
+            m_string_t buf;
+            m_string_init(buf);
             cace_ari_text_encode(buf, &ariname, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("EDD type %s", string_get_cstr(buf));
-            string_clear(buf);
+            CACE_LOG_DEBUG("EDD type %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
         }
         cace_ari_deinit(&ariname);
     }
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        string_t buf;
-        string_init(buf);
+        m_string_t buf;
+        m_string_init(buf);
         cace_ari_text_encode(buf, &(ctx->prodctx->value), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("EDD result value %s", string_get_cstr(buf));
-        string_clear(buf);
+        CACE_LOG_DEBUG("EDD result value %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     bool valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctx->edd->prod_type), &(ctx->prodctx->value)));

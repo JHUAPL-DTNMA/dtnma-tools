@@ -33,7 +33,7 @@ typedef struct refda_msgdata_s
 {
     /// The peer identity as opaque value
     cace_ari_t ident;
-    /// The message value
+    /// The message value (single EXECSET or RPTSET)
     cace_ari_t value;
 } refda_msgdata_t;
 
@@ -57,7 +57,7 @@ static inline void refda_msgdata_init_set(refda_msgdata_t *obj, const refda_msgd
      INIT_MOVE(API_6(refda_msgdata_init_move)), CLEAR(API_2(refda_msgdata_deinit)), SET(API_6(refda_msgdata_set)))
 
 /// @cond Doxygen_Suppress
-QUEUE_SPSC_DEF(refda_msgdata_queue, refda_msgdata_t, BUFFER_QUEUE | BUFFER_PUSH_INIT_POP_MOVE)
+M_QUEUE_SPSC_DEF(refda_msgdata_queue, refda_msgdata_t, M_BUFFER_QUEUE | M_BUFFER_PUSH_INIT_POP_MOVE)
 /// @endcond
 
 #ifdef __cplusplus

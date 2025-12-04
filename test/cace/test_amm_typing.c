@@ -17,6 +17,7 @@
  */
 #include <cace/amm/semtype.h>
 #include <cace/amm/typing.h>
+#include <cace/amm/obj_store.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
 #include <cace/util/logging.h>
@@ -25,25 +26,30 @@
 // Allow this macro
 #define TEST_CASE(...)
 
+/// Dummy store for semantic types
+static cace_amm_obj_store_t store;
+
 void suiteSetUp(void)
 {
     cace_openlog();
+    cace_amm_obj_store_init(&store);
 }
 
 int suiteTearDown(int failures)
 {
+    cace_amm_obj_store_deinit(&store);
     cace_closelog();
     return failures;
 }
 
 static void check_match(const cace_amm_type_t *type, const char *inhex, cace_amm_type_match_res_t expect)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     int res = cace_base16_decode(&indata, intext);
-    string_clear(intext);
+    m_string_clear(intext);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_decode() failed");
 
     cace_ari_t val = CACE_ARI_INIT_UNDEFINED;
@@ -59,12 +65,12 @@ static void check_match(const cace_amm_type_t *type, const char *inhex, cace_amm
 
 static void check_convert(const cace_amm_type_t *type, const char *inhex, const char *expecthex)
 {
-    string_t intext;
-    string_init_set_str(intext, inhex);
+    m_string_t intext;
+    m_string_init_set_cstr(intext, inhex);
     cace_data_t indata;
     cace_data_init(&indata);
     int res = cace_base16_decode(&indata, intext);
-    string_clear(intext);
+    m_string_clear(intext);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_decode() failed");
 
     cace_ari_t inval = CACE_ARI_INIT_UNDEFINED;
@@ -90,14 +96,14 @@ static void check_convert(const cace_amm_type_t *type, const char *inhex, const 
     res = cace_ari_cbor_encode(&outdata, &outval);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_encode() failed");
 
-    string_t outhex;
-    string_init(outhex);
+    m_string_t outhex;
+    m_string_init(outhex);
     res = cace_base16_encode(outhex, &outdata, true);
     cace_data_deinit(&outdata);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_base16_encode() failed");
 
-    TEST_ASSERT_EQUAL_STRING(expecthex, string_get_cstr(outhex));
-    string_clear(outhex);
+    TEST_ASSERT_EQUAL_STRING(expecthex, m_string_get_cstr(outhex));
+    m_string_clear(outhex);
     cace_ari_deinit(&outval);
 }
 
@@ -134,7 +140,7 @@ TEST_CASE(CACE_ARI_TYPE_CTRL)
 TEST_CASE(CACE_ARI_TYPE_OPER)
 TEST_CASE(CACE_ARI_TYPE_SBR)
 TEST_CASE(CACE_ARI_TYPE_TBR)
-void test_amm_type_get_name(cace_ari_type_t type)
+void test_amm_type_get_name_builtin(cace_ari_type_t type)
 {
     const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(type);
     TEST_ASSERT_NOT_NULL(typeobj);
@@ -143,9 +149,66 @@ void test_amm_type_get_name(cace_ari_type_t type)
     TEST_ASSERT_TRUE(cace_amm_type_get_name(typeobj, &name));
 
     TEST_ASSERT_TRUE(cace_ari_is_lit_typed(&name, CACE_ARI_TYPE_ARITYPE));
-    const cace_data_t *data = cace_ari_cget_tstr(&name);
-    TEST_ASSERT_NOT_NULL(data);
-    TEST_PRINTF("got name %s", (const char *)(data->ptr));
+    const char *cstr = cace_ari_cget_tstr_cstr(&name);
+    TEST_ASSERT_NOT_NULL(cstr);
+    TEST_PRINTF("got name %s", cstr);
+    TEST_ASSERT_EQUAL_STRING(cace_ari_type_to_name(type), cstr);
+}
+
+TEST_CASE(CACE_ARI_TYPE_LITERAL)
+TEST_CASE(CACE_ARI_TYPE_NULL)
+TEST_CASE(CACE_ARI_TYPE_BOOL)
+TEST_CASE(CACE_ARI_TYPE_BYTE)
+TEST_CASE(CACE_ARI_TYPE_INT)
+TEST_CASE(CACE_ARI_TYPE_UINT)
+TEST_CASE(CACE_ARI_TYPE_VAST)
+TEST_CASE(CACE_ARI_TYPE_UVAST)
+TEST_CASE(CACE_ARI_TYPE_REAL32)
+TEST_CASE(CACE_ARI_TYPE_REAL64)
+TEST_CASE(CACE_ARI_TYPE_TEXTSTR)
+TEST_CASE(CACE_ARI_TYPE_BYTESTR)
+TEST_CASE(CACE_ARI_TYPE_TP)
+TEST_CASE(CACE_ARI_TYPE_TD)
+TEST_CASE(CACE_ARI_TYPE_LABEL)
+TEST_CASE(CACE_ARI_TYPE_CBOR)
+TEST_CASE(CACE_ARI_TYPE_ARITYPE)
+TEST_CASE(CACE_ARI_TYPE_AC)
+TEST_CASE(CACE_ARI_TYPE_AM)
+TEST_CASE(CACE_ARI_TYPE_TBL)
+TEST_CASE(CACE_ARI_TYPE_EXECSET)
+TEST_CASE(CACE_ARI_TYPE_RPTSET)
+TEST_CASE(CACE_ARI_TYPE_OBJECT)
+TEST_CASE(CACE_ARI_TYPE_NAMESPACE)
+TEST_CASE(CACE_ARI_TYPE_IDENT)
+TEST_CASE(CACE_ARI_TYPE_TYPEDEF)
+TEST_CASE(CACE_ARI_TYPE_CONST)
+TEST_CASE(CACE_ARI_TYPE_VAR)
+TEST_CASE(CACE_ARI_TYPE_EDD)
+TEST_CASE(CACE_ARI_TYPE_CTRL)
+TEST_CASE(CACE_ARI_TYPE_OPER)
+TEST_CASE(CACE_ARI_TYPE_SBR)
+TEST_CASE(CACE_ARI_TYPE_TBR)
+void test_amm_type_set_name_builtin(cace_ari_type_t type)
+{
+    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+
+    // convert from integer value
+    cace_ari_set_aritype(&name, type);
+    cace_amm_type_t got = CACE_AMM_TYPE_INIT_INVALID;
+    TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_name(&got, &name, &store));
+    TEST_ASSERT_EQUAL_INT(CACE_AMM_TYPE_BUILTIN, got.type_class);
+    TEST_ASSERT_EQUAL_PTR(type, got.as_builtin.ari_type);
+    cace_amm_type_deinit(&got);
+
+    // convert from text value
+    cace_ari_set_aritype_text(&name, type);
+    got = CACE_AMM_TYPE_INIT_INVALID;
+    TEST_ASSERT_EQUAL_INT(0, cace_amm_type_set_name(&got, &name, &store));
+    TEST_ASSERT_EQUAL_INT(CACE_AMM_TYPE_BUILTIN, got.type_class);
+    TEST_ASSERT_EQUAL_PTR(type, got.as_builtin.ari_type);
+    cace_amm_type_deinit(&got);
+
+    cace_ari_deinit(&name);
 }
 
 TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefined
