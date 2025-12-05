@@ -652,15 +652,12 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/last-msg-rx-time))')]
         )
-        #rpts = self._wait_msg(mgr_ix=0)
         msg_vals = self._wait_msg(mgr_ix=0)
         self.assertEqual(1, len(msg_vals))
         rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, numpy.datetime64)
-        #self.assertEqual(True, rpt.items[0].value) 
-        # commented out because AssertionError: 0 != np.datetime64('2025-12-05T19:58:58.129366556')
 
     def test_odm_var_const(self):
         self._start()
