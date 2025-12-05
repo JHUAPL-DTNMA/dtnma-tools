@@ -795,7 +795,7 @@ static void refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time(refda_edd_prod_ctx_t
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent = ctx->prodctx->parent->agent;
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
 
     if (pthread_mutex_lock(&agent->instr.mutex) != 0)
     {
