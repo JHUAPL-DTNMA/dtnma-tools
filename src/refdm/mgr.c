@@ -178,7 +178,7 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
 
     if (pthread_mutex_lock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to lock mutex");
+        CACE_LOG_CRIT("failed to lock mutex");
         return NULL;
     }
 
@@ -228,7 +228,7 @@ refdm_agent_t *refdm_mgr_agent_get_eid(refdm_mgr_t *mgr, const char *eid)
 
     if (pthread_mutex_lock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to lock mutex");
+        CACE_LOG_CRIT("failed to lock mutex");
         return NULL;
     }
 
@@ -236,7 +236,7 @@ refdm_agent_t *refdm_mgr_agent_get_eid(refdm_mgr_t *mgr, const char *eid)
 
     if (pthread_mutex_unlock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to unlock mutex");
+        CACE_LOG_CRIT("failed to unlock mutex");
     }
 
     return got ? *got : NULL;
@@ -248,7 +248,7 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
     if (pthread_mutex_lock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to lock mutex");
+        CACE_LOG_CRIT("failed to lock mutex");
         return NULL;
     }
 
@@ -256,7 +256,7 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
     if (pthread_mutex_unlock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to unlock mutex");
+        CACE_LOG_CRIT("failed to unlock mutex");
     }
 
     return got ? *got : NULL;

@@ -806,7 +806,7 @@ static void refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time(refda_edd_prod_ctx_t
     cace_ari_set_copy(&result, &agent->instr.last_time_recv);
     if (pthread_mutex_unlock(&agent->instr.mutex) != 0)
     {
-        CACE_LOG_ERR(REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE);
+        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE);
         return;
     }
 
