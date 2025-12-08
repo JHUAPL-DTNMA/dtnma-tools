@@ -121,19 +121,19 @@ void refda_agent_deinit(refda_agent_t *agent);
 
 /** Lock the object mutex on an agent and return if failed.
  */
-#define REFDA_AGENT_LOCK(agent, err)                  \
-    if (pthread_mutex_lock(&(agent->objs_mutex)))     \
-    {                                                 \
+#define REFDA_AGENT_LOCK(agent, err)                   \
+    if (pthread_mutex_lock(&(agent->objs_mutex)))      \
+    {                                                  \
         CACE_LOG_CRIT("failed to lock agent objects"); \
-        return err;                                   \
+        return err;                                    \
     }
 /** Unlock the object mutex on an agent and return if failed.
  */
-#define REFDA_AGENT_UNLOCK(agent, err)                  \
-    if (pthread_mutex_unlock(&(agent->objs_mutex)))     \
-    {                                                   \
+#define REFDA_AGENT_UNLOCK(agent, err)                   \
+    if (pthread_mutex_unlock(&(agent->objs_mutex)))      \
+    {                                                    \
         CACE_LOG_CRIT("failed to unlock agent objects"); \
-        return err;                                     \
+        return err;                                      \
     }
 
 /** Store the current timestamp in an ARI.
