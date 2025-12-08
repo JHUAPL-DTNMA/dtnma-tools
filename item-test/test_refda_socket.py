@@ -28,7 +28,6 @@ import sys
 import tempfile
 from typing import List, Optional
 import urllib.parse
-from urllib.parse import quote
 import unittest
 import cbor2
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
@@ -741,6 +740,7 @@ class TestRefdaSocket(unittest.TestCase):
         rptset = msg_vals[0].value
         rpt = rptset.reports[0]
         self.assertEqual(1, len(rpt.items))
+        self.assertEqual(rpt.items[0].type_id, ari.StructType.TP)
         self.assertIsInstance(rpt.items[0].value, numpy.datetime64)
 
     def test_odm_var_const(self):
@@ -947,7 +947,8 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(True, rpt.items[0].value)
 
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), //ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version), null))')]
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), //ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version), null))')]
         )
         msg_vals = self._wait_msg(mgr_ix=0)
         rptset = msg_vals[0].value

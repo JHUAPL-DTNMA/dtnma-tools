@@ -799,7 +799,7 @@ static void refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time(refda_edd_prod_ctx_t
 
     if (pthread_mutex_lock(&agent->instr.mutex) != 0)
     {
-        CACE_LOG_ERR(REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE);
+        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE);
         return;
     }
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
@@ -1021,7 +1021,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
     if (pthread_mutex_lock(&(agent->exec_state_mutex)))
     {
-        CACE_LOG_ERR("failed to lock exec_state_mutex");
+        CACE_LOG_CRIT("failed to lock exec_state_mutex");
         return;
     }
 
@@ -1085,7 +1085,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
     {
-        CACE_LOG_ERR("failed to unlock exec_state_mutex");
+        CACE_LOG_CRIT("failed to unlock exec_state_mutex");
         return;
     }
     /*
