@@ -907,7 +907,7 @@ int refdm_db_clear_rptset(int32_t agent_idx)
     int ecode;
     if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
     {
-        CACE_LOG_ERR("failed to lock mutex");
+        CACE_LOG_CRIT("failed to lock mutex");
         return RET_FAIL_DATABASE_CONNECTION;
     }
 
@@ -931,7 +931,7 @@ int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
     int ecode;
     if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
     {
-        CACE_LOG_ERR("failed to lock mutex");
+        CACE_LOG_CRIT("failed to lock mutex");
         return RET_FAIL_DATABASE_CONNECTION;
     }
 
@@ -964,7 +964,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
     int ecode;
     if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
     {
-        CACE_LOG_ERR("failed to lock mutex");
+        CACE_LOG_CRIT("failed to lock mutex");
         return RET_FAIL_DATABASE_CONNECTION;
     }
 
