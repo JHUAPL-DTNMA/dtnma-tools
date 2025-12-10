@@ -4126,32 +4126,6 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
 }
 
 /**
- * Helper function to get LABEL data as an integer
- */
-static int get_label_as_int(cace_ari_t *ari, int *out)
-{
-    CHKERR1(ari);
-    CHKERR1(out);
-    if (!cace_ari_is_lit_typed(ari, CACE_ARI_TYPE_LABEL))
-    {
-        return 1;
-    }
-    switch (ari->as_lit.prim_type)
-    {
-        case CACE_ARI_PRIM_INT64:
-            *out = (int)ari->as_lit.value.as_int64;
-            break;
-        case CACE_ARI_PRIM_UINT64:
-            *out = (int)ari->as_lit.value.as_uint64;
-            break;
-        default:
-            return 2;
-    }
-
-    return 0;
-}
-
-/**
  * Helper function to substitute any LABELS in the expression with corresponding
  * data from the current table row.
  *
@@ -4168,8 +4142,8 @@ static void tbl_filter_substitute_row_values(cace_ari_t *expr, cace_ari_tbl_t *t
             cace_ari_t *item     = cace_ari_list_ref(lit);
             int         label_id = 0;
 
-            int res = get_label_as_int(item, &label_id);
-            if (!res)
+            int res = cace_ari_get_int(item, &label_id);
+            if (!res && cace_ari_is_lit_typed(item, CACE_ARI_TYPE_LABEL))
             {
                 // Get column index
                 int col_index = label_id;
