@@ -304,7 +304,7 @@ static int cace_ari_map_tbl(cace_ari_tbl_t *out, const cace_ari_tbl_t *in, const
 static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const cace_ari_translator_t *translator,
                                   const cace_ari_translate_ctx_t *ctx)
 {
-    int retval;
+    int retval = 0;
 
     // handle main ARI first
     if (translator->map_ari)
