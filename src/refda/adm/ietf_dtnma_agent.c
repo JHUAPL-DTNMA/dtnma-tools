@@ -4316,6 +4316,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
             if (res)
             {
                 CACE_LOG_ERR("Unable to translate ARI, error %d", res);
+                cace_ari_deinit(&current_row); // No longer needed at this point
                 return;
             }
         }
