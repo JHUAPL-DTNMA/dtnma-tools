@@ -72,6 +72,19 @@ void *refda_ingress_worker(void *arg)
 
                 atomic_fetch_add(&agent->instr.num_execset_recv, 1);
             }
+
+            // Update the (mutex proctected) agent.instr.last_time_recv with the message's meta timestamp
+            if (pthread_mutex_lock(&agent->instr.mutex) != 0)
+            {
+                CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE);
+                continue;
+            }
+            cace_ari_set_copy(&agent->instr.last_time_recv, &meta.timestamp);
+            if (pthread_mutex_unlock(&agent->instr.mutex) != 0)
+            {
+                CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE);
+                continue;
+            }
         }
 
         if (recv_res)

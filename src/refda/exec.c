@@ -114,7 +114,7 @@ int refda_exec_waiting(refda_agent_t *agent)
     // the sequences themselves will not be touched outside of this worker
     if (pthread_mutex_lock(&(agent->exec_state_mutex)))
     {
-        CACE_LOG_ERR("failed to lock exec_state_mutex");
+        CACE_LOG_CRIT("failed to lock exec_state_mutex");
         return 2;
     }
 

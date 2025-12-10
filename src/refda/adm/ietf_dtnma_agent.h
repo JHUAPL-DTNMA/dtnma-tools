@@ -55,6 +55,8 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION 1
 /// For ./EDD/capability
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_CAPABILITY 2
+/// For ./EDD/last-msg-rx-time
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_LAST_MSG_RX_TIME 17
 /// For ./EDD/num-msg-rx
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_RX 3
 /// For ./EDD/num-msg-rx-failed

@@ -167,7 +167,11 @@ static int agentsGetHandler(struct mg_connection *conn)
         return HTTP_INTERNAL_ERROR;
     }
 
-    pthread_mutex_lock(&mgr->agent_mutex);
+    if (pthread_mutex_lock(&mgr->agent_mutex))
+    {
+        CACE_LOG_CRIT("failed to lock mutex");
+        return HTTP_INTERNAL_ERROR;
+    }
     refdm_agent_list_it_t agent_it;
     for (refdm_agent_list_it(agent_it, mgr->agent_list); !refdm_agent_list_end_p(agent_it);
          refdm_agent_list_next(agent_it))

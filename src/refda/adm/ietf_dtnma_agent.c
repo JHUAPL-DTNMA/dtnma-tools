@@ -779,6 +779,45 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
      */
 }
 
+/* Name: last-msg-rx-time
+ * Description:
+ *   Returns the time of the last received message. Note the returned time
+ *   is relative to the agent.
+ *
+ * Parameters: none
+ *
+ * Produced type: ari:/ARITYPE/TP
+ */
+static void refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time(refda_edd_prod_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time BODY
+     * +-------------------------------------------------------------------------+
+     */
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
+
+    if (pthread_mutex_lock(&agent->instr.mutex) != 0)
+    {
+        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE);
+        return;
+    }
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_copy(&result, &agent->instr.last_time_recv);
+    if (pthread_mutex_unlock(&agent->instr.mutex) != 0)
+    {
+        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE);
+        return;
+    }
+
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: num-msg-rx
  * Description MISSING
  *
@@ -982,7 +1021,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
     if (pthread_mutex_lock(&(agent->exec_state_mutex)))
     {
-        CACE_LOG_ERR("failed to lock exec_state_mutex");
+        CACE_LOG_CRIT("failed to lock exec_state_mutex");
         return;
     }
 
@@ -1046,7 +1085,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
     {
-        CACE_LOG_ERR("failed to unlock exec_state_mutex");
+        CACE_LOG_CRIT("failed to unlock exec_state_mutex");
         return;
     }
     /*
@@ -4552,6 +4591,25 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             obj = refda_register_edd(
                 adm, cace_amm_idseg_ref_withenum("capability", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_CAPABILITY),
                 objdata);
+            // no parameters
+        }
+        { // For ./EDD/last-msg-rx-time
+            refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_init(objdata);
+            // produced type
+            {
+                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
+                cace_ari_set_aritype(&name, CACE_ARI_TYPE_TP);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
+            }
+            // callback:
+            objdata->produce = refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time;
+
+            obj =
+                refda_register_edd(adm,
+                                   cace_amm_idseg_ref_withenum(
+                                       "last-msg-rx-time", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_LAST_MSG_RX_TIME),
+                                   objdata);
             // no parameters
         }
         { // For ./EDD/num-msg-rx
