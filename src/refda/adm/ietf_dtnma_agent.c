@@ -4132,7 +4132,10 @@ typedef struct
 } _tbl_row_pair_t;
 
 /**
- * Translation function to replace any LABELs with corresponding TBL data
+ * Translation helper function to substitute any LABELS in the expression with
+ * corresponding data from the current table row.
+ *
+ * Assumes the LABEL contains an index of the column which will substitute data
  */
 static int tbl_filter_sub_label(cace_ari_lit_t *out, const cace_ari_lit_t *in, const cace_ari_translate_ctx_t *ctx)
 {
@@ -4203,28 +4206,6 @@ static int tbl_filter_sub_label(cace_ari_lit_t *out, const cace_ari_lit_t *in, c
     return res;
 }
 
-/**
- * Helper function to substitute any LABELS in the expression with corresponding
- * data from the current table row.
- *
- * Assumes the LABEL contains an index of the column which will substitute data
- */
-static void tbl_filter_substitute_row_values(cace_ari_t *expr, cace_ari_tbl_t *tbl_data, int row_index)
-{
-
-    cace_ari_translator_t translator = { 0 };
-    translator.map_lit               = tbl_filter_sub_label;
-    cace_ari_t      output           = CACE_ARI_INIT_UNDEFINED;
-    _tbl_row_pair_t table_data       = { tbl_data, row_index };
-
-    int res = cace_ari_translate(&output, expr, &translator, &table_data);
-    if (!res)
-    {
-        // Write changes back to expr
-        cace_ari_set_copy(expr, &output);
-    }
-}
-
 /* Name: tbl-filter
  * Description:
  *   Filter a table first by rows and then by columns.
@@ -4285,8 +4266,20 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     {
         // Substitute row values for LABEL items within row filter EXPR
         cace_ari_t current_row = CACE_ARI_INIT_UNDEFINED;
-        cace_ari_set_copy(&current_row, row_match);
-        tbl_filter_substitute_row_values(&current_row, tbl_data, r);
+        {
+            // cace_ari_set_copy(&current_row, row_match);
+            // tbl_filter_substitute_row_values(&current_row, tbl_data, r);
+            cace_ari_translator_t translator = { 0 };
+            translator.map_lit               = tbl_filter_sub_label;
+            _tbl_row_pair_t table_data       = { tbl_data, r };
+
+            int res = cace_ari_translate(&current_row, row_match, &translator, &table_data);
+            if (res)
+            {
+                CACE_LOG_ERR("Unable to translate ARI, error %d", res);
+                return;
+            }
+        }
 
         // Evaluate the row filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
