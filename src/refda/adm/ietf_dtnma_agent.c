@@ -4125,6 +4125,84 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
      */
 }
 
+typedef struct
+{
+    cace_ari_tbl_t *tbl;
+    int             row_index;
+} _tbl_row_pair_t;
+
+/**
+ * Translation function to replace any LABELs with corresponding TBL data
+ */
+static int tbl_filter_sub_label(cace_ari_lit_t *out, const cace_ari_lit_t *in, const cace_ari_translate_ctx_t *ctx)
+{
+    int              res;
+    _tbl_row_pair_t *table_data = (_tbl_row_pair_t *)ctx->user_data;
+
+    if (in->has_ari_type && in->ari_type == CACE_ARI_TYPE_LABEL)
+    {
+        cace_ari_tbl_t *tbl_data  = table_data->tbl;
+        int             row_index = table_data->row_index;
+        int             label_id  = 0;
+
+        // Get label ID value
+        switch (in->prim_type)
+        {
+            case CACE_ARI_PRIM_UINT64:
+            {
+                const uint64_t *val = &(in->value.as_uint64);
+                if (*val > INT32_MAX)
+                {
+                    return 3;
+                }
+                label_id = *val;
+                break;
+            }
+            case CACE_ARI_PRIM_INT64:
+            {
+                const int64_t *val = &(in->value.as_int64);
+                if ((*val < INT32_MIN) || (*val > INT32_MAX))
+                {
+                    return 3;
+                }
+                label_id = *val;
+                break;
+            }
+            default:
+                return 2;
+        }
+
+        // Get column index
+        int col_index = label_id;
+        if (col_index >= (int)tbl_data->ncols)
+        {
+            CACE_LOG_WARNING("Invalid colum index %d, skipping", col_index);
+            return 1;
+        }
+
+        // Get data value from table
+        size_t      array_index   = (row_index * tbl_data->ncols) + col_index;
+        cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, array_index);
+
+        // Replace label with table data
+        if (tbl_data_item->is_ref)
+        {
+            CACE_LOG_WARNING("Substitution of lit with ref currently not supported");
+            res = cace_ari_lit_copy(out, in);
+        }
+        else
+        {
+            res = cace_ari_lit_copy(out, &(tbl_data_item->as_lit));
+        }
+    }
+    else
+    {
+        res = cace_ari_lit_copy(out, in);
+    }
+
+    return res;
+}
+
 /**
  * Helper function to substitute any LABELS in the expression with corresponding
  * data from the current table row.
@@ -4133,34 +4211,17 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
  */
 static void tbl_filter_substitute_row_values(cace_ari_t *expr, cace_ari_tbl_t *tbl_data, int row_index)
 {
-    cace_ari_ac_t *list = cace_ari_get_ac(expr);
-    if (list)
+
+    cace_ari_translator_t translator = { 0 };
+    translator.map_lit               = tbl_filter_sub_label;
+    cace_ari_t      output           = CACE_ARI_INIT_UNDEFINED;
+    _tbl_row_pair_t table_data       = { tbl_data, row_index };
+
+    int res = cace_ari_translate(&output, expr, &translator, &table_data);
+    if (!res)
     {
-        cace_ari_list_it_t lit;
-        for (cace_ari_list_it(lit, list->items); !cace_ari_list_end_p(lit); cace_ari_list_next(lit))
-        {
-            cace_ari_t *item     = cace_ari_list_ref(lit);
-            int         label_id = 0;
-
-            int res = cace_ari_get_int(item, &label_id);
-            if (!res && cace_ari_is_lit_typed(item, CACE_ARI_TYPE_LABEL))
-            {
-                // Get column index
-                int col_index = label_id;
-                if (col_index >= (int)tbl_data->ncols)
-                {
-                    CACE_LOG_WARNING("Invalid colum index %d, skipping", col_index);
-                    continue; // TODO: bail?
-                }
-
-                // Get data value from table
-                size_t      array_index   = (row_index * tbl_data->ncols) + col_index;
-                cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, array_index);
-
-                // Replace label with table data
-                cace_ari_set_copy(item, tbl_data_item);
-            }
-        }
+        // Write changes back to expr
+        cace_ari_set_copy(expr, &output);
     }
 }
 
