@@ -304,7 +304,7 @@ static int cace_ari_map_tbl(cace_ari_tbl_t *out, const cace_ari_tbl_t *in, const
 static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const cace_ari_translator_t *translator,
                                   const cace_ari_translate_ctx_t *ctx)
 {
-    int retval;
+    int retval = 0;
 
     // handle main ARI first
     if (translator->map_ari)
@@ -376,16 +376,6 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
     }
     else
     {
-        if (translator->map_lit)
-        {
-            retval = translator->map_lit(&(out->as_lit), &(in->as_lit), ctx);
-            CHKERRVAL(retval);
-        }
-        else
-        {
-            cace_ari_lit_copy(&(out->as_lit), &(in->as_lit));
-        }
-
         if (in->as_lit.has_ari_type)
         {
             switch (in->as_lit.ari_type)
@@ -410,7 +400,28 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
                     break;
                 }
                 default:
+                    if (translator->map_lit)
+                    {
+                        retval = translator->map_lit(&(out->as_lit), &(in->as_lit), ctx);
+                        CHKERRVAL(retval);
+                    }
+                    else
+                    {
+                        cace_ari_lit_copy(&(out->as_lit), &(in->as_lit));
+                    }
                     break;
+            }
+        }
+        else
+        {
+            if (translator->map_lit)
+            {
+                retval = translator->map_lit(&(out->as_lit), &(in->as_lit), ctx);
+                CHKERRVAL(retval);
+            }
+            else
+            {
+                cace_ari_lit_copy(&(out->as_lit), &(in->as_lit));
             }
         }
     }

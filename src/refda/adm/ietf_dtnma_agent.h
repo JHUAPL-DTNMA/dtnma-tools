@@ -41,12 +41,6 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM 1
 
 /*
- * Enumerations for TYPEDEF objects
- */
-/// For ./TYPEDEF/column-id
-#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_COLUMN_ID 1
-
-/*
  * Enumerations for CONST objects
  */
 /// For ./CONST/hello
@@ -71,6 +65,8 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX 5
 /// For ./EDD/num-msg-tx-failed
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX_FAILED 15
+/// For ./EDD/last-msg-rx-time
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_LAST_MSG_RX_TIME 17
 /// For ./EDD/num-exec-started
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_EXEC_STARTED 6
 /// For ./EDD/num-exec-succeeded
@@ -181,6 +177,10 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LE 19
 /// For ./OPER/tbl-filter
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_TBL_FILTER 20
+/// For ./OPER/list-get
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_LIST_GET 21
+/// For ./OPER/map-get
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MAP_GET 22
 
 /** Initializer for the ADM module ietf-dtnma-agent.
  * @param[in,out] agent The agent to register this namespace and its
