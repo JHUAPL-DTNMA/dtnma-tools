@@ -235,6 +235,7 @@ thr
 timespec
 TP
 Transcoder
+truthy
 tstr
 TSTR
 tv
