@@ -124,6 +124,12 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
 #define M_OPL_cace_amm_semtype_cnst_t() \
     (INIT(API_2(cace_amm_semtype_cnst_init)), CLEAR(API_2(cace_amm_semtype_cnst_deinit)))
 
+/* Define the new constraint type ID if not already there */
+#define AMM_SEMTYPE_CNST_INT_ENUM 10 // Use the next available integer ID
+
+/* Prototype for the setter function */
+int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *cnst, cace_ari_am_t *mappings);
+
 #ifdef __cplusplus
 }
 #endif
