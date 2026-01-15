@@ -18,22 +18,6 @@
 #include "semtype_cnst.h"
 #include "cace/util/logging.h"
 
-struct cace_amm_semtype_cnst {
-    uint8_t type;
-    union {
-        cace_amm_range_size_t as_strlen;
-#if defined(PCRE_FOUND)
-        pcre2_code *as_textpat;
-#endif
-        cace_amm_range_int64_t as_range_int64;
-        
-        /* Structure to hold the integer enum mapping */
-        struct {
-            cace_ari_am_t *enum_map; 
-        } as_enum;
-    };
-};
-
 void cace_amm_semtype_cnst_init(cace_amm_semtype_cnst_t *obj)
 {
     CHKVOID(obj);
@@ -50,12 +34,14 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
         case AMM_SEMTYPE_CNST_STRLEN:
             cace_amm_range_size_deinit(&(obj->as_strlen));
             break;
-        case AMM_SEMTYPE_CNST_INT_ENUM: // The "ID" for our new constraint type
-            if(obj->as_enum.enum_map) {
-                cace_ari_am_destroy(obj->as_enum.enum_map); // Delete the map
-                obj->as_enum.enum_map = NULL;
+        case AMM_SEMTYPE_CNST_INT_ENUM:
+            if(obj->as_enum) {
+                cace_ari_am_destroy(obj->as_enum); // Accessing as_enum directly
+                obj->as_enum = NULL;
             }
             break;
+    obj->type = AMM_SEMTYPE_CNST_INVALID;
+
 #if defined(PCRE_FOUND)
         case AMM_SEMTYPE_CNST_TEXTPAT:
             pcre2_code_free(obj->as_textpat);

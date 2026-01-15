@@ -61,6 +61,7 @@ typedef struct cace_amm_semtype_cnst_s
     /// The type of constraint present
     enum cace_amm_semtype_cnst_type_e type;
 
+    uint8_t type;
     union
     {
         /// Used when #type is ::AMM_SEMTYPE_CNST_STRLEN
@@ -71,6 +72,10 @@ typedef struct cace_amm_semtype_cnst_s
 #endif /* PCRE_FOUND */
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
         cace_amm_range_int64_t as_range_int64;
+
+        /// NEW: Used when #type is ::AMM_SEMTYPE_CNST_INT_ENUM
+        /// This is now a direct pointer
+        cace_ari_am_t *as_enum; 
     };
 } cace_amm_semtype_cnst_t;
 
