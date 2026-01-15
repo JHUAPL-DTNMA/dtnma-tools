@@ -40,9 +40,13 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
             cace_util_range_size_clear(obj->as_strlen);
             break;
         case AMM_SEMTYPE_CNST_INT_ENUM:
-            cace_ari_am_deinit(&obj->as_enum.enum_map);
-            obj->type = AMM_SEMTYPE_CNST_INVALID;
+            if(obj->as_enum) {
+                cace_ari_am_destroy(obj->as_enum); // Accessing as_enum directly
+                obj->as_enum = NULL;
+            }
             break;
+    obj->type = AMM_SEMTYPE_CNST_INVALID;
+
     obj->type = AMM_SEMTYPE_CNST_INVALID;
 
 #if defined(PCRE_FOUND)
