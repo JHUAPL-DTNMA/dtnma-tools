@@ -118,6 +118,25 @@ cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_c
     return cfg;
 }
 
+/** 
+ * NEW SETTER:
+ * This function initializes the constraint as an Integer Enum type.
+ */
+int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *obj, cace_ari_am_t *mappings)
+{
+    CHKERR1(obj);
+    CHKERR1(mappings);
+    
+    /* 1. Clean up any existing constraint data in this object */
+    cace_amm_semtype_cnst_deinit(obj);
+
+    /* 2. Set the type and attach the mapping tree */
+    obj->type = AMM_SEMTYPE_CNST_INT_ENUM;
+    obj->as_enum = mappings;
+
+    return 0;
+}
+
 bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const cace_ari_t *val)
 {
     bool retval = false;
@@ -149,6 +168,19 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
             retval = cace_amm_range_size_contains(cfg, len);
             break;
         }
+        case AMM_SEMTYPE_CNST_INT_ENUM:
+        {
+            /* 
+             * NEW VALIDATOR CASE:
+             * This checks if the value 'val' is present as a key in our map.
+             */
+            if (obj->as_enum && cace_ari_am_find_key(obj->as_enum, val) != NULL)
+            {
+                retval = true;
+            }
+            break;
+        }
+
 #if defined(PCRE_FOUND)
         case AMM_SEMTYPE_CNST_TEXTPAT:
         {
