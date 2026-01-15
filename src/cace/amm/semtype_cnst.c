@@ -36,7 +36,8 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
             break;
         case AMM_SEMTYPE_CNST_INT_ENUM:
             if(obj->as_enum) {
-                cace_ari_am_destroy(obj->as_enum); // Accessing as_enum directly
+                /* Use the _clear function instead of _destroy */
+                cace_ari_am_clear(obj->as_enum);
                 obj->as_enum = NULL;
             }
             break;
