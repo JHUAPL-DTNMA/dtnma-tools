@@ -64,7 +64,7 @@ int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t 
      CLEAR(API_2(refda_amm_ident_base_deinit)), SET(API_6(refda_amm_ident_base_set)))
 
 /** @struct refda_amm_ident_base_list_t
- * A list of dereferenced IDENT objects.
+ * A list of dereferenced IDENT objects as refda_amm_ident_base_t.
  */
 /** @struct refda_amm_ident_base_ptr_set_t
  * A set of pointers to dereferenced IDENT objects.

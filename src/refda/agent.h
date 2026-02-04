@@ -25,6 +25,7 @@
 #include "rpt_agg.h"
 #include "timeline.h"
 #include "acl.h"
+#include "alarms.h"
 #include <cace/util/daemon_run.h>
 #include <cace/util/threadset.h>
 #include <cace/amm/obj_ns.h>
@@ -71,6 +72,9 @@ typedef struct refda_agent_s
     refda_acl_t acl;
     /// Mutex for the state of #acl
     pthread_mutex_t acl_mutex;
+
+    /// Agent alarms state and config
+    refda_alarms_t alarms;
 
     /// Text string ownership for ODM (runtime-defined) text names
     string_list_t odm_names;

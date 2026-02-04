@@ -860,45 +860,6 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
      */
 }
 
-/* Name: last-msg-rx-time
- * Description:
- *   Returns the time of the last received message. Note the returned time
- *   is relative to the agent.
- *
- * Parameters: none
- *
- * Produced type: ari:/ARITYPE/TP
- */
-static void refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time(refda_edd_prod_ctx_t *ctx)
-{
-    /*
-     * +-------------------------------------------------------------------------+
-     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time BODY
-     * +-------------------------------------------------------------------------+
-     */
-    refda_agent_t *agent = ctx->prodctx->runctx->agent;
-
-    if (pthread_mutex_lock(&agent->instr.mutex) != 0)
-    {
-        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE);
-        return;
-    }
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_copy(&result, &agent->instr.last_time_recv);
-    if (pthread_mutex_unlock(&agent->instr.mutex) != 0)
-    {
-        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE);
-        return;
-    }
-
-    refda_edd_prod_ctx_set_result_move(ctx, &result);
-    /*
-     * +-------------------------------------------------------------------------+
-     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time BODY
-     * +-------------------------------------------------------------------------+
-     */
-}
-
 /* Name: num-msg-rx
  * Description MISSING
  *
@@ -999,6 +960,43 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed(refda_edd_prod_ctx_
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: last-msg-rx-time
+ * Description MISSING
+ *
+ * Parameters: none
+ *
+ * Produced type: use of ari:/ARITYPE/TP
+ */
+static void refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time(refda_edd_prod_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time BODY
+     * +-------------------------------------------------------------------------+
+     */
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
+
+    if (pthread_mutex_lock(&agent->instr.mutex) != 0)
+    {
+        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE);
+        return;
+    }
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_copy(&result, &agent->instr.last_time_recv);
+    if (pthread_mutex_unlock(&agent->instr.mutex) != 0)
+    {
+        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE);
+        return;
+    }
+
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -2138,7 +2136,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
 
 /* Name: ensure-odm
  * Description:
- *   Ensure a specific ODM is present.
+ *   Ensure a specific ODM is present. The referenced organization and
+ *   model identifiers SHALL either not already exist or exist with the
+ *   exact combination given by these parameters
  *
  * Parameters list:
  *   - Index 0, name "org-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
@@ -4247,10 +4247,11 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
 
 /* Name: tbl-filter
  * Description:
- *   Filter a table first by rows and then by columns.
+ *   Filter a table first by rows (using an expression) and then by columns
+ *   (using identifiers).
  *
  * Parameters list:
- *   - Index 0, name "row-match", type use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 0, name "rows", type use of ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
  *   - Index 1, name "columns", type ulist of use of ari:/ARITYPE/UVAST
  *
  * Result name "out", type use of ari:/ARITYPE/TBL
@@ -4443,6 +4444,28 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         (void)obj;
 
         /**
+         * Register TYPEDEF objects
+         */
+        { // For ./TYPEDEF/tbl-row-filter
+            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named semantic type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/EXPR
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+            }
+
+            obj = refda_register_typedef(
+                adm,
+                cace_amm_idseg_ref_withenum("tbl-row-filter",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_TBL_ROW_FILTER),
+                objdata);
+            // no parameters possible
+        }
+
+        /**
          * Register CONST objects
          */
         { // For ./CONST/hello
@@ -4594,25 +4617,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./EDD/last-msg-rx-time
-            refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
-            refda_amm_edd_desc_init(objdata);
-            // produced type
-            {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_TP);
-                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &name);
-            }
-            // callback:
-            objdata->produce = refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time;
-
-            obj =
-                refda_register_edd(adm,
-                                   cace_amm_idseg_ref_withenum(
-                                       "last-msg-rx-time", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_LAST_MSG_RX_TIME),
-                                   objdata);
-            // no parameters
-        }
         { // For ./EDD/num-msg-rx
             refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
             refda_amm_edd_desc_init(objdata);
@@ -4687,6 +4691,26 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_idseg_ref_withenum("num-msg-tx-failed",
                                             REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_TX_FAILED),
                 objdata);
+            // no parameters
+        }
+        { // For ./EDD/last-msg-rx-time
+            refda_amm_edd_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_edd_desc_t));
+            refda_amm_edd_desc_init(objdata);
+            // produced type
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/TP
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TP);
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
+            }
+            // callback:
+            objdata->produce = refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time;
+
+            obj =
+                refda_register_edd(adm,
+                                   cace_amm_idseg_ref_withenum(
+                                       "last-msg-rx-time", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_LAST_MSG_RX_TIME),
+                                   objdata);
             // no parameters
         }
         { // For ./EDD/num-exec-started
@@ -6849,11 +6873,11 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 objdata);
             // parameters:
             {
-                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "row-match");
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "rows");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/EXPR
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                    // reference to ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
+                    cace_ari_set_objref_path_intid(&typeref, 1, 1, CACE_ARI_TYPE_TYPEDEF, 0);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
@@ -6863,8 +6887,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     // uniform list
                     cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
                     {
-                        // use of ari:/ARITYPE/UVAST
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/UVAST
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UVAST);
                         cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
                     }
@@ -6880,8 +6904,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 m_string_set_cstr(operand->name, "in");
                 {
-                    // use of ari:/ARITYPE/AC
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/AC
                     cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_AC);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -6903,8 +6927,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "index");
                 {
-                    // use of ari://ietf/amm-base/TYPEDEF/INTEGER
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
@@ -6919,8 +6943,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
                 m_string_set_cstr(operand->name, "in");
                 {
-                    // use of ari:/ARITYPE/AM
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/AM
                     cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_AM);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
@@ -6942,9 +6966,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "key");
                 {
-                    // use of ari://ietf/amm-base/TYPEDEF/primitive
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/amm-base/TYPEDEF/primitive
+                    // reference to ari://ietf/amm-base/TYPEDEF/primitive
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 4);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }

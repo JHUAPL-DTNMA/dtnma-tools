@@ -63,14 +63,18 @@ void refda_acl_group_deinit(refda_acl_group_t *obj);
  * An ordered list of ::refda_acl_group_t instances.
  */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_DEQUE_DEF(refda_acl_group_list, refda_acl_group_t)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /** @struct refda_acl_id_tree_t
  * An ordered list of unique IDs.
  */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_RBTREE_DEF(refda_acl_id_tree, refda_acl_id_t, M_BASIC_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /** A single entry of the ACL access table.
@@ -155,6 +159,7 @@ void refda_acl_init(refda_acl_t *obj);
 
 void refda_acl_deinit(refda_acl_t *obj);
 
+// forward declared
 typedef struct refda_agent_s refda_agent_t;
 
 /** Search in an ACL for a specific endpoint.
