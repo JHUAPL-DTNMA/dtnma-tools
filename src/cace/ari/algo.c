@@ -533,60 +533,6 @@ size_t cace_ari_hash(const cace_ari_t *ari)
     return accum;
 }
 
-static bool cace_ari_objpath_cmp(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right)
-{
-    int part_cmp = cace_ari_idseg_cmp(&(left->org_id), &(right->org_id));
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-    part_cmp = cace_ari_idseg_cmp(&(left->model_id), &(right->model_id));
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-    part_cmp = cace_ari_date_cmp(&(left->model_rev), &(right->model_rev));
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-
-    // prefer derived values
-    if (left->has_ari_type && right->has_ari_type)
-    {
-        part_cmp = left->ari_type < right->ari_type;
-    }
-    else
-    {
-        part_cmp = cace_ari_idseg_cmp(&(left->type_id), &(right->type_id));
-    }
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-
-    return cace_ari_idseg_cmp(&(left->obj_id), &(right->obj_id));
-}
-
-static bool cace_ari_objpath_equal(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right)
-{
-    // prefer derived values
-    bool type_equal;
-    if (left->has_ari_type && right->has_ari_type)
-    {
-        type_equal = left->ari_type == right->ari_type;
-    }
-    else
-    {
-        type_equal = cace_ari_idseg_equal(&(left->type_id), &(right->type_id));
-    }
-
-    return (cace_ari_idseg_equal(&(left->org_id), &(right->org_id))
-            && cace_ari_idseg_equal(&(left->model_id), &(right->model_id))
-            && (cace_ari_date_cmp(&(left->model_rev), &(right->model_rev)) == 0) && type_equal
-            && cace_ari_idseg_equal(&(left->obj_id), &(right->obj_id)));
-}
-
 static int cace_ari_params_cmp(const cace_ari_params_t *left, const cace_ari_params_t *right)
 {
     int part_cmp = M_CMP_DEFAULT(left->state, right->state);

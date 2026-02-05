@@ -67,6 +67,11 @@ void suiteSetUp(void)
     ex_adm = cace_amm_obj_store_add_ns(&(agent.objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
                                        cace_amm_idseg_ref_withenum("adm", EXAMPLE_ADM_ENUM), "2025-01-03");
     assert(NULL != ex_adm);
+    refda_binding_ctx_t bind_ctx = {
+        .store = &(agent.objs),
+        .ns    = ex_adm,
+    };
+
     {
         cace_amm_obj_desc_t *obj;
         { // For ./VAR/test
@@ -83,7 +88,7 @@ void suiteSetUp(void)
             // no parameters
         }
         assert(NULL != obj);
-        int res = refda_binding_obj(CACE_ARI_TYPE_VAR, obj, &agent.objs);
+        int res = refda_binding_obj(&bind_ctx, CACE_ARI_TYPE_VAR, obj);
         assert(0 == res);
     }
 

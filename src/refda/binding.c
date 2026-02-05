@@ -33,7 +33,7 @@
 #include <cace/util/defs.h>
 #include <cace/util/logging.h>
 
-static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace_amm_obj_store_t *store)
+static int refda_binding_semtype_use(const refda_binding_ctx_t *ctx, cace_amm_semtype_use_t *semtype)
 {
     // do not rebind
     if (semtype->base)
@@ -56,7 +56,7 @@ static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace
         cace_amm_lookup_t deref;
         cace_amm_lookup_init(&deref);
 
-        if (!cace_amm_lookup_deref(&deref, store, &(semtype->name)))
+        if (!cace_amm_lookup_deref(&deref, ctx->store, &(semtype->name)))
         {
             if (deref.obj_type == CACE_ARI_TYPE_TYPEDEF)
             {
@@ -119,12 +119,12 @@ static int refda_binding_semtype_use(cace_amm_semtype_use_t *semtype, const cace
     return failcnt;
 }
 
-static int refda_binding_semtype_ulist(cace_amm_semtype_ulist_t *semtype, const cace_amm_obj_store_t *store)
+static int refda_binding_semtype_ulist(const refda_binding_ctx_t *ctx, cace_amm_semtype_ulist_t *semtype)
 {
-    return refda_binding_typeobj(&(semtype->item_type), store);
+    return refda_binding_typeobj(ctx, &(semtype->item_type));
 }
 
-static int refda_binding_semtype_dlist(cace_amm_semtype_dlist_t *semtype, const cace_amm_obj_store_t *store)
+static int refda_binding_semtype_dlist(const refda_binding_ctx_t *ctx, cace_amm_semtype_dlist_t *semtype)
 {
     int failcnt = 0;
 
@@ -133,20 +133,20 @@ static int refda_binding_semtype_dlist(cace_amm_semtype_dlist_t *semtype, const 
     {
         cace_amm_type_t *typeobj = cace_amm_type_array_ref(it);
 
-        failcnt += refda_binding_typeobj(typeobj, store);
+        failcnt += refda_binding_typeobj(ctx, typeobj);
     }
     return failcnt;
 }
 
-static int refda_binding_semtype_umap(cace_amm_semtype_umap_t *semtype, const cace_amm_obj_store_t *store)
+static int refda_binding_semtype_umap(const refda_binding_ctx_t *ctx, cace_amm_semtype_umap_t *semtype)
 {
     int failcnt = 0;
-    failcnt += refda_binding_typeobj(&(semtype->key_type), store);
-    failcnt += refda_binding_typeobj(&(semtype->val_type), store);
+    failcnt += refda_binding_typeobj(ctx, &(semtype->key_type));
+    failcnt += refda_binding_typeobj(ctx, &(semtype->val_type));
     return failcnt;
 }
 
-static int refda_binding_semtype_tblt(cace_amm_semtype_tblt_t *semtype, const cace_amm_obj_store_t *store)
+static int refda_binding_semtype_tblt(const refda_binding_ctx_t *ctx, cace_amm_semtype_tblt_t *semtype)
 {
     int failcnt = 0;
 
@@ -156,12 +156,12 @@ static int refda_binding_semtype_tblt(cace_amm_semtype_tblt_t *semtype, const ca
     {
         cace_amm_named_type_t *col = cace_amm_named_type_array_ref(it);
 
-        failcnt += refda_binding_typeobj(&(col->typeobj), store);
+        failcnt += refda_binding_typeobj(ctx, &(col->typeobj));
     }
     return failcnt;
 }
 
-static int refda_binding_semtype_union(cace_amm_semtype_union_t *semtype, const cace_amm_obj_store_t *store)
+static int refda_binding_semtype_union(const refda_binding_ctx_t *ctx, cace_amm_semtype_union_t *semtype)
 {
     int failcnt = 0;
 
@@ -170,17 +170,17 @@ static int refda_binding_semtype_union(cace_amm_semtype_union_t *semtype, const 
     {
         cace_amm_type_t *choice = cace_amm_type_array_ref(it);
 
-        failcnt += refda_binding_typeobj(choice, store);
+        failcnt += refda_binding_typeobj(ctx, choice);
     }
     return failcnt;
 }
 
-static int refda_binding_semtype_seq(cace_amm_semtype_seq_t *semtype, const cace_amm_obj_store_t *store)
+static int refda_binding_semtype_seq(const refda_binding_ctx_t *ctx, cace_amm_semtype_seq_t *semtype)
 {
-    return refda_binding_typeobj(&(semtype->item_type), store);
+    return refda_binding_typeobj(ctx, &(semtype->item_type));
 }
 
-int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *store)
+int refda_binding_typeobj(const refda_binding_ctx_t *ctx, cace_amm_type_t *typeobj)
 {
     switch (typeobj->type_class)
     {
@@ -188,26 +188,26 @@ int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *
             CACE_LOG_WARNING("Binding failed due to default-initialized typeobj");
             return 1;
         case CACE_AMM_TYPE_USE:
-            return refda_binding_semtype_use(typeobj->as_semtype, store);
+            return refda_binding_semtype_use(ctx, typeobj->as_semtype);
         case CACE_AMM_TYPE_ULIST:
-            return refda_binding_semtype_ulist(typeobj->as_semtype, store);
+            return refda_binding_semtype_ulist(ctx, typeobj->as_semtype);
         case CACE_AMM_TYPE_DLIST:
-            return refda_binding_semtype_dlist(typeobj->as_semtype, store);
+            return refda_binding_semtype_dlist(ctx, typeobj->as_semtype);
         case CACE_AMM_TYPE_UMAP:
-            return refda_binding_semtype_umap(typeobj->as_semtype, store);
+            return refda_binding_semtype_umap(ctx, typeobj->as_semtype);
         case CACE_AMM_TYPE_TBLT:
-            return refda_binding_semtype_tblt(typeobj->as_semtype, store);
+            return refda_binding_semtype_tblt(ctx, typeobj->as_semtype);
         case CACE_AMM_TYPE_UNION:
-            return refda_binding_semtype_union(typeobj->as_semtype, store);
+            return refda_binding_semtype_union(ctx, typeobj->as_semtype);
         case CACE_AMM_TYPE_SEQ:
-            return refda_binding_semtype_seq(typeobj->as_semtype, store);
+            return refda_binding_semtype_seq(ctx, typeobj->as_semtype);
         default:
             CACE_LOG_WARNING("Binding failed due to invalid typeobj %d", typeobj->type_class);
             return 1;
     }
 }
 
-static int refda_binding_fparams(cace_amm_formal_param_list_t fparams, const cace_amm_obj_store_t *store)
+static int refda_binding_fparams(const refda_binding_ctx_t *ctx, cace_amm_formal_param_list_t fparams)
 {
     int failcnt = 0;
 
@@ -217,18 +217,18 @@ static int refda_binding_fparams(cace_amm_formal_param_list_t fparams, const cac
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_ref(fit);
         CACE_LOG_DEBUG("Binding formal parameter \"%s\" (index %zd)", m_string_get_cstr(fparam->name), fparam->index);
-        failcnt += refda_binding_typeobj(&(fparam->typeobj), store);
+        failcnt += refda_binding_typeobj(ctx, &(fparam->typeobj));
     }
 
     return failcnt;
 }
 
-static int refda_binding_ident_bases(refda_amm_ident_base_list_t bases, const cace_amm_obj_store_t *store)
+static int refda_binding_ident_bases(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj, refda_amm_ident_desc_t *desc)
 {
     int failcnt = 0;
 
     refda_amm_ident_base_list_it_t it;
-    for (refda_amm_ident_base_list_it(it, bases); !refda_amm_ident_base_list_end_p(it);
+    for (refda_amm_ident_base_list_it(it, desc->bases); !refda_amm_ident_base_list_end_p(it);
          refda_amm_ident_base_list_next(it))
     {
         refda_amm_ident_base_t *base = refda_amm_ident_base_list_ref(it);
@@ -242,17 +242,21 @@ static int refda_binding_ident_bases(refda_amm_ident_base_list_t bases, const ca
             m_string_clear(buf);
         }
 
-        cace_amm_lookup_t deref;
-        cace_amm_lookup_init(&deref);
-
-        if (!cace_amm_lookup_deref(&deref, store, &(base->name)))
+        if (!refda_amm_ident_base_populate(base, NULL, ctx->store))
         {
-            if (deref.obj_type == CACE_ARI_TYPE_IDENT)
+            if (base->deref.obj_type == CACE_ARI_TYPE_IDENT)
             {
-                refda_amm_ident_desc_t *desc = deref.obj->app_data.ptr;
-                if (desc)
+                refda_amm_ident_desc_t *base_desc = base->deref.obj->app_data.ptr;
+                if (base_desc)
                 {
-                    base->ident = desc;
+                    // forward reference
+                    base->ident = base_desc;
+
+                    // reverse reference
+                    cace_amm_lookup_t *obj_deref = cace_amm_lookup_list_push_new(base_desc->derived);
+                    obj_deref->ns = ctx->ns;
+                    obj_deref->obj_type = CACE_ARI_TYPE_IDENT;
+                    obj_deref->obj = obj;
                 }
                 else
                 {
@@ -282,80 +286,78 @@ static int refda_binding_ident_bases(refda_amm_ident_base_list_t bases, const ca
 
             failcnt += 1;
         }
-
-        cace_amm_lookup_deinit(&deref);
     }
 
     return failcnt;
 }
 
-int refda_binding_ident(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_ident(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj)
 {
     CHKERR1(obj);
-    CHKERR1(store);
+    CHKERR1(ctx);
     refda_amm_ident_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
     int failcnt = 0;
-    failcnt += refda_binding_fparams(obj->fparams, store);
-    failcnt += refda_binding_ident_bases(desc->bases, store);
+    failcnt += refda_binding_fparams(ctx, obj->fparams);
+    failcnt += refda_binding_ident_bases(ctx, obj, desc);
     return failcnt;
 }
 
-int refda_binding_typedef(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_typedef(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj)
 {
     CHKERR1(obj);
-    CHKERR1(store);
+    CHKERR1(ctx);
     refda_amm_typedef_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
     int failcnt = 0;
-    failcnt += refda_binding_typeobj(&(desc->typeobj), store);
+    failcnt += refda_binding_typeobj(ctx, &(desc->typeobj));
     return failcnt;
 }
 
-int refda_binding_const(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_const(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj)
 {
     CHKERR1(obj);
-    CHKERR1(store);
+    CHKERR1(ctx);
     refda_amm_const_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
     int failcnt = 0;
-    failcnt += refda_binding_fparams(obj->fparams, store);
+    failcnt += refda_binding_fparams(ctx, obj->fparams);
     return failcnt;
 }
 
-int refda_binding_var(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_var(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj)
 {
     CHKERR1(obj);
-    CHKERR1(store);
+    CHKERR1(ctx);
     refda_amm_var_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
     int failcnt = 0;
-    failcnt += refda_binding_typeobj(&(desc->val_type), store);
-    failcnt += refda_binding_fparams(obj->fparams, store);
+    failcnt += refda_binding_typeobj(ctx, &(desc->val_type));
+    failcnt += refda_binding_fparams(ctx, obj->fparams);
     return failcnt;
 }
 
-int refda_binding_edd(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_edd(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj)
 {
     CHKERR1(obj);
-    CHKERR1(store);
+    CHKERR1(ctx);
     refda_amm_edd_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
     int failcnt = 0;
-    failcnt += refda_binding_typeobj(&(desc->prod_type), store);
-    failcnt += refda_binding_fparams(obj->fparams, store);
+    failcnt += refda_binding_typeobj(ctx, &(desc->prod_type));
+    failcnt += refda_binding_fparams(ctx, obj->fparams);
     return failcnt;
 }
 
-int refda_binding_ctrl(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_ctrl(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj)
 {
     CHKERR1(obj);
-    CHKERR1(store);
+    CHKERR1(ctx);
     refda_amm_ctrl_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
@@ -363,16 +365,16 @@ int refda_binding_ctrl(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
     if (cace_amm_type_is_valid(&(desc->res_type)))
     {
         // optional
-        failcnt += refda_binding_typeobj(&(desc->res_type), store);
+        failcnt += refda_binding_typeobj(ctx, &(desc->res_type));
     }
-    failcnt += refda_binding_fparams(obj->fparams, store);
+    failcnt += refda_binding_fparams(ctx, obj->fparams);
     return failcnt;
 }
 
-int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_oper(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj)
 {
     CHKERR1(obj);
-    CHKERR1(store);
+    CHKERR1(ctx);
     refda_amm_oper_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
@@ -384,17 +386,17 @@ int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *sto
     {
         cace_amm_named_type_t *operand = cace_amm_named_type_array_ref(ait);
         CACE_LOG_DEBUG("Binding operand \"%s\"", m_string_get_cstr(operand->name));
-        failcnt += refda_binding_typeobj(&(operand->typeobj), store);
+        failcnt += refda_binding_typeobj(ctx, &(operand->typeobj));
     }
-    failcnt += refda_binding_typeobj(&(desc->res_type), store);
-    failcnt += refda_binding_fparams(obj->fparams, store);
+    failcnt += refda_binding_typeobj(ctx, &(desc->res_type));
+    failcnt += refda_binding_fparams(ctx, obj->fparams);
     return failcnt;
 }
 
-int refda_binding_sbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_sbr(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj)
 {
     CHKERR1(obj);
-    CHKERR1(store);
+    CHKERR1(ctx);
     refda_amm_sbr_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
@@ -402,10 +404,10 @@ int refda_binding_sbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *stor
     return failcnt;
 }
 
-int refda_binding_tbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_tbr(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj)
 {
     CHKERR1(obj);
-    CHKERR1(store);
+    CHKERR1(ctx);
     refda_amm_tbr_desc_t *desc = obj->app_data.ptr;
     CHKERR1(desc);
 
@@ -413,29 +415,29 @@ int refda_binding_tbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *stor
     return failcnt;
 }
 
-int refda_binding_obj(cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store)
+int refda_binding_obj(const refda_binding_ctx_t *ctx, cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj)
 {
     CACE_LOG_DEBUG("Binding object ./%s/%s", cace_ari_type_to_name(obj_type), m_string_get_cstr(obj->obj_id.name));
     switch (obj_type)
     {
         case CACE_ARI_TYPE_IDENT:
-            return refda_binding_ident(obj, store);
+            return refda_binding_ident(ctx, obj);
         case CACE_ARI_TYPE_TYPEDEF:
-            return refda_binding_typedef(obj, store);
+            return refda_binding_typedef(ctx, obj);
         case CACE_ARI_TYPE_CONST:
-            return refda_binding_const(obj, store);
+            return refda_binding_const(ctx, obj);
         case CACE_ARI_TYPE_VAR:
-            return refda_binding_var(obj, store);
+            return refda_binding_var(ctx, obj);
         case CACE_ARI_TYPE_EDD:
-            return refda_binding_edd(obj, store);
+            return refda_binding_edd(ctx, obj);
         case CACE_ARI_TYPE_CTRL:
-            return refda_binding_ctrl(obj, store);
+            return refda_binding_ctrl(ctx, obj);
         case CACE_ARI_TYPE_OPER:
-            return refda_binding_oper(obj, store);
+            return refda_binding_oper(ctx, obj);
         case CACE_ARI_TYPE_SBR:
-            return refda_binding_sbr(obj, store);
+            return refda_binding_sbr(ctx, obj);
         case CACE_ARI_TYPE_TBR:
-            return refda_binding_tbr(obj, store);
+            return refda_binding_tbr(ctx, obj);
         default:
             CACE_LOG_WARNING("Binding failed due to invalid obj-type %d", obj_type);
             return 1;

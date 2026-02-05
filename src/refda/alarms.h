@@ -164,7 +164,7 @@ typedef struct refda_agent_s refda_agent_t;
  * @param[in] severity The new severity level.
  */
 void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, const cace_ari_t *category,
-                      refda_alarms_severity_t severity);
+                           refda_alarms_severity_t severity);
 
 /** Purge the list of alarms based on an LABEL-substituted expression.
  *

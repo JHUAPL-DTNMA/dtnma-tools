@@ -90,8 +90,6 @@ void suiteSetUp(void)
             // no parameters
         }
         assert(NULL != obj);
-        //        int res = refda_binding_obj(CACE_ARI_TYPE_IDENT, obj, &agent.objs);
-        //        assert(0 == res);
     }
 
     ex_odm = cace_amm_obj_store_add_ns(&(agent.objs), cace_amm_idseg_ref_withenum("example", EXAMPLE_ORG_ENUM),
@@ -114,10 +112,11 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-void test_refda_alarms_set_state_no_category(void)
+void test_refda_adm_ietf_alarms_list_no_category(void)
 {
     cace_ari_t alarm_list_ref = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_objref_path_intid(&alarm_list_ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_ALARMS_ENUM_ADM, CACE_ARI_TYPE_EDD, REFDA_ADM_IETF_ALARMS_ENUM_OBJID_EDD_ALARM_LIST);
+    cace_ari_set_objref_path_intid(&alarm_list_ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_ALARMS_ENUM_ADM,
+                                   CACE_ARI_TYPE_EDD, REFDA_ADM_IETF_ALARMS_ENUM_OBJID_EDD_ALARM_LIST);
     cace_amm_lookup_t alarm_list_deref;
     cace_amm_lookup_init(&alarm_list_deref);
     TEST_ASSERT_EQUAL_INT(0, cace_amm_lookup_deref(&alarm_list_deref, &(agent.objs), &alarm_list_ref));
@@ -135,7 +134,7 @@ void test_refda_alarms_set_state_no_category(void)
         int res = refda_valprod_run(&prodctx);
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_valprod_run() failed");
 
-        struct cace_ari_tbl_s *tbl =cace_ari_get_tbl(&prodctx.value);
+        struct cace_ari_tbl_s *tbl = cace_ari_get_tbl(&prodctx.value);
         TEST_ASSERT_NOT_NULL(tbl);
         TEST_ASSERT_EQUAL_size_t(9, tbl->ncols);
         TEST_ASSERT_EQUAL_size_t(0, cace_ari_array_size(tbl->items));
@@ -159,10 +158,10 @@ void test_refda_alarms_set_state_no_category(void)
         int res = refda_valprod_run(&prodctx);
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_valprod_run() failed");
 
-        struct cace_ari_tbl_s *tbl =cace_ari_get_tbl(&prodctx.value);
+        struct cace_ari_tbl_s *tbl = cace_ari_get_tbl(&prodctx.value);
         TEST_ASSERT_NOT_NULL(tbl);
         TEST_ASSERT_EQUAL_size_t(9, tbl->ncols);
-        TEST_ASSERT_EQUAL_size_t(9, cace_ari_array_size(tbl->items));
+        TEST_ASSERT_EQUAL_size_t(1 * tbl->ncols, cace_ari_array_size(tbl->items));
 
         refda_valprod_ctx_deinit(&prodctx);
     }
@@ -173,4 +172,53 @@ void test_refda_alarms_set_state_no_category(void)
     refda_runctx_deinit(&runctx);
     cace_amm_lookup_deinit(&alarm_list_deref);
     cace_ari_deinit(&alarm_list_ref);
+}
+
+void test_refda_adm_ietf_alarms_resource_inventory(void)
+{
+    cace_ari_t edd_ref = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_objref_path_intid(&edd_ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_ALARMS_ENUM_ADM, CACE_ARI_TYPE_EDD,
+                                   REFDA_ADM_IETF_ALARMS_ENUM_OBJID_EDD_RESOURCE_INVENTORY);
+    cace_amm_lookup_t edd_deref;
+    cace_amm_lookup_init(&edd_deref);
+    TEST_ASSERT_EQUAL_INT(0, cace_amm_lookup_deref(&edd_deref, &(agent.objs), &edd_ref));
+
+    refda_runctx_t runctx;
+    TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
+
+    {
+        refda_valprod_ctx_t prodctx;
+        refda_valprod_ctx_init(&prodctx, &runctx, &edd_ref, &edd_deref);
+
+        int res = refda_valprod_run(&prodctx);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_valprod_run() failed");
+
+        struct cace_ari_tbl_s *tbl = cace_ari_get_tbl(&prodctx.value);
+        TEST_ASSERT_NOT_NULL(tbl);
+        TEST_ASSERT_EQUAL_size_t(1, tbl->ncols);
+        // only test fixture resource is present
+        TEST_ASSERT_EQUAL_size_t(2 * tbl->ncols, cace_ari_array_size(tbl->items));
+        cace_ari_t expect = CACE_ARI_INIT_UNDEFINED;
+        {
+            cace_ari_set_objref_path_intid(&expect, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_ALARMS_ENUM_ADM,
+                                           CACE_ARI_TYPE_IDENT, REFDA_ADM_IETF_ALARMS_ENUM_OBJID_IDENT_RESOURCE);
+
+            cace_ari_t *item = cace_ari_array_get(tbl->items, 0);
+            TEST_ASSERT_TRUE(cace_ari_equal(&expect, item));
+        }
+        {
+            cace_ari_set_objref_path_intid(&expect, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM,
+                                           CACE_ARI_TYPE_IDENT, EXAMPLE_IDENT_RES1_ENUM);
+
+            cace_ari_t *item = cace_ari_array_get(tbl->items, 1);
+            TEST_ASSERT_TRUE(cace_ari_equal(&expect, item));
+        }
+        cace_ari_deinit(&expect);
+
+        refda_valprod_ctx_deinit(&prodctx);
+    }
+
+    refda_runctx_deinit(&runctx);
+    cace_amm_lookup_deinit(&edd_deref);
+    cace_ari_deinit(&edd_ref);
 }

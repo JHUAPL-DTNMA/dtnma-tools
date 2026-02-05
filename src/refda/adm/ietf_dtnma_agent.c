@@ -2485,8 +2485,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
     refda_amm_const_desc_t *cnst = NULL;
     {
-        cace_amm_obj_desc_t *obj = NULL;
-        obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_CONST, obj_name);
+        cace_amm_obj_desc_t *obj = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_CONST, obj_name);
         if (obj)
         {
             CACE_LOG_INFO("CONST already exists");
@@ -2521,9 +2520,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
             m_string_clear(buf);
         }
 
+        refda_binding_ctx_t bind_ctx = {
+            .store = &(agent->objs),
+            .ns    = odm,
+        };
         // recursively fetch type and bind now so that match will work
         if (cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs)
-            || refda_binding_typeobj(&(objdata->val_type), &agent->objs))
+            || refda_binding_typeobj(&bind_ctx, &(objdata->val_type)))
         {
             m_string_t buf;
             m_string_init(buf);
@@ -2561,7 +2564,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
             cace_amm_obj_desc_t *obj =
                 refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
-            int res = refda_binding_const(obj, &agent->objs);
+
+            refda_binding_ctx_t bind_ctx = {
+                .store = &(agent->objs),
+                .ns    = odm,
+            };
+            int res = refda_binding_const(&bind_ctx, obj);
             if (res)
             {
                 CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
@@ -2761,9 +2769,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
             m_string_clear(buf);
         }
 
+        refda_binding_ctx_t bind_ctx = {
+            .store = &(agent->objs),
+            .ns    = odm,
+        };
         // recursively fetch type and bind now so that match will work
         if (cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs)
-            || refda_binding_typeobj(&(objdata->val_type), &agent->objs))
+            || refda_binding_typeobj(&bind_ctx, &(objdata->val_type)))
         {
             m_string_t buf;
             m_string_init(buf);
@@ -2802,7 +2814,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
 
             cace_amm_obj_desc_t *obj =
                 refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*var_name), obj_id), objdata);
-            int res = refda_binding_var(obj, &agent->objs);
+
+            refda_binding_ctx_t bind_ctx = {
+                .store = &(agent->objs),
+                .ns    = odm,
+            };
+            int res = refda_binding_var(&bind_ctx, obj);
             if (res)
             {
                 CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);

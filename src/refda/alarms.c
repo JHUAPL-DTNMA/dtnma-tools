@@ -69,7 +69,7 @@ void refda_alarms_deinit(refda_alarms_t *obj)
 }
 
 void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, const cace_ari_t *category,
-                      refda_alarms_severity_t severity)
+                           refda_alarms_severity_t severity)
 {
     refda_amm_ident_base_t res_ref, cat_ref;
     refda_amm_ident_base_init(&res_ref);
@@ -153,7 +153,4 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
     }
 }
 
-void refda_alarms_purge(refda_agent_t *agent, const cace_ari_t *expr)
-{
-
-}
+void refda_alarms_purge(refda_agent_t *agent, const cace_ari_t *expr) {}

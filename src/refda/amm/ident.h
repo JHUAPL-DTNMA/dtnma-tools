@@ -38,7 +38,7 @@ typedef struct
     /** The bound object being used, which is bound based on #name.
      * This is always a reference to an externally-owned object.
      */
-    const struct refda_amm_ident_desc_s *ident;
+    struct refda_amm_ident_desc_s *ident;
 } refda_amm_ident_base_t;
 
 void refda_amm_ident_base_init(refda_amm_ident_base_t *obj);
@@ -54,7 +54,7 @@ void refda_amm_ident_base_set_move(refda_amm_ident_base_t *obj, refda_amm_ident_
 /** Set the name and perform a reference lookup on this object.
  *
  * @param[in,out] obj The object to set.
- * @param[in] ref The new name.
+ * @param[in] ref The optional new name. If null pointer, the existing name is kept.
  * @param[in] objs The object store to search.
  * @return Zero if the lookup was fully successful.
  */
@@ -75,6 +75,7 @@ int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t 
 /// @cond Doxygen_Suppress
 M_ARRAY_DEF(refda_amm_ident_base_list, refda_amm_ident_base_t)
 M_RBTREE_DEF(refda_amm_ident_base_ptr_set, refda_amm_ident_base_t *, M_PTR_OPLIST)
+M_ARRAY_DEF(cace_amm_lookup_list, cace_amm_lookup_t)
 /// @endcond
 
 /** An IDENT descriptor.
@@ -86,6 +87,11 @@ typedef struct refda_amm_ident_desc_s
      * This list will not change during the lifetime of the IDENT.
      */
     refda_amm_ident_base_list_t bases;
+
+    /** All IDENT objects with this object as a base.
+     * This list can change as other objects are updated.
+     */
+    cace_amm_lookup_list_t derived;
 
     /** Optional ADM data associated with this object.
      */

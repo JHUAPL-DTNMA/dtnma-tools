@@ -212,6 +212,11 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         CACE_LOG_DEBUG("Binding namespace ari:/%s/%s/", m_string_get_cstr(ns->org_id.name),
                        m_string_get_cstr(ns->model_id.name));
 
+        refda_binding_ctx_t ctx = {
+            .store = &(agent->objs),
+            .ns    = ns,
+        };
+
         cace_amm_obj_ns_ctr_dict_it_t objtype_it;
         for (cace_amm_obj_ns_ctr_dict_it(objtype_it, ns->object_types); !cace_amm_obj_ns_ctr_dict_end_p(objtype_it);
              cace_amm_obj_ns_ctr_dict_next(objtype_it))
@@ -227,7 +232,7 @@ int refda_agent_bindrefs(refda_agent_t *agent)
             {
                 cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_ref(obj_it));
 
-                const int objfailcnt = refda_binding_obj(obj_type, obj, &(agent->objs));
+                const int objfailcnt = refda_binding_obj(&ctx, obj_type, obj);
                 if (objfailcnt)
                 {
                     CACE_LOG_WARNING("binding object ari:/%s/%s/%s/%s; failures %d", m_string_get_cstr(ns->org_id.name),

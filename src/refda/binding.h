@@ -26,47 +26,58 @@
 extern "C" {
 #endif
 
+/** Context to bind an individual object.
+ *
+ */
+typedef struct
+{
+    /// The store in which the objects reside
+    const cace_amm_obj_store_t *store;
+    /// The namespace of the object being bound
+    cace_amm_obj_ns_t *ns;
+} refda_binding_ctx_t;
+
 /** Perform a type binding on a semantic type object.
  *
+ * @param[in] ctx The context for the object.
  * @param[in,out] typeobj The object to bind.
- * @param[in] store The object store to lookup within.
  * @return Zero if successful.
  * Otherwise, the number of individual bindings which have failed.
  */
-int refda_binding_typeobj(cace_amm_type_t *typeobj, const cace_amm_obj_store_t *store);
+int refda_binding_typeobj(const refda_binding_ctx_t *ctx, cace_amm_type_t *typeobj);
 
 /** Perform a type binding into an object store.
  *
+ * @param[in] ctx The context for the object.
  * @param[in,out] obj The object to bind.
- * @param[in] store The object store to lookup within.
  * @return Zero if successful.
  * Otherwise, the number of individual bindings which have failed.
  */
-int refda_binding_ident(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_ident(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj);
 
 /// @overload
-int refda_binding_typedef(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_typedef(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj);
 
 /// @overload
-int refda_binding_const(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_const(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj);
 
 /// @overload
-int refda_binding_var(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_var(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj);
 
 /// @overload
-int refda_binding_edd(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_edd(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj);
 
 /// @overload
-int refda_binding_ctrl(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_ctrl(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj);
 
 /// @overload
-int refda_binding_oper(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_oper(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj);
 
 /// @overload
-int refda_binding_sbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_sbr(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj);
 
 /// @overload
-int refda_binding_tbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_tbr(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj);
 
 /** Perform a type binding into an object store.
  *
@@ -76,7 +87,7 @@ int refda_binding_tbr(cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *stor
  * @return Zero if successful.
  * Otherwise, the number of individual bindings which have failed.
  */
-int refda_binding_obj(cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj, const cace_amm_obj_store_t *store);
+int refda_binding_obj(const refda_binding_ctx_t *ctx, cace_ari_type_t obj_type, cace_amm_obj_desc_t *obj);
 
 #ifdef __cplusplus
 } // extern C

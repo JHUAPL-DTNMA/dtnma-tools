@@ -35,11 +35,43 @@
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
-/*             TODO              */
+#include "ietf.h"
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
-/*             TODO              */
+static void alarms_append_derived_ident(cace_ari_tbl_t *table, const cace_amm_lookup_t *base)
+{
+    // Represent own object
+    if (true) // TODO check for abstract
+    {
+        cace_ari_array_t row;
+        cace_ari_array_init(row);
+        cace_ari_array_resize(row, table->ncols);
+
+        // only set first column
+        cace_amm_lookup_ref_int(cace_ari_array_get(row, 0), base);
+
+        // append the row
+        cace_ari_tbl_move_row_array(table, row);
+    }
+
+    const refda_amm_ident_desc_t *ident = base->obj ? base->obj->app_data.ptr : NULL;
+    if (!ident)
+    {
+        CACE_LOG_ERR("invalid ident object");
+        return;
+    }
+    CACE_LOG_ERR("recurse into %zu", cace_amm_lookup_list_size(ident->derived));
+    // recurse into children
+    cace_amm_lookup_list_it_t child_it;
+    for (cace_amm_lookup_list_it(child_it, ident->derived); !cace_amm_lookup_list_end_p(child_it);
+         cace_amm_lookup_list_next(child_it))
+    {
+        const cace_amm_lookup_t *child = cace_amm_lookup_list_cref(child_it);
+
+        alarms_append_derived_ident(table, child);
+    }
+}
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
 /* Name: alarm-list
@@ -90,7 +122,7 @@ static void refda_adm_ietf_alarms_edd_alarm_list(refda_edd_prod_ctx_t *ctx)
 
         cace_ari_array_t row;
         cace_ari_array_init(row);
-        cace_ari_array_resize(row, 9);
+        cace_ari_array_resize(row, table->ncols);
 
         cace_ari_set_copy(cace_ari_array_get(row, 0), &entry->resource.name);
         cace_ari_set_copy(cace_ari_array_get(row, 1), &entry->category.name);
@@ -133,6 +165,34 @@ static void refda_adm_ietf_alarms_edd_resource_inventory(refda_edd_prod_ctx_t *c
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_edd_resource_inventory BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
+    cace_ari_tbl_reset(table, 1, 0);
+
+    cace_ari_t base_ref = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_objref_path_intid(&base_ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_ALARMS_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                                   REFDA_ADM_IETF_ALARMS_ENUM_OBJID_IDENT_RESOURCE);
+    refda_amm_ident_base_t base_deref;
+    refda_amm_ident_base_init(&base_deref);
+    int res = refda_amm_ident_base_populate(&base_deref, &base_ref, &(agent->objs));
+    cace_ari_deinit(&base_ref);
+    if (res)
+    {
+        CACE_LOG_CRIT("Unable to find base object");
+        refda_amm_ident_base_deinit(&base_deref);
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    alarms_append_derived_ident(table, &base_deref.deref);
+    refda_amm_ident_base_deinit(&base_deref);
+
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_edd_resource_inventory BODY

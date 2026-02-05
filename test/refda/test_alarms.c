@@ -130,7 +130,7 @@ void test_refda_alarms_set_state_no_category(void)
     TEST_ASSERT_EQUAL_size_t(1, refda_alarms_entry_index_size(agent.alarms.alarm_index));
     {
         refda_alarms_entry_ptr_t *entry_ptr = *refda_alarms_entry_list_front(agent.alarms.alarm_list);
-        refda_alarms_entry_t *entry = refda_alarms_entry_ptr_ref(entry_ptr);
+        refda_alarms_entry_t     *entry     = refda_alarms_entry_ptr_ref(entry_ptr);
         TEST_ASSERT_NOT_NULL(entry);
         TEST_ASSERT_TRUE(cace_ari_equal(&res_ref, &entry->resource.name));
         TEST_ASSERT_TRUE(cace_ari_equal(&cat_ref, &entry->category.name));
@@ -146,7 +146,7 @@ void test_refda_alarms_set_state_no_category(void)
     TEST_ASSERT_EQUAL_size_t(1, refda_alarms_entry_index_size(agent.alarms.alarm_index));
     {
         refda_alarms_entry_ptr_t *entry_ptr = *refda_alarms_entry_list_front(agent.alarms.alarm_list);
-        refda_alarms_entry_t *entry = refda_alarms_entry_ptr_ref(entry_ptr);
+        refda_alarms_entry_t     *entry     = refda_alarms_entry_ptr_ref(entry_ptr);
         TEST_ASSERT_NOT_NULL(entry);
         TEST_ASSERT_TRUE(cace_ari_equal(&res_ref, &entry->resource.name));
         TEST_ASSERT_TRUE(cace_ari_equal(&cat_ref, &entry->category.name));
