@@ -83,6 +83,11 @@ M_ARRAY_DEF(cace_amm_lookup_list, cace_amm_lookup_t)
  */
 typedef struct refda_amm_ident_desc_s
 {
+    /** Abstract marking from the model.
+     * If true, the object is not usable in some contexts.
+     */
+    bool abstract;
+
     /** All base IDENT objects for this object.
      * This list will not change during the lifetime of the IDENT.
      */

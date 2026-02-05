@@ -223,7 +223,8 @@ static int refda_binding_fparams(const refda_binding_ctx_t *ctx, cace_amm_formal
     return failcnt;
 }
 
-static int refda_binding_ident_bases(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj, refda_amm_ident_desc_t *desc)
+static int refda_binding_ident_bases(const refda_binding_ctx_t *ctx, cace_amm_obj_desc_t *obj,
+                                     refda_amm_ident_desc_t *desc)
 {
     int failcnt = 0;
 
@@ -254,9 +255,9 @@ static int refda_binding_ident_bases(const refda_binding_ctx_t *ctx, cace_amm_ob
 
                     // reverse reference
                     cace_amm_lookup_t *obj_deref = cace_amm_lookup_list_push_new(base_desc->derived);
-                    obj_deref->ns = ctx->ns;
-                    obj_deref->obj_type = CACE_ARI_TYPE_IDENT;
-                    obj_deref->obj = obj;
+                    obj_deref->ns                = ctx->ns;
+                    obj_deref->obj_type          = CACE_ARI_TYPE_IDENT;
+                    obj_deref->obj               = obj;
                 }
                 else
                 {

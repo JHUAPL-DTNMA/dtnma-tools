@@ -97,6 +97,7 @@ int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t 
 
 void refda_amm_ident_desc_init(refda_amm_ident_desc_t *obj)
 {
+    obj->abstract = false;
     refda_amm_ident_base_list_init(obj->bases);
     cace_amm_lookup_list_init(obj->derived);
     cace_amm_user_data_init(&(obj->user_data));
@@ -107,4 +108,5 @@ void refda_amm_ident_desc_deinit(refda_amm_ident_desc_t *obj)
     cace_amm_user_data_deinit(&(obj->user_data));
     cace_amm_lookup_list_clear(obj->derived);
     refda_amm_ident_base_list_clear(obj->bases);
+    obj->abstract = false;
 }
