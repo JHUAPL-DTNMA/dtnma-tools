@@ -20,10 +20,9 @@
 
 #include "amm/ident.h"
 #include "cace/ari/base.h"
-#include <m-atomic.h>
-#include <m-deque.h>
-#include <m-rbtree.h>
-#include <m-bptree.h>
+#include <m-array.h>
+#include <m-dict.h>
+#include <pthread.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -35,11 +34,43 @@ extern "C" {
  */
 typedef enum
 {
+    /**
+     * There is currently no specific alarm condition on
+     * a resource.
+     */
     REFDA_ALARMS_SEVERITY_CLEARED = 0,
+    /**
+     * This indicates that the severity level cannot be
+     * determined.
+     */
+    REFDA_ALARMS_SEVERITY_INDETERMINATE = 1,
+    /**
+     * This indicates the detection of a potential or
+     * impending service affecting fault, before any
+     * significant effects have been felt.
+     */
+    REFDA_ALARMS_SEVERITY_WARNING = 2,
+    /**
+     * This indicates the existence of a non-service
+     * affecting fault condition and that corrective action
+     * should be taken in order to prevent a more serious
+     * (for example, service affecting) fault.
+     */
+    REFDA_ALARMS_SEVERITY_MINOR = 3,
+    /**
+     * This indicates that a service affecting condition has
+     * developed and an urgent corrective action is required.
+     */
+    REFDA_ALARMS_SEVERITY_MAJOR = 4,
+    /**
+     * This indicates that a service affecting condition has
+     * occurred and an immediate corrective action is
+     * required.
+     */
+    REFDA_ALARMS_SEVERITY_CRITICAL = 5,
 } refda_alarms_severity_t;
 
 /** A single entry of the alarm list.
- *
  */
 typedef struct
 {
@@ -47,11 +78,12 @@ typedef struct
     refda_amm_ident_base_t resource;
     /// Optional category reference
     refda_amm_ident_base_t category;
+
     /// Current severity
-    int severity;
+    refda_alarms_severity_t severity;
 
     /// Added-at timestamp
-    cace_ari_t added_at;
+    cace_ari_t created_at;
     /// Updated-at timestamp
     cace_ari_t updated_at;
 
@@ -69,17 +101,38 @@ void refda_alarms_entry_init(refda_alarms_entry_t *obj);
 
 void refda_alarms_entry_deinit(refda_alarms_entry_t *obj);
 
-int refda_alarms_entry_cmp(const refda_alarms_entry_t *left, const refda_alarms_entry_t *right);
+#define M_OPL_refda_alarms_entry_t() (INIT(API_2(refda_alarms_entry_init)), CLEAR(API_2(refda_alarms_entry_deinit)))
 
-#define M_OPL_refda_alarms_entry_t() \
-    (INIT(API_2(refda_alarms_entry_init)), CLEAR(API_2(refda_alarms_entry_deinit)), CMP(API_6(refda_alarms_entry_cmp)))
+/** Search key for an alarm entry.
+ */
+typedef struct
+{
+    /// Non-null pointer to an IDENT object
+    const struct refda_amm_ident_desc_s *resource;
+    /// Optional pointer to an IDENT object
+    const struct refda_amm_ident_desc_s *category;
+} refda_alarms_entry_key_t;
 
+int refda_alarms_entry_key_cmp(const refda_alarms_entry_key_t *left, const refda_alarms_entry_key_t *right);
+
+#define M_OPL_refda_alarms_entry_key_t() M_OPEXTEND(M_POD_OPLIST, CMP(API_6(refda_alarms_entry_cmp)))
+
+/** @struct refda_alarms_entry_ptr_t
+ * A non-thread-safe shared pointer to a ::refda_alarms_entry_t instance.
+ */
 /** @struct refda_alarms_entry_list_t
- * An ordered list of ::refda_alarms_entry_t instances.
+ * An ordered list of pointers to ::refda_alarms_entry_t instances.
+ */
+/** @struct refda_alarms_entry_list_t
+ * A lookup from unique key to ::refda_alarms_entry_t pointer.
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_RBTREE_DEF(refda_alarms_entry_list, refda_alarms_entry_t)
+M_SHARED_WEAK_PTR_DEF(refda_alarms_entry_ptr, refda_alarms_entry_t)
+M_ARRAY_DEF(refda_alarms_entry_list, refda_alarms_entry_ptr_t *,
+            M_SHARED_PTR_OPLIST(refda_alarms_entry_ptr, M_OPL_refda_alarms_entry_t()))
+M_DICT_DEF2(refda_alarms_entry_index, refda_alarms_entry_key_t, M_OPL_refda_alarms_entry_key_t(),
+            refda_alarms_entry_t *, M_PTR_OPLIST)
 // GCOV_EXCL_STOP
 /// @endcond
 
@@ -87,9 +140,12 @@ M_RBTREE_DEF(refda_alarms_entry_list, refda_alarms_entry_t)
  */
 typedef struct
 {
-    /** All groups configured in the Agent.
+    /** All alarm entries.
      */
-    refda_alarms_entry_list_t alarms;
+    refda_alarms_entry_list_t  alarm_list;
+    refda_alarms_entry_index_t alarm_index;
+    /// Mutex for the state of #alarm_list and #alarm_index
+    pthread_mutex_t alarm_mutex;
 
 } refda_alarms_t;
 
@@ -99,6 +155,24 @@ void refda_alarms_deinit(refda_alarms_t *obj);
 
 // forward declared
 typedef struct refda_agent_s refda_agent_t;
+
+/** Record a new alarm state in the Agent based on object references.
+ *
+ * @param agent The agent state to modify.
+ * @param[in] resource The resource to set state on.
+ * @param[in] category The optional category to set state on.
+ * @param[in] severity The new severity level.
+ */
+void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, const cace_ari_t *category,
+                      refda_alarms_severity_t severity);
+
+/** Purge the list of alarms based on an LABEL-substituted expression.
+ *
+ * @param agent The agent state to modify.
+ * @param[in] expr The expression to LABEL-substitute and evaluate for
+ * each alarm entry.
+ */
+void refda_alarms_purge(refda_agent_t *agent, const cace_ari_t *expr);
 
 #ifdef __cplusplus
 } // extern C

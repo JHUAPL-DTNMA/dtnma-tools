@@ -23,6 +23,7 @@
 #include <refda/adm/ietf_network_base.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/adm/ietf_dtnma_agent_acl.h>
+#include <refda/adm/ietf_alarms.h>
 #include <refda/agent.h>
 #include <cace/ari/time_util.h>
 #include <assert.h>
@@ -35,6 +36,7 @@ void test_util_agent_crit_adms(refda_agent_t *agent)
     assert(0 == refda_adm_ietf_network_base_init(agent));
     assert(0 == refda_adm_ietf_dtnma_agent_init(agent));
     assert(0 == refda_adm_ietf_dtnma_agent_acl_init(agent));
+    assert(0 == refda_adm_ietf_alarms_init(agent));
 }
 
 void test_util_agent_permission(refda_agent_t *agent, cace_ari_int_id_t obj_id)

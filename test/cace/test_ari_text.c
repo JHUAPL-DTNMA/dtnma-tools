@@ -314,7 +314,7 @@ void test_ari_text_encode_objref_int(cace_ari_int_id_t org_id, cace_ari_int_id_t
                                      cace_ari_int_id_t obj_id, const char *expect)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_objpath_set_intid(&(cace_ari_set_objref(&ari)->objpath), org_id, model_id, type_id, obj_id);
+    cace_ari_set_objref_path_intid(&ari, org_id, model_id, type_id, obj_id);
 
     cace_ari_text_enc_opts_t opts = CACE_ARI_TEXT_ENC_OPTS_DEFAULT;
     check_encode(&ari, expect, opts);

@@ -1204,9 +1204,8 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/alarms/EDD/alarm-list)'), rpt.source)
         self.assertEqual(1, len(rpt.items))
-        self.assertEqual([ari.UNDEFINED], rpt.items)
-        # self.assertIsInstance(rpt.items[0].value, ari.Table)
-        # TODO self.assertEqual((0, 6), rpt.items[0].value.shape)
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 9), rpt.items[0].value.shape)
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/alarms/EDD/shelf-list)'), rpt.source)

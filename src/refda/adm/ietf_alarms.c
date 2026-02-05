@@ -45,13 +45,13 @@
 /* Name: alarm-list
  * Description:
  *   A table to indicate the current and historical alarm states. Rows of
- *   the table SHALL be ordered
+ *   the table SHALL be ordered by their 'time-created' values.
  *
  * Parameters: none
  *
  * Produced type: TBLT with 9 columns:
  *   - Index 0, name "resource", type use of ari:/ARITYPE/IDENT
- *   - Index 1, name "category", type use of ari:/ARITYPE/IDENT
+ *   - Index 1, name "category", type union of 2 types (use of ari:/ARITYPE/NULL, use of ari:/ARITYPE/IDENT)
  *   - Index 2, name "severity", type use of ari://ietf/alarms/TYPEDEF/severity
  *   - Index 3, name "time-created", type use of ari://ietf/amm-base/TYPEDEF/timestamp
  *   - Index 4, name "time-updated", type use of ari://ietf/amm-base/TYPEDEF/timestamp
@@ -70,6 +70,46 @@ static void refda_adm_ietf_alarms_edd_alarm_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_edd_alarm_list BODY
      * +-------------------------------------------------------------------------+
      */
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
+    if (pthread_mutex_lock(&(agent->alarms.alarm_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock alarm_mutex");
+        return;
+    }
+
+    cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
+    cace_ari_tbl_reset(table, 9, 0);
+
+    // table is naturally sorted
+    refda_alarms_entry_list_it_t entry_it;
+    for (refda_alarms_entry_list_it(entry_it, agent->alarms.alarm_list); !refda_alarms_entry_list_end_p(entry_it);
+         refda_alarms_entry_list_next(entry_it))
+    {
+        const refda_alarms_entry_t *entry = refda_alarms_entry_ptr_cref(*refda_alarms_entry_list_cref(entry_it));
+
+        cace_ari_array_t row;
+        cace_ari_array_init(row);
+        cace_ari_array_resize(row, 9);
+
+        cace_ari_set_copy(cace_ari_array_get(row, 0), &entry->resource.name);
+        cace_ari_set_copy(cace_ari_array_get(row, 1), &entry->category.name);
+        cace_ari_set_uint(cace_ari_array_get(row, 2), entry->severity);
+        cace_ari_set_copy(cace_ari_array_get(row, 3), &entry->created_at);
+        cace_ari_set_copy(cace_ari_array_get(row, 4), &entry->updated_at);
+        // TODO other columns
+
+        // append the row
+        cace_ari_tbl_move_row_array(table, row);
+    }
+
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
+
+    if (pthread_mutex_unlock(&(agent->alarms.alarm_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock alarm_mutex");
+        return;
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_edd_alarm_list BODY
@@ -376,10 +416,26 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "category");
                     {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // use of ari:/ARITYPE/IDENT
-                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        // union
+                        cace_amm_semtype_union_t *semtype_d1 = cace_amm_type_set_union_size(&(col->typeobj), 2);
+                        {
+                            cace_amm_type_t *choice_d1 = cace_amm_type_array_get(semtype_d1->choices, 0);
+                            {
+                                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                                // use of ari:/ARITYPE/NULL
+                                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                                cace_amm_type_set_use_ref_move(choice_d1, &typeref);
+                            }
+                        }
+                        {
+                            cace_amm_type_t *choice_d1 = cace_amm_type_array_get(semtype_d1->choices, 1);
+                            {
+                                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                                // use of ari:/ARITYPE/IDENT
+                                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
+                                cace_amm_type_set_use_ref_move(choice_d1, &typeref);
+                            }
+                        }
                     }
                 }
                 {

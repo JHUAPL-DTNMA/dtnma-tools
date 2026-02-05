@@ -50,6 +50,20 @@ void refda_amm_ident_base_set(refda_amm_ident_base_t *obj, const refda_amm_ident
     CHKVOID(obj);
     CHKVOID(src);
     cace_ari_set_copy(&(obj->name), &(src->name));
+    cace_amm_lookup_set(&obj->deref, &src->deref);
+    obj->ident = src->ident;
+}
+
+void refda_amm_ident_base_set_move(refda_amm_ident_base_t *obj, refda_amm_ident_base_t *src)
+{
+    if (obj == src)
+    {
+        return;
+    }
+    CHKVOID(obj);
+    CHKVOID(src);
+    cace_ari_set_move(&(obj->name), &(src->name));
+    cace_amm_lookup_set_move(&obj->deref, &src->deref);
     obj->ident = src->ident;
 }
 
