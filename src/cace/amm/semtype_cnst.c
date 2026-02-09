@@ -128,10 +128,6 @@ int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *obj, cace_ari_am_t *
 
     obj->type = AMM_SEMTYPE_CNST_INT_ENUM;
     
-    /* 
-     * If cace_ari_am_t is a struct, you may need to move/copy it.
-     * If mappings is a pointer to the wrapper, you might do:
-     */
     obj->as_enum.enum_map = *mappings; 
 
     return 0;
@@ -171,8 +167,8 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
         case AMM_SEMTYPE_CNST_INT_ENUM:
         {
             /* 
-            * Access the internal tree inside the wrapper.
-            * We use the _get function from the B-tree interface as requested.
+            * Access the internal tree inside the wrapper
+            * Using the _get function from the B-tree interface
             */
             if (cace_ari_tree_get(obj->as_enum.enum_map.tree, val) != NULL) {
                 return 1; // Value found in enum
