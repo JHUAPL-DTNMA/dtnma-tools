@@ -40,8 +40,11 @@ def compose_args(args: List[str]) -> List[str]:
     needed to run from the `testroot` environment.
     '''
     args = list(args)
-    if os.environ.get('TEST_MEMCHECK', ''):
-        valgrind = [
+
+    wrap = os.environ.get('TEST_EXEC_WRAP', '').casefold()
+    prefix = []
+    if wrap == 'memcheck':
+        prefix = [
             'valgrind',
             '--tool=memcheck',
             '--leak-check=full',
@@ -49,11 +52,14 @@ def compose_args(args: List[str]) -> List[str]:
             '--gen-suppressions=all',
             '--error-exitcode=2',
         ]
-        args = valgrind + args
-    elif os.environ.get('TEST_GDB', ''):
-        gdb = ['gdb', '-batch', '-ex', 'run', '-ex', 'bt', '--args']
-        args = gdb + args
-    args = [os.path.join(PROJPATH, 'run.sh')] + args
+    elif wrap == 'gdb':
+        prefix = [
+            'gdb',
+            '-batch', '-ex', 'run', '-ex', 'bt',
+            '--args'
+        ]
+
+    args = [os.path.join(PROJPATH, 'run.sh')] + prefix + args
     return args
 
 
