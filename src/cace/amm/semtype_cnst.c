@@ -35,11 +35,8 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
             cace_amm_range_size_deinit(&(obj->as_strlen));
             break;
         case AMM_SEMTYPE_CNST_INT_ENUM:
-            if(obj->as_enum) {
-                /* Use the _clear function instead of _destroy */
-                cace_ari_am_clear(obj->as_enum);
-                obj->as_enum = NULL;
-            }
+            /* Use the wrapper deinit function */
+            cace_ari_am_deinit(&obj->as_enum.enum_map); 
             break;
     obj->type = AMM_SEMTYPE_CNST_INVALID;
 
@@ -126,13 +123,16 @@ int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *obj, cace_ari_am_t *
 {
     CHKERR1(obj);
     CHKERR1(mappings);
-    
-    /* 1. Clean up any existing constraint data in this object */
+
     cace_amm_semtype_cnst_deinit(obj);
 
-    /* 2. Set the type and attach the mapping tree */
     obj->type = AMM_SEMTYPE_CNST_INT_ENUM;
-    obj->as_enum = mappings;
+    
+    /* 
+     * If cace_ari_am_t is a struct, you may need to move/copy it.
+     * If mappings is a pointer to the wrapper, you might do:
+     */
+    obj->as_enum.enum_map = *mappings; 
 
     return 0;
 }
@@ -171,14 +171,13 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
         case AMM_SEMTYPE_CNST_INT_ENUM:
         {
             /* 
-             * NEW VALIDATOR CASE:
-             * This checks if the value 'val' is present as a key in our map.
-             */
-            if (obj->as_enum && cace_ari_am_find_key(obj->as_enum, val) != NULL)
-            {
-                retval = true;
+            * Access the internal tree inside the wrapper.
+            * We use the _get function from the B-tree interface as requested.
+            */
+            if (cace_ari_tree_get(obj->as_enum.enum_map.tree, val) != NULL) {
+                return 1; // Value found in enum
             }
-            break;
+            return 0; // Not found
         }
 
 #if defined(PCRE_FOUND)

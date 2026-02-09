@@ -59,7 +59,12 @@ enum cace_amm_semtype_cnst_type_e
 typedef struct cace_amm_semtype_cnst_s
 {
     /// The type of constraint present
-    enum cace_amm_semtype_cnst_type_e type;
+    enum cace_amm_semtype_cnst_type_e {
+        AMM_SEMTYPE_CNST_STRLEN,
+        AMM_SEMTYPE_CNST_TEXTPAT,
+        AMM_SEMTYPE_CNST_RANGE_INT64,
+        AMM_SEMTYPE_CNST_INT_ENUM = 10
+    };
 
     union
     {
@@ -73,8 +78,9 @@ typedef struct cace_amm_semtype_cnst_s
         cace_amm_range_int64_t as_range_int64;
 
         /// NEW: Used when #type is ::AMM_SEMTYPE_CNST_INT_ENUM
-        /// This is now a direct pointer
-        cace_ari_am_t *as_enum; 
+        struct {
+            cace_ari_am_t enum_map; 
+        } as_enum;
     };
 } cace_amm_semtype_cnst_t;
 
@@ -127,9 +133,6 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
 /// M*LIB OPLIST for cace_amm_semtype_cnst_t
 #define M_OPL_cace_amm_semtype_cnst_t() \
     (INIT(API_2(cace_amm_semtype_cnst_init)), CLEAR(API_2(cace_amm_semtype_cnst_deinit)))
-
-/* Define the new constraint type ID if not already there */
-#define AMM_SEMTYPE_CNST_INT_ENUM 10 // Use the next available integer ID
 
 /* Prototype for the setter function */
 int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *cnst, cace_ari_am_t *mappings);
