@@ -61,7 +61,6 @@ typedef struct cace_amm_semtype_cnst_s
     /// The type of constraint present
     enum cace_amm_semtype_cnst_type_e type;
 
-    uint8_t type;
     union
     {
         /// Used when #type is ::AMM_SEMTYPE_CNST_STRLEN
