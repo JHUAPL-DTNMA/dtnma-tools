@@ -287,7 +287,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
 
             // remove rule events
             refda_timeline_it_t tl_it;
-            for (refda_timeline_it(tl_it, agent->exec_timeline);!refda_timeline_end_p(tl_it); )
+            for (refda_timeline_it(tl_it, agent->exec_timeline); !refda_timeline_end_p(tl_it);)
             {
                 refda_timeline_event_t *event = refda_timeline_ref(tl_it);
                 if (event->purpose == REFDA_TIMELINE_EXEC)
@@ -297,7 +297,6 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                 else
                 {
                     refda_timeline_remove(agent->exec_timeline, tl_it);
-
                 }
             }
         }
