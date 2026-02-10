@@ -91,7 +91,8 @@ static void alarms_append_derived_ident(cace_ari_tbl_t *table, const cace_amm_lo
  *       - Index 0, name "time", type use of ari://ietf/amm-base/TYPEDEF/timestamp
  *       - Index 1, name "severity", type use of ari://ietf/alarms/TYPEDEF/severity
  *   - Index 6, name "manager-state", type use of ari://ietf/alarms/TYPEDEF/manager-state
- *   - Index 7, name "manager-identity", type use of ari://ietf/network-base/TYPEDEF/endpoint
+ *   - Index 7, name "manager-identity", type union of 2 types (use of ari://ietf/network-base/TYPEDEF/endpoint, use of
+ * ari:/ARITYPE/NULL)
  *   - Index 8, name "manager-time", type union of 2 types (use of ari://ietf/amm-base/TYPEDEF/timestamp, use of
  * ari:/ARITYPE/NULL)
  */
@@ -129,7 +130,29 @@ static void refda_adm_ietf_alarms_edd_alarm_list(refda_edd_prod_ctx_t *ctx)
         cace_ari_set_uint(cace_ari_array_get(row, 2), entry->severity);
         cace_ari_set_copy(cace_ari_array_get(row, 3), &entry->created_at);
         cace_ari_set_copy(cace_ari_array_get(row, 4), &entry->updated_at);
-        // TODO other columns
+        {
+            cace_ari_tbl_t *hist_tbl = cace_ari_set_tbl(cace_ari_array_get(row, 5), NULL);
+            cace_ari_tbl_reset(hist_tbl, 2, 0);
+
+            refda_alarms_history_list_it_t hist_it;
+            for (refda_alarms_history_list_it(hist_it, entry->history); !refda_alarms_history_list_end_p(hist_it);
+                 refda_alarms_history_list_next(hist_it))
+            {
+                const refda_alarms_history_item_t *hist_item = refda_alarms_history_list_cref(hist_it);
+
+                cace_ari_array_t hist_row;
+                cace_ari_array_init(hist_row);
+                cace_ari_array_resize(hist_row, hist_tbl->ncols);
+
+                cace_ari_set_copy(cace_ari_array_get(hist_row, 0), &hist_item->timestamp);
+                cace_ari_set_uint(cace_ari_array_get(hist_row, 1), hist_item->severity);
+
+                cace_ari_tbl_move_row_array(hist_tbl, hist_row);
+            }
+        }
+        cace_ari_set_uint(cace_ari_array_get(row, 6), entry->mgr_state);
+        cace_ari_set_copy(cace_ari_array_get(row, 7), &entry->mgr_ident);
+        cace_ari_set_copy(cace_ari_array_get(row, 8), &entry->mgr_state_at);
 
         // append the row
         cace_ari_tbl_move_row_array(table, row);
@@ -276,7 +299,8 @@ static void refda_adm_ietf_alarms_edd_shelf_list(refda_edd_prod_ctx_t *ctx)
 
 /* Name: purge-alarms
  * Description:
- *   Remove specific entries of the <./edd/alarm-list> table
+ *   Remove specific entries of the <./edd/alarm-list> table. Removed
+ *   entries can reappear if their alarm state changes after a purge.
  *
  * Parameters list:
  *   - Index 0, name "filter", type use of ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
@@ -600,10 +624,26 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 7);
                     m_string_set_cstr(col->name, "manager-identity");
                     {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/network-base/TYPEDEF/endpoint
-                        cace_ari_set_objref_path_intid(&typeref, 1, 26, CACE_ARI_TYPE_TYPEDEF, 1);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        // union
+                        cace_amm_semtype_union_t *semtype_d1 = cace_amm_type_set_union_size(&(col->typeobj), 2);
+                        {
+                            cace_amm_type_t *choice_d1 = cace_amm_type_array_get(semtype_d1->choices, 0);
+                            {
+                                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                                // reference to ari://ietf/network-base/TYPEDEF/endpoint
+                                cace_ari_set_objref_path_intid(&typeref, 1, 26, CACE_ARI_TYPE_TYPEDEF, 1);
+                                cace_amm_type_set_use_ref_move(choice_d1, &typeref);
+                            }
+                        }
+                        {
+                            cace_amm_type_t *choice_d1 = cace_amm_type_array_get(semtype_d1->choices, 1);
+                            {
+                                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                                // use of ari:/ARITYPE/NULL
+                                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                                cace_amm_type_set_use_ref_move(choice_d1, &typeref);
+                            }
+                        }
                     }
                 }
                 {

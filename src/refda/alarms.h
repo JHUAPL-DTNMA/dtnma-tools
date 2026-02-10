@@ -70,6 +70,32 @@ typedef enum
     REFDA_ALARMS_SEVERITY_CRITICAL = 5,
 } refda_alarms_severity_t;
 
+/** Each item of an alarm entry history.
+ */
+typedef struct
+{
+    /// Timestamp of this update
+    cace_ari_t timestamp;
+    /// Severity at this update
+    refda_alarms_severity_t severity;
+} refda_alarms_history_item_t;
+
+void refda_alarms_history_item_init(refda_alarms_history_item_t *obj);
+
+void refda_alarms_history_item_deinit(refda_alarms_history_item_t *obj);
+
+/// M*LIB oplist for ::refda_alarms_history_item_t
+#define M_OPL_refda_alarms_history_item_t() (INIT(API_2(refda_alarms_history_item_init)), CLEAR(API_2(refda_alarms_history_item_deinit)))
+
+/** @struct refda_alarms_history_list_t
+ * An ordered list of ::refda_alarms_history_item_t instances.
+ */
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+M_DEQUE_DEF(refda_alarms_history_list, refda_alarms_history_item_t)
+// GCOV_EXCL_STOP
+/// @endcond
+
 /** A single entry of the alarm list.
  */
 typedef struct
@@ -87,7 +113,8 @@ typedef struct
     /// Updated-at timestamp
     cace_ari_t updated_at;
 
-    // TODO add history storage
+    // History storage, ordered with newest first
+    refda_alarms_history_list_t history;
 
     /// Manager state
     int mgr_state;
@@ -101,6 +128,7 @@ void refda_alarms_entry_init(refda_alarms_entry_t *obj);
 
 void refda_alarms_entry_deinit(refda_alarms_entry_t *obj);
 
+/// M*LIB oplist for ::refda_alarms_entry_t
 #define M_OPL_refda_alarms_entry_t() (INIT(API_2(refda_alarms_entry_init)), CLEAR(API_2(refda_alarms_entry_deinit)))
 
 /** Search key for an alarm entry.
@@ -115,6 +143,7 @@ typedef struct
 
 int refda_alarms_entry_key_cmp(const refda_alarms_entry_key_t *left, const refda_alarms_entry_key_t *right);
 
+/// M*LIB oplist for ::refda_alarms_entry_key_t
 #define M_OPL_refda_alarms_entry_key_t() M_OPEXTEND(M_POD_OPLIST, CMP(API_6(refda_alarms_entry_cmp)))
 
 /** @struct refda_alarms_entry_ptr_t

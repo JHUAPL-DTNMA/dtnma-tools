@@ -28,9 +28,6 @@
 #include <refda/exec_proc.h>
 #include <refda/adm/ietf.h>
 #include <refda/adm/ietf_amm_base.h>
-#include <refda/adm/ietf_amm_semtype.h>
-#include <refda/adm/ietf_dtnma_agent.h>
-#include <refda/adm/ietf_dtnma_agent_acl.h>
 #include <refda/adm/ietf_alarms.h>
 #include <refda/amm/ident.h>
 #include <refda/amm/const.h>
@@ -138,6 +135,7 @@ void test_refda_alarms_set_state_no_category(void)
         TEST_ASSERT_TRUE(cace_ari_not_undefined(&entry->created_at));
         TEST_ASSERT_TRUE(cace_ari_not_undefined(&entry->updated_at));
         TEST_ASSERT_TRUE(cace_ari_equal(&entry->created_at, &entry->updated_at));
+        TEST_ASSERT_EQUAL_size_t(1, refda_alarms_history_list_size(entry->history));
     }
 
     // update state
@@ -154,6 +152,7 @@ void test_refda_alarms_set_state_no_category(void)
         TEST_ASSERT_TRUE(cace_ari_not_undefined(&entry->created_at));
         TEST_ASSERT_TRUE(cace_ari_not_undefined(&entry->updated_at));
         TEST_ASSERT_TRUE(!cace_ari_equal(&entry->created_at, &entry->updated_at));
+        TEST_ASSERT_EQUAL_size_t(2, refda_alarms_history_list_size(entry->history));
     }
 
     cace_ari_deinit(&cat_ref);

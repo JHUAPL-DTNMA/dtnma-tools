@@ -21,13 +21,25 @@
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 
+void refda_alarms_history_item_init(refda_alarms_history_item_t *obj)
+{
+    cace_ari_init(&obj->timestamp);
+    obj->severity = REFDA_ALARMS_SEVERITY_CLEARED;
+}
+
+void refda_alarms_history_item_deinit(refda_alarms_history_item_t *obj)
+{
+    cace_ari_deinit(&obj->timestamp);
+}
+
 void refda_alarms_entry_init(refda_alarms_entry_t *obj)
 {
     refda_amm_ident_base_init(&obj->resource);
     refda_amm_ident_base_init(&obj->category);
-    obj->severity = 0; // TODO
+    obj->severity = REFDA_ALARMS_SEVERITY_CLEARED;
     cace_ari_init(&obj->created_at);
     cace_ari_init(&obj->updated_at);
+    refda_alarms_history_list_init(obj->history);
     obj->mgr_state = 0; // TODO
     obj->mgr_ident = CACE_ARI_INIT_NULL;
     cace_ari_init(&obj->mgr_state_at);
@@ -37,6 +49,7 @@ void refda_alarms_entry_deinit(refda_alarms_entry_t *obj)
 {
     cace_ari_deinit(&obj->mgr_state_at);
     cace_ari_deinit(&obj->mgr_ident);
+    refda_alarms_history_list_clear(obj->history);
     cace_ari_deinit(&obj->updated_at);
     cace_ari_deinit(&obj->created_at);
     refda_amm_ident_base_deinit(&obj->category);
@@ -145,7 +158,11 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
         cace_ari_set_copy(&entry->created_at, &entry->updated_at);
     }
 
-    // TODO record history
+    { // record history at the front
+        refda_alarms_history_item_t *hist_item = refda_alarms_history_list_push_front_new(entry->history);
+        hist_item->severity = entry->severity;
+        cace_ari_set_copy(&hist_item->timestamp, &entry->updated_at);
+    }
 
     if (pthread_mutex_unlock(&(agent->alarms.alarm_mutex)))
     {
