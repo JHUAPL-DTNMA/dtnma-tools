@@ -63,6 +63,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         { // For ./IDENT/semtype
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // no IDENT bases
 
             obj = refda_register_ident(
@@ -73,6 +74,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         { // For ./IDENT/type-use
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -97,6 +99,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         { // For ./IDENT/ulist
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -172,6 +175,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         { // For ./IDENT/dlist
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -199,6 +203,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         { // For ./IDENT/umap
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -231,6 +236,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         { // For ./IDENT/tblt
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -368,6 +374,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         { // For ./IDENT/union
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -395,6 +402,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         { // For ./IDENT/seq
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);

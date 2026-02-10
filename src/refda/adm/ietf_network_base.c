@@ -63,6 +63,7 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-bstr-uuid
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -80,6 +81,7 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-bstr-oid
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -97,6 +99,7 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
         { // For ./IDENT/abstract-endpoint
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // no IDENT bases
 
             obj = refda_register_ident(
@@ -109,6 +112,7 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
         { // For ./IDENT/abstract-endpoint-pattern
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // no IDENT bases
 
             obj = refda_register_ident(
@@ -121,6 +125,7 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
         { // For ./IDENT/uri-regexp-pattern
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
