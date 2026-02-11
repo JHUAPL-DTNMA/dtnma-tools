@@ -37,9 +37,6 @@
 #include <refda/amm/var.h>
 #include <refda/amm/edd.h>
 #include <cace/amm/semtype.h>
-#include <cace/ari/text_util.h>
-#include <cace/ari/cbor.h>
-#include <cace/ari/text.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 #include <unity.h>
@@ -127,6 +124,12 @@ int suiteTearDown(int failures)
 
     cace_closelog();
     return failures;
+}
+
+void setUp(void)
+{
+    refda_alarms_entry_index_reset(agent.alarms.alarm_index);
+    refda_alarms_entry_list_reset(agent.alarms.alarm_list);
 }
 
 void test_refda_adm_ietf_alarms_list_no_category(void)
@@ -273,4 +276,55 @@ void test_refda_adm_ietf_alarms_category_inventory(void)
     refda_runctx_deinit(&runctx);
     cace_amm_lookup_deinit(&edd_deref);
     cace_ari_deinit(&edd_ref);
+}
+
+void test_refda_adm_ietf_alarms_purge_all(void)
+{
+    // no mutex use with single thread
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_list_size(agent.alarms.alarm_list));
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_index_size(agent.alarms.alarm_index));
+
+    cace_ari_t null_ref = CACE_ARI_INIT_NULL;
+    cace_ari_t res1_ref = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_objref_path_intid(&res1_ref, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_IDENT,
+                                   EXAMPLE_IDENT_RES1_ENUM);
+    cace_ari_t cat2_ref = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_objref_path_intid(&cat2_ref, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_IDENT,
+                                   EXAMPLE_IDENT_CAT2_ENUM);
+
+    // initial entries: one with 2-item history, one with 1-item history
+    refda_alarms_set_refs(&agent, &res1_ref, &cat2_ref, REFDA_ALARMS_SEVERITY_MINOR);
+    refda_alarms_set_refs(&agent, &res1_ref, &cat2_ref, REFDA_ALARMS_SEVERITY_WARNING);
+    refda_alarms_set_refs(&agent, &res1_ref, &null_ref, REFDA_ALARMS_SEVERITY_MINOR);
+    TEST_ASSERT_EQUAL_size_t(2, refda_alarms_entry_list_size(agent.alarms.alarm_list));
+    TEST_ASSERT_EQUAL_size_t(2, refda_alarms_entry_index_size(agent.alarms.alarm_index));
+
+    {
+        cace_ari_t ctrl_ref = CACE_ARI_INIT_UNDEFINED;
+        {
+            cace_ari_ref_t *ref =
+                cace_ari_set_objref_path_intid(&ctrl_ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_ALARMS_ENUM_ADM,
+                                               CACE_ARI_TYPE_CTRL, REFDA_ADM_IETF_ALARMS_ENUM_OBJID_CTRL_PURGE_ALARMS);
+
+            cace_ari_ac_t *params = cace_ari_params_set_ac(&(ref->params), NULL);
+            { // filter
+                cace_ari_t    *param   = cace_ari_list_push_back_new(params->items);
+                cace_ari_ac_t *expr_ac = cace_ari_set_ac(param, NULL);
+
+                // purge all rows
+                cace_ari_t *expr_item = cace_ari_list_push_back_new(expr_ac->items);
+                cace_ari_set_bool(expr_item, true);
+            }
+        }
+
+        test_util_agent_check_execute(&agent, &ctrl_ref);
+        cace_ari_deinit(&ctrl_ref);
+    }
+    // all gone
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_list_size(agent.alarms.alarm_list));
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_index_size(agent.alarms.alarm_index));
+
+    cace_ari_deinit(&cat2_ref);
+    cace_ari_deinit(&res1_ref);
+    cace_ari_deinit(&null_ref);
 }

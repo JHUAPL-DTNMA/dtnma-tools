@@ -1186,7 +1186,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent-acl/CTRL/ensure-access'), self._ari_strip_params(rpt.source))
         self.assertEqual([ari.UNDEFINED], rpt.items)
 
-    def test_alarm(self):
+    def test_alarms(self):
         self._start()
 
         # Initial default state
@@ -1211,5 +1211,5 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/alarms/EDD/shelf-list)'), rpt.source)
         self.assertEqual(1, len(rpt.items))
         self.assertEqual([ari.UNDEFINED], rpt.items)
-        # self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
         # TODO self.assertEqual((0, 6), rpt.items[0].value.shape)

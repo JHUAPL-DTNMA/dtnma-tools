@@ -18,6 +18,7 @@
 #ifndef REFDA_ALARMS_H_
 #define REFDA_ALARMS_H_
 
+#include "runctx.h"
 #include "amm/ident.h"
 #include "cace/ari/base.h"
 #include <m-array.h>
@@ -70,6 +71,29 @@ typedef enum
     REFDA_ALARMS_SEVERITY_CRITICAL = 5,
 } refda_alarms_severity_t;
 
+/** Enumeration of alarm entry manager state.
+ * Descriptions are copied from the ADM.
+ */
+typedef enum
+{
+    /**
+     * The alarm is not being taken care of.
+     */
+    REFDA_ALARMS_MGR_STATE_NONE = 0,
+    /**
+     * The alarm is being taken care of.
+     */
+    REFDA_ALARMS_MGR_STATE_ACK = 1,
+    /**
+     * Corrective action taken successfully.
+     */
+    REFDA_ALARMS_MGR_STATE_CLOSED = 2,
+    /**
+     * The alarm is shelved and moved out of the table.
+     */
+    REFDA_ALARMS_MGR_STATE_SHELVED = 3,
+} refda_alarms_mgr_state_t;
+
 /** Each item of an alarm entry history.
  */
 typedef struct
@@ -85,7 +109,8 @@ void refda_alarms_history_item_init(refda_alarms_history_item_t *obj);
 void refda_alarms_history_item_deinit(refda_alarms_history_item_t *obj);
 
 /// M*LIB oplist for ::refda_alarms_history_item_t
-#define M_OPL_refda_alarms_history_item_t() (INIT(API_2(refda_alarms_history_item_init)), CLEAR(API_2(refda_alarms_history_item_deinit)))
+#define M_OPL_refda_alarms_history_item_t() \
+    (INIT(API_2(refda_alarms_history_item_init)), CLEAR(API_2(refda_alarms_history_item_deinit)))
 
 /** @struct refda_alarms_history_list_t
  * An ordered list of ::refda_alarms_history_item_t instances.
@@ -117,11 +142,11 @@ typedef struct
     refda_alarms_history_list_t history;
 
     /// Manager state
-    int mgr_state;
+    refda_alarms_mgr_state_t mgr_state;
     /// Associated manager identity
     cace_ari_t mgr_ident;
     /// Manager state timestamp
-    cace_ari_t mgr_state_at;
+    cace_ari_t mgr_time;
 } refda_alarms_entry_t;
 
 void refda_alarms_entry_init(refda_alarms_entry_t *obj);
@@ -171,7 +196,8 @@ typedef struct
 {
     /** All alarm entries.
      */
-    refda_alarms_entry_list_t  alarm_list;
+    refda_alarms_entry_list_t alarm_list;
+    /// Index by key (resource,category)
     refda_alarms_entry_index_t alarm_index;
     /// Mutex for the state of #alarm_list and #alarm_index
     pthread_mutex_t alarm_mutex;
@@ -195,13 +221,36 @@ typedef struct refda_agent_s refda_agent_t;
 void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, const cace_ari_t *category,
                            refda_alarms_severity_t severity);
 
-/** Purge the list of alarms based on an LABEL-substituted expression.
+/** Get a table representing the alarm list.
  *
- * @param agent The agent state to modify.
- * @param[in] expr The expression to LABEL-substitute and evaluate for
- * each alarm entry.
+ * @param[in] runctx The context to produce under.
+ * @param[out] out The already-initialized value to store into.
+ * @return Zero if successful.
  */
-void refda_alarms_purge(refda_agent_t *agent, const cace_ari_t *expr);
+int refda_alarms_get_table(refda_runctx_t *runctx, cace_ari_t *out);
+
+/** Purge the list of alarms based on filtered entries.
+ *
+ * @param[in] runctx The context to evaluate expressions and the agent state to modify.
+ * @param[in] filter The expression to LABEL-substitute and evaluate for each alarm entry.
+ * @return The number of affected entries.
+ */
+size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter);
+
+/** Compress the history on on filtered entries.
+ *
+ * @param[in] runctx The context to evaluate expressions and the agent state to modify.
+ * @param[in] filter The expression to LABEL-substitute and evaluate for each alarm entry.
+ */
+size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter);
+
+/** Set the manager state on on filtered entries.
+ *
+ * @param[in] runctx The context to evaluate expressions and the agent state to modify.
+ * @param[in] filter The expression to LABEL-substitute and evaluate for each alarm entry.
+ * @param state The new state.
+ */
+size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, refda_alarms_mgr_state_t state);
 
 #ifdef __cplusplus
 } // extern C

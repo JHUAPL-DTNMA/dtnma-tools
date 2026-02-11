@@ -253,7 +253,8 @@ static int cace_ari_map_ac(cace_ari_ac_t *out, const cace_ari_ac_t *in, const ca
     {
         const cace_ari_t *in_item  = cace_ari_list_cref(it);
         cace_ari_t       *out_item = cace_ari_list_push_back_new(out->items);
-        retval                     = cace_ari_translate_ari(out_item, in_item, translator, ctx);
+
+        retval = cace_ari_translate_ari(out_item, in_item, translator, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -294,7 +295,8 @@ static int cace_ari_map_tbl(cace_ari_tbl_t *out, const cace_ari_tbl_t *in, const
     {
         const cace_ari_t *in_item  = cace_ari_array_cref(it);
         cace_ari_t        out_item = CACE_ARI_INIT_UNDEFINED;
-        retval                     = cace_ari_translate_ari(&out_item, in_item, translator, ctx);
+
+        retval = cace_ari_translate_ari(&out_item, in_item, translator, ctx);
         cace_ari_array_push_move(out->items, &out_item);
         CHKERRVAL(retval);
     }
@@ -307,15 +309,21 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
     int retval = 0;
 
     // handle main ARI first
+    cace_ari_translate_result_t res = CACE_ARI_TRANSLATE_DEFAULT;
     if (translator->map_ari)
     {
-        retval = translator->map_ari(out, in, ctx);
-        CHKERRVAL(retval);
+        res = translator->map_ari(out, in, ctx);
+        if (res == CACE_ARI_TRANSLATE_FAILURE)
+        {
+            return 2;
+        }
+        if (res == CACE_ARI_TRANSLATE_FINAL)
+        {
+            // all done
+            return 0;
+        }
     }
-    else
-    {
-        out->is_ref = in->is_ref;
-    }
+    // at this point res == CACE_ARI_TRANSLATE_DEFAULT
 
     cace_ari_translate_ctx_t sub_ctx = {
         .parent     = in,
@@ -323,6 +331,7 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
         .user_data  = ctx->user_data,
     };
 
+    out->is_ref = in->is_ref;
     if (in->is_ref)
     {
         if (translator->map_objpath)

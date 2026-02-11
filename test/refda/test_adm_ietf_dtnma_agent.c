@@ -21,7 +21,6 @@
 #include <refda/register.h>
 #include <refda/binding.h>
 #include <refda/valprod.h>
-#include <refda/exec_proc.h>
 #include <refda/adm/ietf.h>
 #include <refda/adm/ietf_amm_base.h>
 #include <refda/adm/ietf_amm_semtype.h>
@@ -31,9 +30,6 @@
 #include <refda/amm/var.h>
 #include <refda/amm/edd.h>
 #include <cace/amm/semtype.h>
-#include <cace/ari/text_util.h>
-#include <cace/ari/cbor.h>
-#include <cace/ari/text.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 #include <unity.h>
@@ -110,33 +106,6 @@ int suiteTearDown(int failures)
 
     cace_closelog();
     return failures;
-}
-
-/** Execute a target in the main test thread.
- * This assumes the target does not contain any deferred callbacks.
- */
-static void check_execute(const cace_ari_t *target)
-{
-    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
-    // no nonce for test
-    refda_runctx_from(refda_runctx_ptr_ref(ctxptr), &agent, NULL);
-
-    refda_exec_seq_t eseq;
-    refda_exec_seq_init(&eseq);
-    refda_runctx_ptr_set(&eseq.runctx, ctxptr);
-
-    size_t seq_ix = 0;
-
-    int res = refda_exec_proc_expand(&eseq, &seq_ix, target);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_exec_exp_target() failed");
-
-    res = refda_exec_proc_run(&eseq);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_exec_run_seq() failed");
-
-    // TODO assert sequence is successful
-
-    refda_exec_seq_deinit(&eseq);
-    refda_runctx_ptr_clear(ctxptr);
 }
 
 // clang-format off
@@ -262,7 +231,7 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_ensure_var(void)
             cace_ari_params_set_ac(&(ref->params), params);
         }
 
-        check_execute(&ctrl_ref);
+        test_util_agent_check_execute(&agent, &ctrl_ref);
         cace_ari_deinit(&ctrl_ref);
     }
 
@@ -328,7 +297,7 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_store_reset(void)
             cace_ari_params_set_ac(&(ref->params), params);
         }
 
-        check_execute(&ctrl_ref);
+        test_util_agent_check_execute(&agent, &ctrl_ref);
         cace_ari_deinit(&ctrl_ref);
     }
 
@@ -364,7 +333,7 @@ void test_refda_adm_ietf_dtnma_agent_ctrl_var_store_reset(void)
             cace_ari_params_set_ac(&(ref->params), params);
         }
 
-        check_execute(&ctrl_ref);
+        test_util_agent_check_execute(&agent, &ctrl_ref);
         cace_ari_deinit(&ctrl_ref);
     }
 

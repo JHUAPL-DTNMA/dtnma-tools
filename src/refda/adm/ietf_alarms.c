@@ -72,6 +72,7 @@ static void alarms_append_derived_ident(cace_ari_tbl_t *table, const cace_amm_lo
         alarms_append_derived_ident(table, child);
     }
 }
+
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
 /* Name: alarm-list
@@ -103,67 +104,11 @@ static void refda_adm_ietf_alarms_edd_alarm_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_edd_alarm_list BODY
      * +-------------------------------------------------------------------------+
      */
-    refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    if (pthread_mutex_lock(&(agent->alarms.alarm_mutex)))
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    int        res    = refda_alarms_get_table(ctx->prodctx->runctx, &result);
+    if (!res)
     {
-        CACE_LOG_CRIT("failed to lock alarm_mutex");
-        return;
-    }
-
-    cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
-    cace_ari_tbl_reset(table, 9, 0);
-
-    // table is naturally sorted
-    refda_alarms_entry_list_it_t entry_it;
-    for (refda_alarms_entry_list_it(entry_it, agent->alarms.alarm_list); !refda_alarms_entry_list_end_p(entry_it);
-         refda_alarms_entry_list_next(entry_it))
-    {
-        const refda_alarms_entry_t *entry = refda_alarms_entry_ptr_cref(*refda_alarms_entry_list_cref(entry_it));
-
-        cace_ari_array_t row;
-        cace_ari_array_init(row);
-        cace_ari_array_resize(row, table->ncols);
-
-        cace_ari_set_copy(cace_ari_array_get(row, 0), &entry->resource.name);
-        cace_ari_set_copy(cace_ari_array_get(row, 1), &entry->category.name);
-        cace_ari_set_uint(cace_ari_array_get(row, 2), entry->severity);
-        cace_ari_set_copy(cace_ari_array_get(row, 3), &entry->created_at);
-        cace_ari_set_copy(cace_ari_array_get(row, 4), &entry->updated_at);
-        {
-            cace_ari_tbl_t *hist_tbl = cace_ari_set_tbl(cace_ari_array_get(row, 5), NULL);
-            cace_ari_tbl_reset(hist_tbl, 2, 0);
-
-            refda_alarms_history_list_it_t hist_it;
-            for (refda_alarms_history_list_it(hist_it, entry->history); !refda_alarms_history_list_end_p(hist_it);
-                 refda_alarms_history_list_next(hist_it))
-            {
-                const refda_alarms_history_item_t *hist_item = refda_alarms_history_list_cref(hist_it);
-
-                cace_ari_array_t hist_row;
-                cace_ari_array_init(hist_row);
-                cace_ari_array_resize(hist_row, hist_tbl->ncols);
-
-                cace_ari_set_copy(cace_ari_array_get(hist_row, 0), &hist_item->timestamp);
-                cace_ari_set_uint(cace_ari_array_get(hist_row, 1), hist_item->severity);
-
-                cace_ari_tbl_move_row_array(hist_tbl, hist_row);
-            }
-        }
-        cace_ari_set_uint(cace_ari_array_get(row, 6), entry->mgr_state);
-        cace_ari_set_copy(cace_ari_array_get(row, 7), &entry->mgr_ident);
-        cace_ari_set_copy(cace_ari_array_get(row, 8), &entry->mgr_state_at);
-
-        // append the row
-        cace_ari_tbl_move_row_array(table, row);
-    }
-
-    refda_edd_prod_ctx_set_result_move(ctx, &result);
-
-    if (pthread_mutex_unlock(&(agent->alarms.alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-        return;
+        refda_edd_prod_ctx_set_result_move(ctx, &result);
     }
     /*
      * +-------------------------------------------------------------------------+
@@ -303,7 +248,7 @@ static void refda_adm_ietf_alarms_edd_shelf_list(refda_edd_prod_ctx_t *ctx)
  *   entries can reappear if their alarm state changes after a purge.
  *
  * Parameters list:
- *   - Index 0, name "filter", type use of ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
+ *   - Index 0, name "filter", type use of ari://ietf/alarms/TYPEDEF/alarm-filter
  *
  * Result name "affected", type use of ari:/ARITYPE/UVAST
  */
@@ -314,6 +259,19 @@ static void refda_adm_ietf_alarms_ctrl_purge_alarms(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_purge_alarms BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    // original filter with LABEL values
+    const cace_ari_t *filter = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    size_t affected = refda_alarms_purge(ctx->runctx, filter);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_uvast(&result, affected);
+    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_purge_alarms BODY
@@ -324,11 +282,11 @@ static void refda_adm_ietf_alarms_ctrl_purge_alarms(refda_ctrl_exec_ctx_t *ctx)
 /* Name: compress-alarms
  * Description:
  *   Compress the timeline expressed in the 'history' column of the
- *   <./edd/alarm-list> table. The result on affected entries will be a
- *   history which is compressed to only a single, current row.
+ *   <./edd/alarm-list> table. Affected alarm entries will have a history
+ *   which is compressed to only a single, current-severity row.
  *
  * Parameters list:
- *   - Index 0, name "filter", type use of ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
+ *   - Index 0, name "filter", type use of ari://ietf/alarms/TYPEDEF/alarm-filter
  *
  * Result name "affected", type use of ari:/ARITYPE/UVAST
  */
@@ -339,9 +297,69 @@ static void refda_adm_ietf_alarms_ctrl_compress_alarms(refda_ctrl_exec_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_compress_alarms BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    // original filter with LABEL values
+    const cace_ari_t *filter = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+
+    size_t affected = refda_alarms_compress(ctx->runctx, filter);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_uvast(&result, affected);
+    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_compress_alarms BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: set-alarms-manager-state
+ * Description:
+ *   Set the 'manager-state' column of entries in the <./edd/alarm-list>
+ *   table. Affected alarm entries will their new manager state and related
+ *   columns updated.
+ *
+ * Parameters list:
+ *   - Index 0, name "filter", type use of ari://ietf/alarms/TYPEDEF/alarm-filter
+ *   - Index 1, name "manager-state", type use of ari://ietf/alarms/TYPEDEF/manager-state
+ *
+ * Result name "affected", type use of ari:/ARITYPE/UVAST
+ */
+static void refda_adm_ietf_alarms_ctrl_set_alarms_manager_state(refda_ctrl_exec_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_set_alarms_manager_state BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    // original filter with LABEL values
+    const cace_ari_t *filter = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    // rely on AMM to determine valid state
+    const cace_ari_t *mgr_state = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+
+    int mgr_state_val;
+    if (cace_ari_get_int(mgr_state, &mgr_state_val))
+    {
+        CACE_LOG_ERR("Invalid manager-state");
+        return;
+    }
+    size_t affected = refda_alarms_mgr_state(ctx->runctx, filter, mgr_state_val);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_uvast(&result, affected);
+    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_set_alarms_manager_state BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -468,6 +486,22 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
             obj = refda_register_typedef(
                 adm,
                 cace_amm_idseg_ref_withenum("manager-state", REFDA_ADM_IETF_ALARMS_ENUM_OBJID_TYPEDEF_MANAGER_STATE),
+                objdata);
+            // no parameters possible
+        }
+        { // For ./TYPEDEF/alarm-filter
+            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named semantic type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/EXPR
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+            }
+
+            obj = refda_register_typedef(
+                adm, cace_amm_idseg_ref_withenum("alarm-filter", REFDA_ADM_IETF_ALARMS_ENUM_OBJID_TYPEDEF_ALARM_FILTER),
                 objdata);
             // no parameters possible
         }
@@ -778,8 +812,8 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "filter");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
-                    cace_ari_set_objref_path_intid(&typeref, 1, 1, CACE_ARI_TYPE_TYPEDEF, 0);
+                    // reference to ari://ietf/alarms/TYPEDEF/alarm-filter
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
@@ -806,8 +840,46 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "filter");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
-                    cace_ari_set_objref_path_intid(&typeref, 1, 1, CACE_ARI_TYPE_TYPEDEF, 0);
+                    // reference to ari://ietf/alarms/TYPEDEF/alarm-filter
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./CTRL/set-alarms-manager-state
+            refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
+            refda_amm_ctrl_desc_init(objdata);
+            // result type
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/UVAST
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UVAST);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->execute = refda_adm_ietf_alarms_ctrl_set_alarms_manager_state;
+
+            obj = refda_register_ctrl(
+                adm,
+                cace_amm_idseg_ref_withenum("set-alarms-manager-state",
+                                            REFDA_ADM_IETF_ALARMS_ENUM_OBJID_CTRL_SET_ALARMS_MANAGER_STATE),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "filter");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/alarms/TYPEDEF/alarm-filter
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "manager-state");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/alarms/TYPEDEF/manager-state
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 1);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
