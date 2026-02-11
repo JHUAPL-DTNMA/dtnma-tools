@@ -43,7 +43,7 @@ void refda_alarms_entry_init(refda_alarms_entry_t *obj)
     refda_alarms_history_list_init(obj->history);
     obj->mgr_state = REFDA_ALARMS_MGR_STATE_NONE;
     obj->mgr_ident = CACE_ARI_INIT_NULL;
-    obj->mgr_time = CACE_ARI_INIT_NULL;
+    obj->mgr_time  = CACE_ARI_INIT_NULL;
 }
 
 void refda_alarms_entry_deinit(refda_alarms_entry_t *obj)
@@ -425,7 +425,8 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
     cace_ari_translator_t translator = { .map_ari = alarm_list_filter_sub_label };
 
     refda_alarms_entry_list_it_t entry_it;
-    for (refda_alarms_entry_list_it(entry_it, alarms->alarm_list); !refda_alarms_entry_list_end_p(entry_it);refda_alarms_entry_list_next(entry_it))
+    for (refda_alarms_entry_list_it(entry_it, alarms->alarm_list); !refda_alarms_entry_list_end_p(entry_it);
+         refda_alarms_entry_list_next(entry_it))
     {
         refda_alarms_entry_t *entry = refda_alarms_entry_ptr_ref(*refda_alarms_entry_list_cref(entry_it));
 
@@ -486,13 +487,14 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
         return 0;
     }
 
-    int res;
+    int    res;
     size_t affected = 0;
 
     cace_ari_translator_t translator = { .map_ari = alarm_list_filter_sub_label };
 
     refda_alarms_entry_list_it_t entry_it;
-    for (refda_alarms_entry_list_it(entry_it, alarms->alarm_list); !refda_alarms_entry_list_end_p(entry_it);refda_alarms_entry_list_next(entry_it))
+    for (refda_alarms_entry_list_it(entry_it, alarms->alarm_list); !refda_alarms_entry_list_end_p(entry_it);
+         refda_alarms_entry_list_next(entry_it))
     {
         refda_alarms_entry_t *entry = refda_alarms_entry_ptr_ref(*refda_alarms_entry_list_cref(entry_it));
 
@@ -510,7 +512,7 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
 
         // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        res         = refda_eval_target(runctx, &eval_result, &expr);
+        res                    = refda_eval_target(runctx, &eval_result, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
         if (res)
         {

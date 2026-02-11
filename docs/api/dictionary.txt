@@ -184,6 +184,7 @@ rankdir
 rb
 realloc
 REALLOC
+recurse
 recurses
 recv
 RECV

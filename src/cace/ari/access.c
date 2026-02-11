@@ -181,7 +181,7 @@ int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out)
             }
             if (out)
             {
-            *out = *val;
+                *out = *val;
             }
             break;
         }
@@ -194,7 +194,7 @@ int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out)
             }
             if (out)
             {
-            *out = *val;
+                *out = *val;
             }
             break;
         }
@@ -222,7 +222,7 @@ int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out)
             }
             if (out)
             {
-            *out = *val;
+                *out = *val;
             }
             break;
         }
@@ -235,7 +235,7 @@ int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out)
             }
             if (out)
             {
-            *out = *val;
+                *out = *val;
             }
             break;
         }
@@ -263,7 +263,7 @@ int cace_ari_get_vast(const cace_ari_t *ari, cace_ari_vast *out)
             }
             if (out)
             {
-            *out = *val;
+                *out = *val;
             }
             break;
         }
@@ -297,7 +297,7 @@ int cace_ari_get_uvast(const cace_ari_t *ari, cace_ari_uvast *out)
             }
             if (out)
             {
-            *out = *val;
+                *out = *val;
             }
             break;
         }
