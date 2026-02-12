@@ -405,7 +405,7 @@ class TestRefdaSocket(unittest.TestCase):
             self._ari_text_to_obj('/ac/(undefined,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'),
             rpt.source
         )
-        self.assertEqual([ari.UndefinedType, int], literal_prim_types(rpt.items))
+        self.assertEqual([ari.UndefinedPrimitiveType, int], literal_prim_types(rpt.items))
 
         rpt = rpts.pop(0)
         self.assertEqual(
