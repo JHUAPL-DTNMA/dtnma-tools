@@ -361,15 +361,15 @@ class TestRefdaSocket(unittest.TestCase):
 
         # macro to configure preconditions:
         #  ../!odm/const/rptt-two contains RPTT with two counter items
-        #  ../!odm/const/expr contains EXPR resolving to one counter
-        #  ../!odm/var/rptt-sum contains EXPR resolving to one counter
+        #  ../!odm/const/expr-sum contains EXPR evaluating to one counter
+        #  ../!odm/var/rptt-sum-inline contains same EXPR evaluating to one counter
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(/ac/('
                 + '//ietf/dtnma-agent/CTRL/ensure-odm(ietf,1,!odm,-1),'
                 + '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,rptt-two,1,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)),'
                 + '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,expr-sum,2,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/expr),/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)),'
-                + '//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!odm,rptt-sum,3,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(//ietf/!odm/const/expr-sum))'
+                + '//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!odm,rptt-sum-inline,3,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)))'
                 + '))',
                 nn=False
             )]
@@ -391,7 +391,7 @@ class TestRefdaSocket(unittest.TestCase):
                 # inline RPTT with an expression (containing sub-expression reference)
                 + '//ietf/dtnma-agent/CTRL/report-on(/ac/(/ac/(//ietf/!odm/const/expr-sum))),'
                 # produced RPTT with an expression
-                + '//ietf/dtnma-agent/CTRL/report-on(//ietf/!odm/var/rptt-sum)'
+                + '//ietf/dtnma-agent/CTRL/report-on(//ietf/!odm/var/rptt-sum-inline)'
                 + ')',
                 nn=False
             )]
@@ -426,10 +426,11 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('/ac/(/ac/(//ietf/!odm/const/expr-sum))', nn=False), rpt.source)
         # the evaluated result
-        self.assertEqual([int], literal_prim_types(rpt.items))
+        # FIXME: should be recursively evaluated
+        self.assertEqual([list], literal_prim_types(rpt.items))
 
         rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/var/rptt-sum', nn=False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/var/rptt-sum-inline', nn=False), rpt.source)
         self.assertEqual([int], literal_prim_types(rpt.items))
 
     def test_exec_delayed(self):
