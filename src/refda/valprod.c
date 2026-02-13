@@ -21,9 +21,84 @@
 #include "amm/var.h"
 #include "amm/edd.h"
 #include "cace/ari/type.h"
+#include "cace/ari/algo.h"
 #include "cace/ari/text.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
+
+static cace_ari_translate_result_t refda_valprod_label_subst_map(cace_ari_t *out, const cace_ari_t *in,
+                                                                 const cace_ari_translate_ctx_t *ctx)
+{
+    if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
+    {
+        const cace_ari_itemized_t *aparams = ctx->user_data;
+
+        const cace_ari_t *aparam  = NULL;
+        const char       *as_text = cace_ari_cget_tstr_cstr(in);
+        cace_ari_int      as_int;
+        if (as_text)
+        {
+            cace_ari_t *const *aparam_ptr = cace_named_ari_ptr_dict_cget(aparams->named, as_text);
+            if (aparam_ptr)
+            {
+                aparam = *aparam_ptr;
+            }
+            else
+            {
+                CACE_LOG_DEBUG("LABEL value %s is not an actual parameter", as_text);
+            }
+        }
+        else if (!cace_ari_get_int(in, &as_int))
+        {
+            if (as_int >= 0)
+            {
+                aparam = cace_ari_array_cget(aparams->ordered, as_int);
+            }
+
+            if (!aparam)
+            {
+                CACE_LOG_DEBUG("LABEL value %"PRId32" is not an actual parameter", as_int);
+            }
+        }
+        else
+        {
+            CACE_LOG_ERR("invalid LABEL primitive type");
+        }
+
+        if (aparam)
+        {
+            cace_ari_set_copy(out, aparam);
+            return CACE_ARI_TRANSLATE_FINAL;
+        }
+        else
+        {
+            // does not represent a formal parameter, keep it
+            cace_ari_set_copy(out, in);
+            return CACE_ARI_TRANSLATE_FINAL;
+        }
+    }
+    return CACE_ARI_TRANSLATE_DEFAULT;
+}
+
+/** Perform LABEL substitution in the produced value.
+ */
+static int refda_valprod_label_subst(refda_valprod_ctx_t *ctx)
+{
+    cace_ari_translator_t translator = { .map_ari = refda_valprod_label_subst_map };
+
+    // operate on temporary value
+    cace_ari_t src;
+    cace_ari_init_move(&src, &ctx->value);
+    cace_ari_init(&ctx->value);
+
+    int res = cace_ari_translate(&ctx->value, &src, &translator, (void *)&(ctx->deref->aparams));
+    cace_ari_deinit(&src);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to translate produced value, error %d", res);
+    }
+    return res;
+}
 
 static int refda_valprod_const_run(const refda_amm_const_desc_t *cnst, refda_valprod_ctx_t *ctx)
 {
@@ -31,7 +106,7 @@ static int refda_valprod_const_run(const refda_amm_const_desc_t *cnst, refda_val
     CHKERR1(ctx);
 
     cace_ari_set_copy(&(ctx->value), &(cnst->value));
-    // FIXME use ctx parameters to substitute
+    refda_valprod_label_subst(ctx);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
@@ -51,7 +126,7 @@ static int refda_valprod_var_run(const refda_amm_var_desc_t *var, refda_valprod_
     CHKERR1(ctx);
 
     cace_ari_set_copy(&(ctx->value), &(var->value));
-    // FIXME use ctx parameters to substitute
+    refda_valprod_label_subst(ctx);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {

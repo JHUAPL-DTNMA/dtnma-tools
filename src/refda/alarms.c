@@ -194,10 +194,10 @@ enum alarm_table_col_e
 static cace_ari_translate_result_t alarm_list_filter_sub_label(cace_ari_t *out, const cace_ari_t *in,
                                                                const cace_ari_translate_ctx_t *ctx)
 {
-    const refda_alarms_entry_t *entry = (refda_alarms_entry_t *)ctx->user_data;
-
     if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
     {
+        const refda_alarms_entry_t *entry = (refda_alarms_entry_t *)ctx->user_data;
+
         const char  *as_text = NULL;
         cace_ari_int as_int;
         if ((as_text = cace_ari_cget_tstr_cstr(in)))

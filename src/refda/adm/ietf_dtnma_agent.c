@@ -157,7 +157,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
     cace_ari_deinit(&result);
 }
 
-static void refda_adm_ietf_dtnma_agent_read_fparams(cace_amm_obj_desc_t *obj, const cace_ari_t *ari_fparams, const cace_amm_obj_store_t *store)
+static void refda_adm_ietf_dtnma_agent_read_fparams(cace_amm_obj_desc_t *obj, const cace_ari_t *ari_fparams,
+                                                    const cace_amm_obj_store_t *store)
 {
     if (!obj)
     {
@@ -173,7 +174,7 @@ static void refda_adm_ietf_dtnma_agent_read_fparams(cace_amm_obj_desc_t *obj, co
     while (!cace_ari_array_end_p(tbl_it))
     {
         cace_amm_formal_param_t *fparam = cace_amm_formal_param_list_push_back_new(obj->fparams);
-        fparam->index = fparam_ix++;
+        fparam->index                   = fparam_ix++;
 
         const cace_ari_t *fp_name = cace_ari_array_cref(tbl_it);
         m_string_set_cstr(fparam->name, cace_ari_cget_tstr_cstr(fp_name));
@@ -186,7 +187,9 @@ static void refda_adm_ietf_dtnma_agent_read_fparams(cace_amm_obj_desc_t *obj, co
             m_string_t buf;
             m_string_init(buf);
             cace_ari_text_encode(buf, fp_type, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_WARNING("Failed lookup for object %s formal parameter %s type from %s", m_string_get_cstr(obj->obj_id.name), m_string_get_cstr(fparam->name), m_string_get_cstr(buf));
+            CACE_LOG_WARNING("Failed lookup for object %s formal parameter %s type from %s",
+                             m_string_get_cstr(obj->obj_id.name), m_string_get_cstr(fparam->name),
+                             m_string_get_cstr(buf));
             m_string_clear(buf);
         }
         cace_ari_array_next(tbl_it);
@@ -2548,7 +2551,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
     // ari_value can be undefined
     if (!(cace_ari_not_undefined(ari_namespace) && cace_ari_not_undefined(ari_obj_name)
-          && cace_ari_not_undefined(ari_obj_enum) && cace_ari_not_undefined(ari_type) && cace_ari_not_undefined(ari_fparams)))
+          && cace_ari_not_undefined(ari_obj_enum) && cace_ari_not_undefined(ari_type)
+          && cace_ari_not_undefined(ari_fparams)))
     {
         CACE_LOG_ERR("Invalid parameter, unable to continue");
         return;
@@ -2668,7 +2672,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
             cace_amm_obj_desc_t *obj =
                 refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
-refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
+            refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
 
             refda_binding_ctx_t bind_ctx = {
                 .store = &(agent->objs),
@@ -2921,7 +2925,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
 
             cace_amm_obj_desc_t *obj =
                 refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*var_name), obj_id), objdata);
-refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
+            refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
 
             refda_binding_ctx_t bind_ctx = {
                 .store = &(agent->objs),

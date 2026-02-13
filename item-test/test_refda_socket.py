@@ -564,7 +564,13 @@ class TestRefdaSocket(unittest.TestCase):
                     + '/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,/label/hello)'  # value
                     '),')
                 + '//ietf/dtnma-agent/CTRL/ensure-const(' + (
-                    '//ietf/!odm,expr-with-params,2,'  # identity
+                    '//ietf/!odm,expr-with-params-int,2,'  # identity
+                    + '//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/expr),'  # type
+                    + '/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,/label/0),'  # value
+                    + '/tbl/c=3;(hello,//ietf/amm-semtype/IDENT/type-use(/aritype/object),undefined)'  # params
+                    '),')
+                + '//ietf/dtnma-agent/CTRL/ensure-const(' + (
+                    '//ietf/!odm,expr-with-params-tstr,3,'  # identity
                     + '//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/expr),'  # type
                     + '/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,/label/hello),'  # value
                     + '/tbl/c=3;(hello,//ietf/amm-semtype/IDENT/type-use(/aritype/object),undefined)'  # params
@@ -577,8 +583,8 @@ class TestRefdaSocket(unittest.TestCase):
                 + '))'
             )]
         )
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=4)
-        self.assertEqual(4, len(rpts))
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=5)
+        self.assertEqual(5, len(rpts))
         for rpt_ix, rpt in enumerate(rpts):
             LOGGER.info('Checking report #%d', rpt_ix)
             self.assertEqual(1, len(rpt.items))
@@ -589,14 +595,16 @@ class TestRefdaSocket(unittest.TestCase):
                 'ari:/EXECSET/n=123;('
                 # no parameters, no label substitution
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-labels),'
-                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params),'
-                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params(//ietf/dtnma-agent/EDD/num-msg-rx-failed))'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-int),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-int(//ietf/dtnma-agent/EDD/num-msg-rx-failed)),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-tstr),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-tstr(//ietf/dtnma-agent/EDD/num-msg-rx-failed))'
                 + ')'
             )]
         )
 
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=3)
-        self.assertEqual(3, len(rpts))
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=5)
+        self.assertEqual(5, len(rpts))
 
         rpt = rpts.pop(0)
         self.assertEqual(
@@ -609,16 +617,34 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertEqual(
-            self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params)'),
+            self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-int)'),
             rpt.source
         )
         self.assertEqual(1, len(rpt.items))
         # processed, but no given parameter
-        self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,/label/hello)'), rpt.items[0])
+        self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,undefined)'), rpt.items[0])
 
         rpt = rpts.pop(0)
         self.assertEqual(
-            self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params(//ietf/dtnma-agent/EDD/num-msg-rx-failed))'),
+            self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-int(//ietf/dtnma-agent/EDD/num-msg-rx-failed))'),
+            rpt.source
+        )
+        self.assertEqual(1, len(rpt.items))
+        # substitution
+        self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'), rpt.items[0])
+
+        rpt = rpts.pop(0)
+        self.assertEqual(
+            self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-tstr)'),
+            rpt.source
+        )
+        self.assertEqual(1, len(rpt.items))
+        # processed, but no given parameter
+        self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,undefined)'), rpt.items[0])
+
+        rpt = rpts.pop(0)
+        self.assertEqual(
+            self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-tstr(//ietf/dtnma-agent/EDD/num-msg-rx-failed))'),
             rpt.source
         )
         self.assertEqual(1, len(rpt.items))
