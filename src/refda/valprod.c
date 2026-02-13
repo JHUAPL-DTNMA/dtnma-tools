@@ -57,7 +57,7 @@ static cace_ari_translate_result_t refda_valprod_label_subst_map(cace_ari_t *out
 
             if (!aparam)
             {
-                CACE_LOG_DEBUG("LABEL value %"PRId32" is not an actual parameter", as_int);
+                CACE_LOG_DEBUG("LABEL value %" PRId32 " is not an actual parameter", as_int);
             }
         }
         else
