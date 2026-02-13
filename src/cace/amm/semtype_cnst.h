@@ -79,7 +79,7 @@ typedef struct cace_amm_semtype_cnst_s
 
         /// NEW: Used when #type is ::AMM_SEMTYPE_CNST_INT_ENUM
         struct {
-            cace_ari_am_t enum_map; 
+            cace_ari_am_t *enum_map; 
         } as_enum;
     };
 } cace_amm_semtype_cnst_t;

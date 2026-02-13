@@ -35,8 +35,8 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
             cace_amm_range_size_deinit(&(obj->as_strlen));
             break;
         case AMM_SEMTYPE_CNST_INT_ENUM:
-            /* Use the wrapper deinit function */
-            cace_ari_am_deinit(&obj->as_enum.enum_map); 
+            cace_ari_am_deinit(&obj->as_enum.enum_map);
+            obj->type = AMM_SEMTYPE_CNST_INVALID;
             break;
     obj->type = AMM_SEMTYPE_CNST_INVALID;
 
@@ -51,18 +51,6 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
             break;
     }
     obj->type = AMM_SEMTYPE_CNST_INVALID;
-}
-
-int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *obj, cace_ari_am_t *mappings)
-{
-    CHKERR1(obj);
-    CHKERR1(mappings);
-    cace_amm_semtype_cnst_deinit(obj); // Clear previous settings
-
-    obj->type = AMM_SEMTYPE_CNST_INT_ENUM; // Set the type to "Enum Constraint"
-    obj->as_enum.enum_map = mappings;      // Save the map
-
-    return 0; // Success
 }
 
 cace_amm_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t *obj)
@@ -127,8 +115,7 @@ int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *obj, cace_ari_am_t *
     cace_amm_semtype_cnst_deinit(obj);
 
     obj->type = AMM_SEMTYPE_CNST_INT_ENUM;
-    
-    obj->as_enum.enum_map = *mappings; 
+    obj->as_enum.enum_map = mappings; 
 
     return 0;
 }
@@ -170,7 +157,7 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
             * Access the internal tree inside the wrapper
             * Using the _get function from the B-tree interface
             */
-            if (cace_ari_tree_get(obj->as_enum.enum_map.tree, val) != NULL) {
+            if (cace_ari_tree_get(obj->as_enum.enum_map->tree, val) != NULL) {
                 return 1; // Value found in enum
             }
             return 0; // Not found
