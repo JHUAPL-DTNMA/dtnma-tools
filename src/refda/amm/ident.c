@@ -53,6 +53,22 @@ void refda_amm_ident_base_set(refda_amm_ident_base_t *obj, const refda_amm_ident
     obj->ident = src->ident;
 }
 
+void refda_amm_ident_base_get_str(m_string_t out, const refda_amm_ident_base_t *obj, bool append)
+{
+    m_string_t buf;
+    m_string_init(buf);
+    cace_ari_text_encode(buf, &obj->name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    if (append)
+    {
+        m_string_cat(out, buf);
+        m_string_clear(buf);
+    }
+    else
+    {
+        m_string_move(out, buf);
+    }
+}
+
 int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t *ref, const cace_amm_obj_store_t *objs)
 {
     cace_ari_set_copy(&obj->name, ref);

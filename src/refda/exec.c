@@ -279,14 +279,36 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
     {
         // sentinel for end-of-input
         const bool at_end = cace_ari_is_undefined(&(item.value));
-        if (!at_end)
+        if (at_end)
+        {
+            CACE_LOG_INFO("Got undefined exec, stopping after empty timeline");
+            // keep this state but continue executing non-rule events
+            atomic_store(&agent->exec_end, true);
+
+            // remove rule events
+            refda_timeline_it_t tl_it;
+            for (refda_timeline_it(tl_it, agent->exec_timeline); !refda_timeline_end_p(tl_it);)
+            {
+                refda_timeline_event_t *event = refda_timeline_ref(tl_it);
+                if (event->purpose == REFDA_TIMELINE_EXEC)
+                {
+                    refda_timeline_next(tl_it);
+                }
+                else
+                {
+                    refda_timeline_remove(agent->exec_timeline, tl_it);
+                }
+            }
+        }
+        else
         {
             refda_exec_add_execset(agent, &item);
         }
         refda_msgdata_deinit(&item);
-        if (at_end && refda_timeline_empty_p(agent->exec_timeline))
+
+        if (atomic_load(&agent->exec_end) && refda_timeline_empty_p(agent->exec_timeline))
         {
-            CACE_LOG_INFO("Got undefined exec, stopping");
+            CACE_LOG_INFO("Stopping with empty timeline");
 
             // flush the input queue but keep the daemon running
             refda_msgdata_t undef;
@@ -406,6 +428,11 @@ static int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const 
  */
 static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting)
 {
+    if (atomic_load(&agent->exec_end))
+    {
+        // no further executions
+        return 0;
+    }
     // Do not schedule TBR if it has reached its execution threshold
     if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
     {
@@ -541,6 +568,11 @@ static int refda_exec_sbr_next_scheduled_time(struct timespec *schedtime, const 
  */
 static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 {
+    if (atomic_load(&agent->exec_end))
+    {
+        // no further executions
+        return 0;
+    }
     // Do not schedule SBR if it has reached its execution threshold
     if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
     {

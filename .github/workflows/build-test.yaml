@@ -192,7 +192,7 @@ jobs:
         run: echo "/usr/lib/postgresql/16/bin" >>$GITHUB_PATH
       - name: Test
         env:
-          TEST_MEMCHECK: '1'
+          TEST_EXEC_WRAP: 'memcheck'
           TEST_LOG_LEVEL: 'info'
           DB_HOST: 'postgres'
           DB_USER: 'tester'

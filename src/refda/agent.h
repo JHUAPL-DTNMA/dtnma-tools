@@ -96,7 +96,8 @@ typedef struct refda_agent_s
     /// The next-to-use execution PID
     uint64_t exec_next_pid;
     /** Execution sequence state table.
-     * This is owned by the refda_exec_worker() thread.
+     * This is owned by the refda_exec_worker() thread, but visible
+     * from the Agent ADM.
      */
     refda_exec_seq_list_t exec_state;
     /// Mutex for the state of #exec_state
@@ -105,6 +106,10 @@ typedef struct refda_agent_s
      * This is owned by the refda_exec_worker() thread.
      */
     refda_timeline_t exec_timeline;
+    /** Execution shutdown state.
+     * This is owned by the refda_exec_worker() thread.
+     */
+    atomic_bool exec_end;
 
     /// Egress RPTSET queue
     refda_msgdata_queue_t rptgs;

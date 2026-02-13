@@ -49,6 +49,8 @@ void refda_amm_ident_base_init_set(refda_amm_ident_base_t *obj, const refda_amm_
 
 void refda_amm_ident_base_set(refda_amm_ident_base_t *obj, const refda_amm_ident_base_t *src);
 
+void refda_amm_ident_base_get_str(m_string_t out, const refda_amm_ident_base_t *obj, bool append);
+
 /** Set the name and perform a reference lookup on this object.
  *
  * @param[in,out] obj The object to set.
@@ -71,7 +73,8 @@ int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t 
  */
 /// @cond Doxygen_Suppress
 M_ARRAY_DEF(refda_amm_ident_base_list, refda_amm_ident_base_t)
-M_RBTREE_DEF(refda_amm_ident_base_ptr_set, refda_amm_ident_base_t *, M_PTR_OPLIST)
+M_RBTREE_DEF(refda_amm_ident_base_ptr_set, refda_amm_ident_base_t *,
+             M_OPEXTEND(M_PTR_OPLIST, GET_STR(refda_amm_ident_base_get_str)))
 /// @endcond
 
 /** An IDENT descriptor.

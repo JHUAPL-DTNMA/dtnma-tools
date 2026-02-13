@@ -78,7 +78,8 @@ class TestRefdaSocket(unittest.TestCase):
             startup_file.writelines([
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group(1,test-agents)\n',
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/ident/uri-regexp-pattern(%22file%3A.%2A%22)))\n',
-                '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(1),h\'0102\',/ac/('
+                # group 0 (agent) and 1 (all test mgrs) have all access
+                '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(0,1),h\'0102\',/ac/('
                 + '//ietf/dtnma-agent-acl/ident/execute,'
                 + '//ietf/dtnma-agent-acl/ident/produce'
                 + '))\n',
@@ -583,7 +584,7 @@ class TestRefdaSocket(unittest.TestCase):
         # ODM Rules
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/PT1S,1,false))', nn=False)]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -594,7 +595,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/1,1,false))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/PT1S,1,false))', nn=False)]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -686,6 +687,55 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual((1, 7), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
         self.assertEqual(False, rpt.items[0].value[0, 5].value)  # Confirm rule is disabled
+
+    def test_rule_sbr(self):
+        self._start()
+
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-odm(ietf,1,!test-model-1,-1))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm'), self._ari_strip_params(rpt.source))
+        # items of the report
+        self.assertEqual([ari.LiteralARI(None)], rpt.items)
+
+        mgr_eids = [
+            quote('"file:' + self._mgr_bind[0]['path'] + '"'),
+        ]
+        rptsrc = '/ac/(//ietf/dtnma-agent/EDD/num-msg-rx)'
+        macro = '/AC/(//ietf/dtnma-agent/CTRL/report-on(' + rptsrc + ',/ac/(' + ','.join(mgr_eids) + ')))'
+        cond = '/AC/(//ietf/dtnma-agent/EDD/num-msg-rx,3,//ietf/dtnma-agent/oper/compare-ge)'
+        # rule is created as enabled
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,' + macro + ',' + cond + ',/TD/PT0.5S,0,true))', nn=False)]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-sbr'), self._ari_strip_params(rpt.source))
+        # items of the report
+        self.assertEqual(1, len(rpt.items))
+
+        # no more
+        with self.assertRaises(TimeoutError):
+            self._wait_msg(mgr_ix=0, timeout=0.1)
+
+        # At this point ./edd/num-msg-rx is still 2, any next message will satisfy rule condition
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=null;()')]
+        )
+        # Wait for two action triggers, at least one eval period for each trigger
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=2, timeout=3)
+        self.assertEqual(2, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj(rptsrc), rpt.source)
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj(rptsrc), rpt.source)
+
+        # clean shutdown even while condition is satisfied
 
     def test_edd_counters(self):
         self._start()

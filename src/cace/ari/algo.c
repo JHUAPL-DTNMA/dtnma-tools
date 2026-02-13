@@ -17,6 +17,7 @@
  */
 #include "algo.h"
 #include "containers.h"
+#include "text.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include "cace/amm/numeric.h"
@@ -901,5 +902,21 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
         cace_ari_deinit(&lt_prom);
         cace_ari_deinit(&rt_prom);
         return result;
+    }
+}
+
+void cace_ari_get_str(m_string_t out, const cace_ari_t obj, bool append)
+{
+    m_string_t buf;
+    m_string_init(buf);
+    cace_ari_text_encode(buf, &obj, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    if (append)
+    {
+        m_string_cat(out, buf);
+        m_string_clear(buf);
+    }
+    else
+    {
+        m_string_move(out, buf);
     }
 }

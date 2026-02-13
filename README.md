@@ -85,9 +85,14 @@ Test are defined in the python modules under that directory and run using the `i
 
 Specific environment variables used by the test fixture are:
 
- - `TEST_LOG_LEVEL` controls the child process logging severity level. This defaults to "info" but can be set to "debug" for more detail.
- - `TEST_MEMCHECK`, if set to any value, will cause the item tests to run their executable-under-test within Valgrind memcheck. This defaults to disabled.
- - `TEST_DIR_KEEP`, if set to any value, will not delete the temporary directory after tests are finished. This defaults to deleting the directory.
+ - `TEST_LOG_LEVEL` controls the child process logging severity level.
+   This defaults to "info" but can be set to "debug" for more detail.
+ - `TEST_EXEC_WRAP` controls how executable-under-test is wrapped in a diagnostic tool.
+   If set to "memcheck" will cause the item tests to run within Valgrind memcheck.
+   If set to "gdb" will cause the item tests to run within GDB to report failure traces.
+   This defaults to empty (disabled).
+ - `TEST_DIR_KEEP`, if set to any value, will not delete the temporary directory after tests are finished.
+   This defaults to deleting the directory.
 
 An example full shell command to build and run specific (pytest-filtered) test cases is:
 ```sh

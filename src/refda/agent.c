@@ -55,6 +55,7 @@ void refda_agent_init(refda_agent_t *agent)
     refda_exec_seq_list_init(agent->exec_state);
     pthread_mutex_init(&(agent->exec_state_mutex), NULL);
     refda_timeline_init(agent->exec_timeline);
+    atomic_store(&agent->exec_end, false);
 
     refda_msgdata_queue_init(agent->rptgs, AGENT_QUEUE_SIZE);
     sem_init(&(agent->rptgs_sem), 0, 0);
