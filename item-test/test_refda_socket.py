@@ -767,7 +767,16 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((0, 2), rpt.items[0].value.shape)
-        self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
+        # Verify show-abstract list does have entries
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/ident-list(false,true)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 2), rpt.items[0].value.shape)
 
         # Add an IDENT
         self._send_msg(
@@ -794,10 +803,31 @@ class TestRefdaSocket(unittest.TestCase):
             self._ari_text_to_obj('//1/-1/ident/1', nn=False),
             rpt.items[0].value[0, 0]
         )
-        # self.assertEqual(
-        #     self._ari_text_to_obj('//ietf/amm-semtype/IDENT/type-use(name=/ARITYPE/int)', id_convert=False),
-        #     rpt.items[0].value[0, 1]
-        # )
+        # Verify base-filtered list also shows object
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/ident-list(false,false,//ietf/alarms/IDENT/resource)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((1, 2), rpt.items[0].value.shape)
+        self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
+        self.assertEqual(
+            self._ari_text_to_obj('//1/-1/ident/1', nn=False),
+            rpt.items[0].value[0, 0]
+        )
+        # Verify other base-filtered list does not include object
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/ident-list(false,false,//ietf/alarms/IDENT/category)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 2), rpt.items[0].value.shape)
 
         # Obsolete the IDENT
         self._send_msg(
