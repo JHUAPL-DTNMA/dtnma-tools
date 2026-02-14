@@ -202,12 +202,17 @@ int cace_ari_cmp(const cace_ari_t *left, const cace_ari_t *right);
  */
 bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right);
 
+/** An M*LIB compatible debug text output function.
+ * This encodes to text with default options.
+ */
+void cace_ari_get_str(m_string_t out, const cace_ari_t obj, bool append);
+
 /// Default OPLIST for cace_ari_t
 #define M_OPL_cace_ari_t()                                                                                  \
     (INIT(API_2(cace_ari_init)), INIT_SET(API_6(cace_ari_init_copy)), INIT_MOVE(API_6(cace_ari_init_move)), \
      CLEAR(API_2(cace_ari_deinit)), RESET(API_2(cace_ari_reset)), SET(API_6(cace_ari_set_copy)),            \
      MOVE(API_6(cace_ari_set_move)), HASH(API_2(cace_ari_hash)), CMP(API_6(cace_ari_cmp)),                  \
-     EQUAL(API_6(cace_ari_equal)))
+     EQUAL(API_6(cace_ari_equal)), GET_STR(cace_ari_get_str))
 
 #ifdef __cplusplus
 }
