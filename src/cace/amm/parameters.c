@@ -155,7 +155,7 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
                 if (cace_ari_list_end_p(gparam_it))
                 {
                     // no given parameter
-                    CACE_LOG_DEBUG("  given parameter absent");
+                    CACE_LOG_DEBUG("  given parameter absent, using default");
                     cace_ari_set_copy(aparam, &(fparam->defval));
                 }
                 else

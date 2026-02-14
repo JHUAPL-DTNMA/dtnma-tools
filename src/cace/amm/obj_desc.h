@@ -21,6 +21,7 @@
 #include "idseg_val.h"
 #include "user_data.h"
 #include "parameters.h"
+#include "status.h"
 #include "cace/ari.h"
 #include "cace/util/nocase.h"
 
@@ -37,6 +38,9 @@ typedef struct cace_amm_obj_desc_s
 
     /// Formal parameters of this object instance, which may be empty
     cace_amm_formal_param_list_t fparams;
+
+    /// The status of this object, which can change over time
+    cace_amm_status_t status;
 
     /** Object-type-specific application data.
      */
