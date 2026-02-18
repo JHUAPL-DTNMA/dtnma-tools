@@ -26,7 +26,7 @@ import socket
 import subprocess
 import sys
 import tempfile
-from typing import List, Optional
+from typing import List, Optional, Type
 import urllib.parse
 import unittest
 import cbor2
@@ -46,6 +46,19 @@ ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
 def quote(text: str)->str:
     ''' URL-encode all non-unreserved characters. '''
     return urllib.parse.quote(text, safe="")
+
+
+def literal_prim_type(item: ARI) -> Optional[Type]:
+    ''' Get a single primitive type to use for test assertions '''
+    if isinstance(item, ari.LiteralARI):
+        return type(item.value)
+    else:
+        return None
+
+
+def literal_prim_types(items: list[ARI]) -> list[Optional[Type]]:
+    ''' Get a list of literal primitive types to use for test assertions '''
+    return list(map(literal_prim_type, items))
 
 
 class TestRefdaSocket(unittest.TestCase):
@@ -287,7 +300,7 @@ class TestRefdaSocket(unittest.TestCase):
         # items of the report
         self.assertEqual([ari.LiteralARI('0.0.0')], rpt.items)
 
-    def test_exec_report_on_valid(self):
+    def test_exec_report_on_multi_mgr(self):
         self._start()
 
         mgr_eids = [
@@ -349,15 +362,15 @@ class TestRefdaSocket(unittest.TestCase):
 
         # macro to configure preconditions:
         #  ../!odm/const/rptt-two contains RPTT with two counter items
-        #  ../!odm/const/expr contains EXPR resolving to one counter
-        #  ../!odm/var/rptt-sum contains EXPR resolving to one counter
+        #  ../!odm/const/expr-sum contains EXPR evaluating to one counter
+        #  ../!odm/var/rptt-sum-inline contains same EXPR evaluating to one counter
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(/ac/('
                 + '//ietf/dtnma-agent/CTRL/ensure-odm(ietf,1,!odm,-1),'
                 + '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,rptt-two,1,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)),'
                 + '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,expr-sum,2,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/expr),/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)),'
-                + '//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!odm,rptt-sum,3,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(//ietf/!odm/const/expr-sum))'
+                + '//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!odm,rptt-sum-inline,3,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)))'
                 + '))',
                 nn=False
             )]
@@ -368,52 +381,58 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=null;('
+                # inline RPTT, contains undefined template item
                 + '//ietf/dtnma-agent/CTRL/report-on(/ac/(undefined,//ietf/dtnma-agent/EDD/num-msg-rx-failed)),'
+                # inline RPTT, two valid references
                 + '//ietf/dtnma-agent/CTRL/report-on(/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)),'
+                # produced RPTT with two valid references
                 + '//ietf/dtnma-agent/CTRL/report-on(//ietf/!odm/const/rptt-two),'
+                # inline RPTT with a literal reference (not evaluated)
                 + '//ietf/dtnma-agent/CTRL/report-on(/ac/(//ietf/!odm/const/expr-sum)),'
-                + '//ietf/dtnma-agent/CTRL/report-on(//ietf/!odm/var/rptt-sum)'
+                # inline RPTT with an expression (containing sub-expression reference)
+                + '//ietf/dtnma-agent/CTRL/report-on(/ac/(/ac/(//ietf/!odm/const/expr-sum))),'
+                # produced RPTT with an expression
+                + '//ietf/dtnma-agent/CTRL/report-on(//ietf/!odm/var/rptt-sum-inline)'
                 + ')',
                 nn=False
             )]
         )
 
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=5)
-        self.assertEqual(5, len(rpts))
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=6)
+        self.assertEqual(6, len(rpts))
 
         rpt = rpts.pop(0)
         self.assertEqual(
             self._ari_text_to_obj('/ac/(undefined,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'),
             rpt.source
         )
-        self.assertEqual(2, len(rpt.items))
-        self.assertEqual(ari.UNDEFINED, rpt.items[0])
-        self.assertIsInstance(rpt.items[1].value, int)
+        self.assertEqual([ari.UndefinedPrimitiveType, int], literal_prim_types(rpt.items))
 
         rpt = rpts.pop(0)
         self.assertEqual(
             self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'),
             rpt.source
         )
-        self.assertEqual(2, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, int)
-        self.assertIsInstance(rpt.items[1].value, int)
+        self.assertEqual([int, int], literal_prim_types(rpt.items))
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/!odm/const/rptt-two', nn=False), rpt.source)
-        self.assertEqual(2, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, int)
-        self.assertIsInstance(rpt.items[1].value, int)
+        self.assertEqual([int, int], literal_prim_types(rpt.items))
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/!odm/const/expr-sum)', nn=False), rpt.source)
-        self.assertEqual(1, len(rpt.items))
-        # self.assertIsInstance(rpt.items[0].value, int)
+        # the produced AC directly
+        self.assertEqual([list], literal_prim_types(rpt.items))
 
         rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/var/rptt-sum', nn=False), rpt.source)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, int)
+        self.assertEqual(self._ari_text_to_obj('/ac/(/ac/(//ietf/!odm/const/expr-sum))', nn=False), rpt.source)
+        # the evaluated result
+        # FIXME: should be recursively evaluated
+        self.assertEqual([list], literal_prim_types(rpt.items))
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/var/rptt-sum-inline', nn=False), rpt.source)
+        self.assertEqual([int], literal_prim_types(rpt.items))
 
     def test_exec_delayed(self):
         self._start()
@@ -525,9 +544,9 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
+
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 3), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         pid_col = list(rpt.items[0].value[:, 0])
@@ -545,9 +564,9 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
+
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((2, 3), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         pid_col = list(rpt.items[0].value[:, 0])
@@ -565,7 +584,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-odm'), self._ari_strip_params(rpt.source))
         # items of the report
-        self.assertEqual([ari.LiteralARI(None)], rpt.items)
+        self.assertEqual([ari.NoneType], literal_prim_types(rpt.items))
 
         # FIXME: Add following test
         # ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-odm(//example/!test-model-1))
@@ -579,7 +598,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/odm-list)'), rpt.source)
         # items of the report
-        self.assertEqual(1, len(rpt.items))
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
 
         # ODM Rules
         self._send_msg(
@@ -591,7 +610,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-tbr'), self._ari_strip_params(rpt.source))
         # items of the report
-        self.assertEqual(1, len(rpt.items))
+        self.assertEqual([ari.NoneType], literal_prim_types(rpt.items))
 
         self._send_msg(
             [self._ari_text_to_obj(
@@ -602,7 +621,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-tbr'), self._ari_strip_params(rpt.source))
         # items of the report
-        self.assertEqual(1, len(rpt.items))
+        self.assertEqual([ari.NoneType], literal_prim_types(rpt.items))
 
         self._send_msg(
             [self._ari_text_to_obj(
@@ -613,7 +632,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-sbr'), self._ari_strip_params(rpt.source))
         # items of the report
-        self.assertEqual(1, len(rpt.items))
+        self.assertEqual([ari.NoneType], literal_prim_types(rpt.items))
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sbr-list(false)))')]
@@ -623,8 +642,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sbr-list(false))'), rpt.source)
         # items of the report
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 7), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
 
@@ -636,8 +654,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
         # items of the report
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((2, 7), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
 
@@ -682,8 +699,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/tbr-list(false))'), rpt.source)
         # items of the report
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 7), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
         self.assertEqual(False, rpt.items[0].value[0, 5].value)  # Confirm rule is disabled
@@ -747,8 +763,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, int)
+        self.assertEqual([int], literal_prim_types(rpt.items))
         self.assertLessEqual(1, rpt.items[0].value)  # 4 from startup macro, 1 from <inspect> above
 
         # Count number of successful exec's
@@ -758,7 +773,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
+        self.assertEqual([int], literal_prim_types(rpt.items))
         self.assertLessEqual(1, rpt.items[0].value)
 
         # Count number of failed exec's
@@ -768,7 +783,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
+        self.assertEqual([int], literal_prim_types(rpt.items))
         self.assertEqual(0, rpt.items[0].value)
 
         # Sanity check expected count of tx failures
@@ -778,7 +793,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
+        self.assertEqual([int], literal_prim_types(rpt.items))
         self.assertEqual(0, rpt.items[0].value)
 
         # Send EXECSET request to get last message receive time
@@ -789,9 +804,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(msg_vals))
         rptset = msg_vals[0].value
         rpt = rptset.reports[0]
-        self.assertEqual(1, len(rpt.items))
-        self.assertEqual(rpt.items[0].type_id, ari.StructType.TP)
-        self.assertIsInstance(rpt.items[0].value, numpy.datetime64)
+        self.assertEqual([numpy.datetime64], literal_prim_types(rpt.items))
 
     def test_odm_var_const(self):
         self._start()
@@ -811,8 +824,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
 
@@ -833,8 +845,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
         self.assertEqual(
@@ -860,8 +871,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
 
     def test_odm_var_invalid(self):
@@ -902,8 +912,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
 
@@ -925,8 +934,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
 
@@ -947,8 +955,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
         self.assertEqual(
@@ -976,8 +983,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
 
     def test_agent_control_flow_ctrls(self):
@@ -1045,8 +1051,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
 
@@ -1109,15 +1114,13 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 5), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 6), rpt.items[0].value.shape)
         # FIXME self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
@@ -1168,8 +1171,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((2, 5), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         # new group number 10
@@ -1178,8 +1180,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((2, 6), rpt.items[0].value.shape)
         # new access number 10
         self.assertEqual([ari.typed_uint(1), ari.typed_uint(10)], rpt.items[0].value[:, 0])
@@ -1209,14 +1210,12 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 5), rpt.items[0].value.shape)
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
-        self.assertEqual(1, len(rpt.items))
-        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 6), rpt.items[0].value.shape)
 
         # failure adding non-existing permission

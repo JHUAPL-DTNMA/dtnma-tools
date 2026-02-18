@@ -42,10 +42,10 @@ extern "C" {
  * @param[out] result The single result value from the evaluation.
  * This ARI must be initialized before the call and will be valid if the
  * return code is zero but must be deinitialized regardless.
- * @param[in] ari The ARI to dereference, if necessary, and evaluate.
+ * @param[in] expr The literal-value EXPR to evaluate.
  * @return Zero if successful.
  */
-int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *ari);
+int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr);
 
 /** Evaluate given conditional ARI expression and return a boolean ARI indicating whether
  * the condition was true or false.

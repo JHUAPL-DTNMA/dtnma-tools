@@ -141,33 +141,24 @@ static int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx
     return retval;
 }
 
-int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *ari)
+int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr)
 {
     CHKERR1(runctx);
-    CHKERR1(ari);
+    CHKERR1(expr);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         m_string_t buf;
         m_string_init(buf);
-        cace_ari_text_encode(buf, ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, expr, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("Evaluation input %s", m_string_get_cstr(buf));
         m_string_clear(buf);
     }
 
-    /* FIXME: handle target of object reference for rule/ctrl conditions.
-     * This is not reachable for reporting alone.
-    cace_ari_t tgt_exp;
-    cace_ari_init(&tgt_exp);
-    if (refda_eval_expand(runctx, &tgt_exp, ari))
-    {
-        return REFDA_EVAL_ERR_BAD_TYPE;
-    }
-    */
-
-    const cace_ari_ac_t *ac = cace_ari_cget_ac(ari);
+    const cace_ari_ac_t *ac = cace_ari_cget_ac(expr);
     if (!ac)
     {
+        CACE_LOG_WARNING("evaluation given non-AC value");
         return REFDA_EVAL_ERR_BAD_TYPE;
     }
 
@@ -192,6 +183,7 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
             }
         }
     }
+    CACE_LOG_DEBUG("Evaluation expansion results in %zu items", refda_eval_list_size(eval_ctx.input));
 
     if (!retval)
     {
@@ -215,9 +207,9 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
                     case CACE_ARI_TYPE_OPER:
                     {
                         int res = refda_eval_oper(as_obj, &eval_ctx);
-                        CACE_LOG_DEBUG("Evaluation return code %d", res);
                         if (res)
                         {
+                            CACE_LOG_WARNING("OPER evaluation return code %d", res);
                             // stop early if reduction fails
                             retval = res;
                         }
@@ -233,7 +225,6 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     if (!retval)
     {
         // overall result is the single value left on the stack
-        CACE_LOG_DEBUG("Evaluation ends with %d stack items", cace_ari_list_size(eval_ctx.stack));
         if (cace_ari_list_size(eval_ctx.stack) == 1)
         {
             cace_ari_set_copy(result, cace_ari_list_front(eval_ctx.stack));
@@ -248,6 +239,7 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
         }
         else
         {
+            CACE_LOG_WARNING("Evaluation ends with %d stack items", cace_ari_list_size(eval_ctx.stack));
             retval = REFDA_EVAL_ERR_NON_SINGLE;
         }
     }
