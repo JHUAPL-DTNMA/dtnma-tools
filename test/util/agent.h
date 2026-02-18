@@ -42,6 +42,14 @@ void test_util_group_add(refda_agent_t *agent, refda_acl_id_t group_id, const ch
 /// Add access permission for specific group
 void test_util_group_permission(refda_agent_t *agent, refda_acl_id_t group_id, cace_ari_int_id_t obj_id);
 
+/** Execute a target in the main test thread.
+ * This assumes the target does not contain any deferred callbacks.
+ *
+ * @param agent The agent to execute within.
+ * @param[in] target The target to expand, execute, and check success for.
+ */
+void test_util_agent_check_execute(refda_agent_t *agent, const cace_ari_t *target);
+
 #ifdef __cplusplus
 } // extern C
 #endif

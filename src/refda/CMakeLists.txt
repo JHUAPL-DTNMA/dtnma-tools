@@ -20,7 +20,9 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/agent.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/endpoint.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/acl.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/alarms.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/instr.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/loader.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/binding.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/msgdata.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ingress.h"
@@ -53,12 +55,15 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_network_base.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_dtnma_agent.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_dtnma_agent_acl.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/adm/ietf_alarms.h"
 )
 set(CFILES
     "agent.c"
     "endpoint.c"
     "acl.c"
+    "alarms.c"
     "instr.c"
+    "loader.c"
     "binding.c"
     "msgdata.c"
     "ingress.c"
@@ -93,6 +98,7 @@ set(CFILES
     "adm/ietf_network_base.c"
     "adm/ietf_dtnma_agent.c"
     "adm/ietf_dtnma_agent_acl.c"
+    "adm/ietf_alarms.c"
 )
 add_library(refda)
 target_sources(refda PUBLIC ${HFILES})

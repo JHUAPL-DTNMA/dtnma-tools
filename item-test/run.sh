@@ -40,8 +40,8 @@ if [[ ! -d ./deps/dtnma-ace ]]
 then
     git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-ace.git ./deps/dtnma-ace
 fi
-${PYTHON} -m pip install -e ./deps/dtnma-ace
-${PYTHON} -m pip install -r requirements.txt
+#${PYTHON} -m pip install -e ./deps/dtnma-ace
+#${PYTHON} -m pip install -r requirements.txt
 
 echo "Executing tests..."
 ${PYTHON} -m pytest . "$@"

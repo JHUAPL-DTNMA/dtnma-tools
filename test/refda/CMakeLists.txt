@@ -32,8 +32,14 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   add_unity_test(SOURCE "test_reporting.c")
   target_link_libraries(test_reporting PUBLIC refda test_util)
   
+  add_unity_test(SOURCE "test_alarms.c")
+  target_link_libraries(test_alarms PUBLIC refda test_util)
+  
   add_unity_test(SOURCE "test_adm_ietf_dtnma_agent.c")
   target_link_libraries(test_adm_ietf_dtnma_agent PUBLIC refda test_util)
+  
+  add_unity_test(SOURCE "test_adm_ietf_alarms.c")
+  target_link_libraries(test_adm_ietf_alarms PUBLIC refda test_util)
   
   # Test just being able to compile and link a C++ user with the refda library
   add_executable(test_refda_cpp)

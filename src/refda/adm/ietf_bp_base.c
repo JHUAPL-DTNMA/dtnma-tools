@@ -29,7 +29,6 @@
 #include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"
 #include "refda/oper_eval_ctx.h"
-#include "refda/reporting.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
@@ -56,6 +55,7 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
+        (void)obj;
 
         /**
          * Register IDENT objects
@@ -63,10 +63,11 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-bstr-eid
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                // reference to ari://ietf/amm-base/IDENT/display-hint-bstr
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
@@ -80,10 +81,11 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-bstr-eid-pattern
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                // reference to ari://ietf/amm-base/IDENT/display-hint-bstr
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
@@ -97,10 +99,11 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
         { // For ./IDENT/bp-endpoint
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/network-base/IDENT/abstract-endpoint
+                // reference to ari://ietf/network-base/IDENT/abstract-endpoint
                 cace_ari_set_objref_path_intid(&(base->name), 1, 26, CACE_ARI_TYPE_IDENT, 0);
             }
 
@@ -111,20 +114,21 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "eid");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/bp-base/TYPEDEF/eid-cbor
-                    cace_ari_set_objref_path_intid(&name, 1, 5, CACE_ARI_TYPE_TYPEDEF, 1);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/bp-base/TYPEDEF/eid-cbor
+                    cace_ari_set_objref_path_intid(&typeref, 1, 5, CACE_ARI_TYPE_TYPEDEF, 1);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
         { // For ./IDENT/bp-eid-pattern
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/network-base/IDENT/abstract-endpoint-pattern
+                // reference to ari://ietf/network-base/IDENT/abstract-endpoint-pattern
                 cace_ari_set_objref_path_intid(&(base->name), 1, 26, CACE_ARI_TYPE_IDENT, 1);
             }
 
@@ -136,10 +140,10 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "pattern");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/bp-base/TYPEDEF/eid-pattern-cbor
-                    cace_ari_set_objref_path_intid(&name, 1, 5, CACE_ARI_TYPE_TYPEDEF, 2);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/bp-base/TYPEDEF/eid-pattern-cbor
+                    cace_ari_set_objref_path_intid(&typeref, 1, 5, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -150,12 +154,12 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
         { // For ./TYPEDEF/eid-text
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                // ari://ietf/network-base/TYPEDEF/uri
-                cace_ari_set_objref_path_intid(&name, 1, 26, CACE_ARI_TYPE_TYPEDEF, 0);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/network-base/TYPEDEF/uri
+                cace_ari_set_objref_path_intid(&typeref, 1, 26, CACE_ARI_TYPE_TYPEDEF, 0);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
             }
 
             obj = refda_register_typedef(
@@ -166,11 +170,12 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
         { // For ./TYPEDEF/eid-cbor
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_CBOR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/CBOR
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_CBOR);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
             }
 
             obj = refda_register_typedef(
@@ -181,11 +186,12 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
         { // For ./TYPEDEF/eid-pattern-cbor
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_CBOR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/CBOR
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_CBOR);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
             }
 
             obj = refda_register_typedef(
