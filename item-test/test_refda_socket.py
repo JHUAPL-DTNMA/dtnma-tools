@@ -610,7 +610,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-tbr'), self._ari_strip_params(rpt.source))
         # items of the report
-        self.assertEqual([int], literal_prim_types(rpt.items))
+        self.assertEqual([ari.NoneType], literal_prim_types(rpt.items))
 
         self._send_msg(
             [self._ari_text_to_obj(
@@ -621,7 +621,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-tbr'), self._ari_strip_params(rpt.source))
         # items of the report
-        self.assertEqual([int], literal_prim_types(rpt.items))
+        self.assertEqual([ari.NoneType], literal_prim_types(rpt.items))
 
         self._send_msg(
             [self._ari_text_to_obj(
@@ -632,7 +632,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-sbr'), self._ari_strip_params(rpt.source))
         # items of the report
-        self.assertEqual([int], literal_prim_types(rpt.items))
+        self.assertEqual([ari.NoneType], literal_prim_types(rpt.items))
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sbr-list(false)))')]
