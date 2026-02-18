@@ -902,7 +902,9 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
 }
 
 /* Name: num-msg-rx
- * Description MISSING
+ * Description:
+ *   Counter of the number of AMP messages of any type received from any
+ *   manager.
  *
  * Parameters: none
  *
@@ -928,7 +930,9 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx(refda_edd_prod_ctx_t *ctx)
 }
 
 /* Name: num-msg-rx-failed
- * Description MISSING
+ * Description:
+ *   Counter of received EXECSET values that failed to be decoded and
+ *   processed.
  *
  * Parameters: none
  *
@@ -954,7 +958,9 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_rx_failed(refda_edd_prod_ctx_
 }
 
 /* Name: num-msg-tx
- * Description MISSING
+ * Description:
+ *   Counter of the number of AMP messages of any type transmitted to any
+ *   manager.
  *
  * Parameters: none
  *
@@ -980,7 +986,8 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx(refda_edd_prod_ctx_t *ctx)
 }
 
 /* Name: num-msg-tx-failed
- * Description MISSING
+ * Description:
+ *   Counter of RPTSET values that encoded but failed to be sent.
  *
  * Parameters: none
  *
@@ -1006,7 +1013,9 @@ static void refda_adm_ietf_dtnma_agent_edd_num_msg_tx_failed(refda_edd_prod_ctx_
 }
 
 /* Name: last-msg-rx-time
- * Description MISSING
+ * Description:
+ *   A timestamp on the Agent when the latest AMP message was received from
+ *   any manager.
  *
  * Parameters: none
  *
@@ -1043,7 +1052,10 @@ static void refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time(refda_edd_prod_ctx_t
 }
 
 /* Name: num-exec-started
- * Description MISSING
+ * Description:
+ *   Number of CTRL executions started. This does not include EXECSETs
+ *   which have been received and are still queued for execution. See
+ *   <./edd/exec-running> table for those details.
  *
  * Parameters: none
  *
@@ -1069,7 +1081,9 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_started(refda_edd_prod_ctx_t
 }
 
 /* Name: num-exec-succeeded
- * Description MISSING
+ * Description:
+ *   Number of successful CTRL executions. This means the CTRL result was
+ *   not undefined.
  *
  * Parameters: none
  *
@@ -1095,7 +1109,9 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_succeeded(refda_edd_prod_ctx
 }
 
 /* Name: num-exec-failed
- * Description MISSING
+ * Description:
+ *   Number of failed CTRL executions. This means the CTRL result was
+ *   undefined.
  *
  * Parameters: none
  *
@@ -1121,13 +1137,18 @@ static void refda_adm_ietf_dtnma_agent_edd_num_exec_failed(refda_edd_prod_ctx_t 
 }
 
 /* Name: exec-running
- * Description MISSING
+ * Description:
+ *   Information on controls currently being executed. This represents
+ *   tracking of execution requests from received EXECSET values until the
+ *   entire execution is finished (successfully or not). Once finished, the
+ *   Agent SHALL remove the associated row from this table and never re-use
+ *   its 'pid' value.
  *
  * Parameters: none
  *
  * Produced type: TBLT with 3 columns:
  *   - Index 0, name "pid", type use of ari:/ARITYPE/UVAST
- *   - Index 1, name "target", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "target", type use of ari://ietf/amm-base/TYPEDEF/exec-tgt
  *   - Index 2, name "state", type use of ari:/ARITYPE/BYTE
  */
 static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ctx)
@@ -1733,8 +1754,8 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
  *
  * Produced type: TBLT with 7 columns:
  *   - Index 0, name "obj", type use of ari:/ARITYPE/SBR
- *   - Index 1, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
- *   - Index 2, name "condition", type use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 1, name "action", type use of ari://ietf/amm-base/TYPEDEF/exec-tgt
+ *   - Index 2, name "condition", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
  *   - Index 3, name "min-interval", type use of ari:/ARITYPE/TD
  *   - Index 4, name "max-count", type use of ari:/ARITYPE/UVAST
  *   - Index 5, name "init-enabled", type use of ari:/ARITYPE/BOOL
@@ -1843,7 +1864,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
  *
  * Produced type: TBLT with 7 columns:
  *   - Index 0, name "obj", type use of ari:/ARITYPE/TBR
- *   - Index 1, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 1, name "action", type use of ari://ietf/amm-base/TYPEDEF/exec-tgt
  *   - Index 2, name "start-time", type use of ari://ietf/amm-base/TYPEDEF/TIME
  *   - Index 3, name "period", type use of ari:/ARITYPE/TD
  *   - Index 4, name "max-count", type use of ari:/ARITYPE/UVAST
@@ -3337,13 +3358,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
  *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
  *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
  *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
- *   - Index 3, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
- *   - Index 4, name "condition", type use of ari://ietf/amm-base/TYPEDEF/EXPR
+ *   - Index 3, name "action", type use of ari://ietf/amm-base/TYPEDEF/exec-tgt
+ *   - Index 4, name "condition", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
  *   - Index 5, name "min-interval", type use of ari:/ARITYPE/TD
  *   - Index 6, name "max-count", type use of ari:/ARITYPE/UVAST
  *   - Index 7, name "init-enabled", type use of ari:/ARITYPE/BOOL
  *
- * Result name "res", type use of ari:/ARITYPE/UINT
+ * Result: none
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -3520,9 +3541,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
 
     if (valid)
     {
-        cace_ari_init(&ari_result);
-        cace_ari_set_uint(&ari_result, 0);
-        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
 
     REFDA_AGENT_UNLOCK(agent, );
@@ -3542,13 +3561,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
  *   - Index 0, name "namespace", type use of ari:/ARITYPE/NAMESPACE
  *   - Index 1, name "obj-name", type use of ari://ietf/amm-base/TYPEDEF/id-text
  *   - Index 2, name "obj-enum", type use of ari://ietf/amm-base/TYPEDEF/id-int
- *   - Index 3, name "action", type use of ari://ietf/amm-base/TYPEDEF/MAC
+ *   - Index 3, name "action", type use of ari://ietf/amm-base/TYPEDEF/exec-tgt
  *   - Index 4, name "start-time", type use of ari://ietf/amm-base/TYPEDEF/TIME
  *   - Index 5, name "period", type use of ari:/ARITYPE/TD
  *   - Index 6, name "max-count", type use of ari:/ARITYPE/UVAST
  *   - Index 7, name "init-enabled", type use of ari:/ARITYPE/BOOL
  *
- * Result name "res", type use of ari:/ARITYPE/UINT
+ * Result: none
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -3737,9 +3756,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
 
     if (valid)
     {
-        cace_ari_init(&ari_result);
-        cace_ari_set_uint(&ari_result, 0);
-        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
 
     REFDA_AGENT_UNLOCK(agent, );
@@ -3752,13 +3769,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
 
 /* Name: ensure-rule-enabled
  * Description:
- *   Ensure rule is enabled or disabled.
+ *   Ensure a specific rule is enabled or disabled.
  *
  * Parameters list:
  *   - Index 0, name "obj-id", type union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
  *   - Index 1, name "enabled", type use of ari:/ARITYPE/BOOL
  *
- * Result name "res", type use of ari:/ARITYPE/UINT
+ * Result: none
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -3782,10 +3799,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
         CACE_LOG_ERR("Invalid ARI for enabled");
         return;
     }
-
-    cace_ari_t ari_result;
-    cace_ari_init(&ari_result);
-    cace_ari_set_uint(&ari_result, 0);
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
@@ -3822,7 +3835,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
                 refda_exec_sbr_disable(agent, sbr);
             }
         }
-        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
     else if (deref.obj_type == CACE_ARI_TYPE_TBR)
     {
@@ -3843,7 +3856,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
                 refda_exec_tbr_disable(agent, tbr);
             }
         }
-        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
     cace_amm_lookup_deinit(&deref);
 
@@ -3862,7 +3875,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
  * Parameters list:
  *   - Index 0, name "obj-id", type union of 2 types (use of ari:/ARITYPE/SBR, use of ari:/ARITYPE/TBR)
  *
- * Result name "res", type use of ari:/ARITYPE/UINT
+ * Result: none
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_ctx_t *ctx)
 {
@@ -3872,10 +3885,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
      * +-------------------------------------------------------------------------+
      */
     const cace_ari_t *target = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
-
-    cace_ari_t ari_result;
-    cace_ari_init(&ari_result);
-    cace_ari_set_uint(&ari_result, 0);
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
@@ -3912,7 +3921,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
                 refda_exec_sbr_disable(agent, sbr);
             }
         }
-        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
     else if (deref.obj_type == CACE_ARI_TYPE_TBR)
     {
@@ -3933,7 +3942,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
                 refda_exec_tbr_disable(agent, tbr);
             }
         }
-        refda_ctrl_exec_ctx_set_result_move(ctx, &ari_result);
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
     cace_amm_lookup_deinit(&deref);
 
@@ -4079,8 +4088,9 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
 
 /* Name: add
  * Description:
- *   Add two numeric values. The operands are cast to the least compatible
- *   numeric type before the arithmetic.
+ *   Add two numeric values or a TP and TD value (in either order). The
+ *   operands are cast to the least compatible numeric type before the
+ *   arithmetic.
  *
  * Parameters: none
  *
@@ -4109,7 +4119,12 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: sub
- * Description MISSING
+ * Description:
+ *   Subtract two numeric values or a TP less a TD value. The left (second)
+ *   operand is the minuend and the right (first) operand is the
+ *   subtrahend; this means that the EXPR </AC/(10, 2, ./OPER/sub)> behaves
+ *   as the infix '10 - 2'. The operands are cast to the least compatible
+ *   numeric type before the arithmetic.
  *
  * Parameters: none
  *
@@ -4138,7 +4153,10 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: multiply
- * Description MISSING
+ * Description:
+ *   Multiply two numeric values or a TD value (in either order). The
+ *   operands are cast to the least compatible numeric type before the
+ *   arithmetic.
  *
  * Parameters: none
  *
@@ -4167,7 +4185,12 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: divide
- * Description MISSING
+ * Description:
+ *   Divide two numeric values or a TD value (as numerator). The left
+ *   (second) operand is the numerator and the right (first) operand is the
+ *   divisor; this means that the EXPR </AC/(10, 2, ./OPER/divide)> behaves
+ *   as the infix '10 / 2'. The operands are cast to the least compatible
+ *   numeric type before the arithmetic.
  *
  * Parameters: none
  *
@@ -4198,7 +4221,12 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: remainder
- * Description MISSING
+ * Description:
+ *   Find the remainder of a numeric operation. The left (second) operand
+ *   is the numerator and the right (first) operand is the divisor; this
+ *   means that the EXPR </AC/(10, 2, ./OPER/divide)> behaves as the infix
+ *   '10 % 2'. The operands are cast to the least compatible numeric type
+ *   before the arithmetic.
  *
  * Parameters: none
  *
@@ -4229,7 +4257,8 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
 }
 
 /* Name: bit-not
- * Description MISSING
+ * Description:
+ *   Perform a bitwise NOT on an integer value.
  *
  * Parameters: none
  *
@@ -4275,7 +4304,8 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: bit-and
- * Description MISSING
+ * Description:
+ *   Perform a bitwise AND between two integer values.
  *
  * Parameters: none
  *
@@ -4303,7 +4333,8 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: bit-or
- * Description MISSING
+ * Description:
+ *   Perform a bitwise OR between two integer values.
  *
  * Parameters: none
  *
@@ -4331,7 +4362,8 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: bit-xor
- * Description MISSING
+ * Description:
+ *   Perform a bitwise exclusive or (XOR) between two integer values.
  *
  * Parameters: none
  *
@@ -4359,7 +4391,8 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: bool-not
- * Description MISSING
+ * Description:
+ *   Perform a boolean NOT on a boolean value.
  *
  * Parameters: none
  *
@@ -4390,7 +4423,8 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: bool-and
- * Description MISSING
+ * Description:
+ *   Perform a boolean AND between two boolean values.
  *
  * Parameters: none
  *
@@ -4422,7 +4456,8 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: bool-or
- * Description MISSING
+ * Description:
+ *   Perform a boolean OR between two boolean values.
  *
  * Parameters: none
  *
@@ -4454,7 +4489,8 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: bool-xor
- * Description MISSING
+ * Description:
+ *   Perform a boolean XOR between two boolean values.
  *
  * Parameters: none
  *
@@ -4486,7 +4522,9 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
 }
 
 /* Name: compare-eq
- * Description MISSING
+ * Description:
+ *   Compare two values for equality as defined by Section 6.12.1 of the
+ *   AMM.
  *
  * Parameters: none
  *
@@ -4517,7 +4555,9 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ct
 }
 
 /* Name: compare-ne
- * Description MISSING
+ * Description:
+ *   Compare two values for inequality as defined by Section 6.12.1 of the
+ *   AMM.
  *
  * Parameters: none
  *
@@ -4934,9 +4974,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // reference to ari://ietf/amm-base/TYPEDEF/EXPR
                 cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
-                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
-                // no constraints
-                (void)semtype;
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
             }
 
             obj = refda_register_typedef(
@@ -5206,9 +5244,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/TP
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TP);
-                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
-                // no constraints
-                (void)semtype;
+                cace_amm_type_set_use_ref_move(&(objdata->prod_type), &typeref);
             }
             // callback:
             objdata->produce = refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time;
@@ -5309,11 +5345,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "target");
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/any
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
-                        // no constraints
-                        (void)semtype_d1;
+                        // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
@@ -5325,11 +5359,18 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BYTE);
                         cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
 
-                        // cace_amm_semtype_cnst_t *cnst;
+                        cace_amm_semtype_cnst_t *cnst;
                         {
                             // Constraint: IntegerEnums(values={0: 'waiting', 1: 'running'})
-                            // cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
-                            // FIXME unhandled constraint IntegerEnums(values={0: 'waiting', 1: 'running'})
+                            cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
+                            cace_amm_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
+                            {
+                                cace_amm_range_intvl_int64_t intvl;
+                                cace_amm_range_intvl_int64_set_infinite(&intvl);
+                                cace_amm_range_intvl_int64_set_min(&intvl, 0);
+                                cace_amm_range_intvl_int64_set_max(&intvl, 1);
+                                cace_amm_range_intvl_int64_seq_push(range->intvls, intvl);
+                            }
                         }
                     }
                 }
@@ -5682,11 +5723,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "action");
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/MAC
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
-                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
-                        // no constraints
-                        (void)semtype_d1;
+                        // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
@@ -5694,11 +5733,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "condition");
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/EXPR
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
-                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
-                        // no constraints
-                        (void)semtype_d1;
+                        // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
@@ -5794,11 +5831,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "action");
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/MAC
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
-                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
-                        // no constraints
-                        (void)semtype_d1;
+                        // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
@@ -6666,15 +6701,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         { // For ./CTRL/ensure-sbr
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            // result type
-            {
-                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // use of ari:/ARITYPE/UINT
-                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
-                // no constraints
-                (void)semtype;
-            }
+            // no result type
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr;
 
@@ -6719,22 +6746,18 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "action");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/MAC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
-                    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
-                    // no constraints
-                    (void)semtype;
+                    // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "condition");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/EXPR
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
-                    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
-                    // no constraints
-                    (void)semtype;
+                    // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
@@ -6774,15 +6797,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         { // For ./CTRL/ensure-tbr
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            // result type
-            {
-                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // use of ari:/ARITYPE/UINT
-                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
-                // no constraints
-                (void)semtype;
-            }
+            // no result type
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr;
 
@@ -6827,11 +6842,9 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "action");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/MAC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 21);
-                    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
-                    // no constraints
-                    (void)semtype;
+                    // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
@@ -6882,15 +6895,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         { // For ./CTRL/ensure-rule-enabled
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            // result type
-            {
-                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // use of ari:/ARITYPE/UINT
-                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
-                // no constraints
-                (void)semtype;
-            }
+            // no result type
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled;
 
@@ -6944,15 +6949,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
         { // For ./CTRL/reset-rule-enabled
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
-            // result type
-            {
-                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // use of ari:/ARITYPE/UINT
-                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
-                // no constraints
-                (void)semtype;
-            }
+            // no result type
             // callback:
             objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled;
 
@@ -7964,9 +7961,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // reference to ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
                     cace_ari_set_objref_path_intid(&typeref, 1, 1, CACE_ARI_TYPE_TYPEDEF, 0);
-                    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
-                    // no constraints
-                    (void)semtype;
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
