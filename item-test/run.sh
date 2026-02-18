@@ -34,7 +34,7 @@ source ./build/venv/bin/activate
 echo "Installing dependencies..."
 if [[ ! -d ./deps/adms ]]
 then
-    git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-adms.git ./deps/adms
+    git clone --branch agent-introspect-update https://github.com/JHUAPL-DTNMA/dtnma-adms.git ./deps/adms
 fi
 if [[ ! -d ./deps/dtnma-ace ]]
 then

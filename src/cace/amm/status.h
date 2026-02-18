@@ -15,42 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef REFDA_AMM_CONST_H_
-#define REFDA_AMM_CONST_H_
+#ifndef CACE_AMM_STATUS_H_
+#define CACE_AMM_STATUS_H_
 
-#include <cace/amm/typing.h>
-#include <cace/ari.h>
+#include "idseg_val.h"
+#include "user_data.h"
+#include "parameters.h"
+#include "cace/ari.h"
+#include "cace/util/nocase.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** A CONST descriptor.
- * This defines the properties of a CONST in an Agent and includes common
- * object metadata.
+/** Possible status values for a namespace and for an object.
  */
-typedef struct
+typedef enum
 {
-    /** The required type for the stored value and result value.
-     * This type will not change during the lifetime of the CONST.
-     * All type references are fully recursively resolved.
-     * The type object is owned by this descriptor.
+    /**
+     * This means that the definition is current and valid.
      */
-    cace_amm_type_t val_type;
-
-    /** Storage for the constant value.
-     * This is type-converted at initialization time to match #val_type.
+    CACE_AMM_STATUS_CURRENT,
+    /**
+     * This indicates an obsolete definition, but it permits
+     * new/continued implementation in order to foster interoperability
+     * with older/existing implementations.
      */
-    cace_ari_t value;
+    CACE_AMM_STATUS_DEPRECATED,
+    /**
+     * This means that the definition is obsolete and SHOULD NOT be
+     * implemented and/or can be removed from implementations.
+     */
+    CACE_AMM_STATUS_OBSOLETE,
 
-} refda_amm_const_desc_t;
-
-void refda_amm_const_desc_init(refda_amm_const_desc_t *obj);
-
-void refda_amm_const_desc_deinit(refda_amm_const_desc_t *obj);
+} cace_amm_status_t;
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* REFDA_AMM_CONST_H_ */
+#endif /* CACE_AMM_STATUS_H_ */

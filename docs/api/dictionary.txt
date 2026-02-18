@@ -85,6 +85,7 @@ Doxygen
 dtn
 dtnma
 DTNMA
+edd
 EDD
 EDDs
 eid
@@ -167,6 +168,7 @@ OPLIST
 orgs
 OSAL
 param
+params
 PARAMS
 PCRE
 PID
@@ -184,6 +186,7 @@ rankdir
 rb
 realloc
 REALLOC
+recurse
 recurses
 recv
 RECV

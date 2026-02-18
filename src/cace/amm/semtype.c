@@ -33,7 +33,7 @@ static bool cace_amm_semtype_use_constraints(const cace_amm_semtype_use_t *semty
         const cace_amm_semtype_cnst_t *cnst = cace_amm_semtype_cnst_array_cref(it);
         if (!cace_amm_semtype_cnst_is_valid(cnst, val))
         {
-            CACE_LOG_WARNING("type use constraint %d failed", cnst->type);
+            CACE_LOG_WARNING("type use constraint type %d failed", cnst->type);
             // first failure wins
             return false;
         }
@@ -183,10 +183,9 @@ int cace_amm_type_set_use_builtin(cace_amm_type_t *type, cace_ari_type_t ari_typ
 {
     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_aritype_text(&typeref, ari_type);
-    cace_amm_type_set_use_ref_move(type, &typeref);
+    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(type, &typeref);
 
-    cace_amm_semtype_use_t *semtype = type->as_semtype;
-    semtype->base                   = cace_amm_type_get_builtin(ari_type);
+    semtype->base = cace_amm_type_get_builtin(ari_type);
 
     return semtype->base ? 0 : 3;
 }

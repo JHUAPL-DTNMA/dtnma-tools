@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 #include "agent.h"
+#include <refda/agent.h>
+#include <refda/exec_proc.h>
 #include <refda/adm/ietf.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_amm_base.h>
@@ -23,8 +25,9 @@
 #include <refda/adm/ietf_network_base.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/adm/ietf_dtnma_agent_acl.h>
-#include <refda/agent.h>
+#include <refda/adm/ietf_alarms.h>
 #include <cace/ari/time_util.h>
+#include <cace/util/logging.h>
 #include <assert.h>
 
 void test_util_agent_crit_adms(refda_agent_t *agent)
@@ -35,6 +38,7 @@ void test_util_agent_crit_adms(refda_agent_t *agent)
     assert(0 == refda_adm_ietf_network_base_init(agent));
     assert(0 == refda_adm_ietf_dtnma_agent_init(agent));
     assert(0 == refda_adm_ietf_dtnma_agent_acl_init(agent));
+    assert(0 == refda_adm_ietf_alarms_init(agent));
 }
 
 void test_util_agent_permission(refda_agent_t *agent, cace_ari_int_id_t obj_id)
@@ -90,7 +94,7 @@ void test_util_group_add(refda_agent_t *agent, refda_acl_id_t group_id, const ch
         refda_amm_ident_base_t *pat = refda_amm_ident_base_list_push_new(grp->member_pats);
         if (refda_amm_ident_base_populate(pat, &pat_name, &agent->objs))
         {
-            // CACE_LOG_CRIT("no uri_regexp_pattern found");
+            CACE_LOG_CRIT("no uri_regexp_pattern found");
             assert(false);
         }
         cace_ari_deinit(&pat_name);
@@ -115,7 +119,7 @@ void test_util_group_permission(refda_agent_t *agent, refda_acl_id_t group_id, c
         refda_amm_ident_base_t *perm = refda_amm_ident_base_list_push_new(access->permissions);
         if (refda_amm_ident_base_populate(perm, &perm_name, &agent->objs))
         {
-            // CACE_LOG_CRIT("no permission found");
+            CACE_LOG_CRIT("no permission found");
             assert(false);
         }
         cace_ari_deinit(&perm_name);
@@ -123,4 +127,40 @@ void test_util_group_permission(refda_agent_t *agent, refda_acl_id_t group_id, c
 
     refda_acl_access_ptr_set_t *set = refda_acl_access_by_group_safe_get(agent->acl.access_by_group, group_id);
     refda_acl_access_ptr_set_push(*set, access);
+}
+
+void test_util_agent_check_execute(refda_agent_t *agent, const cace_ari_t *target)
+{
+    refda_runctx_ptr_t *ctxptr = refda_runctx_ptr_new();
+    // no nonce for test
+    refda_runctx_from(refda_runctx_ptr_ref(ctxptr), agent, NULL);
+
+    refda_exec_seq_t eseq;
+    refda_exec_seq_init(&eseq);
+    refda_runctx_ptr_set(&eseq.runctx, ctxptr);
+
+    size_t seq_ix = 0;
+
+    int res = refda_exec_proc_expand(&eseq, &seq_ix, target);
+    if (res)
+    {
+        CACE_LOG_CRIT("refda_exec_exp_target() failed: %d", res);
+    }
+    assert(0 == res);
+
+    res = refda_exec_proc_run(&eseq);
+    if (res)
+    {
+        CACE_LOG_CRIT("refda_exec_run_seq() failed: %d", res);
+    }
+    assert(0 == res);
+
+    if (0 < refda_exec_item_list_size(eseq.items))
+    {
+        CACE_LOG_CRIT("sequence did not complete, remaining: %zu", refda_exec_item_list_size(eseq.items));
+        assert(0);
+    }
+
+    refda_exec_seq_deinit(&eseq);
+    refda_runctx_ptr_clear(ctxptr);
 }

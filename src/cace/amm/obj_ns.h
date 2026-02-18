@@ -34,13 +34,16 @@ extern "C" {
 /** @struct string_tree_set_t
  * Unique set of feature names in a single namespace.
  */
+/** @struct cace_amm_obj_desc_ptr_t
+ * A non-thread-safe shared pointer to a ::cace_amm_obj_desc_t instance.
+ */
 /** @struct cace_amm_obj_desc_list_t
  * Linked list of object descriptors of a single type within a namespace.
  * The list owns the object lifetimes and is indexed by pointers to
- * list members.
+ * list members of ::cace_amm_obj_desc_t.
  */
 /** @struct cace_amm_obj_desc_ptr_set_t
- * Unique set of object descriptor pointers.
+ * Unique set of object descriptor pointers to ::cace_amm_obj_desc_t.
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
@@ -99,8 +102,9 @@ typedef struct
     /// AMM object descriptors organized by object type
     cace_amm_obj_ns_ctr_dict_t object_types;
 
-    /// Flag to determine whether ns has been marked obsolete
-    cace_ari_bool obsolete;
+    /// The status of this NS, which can change over time
+    cace_amm_status_t status;
+
 } cace_amm_obj_ns_t;
 
 void cace_amm_obj_ns_init(cace_amm_obj_ns_t *ns);

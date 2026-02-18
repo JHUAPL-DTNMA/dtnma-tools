@@ -15,17 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "const.h"
 
-void refda_amm_const_desc_init(refda_amm_const_desc_t *obj)
-{
-    obj->val_type = CACE_AMM_TYPE_INIT_INVALID;
-    obj->value    = CACE_ARI_INIT_UNDEFINED;
-}
+#ifndef REFDA_LOADER_H_
+#define REFDA_LOADER_H_
 
-void refda_amm_const_desc_deinit(refda_amm_const_desc_t *obj)
-{
-    cace_ari_deinit(&(obj->value));
-    cace_amm_type_deinit(&(obj->val_type));
-    memset(obj, 0, sizeof(*obj));
-}
+#include "agent.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Initialize base models on an agent at startup.
+ * This should be called before any other ADMs and uses of refda_agent_bindrefs().
+ * @param[in] agent The agent to load models into.
+ * @return Zero if successful.
+ */
+int refda_loader_basemods(refda_agent_t *agent);
+
+#ifdef __cplusplus
+} // extern C
+#endif
+
+#endif /* REFDA_LOADER_H_ */

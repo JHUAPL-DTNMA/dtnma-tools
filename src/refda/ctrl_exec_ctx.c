@@ -90,7 +90,14 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
             valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctx->ctrl->res_type), &(ctx->item->result)));
             if (!valid)
             {
-                CACE_LOG_ERR("CTRL result type failed to match a result value");
+                if (cace_log_is_enabled_for(LOG_ERR))
+                {
+                    m_string_t buf;
+                    m_string_init(buf);
+                    cace_ari_text_encode(buf, &(ctx->item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                    CACE_LOG_ERR("CTRL result type failed to match the value %s", m_string_get_cstr(buf));
+                    m_string_clear(buf);
+                }
                 cace_ari_set_undefined(&(ctx->item->result));
             }
         }
