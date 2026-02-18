@@ -33,7 +33,7 @@ static bool cace_amm_semtype_use_constraints(const cace_amm_semtype_use_t *semty
         const cace_amm_semtype_cnst_t *cnst = cace_amm_semtype_cnst_array_cref(it);
         if (!cace_amm_semtype_cnst_is_valid(cnst, val))
         {
-            CACE_LOG_WARNING("type use constraint %d failed", cnst->type);
+            CACE_LOG_WARNING("type use constraint type %d failed", cnst->type);
             // first failure wins
             return false;
         }

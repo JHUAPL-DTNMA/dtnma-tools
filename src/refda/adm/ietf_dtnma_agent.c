@@ -5325,10 +5325,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BYTE);
                         cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
 
-                        cace_amm_semtype_cnst_t *cnst;
+                        // cace_amm_semtype_cnst_t *cnst;
                         {
                             // Constraint: IntegerEnums(values={0: 'waiting', 1: 'running'})
-                            cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
+                            // cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
                             // FIXME unhandled constraint IntegerEnums(values={0: 'waiting', 1: 'running'})
                         }
                     }
