@@ -155,7 +155,7 @@ cace_amm_semtype_use_t *cace_amm_type_set_use(cace_amm_type_t *type)
     return semtype;
 }
 
-cace_amm_semtype_use_t * cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name)
+cace_amm_semtype_use_t *cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name)
 {
     CHKNULL(type);
     CHKNULL(name);
@@ -167,7 +167,7 @@ cace_amm_semtype_use_t * cace_amm_type_set_use_ref(cace_amm_type_t *type, const 
     return semtype;
 }
 
-cace_amm_semtype_use_t * cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name)
+cace_amm_semtype_use_t *cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name)
 {
     CHKNULL(type);
     CHKNULL(name);

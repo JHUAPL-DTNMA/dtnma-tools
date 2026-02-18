@@ -95,11 +95,11 @@ int cace_amm_type_set_use_from_name(cace_amm_type_t *type, const cace_amm_lookup
  * @param[in] name The ARITYPE literal or TYPEDEF reference value.
  * @return Non-NULL upon success.
  */
-cace_amm_semtype_use_t * cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name);
+cace_amm_semtype_use_t *cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name);
 /** @overload
  * Set the name with move semantics.
  */
-cace_amm_semtype_use_t * cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name);
+cace_amm_semtype_use_t *cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name);
 
 /** Create a use type based on a base type object.
  * A use type adds annotations and constraints onto a base type.

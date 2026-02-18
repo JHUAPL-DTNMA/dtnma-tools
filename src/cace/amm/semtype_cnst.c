@@ -66,9 +66,9 @@ uint64_t *cace_amm_semtype_cnst_set_int_bits(cace_amm_semtype_cnst_t *obj)
     CHKNULL(obj);
     cace_amm_semtype_cnst_deinit(obj);
 
-    obj->type                   = AMM_SEMTYPE_CNST_INT_BITS;
+    obj->type     = AMM_SEMTYPE_CNST_INT_BITS;
     uint64_t *cfg = &(obj->as_bit_mask);
-    *cfg = 0;
+    *cfg          = 0;
 
     return cfg;
 }
