@@ -606,7 +606,7 @@ int cace_ari_text_encode_objpath(m_string_t text, const cace_ari_objpath_t *path
     }
     else
     {
-        if (path->org_id.form != CACE_ARI_IDSEG_NULL)
+        if (path->model_id.form != CACE_ARI_IDSEG_NULL)
         {
             m_string_cat_cstr(text, "..");
         }
