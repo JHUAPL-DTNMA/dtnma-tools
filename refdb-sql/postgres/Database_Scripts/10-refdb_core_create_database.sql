@@ -510,8 +510,7 @@ create table if not exists execution_set(
     agent_id varchar,
     primary key (execution_set_id),
     foreign key (ac_id)
-        references ari_collection (ac_id),
-    unique(nonce_cbor, ac_id, agent_id) --AC would be unique for entry and one nonce per agent
+        references ari_collection (ac_id)
 );
 
 -- ari-tbl template 
