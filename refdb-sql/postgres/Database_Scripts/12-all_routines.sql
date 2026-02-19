@@ -1316,7 +1316,7 @@ DECLARE
     agent_row_id INTEGER;
 BEGIN
     CALL SP__insert_agent(p_agent_endpoint_uri, agent_row_id);
-    INSERT INTO ari_rptset(nonce_cbor, reference_time, report_list, report_list_cbor, agent_id)
+    INSERT INTO ari_rptset(now(), nonce_cbor, reference_time, report_list, report_list_cbor, agent_id)
         VALUES(p_nonce_cbor, p_reference_time, p_report_list, p_report_list_cbor, agent_row_id);
 End$$;
 
@@ -1333,6 +1333,6 @@ language plpgsql
 		insert INTO ari_collection(num_entries,entries) 
 		VALUES(p_num_entries,p_exec_set) RETURNING ac_id into r_ac_id;
     END IF ;
-		INSERT INTO execution_set(nonce_cbor, ac_id , use_desc, agent_id)
+		INSERT INTO execution_set(now(), nonce_cbor, ac_id , use_desc, agent_id)
 	VALUES(p_nonce_cbor, r_ac_id, p_use_desc, p_agent_id);
 	End$$;

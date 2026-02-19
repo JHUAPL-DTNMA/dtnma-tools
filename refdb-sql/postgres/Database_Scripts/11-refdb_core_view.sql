@@ -991,7 +991,8 @@ left join vw_typedef_actual tad on
 create or replace
 view vw_execution_set as
 select 
-execution_set.execution_set_id ,
+execution_set.execution_set_id,
+execution_set.mgr_time,
 execution_set.nonce_cbor,
 execution_set.use_desc,
 execution_set.agent_id,

@@ -503,7 +503,9 @@ create table if not exists ari_tbl (
 
 -- exec-set log
 create table if not exists execution_set(
-    execution_set_id serial not null ,
+    execution_set_id serial not null,
+    -- timestamp from the Manager
+    mgr_time TIMESTAMP not null,
     nonce_cbor BYTEA,
     ac_id INT,
     use_desc varchar,
@@ -512,6 +514,7 @@ create table if not exists execution_set(
     foreign key (ac_id)
         references ari_collection (ac_id)
 );
+CREATE INDEX idx_execset_nonce ON execution_set (nonce_cbor);
 
 -- ari-tbl template 
 create table if not exists ari_rptt (
@@ -527,6 +530,8 @@ use_desc varchar,
 -- rpt-sets
 create table if not exists ari_rptset (
     ari_rptset_id serial NOT NULL,
+    -- timestamp from the Manager
+    mgr_time TIMESTAMP not null,
     nonce_cbor BYTEA NOT NULL,
     reference_time TIMESTAMP NOT NULL,
     report_list TEXT NOT NULL,
