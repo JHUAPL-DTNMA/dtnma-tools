@@ -501,18 +501,20 @@ create table if not exists ari_tbl (
 );
 
 
--- exec-set
+-- exec-set log
 create table if not exists execution_set(
-    execution_set_id serial not null ,
+    execution_set_id serial not null,
+    -- timestamp from the Manager
+    mgr_time TIMESTAMP not null,
     nonce_cbor BYTEA,
     ac_id INT,
     use_desc varchar,
     agent_id varchar,
     primary key (execution_set_id),
     foreign key (ac_id)
-        references ari_collection (ac_id),
-    unique(nonce_cbor, ac_id, agent_id) --AC would be unique for entry and one nonce per agent
+        references ari_collection (ac_id)
 );
+CREATE INDEX idx_execset_nonce ON execution_set (nonce_cbor);
 
 -- ari-tbl template 
 create table if not exists ari_rptt (
@@ -528,6 +530,8 @@ use_desc varchar,
 -- rpt-sets
 create table if not exists ari_rptset (
     ari_rptset_id serial NOT NULL,
+    -- timestamp from the Manager
+    mgr_time TIMESTAMP not null,
     nonce_cbor BYTEA NOT NULL,
     reference_time TIMESTAMP NOT NULL,
     report_list TEXT NOT NULL,
@@ -862,201 +866,10 @@ delete
 -- (Note: Other DB systems, such as PostgreSQL require different syntax for declaring auto-increment fields to begin with).
 -- SET sql_mode = NO_AUTO_VALUE_ON_ZERO;
 
-/*drop table if exists message_group_agents;
+/*
+drop table if exists DB_LOG_INFO;
+*/
 
-drop table if exists message_perform_control;
-
-drop table if exists message_agents;
-
-drop table if exists message_report_set_entry;
-
-drop table if exists report_definition;
-
-drop table if exists message_group_entry;
-
-drop table if exists message_group;
-
-drop table if exists enum_message_group_states;
-
-drop table if exists enum_message_group_types;
-
-drop table if exists DB_LOG_INFO;*/
-
-
-
-
-create table if not exists enum_message_group_states (
-  state_id serial not null ,
-  name VARCHAR(45) null unique,
-  description varchar null,
-  primary key (state_id)
-  );
-
-comment on
-table enum_message_group_states is 'Enumeration of state_id values in message_group'
-  ;
-
-insert
-	into
-	enum_message_group_states (state_id,
-	name,
-	description)
-values
-(0,
-'initializing',
-'Default value, but generally used solely by UI when creating new outgoing messages.'),
-(1,
-'ready',
-'Indicates message is ready for processing, either for the manager to transmit (outgoing) or user to analyze (incoming)'),
-(2,
-'sent',
-'For outgoing sets only, this indicates that the manager has parsed and sent this message group.'),
-(3,
-'error',
-'Indicates that the manager failed to parse or transmit this group successfully.'),
-(4,
-'aborted',
-'Indicates this outgoing message set has been aborted by the user before transmission.')
-on conflict do nothing;
-
-create table if not exists enum_message_group_types (
-  type_id serial not null ,
-  name VARCHAR(45) null unique,
-  primary key (type_id)
-  );
-
-comment on
-table enum_message_group_types is 'Enumeration of Message group opcode/type values'
-  ;
-
-insert
-	into
-	enum_message_group_types (type_id,
-	name)
-values
-(0,
-'REG_AGENT'),
-(1,
-'RPT_SET'),
-(2,
-'PERF_CTRL'),
-(3,
-'TBL_SET')
-on conflict do nothing;
-
-create table if not exists message_group (
-  group_id serial not null ,
-  created_ts TIMESTAMP not null default NOW(),
-  modified_ts TIMESTAMP default CURRENT_TIMESTAMP,
-  ts INT null,
-  is_outgoing BOOL,
-  state_id INT not null default 0,
-  primary key (group_id),
-  constraint message_group_state_id foreign key (state_id) references enum_message_group_states (state_id) on
-delete
-	restrict
-  );
-
-comment on
-table message_group is 'Incoming and outgoing message sets';
-
-comment on
-column message_group.modified_ts is 'If NULL, this is an outgoing message.  Otherwise this is the raw AMP timestamp value of the received message group.  The function amp_ts_to_datetime() can convert this into a MySQL TIMESTAMP format.';
-
-create or replace trigger update_mg_changetimestamp before
-update
-	on
-	message_group for each row execute procedure
-    update_changetimestamp_column();
-
-create table if not exists message_group_agents (
-  group_id INT not null,
-  agent_id INT not null,
-  primary key (group_id),
-  constraint message_group_agents_group_id foreign key (group_id) references message_group (group_id) on
-delete
-	cascade,
-	constraint message_group_agents_agent_id foreign key (agent_id) references registered_agents (registered_agents_id) on
-	delete
-		cascade
-  );
-
-comment on
-table message_group_agents is 'For received groups, the agent that transmitted the group (singular entry).  For outgoing groups, a set of one or more destination agents for this message';
-
-create table if not exists message_group_entry (
-  group_id INT not null,
-  message_id serial not null ,
-  ack BOOL not null,
-  nak BOOL not null,
-  acl BOOL not null,
-  order_num INT not null,
-  type_id serial not null ,
-  primary key (message_id),
-  unique (group_id,
-message_id,
-order_num),
-  constraint message_group_entry_group_id foreign key (group_id) references message_group (group_id) on
-delete
-	cascade,
-	constraint message_group_entry_opcode foreign key (type_id) references enum_message_group_types (type_id) on
-	delete
-		cascade
-  );
-
-comment on
-table message_group_entry is 'For received groups, the agent that transmitted the group (singular entry).  For outgoing groups, a set of one or more destination agents for this message';
-
-comment on
-column message_group_entry.type_id is 'Conforms to AMP Message Header Opcode value';
-
-create table if not exists message_perform_control (
-  message_id INT not null,
-  tv INT null,
-  ac_id INT not null,
-  primary key (message_id),
-  constraint message_perform_control_mid foreign key (message_id) references message_group_entry (message_id) on
-delete
-	cascade
-  );
-
-comment on
-table message_perform_control is 'Control(s) to be sent to agent';
-
-create table if not exists message_agents (
-  message_id INT not null,
-  agent_id INT null,
-  primary key (message_id),
-  constraint message_agents_mid foreign key (message_id) references message_group_entry (message_id) on
-delete
-	cascade,
-	constraint message_agents_eid foreign key (agent_id) references registered_agents (registered_agents_id) on
-	delete
-		cascade
-  );
-
-comment on
-table message_agents is 'For register_Agent messages, there will always be a single entry in this table. For Table and Msg sets this is the [optional] list of RX names for the set';
--- TODO TABLE message_table_set_entry
-
-
-create table if not exists message_report_set_entry (
-  message_id INT not null,
-  ari_rptset_id INT null,
-  order_num smallint ,
-  unique (message_id,
-order_num),
-  constraint message_report_entry_mid foreign key (message_id) references message_group_entry (message_id) on
-delete
-	cascade,
-	constraint message_report_entry_rid foreign key (ari_rptset_id) references ari_rptset (ari_rptset_id) on
-	delete
-		cascade
-  );
-
-comment on
-table message_report_set_entry is 'A set of received reports'
-  ;
 
 create table if not exists DB_LOG_INFO (
   id SERIAL not null ,

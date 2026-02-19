@@ -451,6 +451,23 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 {
     int retval = 0;
     CACE_LOG_INFO("Sending message with %d EXECSETs", cace_ari_list_size(tosend));
+
+    // add EXECSETs to Database
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+    /* Copy the message group to the database tables */
+    CACE_LOG_INFO("logging EXECSETs in db started");
+    // add all execset
+    cace_ari_list_it_t it;
+    for (cace_ari_list_it(it, tosend); !cace_ari_list_end_p(it); cace_ari_list_next(it))
+    {
+        const cace_ari_t *curr_set = cace_ari_list_cref(it);
+        refdm_db_insert_execset(curr_set, agent);
+    }
+
+    // m_string_clear(eid);
+    CACE_LOG_INFO("logging EXECSETs in db finished");
+#endif
+
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
 
@@ -466,24 +483,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
             mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "Failed sending to agent");
             retval = HTTP_INTERNAL_ERROR;
         }
-
-        // FIXME ui_log_transmit_msg(agent, &esetari);
     }
-// add EXECSETs to Database
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
-    /* Copy the message group to the database tables */
-    CACE_LOG_INFO("logging EXECSETs in db started");
-    // add all execset
-    cace_ari_list_it_t it;
-    for (cace_ari_list_it(it, tosend); !cace_ari_list_end_p(it); cace_ari_list_next(it))
-    {
-        const cace_ari_t *curr_set = cace_ari_list_cref(it);
-        refdm_db_insert_execset(curr_set, agent);
-    }
-
-    // m_string_clear(eid);
-    CACE_LOG_INFO("logging EXECSETs in db finished");
-#endif
 
     if (!retval)
     {

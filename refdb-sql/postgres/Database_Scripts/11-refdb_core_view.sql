@@ -636,51 +636,6 @@ inner join
 			obj_actual_definition.obj_actual_definition_id = ident_actual_definition.obj_actual_definition_id) as view1 on
 		view1.obj_metadata_id = obj_formal_definition.obj_metadata_id) join2 on
 	join2.obj_metadata_id = obj_metadata.obj_metadata_id;
-	
-
-
-
--- message view 
-create or replace
-view vw_ready_outgoing_message_groups as
-select
-	*
-from
-	message_group
-where
-	is_outgoing = true
-	and state_id = 1;
-
-create or replace
-view vw_ready_incoming_message_groups as
-select
-	*
-from
-	message_group
-where
-	is_outgoing = false
-	and state_id = 1;
-
-create or replace
-view vw_message_agents as
-select
-	ma.message_id,
-	ra.*
-from
-	message_agents ma
-left join registered_agents ra on
-	ma.agent_id = ra.registered_agents_id;
-
-create or replace
-view vw_message_group_agents as
-select
-	ma.group_id,
-	ra.*
-from
-	message_group_agents ma
-left join registered_agents ra on
-	ma.agent_id = ra.registered_agents_id;
-
 
 
 -- 
@@ -1036,7 +991,8 @@ left join vw_typedef_actual tad on
 create or replace
 view vw_execution_set as
 select 
-execution_set.execution_set_id ,
+execution_set.execution_set_id,
+execution_set.mgr_time,
 execution_set.nonce_cbor,
 execution_set.use_desc,
 execution_set.agent_id,
