@@ -1235,3 +1235,55 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent-acl/CTRL/ensure-access'), self._ari_strip_params(rpt.source))
         self.assertEqual([ari.UNDEFINED], rpt.items)
+
+    def test_alarms(self):
+        self._start()
+
+        # inventories are empty without apps using them
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;('
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/alarms/EDD/resource-inventory),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/alarms/EDD/category-inventory)'
+                + ')'
+            )]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/alarms/EDD/resource-inventory)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 1), rpt.items[0].value.shape)
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/alarms/EDD/category-inventory)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 1), rpt.items[0].value.shape)
+
+        # Initial default state
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;('
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/alarms/EDD/alarm-list),'
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/alarms/EDD/shelf-list)'
+                + ')'
+            )]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/alarms/EDD/alarm-list)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((0, 9), rpt.items[0].value.shape)
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/alarms/EDD/shelf-list)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertEqual([ari.UNDEFINED], rpt.items)
+        # self.assertIsInstance(rpt.items[0].value, ari.Table)
+        # TODO self.assertEqual((0, 6), rpt.items[0].value.shape)

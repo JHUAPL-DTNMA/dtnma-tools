@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 // forward declaration for callback reference
-struct refda_ctrl_exec_ctx_s;
 typedef struct refda_ctrl_exec_ctx_s refda_ctrl_exec_ctx_t;
 
 /** A control (CTRL) descriptor.

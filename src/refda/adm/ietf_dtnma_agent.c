@@ -638,12 +638,14 @@ static int timespec_numeric_mod(cace_ari_t *result _U_, const cace_ari_t *left _
 
 typedef struct
 {
-    cace_ari_tbl_t *tbl;
-    int             row_index;
+    /// Entire table being filtered
+    const cace_ari_tbl_t *tbl;
+    /// Specific row being checked
+    int row_index;
 } _tbl_row_pair_t;
 
 /**
- * Translation helper function to substitute any LABELS in the expression with
+ * Translation helper function to substitute any LABEL value in the expression with
  * corresponding data from the current table row.
  *
  * Assumes the LABEL contains an index of the column which will substitute data
@@ -655,9 +657,9 @@ static int tbl_filter_sub_label(cace_ari_lit_t *out, const cace_ari_lit_t *in, c
 
     if (in->has_ari_type && in->ari_type == CACE_ARI_TYPE_LABEL)
     {
-        cace_ari_tbl_t *tbl_data  = table_data->tbl;
-        int             row_index = table_data->row_index;
-        int             label_id  = 0;
+        const cace_ari_tbl_t *tbl_data  = table_data->tbl;
+        int                   row_index = table_data->row_index;
+        int                   label_id  = 0;
 
         // Get label ID value
         switch (in->prim_type)
@@ -2506,8 +2508,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
     refda_amm_const_desc_t *cnst = NULL;
     {
-        cace_amm_obj_desc_t *obj = NULL;
-        obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_CONST, obj_name);
+        cace_amm_obj_desc_t *obj = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_CONST, obj_name);
         if (obj)
         {
             CACE_LOG_INFO("CONST already exists");
@@ -2542,9 +2543,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
             m_string_clear(buf);
         }
 
+        refda_binding_ctx_t bind_ctx = {
+            .store = &(agent->objs),
+            .ns    = odm,
+        };
         // recursively fetch type and bind now so that match will work
         if (cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs)
-            || refda_binding_typeobj(&(objdata->val_type), &agent->objs))
+            || refda_binding_typeobj(&bind_ctx, &(objdata->val_type)))
         {
             m_string_t buf;
             m_string_init(buf);
@@ -2582,7 +2587,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
             cace_amm_obj_desc_t *obj =
                 refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
-            int res = refda_binding_const(obj, &agent->objs);
+
+            refda_binding_ctx_t bind_ctx = {
+                .store = &(agent->objs),
+                .ns    = odm,
+            };
+            int res = refda_binding_const(&bind_ctx, obj);
             if (res)
             {
                 CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
@@ -2782,9 +2792,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
             m_string_clear(buf);
         }
 
+        refda_binding_ctx_t bind_ctx = {
+            .store = &(agent->objs),
+            .ns    = odm,
+        };
         // recursively fetch type and bind now so that match will work
         if (cace_amm_type_set_name(&(objdata->val_type), ari_type, &agent->objs)
-            || refda_binding_typeobj(&(objdata->val_type), &agent->objs))
+            || refda_binding_typeobj(&bind_ctx, &(objdata->val_type)))
         {
             m_string_t buf;
             m_string_init(buf);
@@ -2823,7 +2837,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
 
             cace_amm_obj_desc_t *obj =
                 refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*var_name), obj_id), objdata);
-            int res = refda_binding_var(obj, &agent->objs);
+
+            refda_binding_ctx_t bind_ctx = {
+                .store = &(agent->objs),
+                .ns    = odm,
+            };
+            int res = refda_binding_var(&bind_ctx, obj);
             if (res)
             {
                 CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
@@ -4347,16 +4366,15 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
         // Substitute row values for LABEL items within row filter EXPR
         cace_ari_t current_row = CACE_ARI_INIT_UNDEFINED;
         {
-            // cace_ari_set_copy(&current_row, row_match);
-            // tbl_filter_substitute_row_values(&current_row, tbl_data, r);
-            cace_ari_translator_t translator = { 0 };
-            translator.map_lit               = tbl_filter_sub_label;
-            _tbl_row_pair_t table_data       = { tbl_data, r };
+            cace_ari_translator_t translator = {
+                .map_lit = tbl_filter_sub_label,
+            };
+            _tbl_row_pair_t table_data = { tbl_data, r };
 
             int res = cace_ari_translate(&current_row, row_match, &translator, &table_data);
             if (res)
             {
-                CACE_LOG_ERR("Unable to translate ARI, error %d", res);
+                CACE_LOG_ERR("Unable to translate condition expression ARI, error %d", res);
                 cace_ari_deinit(&current_row); // No longer needed at this point
                 return;
             }
@@ -4366,7 +4384,6 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
         int        res         = refda_eval_target(ctx->evalctx->parent, &eval_result, &current_row);
         cace_ari_deinit(&current_row); // No longer needed at this point
-
         if (res)
         {
             CACE_LOG_ERR("failed to evaluate condition, error %d", res);
