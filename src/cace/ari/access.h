@@ -117,6 +117,9 @@ int cace_ari_get_tp_posix(const cace_ari_t *ari, struct timespec *out);
 /// @overload
 int cace_ari_get_td(const cace_ari_t *ari, struct timespec *out);
 
+/// @overload
+int cace_ari_get_objpat(const cace_ari_t *ari, struct cace_ari_objpat_s *out);
+
 /** Determine if this is a typed literal of a specific type.
  *
  * @param[in] ari The value to check.

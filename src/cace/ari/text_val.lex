@@ -66,12 +66,8 @@ DECDIG [0-9]
 }
 
 <LT_LABEL>(0|[1-9]{DECDIG}*) {
-    m_string_t text;
-    m_string_init_set_cstr(text, yytext);
-
     uint64_t val;
-    int ret = cace_ari_uint64_decode(&val, text);
-    m_string_clear(text);
+    int ret = cace_ari_uint64_decode(&val, yytext, yyleng);
     if (ret)
     {
         cace_ari_text_val_error(yyscanner, yyextra, "number too large to parse");
@@ -100,41 +96,39 @@ DECDIG [0-9]
     // infer the base from the text
     if (yytext[0] == '-')
     {
-        m_string_t text;
-        m_string_init_set_cstr(text, yytext + 1);
-        uint64_t neg;
-        int ret = cace_ari_uint64_decode(&neg, text);
-        m_string_clear(text);
+        const char *curs = yytext;
+        size_t len = yyleng;
+        int64_t val;
+        int ret = cace_ari_int64_decode(&val, curs, len);
         if (ret)
         {
             cace_ari_text_val_error(yyscanner, yyextra, "number too large to parse");
             return YYerror;
         }
 
-        // work around signed negation overflow
-        if (neg > (uint64_t)(-(INT64_MIN + 1)) + 1)
-        {
-            cace_ari_text_val_error(yyscanner, yyextra, "negative int too large");
-            return YYerror;
-        }
-
         yylval->lit = (cace_ari_lit_t){
             .prim_type = CACE_ARI_PRIM_INT64,
-            .value.as_int64 = -(int64_t)neg,
+            .value.as_int64 = val,
         };
         return T_INT;
     }
     else
     {
-        m_string_t text;
-        if (yytext[0] == '+') { 
-          m_string_init_set_cstr(text, yytext + 1);
-        } else {
-          m_string_init_set_cstr(text, yytext);
+        const char *curs;
+        size_t len;
+        if (yytext[0] == '+')
+        {
+            curs = yytext + 1;
+            len = yyleng - 1;
         }
+        else
+        {
+            curs = yytext;
+            len = yyleng;
+        }
+
         uint64_t val;
-        int ret = cace_ari_uint64_decode(&val, text);
-        m_string_clear(text);
+        int ret = cace_ari_uint64_decode(&val, curs, len);
         if (ret)
         {
             cace_ari_text_val_error(yyscanner, yyextra, "number too large to parse");

@@ -12,6 +12,7 @@
 #include "cace/ari/text_val_parse.h"
 #include "cace/ari/text_util.h"
 #include "cace/ari/text.h"
+#include "cace/ari/objpat.h"
 #include "cace/config.h"
 #include <stdlib.h>
 
@@ -29,6 +30,7 @@ int yydebug = 0;
 {
 #include "cace/ari/base.h"
 #include "cace/ari/containers.h"
+#include "cace/ari/objpat.h"
 #include <m-string.h>
 #include <m-dict.h>
 
@@ -62,6 +64,7 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
   cace_ari_t ari;
   
   cace_ari_lit_t lit;
+  cace_ari_objpat_part_t objpat_part;
   cace_ari_type_t ari_type;
   cace_named_ari_dict_t litparams;
   struct cace_ari_report_s *report;
@@ -92,12 +95,15 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 %type <lit> reportsbracket
 %type <lit> reportslist
 %type <report> report
+%type <objpat_part> objpat-partbracket
+%type <objpat_part> objpat-part
 %token <ari_type> T_LITTYPE
 %token T_LITTYPE_AC
 %token T_LITTYPE_AM
 %token T_LITTYPE_TBL
 %token T_LITTYPE_EXECSET
 %token T_LITTYPE_RPTSET
+%token T_LITTYPE_OBJPAT
 
 %token T_REF_ABS ///< start of absolute reference ARI
 %token T_REF_REL_DOT
@@ -114,8 +120,9 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 %type <ari> ssp
 
 %destructor { m_string_clear($$); } <text>
-%destructor { cace_named_ari_dict_clear($$); } <litparams>
 %destructor { cace_ari_lit_deinit(&$$); } <lit>
+%destructor { cace_ari_objpat_part_clear($$); } <objpat_part>
+%destructor { cace_named_ari_dict_clear($$); } <litparams>
 %destructor { if ($$) { cace_ari_report_deinit($$); CACE_FREE($$); } } <report>
 %destructor { cace_ari_ref_deinit(&$$); } <objref>
 %destructor { cace_ari_objpath_deinit(&$$); } <objpath>
@@ -313,6 +320,22 @@ ssp-literal:
         cace_ari_init_move(&($$.value.as_rptset->reftime), found_r);
         cace_named_ari_dict_clear($2);
     }
+    | T_LITTYPE_OBJPAT objpat-partbracket objpat-partbracket objpat-partbracket objpat-partbracket {
+        cace_ari_objpat_t *pat = CACE_MALLOC(sizeof(cace_ari_objpat_t));
+        cace_ari_objpat_init(pat);
+    
+        $$ = (cace_ari_lit_t) { .has_ari_type = true,
+                                                 .ari_type     = CACE_ARI_TYPE_OBJPAT,
+                                                 .prim_type    = CACE_ARI_PRIM_OTHER,
+                                                 .value        = {
+                                                            .as_objpat = pat,
+                                                 } };
+        // move semantics here
+        cace_ari_objpat_part_move(pat->org_pat, $2);
+        cace_ari_objpat_part_move(pat->model_pat, $3);
+        cace_ari_objpat_part_move(pat->type_pat, $4);
+        cace_ari_objpat_part_move(pat->obj_pat, $5);
+    }
 ;
 
 acbracket:
@@ -501,6 +524,50 @@ report:
         cace_ari_list_move($$->items, $2.value.as_ac->items);
         cace_ari_list_init($2.value.as_ac->items);
         cace_ari_lit_deinit(&$2);
+    }
+;
+
+objpat-partbracket:
+    T_LPAREN objpat-part T_RPAREN {
+        cace_ari_objpat_part_init_move($$, $2);
+    }
+;
+
+objpat-part:
+    T_VALSEG {
+        if (m_string_equal_cstr_p($1, "*"))
+        {
+            cace_ari_objpat_part_init_set_special($$, true);
+        }
+        else
+        {
+            cace_ari_objpat_part_init($$);
+            
+            // string_search_str
+            
+            // try int first
+            int64_t val;
+            if (cace_ari_int64_decode(&val, m_string_get_cstr($1), m_string_size($1)))
+            {
+                // any failure assumes id-text
+            }
+            else
+            {
+            printf("GOT %" PRIu64 "\n", val);
+            cace_util_range_int64_t range;
+            cace_util_range_int64_init(range);
+            
+            cace_util_range_intvl_int64_t intvl;
+            cace_util_range_intvl_int64_set_finite(&intvl, val, val);
+            cace_util_range_int64_push(range, intvl);
+            
+            cace_ari_objpat_part_move_range_int64($$, range);
+            }
+        }
+    }
+    | objpat-part T_COMMA T_VALSEG {
+        cace_ari_objpat_part_init_move($$, $1);
+        
     }
 ;
 

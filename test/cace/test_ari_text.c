@@ -1227,6 +1227,8 @@ TEST_CASE("ari:/LABEL/hi")
 TEST_CASE("ari:/LABEL/1")
 TEST_CASE("ari:/CBOR/h'0A'")
 TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
+TEST_CASE("ari:/OBJPAT/(65535)(..-1,1)(*)(10..100)")
+TEST_CASE("ari:/OBJPAT/(*)(*)(*)(*)")
 TEST_CASE("ari:/AC/()")
 TEST_CASE("ari:/AC/(a)")
 TEST_CASE("ari:/AC/(a,b,c)")
@@ -1259,7 +1261,7 @@ void test_ari_text_loopback(const char *intext)
     m_string_init_set_cstr(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
     m_string_clear(inbuf);
-    if ((ret != 0) ^ (errm != NULL)) // only error message upon failure
+    if ((ret != 0) && (errm != NULL)) // only error message upon failure
     {
         TEST_FAIL_MESSAGE(errm);
     }

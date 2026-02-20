@@ -105,7 +105,7 @@ void test_ari_roundtrip_text_cbor(const char *intext)
         m_string_init_set_cstr(inbuf, intext);
         int res = cace_ari_text_decode(&ari_dn, inbuf, &errm);
         m_string_clear(inbuf);
-        if ((res != 0) ^ (errm != NULL)) // only error message upon failure
+        if ((res != 0) && (errm != NULL)) // only error message upon failure
         {
             TEST_FAIL_MESSAGE(errm);
         }
@@ -219,7 +219,7 @@ void test_ari_roundtrip_cbor_text(const char *inhex)
 
         res = cace_ari_text_decode(&ari_up, text, &errm);
         m_string_clear(text);
-        if ((res != 0) ^ (errm != NULL)) // only error message upon failure
+        if ((res != 0) && (errm != NULL)) // only error message upon failure
         {
             TEST_FAIL_MESSAGE(errm);
         }

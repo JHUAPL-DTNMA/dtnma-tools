@@ -20,6 +20,7 @@
  */
 #include "lit.h"
 #include "containers.h"
+#include "objpat.h"
 #include "cace/util/defs.h"
 #include <inttypes.h>
 
@@ -72,6 +73,10 @@ int cace_ari_lit_deinit(cace_ari_lit_t *obj)
                 cace_ari_rptset_deinit(obj->value.as_rptset);
                 CACE_FREE(obj->value.as_rptset);
                 break;
+            case CACE_ARI_TYPE_OBJPAT:
+                CHKERR1(obj->value.as_objpat);
+                cace_ari_objpat_deinit(obj->value.as_objpat);
+                CACE_FREE(obj->value.as_objpat);
             default:
                 // do nothing
                 break;

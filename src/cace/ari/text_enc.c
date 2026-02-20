@@ -18,6 +18,7 @@
 #include "text.h"
 #include "text_util.h"
 #include "access.h"
+#include "objpat.h"
 #include "cace/util/defs.h"
 #include <inttypes.h>
 
@@ -337,6 +338,43 @@ static int cace_ari_text_encode_rptset(cace_ari_text_enc_state_t *state, const c
     return retval;
 }
 
+static void cace_ari_text_encode_objpat_part(cace_ari_text_enc_state_t *state, const cace_ari_objpat_part_t part)
+{
+    m_string_push_back(state->out, '(');
+
+    const cace_util_range_int64_t *range_int64 = NULL;
+    const m_string_t *text = NULL;
+    if (cace_ari_objpat_part_cget_special(part))
+    {
+        m_string_push_back(state->out, '*');
+    }
+    else if ((range_int64 = cace_ari_objpat_part_cget_range_int64(part)))
+    {
+        cace_util_range_int64_it_t it;
+        for (cace_util_range_int64_it(it, *range_int64); !cace_util_range_int64_end_p(it); cace_util_range_int64_next(it))
+        {
+            const cace_util_range_intvl_int64_t *intvl = cace_util_range_int64_cref(it);
+            if (intvl->i_min == intvl->i_max)
+            {
+                // FIXME decimal
+                cace_ari_int64_encode(state->out, intvl->i_min, 10);
+            }
+            else
+            {
+                cace_ari_int64_encode(state->out, intvl->i_min, 10);
+                m_string_cat_cstr(state->out, "..");
+                cace_ari_int64_encode(state->out, intvl->i_max, 10);
+            }
+        }
+    }
+    else if ((text = cace_ari_objpat_part_cget_text(part)))
+    {
+        m_string_cat(state->out, *text);
+    }
+
+    m_string_push_back(state->out, ')');
+}
+
 static void cace_ari_text_encode_prefix(cace_ari_text_enc_state_t *state)
 {
     switch (state->opts->scheme_prefix)
@@ -453,7 +491,12 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
             case CACE_ARI_TYPE_RPTSET:
                 cace_ari_text_encode_rptset(state, obj->value.as_rptset);
                 break;
-
+            case CACE_ARI_TYPE_OBJPAT:
+                cace_ari_text_encode_objpat_part(state, obj->value.as_objpat->org_pat);
+                cace_ari_text_encode_objpat_part(state, obj->value.as_objpat->model_pat);
+                cace_ari_text_encode_objpat_part(state, obj->value.as_objpat->type_pat);
+                cace_ari_text_encode_objpat_part(state, obj->value.as_objpat->obj_pat);
+                break;
             default:
                 // Fall through to primitives below
                 break;
@@ -486,17 +529,7 @@ static int cace_ari_text_encode_lit(cace_ari_text_enc_state_t *state, const cace
             break;
         case CACE_ARI_PRIM_INT64:
         {
-            uint64_t absval;
-            if (obj->value.as_int64 < 0)
-            {
-                absval = -obj->value.as_int64;
-                m_string_push_back(state->out, '-');
-            }
-            else
-            {
-                absval = obj->value.as_int64;
-            }
-            if (cace_ari_uint64_encode(state->out, absval, (int)(state->opts->int_base)))
+            if (cace_ari_int64_encode(state->out, obj->value.as_int64, (int)(state->opts->int_base)))
             {
                 return 2;
             }
