@@ -30,6 +30,20 @@ void cace_ari_objpat_init(cace_ari_objpat_t *obj)
     cace_ari_objpat_part_init(obj->obj_pat);
 }
 
+void cace_ari_objpat_init_set(cace_ari_objpat_t *obj, const cace_ari_objpat_t *src)
+{
+    CHKVOID(obj);
+    CHKVOID(src);
+    if (obj == src)
+    {
+        return;
+    }
+    cace_ari_objpat_part_init_set(obj->org_pat, src->org_pat);
+    cace_ari_objpat_part_init_set(obj->model_pat, src->model_pat);
+    cace_ari_objpat_part_init_set(obj->type_pat, src->type_pat);
+    cace_ari_objpat_part_init_set(obj->obj_pat, src->obj_pat);
+}
+
 void cace_ari_objpat_deinit(cace_ari_objpat_t *obj)
 {
     CHKVOID(obj);
@@ -37,6 +51,19 @@ void cace_ari_objpat_deinit(cace_ari_objpat_t *obj)
     cace_ari_objpat_part_clear(obj->model_pat);
     cace_ari_objpat_part_clear(obj->type_pat);
     cace_ari_objpat_part_clear(obj->obj_pat);
+}
+void cace_ari_objpat_set(cace_ari_objpat_t *obj, const cace_ari_objpat_t *src)
+{
+    CHKVOID(obj);
+    CHKVOID(src);
+    if (obj == src)
+    {
+        return;
+    }
+    cace_ari_objpat_part_set(obj->org_pat, src->org_pat);
+    cace_ari_objpat_part_set(obj->model_pat, src->model_pat);
+    cace_ari_objpat_part_set(obj->type_pat, src->type_pat);
+    cace_ari_objpat_part_set(obj->obj_pat, src->obj_pat);
 }
 
 cace_ari_objpat_t *cace_ari_lit_init_objpat(cace_ari_lit_t *lit)

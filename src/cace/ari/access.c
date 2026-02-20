@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "access.h"
+#include "objpat.h"
 #include "cace/util/defs.h"
 #include <timespec.h>
 
@@ -798,6 +799,33 @@ struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari)
                                                  } };
 
     return ctr;
+}
+
+struct cace_ari_objpat_s *cace_ari_cget_objpat(const cace_ari_t *ari)
+{
+    if (!cace_ari_is_lit_typed(ari, CACE_ARI_TYPE_OBJPAT))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_objpat;
+}
+
+struct cace_ari_objpat_s *cace_ari_set_objpat(cace_ari_t *ari)
+{
+    CHKNULL(ari);
+    cace_ari_deinit(ari);
+
+    cace_ari_objpat_t *pat = CACE_MALLOC(sizeof(cace_ari_objpat_t));
+    cace_ari_objpat_init(pat);
+
+    *cace_ari_init_lit(ari) = (cace_ari_lit_t) { .has_ari_type = true,
+                                                 .ari_type     = CACE_ARI_TYPE_OBJPAT,
+                                                 .prim_type    = CACE_ARI_PRIM_OTHER,
+                                                 .value        = {
+                                                            .as_objpat = pat,
+                                                 } };
+
+    return pat;
 }
 
 const cace_ari_ref_t *cace_ari_cget_ref(const cace_ari_t *ari)

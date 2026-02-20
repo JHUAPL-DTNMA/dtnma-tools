@@ -15,6 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup amm
+ * Object and namespace reference lookup algorithms.
+ */
 #ifndef CACE_AMM_LOOKUP_H_
 #define CACE_AMM_LOOKUP_H_
 

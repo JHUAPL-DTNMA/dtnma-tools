@@ -125,7 +125,7 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
     // access check, this permission has no parameters
     refda_amm_ident_base_ptr_set_t acl_match;
     refda_amm_ident_base_ptr_set_init(acl_match);
-    bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, ctx->deref->obj,
+    bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, ctx->deref,
                                                      ctx->runctx->agent->acl.perm_produce, acl_match);
     refda_amm_ident_base_ptr_set_clear(acl_match);
     if (!acl_found)

@@ -79,7 +79,7 @@ class TestRefdaSocket(unittest.TestCase):
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group(1,test-agents)\n',
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/ident/uri-regexp-pattern(%22file%3A.%2A%22)))\n',
                 # group 0 (agent) and 1 (all test mgrs) have all access
-                '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(0,1),h\'0102\',/ac/('
+                '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(0,1),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
                 + '//ietf/dtnma-agent-acl/ident/execute,'
                 + '//ietf/dtnma-agent-acl/ident/produce'
                 + '))\n',
@@ -1129,7 +1129,7 @@ class TestRefdaSocket(unittest.TestCase):
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'  # duplicate no-op
                 + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(10,/ac/(//ietf/network-base/ident/uri-regexp-pattern(' + pat + '))),'
-                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(10,/ac/(10),h\'0102\',/ac/('
+                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(10,/ac/(10),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
                 + '//ietf/dtnma-agent-acl/ident/execute,'
                 + '//ietf/dtnma-agent-acl/ident/produce'
                 + ')),'
@@ -1223,7 +1223,7 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;('
-                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(10),h\'0102\',/ac/('
+                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(10),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
                 + '//ietf/dtnma-agent-acl/ident/other'
                 + '))'
                 + ')',

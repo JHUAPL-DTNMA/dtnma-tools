@@ -69,20 +69,21 @@ void cace_ari_objpat_init(cace_ari_objpat_t *obj);
  */
 void cace_ari_objpat_init_set(cace_ari_objpat_t *obj, const cace_ari_objpat_t *src);
 
-/** Initializer with move semantics.
- */
-void cace_ari_objpat_init_move(cace_ari_objpat_t *obj, cace_ari_objpat_t *src);
-
 /** State de-initializer.
  */
 void cace_ari_objpat_deinit(cace_ari_objpat_t *obj);
 
-/** Clear out any parameters present.
- *
- * @param[in,out] obj The struct to clear.
+/** Setter with copy semantics.
  */
-void cace_ari_objpat_reset(cace_ari_objpat_t *obj);
+void cace_ari_objpat_set(cace_ari_objpat_t *obj, const cace_ari_objpat_t *src);
 
+/// M*LIB OPLIST for ::cace_ari_objpat_t
+#define M_OPL_cace_ari_objpat_t()                                                                                   \
+    (INIT(API_2(cace_ari_objpat_init)), INIT_SET(API_6(cace_ari_objpat_init_set)), SET(API_6(cace_ari_objpat_set)), \
+     CLEAR(API_2(cace_ari_objpat_deinit)))
+
+/** Set a new literal value with a pattern.
+ */
 cace_ari_objpat_t *cace_ari_lit_init_objpat(cace_ari_lit_t *lit);
 
 #ifdef __cplusplus
