@@ -350,20 +350,34 @@ static void cace_ari_text_encode_objpat_part(cace_ari_text_enc_state_t *state, c
     }
     else if ((range_int64 = cace_ari_objpat_part_cget_range_int64(part)))
     {
+        bool sep = false;
+
         cace_util_range_int64_it_t it;
         for (cace_util_range_int64_it(it, *range_int64); !cace_util_range_int64_end_p(it); cace_util_range_int64_next(it))
         {
+            if (sep)
+            {
+                m_string_push_back(state->out, ',');
+            }
+            sep = true;
+
             const cace_util_range_intvl_int64_t *intvl = cace_util_range_int64_cref(it);
-            if (intvl->i_min == intvl->i_max)
+            if (intvl->has_min && intvl->has_max && (intvl->i_min == intvl->i_max))
             {
                 // FIXME decimal
                 cace_ari_int64_encode(state->out, intvl->i_min, 10);
             }
             else
             {
-                cace_ari_int64_encode(state->out, intvl->i_min, 10);
+                if (intvl->has_min)
+                {
+                    cace_ari_int64_encode(state->out, intvl->i_min, 10);
+                }
                 m_string_cat_cstr(state->out, "..");
-                cace_ari_int64_encode(state->out, intvl->i_max, 10);
+                if (intvl->has_max)
+                {
+                    cace_ari_int64_encode(state->out, intvl->i_max, 10);
+                }
             }
         }
     }
