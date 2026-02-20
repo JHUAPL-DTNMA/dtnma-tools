@@ -891,7 +891,8 @@ static void cace_ari_cbor_encode_objpat_part(QCBOREncodeContext *enc, const cace
             int64_t pos = INT64_MIN;
 
             cace_util_range_int64_it_t it;
-            for (cace_util_range_int64_it(it, *range_int64); !cace_util_range_int64_end_p(it); cace_util_range_int64_next(it))
+            for (cace_util_range_int64_it(it, *range_int64); !cace_util_range_int64_end_p(it);
+                 cace_util_range_int64_next(it))
             {
                 const cace_util_range_intvl_int64_t *intvl = cace_util_range_int64_cref(it);
 
