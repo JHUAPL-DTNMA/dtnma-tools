@@ -75,9 +75,17 @@ TEST_CASE("ari:/REAL64/Infinity")
 TEST_CASE("ari:/REAL64/-Infinity")
 TEST_CASE("ari:/BYTESTR/h'6869'")
 TEST_CASE("ari:/TEXTSTR/%22hi%20there%22")
-TEST_CASE("ari:/LABEL/hi")
 TEST_CASE("ari:/TP/20230102T030405Z")
 TEST_CASE("ari:/TD/PT20.5S")
+TEST_CASE("ari:/LABEL/hi")
+TEST_CASE("ari:/LABEL/1")
+TEST_CASE("ari:/CBOR/h'0A'")
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
+TEST_CASE("ari:/OBJPAT/(*)(*)(*)(*)")
+TEST_CASE("ari:/OBJPAT/(65535)(-10)(-2)(45)")
+TEST_CASE("ari:/OBJPAT/(example)(adm)(ctrl)(hi)")
+TEST_CASE("ari:/OBJPAT/(65535)(-10..-1,1)(*)(10..100)")
+TEST_CASE("ari:/OBJPAT/(example)(..-1)(10..)(*)")
 TEST_CASE("ari:/AC/()")
 TEST_CASE("ari:/AC/(null,/INT/23)")
 TEST_CASE("ari:/AM/()")
@@ -140,7 +148,7 @@ void test_ari_roundtrip_text_cbor(const char *intext)
     {
         m_string_t outtext;
         m_string_init(outtext);
-        int res = cace_ari_text_encode(outtext, &ari_dn, opts);
+        int res = cace_ari_text_encode(outtext, &ari_up, opts);
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_encode() failed");
 
         TEST_ASSERT_EQUAL_STRING(intext, m_string_get_cstr(outtext));

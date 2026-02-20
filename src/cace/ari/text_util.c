@@ -266,7 +266,7 @@ int cace_ari_uint64_decode(uint64_t *out, const char *in, size_t in_len)
     CHKERR1(out);
     CHKERR1(in);
 
-    const char  *end    = in + in_len;
+    const char *end = in + in_len;
 
     uint64_t tmp;
     if ((in_len >= 2) && (*in == '0') && (tolower(*(in + 1)) == 'b'))
@@ -316,7 +316,7 @@ int cace_ari_int64_decode(int64_t *out, const char *in, size_t in_len)
         --in_len;
 
         uint64_t neg;
-        int ret = cace_ari_uint64_decode(&neg, in, in_len);
+        int      ret = cace_ari_uint64_decode(&neg, in, in_len);
         if (ret)
         {
             return ret;
@@ -338,7 +338,7 @@ int cace_ari_int64_decode(int64_t *out, const char *in, size_t in_len)
         }
 
         uint64_t tmp;
-        int ret = cace_ari_uint64_decode(&tmp, in, in_len);
+        int      ret = cace_ari_uint64_decode(&tmp, in, in_len);
         if (ret)
         {
             return ret;

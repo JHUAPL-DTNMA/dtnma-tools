@@ -20,6 +20,7 @@
 #include "access.h"
 #include "objpat.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 #include <inttypes.h>
 
 typedef struct
@@ -343,7 +344,7 @@ static void cace_ari_text_encode_objpat_part(cace_ari_text_enc_state_t *state, c
     m_string_push_back(state->out, '(');
 
     const cace_util_range_int64_t *range_int64 = NULL;
-    const m_string_t *text = NULL;
+    const m_string_t              *text        = NULL;
     if (cace_ari_objpat_part_cget_special(part))
     {
         m_string_push_back(state->out, '*');
@@ -353,7 +354,8 @@ static void cace_ari_text_encode_objpat_part(cace_ari_text_enc_state_t *state, c
         bool sep = false;
 
         cace_util_range_int64_it_t it;
-        for (cace_util_range_int64_it(it, *range_int64); !cace_util_range_int64_end_p(it); cace_util_range_int64_next(it))
+        for (cace_util_range_int64_it(it, *range_int64); !cace_util_range_int64_end_p(it);
+             cace_util_range_int64_next(it))
         {
             if (sep)
             {
@@ -384,6 +386,10 @@ static void cace_ari_text_encode_objpat_part(cace_ari_text_enc_state_t *state, c
     else if ((text = cace_ari_objpat_part_cget_text(part)))
     {
         m_string_cat(state->out, *text);
+    }
+    else
+    {
+        CACE_LOG_ERR("Invalid OBJPAT part state");
     }
 
     m_string_push_back(state->out, ')');

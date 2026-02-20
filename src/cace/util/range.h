@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -39,11 +39,13 @@ extern "C" {
  *
  * Functions for the interval struct are the following:
  *
- * * `intvl_init()` Initialize a fully infinite interval.
+ * * `intvl_set_infinite()` Initialize a fully infinite interval.
  * * `intvl_deinit()` Clean up state.
  * * `intvl_set_finite()` Set the state to a fully finite interval.
  * * `intvl_set_min()` Set just the minimum finite extent.
  * * `intvl_set_max()` Set just the maximum finite extent.
+ * * `intvl_clear_min()` Set just the minimum to infinite.
+ * * `intvl_clear_max()` Set just the maximum to infinite.
  * * `intvl_is_infinite()` Determine if this interval is open on both ends (is fully infinite).
  * * `intvl_cmp()` Compare to intervals by their extents.
  * * `intvl_contains()` Determine if a value is within the interval.
@@ -80,6 +82,14 @@ extern "C" {
             .has_max = true,                                                                     \
             .i_max   = val,                                                                      \
         };                                                                                       \
+    }                                                                                            \
+    static inline void M_C(intvl, _clear_min)(M_C(intvl, _t) * obj)                              \
+    {                                                                                            \
+        obj->has_min = false;                                                                    \
+    }                                                                                            \
+    static inline void M_C(intvl, _clear_max)(M_C(intvl, _t) * obj)                              \
+    {                                                                                            \
+        obj->has_max = false;                                                                    \
     }                                                                                            \
     static inline void M_C(intvl, _set_min)(M_C(intvl, _t) * obj, type val)                      \
     {                                                                                            \
@@ -146,23 +156,23 @@ extern "C" {
                                                                                                  \
     M_RBTREE_DEF(range, M_C(intvl, _t), M_OPEXTEND(M_POD_OPLIST, CMP(API_6(M_C(intvl, _cmp)))))  \
                                                                                                  \
-    static inline bool M_C(range, _contains)(const M_C(range, _t) obj, type val)               \
+    static inline bool M_C(range, _contains)(const M_C(range, _t) obj, type val)                 \
     {                                                                                            \
         M_C(intvl, _t) chkval;                                                                   \
         M_C(intvl, _set_singleton)(&chkval, val);                                                \
                                                                                                  \
-        M_C(range, _it_t) it;                                                                \
-        M_C(range, _it_from)(it, obj, chkval);                                       \
-        if (M_C(range, _end_p)(it))                                                          \
+        M_C(range, _it_t) it;                                                                    \
+        M_C(range, _it_from)(it, obj, chkval);                                                   \
+        if (M_C(range, _end_p)(it))                                                              \
         {                                                                                        \
-            const M_C(intvl, _t) *last = M_C(range, _cmax)(obj);                     \
+            const M_C(intvl, _t) *last = M_C(range, _cmax)(obj);                                 \
             if (last)                                                                            \
             {                                                                                    \
                 return M_C(intvl, _contains)(last, val);                                         \
             }                                                                                    \
             return false;                                                                        \
         }                                                                                        \
-        return M_C(intvl, _contains)(M_C(range, _cref)(it), val);                            \
+        return M_C(intvl, _contains)(M_C(range, _cref)(it), val);                                \
     }
 
 #define CACE_UTIL_RANGE_OPLIST(range, type) \

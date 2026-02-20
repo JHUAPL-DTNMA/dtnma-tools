@@ -24,6 +24,7 @@
  */
 #include "cbor.h"
 #include "access.h"
+#include "objpat.h"
 #include "text_util.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
@@ -326,6 +327,10 @@ static int cace_ari_cbor_decode_ac(QCBORDecodeContext *dec, cace_ari_ac_t *obj)
         cace_ari_set_move(item, &ari);
     }
     QCBORDecode_ExitArray(dec);
+    if (QCBORDecode_GetError(dec))
+    {
+        retval = 3;
+    }
     return retval;
 }
 
@@ -435,6 +440,10 @@ static int cace_ari_cbor_decode_am(QCBORDecodeContext *dec, cace_ari_am_t *obj)
     }
 
     QCBORDecode_ExitArray(dec);
+    if (QCBORDecode_GetError(dec))
+    {
+        retval = 3;
+    }
     return retval;
 }
 
@@ -515,6 +524,10 @@ static int cace_ari_cbor_decode_tbl(QCBORDecodeContext *dec, cace_ari_tbl_t *obj
     }
 
     QCBORDecode_ExitArray(dec);
+    if (QCBORDecode_GetError(dec))
+    {
+        retval = 3;
+    }
     return retval;
 }
 
@@ -616,6 +629,10 @@ static int cace_ari_cbor_decode_execset(QCBORDecodeContext *dec, cace_ari_execse
     }
 
     QCBORDecode_ExitArray(dec);
+    if (QCBORDecode_GetError(dec))
+    {
+        retval = 3;
+    }
     return retval;
 }
 
@@ -711,6 +728,10 @@ static int cace_ari_cbor_decode_report(QCBORDecodeContext *dec, cace_ari_report_
     }
 
     QCBORDecode_ExitArray(dec);
+    if (QCBORDecode_GetError(dec))
+    {
+        retval = 3;
+    }
     return retval;
 }
 
@@ -831,6 +852,259 @@ static int cace_ari_cbor_decode_rptset(QCBORDecodeContext *dec, cace_ari_rptset_
     }
 
     QCBORDecode_ExitArray(dec);
+    if (QCBORDecode_GetError(dec))
+    {
+        retval = 3;
+    }
+    return retval;
+}
+
+static void cace_ari_cbor_encode_objpat_part(QCBOREncodeContext *enc, const cace_ari_objpat_part_t *obj)
+{
+    const cace_util_range_int64_t *range_int64 = NULL;
+    const m_string_t              *text        = NULL;
+    if (cace_ari_objpat_part_cget_special(*obj))
+    {
+        QCBOREncode_AddBool(enc, true);
+    }
+    else if ((range_int64 = cace_ari_objpat_part_cget_range_int64(*obj)))
+    {
+        const cace_util_range_intvl_int64_t *single = NULL;
+        if (cace_util_range_int64_size(*range_int64) == 1)
+        {
+            single = cace_util_range_int64_cmin(*range_int64);
+            if (!(single->has_min && single->has_max && (single->i_min == single->i_max)))
+            {
+                single = NULL;
+            }
+        }
+
+        if (single)
+        {
+            QCBOREncode_AddInt64(enc, single->i_min);
+        }
+        else
+        {
+            QCBOREncode_OpenArray(enc);
+
+            // sentinel to indicate first item
+            int64_t pos = INT64_MIN;
+
+            cace_util_range_int64_it_t it;
+            for (cace_util_range_int64_it(it, *range_int64); !cace_util_range_int64_end_p(it); cace_util_range_int64_next(it))
+            {
+                const cace_util_range_intvl_int64_t *intvl = cace_util_range_int64_cref(it);
+
+                if (pos < INT32_MIN)
+                {
+                    // initial position
+                    if (intvl->has_min)
+                    {
+                        pos = intvl->i_min;
+                        QCBOREncode_AddInt64(enc, pos);
+                    }
+                    else
+                    {
+                        pos = INT32_MIN;
+                        QCBOREncode_AddNULL(enc);
+                    }
+                }
+                else
+                {
+                    if (intvl->has_min)
+                    {
+                        int64_t excl = intvl->i_min - pos - 2;
+                        QCBOREncode_AddInt64(enc, excl);
+                        pos = intvl->i_min;
+                    }
+                    else
+                    {
+                        CACE_LOG_ERR("Invalid range interval with no maximum");
+                        return;
+                    }
+                }
+
+                if (intvl->has_max)
+                {
+                    int64_t incl = intvl->i_max - pos;
+                    QCBOREncode_AddInt64(enc, incl);
+                    pos = intvl->i_max;
+                }
+                else
+                {
+                    QCBOREncode_AddNULL(enc);
+                    // can only occur on the last interval
+                    break;
+                }
+            }
+            QCBOREncode_CloseArray(enc);
+        }
+    }
+    else if ((text = cace_ari_objpat_part_cget_text(*obj)))
+    {
+        // trim off trailing null
+        const UsefulBufC buf = { .ptr = m_string_get_cstr(*text), .len = m_string_size(*text) };
+        QCBOREncode_AddText(enc, buf);
+    }
+    else
+    {
+        CACE_LOG_ERR("Invalid OBJPAT part state");
+    }
+}
+
+static int cace_ari_cbor_decode_objpat_part(QCBORDecodeContext *dec, cace_ari_objpat_part_t *obj)
+{
+    QCBORItem decitem;
+    QCBORDecode_VPeekNext(dec, &decitem);
+    if (QCBORDecode_GetError(dec))
+    {
+        return 3;
+    }
+
+    switch (decitem.uDataType)
+    {
+        case QCBOR_TYPE_TRUE:
+            QCBORDecode_GetNext(dec, &decitem);
+            cace_ari_objpat_part_set_special(*obj, true);
+            break;
+        case QCBOR_TYPE_TEXT_STRING:
+        {
+            UsefulBufC buf;
+            QCBORDecode_GetTextString(dec, &buf);
+            m_string_t text;
+            // add trailing null
+            m_string_init_printf(text, "%.*s", buf.len, buf.ptr);
+            cace_ari_objpat_part_move_text(*obj, text);
+            break;
+        }
+        case QCBOR_TYPE_INT64:
+        {
+            // single int range
+            int64_t buf;
+            QCBORDecode_GetInt64(dec, &buf);
+
+            cace_util_range_int64_t range;
+            cace_util_range_int64_init(range);
+            {
+                cace_util_range_intvl_int64_t intvl;
+                cace_util_range_intvl_int64_set_singleton(&intvl, buf);
+                cace_util_range_int64_push(range, intvl);
+            }
+            cace_ari_objpat_part_move_range_int64(*obj, range);
+            break;
+        }
+        case QCBOR_TYPE_ARRAY:
+            // full int range
+            QCBORDecode_EnterArray(dec, &decitem);
+            const size_t array_len = decitem.val.uCount;
+            if (QCBORDecode_GetError(dec) || (array_len == UINT16_MAX))
+            {
+                return 3;
+            }
+
+            cace_util_range_int64_t range;
+            cace_util_range_int64_init(range);
+
+            cace_util_range_intvl_int64_t intvl;
+
+            // first item
+            int64_t pos;
+            QCBORDecode_VPeekNext(dec, &decitem);
+            if (decitem.uDataType == QCBOR_TYPE_NULL)
+            {
+                QCBORDecode_GetNext(dec, &decitem);
+                // leave infinite min but set implied position
+                cace_util_range_intvl_int64_clear_min(&intvl);
+                pos = INT32_MIN;
+            }
+            else
+            {
+                pos = 0;
+                QCBORDecode_GetInt64(dec, &pos);
+                cace_util_range_intvl_int64_set_min(&intvl, pos);
+            }
+
+            // first item above
+            for (size_t ix = 1; ix < array_len - 1;)
+            {
+                int64_t incl = 0, excl = 0;
+                QCBORDecode_GetInt64(dec, &incl);
+                QCBORDecode_GetInt64(dec, &excl);
+                ix += 2;
+
+                pos += incl;
+                cace_util_range_intvl_int64_set_max(&intvl, pos);
+                cace_util_range_int64_push(range, intvl);
+
+                pos += excl + 2;
+                cace_util_range_intvl_int64_set_min(&intvl, pos);
+            }
+
+            // last item to complete interval
+            QCBORDecode_VPeekNext(dec, &decitem);
+            if (decitem.uDataType == QCBOR_TYPE_NULL)
+            {
+                QCBORDecode_GetNext(dec, &decitem);
+                // leave infinite min but set implied position
+                cace_util_range_intvl_int64_clear_max(&intvl);
+            }
+            else
+            {
+                int64_t incl = 0;
+                QCBORDecode_GetInt64(dec, &incl);
+                cace_util_range_intvl_int64_set_max(&intvl, pos + incl);
+            }
+            cace_util_range_int64_push(range, intvl);
+
+            cace_ari_objpat_part_move_range_int64(*obj, range);
+            QCBORDecode_ExitArray(dec);
+            if (QCBORDecode_GetError(dec))
+            {
+                return 2;
+            }
+            break;
+        default:
+            CACE_LOG_ERR("Invalid OBJPAT part type: %d", decitem.uDataType);
+            return 4;
+    }
+
+    return 0;
+}
+
+static int cace_ari_cbor_encode_objpat(QCBOREncodeContext *enc, const cace_ari_objpat_t *obj)
+{
+    int retval = 0;
+    QCBOREncode_OpenArray(enc);
+
+    cace_ari_cbor_encode_objpat_part(enc, &obj->org_pat);
+    cace_ari_cbor_encode_objpat_part(enc, &obj->model_pat);
+    cace_ari_cbor_encode_objpat_part(enc, &obj->type_pat);
+    cace_ari_cbor_encode_objpat_part(enc, &obj->obj_pat);
+
+    QCBOREncode_CloseArray(enc);
+    return retval;
+}
+
+static int cace_ari_cbor_decode_objpat(QCBORDecodeContext *dec, cace_ari_objpat_t *obj)
+{
+    int retval = 0;
+
+    QCBORDecode_EnterArray(dec, NULL);
+    if (QCBORDecode_GetError(dec))
+    {
+        return 2;
+    }
+
+    cace_ari_cbor_decode_objpat_part(dec, &obj->org_pat);
+    cace_ari_cbor_decode_objpat_part(dec, &obj->model_pat);
+    cace_ari_cbor_decode_objpat_part(dec, &obj->type_pat);
+    cace_ari_cbor_decode_objpat_part(dec, &obj->obj_pat);
+
+    QCBORDecode_ExitArray(dec);
+    if (QCBORDecode_GetError(dec))
+    {
+        retval = 3;
+    }
     return retval;
 }
 
@@ -972,6 +1246,12 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *enc, const cace_ari_t *ari)
                     break;
                 case CACE_ARI_TYPE_RPTSET:
                     if (cace_ari_cbor_encode_rptset(enc, obj->value.as_rptset))
+                    {
+                        return 2;
+                    }
+                    break;
+                case CACE_ARI_TYPE_OBJPAT:
+                    if (cace_ari_cbor_encode_objpat(enc, obj->value.as_objpat))
                     {
                         return 2;
                     }
@@ -1235,6 +1515,15 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
                         retval = 3;
                     }
                     break;
+                case CACE_ARI_TYPE_OBJPAT:
+                {
+                    cace_ari_objpat_t *pat = cace_ari_lit_init_objpat(obj);
+                    if (cace_ari_cbor_decode_objpat(dec, pat))
+                    {
+                        return 2;
+                    }
+                    break;
+                }
                 default:
                     // simple typed literals
                     if (cace_ari_cbor_decode_primval(dec, obj))
@@ -1328,6 +1617,10 @@ int cace_ari_cbor_decode_stream(QCBORDecodeContext *dec, cace_ari_t *ari)
         }
 
         QCBORDecode_ExitArray(dec);
+        if (QCBORDecode_GetError(dec))
+        {
+            retval = 3;
+        }
     }
     else if (decitem.uDataType == QCBOR_TYPE_MAP_AS_ARRAY)
     {

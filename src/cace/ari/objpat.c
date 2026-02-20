@@ -38,3 +38,18 @@ void cace_ari_objpat_deinit(cace_ari_objpat_t *obj)
     cace_ari_objpat_part_clear(obj->type_pat);
     cace_ari_objpat_part_clear(obj->obj_pat);
 }
+
+cace_ari_objpat_t *cace_ari_lit_init_objpat(cace_ari_lit_t *lit)
+{
+    CHKNULL(lit);
+    lit->has_ari_type = true;
+    lit->ari_type     = CACE_ARI_TYPE_OBJPAT;
+    lit->prim_type    = CACE_ARI_PRIM_OTHER;
+
+    cace_ari_objpat_t *pat = CACE_MALLOC(sizeof(cace_ari_objpat_t));
+    cace_ari_objpat_init(pat);
+
+    lit->value.as_objpat = pat;
+
+    return pat;
+}

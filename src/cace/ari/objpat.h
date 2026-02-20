@@ -33,40 +33,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#if 0
-/** Each part of an object reference pattern.
- */
-typedef struct
-{
-    /// Control which union member to use
-    enum
-    {
-        /// Default invalid value
-        CACE_ARI_OBJPAT_INVALID = 0,
-        /// A selector for cace_ari_objpat_part_t::as_range_int64
-        CACE_ARI_OBJPAT_RANGE_INT64,
-        /// A selector for cace_ari_objpat_part_t::as_text
-        CACE_ARI_OBJPAT_TEXT,
-    } form;
-    /// Choice of value
-    union
-    {
-        /// Range of id-int values
-        cace_util_range_int64_t as_range_int64;
-        /// Single id-text value
-        m_string_t as_text;
-    };
-} cace_ari_objpat_part_t;
-
-/** Setter with move semantics.
- */
-void cace_ari_objpat_part_set_move(cace_ari_objpat_part_t *obj, cace_ari_objpat_part_t *src);
-
-/** State de-initializer.
- */
-void cace_ari_objpat_part_deinit(cace_ari_objpat_part_t *obj);
-
-#endif
 
 /** @struct cace_ari_objpat_part
  * A variant with value of field:
@@ -116,6 +82,8 @@ void cace_ari_objpat_deinit(cace_ari_objpat_t *obj);
  * @param[in,out] obj The struct to clear.
  */
 void cace_ari_objpat_reset(cace_ari_objpat_t *obj);
+
+cace_ari_objpat_t *cace_ari_lit_init_objpat(cace_ari_lit_t *lit);
 
 #ifdef __cplusplus
 } // extern C
