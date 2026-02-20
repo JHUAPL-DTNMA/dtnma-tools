@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -24,6 +24,7 @@
 #include <refda/ctrl_exec_ctx.h>
 #include <refda/amm/const.h>
 #include <refda/amm/ctrl.h>
+#include <refda/adm/ietf.h>
 #include <cace/amm/semtype.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -410,10 +411,10 @@ void test_refda_exec_wait_for(int delay_ms)
     // synthesize the target
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     {
-        cace_ari_ref_t *ref = cace_ari_set_objref(&target);
         // ari://ietf/dtnma-agent/CTRL/wait-for
-        cace_ari_objpath_set_intid(&(ref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
-                                   REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_FOR);
+        cace_ari_ref_t *ref =
+            cace_ari_set_objref_path_intid(&target, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                           CACE_ARI_TYPE_CTRL, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_FOR);
 
         cace_ari_list_t params;
         cace_ari_list_init(params);
@@ -441,10 +442,10 @@ void test_refda_exec_wait_until(int delay_ms)
     // synthesize the target
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     {
-        cace_ari_ref_t *ref = cace_ari_set_objref(&target);
         // ari://ietf/dtnma-agent/CTRL/wait-until
-        cace_ari_objpath_set_intid(&(ref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
-                                   REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_UNTIL);
+        cace_ari_ref_t *ref =
+            cace_ari_set_objref_path_intid(&target, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                           CACE_ARI_TYPE_CTRL, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_UNTIL);
 
         cace_ari_list_t params;
         cace_ari_list_init(params);
@@ -467,9 +468,9 @@ void test_refda_exec_wait_cond(int delay_ms)
     // synthesize the target
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     {
-        cace_ari_ref_t *ref = cace_ari_set_objref(&target);
-        cace_ari_objpath_set_intid(&(ref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
-                                   REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_COND);
+        cace_ari_ref_t *ref =
+            cace_ari_set_objref_path_intid(&target, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                           CACE_ARI_TYPE_CTRL, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_WAIT_COND);
 
         cace_ari_list_t params;
         cace_ari_list_init(params);
@@ -477,11 +478,10 @@ void test_refda_exec_wait_cond(int delay_ms)
             cace_ari_t    *param = cace_ari_list_push_back_new(params);
             cace_ari_ac_t *expr  = cace_ari_set_ac(param, NULL);
             {
-                cace_ari_t     *expr_item = cace_ari_list_push_back_new(expr->items);
-                cace_ari_ref_t *pref      = cace_ari_set_objref(expr_item);
+                cace_ari_t *expr_item = cace_ari_list_push_back_new(expr->items);
                 // will always evaluate truthy
-                cace_ari_objpath_set_intid(&(pref->objpath), 1, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_EDD,
-                                           REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION);
+                cace_ari_set_objref_path_intid(expr_item, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                               CACE_ARI_TYPE_EDD, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION);
             }
         }
         cace_ari_params_set_ac(&(ref->params), params);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -102,16 +102,34 @@ typedef struct
     void *user_data;
 } cace_ari_translate_ctx_t;
 
+typedef enum
+{
+    /** Indicates that the callback has failed and translation should
+     * be stopped as having failed.
+     */
+    CACE_ARI_TRANSLATE_FAILURE,
+    /** Indicates that the callback has fully translated the value and
+     * the output is in its final form.
+     * @note This result is useful for leaf values and will not recurse into
+     * containers.
+     */
+    CACE_ARI_TRANSLATE_FINAL,
+    /** Indicates that the callback has not modified the output and
+     * the default recursive translation needs to be performed.
+     */
+    CACE_ARI_TRANSLATE_DEFAULT
+} cace_ari_translate_result_t;
+
 /** Function pointers to implement the cace_ari_translate() behavior.
  * For any input value, the #map_ari is first called (with fallback behavior)
  * followed by either #map_objpath or #map_lit depending on the ARI type.
  */
 typedef struct
 {
-
     /** Called when translating each ARI.
-     * For containers this is called before any contained values.
-     * If not provided, the literal/objref tag will be copied.
+     * If not provided, the CACE_ARI_TRANSLATE_DEFAULT result is assumed,
+     * which will copy the literal / reference structure and recurse into
+     * contained values or given parameters respectively.
      *
      * @pre The @c out value is already initialized.
      * @param[out] out The produced value.
@@ -119,15 +137,29 @@ typedef struct
      * @param[in] ctx Visitor context information.
      * @return Zero to continue iterating, or non-zero to stop immediately.
      */
-    int (*map_ari)(cace_ari_t *out, const cace_ari_t *in, const cace_ari_translate_ctx_t *ctx);
+    cace_ari_translate_result_t (*map_ari)(cace_ari_t *out, const cace_ari_t *in, const cace_ari_translate_ctx_t *ctx);
 
-    /** @overload
-     * If not provided, the standard cace_ari_objpath_copy() will be used.
+    /**
+     * This is used only when #map_ari returns CACE_ARI_TRANSLATE_DEFAULT.
+     * If pointer is NULL, the standard cace_ari_objpath_copy() will be used.
+     *
+     * @pre The @c out value is already initialized.
+     * @param[out] out The produced value.
+     * @param[in] in The value being mapped.
+     * @param[in] ctx Visitor context information.
+     * @return Zero to continue iterating, or non-zero to stop immediately.
      */
     int (*map_objpath)(cace_ari_objpath_t *out, const cace_ari_objpath_t *in, const cace_ari_translate_ctx_t *ctx);
 
-    /** @overload
-     * If not provided, the standard cace_ari_lit_copy() will be used.
+    /**
+     * This is used only when #map_ari returns CACE_ARI_TRANSLATE_DEFAULT.
+     * If pointer is NULL, the standard cace_ari_lit_copy() will be used.
+     *
+     * @pre The @c out value is already initialized.
+     * @param[out] out The produced value.
+     * @param[in] in The value being mapped.
+     * @param[in] ctx Visitor context information.
+     * @return Zero to continue iterating, or non-zero to stop immediately.
      */
     int (*map_lit)(cace_ari_lit_t *out, const cace_ari_lit_t *in, const cace_ari_translate_ctx_t *ctx);
 

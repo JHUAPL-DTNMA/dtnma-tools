@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -717,6 +717,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
         { // For ./IDENT/permission
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // no IDENT bases
 
             obj = refda_register_ident(
@@ -728,6 +729,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
         { // For ./IDENT/execute
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -743,6 +745,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
         { // For ./IDENT/produce
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -758,6 +761,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
         { // For ./IDENT/modify-var
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -774,6 +778,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
         { // For ./IDENT/create-odm
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -790,6 +795,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
         { // For ./IDENT/delete-odm
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -806,6 +812,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
         { // For ./IDENT/create-object
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -823,6 +830,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
         { // For ./IDENT/delete-object
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);

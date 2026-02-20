@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -84,9 +84,18 @@ void cace_amm_lookup_set_move(cace_amm_lookup_t *res, cace_amm_lookup_t *src);
  */
 int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *store, const cace_ari_t *ref);
 
-#define M_OPL_cace_amm_lookup_t()                                                    \
-    (INIT(API_2(cace_amm_lookup_init)), INIT_MOVE(API_6(cace_amm_lookup_init_move)), \
-     CLEAR(API_2(cace_amm_lookup_deinit)), MOVE(API_6(cace_amm_lookup_move)))
+/** Reverse a lookup to obtain an object reference value with integer identifiers.
+ *
+ * @param[in] src The lookup to convert back to a reference.
+ * @param[in,out] ref The value to populate with a reference.
+ * @return Zero if successful.
+ */
+int cace_amm_lookup_ref_int(cace_ari_t *ref, const cace_amm_lookup_t *src);
+
+#define M_OPL_cace_amm_lookup_t()                                                       \
+    (INIT(API_2(cace_amm_lookup_init)), INIT_SET(API_6(cace_amm_lookup_init_set)),      \
+     INIT_MOVE(API_6(cace_amm_lookup_init_move)), CLEAR(API_2(cace_amm_lookup_deinit)), \
+     SET(API_6(cace_amm_lookup_set)), MOVE(API_6(cace_amm_lookup_set_move)))
 
 #ifdef __cplusplus
 } // extern C

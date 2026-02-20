@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -63,6 +63,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // no IDENT bases
 
             obj = refda_register_ident(
@@ -73,6 +74,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint-integer
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -90,6 +92,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint-float
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -107,6 +110,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint-bstr
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -124,6 +128,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint-time
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -141,6 +146,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/bstr-ari-pattern
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);

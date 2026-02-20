@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -29,7 +29,6 @@
 #include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"
 #include "refda/oper_eval_ctx.h"
-#include "refda/reporting.h"
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
@@ -56,6 +55,7 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
+        (void)obj;
 
         /**
          * Register IDENT objects
@@ -63,10 +63,11 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-bstr-ipaddress
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                // reference to ari://ietf/amm-base/IDENT/display-hint-bstr
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
@@ -80,10 +81,11 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./IDENT/ip-endpoint
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/network-base/IDENT/abstract-endpoint
+                // reference to ari://ietf/network-base/IDENT/abstract-endpoint
                 cace_ari_set_objref_path_intid(&(base->name), 1, 26, CACE_ARI_TYPE_IDENT, 0);
             }
 
@@ -94,10 +96,10 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "address");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/inet-base/TYPEDEF/ip-address
-                    cace_ari_set_objref_path_intid(&name, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/inet-base/TYPEDEF/ip-address
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
@@ -108,18 +110,19 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            // ari://ietf/inet-base/TYPEDEF/zone
-                            cace_ari_set_objref_path_intid(&name, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // reference to ari://ietf/inet-base/TYPEDEF/zone
+                            cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NULL
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                 }
@@ -129,10 +132,11 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./IDENT/ip-transport
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/network-base/IDENT/abstract-endpoint
+                // reference to ari://ietf/network-base/IDENT/abstract-endpoint
                 cace_ari_set_objref_path_intid(&(base->name), 1, 26, CACE_ARI_TYPE_IDENT, 0);
             }
 
@@ -144,19 +148,19 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "address");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/inet-base/TYPEDEF/ip-address
-                    cace_ari_set_objref_path_intid(&name, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/inet-base/TYPEDEF/ip-address
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "port");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/inet-base/TYPEDEF/port-number
-                    cace_ari_set_objref_path_intid(&name, 1, 4, CACE_ARI_TYPE_TYPEDEF, 3);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/inet-base/TYPEDEF/port-number
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 3);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
@@ -167,18 +171,19 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            // ari://ietf/inet-base/TYPEDEF/zone
-                            cace_ari_set_objref_path_intid(&name, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // reference to ari://ietf/inet-base/TYPEDEF/zone
+                            cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                     {
                         cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                         {
-                            cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                            cace_ari_set_aritype(&name, CACE_ARI_TYPE_NULL);
-                            cace_amm_type_set_use_ref_move(choice, &name);
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NULL
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
                         }
                     }
                 }
@@ -188,10 +193,11 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./IDENT/ip-vlsm-pattern
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/network-base/IDENT/abstract-endpoint-pattern
+                // reference to ari://ietf/network-base/IDENT/abstract-endpoint-pattern
                 cace_ari_set_objref_path_intid(&(base->name), 1, 26, CACE_ARI_TYPE_IDENT, 1);
             }
 
@@ -204,18 +210,19 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "base");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    // ari://ietf/inet-base/TYPEDEF/ip-address
-                    cace_ari_set_objref_path_intid(&name, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/inet-base/TYPEDEF/ip-address
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "prefix");
                 {
-                    cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                    cace_ari_set_aritype(&name, CACE_ARI_TYPE_UINT);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &name);
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/UINT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }
@@ -226,11 +233,12 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./TYPEDEF/ipv4-address
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BYTESTR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BYTESTR
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BYTESTR);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
             }
 
             obj = refda_register_typedef(
@@ -242,11 +250,12 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./TYPEDEF/ipv6-address
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_BYTESTR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BYTESTR
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BYTESTR);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
             }
 
             obj = refda_register_typedef(
@@ -258,26 +267,26 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./TYPEDEF/ip-address
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
                 // union
                 cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 2);
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/inet-base/TYPEDEF/ipv4-address
-                        cace_ari_set_objref_path_intid(&name, 1, 4, CACE_ARI_TYPE_TYPEDEF, 0);
-                        cace_amm_type_set_use_ref_move(choice, &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/inet-base/TYPEDEF/ipv4-address
+                        cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 0);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        // ari://ietf/inet-base/TYPEDEF/ipv6-address
-                        cace_ari_set_objref_path_intid(&name, 1, 4, CACE_ARI_TYPE_TYPEDEF, 1);
-                        cace_amm_type_set_use_ref_move(choice, &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/inet-base/TYPEDEF/ipv6-address
+                        cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 1);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
             }
@@ -290,24 +299,26 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./TYPEDEF/zone
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
                 // union
                 cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 2);
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_UINT);
-                        cace_amm_type_set_use_ref_move(choice, &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/UINT
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                     {
-                        cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                        cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                        cace_amm_type_set_use_ref_move(choice, &name);
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/TEXTSTR
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
             }
@@ -319,11 +330,12 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./TYPEDEF/port-number
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_UINT);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/UINT
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
             }
 
             obj = refda_register_typedef(
@@ -335,11 +347,12 @@ int refda_adm_ietf_inet_base_init(refda_agent_t *agent)
         { // For ./TYPEDEF/domain-name
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
-            // named type:
+            // named semantic type:
             {
-                cace_ari_t name = CACE_ARI_INIT_UNDEFINED;
-                cace_ari_set_aritype(&name, CACE_ARI_TYPE_TEXTSTR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &name);
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/TEXTSTR
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
             }
 
             obj = refda_register_typedef(

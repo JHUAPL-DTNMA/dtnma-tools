@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -82,6 +82,9 @@ typedef struct
 void cace_ari_objpath_init(cace_ari_objpath_t *obj);
 void cace_ari_objpath_deinit(cace_ari_objpath_t *obj);
 void cace_ari_objpath_copy(cace_ari_objpath_t *obj, const cace_ari_objpath_t *src);
+
+bool cace_ari_objpath_equal(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right);
+bool cace_ari_objpath_cmp(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right);
 
 /** Derive the ARI Type of a referenced object.
  * This sets the cace_ari_objpath_t::ari_type based on the cace_ari_objpath_t::type_id

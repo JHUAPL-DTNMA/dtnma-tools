@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -34,13 +34,16 @@ extern "C" {
 /** @struct string_tree_set_t
  * Unique set of feature names in a single namespace.
  */
+/** @struct cace_amm_obj_desc_ptr_t
+ * A non-thread-safe shared pointer to a ::cace_amm_obj_desc_t instance.
+ */
 /** @struct cace_amm_obj_desc_list_t
  * Linked list of object descriptors of a single type within a namespace.
  * The list owns the object lifetimes and is indexed by pointers to
- * list members.
+ * list members of ::cace_amm_obj_desc_t.
  */
 /** @struct cace_amm_obj_desc_ptr_set_t
- * Unique set of object descriptor pointers.
+ * Unique set of object descriptor pointers to ::cace_amm_obj_desc_t.
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
