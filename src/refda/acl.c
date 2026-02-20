@@ -44,6 +44,7 @@ void refda_acl_access_init(refda_acl_access_t *obj)
     CHKVOID(obj);
     obj->id = 0;
     refda_acl_id_tree_init(obj->groups);
+    cace_amm_objpat_set_init(obj->objects);
     refda_amm_ident_base_list_init(obj->permissions);
     obj->added_at   = CACE_ARI_INIT_UNDEFINED;
     obj->updated_at = CACE_ARI_INIT_UNDEFINED;
@@ -53,6 +54,7 @@ void refda_acl_access_deinit(refda_acl_access_t *obj)
 {
     CHKVOID(obj);
     refda_amm_ident_base_list_clear(obj->permissions);
+    cace_amm_objpat_set_clear(obj->objects);
     refda_acl_id_tree_clear(obj->groups);
     obj->id = 0;
 }
@@ -152,7 +154,7 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
 }
 
 bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-                                 const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
+                                 const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
                                  refda_amm_ident_base_ptr_set_t match)
 {
     bool found = false;
@@ -203,8 +205,10 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
             refda_acl_access_t *const *acc_ptr = refda_acl_access_ptr_set_cref(acc_it);
             const refda_acl_access_t  *acc     = *acc_ptr;
 
-            // TODO filter by acc_obj
-            (void)acc_obj;
+            if (!cace_amm_objpat_set_match(acc->objects, acc_obj))
+            {
+                continue;
+            }
 
             refda_amm_ident_base_list_it_t perm_it;
             for (refda_amm_ident_base_list_it(perm_it, acc->permissions); !refda_amm_ident_base_list_end_p(perm_it);
@@ -242,7 +246,7 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
 }
 
 bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-                                     const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
+                                     const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
                                      refda_amm_ident_base_ptr_set_t match)
 {
     cace_amm_obj_desc_ptr_set_t perm_objs;

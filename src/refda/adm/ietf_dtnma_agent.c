@@ -4867,13 +4867,13 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         {
                             // Constraint: IntegerEnums(values={0: 'waiting', 1: 'running'})
                             cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
-                            cace_amm_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
+
+                            cace_util_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
                             {
-                                cace_amm_range_intvl_int64_t intvl;
-                                cace_amm_range_intvl_int64_set_infinite(&intvl);
-                                cace_amm_range_intvl_int64_set_min(&intvl, 0);
-                                cace_amm_range_intvl_int64_set_max(&intvl, 1);
-                                cace_amm_range_intvl_int64_seq_push(range->intvls, intvl);
+                                cace_util_range_intvl_int64_t intvl;
+                                cace_util_range_intvl_int64_set_min(&intvl, 0);
+                                cace_util_range_intvl_int64_set_max(&intvl, 1);
+                                cace_util_range_int64_push(*range, intvl);
                             }
                         }
                     }
@@ -5581,6 +5581,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     {
                         // Constraint: TextPattern(pattern='!.+')
                         cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
                         cace_amm_semtype_cnst_set_textpat(cnst, "!.+");
                     }
                 }
@@ -5596,13 +5597,14 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_amm_semtype_cnst_t *cnst;
                     {
                         // Constraint: NumericRange(ranges=[-inf,-1])
-                        cnst                          = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
-                        cace_amm_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
+                        cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                        cace_util_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
                         {
-                            cace_amm_range_intvl_int64_t intvl;
-                            cace_amm_range_intvl_int64_set_infinite(&intvl);
-                            cace_amm_range_intvl_int64_set_max(&intvl, -1);
-                            cace_amm_range_intvl_int64_seq_push(range->intvls, intvl);
+                            cace_util_range_intvl_int64_t intvl;
+                            cace_util_range_intvl_int64_clear_min(&intvl);
+                            cace_util_range_intvl_int64_set_max(&intvl, -1);
+                            cace_util_range_int64_push(*range, intvl);
                         }
                     }
                 }

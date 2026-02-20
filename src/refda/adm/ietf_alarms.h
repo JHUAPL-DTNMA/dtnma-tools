@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -56,7 +56,7 @@ extern "C" {
 /// For ./TYPEDEF/manager-state
 #define REFDA_ADM_IETF_ALARMS_ENUM_OBJID_TYPEDEF_MANAGER_STATE 1
 /// For ./TYPEDEF/alarm-filter
-#define REFDA_ADM_IETF_ALARMS_ENUM_OBJID_TYPEDEF_ALARM_FILTER 2
+#define REFDA_ADM_IETF_ALARMS_ENUM_OBJID_TYPEDEF_ALARM_FILTER 4
 /// For ./TYPEDEF/shelf-tblt
 #define REFDA_ADM_IETF_ALARMS_ENUM_OBJID_TYPEDEF_SHELF_TBLT 3
 

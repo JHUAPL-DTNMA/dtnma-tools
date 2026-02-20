@@ -62,8 +62,8 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 }
 
 <ARI_OBJREF>\/{VALSEG} {
-    //fprintf(stderr, "VALSEG:%s\n", yytext);
     // Match one path segment including leading slash
+    //fprintf(stderr, "VALSEG:%s\n", yytext);
     char *curs = yytext + 1;
 
     {
@@ -81,6 +81,7 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 
 <INITIAL>\/{VALSEG}\//. {
     // Literal type ID, match leading and trailing slash also
+    //fprintf(stderr, "VALSEG:%s\n", yytext + 1);
     cace_ari_idseg_t typeid;
     {
         m_string_t decoded;
@@ -129,6 +130,8 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
             return T_LITTYPE_EXECSET;
         case CACE_ARI_TYPE_RPTSET:
             return T_LITTYPE_RPTSET;
+        case CACE_ARI_TYPE_OBJPAT:
+            return T_LITTYPE_OBJPAT;
         default:
             // next is the literal value
             BEGIN(ARI_TYPEDLIT);

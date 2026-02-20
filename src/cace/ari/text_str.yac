@@ -12,6 +12,7 @@
 #include "cace/ari/text_val_parse.h"
 #include "cace/ari/text_util.h"
 #include "cace/ari/text.h"
+#include "cace/ari/objpat.h"
 #include "cace/config.h"
 #include <stdlib.h>
 
@@ -20,6 +21,8 @@
 
 static int cace_model_split_rev(cace_ari_objpath_t *path, cace_ari_idseg_t *seg);
 static int cace_validate_objpath(cace_ari_objpath_t *path);
+static int cace_ari_objpat_part_tryint(cace_util_range_intvl_int64_t *intvl, const m_string_t text);
+
 static int cace_ari_lit_from_text(yyscan_t *scanner, cace_ari_text_str_t *input, cace_ari_lit_t *lit, cace_ari_type_t *typ, m_string_t val);
 
 int yydebug = 0;
@@ -29,6 +32,7 @@ int yydebug = 0;
 {
 #include "cace/ari/base.h"
 #include "cace/ari/containers.h"
+#include "cace/ari/objpat.h"
 #include <m-string.h>
 #include <m-dict.h>
 
@@ -62,6 +66,7 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
   cace_ari_t ari;
   
   cace_ari_lit_t lit;
+  cace_ari_objpat_part_t objpat_part;
   cace_ari_type_t ari_type;
   cace_named_ari_dict_t litparams;
   struct cace_ari_report_s *report;
@@ -92,12 +97,15 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 %type <lit> reportsbracket
 %type <lit> reportslist
 %type <report> report
+%type <objpat_part> objpat-partbracket
+%type <objpat_part> objpat-part
 %token <ari_type> T_LITTYPE
 %token T_LITTYPE_AC
 %token T_LITTYPE_AM
 %token T_LITTYPE_TBL
 %token T_LITTYPE_EXECSET
 %token T_LITTYPE_RPTSET
+%token T_LITTYPE_OBJPAT
 
 %token T_REF_ABS ///< start of absolute reference ARI
 %token T_REF_REL_DOT
@@ -114,8 +122,9 @@ void cace_ari_text_str_error(yyscan_t *scanner, cace_ari_text_str_t *input, char
 %type <ari> ssp
 
 %destructor { m_string_clear($$); } <text>
-%destructor { cace_named_ari_dict_clear($$); } <litparams>
 %destructor { cace_ari_lit_deinit(&$$); } <lit>
+%destructor { cace_ari_objpat_part_clear($$); } <objpat_part>
+%destructor { cace_named_ari_dict_clear($$); } <litparams>
 %destructor { if ($$) { cace_ari_report_deinit($$); CACE_FREE($$); } } <report>
 %destructor { cace_ari_ref_deinit(&$$); } <objref>
 %destructor { cace_ari_objpath_deinit(&$$); } <objpath>
@@ -313,6 +322,15 @@ ssp-literal:
         cace_ari_init_move(&($$.value.as_rptset->reftime), found_r);
         cace_named_ari_dict_clear($2);
     }
+    | T_LITTYPE_OBJPAT objpat-partbracket objpat-partbracket objpat-partbracket objpat-partbracket {
+        cace_ari_objpat_t *pat = cace_ari_lit_init_objpat(&$$);
+    
+        // move semantics here
+        cace_ari_objpat_part_move(pat->org_pat, $2);
+        cace_ari_objpat_part_move(pat->model_pat, $3);
+        cace_ari_objpat_part_move(pat->type_pat, $4);
+        cace_ari_objpat_part_move(pat->obj_pat, $5);
+    }
 ;
 
 acbracket:
@@ -504,6 +522,66 @@ report:
     }
 ;
 
+objpat-partbracket:
+    T_LPAREN objpat-part T_RPAREN {
+        cace_ari_objpat_part_init_move($$, $2);
+    }
+;
+
+objpat-part:
+    T_VALSEG {
+        if (m_string_equal_cstr_p($1, "*"))
+        {
+            cace_ari_objpat_part_init_set_special($$, true);
+        }
+        else if (isalpha(m_string_get_char($1, 0)))
+        {
+            cace_ari_objpat_part_init($$);
+            cace_ari_objpat_part_move_text($$, $1);
+        }
+        else
+        {
+            cace_ari_objpat_part_init($$);
+
+            cace_util_range_intvl_int64_t intvl;
+            int res = cace_ari_objpat_part_tryint(&intvl, $1);
+            if (res)
+            {
+            cace_ari_text_str_error(scanner, input, "OBJPAT interval failed with code %d", res);
+                YYERROR;
+            }
+            m_string_clear($1);
+
+            // single initial interval
+            cace_util_range_int64_t range;
+            cace_util_range_int64_init(range);
+            cace_util_range_int64_push(range, intvl);
+            cace_ari_objpat_part_move_range_int64($$, range);
+        }
+    }
+    | objpat-part T_COMMA T_VALSEG {
+        cace_ari_objpat_part_init_move($$, $1);
+
+        cace_util_range_int64_t *range = cace_ari_objpat_part_get_range_int64($$);
+        if (!range)
+        {
+            cace_ari_text_str_error(scanner, input, "OBJPAT range invalid");
+            YYERROR;
+        }
+
+        cace_util_range_intvl_int64_t intvl;
+        int res = cace_ari_objpat_part_tryint(&intvl, $3);
+        if (res)
+        {
+            cace_ari_text_str_error(scanner, input, "OBJPAT interval failed with code %d", res);
+            YYERROR;
+        }
+        m_string_clear($3);
+
+        cace_util_range_int64_push(*range, intvl);
+    }
+;
+
 ssp-ref:
     objpath { $$.objpath = $1; $$.params.state = CACE_ARI_PARAMS_NONE; }
     | objpath params { $$.objpath = $1; $$.params = $2; }
@@ -650,6 +728,70 @@ static int cace_validate_objpath(cace_ari_objpath_t *path)
 
     int err = cace_ari_objpath_derive_type(path);
     return err;
+}
+
+static int cace_ari_objpat_part_tryint(cace_util_range_intvl_int64_t *intvl, const m_string_t text)
+{
+    size_t sep_pos = m_string_search_cstr(text, "..");
+    if (sep_pos == M_STRING_FAILURE)
+    {
+        // single value
+        int64_t val;
+        if (cace_ari_int64_decode(&val, m_string_get_cstr(text), m_string_size(text)))
+        {
+            return 2;
+        }
+        cace_util_range_intvl_int64_set_finite(intvl, val, val);
+    }
+    else
+    {
+        const char *curs = m_string_get_cstr(text);
+        size_t len = m_string_size(text);
+        int64_t low, high;
+
+        if (sep_pos == 0)
+        {
+            curs += 2;
+            len -= 2;
+            if (cace_ari_int64_decode(&high, curs, len))
+            {
+                return 2;
+            }
+
+            cace_util_range_intvl_int64_set_infinite(intvl);
+            cace_util_range_intvl_int64_set_max(intvl, high);
+        }
+        else if (sep_pos == len - 2)
+        {
+            len -= 2;
+            if (cace_ari_int64_decode(&low, curs, len))
+            {
+                return 2;
+            }
+
+            cace_util_range_intvl_int64_set_infinite(intvl);
+            cace_util_range_intvl_int64_set_min(intvl, low);
+        }
+        else
+        {
+            // both ends
+            len = sep_pos;
+            if (cace_ari_int64_decode(&low, curs, len))
+            {
+                return 2;
+            }
+            curs += sep_pos + 2;
+            len = m_string_size(text) - sep_pos - 2;
+    
+            if (cace_ari_int64_decode(&high, curs, len))
+            {
+                return 2;
+            }
+            
+            cace_util_range_intvl_int64_set_finite(intvl, low, high);
+        }
+    }
+    return 0;
 }
 
 int cace_ari_lit_from_text(yyscan_t *scanner, cace_ari_text_str_t *input, cace_ari_lit_t *lit, cace_ari_type_t *typ, m_string_t val)

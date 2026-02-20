@@ -51,6 +51,7 @@ static _ari_type_name_pair_t _ari_type_names[] = {
     {CACE_ARI_TYPE_LABEL, "LABEL"},
     {CACE_ARI_TYPE_CBOR, "CBOR"},
     {CACE_ARI_TYPE_ARITYPE, "ARITYPE"},
+    {CACE_ARI_TYPE_OBJPAT, "OBJPAT"},
     {CACE_ARI_TYPE_AC, "AC"},
     {CACE_ARI_TYPE_AM, "AM"},
     {CACE_ARI_TYPE_TBL, "TBL"},

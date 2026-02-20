@@ -53,8 +53,6 @@ extern "C" {
 #define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_IDENT_DISPLAY_HINT_BSTR 3
 /// For ./IDENT/display-hint-time
 #define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_IDENT_DISPLAY_HINT_TIME 4
-/// For ./IDENT/bstr-ari-pattern
-#define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_IDENT_BSTR_ARI_PATTERN 5
 
 /*
  * Enumerations for TYPEDEF objects
@@ -113,8 +111,6 @@ extern "C" {
 #define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_RPTT_ITEM 23
 /// For ./TYPEDEF/rptt
 #define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_RPTT 24
-/// For ./TYPEDEF/ari-pattern
-#define REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_ARI_PATTERN 27
 
 /** Initializer for the ADM module ietf-amm-base.
  * @param[in,out] agent The agent to register this namespace and its

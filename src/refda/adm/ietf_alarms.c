@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -464,7 +464,22 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/UINT
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: IntegerEnums(values={0: 'cleared', 1: 'indeterminate', 2: 'warning', 3: 'minor', 4:
+                    // 'major', 5: 'critical'})
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                    cace_util_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
+                    {
+                        cace_util_range_intvl_int64_t intvl;
+                        cace_util_range_intvl_int64_set_min(&intvl, 0);
+                        cace_util_range_intvl_int64_set_max(&intvl, 5);
+                        cace_util_range_int64_push(*range, intvl);
+                    }
+                }
             }
 
             obj = refda_register_typedef(
@@ -480,7 +495,21 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/UINT
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: IntegerEnums(values={0: 'none', 1: 'acknowledged', 2: 'closed', 3: 'shelved'})
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                    cace_util_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
+                    {
+                        cace_util_range_intvl_int64_t intvl;
+                        cace_util_range_intvl_int64_set_min(&intvl, 0);
+                        cace_util_range_intvl_int64_set_max(&intvl, 3);
+                        cace_util_range_int64_push(*range, intvl);
+                    }
+                }
             }
 
             obj = refda_register_typedef(
@@ -517,8 +546,8 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "resources");
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/ari-pattern
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
+                        // use of ari:/ARITYPE/OBJPAT
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
                         cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
@@ -527,8 +556,8 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                     m_string_set_cstr(col->name, "categories");
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/ari-pattern
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
+                        // use of ari:/ARITYPE/OBJPAT
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
                         cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
@@ -813,7 +842,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // reference to ari://ietf/alarms/TYPEDEF/alarm-filter
-                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
@@ -841,7 +870,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // reference to ari://ietf/alarms/TYPEDEF/alarm-filter
-                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
@@ -870,7 +899,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // reference to ari://ietf/alarms/TYPEDEF/alarm-filter
-                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }

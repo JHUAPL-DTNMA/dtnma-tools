@@ -81,4 +81,4 @@ void cace_ari_itemized_reset(cace_ari_itemized_t *obj);
 } // extern C
 #endif
 
-#endif /* CACE_AMM_PARAMETERS_H_ */
+#endif /* CACE_ARI_ITEMIZED_H_ */

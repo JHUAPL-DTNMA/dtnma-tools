@@ -32,12 +32,12 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
         case AMM_SEMTYPE_CNST_INVALID:
             break;
         case AMM_SEMTYPE_CNST_RANGE_INT64:
-            cace_amm_range_int64_deinit(&(obj->as_range_int64));
+            cace_util_range_int64_clear(obj->as_range_int64);
             break;
         case AMM_SEMTYPE_CNST_INT_BITS:
             break;
         case AMM_SEMTYPE_CNST_STRLEN:
-            cace_amm_range_size_deinit(&(obj->as_strlen));
+            cace_util_range_size_clear(obj->as_strlen);
             break;
 #if defined(PCRE_FOUND)
         case AMM_SEMTYPE_CNST_TEXTPAT:
@@ -49,14 +49,14 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
     obj->type = AMM_SEMTYPE_CNST_INVALID;
 }
 
-cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj)
+cace_util_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj)
 {
     CHKNULL(obj);
     cace_amm_semtype_cnst_deinit(obj);
 
-    obj->type                   = AMM_SEMTYPE_CNST_RANGE_INT64;
-    cace_amm_range_int64_t *cfg = &(obj->as_range_int64);
-    cace_amm_range_int64_init(cfg);
+    obj->type                    = AMM_SEMTYPE_CNST_RANGE_INT64;
+    cace_util_range_int64_t *cfg = &(obj->as_range_int64);
+    cace_util_range_int64_init(*cfg);
 
     return cfg;
 }
@@ -73,14 +73,14 @@ uint64_t *cace_amm_semtype_cnst_set_int_bits(cace_amm_semtype_cnst_t *obj)
     return cfg;
 }
 
-cace_amm_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t *obj)
+cace_util_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t *obj)
 {
     CHKNULL(obj);
     cace_amm_semtype_cnst_deinit(obj);
 
-    obj->type                  = AMM_SEMTYPE_CNST_STRLEN;
-    cace_amm_range_size_t *cfg = &(obj->as_strlen);
-    cace_amm_range_size_init(cfg);
+    obj->type                   = AMM_SEMTYPE_CNST_STRLEN;
+    cace_util_range_size_t *cfg = &(obj->as_strlen);
+    cace_util_range_size_init(*cfg);
 
     return cfg;
 }
@@ -117,6 +117,8 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
     switch (obj->type)
     {
         case AMM_SEMTYPE_CNST_INVALID:
+            CACE_LOG_CRIT("Attempt to validate an unconfigured constraint");
+            retval = true;
             break;
         case AMM_SEMTYPE_CNST_RANGE_INT64:
         {
@@ -126,9 +128,9 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
                 // non-vast fails
                 return false;
             }
-            const cace_amm_range_int64_t *cfg = &(obj->as_range_int64);
+            const cace_util_range_int64_t *cfg = &(obj->as_range_int64);
 
-            retval = cace_amm_range_int64_contains(cfg, intval);
+            retval = cace_util_range_int64_contains(*cfg, intval);
             break;
         }
         case AMM_SEMTYPE_CNST_INT_BITS:
@@ -164,9 +166,9 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
                 default:
                     return false;
             }
-            const cace_amm_range_size_t *cfg = &(obj->as_strlen);
+            const cace_util_range_size_t *cfg = &(obj->as_strlen);
 
-            retval = cace_amm_range_size_contains(cfg, len);
+            retval = cace_util_range_size_contains(*cfg, len);
             break;
         }
 #if defined(PCRE_FOUND)

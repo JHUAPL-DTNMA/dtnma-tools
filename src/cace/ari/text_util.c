@@ -243,24 +243,40 @@ int cace_ari_uint64_encode(m_string_t out, uint64_t value, int base)
     return 0;
 }
 
-int cace_ari_uint64_decode(uint64_t *out, const m_string_t in)
+int cace_ari_int64_encode(m_string_t out, int64_t value, int base)
+{
+    CHKERR1(out);
+
+    uint64_t absval;
+    if (value < 0)
+    {
+        // this is safe within the domain
+        absval = -value;
+        m_string_push_back(out, '-');
+    }
+    else
+    {
+        absval = value;
+    }
+    return cace_ari_uint64_encode(out, absval, base);
+}
+
+int cace_ari_uint64_decode(uint64_t *out, const char *in, size_t in_len)
 {
     CHKERR1(out);
     CHKERR1(in);
 
-    const char  *begin  = m_string_get_cstr(in);
-    const size_t in_len = m_string_size(in);
-    const char  *end    = begin + in_len;
+    const char *end = in + in_len;
 
     uint64_t tmp;
-    if ((in_len >= 2) && (m_string_get_char(in, 0) == '0') && (tolower(m_string_get_char(in, 1)) == 'b'))
+    if ((in_len >= 2) && (*in == '0') && (tolower(*(in + 1)) == 'b'))
     {
         tmp = 0;
         for (size_t ix = 2; ix < in_len; ++ix)
         {
             tmp <<= 1;
 
-            const char bit = m_string_get_char(in, ix);
+            const char bit = *(in + ix);
             switch (bit)
             {
                 case '0':
@@ -277,7 +293,7 @@ int cace_ari_uint64_decode(uint64_t *out, const m_string_t in)
     else
     {
         char *numend;
-        tmp = strtoull(begin, &numend, 0);
+        tmp = strtoull(in, &numend, 0);
         if (numend != end)
         {
             return 2;
@@ -285,6 +301,55 @@ int cace_ari_uint64_decode(uint64_t *out, const m_string_t in)
     }
 
     *out = tmp;
+    return 0;
+}
+
+int cace_ari_int64_decode(int64_t *out, const char *in, size_t in_len)
+{
+    CHKERR1(out);
+    CHKERR1(in);
+    CHKERR1(in_len > 0);
+
+    if (*in == '-')
+    {
+        ++in;
+        --in_len;
+
+        uint64_t neg;
+        int      ret = cace_ari_uint64_decode(&neg, in, in_len);
+        if (ret)
+        {
+            return ret;
+        }
+
+        // work around signed negation overflow
+        if (neg > (uint64_t)(-(INT64_MIN + 1)) + 1)
+        {
+            return 3;
+        }
+        *out = -(int64_t)neg;
+    }
+    else
+    {
+        if (*in == '+')
+        {
+            ++in;
+            --in_len;
+        }
+
+        uint64_t tmp;
+        int      ret = cace_ari_uint64_decode(&tmp, in, in_len);
+        if (ret)
+        {
+            return ret;
+        }
+        if (tmp > INT64_MAX)
+        {
+            return 3;
+        }
+        *out = (int64_t)tmp;
+    }
+
     return 0;
 }
 

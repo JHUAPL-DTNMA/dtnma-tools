@@ -48,15 +48,15 @@ typedef double   cace_ari_real64;
 
 /** Convenience definition of the DTN Time epoch offset from POSIX time epoch.
  * This is in units of seconds.
- * DTN Time epoch is defined in @cite rfc9171 at 2000-01-01T00:00:00Z
+ * DTN Time epoch is defined in BPv7 @cite rfc9171 at 2000-01-01T00:00:00Z
  */
 #define CACE_ARI_DTN_EPOCH 946684800L
 
-/** The value of CACE_ARI_DTN_EPOCH in a `time_t`.
+/** The value of ::CACE_ARI_DTN_EPOCH in a `time_t`.
  */
 extern const time_t cace_ari_dtn_epoch;
 
-/** The value of CACE_ARI_DTN_EPOCH in a `struct timespec`.
+/** The value of ::CACE_ARI_DTN_EPOCH in a `struct timespec`.
  */
 extern const struct timespec cace_ari_dtn_epoch_timespec;
 
@@ -110,9 +110,11 @@ union cace_ari_prim_val_u
 
     /** Used when cace_ari_lit_t::prim_type is ::CACE_ARI_PRIM_TIMESPEC.
      * For ::CACE_ARI_TYPE_TP this timespec represents the offset from the
-     * DTN Time epoch of @cite rfc9171.
+     * DTN Time epoch of BPv7 @cite rfc9171.
      */
     struct timespec as_timespec;
+    /// Used when cace_ari_lit_t::ari_type is ::CACE_ARI_TYPE_OBJPAT
+    struct cace_ari_objpat_s *as_objpat;
 
     // Container values in this group
     /// Used when cace_ari_lit_t::ari_type is ::CACE_ARI_TYPE_AC
@@ -127,7 +129,7 @@ union cace_ari_prim_val_u
     struct cace_ari_rptset_s *as_rptset;
 };
 
-/** Represent a literal-value ARI in accordance with @cite ietf-dtn-ari-06.
+/** Represent a literal-value ARI in accordance with ARI @cite ietf-dtn-ari-06.
  *
  * A literal ARI is self-contained and fully identifies its own value.
  * Literal values have an optional type part and a mandatory value part.

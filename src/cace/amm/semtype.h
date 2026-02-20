@@ -24,8 +24,8 @@
 
 #include "typing.h"
 #include "named_type.h"
-#include "range.h"
 #include "semtype_cnst.h"
+#include "cace/util/range.h"
 #include <m-array.h>
 
 #ifdef __cplusplus
@@ -122,19 +122,19 @@ typedef struct
 
     /** Constraint on the number of items.
      */
-    cace_amm_range_intvl_size_t size;
+    cace_util_range_intvl_size_t size;
 
 } cace_amm_semtype_ulist_t;
 
 static inline void cace_amm_semtype_ulist_init(cace_amm_semtype_ulist_t *obj)
 {
     cace_amm_type_init(&(obj->item_type));
-    cace_amm_range_intvl_size_set_infinite(&(obj->size));
+    cace_util_range_intvl_size_set_infinite(&(obj->size));
 }
 
 static inline void cace_amm_semtype_ulist_deinit(cace_amm_semtype_ulist_t *obj)
 {
-    cace_amm_range_intvl_size_set_infinite(&(obj->size));
+    cace_util_range_intvl_size_set_infinite(&(obj->size));
     cace_amm_type_deinit(&(obj->item_type));
 }
 
@@ -318,19 +318,19 @@ typedef struct
 
     /** Constraint on the number of items.
      */
-    cace_amm_range_intvl_size_t size;
+    cace_util_range_intvl_size_t size;
 
 } cace_amm_semtype_seq_t;
 
 static inline void cace_amm_semtype_seq_init(cace_amm_semtype_seq_t *obj)
 {
     cace_amm_type_init(&(obj->item_type));
-    cace_amm_range_intvl_size_set_infinite(&(obj->size));
+    cace_util_range_intvl_size_set_infinite(&(obj->size));
 }
 
 static inline void cace_amm_semtype_seq_deinit(cace_amm_semtype_seq_t *obj)
 {
-    cace_amm_range_intvl_size_set_infinite(&(obj->size));
+    cace_util_range_intvl_size_set_infinite(&(obj->size));
     cace_amm_type_deinit(&(obj->item_type));
 }
 

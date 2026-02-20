@@ -19,6 +19,7 @@
 #define REFDA_ACL_H_
 
 #include "amm/ident.h"
+#include "cace/amm/objpat.h"
 #include "cace/ari/base.h"
 #include <m-atomic.h>
 #include <m-deque.h>
@@ -86,6 +87,8 @@ typedef struct
     refda_acl_id_t id;
     /// Groups to which this entry applies
     refda_acl_id_tree_t groups;
+    /// Object patterns to which this entry applies
+    cace_amm_objpat_set_t objects;
     /// Permissions granted to these groups and objects
     refda_amm_ident_base_list_t permissions;
 
@@ -184,14 +187,14 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
  * @return True if permission is present and the @c match is non-empty.
  */
 bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-                                 const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
+                                 const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
                                  refda_amm_ident_base_ptr_set_t match);
 /** @overload
  * This searches for a single permission @c perm_obj which avoids needing
  * to construct a permission set.
  */
 bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-                                     const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
+                                     const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
                                      refda_amm_ident_base_ptr_set_t match);
 
 #ifdef __cplusplus
