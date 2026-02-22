@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * This file is only included in the build when either ::HAVE_POSTGRESQL or
- * ::HAVE_MYSQL are defined.
+ * This file is only included in the build when ::HAVE_POSTGRESQL is defined.
  */
 #include "nm_sql.h"
 
@@ -62,24 +61,23 @@ typedef enum db_con_e
     MGR_NUM_SQL_CONNECTIONS
 } db_con_t;
 
-/* Global connection to the MYSQL Server. */
-#ifdef HAVE_MYSQL
-static MYSQL *gConn[MGR_NUM_SQL_CONNECTIONS];
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-static PGconn *gConn[MGR_NUM_SQL_CONNECTIONS];
-#endif // HAVE_POSTGRESQL
+typedef struct refdm_db_pool_t
+{
+    PGconn         *conn;
+    pthread_mutex_t lock;
+} refdm_db_pool_t;
+
+/* Global connections to the MYSQL Server. */
+refdm_db_pool_t dbpool[MGR_NUM_SQL_CONNECTIONS];
+
+#define checkConn(idx) (idx < MGR_NUM_SQL_CONNECTIONS && dbpool[idx].conn != NULL)
+#define getConn(idx)   pthread_mutex_lock(&dbpool[idx].lock)
+#define giveConn(idx)  pthread_mutex_unlock(&dbpool[idx].lock)
+
 static refdm_db_t *gParms;
 
-static pthread_mutex_t db_rest_con_use;
-
 // Private functions
-#ifdef HAVE_MYSQL
-static MYSQL_STMT *db_mgr_sql_prepare(size_t idx, const char *query);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
 static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, int nParams, const Oid *paramTypes);
-#endif // HAVE_POSTGRESQL
 
 cace_ari_ac_t *db_query_ac(size_t dbidx, int ac_id);
 
@@ -103,39 +101,9 @@ enum queries
     MGR_NUM_QUERIES
 };
 
-#ifdef HAVE_MYSQL
-static MYSQL_STMT *queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
 static char *queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
-#endif // HAVE_POSTGRESQL
 
 /******** SQL Utility Macros ******************/
-#ifdef HAVE_MYSQL
-#define dbprep_bind_res_cmn(idx, var, type)    \
-    bind_res[idx].buffer_type = type;          \
-    bind_res[idx].buffer      = (char *)var;   \
-    bind_res[idx].is_null     = &is_null[idx]; \
-    bind_res[idx].error       = &is_err[idx];
-#endif // HAVE_MYSQL
-
-#ifdef HAVE_MYSQL
-#define dbprep_bind_param_cmn(idx, var, type)   \
-    bind_param[idx].buffer_type = type;         \
-    bind_param[idx].buffer      = (char *)&var; \
-    bind_param[idx].is_null     = 0;            \
-    bind_param[idx].error       = 0;
-#endif // HAVE_MYSQL
-
-#ifdef HAVE_MYSQL
-#define dbprep_bind_param_bool(idx, var)   dbprep_bind_param_cmn(idx, var, MYSQL_TYPE_LONG);
-#define dbprep_bind_param_int(idx, var)    dbprep_bind_param_cmn(idx, var, MYSQL_TYPE_LONG);
-#define dbprep_bind_param_short(idx, var)  dbprep_bind_param_cmn(idx, var, MYSQL_TYPE_SHORT);
-#define dbprep_bind_param_float(idx, var)  dbprep_bind_param_cmn(idx, var, MYSQL_TYPE_FLOAT);
-#define dbprep_bind_param_double(idx, var) dbprep_bind_param_cmn(idx, var, MYSQL_TYPE_DOUBLE);
-#define dbprep_bind_param_bigint(idx, var) dbprep_bind_param_cmn(idx, var, MYSQL_TYPE_LONGLONG);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
 #define dbprep_bind_param_bool(idx, var)        \
     net8Vals[idx]     = (uint8_t)var;           \
     paramValues[idx]  = (char *)&net8Vals[idx]; \
@@ -166,25 +134,7 @@ static char *queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
     paramValues[idx]  = (char *)&net64Vals[idx];   \
     paramLengths[idx] = sizeof(net64Vals[idx]);    \
     paramFormats[idx] = 1; /* binary */
-#endif                     // HAVE_POSTGRESQL
 
-#ifdef HAVE_MYSQL
-#define dbprep_bind_param_str(idx, var)                              \
-    size_t len_##var              = (var == NULL) ? 0 : strlen(var); \
-    bind_param[idx].buffer_length = len_##var;                       \
-    bind_param[idx].length        = &len_##var;                      \
-    bind_param[idx].buffer_type   = MYSQL_TYPE_STRING;               \
-    bind_param[idx].buffer        = (m_string_t *)var;               \
-    bind_param[idx].is_null       = 0;                               \
-    bind_param[idx].error         = 0;
-
-#define dbprep_bind_param_null(idx)                \
-    bind_param[idx].buffer_type = MYSQL_TYPE_NULL; \
-    bind_param[idx].buffer      = 0;               \
-    bind_param[idx].is_null     = 0;               \
-    bind_param[idx].error       = 0;
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
 #define dbprep_bind_param_str(idx, var)                  \
     paramValues[idx]  = var;                             \
     paramLengths[idx] = 0; /* ignored for text format */ \
@@ -197,39 +147,9 @@ static char *queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
     paramValues[idx]  = (const char *)var;       \
     paramLengths[idx] = length;                  \
     paramFormats[idx] = 1;
-#endif // HAVE_POSTGRESQL
 
-#ifdef HAVE_MYSQL
-#define dbprep_bind_res_int(idx, var)   dbprep_bind_res_cmn(idx, &var, MYSQL_TYPE_LONG);
-#define dbprep_bind_res_short(idx, var) dbprep_bind_res_cmn(idx, &var, MYSQL_TYPE_SHORT);
-#define dbprep_bind_res_str(idx, var, len)             \
-    dbprep_bind_res_cmn(idx, &var, MYSQL_TYPE_STRING); \
-    bind_res[idx].buffer_length = len;
-#define dbprep_bind_res_int_ptr(idx, var) dbprep_bind_res_cmn(idx, var, MYSQL_TYPE_LONG);
-
-#define dbprep_dec_res_int(idx, var) \
-    int var;                         \
-    dbprep_bind_res_int(idx, var);
-#endif // HAVE_MYSQL
-
-#ifdef HAVE_MYSQL
-/* NOTE: my_bool is replaceed with 'bool' for MySQL 8.0.1+, but is still used for MariaDB
- *  A build flag may be needed to switch between them based on My/Maria-SQL version to support both.
- */
-#define dbprep_declare(dbidx, idx, params, cols) \
-    MYSQL_STMT   *stmt = queries[dbidx][idx];    \
-    MYSQL_BIND    bind_res[cols];                \
-    MYSQL_BIND    bind_param[params];            \
-    bool          is_null[cols];                 \
-    bool          is_err[cols];                  \
-    unsigned long lengths[params];               \
-    memset(bind_res, 0, sizeof(bind_res));       \
-    memset(bind_param, 0, sizeof(bind_param));   \
-    int return_status;
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
 #define dbprep_declare(dbidx, idx, params, cols)       \
-    PGconn     *conn     = gConn[dbidx];               \
+    PGconn     *conn     = dbpool[dbidx].conn;         \
     char       *stmtName = queries[dbidx][idx];        \
     int         nParams  = params;                     \
     const char *paramValues[nParams];                  \
@@ -241,42 +161,12 @@ static char *queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
     uint16_t    net16Vals[nParams];                    \
     uint32_t    net32Vals[nParams];                    \
     uint64_t    net64Vals[nParams];
-#endif // HAVE_POSTGRESQL
 
-#ifdef HAVE_POSTGRESQL
 #define dbexec_prepared                                                                                   \
     res = PQexecPrepared(conn, stmtName, nParams, paramValues, paramLengths, paramFormats, resultFormat); \
     CACE_LOG_DEBUG("dbexec_prepared result: %s", PQresStatus(PQresultStatus(res)));
 #define dbtest_result(expected) ((PQresultStatus(res) == expected) ? 0 : 1)
-#endif // HAVE_POSTGRESQL
 
-#ifdef HAVE_MYSQL
-#define DB_CHKVOID(status)     \
-    if (status != 0)           \
-    {                          \
-        query_log_err(status); \
-        return;                \
-    }
-#define DB_CHKINT(status)      \
-    if (status != 0)           \
-    {                          \
-        query_log_err(status); \
-        return 0;              \
-    }
-#define DB_CHKNULL(status)     \
-    if (status != 0)           \
-    {                          \
-        query_log_err(status); \
-        return NULL;           \
-    }
-#define DB_CHKUSR(status, usr) \
-    if (status != 0)           \
-    {                          \
-        query_log_err(status); \
-        usr;                   \
-    }
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
 #define DB_CHKVOID(status)     \
     if (status != 0)           \
     {                          \
@@ -305,20 +195,13 @@ static char *queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
         PQclear(res);          \
         usr;                   \
     }
-#endif // HAVE_POSTGRESQL
 
-#ifdef HAVE_MYSQL
-#define query_log_err(status) \
-    CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)", __FILE__, __LINE__, mysql_stmt_error(stmt), mysql_stmt_errno(stmt));
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
 #define query_log_err(status) \
     CACE_LOG_ERR("ERROR at %s %i: %s (errno: %d)", __FILE__, __LINE__, PQresultErrorMessage(res), status);
-#endif // HAVE_POSTGRESQL
 
 void refdm_db_log_msg(const char *file, int line, const char *fun, int level, size_t dbidx, const char *format, ...)
 {
-    if (dbidx >= MGR_NUM_SQL_CONNECTIONS || gConn[dbidx] == NULL)
+    if (!checkConn(dbidx))
     {
         // DB Not connected or invalid idx
         return;
@@ -330,6 +213,8 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
     va_start(val, format);
     m_string_vprintf(msg, format, val);
     va_end(val);
+
+    getConn(dbidx);
     dbprep_declare(dbidx, REFDM_DB_LOG_MSG, 5, 0);
     dbprep_bind_param_str(0, m_string_get_cstr(msg));
     dbprep_bind_param_int(1, level);
@@ -337,15 +222,11 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
     dbprep_bind_param_str(3, file);
     dbprep_bind_param_int(4, line);
 
-#ifdef HAVE_MYSQL
-    DB_CHKVOID(mysql_stmt_bind_param(stmt, bind_param));
-    DB_CHKVOID(mysql_stmt_execute(stmt));
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
     dbexec_prepared;
+    giveConn(dbidx);
+
     DB_CHKVOID(dbtest_result(PGRES_COMMAND_OK))
     PQclear(res);
-#endif // HAVE_POSTGRESQL
 
     m_string_clear(msg);
 }
@@ -372,27 +253,11 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
  *****************************************************************************/
 uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log)
 {
-    pthread_mutex_init(&db_rest_con_use, NULL);
 
-    CACE_LOG_INFO("setting up db connect for DB_CTRL_CON");
-    refdm_db_mgt_init_con(DB_CTRL_CON, parms);
-
-    CACE_LOG_INFO("setting up db connect for DB_RPT_CON");
-    refdm_db_mgt_init_con(DB_RPT_CON, parms);
-
-    CACE_LOG_INFO("setting up db connect for DB_REST_CON");
-    refdm_db_mgt_init_con(DB_REST_CON, parms);
-
-    // A mysql_commit or mysql_rollback will automatically start a new transaction as the old one is closed
-    if (gConn[DB_RPT_CON] != NULL)
+    for (size_t i = 0; i < MGR_NUM_SQL_CONNECTIONS; i++)
     {
-#ifdef HAVE_MYSQL
-        mysql_autocommit(gConn[DB_RPT_CON], 0);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-// TODO postgresql : turn off autocommit
-#endif // HAVE_POSTGRESQL
-       // DB_LOG_INFO(DB_CTRL_CON, "NM Manager Connections Initialized");
+        CACE_LOG_INFO("Initiating DB Pool idx %i", i);
+        refdm_db_mgt_init_con(i, parms);
     }
 
     CACE_LOG_INFO("-->0");
@@ -405,46 +270,36 @@ uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log)
  **/
 uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 {
+    refdm_db_pool_t *conn = &dbpool[idx];
 
-    if (gConn[idx] == NULL)
+    if (idx >= MGR_NUM_SQL_CONNECTIONS)
     {
-#ifdef HAVE_MYSQL
-        gConn[idx] = mysql_init(NULL);
-#endif // HAVE_MYSQL
+        CACE_LOG_ERR("Invalid DB pool index %d", idx);
+        return 0;
+    }
+    if (conn->conn == NULL)
+    {
+        // Initialize mutex
+        pthread_mutex_init(&conn->lock, NULL);
+
+        // Initialize connection
         gParms = parms;
 
-#ifdef HAVE_MYSQL
-        if (!mysql_real_connect(gConn[idx], parms->server, parms->username, parms->password, parms->database, 0, NULL,
-                                0))
-        {
-            if (gConn[idx] != NULL)
-            {
-                mysql_close(gConn[idx]);
-            }
-        }
-
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-        gConn[idx] = PQsetdbLogin(parms->server, NULL, NULL, NULL, parms->database, parms->username, parms->password);
-        if (gConn[idx] == NULL)
+        conn->conn = PQsetdbLogin(parms->server, NULL, NULL, NULL, parms->database, parms->username, parms->password);
+        if (conn->conn == NULL)
         {
             CACE_LOG_WARNING("SQL Error: Null connection object returned");
         }
-        else if (PQstatus(gConn[idx]) != CONNECTION_OK)
+        else if (PQstatus(conn->conn) != CONNECTION_OK)
         {
-            CACE_LOG_WARNING("SQL Error: %s", PQerrorMessage(gConn[idx]));
-            PQfinish(gConn[idx]);
-#endif                         // HAVE_POSTGRESQL
-            gConn[idx] = NULL; // This was previously before the log entry which is likely a mistake
+            CACE_LOG_WARNING("SQL Error: %s", PQerrorMessage(conn->conn));
+            PQfinish(conn->conn);
+            conn->conn = NULL; // This was previously before the log entry which is likely a mistake
             CACE_LOG_INFO("--> 0");
             return 0;
         }
 
-// Initialize prepared queries
-#ifdef HAVE_MYSQL
-
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
+        // Initialize prepared queries
 
         // RPTSET values
         // signature IN p_nonce_cbor BYTEA, p_reference_time TIMESTAMP, p_report_list TEXT, p_report_list_cbor BYTEA,
@@ -466,8 +321,6 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
         queries[idx][ARI_EXECSET_INSERT] =
             db_mgr_sql_prepare(idx, "call SP__insert_execset($1::bytea, $2::varchar, $3::varchar, $4::bytea, $5::int4)",
                                "SP__insert_execset", 5, NULL);
-
-#endif // HAVE_POSTGRESQL
     }
 
     CACE_LOG_INFO("refdm_db_mgt_init -->1");
@@ -495,37 +348,24 @@ void refdm_db_mgt_close(void)
         refdm__db_mgt_close_conn(i);
     }
     CACE_LOG_INFO("refdm_db_mgt_close", "-->.");
-
-    pthread_mutex_destroy(&db_rest_con_use);
 }
 void refdm__db_mgt_close_conn(size_t idx)
 {
-    if (gConn[idx] != NULL)
-    {
-// Free prepared queries (mysql_stmt_close())
-#ifdef HAVE_MYSQL
-        for (int i = 0; i < MGR_NUM_QUERIES; i++)
-        {
-            mysql_stmt_close(queries[idx][i]);
-        }
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-/*  There is no libpq function for deleting a prepared statement,
-        the SQL DEALLOCATE statement can be used for that purpose but
-        if you do not explicitly deallocate a prepared statement, it is deallocated when the session ends.
-        So no actuaion should be needed*/
-#endif // HAVE_POSTGRESQL
-// Close the connection
-#ifdef HAVE_MYSQL
-        mysql_close(gConn[idx]);
-        mysql_library_end();
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-        /* close the connection to the database and cleanup */
-        PQfinish(gConn[idx]);
-#endif // HAVE_POSTGRESQL
+    refdm_db_pool_t *conn = &dbpool[idx];
 
-        gConn[idx] = NULL;
+    if (conn->conn != NULL)
+    {
+        if (pthread_mutex_trylock(&conn->lock))
+        {
+            CACE_LOG_WARNING("refdm_db_mgt_close_conn; Unable to lock connection. Attempting to force close anyway");
+        }
+
+        /* close the connection to the database and cleanup */
+        PQfinish(conn->conn);
+
+        conn->conn = NULL;
+        pthread_mutex_unlock(&conn->lock); // Mutex must be unlocked to destroy
+        pthread_mutex_destroy(&conn->lock);
     }
 }
 
@@ -549,20 +389,17 @@ void refdm__db_mgt_close_conn(size_t idx)
 
 int refdm_db_mgt_connected(size_t idx)
 {
-    int     result    = -1;
-    uint8_t num_tries = 0;
+    int              result    = -1;
+    uint8_t          num_tries = 0;
+    refdm_db_pool_t *conn      = &dbpool[idx];
 
-    if (gConn[idx] == NULL)
+    if (!checkConn(idx))
     {
         return -1;
     }
 
-#ifdef HAVE_MYSQL
-    result = mysql_ping(gConn[idx]);
-#endif // HAVE_MYSQL
-#if defined(HAVE_POSTGRESQL)
-    result = (PQstatus(gConn[idx]) == CONNECTION_OK) ? 0 : 1;
-#endif // HAVE_POSTGRESQL
+    result = (PQstatus(conn->conn) == CONNECTION_OK) ? 0 : 1;
+
     if (result != 0)
     {
         while (num_tries < SQL_CONN_TRIES)
@@ -572,28 +409,12 @@ int refdm_db_mgt_connected(size_t idx)
              * nm_mgr.c HAVE_MYSQL passes gMgrDB.sql_info to refdm_db_mgt_init which does the connection
              */
             refdm_db_mgt_init_con(idx, gParms);
-#ifdef HAVE_MYSQL
-            if ((result = mysql_ping(gConn[idx])) == 0)
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-                if ((result = (PQstatus(gConn[idx]) == CONNECTION_OK) ? 0 : 1) == 0)
-                {
-#endif // HAVE_POSTGRESQL
+            if ((result = (PQstatus(conn->conn) == CONNECTION_OK) ? 0 : 1) == 0)
+            {
 
-                    if (idx == DB_RPT_CON)
-                    {
-// Disable autocommit to ensure all queries are executed within a transaction to ensure consistency
-// A mysql_commit or mysql_rollback will automatically start a new transaction as the old one is closed
-#ifdef HAVE_MYSQL
-                        mysql_autocommit(gConn[DB_RPT_CON], 0);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-// TODO postgresql : turn off autocommit
-#endif // HAVE_POSTGRESQL
-                    }
-                    DB_LOG_INFO(idx, "NM DB Connection Restored", NULL, NULL);
-                    return 0;
-                }
+                DB_LOG_INFO(idx, "NM DB Connection Restored", NULL, NULL);
+                return 0;
+            }
 
             num_tries++;
         }
@@ -602,29 +423,9 @@ int refdm_db_mgt_connected(size_t idx)
     return result;
 }
 
-#ifdef HAVE_MYSQL
-static MYSQL_STMT *db_mgr_sql_prepare(size_t idx, const char *query)
-{
-    MYSQL_STMT *rtv = mysql_stmt_init(gConn[idx]);
-    if (rtv == NULL)
-    {
-        CACE_LOG_ERR("Failed to allocate statement", NULL);
-        return rtv;
-    }
-
-    if (mysql_stmt_prepare(rtv, query, strlen(query)) != 0)
-    {
-        CACE_LOG_ERR("Failed to prepare %s: errno %d, error= %s", query, mysql_stmt_errno(rtv), mysql_stmt_error(rtv));
-        mysql_stmt_close(rtv);
-        return NULL;
-    }
-    return rtv;
-}
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
 static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, int nParams, const Oid *paramTypes)
 {
-    PGresult *pgresult = PQprepare(gConn[idx], stmtName, query, nParams, paramTypes);
+    PGresult *pgresult = PQprepare(dbpool[idx].conn, stmtName, query, nParams, paramTypes);
 
     if (pgresult == NULL)
     { // out of memory or failure to send the conmmand at all
@@ -643,7 +444,6 @@ static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, i
     PQclear(pgresult);
     return stmtName;
 }
-#endif // HAVE_POSTGRESQL
 
 /******************************************************************************
  *
@@ -666,12 +466,7 @@ static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, i
  *  --------  ------------   ---------------------------------------------
  *  01/26/17  E. Birrane     Initial implementation (JHU/APL).
  *****************************************************************************/
-#ifdef HAVE_MYSQL
-int32_t refdm_db_mgt_query_fetch(int db_idx, MYSQL_RES **res, char *format, ...)
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-    int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...)
-#endif // HAVE_POSTGRESQL
+int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...)
 {
     /* Step 0: Sanity check. */
     if (format == NULL)
@@ -698,38 +493,21 @@ int32_t refdm_db_mgt_query_fetch(int db_idx, MYSQL_RES **res, char *format, ...)
     m_string_init_vprintf(query, format, args);
     va_end(args);
 
-#ifdef HAVE_MYSQL
-    int status = mysql_query(gConn[db_idx], m_string_get_cstr(query));
+    getConn(db_idx);
+    *res = PQexec(dbpool[db_idx].conn, m_string_get_cstr(query));
     m_string_clear(query);
-    if (status)
-    {
-        const char *errm = mysql_error(gConn[db_idx]);
-        CACE_LOG_ERR("Database Error: %s", errm);
-        CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
-        return RET_FAIL_DATABASE;
-    }
+    giveConn(db_idx);
 
-    if ((*res = mysql_store_result(gConn[db_idx])) == NULL)
-    {
-        CACE_LOG_ERR("Can't get result.");
-        CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
-        return RET_FAIL_DATABASE;
-    }
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-    *res = PQexec(gConn[db_idx], m_string_get_cstr(query));
-    m_string_clear(query);
     if ((PQresultStatus(*res) != PGRES_TUPLES_OK) && (PQresultStatus(*res) != PGRES_COMMAND_OK))
     {
         PQclear(*res);
-        const char *errm = PQerrorMessage(gConn[db_idx]);
+        const char *errm = PQerrorMessage(dbpool[db_idx].conn);
         CACE_LOG_ERR("Database Error: %s", errm);
         CACE_LOG_INFO("-->%d", RET_FAIL_DATABASE);
         return RET_FAIL_DATABASE;
     }
-#endif // HAVE_POSTGRESQL
 
-    CACE_LOG_INFO("-->%d", RET_PASS);
+    // CACE_LOG_INFO("-->%d", RET_PASS);
     return RET_PASS;
 }
 
@@ -771,41 +549,22 @@ int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...)
     m_string_init_vprintf(query, format, args);
     va_end(args);
 
-#ifdef HAVE_MYSQL
-    int status = mysql_query(gConn[db_idx], m_string_get_cstr(query));
+    getConn(db_idx);
+    PGresult *res = PQexec(dbpool[db_idx].conn, m_string_get_cstr(query));
     m_string_clear(query);
-    if (status)
-    {
-        const char *errm = mysql_error(gConn[db_idx]);
-        CACE_LOG_ERR("Database Error: %s", errm);
-        CACE_LOG_INFO("-->%d", 0);
-        return 0;
-    }
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-    PGresult *res = PQexec(gConn[db_idx], m_string_get_cstr(query));
-    m_string_clear(query);
+    giveConn(db_idx);
+
     if (dbtest_result(PGRES_COMMAND_OK) != 0 && dbtest_result(PGRES_TUPLES_OK) != 0)
     {
         PQclear(res);
-        const char *errm = PQerrorMessage(gConn[db_idx]);
+        const char *errm = PQerrorMessage(dbpool[db_idx].conn);
         CACE_LOG_ERR("Database Error: %s", errm);
         CACE_LOG_INFO("-->%d", 0);
         return 0;
     }
-#endif // HAVE_POSTGRESQL
 
     if (idx != NULL)
     {
-#ifdef HAVE_MYSQL
-        if ((*idx = (uint32_t)mysql_insert_id(gConn[db_idx])) == 0)
-        {
-            CACE_LOG_ERR("Unknown last inserted row.", NULL);
-            CACE_LOG_INFO("-->%d", 0);
-            return 0;
-        }
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
         // requires query string to include "RETURNING id"
         char *iptr = PQgetvalue(res, 0, 0);
         *idx       = ntohl(*((uint32_t *)iptr));
@@ -815,11 +574,8 @@ int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...)
             CACE_LOG_INFO("-->%d", 0);
             return 0;
         }
-#endif // HAVE_POSTGRESQL
     }
-#ifdef HAVE_POSTGRESQL
     PQclear(res);
-#endif // HAVE_POSTGRESQL
 
     CACE_LOG_INFO("-->%d", 1);
     return 1;
@@ -899,49 +655,32 @@ static void debugPostgresSqlResult(PGresult *res, int max_row_cnt)
 }
 
 #endif
-#if defined(HAVE_POSTGRESQL)
 
 //-------------------------------------------------------------------------------------
 int refdm_db_clear_rptset(int32_t agent_idx)
 {
-    int ecode;
-    if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return RET_FAIL_DATABASE_CONNECTION;
-    }
-
     PGresult *res = NULL;
-    ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "DELETE FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET, agent_idx);
+    int       ecode =
+        refdm_db_mgt_query_fetch(DB_REST_CON, &res, "DELETE FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET, agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to clear table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
-        pthread_mutex_unlock(&db_rest_con_use);
         return RET_FAIL_DATABASE;
     }
 
     PQclear(res);
-    pthread_mutex_unlock(&db_rest_con_use);
     return RET_PASS;
 }
 
 //-------------------------------------------------------------------------------------
 int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
 {
-    int ecode;
-    if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return RET_FAIL_DATABASE_CONNECTION;
-    }
-
-    PGresult *res = NULL;
-    ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET,
-                                     agent_idx);
+    PGresult *res   = NULL;
+    int       ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d",
+                                               TBL_NAME_RPTSET, agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to retrieve the count of table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
-        pthread_mutex_unlock(&db_rest_con_use);
         return RET_FAIL_DATABASE;
     }
 
@@ -954,29 +693,21 @@ int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
     *count = count_val;
 
     PQclear(res);
-    pthread_mutex_unlock(&db_rest_con_use);
     return RET_PASS;
 }
 
 //-------------------------------------------------------------------------------------
 int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
 {
-    int ecode;
-    if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return RET_FAIL_DATABASE_CONNECTION;
-    }
-
     // Get the rptset rows from the database
-    PGresult *res = NULL;
-    ecode         = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT %s FROM %s WHERE agent_id=%d",
-                                             COL_NAME_REPORT_LIST_CBOR, TBL_NAME_RPTSET, agent_idx);
+    PGresult *res   = NULL;
+    int       ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT %s FROM %s WHERE agent_id=%d",
+                                               COL_NAME_REPORT_LIST_CBOR, TBL_NAME_RPTSET, agent_idx);
+
     // debugPostgresSqlResult(res, 9);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to retrieve the RPTSET items.");
-        pthread_mutex_unlock(&db_rest_con_use);
         return RET_FAIL_DATABASE;
     }
 
@@ -987,7 +718,6 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
     {
         CACE_LOG_ERR("Failed to locate table column for %s", COL_NAME_REPORT_LIST_CBOR);
         PQclear(res);
-        pthread_mutex_unlock(&db_rest_con_use);
         return RET_FAIL_DATABASE;
     }
 
@@ -1008,7 +738,6 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
             // Skip to next on failure
             CACE_LOG_ERR("Database has invalid report.   row: %d   |   ecode: %d   |   errm: %s", row, ecode, errm);
             CACE_FREE(errm);
-            pthread_mutex_unlock(&db_rest_con_use);
             continue;
         }
         CACE_FREE(errm);
@@ -1020,33 +749,8 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
     CACE_LOG_INFO("Success with retrieval of rptset items. Num items: %d", num_rows);
 
     PQclear(res);
-    pthread_mutex_unlock(&db_rest_con_use);
     return RET_PASS;
 }
-
-#endif // HAVE_POSTGRESQL
-
-#ifdef HAVE_MYSQL
-
-//-------------------------------------------------------------------------------------
-int refdm_db_clear_rptset(int32_t agent_idx)
-{
-    return RET_FAIL_UNDEFINED;
-}
-
-//-------------------------------------------------------------------------------------
-int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
-{
-    return RET_FAIL_UNDEFINED;
-}
-
-//-------------------------------------------------------------------------------------
-int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
-{
-    return RET_FAIL_UNDEFINED;
-}
-
-#endif // HAVE_MYSQL
 
 /******************************************************************************
  *
@@ -1068,13 +772,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
 refdm_agent_t *refdm_db_fetch_agent(int32_t id)
 {
     refdm_agent_t *result = NULL;
-#ifdef HAVE_MYSQL
-    MYSQL_RES *res = NULL;
-    MYSQL_ROW  row;
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-    PGresult *res = NULL;
-#endif // HAVE_POSTGRESQL
+    PGresult      *res    = NULL;
 
     CACE_LOG_INFO("(%d)", id);
 
@@ -1086,34 +784,19 @@ refdm_agent_t *refdm_db_fetch_agent(int32_t id)
         return NULL;
     }
 
-#ifdef HAVE_MYSQL
-    if ((row = mysql_fetch_row(res)) != NULL)
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-        int name_fnum = PQfnumber(res, "agent_endpoint_uri");
+    int name_fnum = PQfnumber(res, "agent_endpoint_uri");
     if (PQntuples(res) != 0)
-#endif // HAVE_POSTGRESQL
     {
         m_string_t eid;
         m_string_init(eid);
-#ifdef HAVE_MYSQL
-        m_string_set_cstr(eid, row[1]);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
         m_string_set_cstr(eid, PQgetvalue(res, 0, name_fnum));
-#endif // HAVE POSTGRESQL
 
         /* Step 3: Create structure for agent */
         refdm_agent_init(result);
         m_string_set(result->eid, eid);
     }
 
-#ifdef HAVE_MYSQL
-    mysql_free_result(res);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
     PQclear(res);
-#endif // HAVE_POSTGRESQL
 
     CACE_LOG_INFO("-->%p", result);
     return result;
@@ -1121,14 +804,8 @@ refdm_agent_t *refdm_db_fetch_agent(int32_t id)
 
 int32_t refdm_db_fetch_agent_idx(const char *eid)
 {
-    int32_t result = 0;
-#ifdef HAVE_MYSQL
-    MYSQL_RES *res = NULL;
-    MYSQL_ROW  row;
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
-    PGresult *res = NULL;
-#endif // HAVE_POSTGRESQL
+    int32_t   result = 0;
+    PGresult *res    = NULL;
 
     /* Step 0: Sanity Check.*/
     if (eid == NULL)
@@ -1140,7 +817,7 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
 
     const size_t eid_len      = strlen(eid);
     char        *eid_buf      = CACE_MALLOC(2 * eid_len + 1);
-    size_t       eid_buf_used = PQescapeStringConn(gConn[DB_RPT_CON], eid_buf, eid, eid_len, NULL);
+    size_t       eid_buf_used = PQescapeStringConn(dbpool[DB_RPT_CON].conn, eid_buf, eid, eid_len, NULL);
 
     /* Step 1: Grab the OID row. */
     int status = refdm_db_mgt_query_fetch(DB_REST_CON, &res,
@@ -1153,34 +830,21 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
         return 0;
     }
 
-/* Step 2: Parse information out of the returned row. */
-#ifdef HAVE_MYSQL
-    if ((row = mysql_fetch_row(res)) != NULL)
-    {
-        result = strtol(row[0], NULL, 10);
-    }
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
+    /* Step 2: Parse information out of the returned row. */
     int agent_id_fnum = PQfnumber(res, "registered_agents_id");
     if (PQntuples(res) != 0)
     {
         result = strtol(PQgetvalue(res, 0, agent_id_fnum), NULL, 10);
     }
-#endif // HAVE_POSTGRESQL
     else
     {
         CACE_LOG_ERR("Did not find Agent with EID of %s", eid);
     }
 
-/* Step 3: Free database resources. */
-#ifdef HAVE_MYSQL
-    mysql_free_result(res);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
+    /* Step 3: Free database resources. */
     PQclear(res);
-#endif // HAVE_POSTGRESQL
 
-    CACE_LOG_INFO("-->%d", result);
+    // CACE_LOG_INFO("-->%d", result);
     return result;
 }
 
@@ -1238,6 +902,7 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
     cace_data_init(&cbordata);
     cace_ari_cbor_encode(&cbordata, val);
 
+    getConn(DB_RPT_CON);
     dbprep_declare(DB_RPT_CON, ARI_RPTSET_INSERT, 5, 1);
 
     dbprep_bind_param_byte(0, nonce_cbor.ptr, nonce_cbor.len);
@@ -1246,17 +911,9 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
     dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
     dbprep_bind_param_str(4, m_string_get_cstr(agent->eid));
 
-#ifdef HAVE_MYSQL
-    mysql_stmt_bind_param(stmt, bind_param);
-    dbprep_bind_res_int(0, rtv);
-    mysql_stmt_execute(stmt);
-    mysql_stmt_bind_result(stmt, bind_res);
-#endif // HAVE_MYSQL
-
-#ifdef HAVE_POSTGRESQL
     dbexec_prepared;
+    giveConn(DB_RPT_CON);
     PQclear(res);
-#endif // HAVE_POSTGRESQL
 
     // cleaning up vars
     m_string_clear(tp);
@@ -1280,21 +937,14 @@ uint32_t refdm_db_insert_agent(const m_string_t eid)
     uint32_t rtv = 0;
     int64_t  id;
 
+    getConn(DB_RPT_CON);
     dbprep_declare(DB_RPT_CON, ARI_AGENT_INSERT, 1, 1);
     dbprep_bind_param_str(0, m_string_get_cstr(eid));
 
-#ifdef HAVE_MYSQL
-    mysql_stmt_bind_param(stmt, bind_param);
-    dbprep_bind_res_int(0, rtv);
-    mysql_stmt_execute(stmt);
-    mysql_stmt_bind_result(stmt, bind_res);
-#endif // HAVE_MYSQL
-
-#ifdef HAVE_POSTGRESQL
     dbexec_prepared;
+    giveConn(DB_RPT_CON);
     PQclear(res);
-#endif // HAVE_POSTGRESQL
-       // cleaning up vars
+    // cleaning up vars
     return rtv;
 }
 // cace_ari_execset_t
@@ -1326,6 +976,7 @@ uint32_t refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *age
     cace_data_init(&cbordata);
     cace_ari_cbor_encode(&cbordata, val);
 
+    getConn(DB_RPT_CON);
     dbprep_declare(DB_RPT_CON, ARI_EXECSET_INSERT, 5, 1);
 
     // p_nonce_cbor BYTEA, p_user_desc varchar, p_agent_id varchar, p_exec_set BYTEA, p_num_entries INT
@@ -1335,17 +986,9 @@ uint32_t refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *age
     dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
     dbprep_bind_param_int(4, cace_ari_list_size(execset->targets));
 
-#ifdef HAVE_MYSQL
-    mysql_stmt_bind_param(stmt, bind_param);
-    dbprep_bind_res_int(0, rtv);
-    mysql_stmt_execute(stmt);
-    mysql_stmt_bind_result(stmt, bind_res);
-#endif // HAVE_MYSQL
-
-#ifdef HAVE_POSTGRESQL
     dbexec_prepared;
+    giveConn(DB_RPT_CON);
     PQclear(res);
-#endif // HAVE_POSTGRESQL
 
     // cleaning up vars
     cace_data_deinit(&cbordata);
