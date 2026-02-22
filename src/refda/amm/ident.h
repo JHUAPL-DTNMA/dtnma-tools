@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -38,7 +38,7 @@ typedef struct
     /** The bound object being used, which is bound based on #name.
      * This is always a reference to an externally-owned object.
      */
-    const struct refda_amm_ident_desc_s *ident;
+    struct refda_amm_ident_desc_s *ident;
 } refda_amm_ident_base_t;
 
 void refda_amm_ident_base_init(refda_amm_ident_base_t *obj);
@@ -49,10 +49,14 @@ void refda_amm_ident_base_init_set(refda_amm_ident_base_t *obj, const refda_amm_
 
 void refda_amm_ident_base_set(refda_amm_ident_base_t *obj, const refda_amm_ident_base_t *src);
 
+void refda_amm_ident_base_set_move(refda_amm_ident_base_t *obj, refda_amm_ident_base_t *src);
+
+void refda_amm_ident_base_get_str(m_string_t out, const refda_amm_ident_base_t *obj, bool append);
+
 /** Set the name and perform a reference lookup on this object.
  *
  * @param[in,out] obj The object to set.
- * @param[in] ref The new name.
+ * @param[in] ref The optional new name. If null pointer, the existing name is kept.
  * @param[in] objs The object store to search.
  * @return Zero if the lookup was fully successful.
  */
@@ -61,17 +65,20 @@ int refda_amm_ident_base_populate(refda_amm_ident_base_t *obj, const cace_ari_t 
 /// M*LIB OPLIST for refda_amm_ident_base_t
 #define M_OPL_refda_amm_ident_base_t()                                                       \
     (INIT(API_2(refda_amm_ident_base_init)), INIT_SET(API_6(refda_amm_ident_base_init_set)), \
-     CLEAR(API_2(refda_amm_ident_base_deinit)), SET(API_6(refda_amm_ident_base_set)))
+     CLEAR(API_2(refda_amm_ident_base_deinit)), SET(API_6(refda_amm_ident_base_set)),        \
+     MOVE(API_6(refda_amm_ident_base_set_move)))
 
 /** @struct refda_amm_ident_base_list_t
- * A list of dereferenced IDENT objects.
+ * A list of dereferenced IDENT objects as refda_amm_ident_base_t.
  */
 /** @struct refda_amm_ident_base_ptr_set_t
  * A set of pointers to dereferenced IDENT objects.
  */
 /// @cond Doxygen_Suppress
 M_ARRAY_DEF(refda_amm_ident_base_list, refda_amm_ident_base_t)
-M_RBTREE_DEF(refda_amm_ident_base_ptr_set, refda_amm_ident_base_t *, M_PTR_OPLIST)
+M_RBTREE_DEF(refda_amm_ident_base_ptr_set, refda_amm_ident_base_t *,
+             M_OPEXTEND(M_PTR_OPLIST, GET_STR(refda_amm_ident_base_get_str)))
+M_ARRAY_DEF(cace_amm_lookup_list, cace_amm_lookup_t)
 /// @endcond
 
 /** An IDENT descriptor.
@@ -79,10 +86,20 @@ M_RBTREE_DEF(refda_amm_ident_base_ptr_set, refda_amm_ident_base_t *, M_PTR_OPLIS
  */
 typedef struct refda_amm_ident_desc_s
 {
+    /** Abstract marking from the model.
+     * If true, the object is not usable in some contexts.
+     */
+    bool abstract;
+
     /** All base IDENT objects for this object.
      * This list will not change during the lifetime of the IDENT.
      */
     refda_amm_ident_base_list_t bases;
+
+    /** All IDENT objects with this object as a base.
+     * This list can change as other objects are updated.
+     */
+    cace_amm_lookup_list_t derived;
 
     /** Optional ADM data associated with this object.
      */

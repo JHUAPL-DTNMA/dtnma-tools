@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -93,12 +93,13 @@ int cace_amm_type_set_use_from_name(cace_amm_type_t *type, const cace_amm_lookup
  *
  * @param[out] type The type to initialize and populate.
  * @param[in] name The ARITYPE literal or TYPEDEF reference value.
+ * @return Non-NULL upon success.
  */
-void cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name);
+cace_amm_semtype_use_t *cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name);
 /** @overload
  * Set the name with move semantics.
  */
-void cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name);
+cace_amm_semtype_use_t *cace_amm_type_set_use_ref_move(cace_amm_type_t *type, cace_ari_t *name);
 
 /** Create a use type based on a base type object.
  * A use type adds annotations and constraints onto a base type.

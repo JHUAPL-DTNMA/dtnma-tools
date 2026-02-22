@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -17,6 +17,7 @@
  */
 #include "algo.h"
 #include "containers.h"
+#include "text.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include "cace/amm/numeric.h"
@@ -253,7 +254,8 @@ static int cace_ari_map_ac(cace_ari_ac_t *out, const cace_ari_ac_t *in, const ca
     {
         const cace_ari_t *in_item  = cace_ari_list_cref(it);
         cace_ari_t       *out_item = cace_ari_list_push_back_new(out->items);
-        retval                     = cace_ari_translate_ari(out_item, in_item, translator, ctx);
+
+        retval = cace_ari_translate_ari(out_item, in_item, translator, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -294,7 +296,8 @@ static int cace_ari_map_tbl(cace_ari_tbl_t *out, const cace_ari_tbl_t *in, const
     {
         const cace_ari_t *in_item  = cace_ari_array_cref(it);
         cace_ari_t        out_item = CACE_ARI_INIT_UNDEFINED;
-        retval                     = cace_ari_translate_ari(&out_item, in_item, translator, ctx);
+
+        retval = cace_ari_translate_ari(&out_item, in_item, translator, ctx);
         cace_ari_array_push_move(out->items, &out_item);
         CHKERRVAL(retval);
     }
@@ -307,15 +310,21 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
     int retval = 0;
 
     // handle main ARI first
+    cace_ari_translate_result_t res = CACE_ARI_TRANSLATE_DEFAULT;
     if (translator->map_ari)
     {
-        retval = translator->map_ari(out, in, ctx);
-        CHKERRVAL(retval);
+        res = translator->map_ari(out, in, ctx);
+        if (res == CACE_ARI_TRANSLATE_FAILURE)
+        {
+            return 2;
+        }
+        if (res == CACE_ARI_TRANSLATE_FINAL)
+        {
+            // all done
+            return 0;
+        }
     }
-    else
-    {
-        out->is_ref = in->is_ref;
-    }
+    // at this point res == CACE_ARI_TRANSLATE_DEFAULT
 
     cace_ari_translate_ctx_t sub_ctx = {
         .parent     = in,
@@ -323,6 +332,7 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
         .user_data  = ctx->user_data,
     };
 
+    out->is_ref = in->is_ref;
     if (in->is_ref)
     {
         if (translator->map_objpath)
@@ -531,60 +541,6 @@ size_t cace_ari_hash(const cace_ari_t *ari)
     cace_ari_visit((cace_ari_t *)ari, &visitor, &accum);
     accum = M_HASH_FINAL(accum);
     return accum;
-}
-
-static bool cace_ari_objpath_cmp(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right)
-{
-    int part_cmp = cace_ari_idseg_cmp(&(left->org_id), &(right->org_id));
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-    part_cmp = cace_ari_idseg_cmp(&(left->model_id), &(right->model_id));
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-    part_cmp = cace_ari_date_cmp(&(left->model_rev), &(right->model_rev));
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-
-    // prefer derived values
-    if (left->has_ari_type && right->has_ari_type)
-    {
-        part_cmp = left->ari_type < right->ari_type;
-    }
-    else
-    {
-        part_cmp = cace_ari_idseg_cmp(&(left->type_id), &(right->type_id));
-    }
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-
-    return cace_ari_idseg_cmp(&(left->obj_id), &(right->obj_id));
-}
-
-static bool cace_ari_objpath_equal(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right)
-{
-    // prefer derived values
-    bool type_equal;
-    if (left->has_ari_type && right->has_ari_type)
-    {
-        type_equal = left->ari_type == right->ari_type;
-    }
-    else
-    {
-        type_equal = cace_ari_idseg_equal(&(left->type_id), &(right->type_id));
-    }
-
-    return (cace_ari_idseg_equal(&(left->org_id), &(right->org_id))
-            && cace_ari_idseg_equal(&(left->model_id), &(right->model_id))
-            && (cace_ari_date_cmp(&(left->model_rev), &(right->model_rev)) == 0) && type_equal
-            && cace_ari_idseg_equal(&(left->obj_id), &(right->obj_id)));
 }
 
 static int cace_ari_params_cmp(const cace_ari_params_t *left, const cace_ari_params_t *right)
@@ -901,5 +857,21 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
         cace_ari_deinit(&lt_prom);
         cace_ari_deinit(&rt_prom);
         return result;
+    }
+}
+
+void cace_ari_get_str(m_string_t out, const cace_ari_t obj, bool append)
+{
+    m_string_t buf;
+    m_string_init(buf);
+    cace_ari_text_encode(buf, &obj, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    if (append)
+    {
+        m_string_cat(out, buf);
+        m_string_clear(buf);
+    }
+    else
+    {
+        m_string_move(out, buf);
     }
 }

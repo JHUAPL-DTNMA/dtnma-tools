@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+# Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
 # Laboratory LLC.
 #
 # This file is part of the Delay-Tolerant Networking Management
@@ -40,8 +40,11 @@ def compose_args(args: List[str]) -> List[str]:
     needed to run from the `testroot` environment.
     '''
     args = list(args)
-    if os.environ.get('TEST_MEMCHECK', ''):
-        valgrind = [
+
+    wrap = os.environ.get('TEST_EXEC_WRAP', '').casefold()
+    prefix = []
+    if wrap == 'memcheck':
+        prefix = [
             'valgrind',
             '--tool=memcheck',
             '--leak-check=full',
@@ -49,8 +52,14 @@ def compose_args(args: List[str]) -> List[str]:
             '--gen-suppressions=all',
             '--error-exitcode=2',
         ]
-        args = valgrind + args
-    args = [os.path.join(PROJPATH, 'run.sh')] + args
+    elif wrap == 'gdb':
+        prefix = [
+            'gdb',
+            '-batch', '-ex', 'run', '-ex', 'bt',
+            '--args'
+        ]
+
+    args = [os.path.join(PROJPATH, 'run.sh')] + prefix + args
     return args
 
 
@@ -224,7 +233,7 @@ class CmdRunner:
         LOGGER.debug('Stopping stdin thread')
         stream.close()
 
-    def wait_for_line(self, timeout:float=5) -> str:
+    def wait_for_line(self, timeout: float=5) -> str:
         ''' Wait for any received stdout line.
 
         :param timeout: The total time to wait for this line.
@@ -237,7 +246,7 @@ class CmdRunner:
             raise TimeoutError('no lines received before timeout')
         return text
 
-    def wait_for_text(self, pattern:str, timeout:float=5) -> str:
+    def wait_for_text(self, pattern: str, timeout: float=5) -> str:
         ''' Iterate through the received stdout lines until a specific
         full matching line is seen.
 
@@ -264,7 +273,7 @@ class CmdRunner:
                 if expr.match(text) is not None:
                     return text
 
-    def send_stdin(self, text:str):
+    def send_stdin(self, text: str):
         ''' Send an exact line of text to the process stdin.
 
         :param text: The line to send, which should include a newline

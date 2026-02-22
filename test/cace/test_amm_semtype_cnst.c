@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -54,6 +54,64 @@ static void check_cnst(const cace_amm_semtype_cnst_t *cnst, const char *inhex, b
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect, res, "cace_amm_semtype_cnst_is_valid() failed");
 
     cace_ari_deinit(&val);
+}
+
+TEST_CASE("F7", false)     // ari:undefined
+TEST_CASE("F6", false)     // ari:null
+TEST_CASE("F4", false)     // ari:false
+TEST_CASE("626869", false) // ari:"hi"
+TEST_CASE("426869", false) // ari:'hi'
+TEST_CASE("F90000", false) // ari:0.0 not implicitly convertable to int
+TEST_CASE("29", false)     // ari:-10
+TEST_CASE("25", false)     // ari:-6
+TEST_CASE("24", true)      // ari:-5
+TEST_CASE("00", true)      // ari:0
+TEST_CASE("05", true)      // ari:5
+TEST_CASE("06", false)     // ari:6
+TEST_CASE("0A", false)     // ari:10
+void test_amm_semtype_cnst_range_int64_1intvl_finite(const char *inhex, bool expect)
+{
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    cace_amm_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(&cnst);
+    TEST_ASSERT_NOT_NULL(range);
+    {
+        cace_amm_range_intvl_int64_t intvl;
+        cace_amm_range_intvl_int64_set_finite(&intvl, -5, 5);
+        cace_amm_range_intvl_int64_seq_push(range->intvls, intvl);
+    }
+
+    check_cnst(&cnst, inhex, expect);
+    cace_amm_semtype_cnst_deinit(&cnst);
+}
+
+TEST_CASE("F7", false)     // ari:undefined
+TEST_CASE("F6", false)     // ari:null
+TEST_CASE("F4", false)     // ari:false
+TEST_CASE("626869", false) // ari:"hi"
+TEST_CASE("426869", false) // ari:'hi'
+TEST_CASE("F90000", false) // ari:0.0 not implicitly convertable to int
+TEST_CASE("29", false)     // ari:-10
+TEST_CASE("25", false)     // ari:-6
+TEST_CASE("00", true)      // ari:0x00 empty is fine
+TEST_CASE("01", false)     // ari:0x01 disallowed is set
+TEST_CASE("02", false)     // ari:0x02 disallowed is set
+TEST_CASE("04", true)      // ari:0x04 lowest set
+TEST_CASE("08", true)      // ari:0x08 mid set
+TEST_CASE("183c", true)    // ari:0x3C all set
+TEST_CASE("1820", true)    // ari:0x20 highest set
+TEST_CASE("1821", false)   // ari:0x21 one disallowed is set
+TEST_CASE("1840", false)   // ari:0x40 disallowed is set
+void test_amm_semtype_cnst_int_bits_1intvl_finite(const char *inhex, bool expect)
+{
+    cace_amm_semtype_cnst_t cnst;
+    cace_amm_semtype_cnst_init(&cnst);
+    uint64_t *mask = cace_amm_semtype_cnst_set_int_bits(&cnst);
+    TEST_ASSERT_NOT_NULL(mask);
+    *mask = 0x3C;
+
+    check_cnst(&cnst, inhex, expect);
+    cace_amm_semtype_cnst_deinit(&cnst);
 }
 
 TEST_CASE("F7", false)             // ari:undefined
@@ -198,33 +256,5 @@ void test_amm_semtype_cnst_textpat(const char *pat, const char *inhex, bool expe
     TEST_ASSERT_EQUAL_INT(100, res);
 #endif /* PCRE_FOUND */
 
-    cace_amm_semtype_cnst_deinit(&cnst);
-}
-
-TEST_CASE("F7", false)     // ari:undefined
-TEST_CASE("F6", false)     // ari:null
-TEST_CASE("F4", false)     // ari:false
-TEST_CASE("626869", false) // ari:"hi"
-TEST_CASE("426869", false) // ari:'hi'
-TEST_CASE("29", false)     // ari:-10
-TEST_CASE("25", false)     // ari:-6
-TEST_CASE("24", true)      // ari:-5
-TEST_CASE("00", true)      // ari:0
-TEST_CASE("05", true)      // ari:5
-TEST_CASE("06", false)     // ari:6
-TEST_CASE("0A", false)     // ari:10
-void test_amm_semtype_cnst_range_int64_1intvl_finite(const char *inhex, bool expect)
-{
-    cace_amm_semtype_cnst_t cnst;
-    cace_amm_semtype_cnst_init(&cnst);
-    cace_amm_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(&cnst);
-    TEST_ASSERT_NOT_NULL(range);
-    {
-        cace_amm_range_intvl_int64_t intvl;
-        cace_amm_range_intvl_int64_set_finite(&intvl, -5, 5);
-        cace_amm_range_intvl_int64_seq_push(range->intvls, intvl);
-    }
-
-    check_cnst(&cnst, inhex, expect);
     cace_amm_semtype_cnst_deinit(&cnst);
 }

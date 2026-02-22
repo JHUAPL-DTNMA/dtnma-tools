@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -41,6 +41,12 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM 1
 
 /*
+ * Enumerations for TYPEDEF objects
+ */
+/// For ./TYPEDEF/tbl-row-filter
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_TBL_ROW_FILTER 0
+
+/*
  * Enumerations for CONST objects
  */
 /// For ./CONST/hello
@@ -55,8 +61,6 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_SW_VERSION 1
 /// For ./EDD/capability
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_CAPABILITY 2
-/// For ./EDD/last-msg-rx-time
-#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_LAST_MSG_RX_TIME 17
 /// For ./EDD/num-msg-rx
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_NUM_MSG_RX 3
 /// For ./EDD/num-msg-rx-failed
