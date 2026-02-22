@@ -61,8 +61,9 @@ typedef enum db_con_e
     MGR_NUM_SQL_CONNECTIONS
 } db_con_t;
 
-typedef struct refdm_db_pool_t {
-    PGconn *conn;
+typedef struct refdm_db_pool_t
+{
+    PGconn         *conn;
     pthread_mutex_t lock;
 } refdm_db_pool_t;
 
@@ -70,8 +71,8 @@ typedef struct refdm_db_pool_t {
 refdm_db_pool_t dbpool[MGR_NUM_SQL_CONNECTIONS];
 
 #define checkConn(idx) (idx < MGR_NUM_SQL_CONNECTIONS && dbpool[idx].conn != NULL)
-#define getConn(idx) pthread_mutex_lock(&dbpool[idx].lock)
-#define giveConn(idx) pthread_mutex_unlock(&dbpool[idx].lock)
+#define getConn(idx)   pthread_mutex_lock(&dbpool[idx].lock)
+#define giveConn(idx)  pthread_mutex_unlock(&dbpool[idx].lock)
 
 static refdm_db_t *gParms;
 
@@ -148,7 +149,7 @@ static char *queries[MGR_NUM_SQL_CONNECTIONS][MGR_NUM_QUERIES];
     paramFormats[idx] = 1;
 
 #define dbprep_declare(dbidx, idx, params, cols)       \
-    PGconn     *conn     = dbpool[dbidx].conn;        \
+    PGconn     *conn     = dbpool[dbidx].conn;         \
     char       *stmtName = queries[dbidx][idx];        \
     int         nParams  = params;                     \
     const char *paramValues[nParams];                  \
@@ -223,7 +224,7 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
 
     dbexec_prepared;
     giveConn(dbidx);
-        
+
     DB_CHKVOID(dbtest_result(PGRES_COMMAND_OK))
     PQclear(res);
 
@@ -253,9 +254,10 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
 uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log)
 {
 
-    for(size_t i = 0; i < MGR_NUM_SQL_CONNECTIONS; i++) {
+    for (size_t i = 0; i < MGR_NUM_SQL_CONNECTIONS; i++)
+    {
         CACE_LOG_INFO("Initiating DB Pool idx %i", i);
-        refdm_db_mgt_init_con(i, parms);        
+        refdm_db_mgt_init_con(i, parms);
     }
 
     CACE_LOG_INFO("-->0");
@@ -270,7 +272,8 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 {
     refdm_db_pool_t *conn = &dbpool[idx];
 
-    if (idx >= MGR_NUM_SQL_CONNECTIONS) {
+    if (idx >= MGR_NUM_SQL_CONNECTIONS)
+    {
         CACE_LOG_ERR("Invalid DB pool index %d", idx);
         return 0;
     }
@@ -278,8 +281,8 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
     {
         // Initialize mutex
         pthread_mutex_init(&conn->lock, NULL);
-        
-        // Initialize connection        
+
+        // Initialize connection
         gParms = parms;
 
         conn->conn = PQsetdbLogin(parms->server, NULL, NULL, NULL, parms->database, parms->username, parms->password);
@@ -318,7 +321,6 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
         queries[idx][ARI_EXECSET_INSERT] =
             db_mgr_sql_prepare(idx, "call SP__insert_execset($1::bytea, $2::varchar, $3::varchar, $4::bytea, $5::int4)",
                                "SP__insert_execset", 5, NULL);
-
     }
 
     CACE_LOG_INFO("refdm_db_mgt_init -->1");
@@ -350,13 +352,14 @@ void refdm_db_mgt_close(void)
 void refdm__db_mgt_close_conn(size_t idx)
 {
     refdm_db_pool_t *conn = &dbpool[idx];
-    
+
     if (conn->conn != NULL)
     {
-        if (pthread_mutex_trylock(&conn->lock) ) {
+        if (pthread_mutex_trylock(&conn->lock))
+        {
             CACE_LOG_WARNING("refdm_db_mgt_close_conn; Unable to lock connection. Attempting to force close anyway");
         }
-        
+
         /* close the connection to the database and cleanup */
         PQfinish(conn->conn);
 
@@ -386,9 +389,9 @@ void refdm__db_mgt_close_conn(size_t idx)
 
 int refdm_db_mgt_connected(size_t idx)
 {
-    int     result    = -1;
-    uint8_t num_tries = 0;
-    refdm_db_pool_t *conn = &dbpool[idx];
+    int              result    = -1;
+    uint8_t          num_tries = 0;
+    refdm_db_pool_t *conn      = &dbpool[idx];
 
     if (!checkConn(idx))
     {
@@ -494,7 +497,7 @@ int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...)
     *res = PQexec(dbpool[db_idx].conn, m_string_get_cstr(query));
     m_string_clear(query);
     giveConn(db_idx);
-    
+
     if ((PQresultStatus(*res) != PGRES_TUPLES_OK) && (PQresultStatus(*res) != PGRES_COMMAND_OK))
     {
         PQclear(*res);
@@ -504,8 +507,7 @@ int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...)
         return RET_FAIL_DATABASE;
     }
 
-
-    //CACE_LOG_INFO("-->%d", RET_PASS);
+    // CACE_LOG_INFO("-->%d", RET_PASS);
     return RET_PASS;
 }
 
@@ -551,7 +553,7 @@ int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...)
     PGresult *res = PQexec(dbpool[db_idx].conn, m_string_get_cstr(query));
     m_string_clear(query);
     giveConn(db_idx);
-    
+
     if (dbtest_result(PGRES_COMMAND_OK) != 0 && dbtest_result(PGRES_TUPLES_OK) != 0)
     {
         PQclear(res);
@@ -574,7 +576,7 @@ int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...)
         }
     }
     PQclear(res);
-    
+
     CACE_LOG_INFO("-->%d", 1);
     return 1;
 }
@@ -658,7 +660,8 @@ static void debugPostgresSqlResult(PGresult *res, int max_row_cnt)
 int refdm_db_clear_rptset(int32_t agent_idx)
 {
     PGresult *res = NULL;
-    int ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "DELETE FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET, agent_idx);
+    int       ecode =
+        refdm_db_mgt_query_fetch(DB_REST_CON, &res, "DELETE FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET, agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to clear table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
@@ -672,9 +675,9 @@ int refdm_db_clear_rptset(int32_t agent_idx)
 //-------------------------------------------------------------------------------------
 int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
 {
-    PGresult *res = NULL;
-    int ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET,
-                                     agent_idx);
+    PGresult *res   = NULL;
+    int       ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d",
+                                               TBL_NAME_RPTSET, agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to retrieve the count of table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
@@ -697,10 +700,10 @@ int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
 int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
 {
     // Get the rptset rows from the database
-    PGresult *res = NULL;
-    int ecode         = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT %s FROM %s WHERE agent_id=%d",
-                                             COL_NAME_REPORT_LIST_CBOR, TBL_NAME_RPTSET, agent_idx);
-    
+    PGresult *res   = NULL;
+    int       ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT %s FROM %s WHERE agent_id=%d",
+                                               COL_NAME_REPORT_LIST_CBOR, TBL_NAME_RPTSET, agent_idx);
+
     // debugPostgresSqlResult(res, 9);
     if (ecode != RET_PASS)
     {
@@ -769,7 +772,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
 refdm_agent_t *refdm_db_fetch_agent(int32_t id)
 {
     refdm_agent_t *result = NULL;
-    PGresult *res = NULL;
+    PGresult      *res    = NULL;
 
     CACE_LOG_INFO("(%d)", id);
 
@@ -801,8 +804,8 @@ refdm_agent_t *refdm_db_fetch_agent(int32_t id)
 
 int32_t refdm_db_fetch_agent_idx(const char *eid)
 {
-    int32_t result = 0;
-    PGresult *res = NULL;
+    int32_t   result = 0;
+    PGresult *res    = NULL;
 
     /* Step 0: Sanity Check.*/
     if (eid == NULL)
@@ -827,7 +830,7 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
         return 0;
     }
 
-/* Step 2: Parse information out of the returned row. */
+    /* Step 2: Parse information out of the returned row. */
     int agent_id_fnum = PQfnumber(res, "registered_agents_id");
     if (PQntuples(res) != 0)
     {
@@ -838,10 +841,10 @@ int32_t refdm_db_fetch_agent_idx(const char *eid)
         CACE_LOG_ERR("Did not find Agent with EID of %s", eid);
     }
 
-/* Step 3: Free database resources. */
+    /* Step 3: Free database resources. */
     PQclear(res);
 
-    //CACE_LOG_INFO("-->%d", result);
+    // CACE_LOG_INFO("-->%d", result);
     return result;
 }
 
@@ -941,7 +944,7 @@ uint32_t refdm_db_insert_agent(const m_string_t eid)
     dbexec_prepared;
     giveConn(DB_RPT_CON);
     PQclear(res);
-       // cleaning up vars
+    // cleaning up vars
     return rtv;
 }
 // cace_ari_execset_t
@@ -986,7 +989,6 @@ uint32_t refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *age
     dbexec_prepared;
     giveConn(DB_RPT_CON);
     PQclear(res);
-    
 
     // cleaning up vars
     cace_data_deinit(&cbordata);
