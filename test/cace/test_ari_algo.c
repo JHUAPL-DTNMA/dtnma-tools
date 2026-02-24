@@ -33,34 +33,38 @@ M_BPTREE_DEF2(test_seen_ari, 4, m_string_t, M_STRING_OPLIST, cace_ari_t, M_OPL_c
 
 /// A collection of unique ARIs in binary form for testing comparisons
 static const char *different_aris[] = {
-    "F7",             // ari:undefined
-    "F6",             // ari:null
-    "F4",             // ari:false
-    "1864",           // ari:100
-    "F90000",         // ari:0.0
-    "F97E00",         // ari:NaN
-    "40",             // ari:h''
-    "426869",         // ari:h'6869'
-    "60",             // ari:%22%22
-    "626869",         // ari:%22hi%22
-    "8201F4",         // ari:/bool/false
-    "8201F5",         // ari:/bool/true
-    "82021864",       // ari:/byte/100
-    "82041864",       // ari:/int/100
-    "82051864",       // ari:/uint/100
-    "82061864",       // ari:/vast/100
-    "82071864",       // ari:/uvast/100
-    "8208F95640",     // ari:/real32/100.0
-    "8209F95640",     // ari:/real64/100.0
-    "821180",         // ari:/AC/()
-    "821182F6820417", // ari:/AC/(null,/INT/23)
-    "8212A0",         // ari:/AM/()
-    "8212A101F5",     // ari:/AM/(1=true)
-    "8212A11864F5",   // ari:/AM/(100=true)
-    "8212A1F90000F5", // ari:/AM/(0.0=true)
-    "8212A1F97E00F5", // ari:/AM/(NaN=true)
-    "82138103",       // ari:/TBL/c=3;
-    "82138403010203", // ari:/TBL/c=3;(1,2,3)
+    "F7",                     // ari:undefined
+    "F6",                     // ari:null
+    "F4",                     // ari:false
+    "1864",                   // ari:100
+    "F90000",                 // ari:0.0
+    "F97E00",                 // ari:NaN
+    "40",                     // ari:h''
+    "426869",                 // ari:h'6869'
+    "60",                     // ari:%22%22
+    "626869",                 // ari:%22hi%22
+    "8201F4",                 // ari:/bool/false
+    "8201F5",                 // ari:/bool/true
+    "82021864",               // ari:/byte/100
+    "82041864",               // ari:/int/100
+    "82051864",               // ari:/uint/100
+    "82061864",               // ari:/vast/100
+    "82071864",               // ari:/uvast/100
+    "8208F95640",             // ari:/real32/100.0
+    "8209F95640",             // ari:/real64/100.0
+    "821180",                 // ari:/AC/()
+    "821182F6820417",         // ari:/AC/(null,/INT/23)
+    "8212A0",                 // ari:/AM/()
+    "8212A101F5",             // ari:/AM/(1=true)
+    "8212A11864F5",           // ari:/AM/(100=true)
+    "8212A1F90000F5",         // ari:/AM/(0.0=true)
+    "8212A1F97E00F5",         // ari:/AM/(NaN=true)
+    "82138103",               // ari:/TBL/c=3;
+    "82138403010203",         // ari:/TBL/c=3;(1,2,3)
+    "82181884F5F5F5F5",       // ari:/OBJPAT/(*)(*)(*)(*)")
+    "8218188420F5F5F5",       // ari:/OBJPAT/(-1)(*)(*)(*)")
+    "8218188419FFFF2921182D", // ari:/OBJPAT/(65535)(-10)(-2)(45)
+                              //    "8218188419FFFF8429090000F5820A185A", // ari:/OBJPAT/(65535)(-10..-1,1)(*)(10..100)
 
     "85676578616D706C656474657374646374726C6474686174811822", // ari://test/ctrl/that(34)
     "8519FFFF02220481626869",                                 // ari://65535/2/-3/4(hi)
@@ -134,7 +138,7 @@ void test_ari_hash(void)
             TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
 
             const size_t hash_b = cace_ari_hash(&ari_b);
-            TEST_ASSERT_EQUAL_INT_MESSAGE(val_hash, hash_b, "hashes from same data differ");
+            TEST_ASSERT_EQUAL_size_t_MESSAGE(val_hash, hash_b, "hashes from same data differ");
             cace_ari_deinit(&ari_b);
             cace_data_deinit(&indata);
         }
@@ -146,7 +150,7 @@ void test_ari_hash(void)
             const test_seen_ari_itref_t *oth_pair = test_seen_ari_cref(oth_it);
 
             const size_t oth_hash = cace_ari_hash(oth_pair->value_ptr);
-            TEST_ASSERT_NOT_EQUAL_INT(val_hash, oth_hash);
+            TEST_ASSERT_NOT_EQUAL_size_t_MESSAGE(val_hash, oth_hash, "hashes from different data match");
         }
     }
 }

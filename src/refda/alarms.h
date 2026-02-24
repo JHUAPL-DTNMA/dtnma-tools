@@ -190,6 +190,46 @@ M_DICT_DEF2(refda_alarms_entry_index, refda_alarms_entry_key_t, M_OPL_refda_alar
 // GCOV_EXCL_STOP
 /// @endcond
 
+/** Each entry of the shelf list.
+ *
+ */
+typedef struct
+{
+    /// Patterns for matching resource
+    cace_ari_objpat_t resources;
+    /// Patterns for matching category
+    cace_ari_objpat_t categories;
+
+} refda_alarms_shelf_entry_t;
+
+void refda_alarms_shelf_entry_init(refda_alarms_shelf_entry_t *obj);
+
+void refda_alarms_shelf_entry_deinit(refda_alarms_shelf_entry_t *obj);
+
+bool refda_alarms_shelf_entry_equal(const refda_alarms_shelf_entry_t *left, const refda_alarms_shelf_entry_t *right);
+
+size_t refda_alarms_shelf_entry_hash(const refda_alarms_shelf_entry_t *obj);
+
+/// M*LIB oplist for ::refda_alarms_shelf_entry_t
+#define M_OPL_refda_alarms_shelf_entry_t()                                                      \
+    (INIT(API_2(refda_alarms_shelf_entry_init)), CLEAR(API_2(refda_alarms_shelf_entry_deinit)), \
+     EQUAL(API_6(refda_alarms_shelf_entry_equal)), HASH(API_2(refda_alarms_shelf_entry_hash)))
+
+/** @struct refda_alarms_shelf_entry_set
+ * A set of unique ::refda_alarms_shelf_entry_t values.
+ */
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+M_DICT_SET_DEF(refda_alarms_shelf_entry_set, refda_alarms_shelf_entry_t, M_OPL_refda_alarms_shelf_entry_t())
+// GCOV_EXCL_STOP
+/// @endcond
+
+/** Check whether an alarm key matches a shelf entry.
+ *
+ */
+bool refda_alarms_shelf_entry_match(const refda_alarms_shelf_entry_t *obj, const cace_amm_lookup_t *resource,
+                                    const cace_amm_lookup_t *category);
+
 /** Storage of the agent alarms list and shelving config.
  */
 typedef struct
@@ -201,6 +241,10 @@ typedef struct
     refda_alarms_entry_index_t alarm_index;
     /// Mutex for the state of #alarm_list and #alarm_index
     pthread_mutex_t alarm_mutex;
+
+    refda_alarms_shelf_entry_set_t shelf_list;
+    /// Mutex for the state of #shelf_list
+    pthread_mutex_t shelf_mutex;
 
 } refda_alarms_t;
 

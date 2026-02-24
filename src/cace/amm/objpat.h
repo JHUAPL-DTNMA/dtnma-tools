@@ -24,29 +24,52 @@
 
 #include "lookup.h"
 #include "cace/ari/objpat.h"
-#include <m-deque.h>
+#include <m-dict.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool cace_amm_objpat_match(const cace_ari_objpat_t *obj, const cace_amm_lookup_t *deref);
+
+int cace_amm_objpat_from_value(cace_ari_objpat_t *obj, const cace_ari_t *val);
+
+int cace_amm_objpat_to_value(const cace_ari_objpat_t *obj, cace_ari_t *val);
 
 /** @struct cace_amm_objpat_set_t
  * Set of ::cace_ari_objpat_t instances to use for matching objects.
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_DEQUE_DEF(cace_amm_objpat_set, cace_ari_objpat_t)
+M_DICT_SET_DEF(cace_amm_objpat_set, cace_ari_objpat_t)
 // GCOV_EXCL_STOP
 /// @endcond
 
 /** Extract a copy of a pattern set from a literal value.
  *
+ * @param[in,out] obj The empty pattern to set.
+ * @param[in] val The value to copy out of, which must be either
+ * an OBJPAT itself or an AC of OBJPAT values.
  * @return Zero if successful.
  */
 int cace_amm_objpat_set_from_value(cace_amm_objpat_set_t obj, const cace_ari_t *val);
 
-/** Determine if a specific dereferenced object matches a pattern set.
+int cace_amm_objpat_set_to_value(const cace_amm_objpat_set_t obj, cace_ari_t *val);
+
+/** Construct a pattern to match a specific object.
+ * Integer ID parts are preferred here.
  *
+ * @param[in,out] obj The empty pattern to set.
+ * @param[in] deref The dereferenced object to match.
+ * @return Zero if successful.
+ */
+int cace_amm_objpat_set_from_obj(cace_amm_objpat_set_t obj, const cace_amm_lookup_t *deref);
+
+/** Determine if a specific dereferenced object matches a pattern set.
+ * Both integer and text ID parts are checked as needed.
+ *
+ * @param[in,out] obj The empty pattern to match against.
+ * @param[in] deref The dereferenced object to match.
  * @return True if it is a match.
  */
 bool cace_amm_objpat_set_match(const cace_amm_objpat_set_t obj, const cace_amm_lookup_t *deref);

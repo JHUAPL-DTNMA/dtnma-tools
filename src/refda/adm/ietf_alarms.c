@@ -235,6 +235,41 @@ static void refda_adm_ietf_alarms_edd_shelf_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_edd_shelf_list BODY
      * +-------------------------------------------------------------------------+
      */
+
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
+    if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock shelf_mutex");
+        return;
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_tbl_t *table = cace_ari_set_tbl(&result, NULL);
+    cace_ari_tbl_reset(table, 2, 0);
+
+    // table is naturally sorted
+    refda_alarms_shelf_entry_set_it_t entry_it;
+    for (refda_alarms_shelf_entry_set_it(entry_it, agent->alarms.shelf_list); !refda_alarms_shelf_entry_set_end_p(entry_it);
+         refda_alarms_shelf_entry_set_next(entry_it))
+    {
+        const refda_alarms_shelf_entry_t *entry = refda_alarms_shelf_entry_set_cref(entry_it);
+
+        cace_ari_array_t row;
+        cace_ari_array_init(row);
+        cace_ari_array_resize(row, table->ncols);
+
+        cace_amm_objpat_to_value(&entry->resources, cace_ari_array_get(row, 0));
+        cace_amm_objpat_to_value(&entry->categories, cace_ari_array_get(row, 1));
+
+        // append the row
+        cace_ari_tbl_move_row_array(table, row);
+    }
+
+    if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock alarm_mutex");
+    }
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_edd_shelf_list BODY
@@ -382,6 +417,61 @@ static void refda_adm_ietf_alarms_ctrl_ensure_shelf(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_ensure_shelf BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    size_t affected = 0;
+
+    const struct cace_ari_tbl_s *tbl = cace_ari_cget_tbl(refda_ctrl_exec_ctx_get_aparam_index(ctx, 0));
+    if (!tbl)
+    {
+        return;
+    }
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock shelf_mutex");
+        return;
+    }
+
+    cace_ari_array_it_t tbl_it;
+    cace_ari_array_it(tbl_it, tbl->items);
+    while (!cace_ari_array_end_p(tbl_it))
+    {
+        refda_alarms_shelf_entry_t trial;
+        refda_alarms_shelf_entry_init(&trial);
+
+        cace_amm_objpat_from_value(&trial.resources, cace_ari_array_cref(tbl_it));
+        cace_ari_array_next(tbl_it);
+
+        cace_amm_objpat_from_value(&trial.categories, cace_ari_array_cref(tbl_it));
+        cace_ari_array_next(tbl_it);
+
+        // present or not
+        if (!refda_alarms_shelf_entry_set_get(agent->alarms.shelf_list, trial))
+        {
+            refda_alarms_shelf_entry_set_push(agent->alarms.shelf_list, trial);
+            ++affected;
+        }
+        refda_alarms_shelf_entry_deinit(&trial);
+    }
+    CACE_LOG_DEBUG("Affected %zu shelf rows", affected);
+
+    if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock alarm_mutex");
+    }
+
+#if 0
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_uvast(&result, affected);
+    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+#endif
+    refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_ensure_shelf BODY

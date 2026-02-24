@@ -17,6 +17,7 @@
  */
 #include "algo.h"
 #include "containers.h"
+#include "objpat.h"
 #include "text.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
@@ -167,6 +168,7 @@ static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor
             CHKERRVAL(retval);
         }
 
+        // recurse into given parameters
         switch (ari->as_ref.params.state)
         {
             case CACE_ARI_PARAMS_NONE:
@@ -197,6 +199,7 @@ static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor
             CHKERRVAL(retval);
         }
 
+        // recurse into containers
         if (ari->as_lit.has_ari_type)
         {
             switch (ari->as_lit.ari_type)
@@ -491,6 +494,10 @@ static int cace_ari_hash_visit_lit(cace_ari_lit_t *obj, const cace_ari_visit_ctx
                 // include metadata
                 M_HASH_UP(*accum, M_HASH_DEFAULT(obj->value.as_tbl->ncols));
                 break;
+            case CACE_ARI_TYPE_OBJPAT:
+                // this is not an ARI container
+                M_HASH_UP(*accum, cace_ari_objpat_hash(obj->value.as_objpat));
+                break;
             default:
                 // container contents are visited separately
                 break;
@@ -653,6 +660,13 @@ int cace_ari_cmp(const cace_ari_t *left, const cace_ari_t *right)
                         return part_cmp;
                     }
                     break;
+                case CACE_ARI_TYPE_OBJPAT:
+                    part_cmp = cace_ari_objpat_cmp(left->as_lit.value.as_objpat, right->as_lit.value.as_objpat);
+                    if (part_cmp)
+                    {
+                        return part_cmp;
+                    }
+                    break;
                 default:
                     break;
             }
@@ -767,6 +781,12 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
                     break;
                 case CACE_ARI_TYPE_RPTSET:
                     if (!cace_ari_rptset_equal(left->as_lit.value.as_rptset, right->as_lit.value.as_rptset))
+                    {
+                        return false;
+                    }
+                    break;
+                case CACE_ARI_TYPE_OBJPAT:
+                    if (!cace_ari_objpat_equal(left->as_lit.value.as_objpat, right->as_lit.value.as_objpat))
                     {
                         return false;
                     }

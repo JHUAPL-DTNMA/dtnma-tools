@@ -158,8 +158,9 @@ void test_ari_roundtrip_text_cbor(const char *intext)
     if (true)
     {
         // optional checks
-        TEST_ASSERT_EQUAL_INT_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "ari_hash() mismatch");
-        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "ari_equal() mismatch");
+        TEST_ASSERT_EQUAL_size_t_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "cace_ari_hash() mismatch");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_ari_cmp(&ari_dn, &ari_up), "cace_ari_cmp() mismatch");
+        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "cace_ari_equal() mismatch");
     }
 
     cace_ari_deinit(&ari_up);
@@ -246,8 +247,9 @@ void test_ari_roundtrip_cbor_text(const char *inhex)
     if (true)
     {
         // optional checks
-        TEST_ASSERT_EQUAL_INT_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "ari_hash() mismatch");
-        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "ari_equal() mismatch");
+        TEST_ASSERT_EQUAL_size_t_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "cace_ari_hash() mismatch");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_ari_cmp(&ari_dn, &ari_up), "cace_ari_cmp() mismatch");
+        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "cace_ari_equal() mismatch");
     }
 
     cace_ari_deinit(&ari_up);

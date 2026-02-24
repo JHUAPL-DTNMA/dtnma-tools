@@ -46,6 +46,11 @@ M_VARIANT_DEF2(cace_ari_objpat_part, (special, bool), (range_int64, cace_util_ra
 // GCOV_EXCL_STOP
 /// @endcond
 
+/** Binary comparison.
+ * Wildcard is always less than int-range is less than text.
+ */
+int cace_ari_objpat_part_cmp(const cace_ari_objpat_part_t left, const cace_ari_objpat_part_t right);
+
 /** A itemized (indexed and named) set of ARIs.
  */
 typedef struct cace_ari_objpat_s
@@ -77,10 +82,23 @@ void cace_ari_objpat_deinit(cace_ari_objpat_t *obj);
  */
 void cace_ari_objpat_set(cace_ari_objpat_t *obj, const cace_ari_objpat_t *src);
 
+/** Binary comparison.
+ */
+int cace_ari_objpat_cmp(const cace_ari_objpat_t *left, const cace_ari_objpat_t *right);
+
+/** Binary comparison.
+ */
+bool cace_ari_objpat_equal(const cace_ari_objpat_t *left, const cace_ari_objpat_t *right);
+
+/** Value hashing.
+ */
+size_t cace_ari_objpat_hash(const cace_ari_objpat_t *obj);
+
 /// M*LIB OPLIST for ::cace_ari_objpat_t
 #define M_OPL_cace_ari_objpat_t()                                                                                   \
     (INIT(API_2(cace_ari_objpat_init)), INIT_SET(API_6(cace_ari_objpat_init_set)), SET(API_6(cace_ari_objpat_set)), \
-     CLEAR(API_2(cace_ari_objpat_deinit)))
+     CLEAR(API_2(cace_ari_objpat_deinit)), CMP(API_6(cace_ari_objpat_cmp)), EQUAL(API_6(cace_ari_objpat_equal)),    \
+     HASH(API_2(cace_ari_objpat_hash)))
 
 /** Set a new literal value with a pattern.
  */

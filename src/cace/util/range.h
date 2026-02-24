@@ -56,127 +56,165 @@ extern "C" {
  * * `range_init_move()` Initialize with move semantics.
  * * `range_clear()` Clean up state.
  * * `range_move()` Setter with move semantics.
+ * * `range_cmp()` Binary comparison based on the min and max value.
  * * `range_contains()` Determine if a value is within the range.
  */
-#define CACE_UTIL_RANGE_DEF(range, intvl, type)                                                  \
-    typedef struct                                                                               \
-    {                                                                                            \
-        bool has_min;                                                                            \
-        type i_min;                                                                              \
-        bool has_max;                                                                            \
-        type i_max;                                                                              \
-    } M_C(intvl, _t);                                                                            \
-                                                                                                 \
-    static inline void M_C(intvl, _set_infinite)(M_C(intvl, _t) * obj)                           \
-    {                                                                                            \
-        *obj = (M_C(intvl, _t)) {                                                                \
-            .has_min = false,                                                                    \
-            .has_max = false,                                                                    \
-        };                                                                                       \
-    }                                                                                            \
-    static inline void M_C(intvl, _set_singleton)(M_C(intvl, _t) * obj, type val)                \
-    {                                                                                            \
-        *obj = (M_C(intvl, _t)) {                                                                \
-            .has_min = true,                                                                     \
-            .i_min   = val,                                                                      \
-            .has_max = true,                                                                     \
-            .i_max   = val,                                                                      \
-        };                                                                                       \
-    }                                                                                            \
-    static inline void M_C(intvl, _clear_min)(M_C(intvl, _t) * obj)                              \
-    {                                                                                            \
-        obj->has_min = false;                                                                    \
-    }                                                                                            \
-    static inline void M_C(intvl, _clear_max)(M_C(intvl, _t) * obj)                              \
-    {                                                                                            \
-        obj->has_max = false;                                                                    \
-    }                                                                                            \
-    static inline void M_C(intvl, _set_min)(M_C(intvl, _t) * obj, type val)                      \
-    {                                                                                            \
-        obj->has_min = true;                                                                     \
-        obj->i_min   = val;                                                                      \
-    }                                                                                            \
-    static inline void M_C(intvl, _set_max)(M_C(intvl, _t) * obj, type val)                      \
-    {                                                                                            \
-        obj->has_max = true;                                                                     \
-        obj->i_max   = val;                                                                      \
-    }                                                                                            \
-    static inline void M_C(intvl, _set_finite)(M_C(intvl, _t) * obj, type min_val, type max_val) \
-    {                                                                                            \
-        *obj = (M_C(intvl, _t)) {                                                                \
-            .has_min = true,                                                                     \
-            .i_min   = min_val,                                                                  \
-            .has_max = true,                                                                     \
-            .i_max   = max_val,                                                                  \
-        };                                                                                       \
-    }                                                                                            \
-                                                                                                 \
-    static inline bool M_C(intvl, _is_infinite)(const M_C(intvl, _t) * obj)                      \
-    {                                                                                            \
-        return !(obj->has_min) && !(obj->has_max);                                               \
-    }                                                                                            \
-                                                                                                 \
-    static inline int M_C(intvl, _cmp)(const M_C(intvl, _t) * lt, const M_C(intvl, _t) * rt)     \
-    {                                                                                            \
-        const bool lt_inf = M_C(intvl, _is_infinite)(lt);                                        \
-        const bool rt_inf = M_C(intvl, _is_infinite)(rt);                                        \
-        if (lt_inf && rt_inf)                                                                    \
-        {                                                                                        \
-            return 0;                                                                            \
-        }                                                                                        \
-        if (lt_inf)                                                                              \
-        {                                                                                        \
-            return -1;                                                                           \
-        }                                                                                        \
-        if (rt_inf)                                                                              \
-        {                                                                                        \
-            return 1;                                                                            \
-        }                                                                                        \
-        if ((lt->has_min == rt->has_min) && (!(lt->has_min) || (lt->i_min == rt->i_min))         \
-            && (lt->has_max == rt->has_max) && (!(lt->has_max) || (lt->i_max == rt->i_max)))     \
-        {                                                                                        \
-            return 0;                                                                            \
-        }                                                                                        \
-        const type *lt_val = lt->has_max ? &(lt->i_max) : &(lt->i_min);                          \
-        const type *rt_val = rt->has_max ? &(rt->i_max) : &(rt->i_min);                          \
-        return *lt_val < *rt_val ? -1 : 1;                                                       \
-    }                                                                                            \
-    static inline bool M_C(intvl, _contains)(const M_C(intvl, _t) * obj, type val)               \
-    {                                                                                            \
-        if (obj->has_min && (obj->i_min > val))                                                  \
-        {                                                                                        \
-            return false;                                                                        \
-        }                                                                                        \
-        if (obj->has_max && (obj->i_max < val))                                                  \
-        {                                                                                        \
-            return false;                                                                        \
-        }                                                                                        \
-        return true;                                                                             \
-    }                                                                                            \
-                                                                                                 \
-    M_RBTREE_DEF(range, M_C(intvl, _t), M_OPEXTEND(M_POD_OPLIST, CMP(API_6(M_C(intvl, _cmp)))))  \
-                                                                                                 \
-    static inline bool M_C(range, _contains)(const M_C(range, _t) obj, type val)                 \
-    {                                                                                            \
-        M_C(intvl, _t) chkval;                                                                   \
-        M_C(intvl, _set_singleton)(&chkval, val);                                                \
-                                                                                                 \
-        M_C(range, _it_t) it;                                                                    \
-        M_C(range, _it_from)(it, obj, chkval);                                                   \
-        if (M_C(range, _end_p)(it))                                                              \
-        {                                                                                        \
-            const M_C(intvl, _t) *last = M_C(range, _cmax)(obj);                                 \
-            if (last)                                                                            \
-            {                                                                                    \
-                return M_C(intvl, _contains)(last, val);                                         \
-            }                                                                                    \
-            return false;                                                                        \
-        }                                                                                        \
-        return M_C(intvl, _contains)(M_C(range, _cref)(it), val);                                \
+#define CACE_UTIL_RANGE_DEF(range, intvl, type)                                                           \
+    typedef struct                                                                                        \
+    {                                                                                                     \
+        bool has_min;                                                                                     \
+        type i_min;                                                                                       \
+        bool has_max;                                                                                     \
+        type i_max;                                                                                       \
+    } M_C(intvl, _t);                                                                                     \
+                                                                                                          \
+    static inline void M_C(intvl, _set_infinite)(M_C(intvl, _t) * obj)                                    \
+    {                                                                                                     \
+        *obj = (M_C(intvl, _t)) {                                                                         \
+            .has_min = false,                                                                             \
+            .has_max = false,                                                                             \
+        };                                                                                                \
+    }                                                                                                     \
+    static inline void M_C(intvl, _set_singleton)(M_C(intvl, _t) * obj, type val)                         \
+    {                                                                                                     \
+        *obj = (M_C(intvl, _t)) {                                                                         \
+            .has_min = true,                                                                              \
+            .i_min   = val,                                                                               \
+            .has_max = true,                                                                              \
+            .i_max   = val,                                                                               \
+        };                                                                                                \
+    }                                                                                                     \
+    static inline void M_C(intvl, _clear_min)(M_C(intvl, _t) * obj)                                       \
+    {                                                                                                     \
+        obj->has_min = false;                                                                             \
+        obj->i_min   = 0;                                                                                 \
+    }                                                                                                     \
+    static inline void M_C(intvl, _clear_max)(M_C(intvl, _t) * obj)                                       \
+    {                                                                                                     \
+        obj->has_max = false;                                                                             \
+        obj->i_max   = 0;                                                                                 \
+    }                                                                                                     \
+    static inline void M_C(intvl, _set_min)(M_C(intvl, _t) * obj, type val)                               \
+    {                                                                                                     \
+        obj->has_min = true;                                                                              \
+        obj->i_min   = val;                                                                               \
+    }                                                                                                     \
+    static inline void M_C(intvl, _set_max)(M_C(intvl, _t) * obj, type val)                               \
+    {                                                                                                     \
+        obj->has_max = true;                                                                              \
+        obj->i_max   = val;                                                                               \
+    }                                                                                                     \
+    static inline void M_C(intvl, _set_finite)(M_C(intvl, _t) * obj, type min_val, type max_val)          \
+    {                                                                                                     \
+        *obj = (M_C(intvl, _t)) {                                                                         \
+            .has_min = true,                                                                              \
+            .i_min   = min_val,                                                                           \
+            .has_max = true,                                                                              \
+            .i_max   = max_val,                                                                           \
+        };                                                                                                \
+    }                                                                                                     \
+                                                                                                          \
+    static inline bool M_C(intvl, _is_infinite)(const M_C(intvl, _t) * obj)                               \
+    {                                                                                                     \
+        return !(obj->has_min) && !(obj->has_max);                                                        \
+    }                                                                                                     \
+                                                                                                          \
+    static inline int M_C(intvl, _cmp)(const M_C(intvl, _t) * lt, const M_C(intvl, _t) * rt)              \
+    {                                                                                                     \
+        const bool lt_inf = M_C(intvl, _is_infinite)(lt);                                                 \
+        const bool rt_inf = M_C(intvl, _is_infinite)(rt);                                                 \
+        if (lt_inf && rt_inf)                                                                             \
+        {                                                                                                 \
+            return 0;                                                                                     \
+        }                                                                                                 \
+        if (lt_inf)                                                                                       \
+        {                                                                                                 \
+            return -1;                                                                                    \
+        }                                                                                                 \
+        if (rt_inf)                                                                                       \
+        {                                                                                                 \
+            return 1;                                                                                     \
+        }                                                                                                 \
+        if ((lt->has_min == rt->has_min) && (!(lt->has_min) || (lt->i_min == rt->i_min))                  \
+            && (lt->has_max == rt->has_max) && (!(lt->has_max) || (lt->i_max == rt->i_max)))              \
+        {                                                                                                 \
+            return 0;                                                                                     \
+        }                                                                                                 \
+        const type *lt_val = lt->has_max ? &(lt->i_max) : &(lt->i_min);                                   \
+        const type *rt_val = rt->has_max ? &(rt->i_max) : &(rt->i_min);                                   \
+        return *lt_val < *rt_val ? -1 : 1;                                                                \
+    }                                                                                                     \
+    static inline int M_C(intvl, _equal)(const M_C(intvl, _t) * lt, const M_C(intvl, _t) * rt)            \
+    {                                                                                                     \
+        return ((lt->has_min == rt->has_min) && (lt->i_min == rt->i_min) && (lt->has_max == rt->has_max)  \
+                && (lt->i_max == rt->i_max));                                                             \
+    }                                                                                                     \
+    static inline int M_C(intvl, _hash)(const M_C(intvl, _t) * obj)                                       \
+    {                                                                                                     \
+        M_HASH_DECL(hash);                                                                                \
+        M_HASH_UP(hash, obj->has_min);                                                                    \
+        M_HASH_UP(hash, obj->i_min);                                                                      \
+        M_HASH_UP(hash, obj->has_max);                                                                    \
+        M_HASH_UP(hash, obj->i_max);                                                                      \
+        return M_HASH_FINAL(hash);                                                                        \
+    }                                                                                                     \
+    static inline bool M_C(intvl, _contains)(const M_C(intvl, _t) * obj, type val)                        \
+    {                                                                                                     \
+        if (obj->has_min && (obj->i_min > val))                                                           \
+        {                                                                                                 \
+            return false;                                                                                 \
+        }                                                                                                 \
+        if (obj->has_max && (obj->i_max < val))                                                           \
+        {                                                                                                 \
+            return false;                                                                                 \
+        }                                                                                                 \
+        return true;                                                                                      \
+    }                                                                                                     \
+                                                                                                          \
+    M_RBTREE_DEF(range, M_C(intvl, _t),                                                                   \
+                 M_OPEXTEND(M_POD_OPLIST, CMP(API_6(M_C(intvl, _cmp))), EQUAL(API_6(M_C(intvl, _equal))), \
+                            HASH(API_2(M_C(intvl, _hash)))))                                              \
+                                                                                                          \
+    static inline int M_C(range, _cmp)(const M_C(range, _t) left, const M_C(range, _t) right)             \
+    {                                                                                                     \
+        if (M_C(range, _equal_p)(left, right))                                                            \
+        {                                                                                                 \
+            return 0;                                                                                     \
+        }                                                                                                 \
+        const M_C(intvl, _t) *lt_min = M_C(range, _cmin)(left);                                           \
+        const M_C(intvl, _t) *rt_min = M_C(range, _cmin)(right);                                          \
+        if (!lt_min)                                                                                      \
+        {                                                                                                 \
+            return -1;                                                                                    \
+        }                                                                                                 \
+        else if (!rt_min)                                                                                 \
+        {                                                                                                 \
+            return 1;                                                                                     \
+        }                                                                                                 \
+        return M_CMP_DEFAULT(lt_min->i_min, rt_min->i_min);                                               \
+    }                                                                                                     \
+                                                                                                          \
+    static inline bool M_C(range, _contains)(const M_C(range, _t) obj, type val)                          \
+    {                                                                                                     \
+        M_C(intvl, _t) chkval;                                                                            \
+        M_C(intvl, _set_singleton)(&chkval, val);                                                         \
+                                                                                                          \
+        M_C(range, _it_t) it;                                                                             \
+        M_C(range, _it_from)(it, obj, chkval);                                                            \
+        if (M_C(range, _end_p)(it))                                                                       \
+        {                                                                                                 \
+            const M_C(intvl, _t) *last = M_C(range, _cmax)(obj);                                          \
+            if (last)                                                                                     \
+            {                                                                                             \
+                return M_C(intvl, _contains)(last, val);                                                  \
+            }                                                                                             \
+            return false;                                                                                 \
+        }                                                                                                 \
+        return M_C(intvl, _contains)(M_C(range, _cref)(it), val);                                         \
     }
 
 #define CACE_UTIL_RANGE_OPLIST(range, type) \
-    M_RBTREE_OPLIST(range, M_OPEXTEND(M_POD_OPLIST, CMP(API_6(M_C(intvl, _cmp)))))
+    M_RBTREE_OPLIST(range, M_OPEXTEND(M_POD_OPLIST, CMP(API_6(M_C(intvl, _cmp))), HASH(M_HASH_POD_DEFAULT)))
 
 /** @struct cace_util_range_intvl_size_t
  * An interval of size_t values.

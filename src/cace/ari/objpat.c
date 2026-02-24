@@ -21,6 +21,61 @@
  */
 #include "objpat.h"
 
+int cace_ari_objpat_part_cmp(const cace_ari_objpat_part_t left, const cace_ari_objpat_part_t right)
+{
+    if (cace_ari_objpat_part_empty_p(left))
+    {
+        if (cace_ari_objpat_part_empty_p(right))
+        {
+            return 0;
+        }
+        else
+        {
+            return -1;
+        }
+    }
+    if (cace_ari_objpat_part_cget_special(left))
+    {
+        if (cace_ari_objpat_part_cget_special(right))
+        {
+            return 0;
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
+    const cace_util_range_int64_t *lt_range, *rt_range;
+    if ((lt_range = cace_ari_objpat_part_cget_range_int64(left)))
+    {
+        if ((rt_range = cace_ari_objpat_part_cget_range_int64(right)))
+        {
+            return cace_util_range_int64_cmp(*lt_range, *rt_range);
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
+    const m_string_t *lt_text, *rt_text;
+    if ((lt_text = cace_ari_objpat_part_cget_text(left)))
+    {
+        if ((rt_text = cace_ari_objpat_part_cget_text(right)))
+        {
+            return m_string_cmp(*lt_text, *rt_text);
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
+    // Not really reachable
+    return 0;
+}
+
 void cace_ari_objpat_init(cace_ari_objpat_t *obj)
 {
     CHKVOID(obj);
@@ -64,6 +119,42 @@ void cace_ari_objpat_set(cace_ari_objpat_t *obj, const cace_ari_objpat_t *src)
     cace_ari_objpat_part_set(obj->model_pat, src->model_pat);
     cace_ari_objpat_part_set(obj->type_pat, src->type_pat);
     cace_ari_objpat_part_set(obj->obj_pat, src->obj_pat);
+}
+
+int cace_ari_objpat_cmp(const cace_ari_objpat_t *left, const cace_ari_objpat_t *right)
+{
+    // compare in order
+    int res = cace_ari_objpat_part_cmp(left->org_pat, right->org_pat);
+    if (res)
+    {
+        return res;
+    }
+    return res;
+}
+
+bool cace_ari_objpat_equal(const cace_ari_objpat_t *left, const cace_ari_objpat_t *right)
+{
+    CHKFALSE(left);
+    CHKFALSE(right);
+    return (cace_ari_objpat_part_equal_p(left->org_pat, right->org_pat)
+            && cace_ari_objpat_part_equal_p(left->model_pat, right->model_pat)
+            && cace_ari_objpat_part_equal_p(left->type_pat, right->type_pat)
+            && cace_ari_objpat_part_equal_p(left->obj_pat, right->obj_pat));
+}
+
+size_t cace_ari_objpat_hash(const cace_ari_objpat_t *obj)
+{
+    CHKRET(obj, 0);
+
+    M_HASH_DECL(accum);
+
+    M_HASH_UP(accum, cace_ari_objpat_part_hash(obj->org_pat));
+    M_HASH_UP(accum, cace_ari_objpat_part_hash(obj->model_pat));
+    M_HASH_UP(accum, cace_ari_objpat_part_hash(obj->type_pat));
+    M_HASH_UP(accum, cace_ari_objpat_part_hash(obj->obj_pat));
+
+    accum = M_HASH_FINAL(accum);
+    return accum;
 }
 
 cace_ari_objpat_t *cace_ari_lit_init_objpat(cace_ari_lit_t *lit)
