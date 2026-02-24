@@ -243,14 +243,14 @@ static void refda_adm_ietf_alarms_edd_shelf_list(refda_edd_prod_ctx_t *ctx)
         return;
     }
 
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_tbl_t *table = cace_ari_set_tbl(&result, NULL);
+    cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
     cace_ari_tbl_reset(table, 2, 0);
 
     // table is naturally sorted
     refda_alarms_shelf_entry_set_it_t entry_it;
-    for (refda_alarms_shelf_entry_set_it(entry_it, agent->alarms.shelf_list); !refda_alarms_shelf_entry_set_end_p(entry_it);
-         refda_alarms_shelf_entry_set_next(entry_it))
+    for (refda_alarms_shelf_entry_set_it(entry_it, agent->alarms.shelf_list);
+         !refda_alarms_shelf_entry_set_end_p(entry_it); refda_alarms_shelf_entry_set_next(entry_it))
     {
         const refda_alarms_shelf_entry_t *entry = refda_alarms_shelf_entry_set_cref(entry_it);
 

@@ -169,10 +169,10 @@ bool cace_amm_objpat_match(const cace_ari_objpat_t *obj, const cace_amm_lookup_t
         return false;
     }
 
-        return (cace_amm_objpat_part_idseg_match(&obj->org_pat, &deref->ns->org_id)
-                         && cace_amm_objpat_part_idseg_match(&obj->model_pat, &deref->ns->model_id)
-                         && cace_amm_objpat_part_type_match(&obj->org_pat, deref->obj_type)
-                         && cace_amm_objpat_part_idseg_match(&obj->obj_pat, &deref->obj->obj_id));
+    return (cace_amm_objpat_part_idseg_match(&obj->org_pat, &deref->ns->org_id)
+            && cace_amm_objpat_part_idseg_match(&obj->model_pat, &deref->ns->model_id)
+            && cace_amm_objpat_part_type_match(&obj->org_pat, deref->obj_type)
+            && cace_amm_objpat_part_idseg_match(&obj->obj_pat, &deref->obj->obj_id));
 }
 
 int cace_amm_objpat_from_value(cace_ari_objpat_t *obj, const cace_ari_t *val)

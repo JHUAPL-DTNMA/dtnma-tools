@@ -99,8 +99,7 @@ size_t refda_alarms_shelf_entry_hash(const refda_alarms_shelf_entry_t *obj)
 bool refda_alarms_shelf_entry_match(const refda_alarms_shelf_entry_t *obj, const cace_amm_lookup_t *resource,
                                     const cace_amm_lookup_t *category)
 {
-    return (cace_amm_objpat_match(&obj->resources, resource)
-            && cace_amm_objpat_match(&obj->categories, category));
+    return (cace_amm_objpat_match(&obj->resources, resource) && cace_amm_objpat_match(&obj->categories, category));
 }
 
 void refda_alarms_init(refda_alarms_t *obj)
