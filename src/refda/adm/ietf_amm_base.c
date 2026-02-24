@@ -586,10 +586,10 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
 
                 cace_amm_semtype_cnst_t *cnst;
                 {
-                    // Constraint: TextPattern(pattern='[A-Za-z_][0-9A-Za-z_\\-\\.]*')
+                    // Constraint: TextPattern(pattern='!?[A-Za-z_][0-9A-Za-z_\\-\\.]*')
                     cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
 
-                    cace_amm_semtype_cnst_set_textpat(cnst, "[A-Za-z_][0-9A-Za-z_\\-\\.]*");
+                    cace_amm_semtype_cnst_set_textpat(cnst, "!?[A-Za-z_][0-9A-Za-z_\\-\\.]*");
                 }
             }
 

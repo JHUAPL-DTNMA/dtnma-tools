@@ -185,15 +185,14 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
             const int         opts = 0;
             // ignore terminating null
             int res = pcre2_match(cfg, (PCRE2_SPTR8)(data->ptr), data->len - 1, 0, opts, md, NULL);
-#if 0
+            pcre2_match_data_free(md);
+
+            if ((res < 0) && cace_log_is_enabled_for(LOG_DEBUG))
             {
-                char buf[128];
+                PCRE2_UCHAR8 buf[128];
                 pcre2_get_error_message(res, buf, sizeof(buf));
                 CACE_LOG_DEBUG("Match regex result %d (%s) for: %s", res, buf, (const char *)(data->ptr));
             }
-#endif
-            pcre2_match_data_free(md);
-
             retval = (res > 0);
             break;
         }

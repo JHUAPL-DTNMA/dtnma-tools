@@ -27,11 +27,13 @@ echo "Using ${PYTHON}"
 
 cd ${SELFDIR}
 
+# Prepare the test environment
+#
 do_prep() {
     echo "Installing virtualenv..."
     ${PYTHON} -m venv ./build/venv
     source ./build/venv/bin/activate
-    
+
     echo "Installing dependencies..."
     if [[ ! -d ./deps/adms ]]
     then
@@ -41,13 +43,16 @@ do_prep() {
     then
         git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-ace.git ./deps/dtnma-ace
     fi
-    
+
     ${PYTHON} -m pip install -e ./deps/dtnma-ace
     ${PYTHON} -m pip install -r requirements.txt
 }
+
+# Execute the tests, passing through command arguments
+#
 do_test() {
     source ./build/venv/bin/activate
-    
+
     echo "Executing tests..."
     ${PYTHON} -m pytest . "$@"
 }
@@ -61,7 +66,7 @@ case "$ACTION" in
     do_prep
     ;;
   test)
-    do_test
+    do_test "$@"
     ;;
   *)
     echo "Usage: $0 {prep,test} [extra args]"
