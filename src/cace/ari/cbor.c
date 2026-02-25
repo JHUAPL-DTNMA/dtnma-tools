@@ -514,7 +514,8 @@ static int cace_ari_cbor_decode_tbl(QCBORDecodeContext *dec, cace_ari_tbl_t *obj
     if (((obj->ncols == 0) && !cace_ari_array_empty_p(obj->items))
         || ((obj->ncols != 0) && (cace_ari_array_size(obj->items) % obj->ncols != 0)))
     {
-        CACE_LOG_ERR("decoding TBL inconsistent; got %zu cols and %zu items", obj->ncols, cace_ari_array_size(obj->items));
+        CACE_LOG_ERR("decoding TBL inconsistent; got %zu cols and %zu items", obj->ncols,
+                     cace_ari_array_size(obj->items));
         retval = 3; // Invalid ARI due to incomplete row data
     }
 

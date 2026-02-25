@@ -79,7 +79,7 @@ size_t cace_ari_idseg_hash(const cace_ari_idseg_t *obj)
 int cace_ari_idseg_cmp(const cace_ari_idseg_t *left, const cace_ari_idseg_t *right)
 {
     CHKRET(left, -2);
-    CHKRET(right, -2);
+    CHKRET(right, 2);
 
     if (left->form != right->form)
     {

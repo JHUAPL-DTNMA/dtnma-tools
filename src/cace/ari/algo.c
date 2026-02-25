@@ -455,9 +455,11 @@ int cace_ari_translate(cace_ari_t *out, const cace_ari_t *in, const cace_ari_tra
     return cace_ari_translate_ari(out, in, translator, &sub_ctx);
 }
 
-static int cace_ari_hash_visit_objpath(cace_ari_objpath_t *path, const cace_ari_visit_ctx_t *ctx)
+static int cace_ari_hash_visit_ref(cace_ari_ref_t *ref, const cace_ari_visit_ctx_t *ctx)
 {
     size_t *accum = ctx->user_data;
+
+    const cace_ari_objpath_t *path = &(ref->objpath);
     M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->org_id)));
     M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->model_id)));
     M_HASH_UP(*accum, M_HASH_DEFAULT(path->model_rev.valid));
@@ -477,6 +479,20 @@ static int cace_ari_hash_visit_objpath(cace_ari_objpath_t *path, const cace_ari_
         M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->type_id)));
     }
     M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->obj_id)));
+
+    M_HASH_UP(*accum, M_HASH_DEFAULT(ref->params.state));
+    switch (ref->params.state)
+    {
+        case CACE_ARI_PARAMS_NONE:
+            break;
+        case CACE_ARI_PARAMS_AC:
+            M_HASH_UP(*accum, cace_ari_list_hash(ref->params.as_ac->items));
+            break;
+        case CACE_ARI_PARAMS_AM:
+            M_HASH_UP(*accum, cace_ari_tree_hash(ref->params.as_am->items));
+            break;
+    }
+
     return 0;
 }
 
@@ -539,8 +555,8 @@ size_t cace_ari_hash(const cace_ari_t *ari)
 {
     CHKRET(ari, 0);
     static const cace_ari_visitor_t visitor = {
-        .visit_objpath = cace_ari_hash_visit_objpath,
-        .visit_lit     = cace_ari_hash_visit_lit,
+        .visit_ref = cace_ari_hash_visit_ref,
+        .visit_lit = cace_ari_hash_visit_lit,
     };
 
     M_HASH_DECL(accum);

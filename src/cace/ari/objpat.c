@@ -70,8 +70,7 @@ int cace_ari_objpat_part_cmp(const cace_ari_objpat_part_t left, const cace_ari_o
         {
             return m_string_cmp(*lt_text, *rt_text);
         }
-        else if ((cace_ari_objpat_part_cget_special(right) ||
-                cace_ari_objpat_part_cget_range_int64(right)))
+        else if ((cace_ari_objpat_part_cget_special(right) || cace_ari_objpat_part_cget_range_int64(right)))
 
         {
             return 1;

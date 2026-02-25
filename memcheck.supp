@@ -70,7 +70,7 @@
    fun:_ari_type_dict_init
 }
 {
-   _ari_type_dict_init2
+   _ari_type_dict_init4
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:malloc
