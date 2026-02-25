@@ -39,10 +39,10 @@ M_BPTREE_DEF2(test_seen_ari, 4, m_string_t, M_STRING_OPLIST, cace_ari_t, M_OPL_c
  */
 static const char *different_aris[] = {
     // untyped literal first
-    "F7",     // ari:undefined
-    "F6",     // ari:null
-    "F4",     // ari:false
-    "29",     // ari:-10
+    "F7", // ari:undefined
+    "F6", // ari:null
+    "F4", // ari:false
+    "29", // ari:-10
     // FIXME zero equality: "00", // ari:0
     "01",     // ari:1
     "1864",   // ari:100
