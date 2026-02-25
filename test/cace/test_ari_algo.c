@@ -29,10 +29,16 @@
 // Allow this macro
 #define TEST_CASE(...)
 
+/** @struct test_seen_ari_t
+ * Internal cache of decoded ARIs
+ */
 M_BPTREE_DEF2(test_seen_ari, 4, m_string_t, M_STRING_OPLIST, cace_ari_t, M_OPL_cace_ari_t())
 
-/// A collection of unique ARIs in binary form for testing comparisons
+/** A collection of unique ARIs in binary form for testing comparisons.
+ * This list is ordered in natural ARI order to enable testing cace_ari_cmp().
+ */
 static const char *different_aris[] = {
+    // untyped literal first
     "F7",                     // ari:undefined
     "F6",                     // ari:null
     "F4",                     // ari:false
@@ -43,6 +49,7 @@ static const char *different_aris[] = {
     "426869",                 // ari:h'6869'
     "60",                     // ari:%22%22
     "626869",                 // ari:%22hi%22
+    // typed literal next
     "8201F4",                 // ari:/bool/false
     "8201F5",                 // ari:/bool/true
     "82021864",               // ari:/byte/100
@@ -59,10 +66,18 @@ static const char *different_aris[] = {
     "8212A11864F5",           // ari:/AM/(100=true)
     "8212A1F90000F5",         // ari:/AM/(0.0=true)
     "8212A1F97E00F5",         // ari:/AM/(NaN=true)
+    // sort by number of columns then rows
+    "82138100",               // ari:/TBL/c=0;
+    "82138102",               // ari:/TBL/c=2;
+    "821383020102",           // ari:/TBL/c=2;(1,2)
     "82138103",               // ari:/TBL/c=3;
     "82138403010203",         // ari:/TBL/c=3;(1,2,3)
-    "82181884F5F5F5F5",       // ari:/OBJPAT/(*)(*)(*)(*)")
-    "8218188420F5F5F5",       // ari:/OBJPAT/(-1)(*)(*)(*)")
+    // sort wildcard before int before text
+    "82181884F5F5F5F5",       // ari:/OBJPAT/(*)(*)(*)(*)
+    "82181884F5F5F520",       // ari:/OBJPAT/(*)(*)(*)(-1)
+    "82181884F5F520F5",       // ari:/OBJPAT/(*)(*)(-1)(*)
+    "82181884F520F5F5",       // ari:/OBJPAT/(*)(-1)(*)(*)
+    "8218188420F5F5F5",       // ari:/OBJPAT/(-1)(*)(*)(*)
     "8218188419FFFF2921182D", // ari:/OBJPAT/(65535)(-10)(-2)(45)
                               //    "8218188419FFFF8429090000F5820A185A", // ari:/OBJPAT/(65535)(-10..-1,1)(*)(10..100)
 
@@ -87,22 +102,22 @@ void suiteSetUp(void)
         m_string_init_set_cstr(intext, *curs);
         cace_data_t indata;
         cace_data_init(&indata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_decode(&indata, intext), "cace_base16_decode() failed");
+        assert(0 ==  cace_base16_decode(&indata, intext));
 
         cace_ari_t ari;
         cace_ari_init(&ari);
         int res = cace_ari_cbor_decode(&ari, &indata, NULL, NULL);
         cace_data_deinit(&indata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
+        assert(0 == res);
 
         {
             cace_ari_t *found = test_seen_ari_get(decode_cache, intext);
-            TEST_ASSERT_NULL(found); // no duplicates
+            assert(!found); // no duplicates from map key perspective
         }
 
         // insert with move
         cace_ari_t *val = test_seen_ari_safe_get(decode_cache, intext);
-        TEST_ASSERT_NOT_NULL(val);
+        assert(val);
         cace_ari_set_move(val, &ari);
         m_string_clear(intext);
     }
@@ -155,7 +170,7 @@ void test_ari_hash(void)
     }
 }
 
-void test_ari_cmp(void)
+void test_ari_cmp_same_diff(void)
 {
     test_seen_ari_it_t it;
     for (test_seen_ari_it(it, decode_cache); !test_seen_ari_end_p(it); test_seen_ari_next(it))
@@ -165,7 +180,7 @@ void test_ari_cmp(void)
         TEST_PRINTF("Comparing value %s", m_string_get_cstr(*pair->key_ptr));
 
         {
-            // alternate decoding has identical hash
+            // alternate decoding has identical compare
             cace_data_t indata;
             cace_data_init(&indata);
             TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_decode(&indata, *pair->key_ptr),
@@ -192,6 +207,42 @@ void test_ari_cmp(void)
     }
 }
 
+void test_ari_cmp_order(void)
+{
+    cace_ari_list_t earlier;
+    cace_ari_list_init(earlier);
+
+    // original value array order
+    for (const char **curs = different_aris; *curs != NULL; ++curs)
+    {
+        m_string_t intext;
+        m_string_init_set_cstr(intext, *curs);
+        TEST_PRINTF("Comparing value %s", m_string_get_cstr(intext));
+
+        cace_data_t indata;
+        cace_data_init(&indata);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_base16_decode(&indata, intext), "cace_base16_decode() failed");
+
+        cace_ari_t val = CACE_ARI_INIT_UNDEFINED;
+        // item outside of history
+        int res = cace_ari_cbor_decode(&val, &indata, NULL, NULL);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
+
+        // greater than all other values so far
+        cace_ari_list_it_t oth_it;
+        for (cace_ari_list_it(oth_it, earlier); !cace_ari_list_end_p(oth_it); cace_ari_list_next(oth_it))
+        {
+            const cace_ari_t *other = cace_ari_list_cref(oth_it);
+
+            // both directions are consistent
+            TEST_ASSERT_EQUAL_INT(1, cace_ari_cmp(&val, other));
+//            TEST_ASSERT_EQUAL_INT(-1, cace_ari_cmp(other, &val));
+        }
+
+        cace_ari_list_push_back_move(earlier, &val);
+    }
+}
+
 void test_ari_equal(void)
 {
     test_seen_ari_it_t it;
@@ -213,7 +264,10 @@ void test_ari_equal(void)
             int res = cace_ari_cbor_decode(&ari_b, &indata, NULL, NULL);
             TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_cbor_decode() failed");
 
+            // both directions are consistent
             TEST_ASSERT_TRUE(cace_ari_equal(pair->value_ptr, &ari_b));
+            TEST_ASSERT_TRUE(cace_ari_equal(&ari_b, pair->value_ptr));
+
             cace_ari_deinit(&ari_b);
             cace_data_deinit(&indata);
         }
@@ -225,6 +279,7 @@ void test_ari_equal(void)
             const test_seen_ari_itref_t *oth_pair = test_seen_ari_cref(oth_it);
 
             TEST_ASSERT_FALSE(cace_ari_equal(pair->value_ptr, oth_pair->value_ptr));
+            TEST_ASSERT_FALSE(cace_ari_equal(oth_pair->value_ptr, pair->value_ptr));
         }
     }
 }

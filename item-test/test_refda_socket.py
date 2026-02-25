@@ -1294,8 +1294,8 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(//ietf/alarms/ctrl/ensure-shelf(/tbl/c=2;' + (
-                    '(/ac/(/objpat/(*)(*)(*)(*)),/ac/(/objpat/(*)(*)(*)(*)))'
                     '(/ac/(/objpat/(-1)(2)(ident)(4)),/ac/(/objpat/(-1)(2)(ident)(5)))'
+                    '(/ac/(/objpat/(*)(*)(*)(*)),/ac/(/objpat/(*)(*)(*)(*)))'
                 ) + '))'
             )]
         )
@@ -1306,6 +1306,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/alarms/ctrl/ensure-shelf'), self._ari_strip_params(rpt.source))
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
+        # observe new state
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;('
@@ -1321,3 +1322,54 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpt.items))
         self.assertIsInstance(rpt.items[0].value, ari.Table)
         self.assertEqual((2, 2), rpt.items[0].value.shape)
+        # ordered rows with wildcard first
+        self.assertEqual(
+            self._ari_text_to_obj(
+                '/tbl/c=2;' + (
+                    '(/ac/(/objpat/(*)(*)(*)(*)),/ac/(/objpat/(*)(*)(*)(*)))'
+                    '(/ac/(/objpat/(-1)(2)(ident)(4)),/ac/(/objpat/(-1)(2)(ident)(5)))'
+                )
+            ),
+            rpt.items[0]
+        )
+
+        # discard one item by-value, and one that isn't present at all
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/alarms/ctrl/discard-shelf(/tbl/c=2;' + (
+                    '(/ac/(/objpat/(-1)(2)(ident)(4)),/ac/(/objpat/(-1)(2)(ident)(5)))'
+                    '(/ac/(/objpat/(-1)(2)(ident)(104)),/ac/(/objpat/(-1)(2)(ident)(105)))'
+                ) + '))'
+            )]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=1)
+        self.assertEqual(1, len(rpts))
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/alarms/ctrl/discard-shelf'), self._ari_strip_params(rpt.source))
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        # observe new state
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;('
+                + '//ietf/dtnma-agent/CTRL/inspect(//ietf/alarms/EDD/shelf-list)'
+                + ')'
+            )]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=1)
+        self.assertEqual(1, len(rpts))
+
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/alarms/EDD/shelf-list)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertIsInstance(rpt.items[0].value, ari.Table)
+        self.assertEqual((1, 2), rpt.items[0].value.shape)
+        self.assertEqual(
+            self._ari_text_to_obj(
+                '/tbl/c=2;' + (
+                    '(/ac/(/objpat/(*)(*)(*)(*)),/ac/(/objpat/(*)(*)(*)(*)))'
+                )
+            ),
+            rpt.items[0]
+        )

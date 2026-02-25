@@ -418,25 +418,10 @@ static int cace_ari_cbor_decode_am(QCBORDecodeContext *dec, cace_ari_am_t *obj)
             break;
         }
 
-        {
-            m_string_t buf;
-            m_string_init(buf);
-            cace_ari_text_encode(buf, &key, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("  key %s", m_string_get_cstr(buf));
-            m_string_clear(buf);
-        }
-
         // push only after fully reading
-#if 0
-        cace_ari_tree_set_at(obj->items, key, value);
-        cace_ari_deinit(&key);
-        cace_ari_deinit(&value);
-#else
         cace_ari_t *val = cace_ari_tree_safe_get(obj->items, key);
-        CACE_LOG_DEBUG("  val %p", val);
         cace_ari_set_move(val, &value);
         cace_ari_deinit(&key);
-#endif
     }
 
     QCBORDecode_ExitArray(dec);
@@ -513,13 +498,23 @@ static int cace_ari_cbor_decode_tbl(QCBORDecodeContext *dec, cace_ari_tbl_t *obj
             cace_ari_deinit(&ari);
             break;
         }
+        {
+            m_string_t buf;
+            m_string_init(buf);
+            cace_ari_text_encode(buf, &ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("  item %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
+        }
 
         // push only after fully reading
         cace_ari_array_push_move(obj->items, &ari);
     }
+    CACE_LOG_DEBUG("  done with %zu", cace_ari_array_size(obj->items));
 
-    if (obj->ncols > 0 && cace_ari_array_size(obj->items) % obj->ncols)
+    if (((obj->ncols == 0) && !cace_ari_array_empty_p(obj->items))
+        || ((obj->ncols != 0) && (cace_ari_array_size(obj->items) % obj->ncols != 0)))
     {
+        CACE_LOG_ERR("decoding TBL inconsistent; got %zu cols and %zu items", obj->ncols, cace_ari_array_size(obj->items));
         retval = 3; // Invalid ARI due to incomplete row data
     }
 

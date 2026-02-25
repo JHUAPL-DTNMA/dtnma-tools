@@ -62,6 +62,7 @@ extern const struct timespec cace_ari_dtn_epoch_timespec;
 
 /** These are enumerations for internal switching of the
  * ::cace_ari_prim_val_u union.
+ * This is ordered to be consistent with CBOR deterministic encoding order.
  */
 enum cace_ari_prim_type_e
 {
@@ -80,10 +81,10 @@ enum cace_ari_prim_type_e
     CACE_ARI_PRIM_INT64,
     /// A selector for cace_ari_prim_val_u::as_float64 associated with ::CACE_ARI_TYPE_REAL32 and ::CACE_ARI_TYPE_REAL64
     CACE_ARI_PRIM_FLOAT64,
-    /// A selector for cace_ari_prim_val_u::as_data associated with ::CACE_ARI_TYPE_TEXTSTR
-    CACE_ARI_PRIM_TSTR,
     /// A selector for cace_ari_prim_val_u::as_data associated with ::CACE_ARI_TYPE_BYTESTR
     CACE_ARI_PRIM_BSTR,
+    /// A selector for cace_ari_prim_val_u::as_data associated with ::CACE_ARI_TYPE_TEXTSTR
+    CACE_ARI_PRIM_TSTR,
     /// A selector for cace_ari_prim_val_u::as_data associated with ::CACE_ARI_TYPE_TP and ::CACE_ARI_TYPE_TD
     CACE_ARI_PRIM_TIMESPEC,
     /// Some other type which requires an cace_ari_lit_t::ari_type identifier

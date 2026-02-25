@@ -53,6 +53,10 @@ int cace_ari_objpat_part_cmp(const cace_ari_objpat_part_t left, const cace_ari_o
         {
             return cace_util_range_int64_cmp(*lt_range, *rt_range);
         }
+        else if (cace_ari_objpat_part_cget_special(right))
+        {
+            return 1;
+        }
         else
         {
             return -1;
@@ -65,6 +69,12 @@ int cace_ari_objpat_part_cmp(const cace_ari_objpat_part_t left, const cace_ari_o
         if ((rt_text = cace_ari_objpat_part_cget_text(right)))
         {
             return m_string_cmp(*lt_text, *rt_text);
+        }
+        else if ((cace_ari_objpat_part_cget_special(right) ||
+                cace_ari_objpat_part_cget_range_int64(right)))
+
+        {
+            return 1;
         }
         else
         {
@@ -129,6 +139,17 @@ int cace_ari_objpat_cmp(const cace_ari_objpat_t *left, const cace_ari_objpat_t *
     {
         return res;
     }
+    res = cace_ari_objpat_part_cmp(left->model_pat, right->model_pat);
+    if (res)
+    {
+        return res;
+    }
+    res = cace_ari_objpat_part_cmp(left->type_pat, right->type_pat);
+    if (res)
+    {
+        return res;
+    }
+    res = cace_ari_objpat_part_cmp(left->obj_pat, right->obj_pat);
     return res;
 }
 
