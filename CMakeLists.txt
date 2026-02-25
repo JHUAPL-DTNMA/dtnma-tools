@@ -132,6 +132,7 @@ if(BUILD_UNITTEST)
       "--track-origins=yes"
       "--leak-check=full" "--show-leak-kinds=all"
       "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/memcheck.supp"
+      "--gen-suppressions=all"
       "--error-exitcode=2"
     )
     # Arguments as list into global scope for Findunitytools.cmake

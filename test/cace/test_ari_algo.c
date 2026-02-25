@@ -42,6 +42,9 @@ static const char *different_aris[] = {
     "F7",     // ari:undefined
     "F6",     // ari:null
     "F4",     // ari:false
+    "29",     // ari:-10
+    // FIXME zero equality: "00", // ari:0
+    "01",     // ari:1
     "1864",   // ari:100
     "F90000", // ari:0.0
     "F97E00", // ari:NaN
@@ -135,7 +138,6 @@ void suiteSetUp(void)
 int suiteTearDown(int failures)
 {
     test_seen_ari_clear(decode_cache);
-    printf("HI!!\n\n");
     cace_closelog();
     return failures;
 }
