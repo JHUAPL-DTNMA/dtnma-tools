@@ -19,7 +19,7 @@
 #define REFDA_ACL_H_
 
 #include "amm/ident.h"
-#include "cace/amm/objpat.h"
+#include "cace/amm/objpat_set.h"
 #include "cace/ari/base.h"
 #include <m-atomic.h>
 #include <m-deque.h>

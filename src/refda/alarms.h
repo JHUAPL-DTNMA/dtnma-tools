@@ -216,7 +216,8 @@ size_t refda_alarms_shelf_entry_hash(const refda_alarms_shelf_entry_t *obj);
 /// M*LIB oplist for ::refda_alarms_shelf_entry_t
 #define M_OPL_refda_alarms_shelf_entry_t()                                                      \
     (INIT(API_2(refda_alarms_shelf_entry_init)), CLEAR(API_2(refda_alarms_shelf_entry_deinit)), \
-     CMP(API_6(refda_alarms_shelf_entry_cmp)), EQUAL(API_6(refda_alarms_shelf_entry_equal)), HASH(API_2(refda_alarms_shelf_entry_hash)))
+     CMP(API_6(refda_alarms_shelf_entry_cmp)), EQUAL(API_6(refda_alarms_shelf_entry_equal)),    \
+     HASH(API_2(refda_alarms_shelf_entry_hash)))
 
 /** Check whether an alarm key matches a shelf entry.
  *

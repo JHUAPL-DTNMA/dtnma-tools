@@ -172,7 +172,6 @@ static bool cace_amm_objpat_match(const cace_ari_t *val, const cace_amm_lookup_t
             && cace_amm_objpat_part_idseg_match(&pat->model_pat, &deref->ns->model_id)
             && cace_amm_objpat_part_type_match(&pat->org_pat, deref->obj_type)
             && cace_amm_objpat_part_idseg_match(&pat->obj_pat, &deref->obj->obj_id));
-
 }
 
 bool cace_amm_objpat_set_match(const cace_ari_t *set, const cace_amm_lookup_t *deref)
