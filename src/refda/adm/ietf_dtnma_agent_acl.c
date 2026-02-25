@@ -130,18 +130,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
                 cace_ari_set_uint(cace_ari_list_push_back_new(grps_ac->items), *grpid);
             }
         }
-        {
-            cace_ari_ac_t *objs_ac = cace_ari_set_ac(cace_ari_array_get(row, 2), NULL);
-
-            cace_amm_objpat_set_it_t pat_it;
-            for (cace_amm_objpat_set_it(pat_it, acc->objects); !cace_amm_objpat_set_end_p(pat_it);
-                 cace_amm_objpat_set_next(pat_it))
-            {
-                const cace_ari_objpat_t *pat = cace_amm_objpat_set_cref(pat_it);
-                // arbitrary order
-                cace_ari_objpat_set(cace_ari_set_objpat(cace_ari_list_push_back_new(objs_ac->items)), pat);
-            }
-        }
+        cace_ari_set_copy(cace_ari_array_get(row, 2), &acc->objects);
         {
             cace_ari_ac_t *perms_ac = cace_ari_set_ac(cace_ari_array_get(row, 3), NULL);
 
@@ -372,7 +361,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
     }
 
     // record and validate the object patterns for this access item
-    cace_amm_objpat_set_from_value(found->objects, p_objs);
+    cace_amm_objpat_set_from_value(&found->objects, p_objs);
 
     // record and validate the permissions for this access item
     refda_amm_ident_base_list_reset(found->permissions);

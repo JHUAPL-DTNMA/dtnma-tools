@@ -258,8 +258,8 @@ static void refda_adm_ietf_alarms_edd_shelf_list(refda_edd_prod_ctx_t *ctx)
         cace_ari_array_init(row);
         cace_ari_array_resize(row, table->ncols);
 
-        cace_amm_objpat_to_value(&entry->resources, cace_ari_array_get(row, 0));
-        cace_amm_objpat_to_value(&entry->categories, cace_ari_array_get(row, 1));
+        cace_ari_set_copy(cace_ari_array_get(row, 0), &entry->resources);
+        cace_ari_set_copy(cace_ari_array_get(row, 1), &entry->categories);
 
         // append the row
         cace_ari_tbl_move_row_array(table, row);
@@ -445,19 +445,23 @@ static void refda_adm_ietf_alarms_ctrl_ensure_shelf(refda_ctrl_exec_ctx_t *ctx)
         refda_alarms_shelf_entry_t trial;
         refda_alarms_shelf_entry_init(&trial);
 
-        cace_amm_objpat_from_value(&trial.resources, cace_ari_array_cref(tbl_it));
+        cace_amm_objpat_set_from_value(&trial.resources, cace_ari_array_cref(tbl_it));
         cace_ari_array_next(tbl_it);
 
-        cace_amm_objpat_from_value(&trial.categories, cace_ari_array_cref(tbl_it));
+        cace_amm_objpat_set_from_value(&trial.categories, cace_ari_array_cref(tbl_it));
         cace_ari_array_next(tbl_it);
 
         // present or not
         if (!refda_alarms_shelf_entry_set_get(agent->alarms.shelf_list, trial))
         {
+            // move semantics
             refda_alarms_shelf_entry_set_push(agent->alarms.shelf_list, trial);
             ++affected;
         }
-        refda_alarms_shelf_entry_deinit(&trial);
+        else
+        {
+            refda_alarms_shelf_entry_deinit(&trial);
+        }
     }
     CACE_LOG_DEBUG("Affected %zu shelf rows", affected);
 
@@ -466,11 +470,6 @@ static void refda_adm_ietf_alarms_ctrl_ensure_shelf(refda_ctrl_exec_ctx_t *ctx)
         CACE_LOG_CRIT("failed to unlock alarm_mutex");
     }
 
-#if 0
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_set_uvast(&result, affected);
-    refda_ctrl_exec_ctx_set_result_move(ctx, &result);
-#endif
     refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
@@ -635,20 +634,28 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "resources");
                     {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // use of ari:/ARITYPE/OBJPAT
-                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        // uniform list
+                        cace_amm_semtype_ulist_t *semtype_d1 = cace_amm_type_set_ulist(&(col->typeobj));
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/OBJPAT
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
+                            cace_amm_type_set_use_ref_move(&(semtype_d1->item_type), &typeref);
+                        }
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "categories");
                     {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // use of ari:/ARITYPE/OBJPAT
-                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        // uniform list
+                        cace_amm_semtype_ulist_t *semtype_d1 = cace_amm_type_set_ulist(&(col->typeobj));
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/OBJPAT
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
+                            cace_amm_type_set_use_ref_move(&(semtype_d1->item_type), &typeref);
+                        }
                     }
                 }
             }
@@ -676,7 +683,19 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/IDENT
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+
+                        cace_amm_semtype_cnst_t *cnst;
+                        {
+                            // Constraint: IdentRefBase(base_text='./ident/resource',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                            cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
+
+                            // FIXME unhandled constraint IdentRefBase(base_text='./ident/resource',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                        }
                     }
                 }
                 {
@@ -700,7 +719,22 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                                 // use of ari:/ARITYPE/IDENT
                                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                                cace_amm_type_set_use_ref_move(choice_d1, &typeref);
+                                cace_amm_semtype_use_t *semtype_d2 =
+                                    cace_amm_type_set_use_ref_move(choice_d1, &typeref);
+
+                                cace_amm_semtype_cnst_t *cnst;
+                                {
+                                    // Constraint: IdentRefBase(base_text='./ident/category',
+                                    // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms',
+                                    // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='category'), params=None),
+                                    // base_ident=None)
+                                    cnst = cace_amm_semtype_cnst_array_push_new(semtype_d2->constraints);
+
+                                    // FIXME unhandled constraint IdentRefBase(base_text='./ident/category',
+                                    // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms',
+                                    // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='category'), params=None),
+                                    // base_ident=None)
+                                }
                             }
                         }
                     }
@@ -848,7 +882,19 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/IDENT
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+
+                        cace_amm_semtype_cnst_t *cnst;
+                        {
+                            // Constraint: IdentRefBase(base_text='./ident/resource',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                            cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
+
+                            // FIXME unhandled constraint IdentRefBase(base_text='./ident/resource',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                        }
                     }
                 }
             }
@@ -875,7 +921,19 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/IDENT
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+
+                        cace_amm_semtype_cnst_t *cnst;
+                        {
+                            // Constraint: IdentRefBase(base_text='./ident/category',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='category'), params=None), base_ident=None)
+                            cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
+
+                            // FIXME unhandled constraint IdentRefBase(base_text='./ident/category',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='category'), params=None), base_ident=None)
+                        }
                     }
                 }
             }

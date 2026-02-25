@@ -71,35 +71,45 @@ int refda_alarms_entry_key_cmp(const refda_alarms_entry_key_t *left, const refda
 void refda_alarms_shelf_entry_init(refda_alarms_shelf_entry_t *obj)
 {
     CHKVOID(obj);
-    cace_ari_objpat_init(&obj->resources);
-    cace_ari_objpat_init(&obj->categories);
+    cace_ari_init(&obj->resources);
+    cace_ari_init(&obj->categories);
 }
 
 void refda_alarms_shelf_entry_deinit(refda_alarms_shelf_entry_t *obj)
 {
     CHKVOID(obj);
-    cace_ari_objpat_deinit(&obj->categories);
-    cace_ari_objpat_deinit(&obj->resources);
+    cace_ari_deinit(&obj->categories);
+    cace_ari_deinit(&obj->resources);
+}
+
+int refda_alarms_shelf_entry_cmp(const refda_alarms_shelf_entry_t *left, const refda_alarms_shelf_entry_t *right)
+{
+    int res = cace_ari_cmp(&left->resources, &right->resources);
+    if (res)
+    {
+        return res;
+    }
+    return cace_ari_cmp(&left->categories, &right->categories);
 }
 
 bool refda_alarms_shelf_entry_equal(const refda_alarms_shelf_entry_t *left, const refda_alarms_shelf_entry_t *right)
 {
-    return (cace_ari_objpat_equal(&left->resources, &right->resources)
-            && cace_ari_objpat_equal(&left->categories, &right->categories));
+    return (cace_ari_equal(&left->resources, &right->resources)
+            && cace_ari_equal(&left->categories, &right->categories));
 }
 
 size_t refda_alarms_shelf_entry_hash(const refda_alarms_shelf_entry_t *obj)
 {
     M_HASH_DECL(hash);
-    M_HASH_UP(hash, cace_ari_objpat_hash(&obj->resources));
-    M_HASH_UP(hash, cace_ari_objpat_hash(&obj->categories));
+    M_HASH_UP(hash, cace_ari_hash(&obj->resources));
+    M_HASH_UP(hash, cace_ari_hash(&obj->categories));
     return M_HASH_FINAL(hash);
 }
 
 bool refda_alarms_shelf_entry_match(const refda_alarms_shelf_entry_t *obj, const cace_amm_lookup_t *resource,
                                     const cace_amm_lookup_t *category)
 {
-    return (cace_amm_objpat_match(&obj->resources, resource) && cace_amm_objpat_match(&obj->categories, category));
+    return (cace_amm_objpat_set_match(&obj->resources, resource) && cace_amm_objpat_set_match(&obj->categories, category));
 }
 
 void refda_alarms_init(refda_alarms_t *obj)
