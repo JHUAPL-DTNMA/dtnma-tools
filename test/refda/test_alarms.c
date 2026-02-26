@@ -128,6 +128,7 @@ void setUp(void)
 {
     refda_alarms_entry_index_reset(agent.alarms.alarm_index);
     refda_alarms_entry_list_reset(agent.alarms.alarm_list);
+    refda_alarms_shelf_entry_set_reset(agent.alarms.shelf_list);
 }
 
 void test_refda_alarms_set_state_no_category(void)
@@ -135,6 +136,7 @@ void test_refda_alarms_set_state_no_category(void)
     // no mutex use with single thread
     TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_list_size(agent.alarms.alarm_list));
     TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_index_size(agent.alarms.alarm_index));
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_shelf_entry_set_size(agent.alarms.shelf_list));
 
     cace_ari_t res_ref = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_objref_path_intid(&res_ref, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_IDENT,
@@ -187,11 +189,83 @@ void test_refda_alarms_set_state_no_category(void)
     cace_ari_deinit(&res_ref);
 }
 
+void test_refda_alarms_set_state_with_shelf(void)
+{
+    // no mutex use with single thread
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_list_size(agent.alarms.alarm_list));
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_index_size(agent.alarms.alarm_index));
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_shelf_entry_set_size(agent.alarms.shelf_list));
+
+    cace_ari_t res_ref = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_objref_path_intid(&res_ref, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_IDENT,
+                                   EXAMPLE_IDENT_RES1_ENUM);
+
+    cace_ari_t cat_ref = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_objref_path_intid(&cat_ref, EXAMPLE_ORG_ENUM, EXAMPLE_ADM_ENUM, CACE_ARI_TYPE_IDENT,
+                                   EXAMPLE_IDENT_CAT2_ENUM);
+
+    // initial state before shelf
+    refda_alarms_set_refs(&agent, &res_ref, &cat_ref, REFDA_ALARMS_SEVERITY_MINOR);
+    TEST_ASSERT_EQUAL_size_t(1, refda_alarms_entry_list_size(agent.alarms.alarm_list));
+    TEST_ASSERT_EQUAL_size_t(1, refda_alarms_entry_index_size(agent.alarms.alarm_index));
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_shelf_entry_set_size(agent.alarms.shelf_list));
+    {
+        refda_alarms_entry_ptr_t *entry_ptr = *refda_alarms_entry_list_front(agent.alarms.alarm_list);
+        refda_alarms_entry_t     *entry     = refda_alarms_entry_ptr_ref(entry_ptr);
+        TEST_ASSERT_NOT_NULL(entry);
+        TEST_ASSERT_TRUE(cace_ari_equal(&res_ref, &entry->resource.name));
+        TEST_ASSERT_TRUE(cace_ari_equal(&cat_ref, &entry->category.name));
+    }
+
+    { // add shelf
+        refda_alarms_shelf_entry_t entry;
+        refda_alarms_shelf_entry_init(&entry);
+
+        {
+            cace_ari_ac_t *val_ac = cace_ari_set_ac(&entry.resources, NULL);
+            // single pattern
+            cace_ari_objpat_t *pat = cace_ari_set_objpat(cace_ari_list_push_back_new(val_ac->items));
+            // any-object matching
+            cace_ari_objpat_part_set_special(pat->org_pat, true);
+            cace_ari_objpat_part_set_special(pat->model_pat, true);
+            cace_ari_objpat_part_set_special(pat->type_pat, true);
+            cace_ari_objpat_part_set_special(pat->obj_pat, true);
+        }
+        {
+            cace_ari_ac_t *val_ac = cace_ari_set_ac(&entry.categories, NULL);
+            // single pattern
+            cace_ari_objpat_t *pat = cace_ari_set_objpat(cace_ari_list_push_back_new(val_ac->items));
+            // any-object matching
+            cace_ari_objpat_part_set_special(pat->org_pat, true);
+            cace_ari_objpat_part_set_special(pat->model_pat, true);
+            cace_ari_objpat_part_set_special(pat->type_pat, true);
+            cace_ari_objpat_part_set_special(pat->obj_pat, true);
+        }
+
+        refda_alarms_apply_shelf(&agent.alarms, &entry);
+        // move semantics
+        refda_alarms_shelf_entry_set_push(agent.alarms.shelf_list, entry);
+    }
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_list_size(agent.alarms.alarm_list));
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_index_size(agent.alarms.alarm_index));
+    TEST_ASSERT_EQUAL_size_t(1, refda_alarms_shelf_entry_set_size(agent.alarms.shelf_list));
+
+    // new state matches shelf, ignored
+    refda_alarms_set_refs(&agent, &res_ref, &cat_ref, REFDA_ALARMS_SEVERITY_MINOR);
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_list_size(agent.alarms.alarm_list));
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_index_size(agent.alarms.alarm_index));
+    TEST_ASSERT_EQUAL_size_t(1, refda_alarms_shelf_entry_set_size(agent.alarms.shelf_list));
+
+    cace_ari_deinit(&cat_ref);
+    cace_ari_deinit(&res_ref);
+}
+
 void test_refda_alarms_purge_all(void)
 {
     // no mutex use with single thread
     TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_list_size(agent.alarms.alarm_list));
     TEST_ASSERT_EQUAL_size_t(0, refda_alarms_entry_index_size(agent.alarms.alarm_index));
+    TEST_ASSERT_EQUAL_size_t(0, refda_alarms_shelf_entry_set_size(agent.alarms.shelf_list));
 
     cace_ari_t null_ref = CACE_ARI_INIT_NULL;
     cace_ari_t res1_ref = CACE_ARI_INIT_UNDEFINED;

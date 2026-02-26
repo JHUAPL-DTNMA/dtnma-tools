@@ -454,6 +454,9 @@ static void refda_adm_ietf_alarms_ctrl_ensure_shelf(refda_ctrl_exec_ctx_t *ctx)
         // present or not
         if (!refda_alarms_shelf_entry_set_get(agent->alarms.shelf_list, trial))
         {
+            // enforce this now, taking the alarm lock
+            refda_alarms_apply_shelf(&agent->alarms, &trial);
+
             // move semantics
             refda_alarms_shelf_entry_set_push(agent->alarms.shelf_list, trial);
             ++affected;

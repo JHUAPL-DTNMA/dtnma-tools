@@ -300,6 +300,10 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter);
  */
 size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, refda_alarms_mgr_state_t state);
 
+/** Internal interface to apply a single shelf entry.
+ */
+size_t refda_alarms_apply_shelf(refda_alarms_t *alarms, const refda_alarms_shelf_entry_t *shelf);
+
 #ifdef __cplusplus
 } // extern C
 #endif

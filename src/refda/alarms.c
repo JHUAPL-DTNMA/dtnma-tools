@@ -198,6 +198,8 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
         if (any_match)
         {
             CACE_LOG_DEBUG("A shelf entry has matched a potential alarm, ignoring the alarm state");
+            refda_amm_ident_base_deinit(&res_ref);
+            refda_amm_ident_base_deinit(&cat_ref);
             return;
         }
     }
@@ -421,6 +423,20 @@ int refda_alarms_get_table(refda_runctx_t *runctx, cace_ari_t *out)
     return 0;
 }
 
+/** Purge an individual entry while the list is locked.
+ */
+static void refda_alarms_purge_entry(refda_alarms_t *alarms, refda_alarms_entry_list_it_t entry_it,
+                                     refda_alarms_entry_t *entry)
+{
+    refda_alarms_entry_key_t entry_key = {
+        .resource = entry->resource.ident,
+        .category = entry->category.ident,
+    };
+    refda_alarms_entry_index_erase(alarms->alarm_index, entry_key);
+
+    refda_alarms_entry_list_remove(alarms->alarm_list, entry_it);
+}
+
 size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
 {
     CHKRET(runctx, 0);
@@ -470,13 +486,7 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
         // True result indicates entry is purged
         if (cace_amm_ari_is_truthy(&eval_result))
         {
-            refda_alarms_entry_key_t entry_key = {
-                .resource = entry->resource.ident,
-                .category = entry->category.ident,
-            };
-            refda_alarms_entry_index_erase(alarms->alarm_index, entry_key);
-
-            refda_alarms_entry_list_remove(alarms->alarm_list, entry_it);
+            refda_alarms_purge_entry(alarms, entry_it, entry);
             affected += 1;
         }
         else
@@ -621,6 +631,40 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
                 cace_get_system_time(&entry->mgr_time);
                 affected += 1;
             }
+        }
+    }
+
+    if (pthread_mutex_unlock(&(alarms->alarm_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock alarm_mutex");
+    }
+    return affected;
+}
+
+size_t refda_alarms_apply_shelf(refda_alarms_t *alarms, const refda_alarms_shelf_entry_t *shelf)
+{
+    if (pthread_mutex_lock(&(alarms->alarm_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock alarm_mutex");
+        return 0;
+    }
+
+    size_t affected = 0;
+
+    refda_alarms_entry_list_it_t entry_it;
+    for (refda_alarms_entry_list_it(entry_it, alarms->alarm_list); !refda_alarms_entry_list_end_p(entry_it);)
+    {
+        refda_alarms_entry_t *entry = refda_alarms_entry_ptr_ref(*refda_alarms_entry_list_cref(entry_it));
+
+        if (refda_alarms_shelf_entry_match(shelf, &entry->resource.deref, &entry->category.deref))
+        {
+            refda_alarms_purge_entry(alarms, entry_it, entry);
+            affected += 1;
+        }
+        else
+        {
+            // keep and check next
+            refda_alarms_entry_list_next(entry_it);
         }
     }
 
