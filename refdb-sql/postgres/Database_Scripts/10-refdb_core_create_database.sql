@@ -505,7 +505,7 @@ create table if not exists ari_tbl (
 create table if not exists execution_set(
     execution_set_id serial not null,
     -- timestamp from the Manager
-    mgr_time TIMESTAMP not null,
+    mgr_time TIMESTAMPTZ not null,
     nonce_cbor BYTEA,
     ac_id INT,
     use_desc varchar,
@@ -531,9 +531,9 @@ use_desc varchar,
 create table if not exists ari_rptset (
     ari_rptset_id serial NOT NULL,
     -- timestamp from the Manager
-    mgr_time TIMESTAMP not null,
+    mgr_time TIMESTAMPTZ not null,
     nonce_cbor BYTEA NOT NULL,
-    reference_time TIMESTAMP NOT NULL,
+    reference_time TIMESTAMPTZ NOT NULL,
     report_list TEXT NOT NULL,
     report_list_cbor BYTEA NOT NULL,
     agent_id INTEGER NOT NULL,

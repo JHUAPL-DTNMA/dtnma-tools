@@ -1309,7 +1309,7 @@ as $$ BEGIN
 END$$;
 
 
-create or replace procedure SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time TIMESTAMP, p_report_list TEXT, p_report_list_cbor BYTEA, p_agent_endpoint_uri TEXT)
+create or replace procedure SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time TIMESTAMPTZ, p_report_list TEXT, p_report_list_cbor BYTEA, p_agent_endpoint_uri TEXT)
 language plpgsql
 as $$
 DECLARE
