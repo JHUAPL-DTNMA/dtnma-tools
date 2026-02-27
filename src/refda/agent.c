@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -43,6 +43,8 @@ void refda_agent_init(refda_agent_t *agent)
     refda_acl_init(&(agent->acl));
     pthread_mutex_init(&(agent->acl_mutex), NULL);
 
+    refda_alarms_init(&(agent->alarms));
+
     string_list_init(agent->odm_names);
     cace_amm_obj_store_init(&(agent->objs));
     pthread_mutex_init(&(agent->objs_mutex), NULL);
@@ -78,6 +80,8 @@ void refda_agent_deinit(refda_agent_t *agent)
     pthread_mutex_destroy(&(agent->objs_mutex));
     cace_amm_obj_store_deinit(&(agent->objs));
     string_list_clear(agent->odm_names);
+
+    refda_alarms_deinit(&(agent->alarms));
 
     pthread_mutex_destroy(&(agent->acl_mutex));
     refda_acl_deinit(&(agent->acl));
@@ -209,6 +213,11 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         CACE_LOG_DEBUG("Binding namespace ari:/%s/%s/", m_string_get_cstr(ns->org_id.name),
                        m_string_get_cstr(ns->model_id.name));
 
+        refda_binding_ctx_t ctx = {
+            .store = &(agent->objs),
+            .ns    = ns,
+        };
+
         cace_amm_obj_ns_ctr_dict_it_t objtype_it;
         for (cace_amm_obj_ns_ctr_dict_it(objtype_it, ns->object_types); !cace_amm_obj_ns_ctr_dict_end_p(objtype_it);
              cace_amm_obj_ns_ctr_dict_next(objtype_it))
@@ -224,7 +233,7 @@ int refda_agent_bindrefs(refda_agent_t *agent)
             {
                 cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(*cace_amm_obj_desc_list_ref(obj_it));
 
-                const int objfailcnt = refda_binding_obj(obj_type, obj, &(agent->objs));
+                const int objfailcnt = refda_binding_obj(&ctx, obj_type, obj);
                 if (objfailcnt)
                 {
                     CACE_LOG_WARNING("binding object ari:/%s/%s/%s/%s; failures %d", m_string_get_cstr(ns->org_id.name),

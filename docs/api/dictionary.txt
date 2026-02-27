@@ -85,6 +85,7 @@ Doxygen
 dtn
 dtnma
 DTNMA
+edd
 EDD
 EDDs
 eid
@@ -184,6 +185,7 @@ rankdir
 rb
 realloc
 REALLOC
+recurse
 recurses
 recv
 RECV
