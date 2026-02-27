@@ -65,6 +65,7 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 #else
     // local daemon storage
     cace_ari_set_copy(cace_ari_list_push_back_new(agent->rptsets), val);
+    agent->mgr_time = time(NULL);
 #endif
 
     {

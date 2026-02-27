@@ -47,6 +47,7 @@ void refdm_agent_init(refdm_agent_t *obj)
     m_string_init(obj->eid);
 #if !(defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL))
     cace_ari_list_init(obj->rptsets);
+    obj->mgr_time = 0;
 #endif
 
     pthread_mutex_init(&(obj->log_mutex), NULL);

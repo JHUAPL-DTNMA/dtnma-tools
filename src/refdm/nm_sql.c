@@ -959,7 +959,7 @@ int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
 }
 
 //-------------------------------------------------------------------------------------
-int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
+int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, struct tm *mgr_time)
 {
     int ecode;
     if ((ecode = pthread_mutex_lock(&db_rest_con_use)))
@@ -968,10 +968,10 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
         return RET_FAIL_DATABASE_CONNECTION;
     }
 
-    // Get the rptset rows from the database
     PGresult *res = NULL;
-    ecode         = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT %s FROM %s WHERE agent_id=%d",
-                                             COL_NAME_REPORT_LIST_CBOR, TBL_NAME_RPTSET, agent_idx);
+    // Get the rptset rows from the database
+    ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT %s FROM %s WHERE agent_id=%d",
+                                     COL_NAME_REPORT_LIST_CBOR, TBL_NAME_RPTSET, agent_idx);
     // debugPostgresSqlResult(res, 9);
     if (ecode != RET_PASS)
     {
@@ -1015,6 +1015,22 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
 
         // Add the report to the list
         cace_ari_list_push_back_move(*rptsets, &ari_item);
+    }
+
+    ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT MAX(mgr_time) FROM %s WHERE agent_id=%d",
+                                     TBL_NAME_RPTSET, agent_idx);
+    if (ecode != RET_PASS)
+    {
+        CACE_LOG_ERR("Failed to retrieve the RPTSET mgr_time");
+    }
+    else
+    {
+        const char *ts_str = PQgetvalue(res, 0, 0);
+
+        if (strptime(ts_str, "%Y-%m-%d %H:%M:%S", mgr_time) == NULL)
+        {
+            CACE_LOG_ERR("Failed to parse mgr_time: %s", ts_str);
+        }
     }
 
     CACE_LOG_INFO("Success with retrieval of rptset items. Num items: %d", num_rows);
