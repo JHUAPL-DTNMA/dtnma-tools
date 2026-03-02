@@ -56,6 +56,7 @@ void cace_amm_obj_desc_init(cace_amm_obj_desc_t *obj)
 {
     cace_amm_idseg_val_init(&obj->obj_id);
     cace_amm_formal_param_list_init(obj->fparams);
+    obj->status = CACE_AMM_STATUS_CURRENT;
     cace_amm_user_data_init(&(obj->app_data));
 }
 

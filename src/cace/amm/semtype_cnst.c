@@ -118,6 +118,7 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
     {
         case AMM_SEMTYPE_CNST_INVALID:
             CACE_LOG_CRIT("Attempt to validate an unconfigured constraint");
+            // avoid runtime failures due to bad model initialization
             retval = true;
             break;
         case AMM_SEMTYPE_CNST_RANGE_INT64:

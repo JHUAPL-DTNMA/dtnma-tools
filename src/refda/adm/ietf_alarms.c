@@ -36,42 +36,10 @@
 
 /*   START CUSTOM INCLUDES HERE  */
 #include "ietf.h"
+#include "ietf_dtnma_agent.h"
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
-static void alarms_append_derived_ident(cace_ari_tbl_t *table, const cace_amm_lookup_t *deref)
-{
-    const refda_amm_ident_desc_t *ident = deref->obj ? deref->obj->app_data.ptr : NULL;
-    if (!ident)
-    {
-        CACE_LOG_ERR("invalid ident object");
-        return;
-    }
-
-    // Represent own object
-    if (!ident->abstract)
-    {
-        cace_ari_array_t row;
-        cace_ari_array_init(row);
-        cace_ari_array_resize(row, table->ncols);
-
-        // only set first column
-        cace_amm_lookup_ref_int(cace_ari_array_get(row, 0), deref);
-
-        // append the row
-        cace_ari_tbl_move_row_array(table, row);
-    }
-
-    // recurse into children
-    cace_amm_lookup_list_it_t child_it;
-    for (cace_amm_lookup_list_it(child_it, ident->derived); !cace_amm_lookup_list_end_p(child_it);
-         cace_amm_lookup_list_next(child_it))
-    {
-        const cace_amm_lookup_t *child = cace_amm_lookup_list_cref(child_it);
-
-        alarms_append_derived_ident(table, child);
-    }
-}
 
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
@@ -150,12 +118,11 @@ static void refda_adm_ietf_alarms_edd_resource_inventory(refda_edd_prod_ctx_t *c
     if (res)
     {
         CACE_LOG_CRIT("Unable to find root object");
-        refda_amm_ident_base_deinit(&root_deref);
-        REFDA_AGENT_UNLOCK(agent, );
-        return;
     }
-
-    alarms_append_derived_ident(table, &root_deref.deref);
+    else
+    {
+        refda_adm_ietf_dtnma_agent_append_derived_ident(table, &root_deref.deref, true, false);
+    }
     refda_amm_ident_base_deinit(&root_deref);
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
@@ -201,12 +168,11 @@ static void refda_adm_ietf_alarms_edd_category_inventory(refda_edd_prod_ctx_t *c
     if (res)
     {
         CACE_LOG_CRIT("Unable to find root object");
-        refda_amm_ident_base_deinit(&root_deref);
-        REFDA_AGENT_UNLOCK(agent, );
-        return;
     }
-
-    alarms_append_derived_ident(table, &root_deref.deref);
+    else
+    {
+        refda_adm_ietf_dtnma_agent_append_derived_ident(table, &root_deref.deref, true, false);
+    }
     refda_amm_ident_base_deinit(&root_deref);
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
