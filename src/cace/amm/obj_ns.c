@@ -41,7 +41,7 @@ void cace_amm_obj_ns_init(cace_amm_obj_ns_t *ns)
     cace_ari_date_init(&ns->model_rev);
     string_tree_set_init(ns->feature_supp);
     cace_amm_obj_ns_ctr_dict_init(ns->object_types);
-    ns->obsolete = false;
+    ns->status = CACE_AMM_STATUS_CURRENT;
 }
 
 void cace_amm_obj_ns_deinit(cace_amm_obj_ns_t *ns)

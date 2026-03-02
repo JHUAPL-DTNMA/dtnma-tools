@@ -75,10 +75,11 @@ typedef struct cace_amm_obj_store_s cace_amm_obj_store_t;
  *
  * @param[out] type The type to initialize and populate.
  * @param[in] name The ARITYPE literal or TYPEDEF reference value.
+ * @return Non-null pointer if successful.
  */
 cace_amm_semtype_use_t *cace_amm_type_set_use(cace_amm_type_t *type);
 
-/** Read a named config from its serialized name.
+/** Read a type use config from its serialized name.
  *
  * @param[in,out] type The object to populate.
  * @param[in] deref The name to draw parameters from.
@@ -93,7 +94,7 @@ int cace_amm_type_set_use_from_name(cace_amm_type_t *type, const cace_amm_lookup
  *
  * @param[out] type The type to initialize and populate.
  * @param[in] name The ARITYPE literal or TYPEDEF reference value.
- * @return Non-NULL upon success.
+ * @return Non-null pointer if successful.
  */
 cace_amm_semtype_use_t *cace_amm_type_set_use_ref(cace_amm_type_t *type, const cace_ari_t *name);
 /** @overload
@@ -145,6 +146,12 @@ static inline void cace_amm_semtype_ulist_deinit(cace_amm_semtype_ulist_t *obj)
  */
 cace_amm_semtype_ulist_t *cace_amm_type_set_ulist(cace_amm_type_t *type);
 
+/** Read a uniform list config from its serialized name.
+ *
+ * @param[in,out] type The object to populate.
+ * @param[in] deref The name to draw parameters from.
+ * @return Zero if successful.
+ */
 int cace_amm_type_set_ulist_from_name(cace_amm_type_t *type, const cace_amm_lookup_t *deref,
                                       const cace_amm_obj_store_t *store);
 

@@ -31,7 +31,6 @@ void refda_amm_sbr_desc_init(refda_amm_sbr_desc_t *obj)
     obj->max_exec_count = 0;
     obj->init_enabled   = true;
     obj->enabled        = false;
-    obj->obsolete       = false;
     obj->exec_count     = 0;
 }
 
