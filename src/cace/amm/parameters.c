@@ -197,6 +197,16 @@ int cace_amm_actual_param_set_populate(cace_ari_itemized_t *obj, const cace_amm_
             // remaining unused actuals
             if (!retval && !cace_ari_list_end_p(gparam_it))
             {
+                if (cace_log_is_enabled_for(LOG_WARNING))
+                {
+                    size_t unused = 0;
+                    while (!cace_ari_list_end_p(gparam_it))
+                    {
+                        ++unused;
+                        cace_ari_list_next(gparam_it);
+                    }
+                    CACE_LOG_WARNING("Given parameters have %zu unused items", unused);
+                }
                 retval = 3;
             }
 
