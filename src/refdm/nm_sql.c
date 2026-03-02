@@ -447,10 +447,10 @@ uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
 #ifdef HAVE_POSTGRESQL
 
         // RPTSET values
-        // signature IN p_nonce_cbor BYTEA, p_reference_time TIMESTAMP, p_report_list TEXT, p_report_list_cbor BYTEA,
+        // signature IN p_nonce_cbor BYTEA, p_reference_time TIMESTAMPTZ, p_report_list TEXT, p_report_list_cbor BYTEA,
         // p_agent_endpoint_uri TEXT
         queries[idx][ARI_RPTSET_INSERT] =
-            db_mgr_sql_prepare(idx, "call sp__insert_rptset($1::bytea, $2::timestamp, $3::text, $4::bytea, $5::text)",
+            db_mgr_sql_prepare(idx, "call sp__insert_rptset($1::bytea, $2::timestamptz, $3::text, $4::bytea, $5::text)",
                                "ARI_RPTSET_INSERT", 5, NULL);
 
         queries[idx][REFDM_DB_LOG_MSG] =
