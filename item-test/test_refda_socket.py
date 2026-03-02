@@ -371,8 +371,7 @@ class TestRefdaSocket(unittest.TestCase):
                 + '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,rptt-two,1,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)),'
                 + '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,expr-sum,2,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/expr),/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)),'
                 + '//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!odm,rptt-sum-inline,3,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)))'
-                + '))',
-                nn=False
+                + '))'
             )]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=4)
@@ -393,8 +392,7 @@ class TestRefdaSocket(unittest.TestCase):
                 + '//ietf/dtnma-agent/CTRL/report-on(/ac/(/ac/(//ietf/!odm/const/expr-sum))),'
                 # produced RPTT with an expression
                 + '//ietf/dtnma-agent/CTRL/report-on(//ietf/!odm/var/rptt-sum-inline)'
-                + ')',
-                nn=False
+                + ')'
             )]
         )
 
@@ -416,22 +414,29 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([int, int], literal_prim_types(rpt.items))
 
         rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/const/rptt-two', nn=False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/const/rptt-two'), rpt.source)
         self.assertEqual([int, int], literal_prim_types(rpt.items))
 
         rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/!odm/const/expr-sum)', nn=False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/!odm/const/expr-sum)'), rpt.source)
         # the produced AC directly
         self.assertEqual([list], literal_prim_types(rpt.items))
+        self.assertEqual(
+            self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)'),
+            rpt.items[0]
+        )
 
         rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('/ac/(/ac/(//ietf/!odm/const/expr-sum))', nn=False), rpt.source)
-        # the evaluated result
-        # FIXME: should be recursively evaluated
+        self.assertEqual(self._ari_text_to_obj('/ac/(/ac/(//ietf/!odm/const/expr-sum))'), rpt.source)
+        # the evaluated expression with no operations
         self.assertEqual([list], literal_prim_types(rpt.items))
+        self.assertEqual(
+            self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)'),
+            rpt.items[0]
+        )
 
         rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/var/rptt-sum-inline', nn=False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/!odm/var/rptt-sum-inline'), rpt.source)
         self.assertEqual([int], literal_prim_types(rpt.items))
 
     def test_exec_delayed(self):
@@ -490,8 +495,7 @@ class TestRefdaSocket(unittest.TestCase):
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),'
                 + '//ietf/dtnma-agent/CTRL/inspect(false),'  # invalid parameter
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'
-                + '))',
-                nn=False
+                + '))'
             )]
         )
 
@@ -514,8 +518,7 @@ class TestRefdaSocket(unittest.TestCase):
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),'
                 + '//ietf/dtnma-agent/CTRL/inspect(//!private/!odm/EDD/missing),'  # invalid target
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'
-                + '))',
-                nn=False
+                + '))'
             )]
         )
 
@@ -527,7 +530,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertIsInstance(rpt, ari.Report)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//!private/!odm/EDD/missing)', nn=False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//!private/!odm/EDD/missing)'), rpt.source)
         self.assertEqual([ari.UNDEFINED], rpt.items)
 
         # no other RPTSET
@@ -603,7 +606,7 @@ class TestRefdaSocket(unittest.TestCase):
         # ODM Rules
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/PT1S,1,false))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr,1,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/PT1S,1,false))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -614,7 +617,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/PT1S,1,false))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-tbr(//ietf/!test-model-1,test-tbr2,2,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/TD/999999,/TD/PT1S,1,false))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -625,7 +628,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/AC/(false),/TD/999999,1,false))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,/AC/(//ietf/dtnma-agent/CTRL/obsolete-rule),/AC/(false),/TD/999999,1,false))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -659,34 +662,34 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
 
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true))', nn=False)]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true)', nn=False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/ensure-rule-enabled(//ietf/!test-model-1/TBR/test-tbr,true)'), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/reset-rule-enabled(//ietf/!test-model-1/TBR/test-tbr))', nn=False)]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/reset-rule-enabled(//ietf/!test-model-1/TBR/test-tbr))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/reset-rule-enabled(//ietf/!test-model-1/TBR/test-tbr)', nn=False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/reset-rule-enabled(//ietf/!test-model-1/TBR/test-tbr)'), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-rule(//ietf/!test-model-1/TBR/test-tbr2))', nn=False)]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-rule(//ietf/!test-model-1/TBR/test-tbr2))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/obsolete-rule(//ietf/!test-model-1/TBR/test-tbr2)', nn=False), rpt.source)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/obsolete-rule(//ietf/!test-model-1/TBR/test-tbr2)'), rpt.source)
         # items of the report
         self.assertEqual(1, len(rpt.items))
         self.assertNotIn(ari.UNDEFINED, rpt.items)
@@ -726,7 +729,7 @@ class TestRefdaSocket(unittest.TestCase):
         # rule is created as enabled
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,' + macro + ',' + cond + ',/TD/PT0.5S,0,true))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,' + macro + ',' + cond + ',/TD/PT0.5S,0,true))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -831,7 +834,7 @@ class TestRefdaSocket(unittest.TestCase):
         # Add a variable
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,test-var,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),1))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,test-var,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),1))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -849,7 +852,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual((1, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
         self.assertEqual(
-            self._ari_text_to_obj('//1/-1/var/1', nn=False),
+            self._ari_text_to_obj('//1/-1/var/1'),
             rpt.items[0].value[0, 0]
         )
         self.assertEqual(
@@ -859,7 +862,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         # Obsolete the VAR
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-var(//ietf/!test-model-1/VAR/test-var))', nn=False)]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-var(//ietf/!test-model-1/VAR/test-var))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -888,7 +891,7 @@ class TestRefdaSocket(unittest.TestCase):
         # attempt to create with an invalid type
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/-100),/AC/(//ietf/dtnma-agent/EDD/num-msg-rx)))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/!test-modell-1/typedef/-100),/AC/(//ietf/dtnma-agent/EDD/num-msg-rx)))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -898,7 +901,7 @@ class TestRefdaSocket(unittest.TestCase):
         # attempt to create with an invalid value
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/RPTT),/AC/(10)))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-var(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/RPTT),/AC/(10)))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -941,7 +944,7 @@ class TestRefdaSocket(unittest.TestCase):
         # Add a constant
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,test-const,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),1))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,test-const,1,//ietf/amm-semtype/IDENT/type-use(/ARITYPE/int),1))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -959,7 +962,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual((1, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
         self.assertEqual(
-            self._ari_text_to_obj('//1/-1/const/1', nn=False),
+            self._ari_text_to_obj('//1/-1/const/1'),
             rpt.items[0].value[0, 0]
         )
         self.assertEqual(
@@ -969,7 +972,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         # Obsolete the CONST
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-const(//ietf/!test-model-1/CONST/test-const))', nn=False)]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-const(//ietf/!test-model-1/CONST/test-const))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -1027,7 +1030,7 @@ class TestRefdaSocket(unittest.TestCase):
         # attempt to create with an invalid type
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/-100),/AC/(//ietf/dtnma-agent/EDD/num-msg-rx)))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/!test-model-1/typedef/-100),/AC/(//ietf/dtnma-agent/EDD/num-msg-rx)))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -1037,7 +1040,7 @@ class TestRefdaSocket(unittest.TestCase):
         # attempt to create with an invalid value
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/RPTT),/AC/(10)))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,invalid,10,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/RPTT),/AC/(10)))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -1069,7 +1072,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,rptt-num-msg-rx,4,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/RPTT),/AC/(//ietf/dtnma-agent/EDD/num-msg-rx)))', nn=False)]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!test-model-1,rptt-num-msg-rx,4,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/RPTT),/AC/(//ietf/dtnma-agent/EDD/num-msg-rx)))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -1077,7 +1080,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/!test-model-1/const/rptt-num-msg-rx))', nn=False)]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/!test-model-1/const/rptt-num-msg-rx))')]
         )
         # the generated report
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None))
