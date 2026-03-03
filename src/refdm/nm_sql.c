@@ -63,14 +63,14 @@ typedef enum db_con_e
 
 typedef struct refdm_db_pool_t
 {
-    /// Lock for this struct instance and its pointers
+    /// Lock for certain uses of #conn which are not thread safe.
     pthread_mutex_t lock;
     /** Connection handle.
      * This can be used outside of #lock in a thread safe way, but not reassigned.
      */
     PGconn *conn;
     /** Parameters used to connect, which must outlive this pointer.
-     * These parameters are used in case reconnection is needed.
+     * These parameters are used in case re-connection is needed.
      */
     const refdm_db_t *parms;
 } refdm_db_pool_t;
