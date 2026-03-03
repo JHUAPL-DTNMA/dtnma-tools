@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * This file is only included in the build when either ::HAVE_POSTGRESQL or
- * ::HAVE_MYSQL are defined.
+ * This file is only included in the build when ::HAVE_POSTGRESQL is defined.
  */
 #ifndef REFDM_NM_SQL_H_
 #define REFDM_NM_SQL_H_
@@ -25,10 +24,6 @@
 /* System Headers */
 #include <stdio.h>
 #include <unistd.h>
-
-#ifdef HAVE_MYSQL
-#include <mysql.h>
-#endif // HAVE_MYSQL
 
 #ifdef HAVE_POSTGRESQL
 #include <libpq-fe.h>
@@ -104,18 +99,14 @@ extern "C" {
 int32_t db_add_agent(const cace_data_t *agent_eid);
 
 /* Database Management Functions. */
-uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log);
-uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms);
+uint32_t refdm_db_mgt_init(const refdm_db_t *parms, uint32_t clear, uint32_t log);
 
 void refdm_db_mgt_close(void);
 void refdm__db_mgt_close_conn(size_t i);
 int  refdm_db_mgt_connected(size_t i);
-#ifdef HAVE_MYSQL
-int32_t refdm_db_mgt_query_fetch(int db_idx, MYSQL_RES **res, char *format, ...);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
+#if defined(HAVE_POSTGRESQL)
 int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...);
-#endif // HAVE_POSTGRESQL
+#endif // defined(HAVE_POSTGRESQL)
 int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...);
 
 /* Functions to process outgoing EXECSET and incoming RPTSET. */
