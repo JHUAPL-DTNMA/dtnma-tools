@@ -63,18 +63,24 @@ typedef enum db_con_e
 
 typedef struct refdm_db_pool_t
 {
-    PGconn         *conn;
+    /// Lock for this struct instance and its pointers
     pthread_mutex_t lock;
+    /** Connection handle.
+     * This can be used outside of #lock in a thread safe way, but not reassigned.
+     */
+    PGconn *conn;
+    /** Parameters used to connect, which must outlive this pointer.
+     * These parameters are used in case reconnection is needed.
+     */
+    const refdm_db_t *parms;
 } refdm_db_pool_t;
 
-/* Global connections to the MYSQL Server. */
+/* Global connections to the Server. */
 refdm_db_pool_t dbpool[MGR_NUM_SQL_CONNECTIONS];
 
 #define checkConn(idx) (idx < MGR_NUM_SQL_CONNECTIONS && dbpool[idx].conn != NULL)
 #define getConn(idx)   pthread_mutex_lock(&dbpool[idx].lock)
 #define giveConn(idx)  pthread_mutex_unlock(&dbpool[idx].lock)
-
-static refdm_db_t *gParms;
 
 // Private functions
 static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, int nParams, const Oid *paramTypes);
@@ -231,6 +237,9 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
     m_string_clear(msg);
 }
 
+static void     refdm_db_pool_init(refdm_db_pool_t *conn, const refdm_db_t *parms);
+static uint32_t refdm_db_pool_connect(refdm_db_pool_t *conn, size_t idx);
+
 /******************************************************************************
  *
  * \par Function Name: refdm_db_mgt_init
@@ -240,10 +249,8 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
  * \retval 0 Failure
  *        !0 Success
  *
- * \param[in]  server The machine hosting the SQL database.
- * \param[in]  user The username for the SQL database.
- * \param[in]  pwd The password for this user.
- * \param[in]  database The database housing the DTNMP tables.
+ * \param[in]  parms The parameters for connecting to the SQL database.
+ * The referenced object must outlive any DB connection.
  *
  * Modification History:
  *  MM/DD/YY  AUTHOR         DESCRIPTION
@@ -251,77 +258,78 @@ void refdm_db_log_msg(const char *file, int line, const char *fun, int level, si
  *  07/12/13  S. Jacobs      Initial implementation,
  *  01/26/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
  *****************************************************************************/
-uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log)
+uint32_t refdm_db_mgt_init(const refdm_db_t *parms, uint32_t clear, uint32_t log)
 {
 
-    for (size_t i = 0; i < MGR_NUM_SQL_CONNECTIONS; i++)
+    for (size_t idx = 0; idx < MGR_NUM_SQL_CONNECTIONS; idx++)
     {
-        CACE_LOG_INFO("Initiating DB Pool idx %i", i);
-        refdm_db_mgt_init_con(i, parms);
+        CACE_LOG_INFO("Initiating DB Pool idx %i", idx);
+        refdm_db_pool_t *conn = &dbpool[idx];
+
+        refdm_db_pool_init(conn, parms);
+        // initial connection
+        refdm_db_pool_connect(conn, idx);
     }
 
     CACE_LOG_INFO("-->0");
     return 0;
 }
 
-/** Initialize specified (thread-specific) SQL connection and prepared queries
- *  Prepared queries are connection specific.  While we may not use all prepared statements for all connections,
- *initializing the same sets everywhere simplifies management.
- **/
-uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms)
+/** Initialize struct state for a single connection in the pool.
+ */
+static void refdm_db_pool_init(refdm_db_pool_t *conn, const refdm_db_t *parms)
 {
-    refdm_db_pool_t *conn = &dbpool[idx];
+    // Initialize states
+    pthread_mutex_init(&conn->lock, NULL);
 
-    if (idx >= MGR_NUM_SQL_CONNECTIONS)
-    {
-        CACE_LOG_ERR("Invalid DB pool index %d", idx);
-        return 0;
-    }
+    conn->parms = parms;
+
+    conn->conn = NULL;
+}
+
+/** Actually attempt the connection from parameters.
+ * This can occur multiple times for the same connection to re-connect.
+ * Prepared queries are connection specific.  While we may not use all prepared statements for all connections,
+ * initializing the same sets everywhere simplifies management.
+ */
+static uint32_t refdm_db_pool_connect(refdm_db_pool_t *conn, size_t idx)
+{
+    conn->conn = PQsetdbLogin(conn->parms->server, NULL, NULL, NULL, conn->parms->database, conn->parms->username,
+                              conn->parms->password);
     if (conn->conn == NULL)
     {
-        // Initialize mutex
-        pthread_mutex_init(&conn->lock, NULL);
-
-        // Initialize connection
-        gParms = parms;
-
-        conn->conn = PQsetdbLogin(parms->server, NULL, NULL, NULL, parms->database, parms->username, parms->password);
-        if (conn->conn == NULL)
-        {
-            CACE_LOG_WARNING("SQL Error: Null connection object returned");
-        }
-        else if (PQstatus(conn->conn) != CONNECTION_OK)
-        {
-            CACE_LOG_WARNING("SQL Error: %s", PQerrorMessage(conn->conn));
-            PQfinish(conn->conn);
-            conn->conn = NULL; // This was previously before the log entry which is likely a mistake
-            CACE_LOG_INFO("--> 0");
-            return 0;
-        }
-
-        // Initialize prepared queries
-
-        // RPTSET values
-        // signature IN p_nonce_cbor BYTEA, p_reference_time TIMESTAMP, p_report_list TEXT, p_report_list_cbor BYTEA,
-        // p_agent_endpoint_uri TEXT
-        queries[idx][ARI_RPTSET_INSERT] =
-            db_mgr_sql_prepare(idx, "call sp__insert_rptset($1::bytea, $2::timestamp, $3::text, $4::bytea, $5::text)",
-                               "ARI_RPTSET_INSERT", 5, NULL);
-
-        queries[idx][REFDM_DB_LOG_MSG] =
-            db_mgr_sql_prepare(idx,
-                               "INSERT INTO DB_LOG_INFO (msg,level,source,file,line) "
-                               "VALUES($1::varchar,$2::int4,$3::varchar,$4::varchar,$5::int4)",
-                               "REFDM_DB_LOG_MSG", 5, NULL);
-
-        queries[idx][ARI_AGENT_INSERT] =
-            db_mgr_sql_prepare(idx, "call SP__insert_agent($1::varchar,null)", "SP__insert_agent", 2, NULL);
-
-        // EXECSET values
-        queries[idx][ARI_EXECSET_INSERT] =
-            db_mgr_sql_prepare(idx, "call SP__insert_execset($1::bytea, $2::varchar, $3::varchar, $4::bytea, $5::int4)",
-                               "SP__insert_execset", 5, NULL);
+        CACE_LOG_WARNING("SQL Error: Null connection object returned");
     }
+    else if (PQstatus(conn->conn) != CONNECTION_OK)
+    {
+        CACE_LOG_WARNING("SQL Error: %s", PQerrorMessage(conn->conn));
+        PQfinish(conn->conn);
+        conn->conn = NULL; // This was previously before the log entry which is likely a mistake
+        CACE_LOG_INFO("--> 0");
+        return 0;
+    }
+
+    // Initialize prepared queries
+
+    // RPTSET values
+    // signature IN p_nonce_cbor BYTEA, p_reference_time TIMESTAMP, p_report_list TEXT, p_report_list_cbor BYTEA,
+    // p_agent_endpoint_uri TEXT
+    queries[idx][ARI_RPTSET_INSERT] =
+        db_mgr_sql_prepare(idx, "call sp__insert_rptset($1::bytea, $2::timestamp, $3::text, $4::bytea, $5::text)",
+                           "ARI_RPTSET_INSERT", 5, NULL);
+
+    queries[idx][REFDM_DB_LOG_MSG] = db_mgr_sql_prepare(idx,
+                                                        "INSERT INTO DB_LOG_INFO (msg,level,source,file,line) "
+                                                        "VALUES($1::varchar,$2::int4,$3::varchar,$4::varchar,$5::int4)",
+                                                        "REFDM_DB_LOG_MSG", 5, NULL);
+
+    queries[idx][ARI_AGENT_INSERT] =
+        db_mgr_sql_prepare(idx, "call SP__insert_agent($1::varchar,null)", "SP__insert_agent", 2, NULL);
+
+    // EXECSET values
+    queries[idx][ARI_EXECSET_INSERT] =
+        db_mgr_sql_prepare(idx, "call SP__insert_execset($1::bytea, $2::varchar, $3::varchar, $4::bytea, $5::int4)",
+                           "SP__insert_execset", 5, NULL);
 
     CACE_LOG_INFO("refdm_db_mgt_init -->1");
     return 1;
@@ -404,11 +412,7 @@ int refdm_db_mgt_connected(size_t idx)
     {
         while (num_tries < SQL_CONN_TRIES)
         {
-            // FIXME: Passing in gParms to a fn that assigns gParms
-            /* NOTES/FIXME: Does this relate to gMbrDB.sql_info? If not, we have a disconnect in parameters
-             * nm_mgr.c HAVE_MYSQL passes gMgrDB.sql_info to refdm_db_mgt_init which does the connection
-             */
-            refdm_db_mgt_init_con(idx, gParms);
+            refdm_db_pool_connect(conn, idx);
             if ((result = (PQstatus(conn->conn) == CONNECTION_OK) ? 0 : 1) == 0)
             {
 

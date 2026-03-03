@@ -27,9 +27,9 @@ limitations under the License.
             | |_____| |
             |_|_____|_|
 
-A MySQL/PostgreSQL database that can be used to support management of the Asynchronous Management Protocol.  
+A persistent database that can be used to support management of the Asynchronous Management Protocol.  
 
-The MySQL/PostgreSQL database was created using as generic SQL as possible allowing for easy porting to the user preferred flavor of SQL. 
+The database schema was created using as generic SQL as possible allowing for easy porting to the user preferred flavor of SQL. 
 
 This is version 1.0 of the new AMP database designed at JHUAPL, using lessons learned from previous iterations of an AMP database. This database confirms to Asynchronous Management Protocol draft-birrane-dtn-amp-08 the most recent version of AMP as of release. 
    
@@ -37,8 +37,6 @@ See [Here](Documents/Notes/AMP_Manager_SQL_Interface.md). This document defines 
 
 ## Setup
 An example docker compose configuration script is provided as a convenient option for getting started.  See the comments at the top of docker-compose.yml for details.
-
-Alternatively, a setup script (setup.mysql) is provided to conveniently source all required SQL files from the command line.  This would be the recommended approach for instantiating production systems.  See the file comments for details.
 
 
 ## Files
@@ -52,14 +50,14 @@ Below shows the file tree of this repo.
     │   │                                # relationships are setup. Also shows how the actual formal definition design is put 
     │   │                                # into effect.
     │   │
-    │   └── Notes               # Notes on the database design. AMP_Manager_SQL_Interface.md is the main document that 
+    │   └── Notes               # Notes on the database design. `AMP_Manager_SQL_Interface.md` is the main document that 
     │                           # describes the database. It will explain design decisions and describe the various tables with 
     │                           # some examples of how different amp objects will look like in the database. SP.txt is for the stored procedures
     │                           # definitions, detailing the inputs and outputs of each SP and. packaging.txt details packaging exampls of the databae  
     │
     |── README.md               # This Document 
-    └── mysql/ or postgres/
-        │  amp_core.sql             # a dump of the MySQL database. A good starting point to load the database. ß
+    └── postgres/
+        │  amp_core.sql             # a dump of the database. A good starting point to load the database.
         ├── Agent_scripts           # SQL scripts to populate the DB with agents. Used for testing completeness of the database
         │                           # good place to see examples of the storeprocedures being used and how to interact with the database.
         │
