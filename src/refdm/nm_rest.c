@@ -30,7 +30,7 @@
 #include <string.h>
 #include <strings.h>
 
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
 #include "nm_sql.h"
 #endif
 
@@ -181,7 +181,7 @@ static int agentsGetHandler(struct mg_connection *conn)
         cJSON *agentObj = cJSON_CreateObject();
         cJSON_AddStringToObject(agentObj, "name", m_string_get_cstr(agent->eid));
         {
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
             int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
 
             size_t count;
@@ -453,7 +453,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
     CACE_LOG_INFO("Sending message with %d EXECSETs", cace_ari_list_size(tosend));
 
     // add EXECSETs to Database
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     CACE_LOG_INFO("logging EXECSETs in db started");
     // add all execset
@@ -463,10 +463,8 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
         const cace_ari_t *curr_set = cace_ari_list_cref(it);
         refdm_db_insert_execset(curr_set, agent);
     }
-
-    // m_string_clear(eid);
     CACE_LOG_INFO("logging EXECSETs in db finished");
-#endif
+#endif // defined(HAVE_POSTGRESQL)
 
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
@@ -509,7 +507,7 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     bool             is_remote_rptsets = false;
     cace_ari_list_t *ptr_rptsets       = NULL;
 
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
     // Synthesize the rptsets (on the stack)
     cace_ari_list_t rptsets;
     cace_ari_list_init(rptsets);
@@ -528,11 +526,11 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     // Set the prt_rptsets to point to the stack
     ptr_rptsets       = &rptsets;
     is_remote_rptsets = true;
-#else  // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
+#else  // defined(HAVE_POSTGRESQL)
     // Set the prt_rptsets to point to the local copy on the agent
     ptr_rptsets       = &agent->rptsets;
     is_remote_rptsets = false;
-#endif // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
+#endif // defined(HAVE_POSTGRESQL)
 
     // Return no content if there are no reports
     if (cace_ari_list_empty_p(*ptr_rptsets))
@@ -599,7 +597,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     bool             is_remote_rptsets = false;
     cace_ari_list_t *ptr_rptsets       = NULL;
 
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
     // Synthesize the rptsets (on the stack)
     cace_ari_list_t rptsets;
     cace_ari_list_init(rptsets);
@@ -618,11 +616,11 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     // Set the prt_rptsets to point to the stack
     ptr_rptsets       = &rptsets;
     is_remote_rptsets = true;
-#else  // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
+#else  // defined(HAVE_POSTGRESQL)
     // Set the prt_rptsets to point to the local copy on the agent
     ptr_rptsets       = &agent->rptsets;
     is_remote_rptsets = false;
-#endif // (HAVE_MYSQL || HAVE_POSTGRESQL) == false
+#endif // defined(HAVE_POSTGRESQL)
 
     // Return no content if there are no reports
     if (cace_ari_list_empty_p(*ptr_rptsets))
