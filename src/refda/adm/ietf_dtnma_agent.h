@@ -30,7 +30,18 @@
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
-/*             TODO              */
+/** Append rows to a table for an IDENT object and any of its derived objects.
+ *
+ * @param[in,out] table The table to append rows to.
+ * Only the first column is set with the IDENT reference.
+ * If two columns are present, the second is set to the abstract marking.
+ * @param[in] deref The base object to check and traverse into.
+ * @param include_adm Objects in ADMs are added only if this is true.
+ * @param include_abstract Abstract objects are added to the table only if
+ * this is true.
+ */
+void refda_adm_ietf_dtnma_agent_append_derived_ident(cace_ari_tbl_t *table, const cace_amm_lookup_t *deref,
+                                                     bool include_adm, bool include_abstract);
 /*   STOP CUSTOM INCLUDES HERE  */
 
 #ifdef __cplusplus
@@ -43,6 +54,8 @@ extern "C" {
 /*
  * Enumerations for TYPEDEF objects
  */
+/// For ./TYPEDEF/formal-params-tbl
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_FORMAL_PARAMS_TBL 1
 /// For ./TYPEDEF/tbl-row-filter
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_TYPEDEF_TBL_ROW_FILTER 0
 
@@ -81,6 +94,8 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_EXEC_RUNNING 9
 /// For ./EDD/odm-list
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_ODM_LIST 16
+/// For ./EDD/ident-list
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_IDENT_LIST 18
 /// For ./EDD/typedef-list
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_EDD_TYPEDEF_LIST 10
 /// For ./EDD/const-list
@@ -117,6 +132,10 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_RESET 7
 /// For ./CTRL/var-store
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_VAR_STORE 8
+/// For ./CTRL/ensure-ident
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_IDENT 20
+/// For ./CTRL/obsolete-ident
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_OBSOLETE_IDENT 21
 /// For ./CTRL/ensure-const
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_ENSURE_CONST 11
 /// For ./CTRL/obsolete-const

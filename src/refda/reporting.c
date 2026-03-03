@@ -53,25 +53,20 @@ int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_
     return 0;
 }
 
-/** Treat any object reference as a value-producing activity, with the
- * produced value reported on directly.
+/** Treat any object reference template item as a value-producing activity, with the
+ * produced value as the report item.
  */
-static int refda_reporting_item_ref(refda_runctx_t *runctx, cace_ari_t *prod_val, const cace_ari_t *rptt_item)
+static void refda_reporting_item_ref(refda_runctx_t *runctx, cace_ari_t *rpt_item, const cace_ari_t *rptt_item)
 {
-    CACE_LOG_DEBUG("Reporting on item reference");
-    int retval = 0;
-
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
 
     int res = cace_amm_lookup_deref(&deref, &(runctx->agent->objs), rptt_item);
-    CACE_LOG_DEBUG("Lookup result %d", res);
     if (res)
     {
-        retval = REFDA_REPORTING_ERR_DEREF_FAILED;
+        CACE_LOG_DEBUG("reporting item reference lookup failed: %d", res);
     }
-
-    if (!retval)
+    else
     {
         switch (deref.obj_type)
         {
@@ -81,23 +76,42 @@ static int refda_reporting_item_ref(refda_runctx_t *runctx, cace_ari_t *prod_val
             {
                 refda_valprod_ctx_t prodctx;
                 refda_valprod_ctx_init(&prodctx, runctx, rptt_item, &deref);
-                retval = refda_valprod_run(&prodctx);
-                if (!retval)
+                int res = refda_valprod_run(&prodctx);
+                if (!res)
                 {
                     // include the produced value directly
-                    cace_ari_set_move(prod_val, &(prodctx.value));
+                    cace_ari_set_move(rpt_item, &(prodctx.value));
                 }
                 refda_valprod_ctx_deinit(&prodctx);
                 break;
             }
             default:
-                retval = REFDA_REPORTING_ERR_BAD_TYPE;
+                CACE_LOG_DEBUG("reporting item reference to non-value-producing");
                 break;
         }
     }
 
     cace_amm_lookup_deinit(&deref);
-    return retval;
+}
+
+/** Treat any literal template item as an evaluation activity, with the
+ * evaluated result as the report item.
+ */
+static void refda_reporting_item_lit(refda_runctx_t *runctx, cace_ari_t *rpt_item, const cace_ari_t *rptt_item)
+{
+    if (CACE_AMM_TYPE_MATCH_POSITIVE != cace_amm_type_match(runctx->agent->expr_type, rptt_item))
+    {
+        CACE_LOG_ERR("reporting item literal was not an EXPR");
+    }
+    else
+    {
+        // item is an expression to be evaluated
+        if (refda_eval_target(runctx, rpt_item, rptt_item))
+        {
+            CACE_LOG_WARNING("reporting item failed to evaluate expression");
+            cace_ari_reset(rpt_item);
+        }
+    }
 }
 
 /** Actually iterate through an RPTT and produce items.
@@ -111,61 +125,37 @@ static int refda_reporting_rptt_val(refda_reporting_ctx_t *rptctx, const cace_ar
     for (cace_ari_list_it(rptt_it, tgt_ac->items); !cace_ari_list_end_p(rptt_it); cace_ari_list_next(rptt_it))
     {
         const cace_ari_t *rptt_item = cace_ari_list_cref(rptt_it);
+        // init as undefined value
+        cace_ari_t *rpt_item = cace_ari_list_push_back_new(rptctx->items);
 
-        // intermediate item from the template
-        cace_ari_t inter_item = CACE_ARI_INIT_UNDEFINED;
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            m_string_t buf;
+            m_string_init(buf);
+            cace_ari_text_encode(buf, rptt_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("Report template item %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
+        }
+
         if (rptt_item->is_ref)
         {
-            // item is a reference to be produced, then possibly evaluated
-            if (refda_reporting_item_ref(rptctx->runctx, &inter_item, rptt_item))
-            {
-                // failures in individual items result in undefined value
-                CACE_LOG_WARNING("failed to dereference item");
-                cace_ari_reset(&inter_item);
-            }
+            // item is a reference to be produced
+            refda_reporting_item_ref(rptctx->runctx, rpt_item, rptt_item);
         }
         else
         {
-            // just use the template item
-            cace_ari_set_copy(&inter_item, rptt_item);
+            // item is an EXPR to be evaluated
+            refda_reporting_item_lit(rptctx->runctx, rpt_item, rptt_item);
         }
+
         if (cace_log_is_enabled_for(LOG_DEBUG))
         {
             m_string_t buf;
             m_string_init(buf);
-            cace_ari_text_encode(buf, &inter_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("intermediate item %s", m_string_get_cstr(buf));
+            cace_ari_text_encode(buf, rpt_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_DEBUG("Report item %s", m_string_get_cstr(buf));
             m_string_clear(buf);
         }
-
-        cace_ari_t rpt_item = CACE_ARI_INIT_UNDEFINED;
-        if (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(rptctx->runctx->agent->expr_type, &inter_item))
-        {
-            // item is an expression to be evaluated
-            CACE_LOG_DEBUG("Reporting on expression");
-            if (refda_eval_target(rptctx->runctx, &rpt_item, &inter_item))
-            {
-                CACE_LOG_WARNING("reporting failed to evaluate expression");
-                cace_ari_reset(&rpt_item);
-            }
-        }
-        else
-        {
-            // intermediate is directly reported
-            CACE_LOG_DEBUG("Reporting on literal");
-            cace_ari_set_move(&rpt_item, &inter_item);
-        }
-        if (cace_log_is_enabled_for(LOG_DEBUG))
-        {
-            m_string_t buf;
-            m_string_init(buf);
-            cace_ari_text_encode(buf, &rpt_item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("reporting intermediate %s", m_string_get_cstr(buf));
-            m_string_clear(buf);
-        }
-        cace_ari_deinit(&inter_item);
-
-        cace_ari_list_push_back_move(rptctx->items, &rpt_item);
     }
 
     return 0;
