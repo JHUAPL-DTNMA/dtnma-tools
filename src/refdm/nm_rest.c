@@ -543,7 +543,8 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
             cace_ari_list_clear(*ptr_rptsets);
         }
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
 
@@ -583,7 +584,6 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
         mg_response_header_add(conn, "Content-Length", buf, buf_used);
 
         buf_used = strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &mgr_time);
-        CACE_LOG_DEBUG("Last-Modified: %s", buf);
         mg_response_header_add(conn, "Last-Modified", buf, buf_used);
 
         mg_response_header_send(conn);
@@ -646,7 +646,8 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
             cace_ari_list_clear(*ptr_rptsets);
         }
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
 
@@ -879,7 +880,8 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
     else
