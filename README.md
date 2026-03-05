@@ -94,9 +94,10 @@ Specific environment variables used by the test fixture are:
  - `TEST_DIR_KEEP`, if set to any value, will not delete the temporary directory after tests are finished.
    This defaults to deleting the directory.
 
-An example full shell command to build and run specific (pytest-filtered) test cases is:
+An example full shell command to setup the test environment, then build and run specific (pytest-filtered) test cases is:
 ```sh
-./build.sh && ./build.sh install && ./item-test/run.sh -k test_exec_inspect
+./item-test/run.sh prep
+./build.sh && ./build.sh install && ./item-test/run.sh test -k test_exec_inspect
 ```
 
 

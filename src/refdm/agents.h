@@ -57,6 +57,8 @@ typedef struct
 #if !(defined(HAVE_POSTGRESQL))
     /// Received RPTSET values
     cace_ari_list_t rptsets;
+    /// Local time of last #rptsets
+    time_t mgr_time;
 #endif
 
     /// Mutex for #log_fd and related data
