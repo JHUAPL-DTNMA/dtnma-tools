@@ -47,7 +47,7 @@ def compose_args(args: List[str]) -> List[str]:
         prefix = [
             'valgrind',
             '--tool=memcheck',
-            '--leak-check=full',
+            '--leak-check=full', '--show-leak-kinds=all',
             f'--suppressions={PROJPATH}/memcheck.supp',
             '--gen-suppressions=all',
             '--error-exitcode=2',

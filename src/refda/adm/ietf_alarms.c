@@ -201,6 +201,41 @@ static void refda_adm_ietf_alarms_edd_shelf_list(refda_edd_prod_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_edd_shelf_list BODY
      * +-------------------------------------------------------------------------+
      */
+
+    refda_agent_t *agent = ctx->prodctx->runctx->agent;
+    if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock shelf_mutex");
+        return;
+    }
+
+    cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
+    cace_ari_tbl_reset(table, 2, 0);
+
+    // table is naturally sorted
+    refda_alarms_shelf_entry_set_it_t entry_it;
+    for (refda_alarms_shelf_entry_set_it(entry_it, agent->alarms.shelf_list);
+         !refda_alarms_shelf_entry_set_end_p(entry_it); refda_alarms_shelf_entry_set_next(entry_it))
+    {
+        const refda_alarms_shelf_entry_t *entry = refda_alarms_shelf_entry_set_cref(entry_it);
+
+        cace_ari_array_t row;
+        cace_ari_array_init(row);
+        cace_ari_array_resize(row, table->ncols);
+
+        cace_ari_set_copy(cace_ari_array_get(row, 0), &entry->resources);
+        cace_ari_set_copy(cace_ari_array_get(row, 1), &entry->categories);
+
+        // append the row
+        cace_ari_tbl_move_row_array(table, row);
+    }
+
+    if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock alarm_mutex");
+    }
+    refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_edd_shelf_list BODY
@@ -348,6 +383,63 @@ static void refda_adm_ietf_alarms_ctrl_ensure_shelf(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_ensure_shelf BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    size_t affected = 0;
+
+    const struct cace_ari_tbl_s *tbl = cace_ari_cget_tbl(refda_ctrl_exec_ctx_get_aparam_index(ctx, 0));
+    if (!tbl)
+    {
+        return;
+    }
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock shelf_mutex");
+        return;
+    }
+
+    cace_ari_array_it_t tbl_it;
+    cace_ari_array_it(tbl_it, tbl->items);
+    while (!cace_ari_array_end_p(tbl_it))
+    {
+        refda_alarms_shelf_entry_t trial;
+        refda_alarms_shelf_entry_init(&trial);
+
+        cace_amm_objpat_set_from_value(&trial.resources, cace_ari_array_cref(tbl_it));
+        cace_ari_array_next(tbl_it);
+
+        cace_amm_objpat_set_from_value(&trial.categories, cace_ari_array_cref(tbl_it));
+        cace_ari_array_next(tbl_it);
+
+        // present or not
+        if (!refda_alarms_shelf_entry_set_get(agent->alarms.shelf_list, trial))
+        {
+            // enforce this now, taking the alarm lock
+            refda_alarms_apply_shelf(&agent->alarms, &trial);
+
+            // move semantics
+            refda_alarms_shelf_entry_set_push(agent->alarms.shelf_list, trial);
+            ++affected;
+        }
+        else
+        {
+            refda_alarms_shelf_entry_deinit(&trial);
+        }
+    }
+    CACE_LOG_DEBUG("Affected %zu shelf rows", affected);
+
+    if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock alarm_mutex");
+    }
+
+    refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_ensure_shelf BODY
@@ -373,6 +465,55 @@ static void refda_adm_ietf_alarms_ctrl_discard_shelf(refda_ctrl_exec_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_discard_shelf BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    size_t affected = 0;
+
+    const struct cace_ari_tbl_s *tbl = cace_ari_cget_tbl(refda_ctrl_exec_ctx_get_aparam_index(ctx, 0));
+    if (!tbl)
+    {
+        return;
+    }
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock shelf_mutex");
+        return;
+    }
+
+    cace_ari_array_it_t tbl_it;
+    cace_ari_array_it(tbl_it, tbl->items);
+    while (!cace_ari_array_end_p(tbl_it))
+    {
+        refda_alarms_shelf_entry_t trial;
+        refda_alarms_shelf_entry_init(&trial);
+
+        cace_amm_objpat_set_from_value(&trial.resources, cace_ari_array_cref(tbl_it));
+        cace_ari_array_next(tbl_it);
+
+        cace_amm_objpat_set_from_value(&trial.categories, cace_ari_array_cref(tbl_it));
+        cace_ari_array_next(tbl_it);
+
+        // present or not
+        if (!refda_alarms_shelf_entry_set_pop_at(NULL, agent->alarms.shelf_list, trial))
+        {
+            ++affected;
+        }
+        refda_alarms_shelf_entry_deinit(&trial);
+    }
+    CACE_LOG_DEBUG("Affected %zu shelf rows", affected);
+
+    if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock alarm_mutex");
+    }
+
+    refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_ctrl_discard_shelf BODY
@@ -430,7 +571,22 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/UINT
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: IntegerEnums(values={0: 'cleared', 1: 'indeterminate', 2: 'warning', 3: 'minor', 4:
+                    // 'major', 5: 'critical'})
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                    cace_util_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
+                    {
+                        cace_util_range_intvl_int64_t intvl;
+                        cace_util_range_intvl_int64_set_min(&intvl, 0);
+                        cace_util_range_intvl_int64_set_max(&intvl, 5);
+                        cace_util_range_int64_push(*range, intvl);
+                    }
+                }
             }
 
             obj = refda_register_typedef(
@@ -446,7 +602,21 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/UINT
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: IntegerEnums(values={0: 'none', 1: 'acknowledged', 2: 'closed', 3: 'shelved'})
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                    cace_util_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
+                    {
+                        cace_util_range_intvl_int64_t intvl;
+                        cace_util_range_intvl_int64_set_min(&intvl, 0);
+                        cace_util_range_intvl_int64_set_max(&intvl, 3);
+                        cace_util_range_int64_push(*range, intvl);
+                    }
+                }
             }
 
             obj = refda_register_typedef(
@@ -482,20 +652,28 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 0);
                     m_string_set_cstr(col->name, "resources");
                     {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/ari-pattern
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        // uniform list
+                        cace_amm_semtype_ulist_t *semtype_d1 = cace_amm_type_set_ulist(&(col->typeobj));
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/OBJPAT
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
+                            cace_amm_type_set_use_ref_move(&(semtype_d1->item_type), &typeref);
+                        }
                     }
                 }
                 {
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 1);
                     m_string_set_cstr(col->name, "categories");
                     {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/ari-pattern
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        // uniform list
+                        cace_amm_semtype_ulist_t *semtype_d1 = cace_amm_type_set_ulist(&(col->typeobj));
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/OBJPAT
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
+                            cace_amm_type_set_use_ref_move(&(semtype_d1->item_type), &typeref);
+                        }
                     }
                 }
             }
@@ -523,7 +701,19 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/IDENT
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+
+                        cace_amm_semtype_cnst_t *cnst;
+                        {
+                            // Constraint: IdentRefBase(base_text='./ident/resource',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                            cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
+
+                            // FIXME unhandled constraint IdentRefBase(base_text='./ident/resource',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                        }
                     }
                 }
                 {
@@ -547,7 +737,22 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                                 // use of ari:/ARITYPE/IDENT
                                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                                cace_amm_type_set_use_ref_move(choice_d1, &typeref);
+                                cace_amm_semtype_use_t *semtype_d2 =
+                                    cace_amm_type_set_use_ref_move(choice_d1, &typeref);
+
+                                cace_amm_semtype_cnst_t *cnst;
+                                {
+                                    // Constraint: IdentRefBase(base_text='./ident/category',
+                                    // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms',
+                                    // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='category'), params=None),
+                                    // base_ident=None)
+                                    cnst = cace_amm_semtype_cnst_array_push_new(semtype_d2->constraints);
+
+                                    // FIXME unhandled constraint IdentRefBase(base_text='./ident/category',
+                                    // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms',
+                                    // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='category'), params=None),
+                                    // base_ident=None)
+                                }
                             }
                         }
                     }
@@ -695,7 +900,19 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/IDENT
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+
+                        cace_amm_semtype_cnst_t *cnst;
+                        {
+                            // Constraint: IdentRefBase(base_text='./ident/resource',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                            cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
+
+                            // FIXME unhandled constraint IdentRefBase(base_text='./ident/resource',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                        }
                     }
                 }
             }
@@ -722,7 +939,19 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/IDENT
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+                        cace_amm_semtype_use_t *semtype_d1 = cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
+
+                        cace_amm_semtype_cnst_t *cnst;
+                        {
+                            // Constraint: IdentRefBase(base_text='./ident/category',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='category'), params=None), base_ident=None)
+                            cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
+
+                            // FIXME unhandled constraint IdentRefBase(base_text='./ident/category',
+                            // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
+                            // type_id=<StructType.IDENT: -1>, obj_id='category'), params=None), base_ident=None)
+                        }
                     }
                 }
             }
@@ -779,7 +1008,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // reference to ari://ietf/alarms/TYPEDEF/alarm-filter
-                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
@@ -807,7 +1036,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // reference to ari://ietf/alarms/TYPEDEF/alarm-filter
-                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
@@ -836,7 +1065,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // reference to ari://ietf/alarms/TYPEDEF/alarm-filter
-                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 2);
+                    cace_ari_set_objref_path_intid(&typeref, 1, 4, CACE_ARI_TYPE_TYPEDEF, 4);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }

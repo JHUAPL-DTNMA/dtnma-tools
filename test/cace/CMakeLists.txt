@@ -17,6 +17,9 @@ limitations under the License.
 ]]
 
 if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
+  add_unity_test(SOURCE "test_util_range.c")
+  target_link_libraries(test_util_range PUBLIC cace)
+  
   add_unity_test(SOURCE "test_ari_cbor.c")
   target_link_libraries(test_ari_cbor PUBLIC cace)
   

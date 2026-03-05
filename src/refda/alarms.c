@@ -68,15 +68,66 @@ int refda_alarms_entry_key_cmp(const refda_alarms_entry_key_t *left, const refda
     return res;
 }
 
+void refda_alarms_shelf_entry_init(refda_alarms_shelf_entry_t *obj)
+{
+    CHKVOID(obj);
+    cace_ari_init(&obj->resources);
+    cace_ari_init(&obj->categories);
+}
+
+void refda_alarms_shelf_entry_deinit(refda_alarms_shelf_entry_t *obj)
+{
+    CHKVOID(obj);
+    cace_ari_deinit(&obj->categories);
+    cace_ari_deinit(&obj->resources);
+}
+
+int refda_alarms_shelf_entry_cmp(const refda_alarms_shelf_entry_t *left, const refda_alarms_shelf_entry_t *right)
+{
+    int res = cace_ari_cmp(&left->resources, &right->resources);
+    if (res)
+    {
+        return res;
+    }
+    return cace_ari_cmp(&left->categories, &right->categories);
+}
+
+bool refda_alarms_shelf_entry_equal(const refda_alarms_shelf_entry_t *left, const refda_alarms_shelf_entry_t *right)
+{
+    return (cace_ari_equal(&left->resources, &right->resources)
+            && cace_ari_equal(&left->categories, &right->categories));
+}
+
+size_t refda_alarms_shelf_entry_hash(const refda_alarms_shelf_entry_t *obj)
+{
+    M_HASH_DECL(hash);
+    M_HASH_UP(hash, cace_ari_hash(&obj->resources));
+    M_HASH_UP(hash, cace_ari_hash(&obj->categories));
+    return M_HASH_FINAL(hash);
+}
+
+bool refda_alarms_shelf_entry_match(const refda_alarms_shelf_entry_t *obj, const cace_amm_lookup_t *resource,
+                                    const cace_amm_lookup_t *category)
+{
+    return (cace_amm_objpat_set_match(&obj->resources, resource)
+            && cace_amm_objpat_set_match(&obj->categories, category));
+}
+
 void refda_alarms_init(refda_alarms_t *obj)
 {
     refda_alarms_entry_list_init(obj->alarm_list);
     refda_alarms_entry_index_init(obj->alarm_index);
     pthread_mutex_init(&(obj->alarm_mutex), NULL);
+
+    refda_alarms_shelf_entry_set_init(obj->shelf_list);
+    pthread_mutex_init(&(obj->shelf_mutex), NULL);
 }
 
 void refda_alarms_deinit(refda_alarms_t *obj)
 {
+    pthread_mutex_destroy(&(obj->shelf_mutex));
+    refda_alarms_shelf_entry_set_clear(obj->shelf_list);
+
     pthread_mutex_destroy(&(obj->alarm_mutex));
     refda_alarms_entry_index_clear(obj->alarm_index);
     refda_alarms_entry_list_clear(obj->alarm_list);
@@ -115,6 +166,42 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
         refda_amm_ident_base_deinit(&res_ref);
         refda_amm_ident_base_deinit(&cat_ref);
         return;
+    }
+
+    // First check shelf for match
+    {
+        bool any_match = false;
+
+        if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
+        {
+            CACE_LOG_CRIT("failed to lock shelf_mutex");
+            return;
+        }
+        refda_alarms_shelf_entry_set_it_t shelf_it;
+        for (refda_alarms_shelf_entry_set_it(shelf_it, agent->alarms.shelf_list);
+             !refda_alarms_shelf_entry_set_end_p(shelf_it); refda_alarms_shelf_entry_set_next(shelf_it))
+        {
+            const refda_alarms_shelf_entry_t *shelf_ent = refda_alarms_shelf_entry_set_cref(shelf_it);
+
+            if (refda_alarms_shelf_entry_match(shelf_ent, &res_ref.deref, &cat_ref.deref))
+            {
+                any_match = true;
+                break;
+            }
+        }
+        if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
+        {
+            CACE_LOG_CRIT("failed to unlock shelf_mutex");
+            return;
+        }
+
+        if (any_match)
+        {
+            CACE_LOG_DEBUG("A shelf entry has matched a potential alarm, ignoring the alarm state");
+            refda_amm_ident_base_deinit(&res_ref);
+            refda_amm_ident_base_deinit(&cat_ref);
+            return;
+        }
     }
 
     if (pthread_mutex_lock(&(agent->alarms.alarm_mutex)))
@@ -336,6 +423,20 @@ int refda_alarms_get_table(refda_runctx_t *runctx, cace_ari_t *out)
     return 0;
 }
 
+/** Purge an individual entry while the list is locked.
+ */
+static void refda_alarms_purge_entry(refda_alarms_t *alarms, refda_alarms_entry_list_it_t entry_it,
+                                     refda_alarms_entry_t *entry)
+{
+    refda_alarms_entry_key_t entry_key = {
+        .resource = entry->resource.ident,
+        .category = entry->category.ident,
+    };
+    refda_alarms_entry_index_erase(alarms->alarm_index, entry_key);
+
+    refda_alarms_entry_list_remove(alarms->alarm_list, entry_it);
+}
+
 size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
 {
     CHKRET(runctx, 0);
@@ -385,13 +486,7 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
         // True result indicates entry is purged
         if (cace_amm_ari_is_truthy(&eval_result))
         {
-            refda_alarms_entry_key_t entry_key = {
-                .resource = entry->resource.ident,
-                .category = entry->category.ident,
-            };
-            refda_alarms_entry_index_erase(alarms->alarm_index, entry_key);
-
-            refda_alarms_entry_list_remove(alarms->alarm_list, entry_it);
+            refda_alarms_purge_entry(alarms, entry_it, entry);
             affected += 1;
         }
         else
@@ -536,6 +631,40 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
                 cace_get_system_time(&entry->mgr_time);
                 affected += 1;
             }
+        }
+    }
+
+    if (pthread_mutex_unlock(&(alarms->alarm_mutex)))
+    {
+        CACE_LOG_CRIT("failed to unlock alarm_mutex");
+    }
+    return affected;
+}
+
+size_t refda_alarms_apply_shelf(refda_alarms_t *alarms, const refda_alarms_shelf_entry_t *shelf)
+{
+    if (pthread_mutex_lock(&(alarms->alarm_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock alarm_mutex");
+        return 0;
+    }
+
+    size_t affected = 0;
+
+    refda_alarms_entry_list_it_t entry_it;
+    for (refda_alarms_entry_list_it(entry_it, alarms->alarm_list); !refda_alarms_entry_list_end_p(entry_it);)
+    {
+        refda_alarms_entry_t *entry = refda_alarms_entry_ptr_ref(*refda_alarms_entry_list_cref(entry_it));
+
+        if (refda_alarms_shelf_entry_match(shelf, &entry->resource.deref, &entry->category.deref))
+        {
+            refda_alarms_purge_entry(alarms, entry_it, entry);
+            affected += 1;
+        }
+        else
+        {
+            // keep and check next
+            refda_alarms_entry_list_next(entry_it);
         }
     }
 

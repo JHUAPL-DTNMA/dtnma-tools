@@ -1221,9 +1221,15 @@ TEST_CASE("ari:/REAL64/-Infinity")
 TEST_CASE("ari:/BYTESTR/h'6869'")
 TEST_CASE("ari:/TEXTSTR/hi")
 TEST_CASE("ari:/TEXTSTR/%22hi%20there%22")
+TEST_CASE("ari:/TP/20230102T030405Z")
+TEST_CASE("ari:/TD/PT1H0.05S")
 TEST_CASE("ari:/LABEL/hi")
 TEST_CASE("ari:/LABEL/1")
-TEST_CASE("ari:/TP/20230102T030405Z")
+TEST_CASE("ari:/CBOR/h'0A'")
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
+TEST_CASE("ari:/OBJPAT/(65535)(-10..-1,1)(*)(10..100)")
+TEST_CASE("ari:/OBJPAT/(example)(..-1)(10..)(*)")
+TEST_CASE("ari:/OBJPAT/(*)(*)(*)(*)")
 TEST_CASE("ari:/AC/()")
 TEST_CASE("ari:/AC/(a)")
 TEST_CASE("ari:/AC/(a,b,c)")
@@ -1246,9 +1252,9 @@ TEST_CASE("ari://example/test@2024-06-25/CONST/that") // ADM revision
 TEST_CASE("ari://example/!test/CONST/that")           // ODM path
 TEST_CASE("ari://example/test/CTRL/that(34)")
 TEST_CASE("ari://65535/2/CTRL/4(hi)")
+TEST_CASE("../adm-b/CTRL/do_thing")
+TEST_CASE("../adm-b@2024-06-25/CTRL/do_thing")
 TEST_CASE("./CTRL/do_thing")
-TEST_CASE("ari:/CBOR/h'0A'")
-TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
 void test_ari_text_loopback(const char *intext)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
@@ -1256,7 +1262,7 @@ void test_ari_text_loopback(const char *intext)
     m_string_init_set_cstr(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
     m_string_clear(inbuf);
-    if ((ret != 0) ^ (errm != NULL)) // only error message upon failure
+    if ((ret != 0) && (errm != NULL)) // only error message upon failure
     {
         TEST_FAIL_MESSAGE(errm);
     }

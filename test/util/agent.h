@@ -33,7 +33,10 @@ extern "C" {
 /// Register critical base ADMs to the agent
 void test_util_agent_crit_adms(refda_agent_t *agent);
 
-/// Add access permissions to agent group 0
+/** Add access permissions to agent group 0.
+ *
+ * @param obj_id The agent ADM permission IDENT object.
+ */
 void test_util_agent_permission(refda_agent_t *agent, cace_ari_int_id_t obj_id);
 
 /// Add group for specific URI pattern

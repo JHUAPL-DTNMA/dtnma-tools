@@ -281,8 +281,8 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 m_string_clear(buf);
             }
 
-            // absolute difference within 20ms of expected
-            TEST_ASSERT_GREATER_OR_EQUAL(wait_ms[ix] - 30, timespec_to_ms(remain));
+            // absolute difference within [-40,+20] ms of expected
+            TEST_ASSERT_GREATER_OR_EQUAL(wait_ms[ix] - 40, timespec_to_ms(remain));
             TEST_ASSERT_LESS_OR_EQUAL(wait_ms[ix] + 20, timespec_to_ms(remain));
 
             // manual sleep

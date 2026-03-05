@@ -22,7 +22,7 @@
 #ifndef CACE_AMM_SEMTYPE_USE_H_
 #define CACE_AMM_SEMTYPE_USE_H_
 
-#include "range.h"
+#include "cace/util/range.h"
 #include "cace/config.h"
 #include "cace/ari.h"
 #if defined(PCRE_FOUND)
@@ -61,11 +61,11 @@ typedef struct cace_amm_semtype_cnst_s
     union
     {
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
-        cace_amm_range_int64_t as_range_int64;
+        cace_util_range_int64_t as_range_int64;
         /// Used when #type is ::AMM_SEMTYPE_CNST_INT_BITS
         uint64_t as_bit_mask;
         /// Used when #type is ::AMM_SEMTYPE_CNST_STRLEN
-        cace_amm_range_size_t as_strlen;
+        cace_util_range_size_t as_strlen;
 #if defined(PCRE_FOUND)
         /// Used when #type is ::AMM_SEMTYPE_CNST_TEXTPAT
         pcre2_code *as_textpat;
@@ -88,7 +88,7 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj);
  * @param[in,out] obj The struct to set the state of.
  * @return The specific parameters for this constraint type.
  */
-cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj);
+cace_util_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj);
 
 /** Configure a constraint on integer values based on a mask of valid
  * bit positions (in an integer value).
@@ -111,7 +111,7 @@ uint64_t *cace_amm_semtype_cnst_set_int_bits(cace_amm_semtype_cnst_t *obj);
  * @param[in,out] obj The struct to set the state of.
  * @return The specific parameters for this constraint type.
  */
-cace_amm_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t *obj);
+cace_util_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t *obj);
 
 /** Configure a constraint on text-string regular expression pattern.
  *

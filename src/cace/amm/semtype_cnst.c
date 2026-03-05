@@ -32,12 +32,12 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
         case AMM_SEMTYPE_CNST_INVALID:
             break;
         case AMM_SEMTYPE_CNST_RANGE_INT64:
-            cace_amm_range_int64_deinit(&(obj->as_range_int64));
+            cace_util_range_int64_clear(obj->as_range_int64);
             break;
         case AMM_SEMTYPE_CNST_INT_BITS:
             break;
         case AMM_SEMTYPE_CNST_STRLEN:
-            cace_amm_range_size_deinit(&(obj->as_strlen));
+            cace_util_range_size_clear(obj->as_strlen);
             break;
 #if defined(PCRE_FOUND)
         case AMM_SEMTYPE_CNST_TEXTPAT:
@@ -49,14 +49,14 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
     obj->type = AMM_SEMTYPE_CNST_INVALID;
 }
 
-cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj)
+cace_util_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj)
 {
     CHKNULL(obj);
     cace_amm_semtype_cnst_deinit(obj);
 
-    obj->type                   = AMM_SEMTYPE_CNST_RANGE_INT64;
-    cace_amm_range_int64_t *cfg = &(obj->as_range_int64);
-    cace_amm_range_int64_init(cfg);
+    obj->type                    = AMM_SEMTYPE_CNST_RANGE_INT64;
+    cace_util_range_int64_t *cfg = &(obj->as_range_int64);
+    cace_util_range_int64_init(*cfg);
 
     return cfg;
 }
@@ -73,14 +73,14 @@ uint64_t *cace_amm_semtype_cnst_set_int_bits(cace_amm_semtype_cnst_t *obj)
     return cfg;
 }
 
-cace_amm_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t *obj)
+cace_util_range_size_t *cace_amm_semtype_cnst_set_strlen(cace_amm_semtype_cnst_t *obj)
 {
     CHKNULL(obj);
     cace_amm_semtype_cnst_deinit(obj);
 
-    obj->type                  = AMM_SEMTYPE_CNST_STRLEN;
-    cace_amm_range_size_t *cfg = &(obj->as_strlen);
-    cace_amm_range_size_init(cfg);
+    obj->type                   = AMM_SEMTYPE_CNST_STRLEN;
+    cace_util_range_size_t *cfg = &(obj->as_strlen);
+    cace_util_range_size_init(*cfg);
 
     return cfg;
 }
@@ -118,6 +118,8 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
     {
         case AMM_SEMTYPE_CNST_INVALID:
             CACE_LOG_CRIT("Attempt to validate an unconfigured constraint");
+            // avoid runtime failures due to bad model initialization
+            retval = true;
             break;
         case AMM_SEMTYPE_CNST_RANGE_INT64:
         {
@@ -127,9 +129,9 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
                 // non-vast fails
                 return false;
             }
-            const cace_amm_range_int64_t *cfg = &(obj->as_range_int64);
+            const cace_util_range_int64_t *cfg = &(obj->as_range_int64);
 
-            retval = cace_amm_range_int64_contains(cfg, intval);
+            retval = cace_util_range_int64_contains(*cfg, intval);
             break;
         }
         case AMM_SEMTYPE_CNST_INT_BITS:
@@ -165,9 +167,9 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
                 default:
                     return false;
             }
-            const cace_amm_range_size_t *cfg = &(obj->as_strlen);
+            const cace_util_range_size_t *cfg = &(obj->as_strlen);
 
-            retval = cace_amm_range_size_contains(cfg, len);
+            retval = cace_util_range_size_contains(*cfg, len);
             break;
         }
 #if defined(PCRE_FOUND)
@@ -184,15 +186,14 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
             const int         opts = 0;
             // ignore terminating null
             int res = pcre2_match(cfg, (PCRE2_SPTR8)(data->ptr), data->len - 1, 0, opts, md, NULL);
-#if 0
+            pcre2_match_data_free(md);
+
+            if ((res < 0) && cace_log_is_enabled_for(LOG_DEBUG))
             {
-                char buf[128];
+                PCRE2_UCHAR8 buf[128];
                 pcre2_get_error_message(res, buf, sizeof(buf));
                 CACE_LOG_DEBUG("Match regex result %d (%s) for: %s", res, buf, (const char *)(data->ptr));
             }
-#endif
-            pcre2_match_data_free(md);
-
             retval = (res > 0);
             break;
         }

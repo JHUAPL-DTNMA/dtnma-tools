@@ -62,7 +62,6 @@ int cace_uri_percent_encode(m_string_t out, const cace_data_t *in, const char *s
 int cace_uri_percent_decode(m_string_t out, const cace_data_t *in);
 
 /** Encode an unsigned integer to text form.
- * The sign will be prepended as necessary.
  *
  * @param[out] out The output buffer, which will be appended to.
  * @param in The input encoded text which may be null-terminated.
@@ -70,8 +69,20 @@ int cace_uri_percent_decode(m_string_t out, const cace_data_t *in);
  * @return Zero upon success.
  */
 int cace_ari_uint64_encode(m_string_t out, uint64_t value, int base);
+/// @overload
+int cace_ari_int64_encode(m_string_t out, int64_t value, int base);
 
-int cace_ari_uint64_decode(uint64_t *out, const m_string_t in);
+/** Decode an unsigned integer from text form.
+ * The base is implied by the leading characters.
+ *
+ * @param[out] out The output value to decode into.
+ * @param in The text buffer to read from.
+ * @param in_len The length of text not including null-terminator.
+ * @return Zero upon success.
+ */
+int cace_ari_uint64_decode(uint64_t *out, const char *in, size_t in_len);
+/// @overload
+int cace_ari_int64_decode(int64_t *out, const char *in, size_t in_len);
 
 /** Encode a floating point number to text form.
  *

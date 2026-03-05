@@ -851,6 +851,13 @@ static cace_amm_type_t cace_amm_builtins[] = {
         .match               = builtin_default_match,
         .convert             = builtin_default_convert,
     },
+    {
+        .type_class          = CACE_AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = CACE_ARI_TYPE_OBJPAT,
+        .ari_name            = builtin_ari_name,
+        .match               = builtin_default_match,
+        .convert             = builtin_default_convert,
+    },
     // reference types below
     {
         .type_class          = CACE_AMM_TYPE_BUILTIN,
