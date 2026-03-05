@@ -749,6 +749,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, stru
         // Add the report to the list
         cace_ari_list_push_back_move(*rptsets, &ari_item);
     }
+    PQclear(res);
 
     ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT MAX(mgr_time) FROM %s WHERE agent_id=%d",
                                      TBL_NAME_RPTSET, agent_idx);
@@ -765,10 +766,9 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, stru
             CACE_LOG_ERR("Failed to parse mgr_time: %s", ts_str);
         }
     }
+    PQclear(res);
 
     CACE_LOG_INFO("Success with retrieval of rptset items. Num items: %d", num_rows);
-
-    PQclear(res);
     return RET_PASS;
 }
 
