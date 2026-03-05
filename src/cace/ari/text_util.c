@@ -21,6 +21,7 @@
 #include <string.h>
 #include <strings.h>
 #include <inttypes.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -250,13 +251,13 @@ int cace_ari_int64_encode(m_string_t out, int64_t value, int base)
     uint64_t absval;
     if (value < 0)
     {
-        // this is safe within the domain
-        absval = -value;
+        // work around signed negation overflow
+        absval = (uint64_t)(-(value + 1)) + 1;
         m_string_push_back(out, '-');
     }
     else
     {
-        absval = value;
+        absval = (uint64_t)value;
     }
     return cace_ari_uint64_encode(out, absval, base);
 }
@@ -268,9 +269,26 @@ int cace_ari_uint64_decode(uint64_t *out, const char *in, size_t in_len)
 
     const char *end = in + in_len;
 
+    if (in_len == 0)
+    {
+        // missing digits
+        return 2;
+    }
+    if (!isdigit(*in))
+    {
+        // cannot be handled as decimal or 0b or 0x
+        return 3;
+    }
+
     uint64_t tmp;
     if ((in_len >= 2) && (*in == '0') && (tolower(*(in + 1)) == 'b'))
     {
+        if (in_len == 2)
+        {
+            // missing digits
+            return 2;
+        }
+
         tmp = 0;
         for (size_t ix = 2; ix < in_len; ++ix)
         {
@@ -298,6 +316,10 @@ int cace_ari_uint64_decode(uint64_t *out, const char *in, size_t in_len)
         {
             return 2;
         }
+        if ((tmp == ULONG_MAX) && (errno == ERANGE))
+        {
+            return 3;
+        }
     }
 
     *out = tmp;
@@ -315,19 +337,26 @@ int cace_ari_int64_decode(int64_t *out, const char *in, size_t in_len)
         ++in;
         --in_len;
 
-        uint64_t neg;
-        int      ret = cace_ari_uint64_decode(&neg, in, in_len);
+        uint64_t absval;
+        int      ret = cace_ari_uint64_decode(&absval, in, in_len);
         if (ret)
         {
             return ret;
         }
 
         // work around signed negation overflow
-        if (neg > (uint64_t)(-(INT64_MIN + 1)) + 1)
+        if (absval > (uint64_t)(-(INT64_MIN + 1)) + 1)
         {
             return 3;
         }
-        *out = -(int64_t)neg;
+        else if (absval == 0)
+        {
+            *out = 0;
+        }
+        else
+        {
+            *out = -1 - (int64_t)(absval - 1);
+        }
     }
     else
     {
@@ -343,6 +372,7 @@ int cace_ari_int64_decode(int64_t *out, const char *in, size_t in_len)
         {
             return ret;
         }
+
         if (tmp > INT64_MAX)
         {
             return 3;

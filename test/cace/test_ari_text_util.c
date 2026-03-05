@@ -474,6 +474,139 @@ void test_cace_timeperiod_decode_invalid(const char *text)
     cace_data_deinit(&in_data);
 }
 
+TEST_CASE(0ULL, 10, "0")
+TEST_CASE(0ULL, 2, "0b0")
+TEST_CASE(0ULL, 16, "0x0")
+TEST_CASE(UINT64_MAX, 10, "18446744073709551615")
+TEST_CASE(UINT64_MAX, 2,
+          "0b"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111")
+TEST_CASE(18446744073709551615ULL, 16, "0xFFFFFFFFFFFFFFFF")
+void test_cace_ari_uint64_encode(uint64_t in, int base, const char *expect)
+{
+    m_string_t buf;
+    m_string_init(buf);
+    TEST_ASSERT_EQUAL_INT(0, cace_ari_uint64_encode(buf, in, base));
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(buf));
+    m_string_clear(buf);
+}
+
+TEST_CASE(INT64_MIN, 10, "-9223372036854775808")
+TEST_CASE(INT64_MIN, 2,
+          "-0b"
+          "10000000"
+          "00000000"
+          "00000000"
+          "00000000"
+          "00000000"
+          "00000000"
+          "00000000"
+          "00000000")
+TEST_CASE(INT64_MIN, 16, "-0x8000000000000000")
+TEST_CASE(0, 10, "0")
+TEST_CASE(0, 2, "0b0")
+TEST_CASE(0, 16, "0x0")
+TEST_CASE(INT64_MAX, 10, "9223372036854775807")
+// no leading zero bits
+TEST_CASE(INT64_MAX, 2,
+          "0b1111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111")
+TEST_CASE(INT64_MAX, 16, "0x7FFFFFFFFFFFFFFF")
+void test_cace_ari_int64_encode(int64_t in, int base, const char *expect)
+{
+    m_string_t buf;
+    m_string_init(buf);
+    TEST_ASSERT_EQUAL_INT(0, cace_ari_int64_encode(buf, in, base));
+    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(buf));
+    m_string_clear(buf);
+}
+
+TEST_CASE("0", 0ULL)
+TEST_CASE("0b0", 0ULL)
+TEST_CASE("0x0", 0ULL)
+TEST_CASE("0b"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111"
+          "11111111",
+          UINT64_MAX)
+TEST_CASE("18446744073709551615", UINT64_MAX)
+TEST_CASE("0xFFFFFFFFFFFFFFFF", UINT64_MAX)
+void test_cace_ari_uint64_decode(const char *in, uint64_t expect)
+{
+    uint64_t out;
+    TEST_ASSERT_EQUAL_INT(0, cace_ari_uint64_decode(&out, in, strlen(in)));
+    TEST_ASSERT_EQUAL_UINT64(expect, out);
+}
+
+// syntax
+TEST_CASE("")
+TEST_CASE("hi")
+TEST_CASE("0b")
+TEST_CASE("0x")
+TEST_CASE("+0")
+TEST_CASE("+10")
+// domain limits
+TEST_CASE("-1")
+TEST_CASE("18446744073709551616")
+TEST_CASE("0x10000000000000000")
+void test_cace_ari_uint64_decode_invalid(const char *in)
+{
+    uint64_t out;
+    TEST_ASSERT_NOT_EQUAL_INT(0, cace_ari_uint64_decode(&out, in, strlen(in)));
+}
+
+TEST_CASE("-9223372036854775808", INT64_MIN)
+TEST_CASE("-0x8000000000000000", INT64_MIN)
+TEST_CASE("0", 0LL)
+TEST_CASE("0b0", 0LL)
+TEST_CASE("0x0", 0LL)
+TEST_CASE("+0", 0LL)
+TEST_CASE("-0", 0LL)
+TEST_CASE("+10", 10LL)
+TEST_CASE("-10", -10LL)
+TEST_CASE("9223372036854775807", INT64_MAX)
+TEST_CASE("0x7FFFFFFFFFFFFFFF", INT64_MAX)
+void test_cace_ari_int64_decode(const char *in, int64_t expect)
+{
+    int64_t out;
+    TEST_ASSERT_EQUAL_INT(0, cace_ari_int64_decode(&out, in, strlen(in)));
+    TEST_ASSERT_EQUAL_INT64(expect, out);
+}
+
+// syntax
+TEST_CASE("")
+TEST_CASE("hi")
+TEST_CASE("0b")
+TEST_CASE("0x")
+// domain limits
+TEST_CASE("-9223372036854775809")
+TEST_CASE("-0x8000000000000001")
+TEST_CASE("9223372036854775808")
+TEST_CASE("0x8000000000000000")
+void test_cace_ari_int64_decode_invalid(const char *in)
+{
+    int64_t out;
+    TEST_ASSERT_NOT_EQUAL_INT(0, cace_ari_int64_decode(&out, in, strlen(in)));
+}
+
 TEST_CASE(0, 'f', "0.000000")
 TEST_CASE(0, 'g', "0")
 TEST_CASE(0, 'e', "0.000000e+00")
