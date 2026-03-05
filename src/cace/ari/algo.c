@@ -17,6 +17,7 @@
  */
 #include "algo.h"
 #include "containers.h"
+#include "objpat.h"
 #include "text.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
@@ -167,6 +168,7 @@ static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor
             CHKERRVAL(retval);
         }
 
+        // recurse into given parameters
         switch (ari->as_ref.params.state)
         {
             case CACE_ARI_PARAMS_NONE:
@@ -197,6 +199,7 @@ static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor
             CHKERRVAL(retval);
         }
 
+        // recurse into containers
         if (ari->as_lit.has_ari_type)
         {
             switch (ari->as_lit.ari_type)
@@ -452,9 +455,11 @@ int cace_ari_translate(cace_ari_t *out, const cace_ari_t *in, const cace_ari_tra
     return cace_ari_translate_ari(out, in, translator, &sub_ctx);
 }
 
-static int cace_ari_hash_visit_objpath(cace_ari_objpath_t *path, const cace_ari_visit_ctx_t *ctx)
+static int cace_ari_hash_visit_ref(cace_ari_ref_t *ref, const cace_ari_visit_ctx_t *ctx)
 {
     size_t *accum = ctx->user_data;
+
+    const cace_ari_objpath_t *path = &(ref->objpath);
     M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->org_id)));
     M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->model_id)));
     M_HASH_UP(*accum, M_HASH_DEFAULT(path->model_rev.valid));
@@ -474,6 +479,20 @@ static int cace_ari_hash_visit_objpath(cace_ari_objpath_t *path, const cace_ari_
         M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->type_id)));
     }
     M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->obj_id)));
+
+    M_HASH_UP(*accum, M_HASH_DEFAULT(ref->params.state));
+    switch (ref->params.state)
+    {
+        case CACE_ARI_PARAMS_NONE:
+            break;
+        case CACE_ARI_PARAMS_AC:
+            M_HASH_UP(*accum, cace_ari_list_hash(ref->params.as_ac->items));
+            break;
+        case CACE_ARI_PARAMS_AM:
+            M_HASH_UP(*accum, cace_ari_tree_hash(ref->params.as_am->items));
+            break;
+    }
+
     return 0;
 }
 
@@ -490,6 +509,10 @@ static int cace_ari_hash_visit_lit(cace_ari_lit_t *obj, const cace_ari_visit_ctx
             case CACE_ARI_TYPE_TBL:
                 // include metadata
                 M_HASH_UP(*accum, M_HASH_DEFAULT(obj->value.as_tbl->ncols));
+                break;
+            case CACE_ARI_TYPE_OBJPAT:
+                // this is not an ARI container
+                M_HASH_UP(*accum, cace_ari_objpat_hash(obj->value.as_objpat));
                 break;
             default:
                 // container contents are visited separately
@@ -532,8 +555,8 @@ size_t cace_ari_hash(const cace_ari_t *ari)
 {
     CHKRET(ari, 0);
     static const cace_ari_visitor_t visitor = {
-        .visit_objpath = cace_ari_hash_visit_objpath,
-        .visit_lit     = cace_ari_hash_visit_lit,
+        .visit_ref = cace_ari_hash_visit_ref,
+        .visit_lit = cace_ari_hash_visit_lit,
     };
 
     M_HASH_DECL(accum);
@@ -653,6 +676,13 @@ int cace_ari_cmp(const cace_ari_t *left, const cace_ari_t *right)
                         return part_cmp;
                     }
                     break;
+                case CACE_ARI_TYPE_OBJPAT:
+                    part_cmp = cace_ari_objpat_cmp(left->as_lit.value.as_objpat, right->as_lit.value.as_objpat);
+                    if (part_cmp)
+                    {
+                        return part_cmp;
+                    }
+                    break;
                 default:
                     break;
             }
@@ -767,6 +797,12 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
                     break;
                 case CACE_ARI_TYPE_RPTSET:
                     if (!cace_ari_rptset_equal(left->as_lit.value.as_rptset, right->as_lit.value.as_rptset))
+                    {
+                        return false;
+                    }
+                    break;
+                case CACE_ARI_TYPE_OBJPAT:
+                    if (!cace_ari_objpat_equal(left->as_lit.value.as_objpat, right->as_lit.value.as_objpat))
                     {
                         return false;
                     }

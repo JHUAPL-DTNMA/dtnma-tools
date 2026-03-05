@@ -66,10 +66,6 @@ typedef struct
      */
     bool enabled;
 
-    /** Determine whether the rule has been marked obsolete
-     */
-    bool obsolete;
-
     /** Track state of current number of executions since the rule was enabled.
      */
     cace_ari_uvast exec_count;

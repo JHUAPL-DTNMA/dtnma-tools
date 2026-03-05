@@ -130,6 +130,7 @@ void setUp(void)
 {
     refda_alarms_entry_index_reset(agent.alarms.alarm_index);
     refda_alarms_entry_list_reset(agent.alarms.alarm_list);
+    refda_alarms_shelf_entry_set_reset(agent.alarms.shelf_list);
 }
 
 void test_refda_adm_ietf_alarms_list_no_category(void)

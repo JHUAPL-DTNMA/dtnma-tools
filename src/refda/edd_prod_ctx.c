@@ -79,7 +79,14 @@ static int refda_edd_prod_check_result(refda_edd_prod_ctx_t *ctx)
     bool valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctx->edd->prod_type), &(ctx->prodctx->value)));
     if (!valid)
     {
-        CACE_LOG_ERR("EDD result type failed to match a produced value");
+        if (cace_log_is_enabled_for(LOG_ERR))
+        {
+            m_string_t buf;
+            m_string_init(buf);
+            cace_ari_text_encode(buf, &(ctx->prodctx->value), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_ERR("EDD produced type failed to match the value %s", m_string_get_cstr(buf));
+            m_string_clear(buf);
+        }
         cace_ari_set_undefined(&(ctx->prodctx->value));
     }
 

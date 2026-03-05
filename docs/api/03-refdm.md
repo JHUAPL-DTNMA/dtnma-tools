@@ -119,8 +119,9 @@ The server daemon has the following additional command-line options.
 
 # Persistent Database Support
 
-To build with MySQL or PostgreSQL database support, simply configure the CMake project with the associated library development OS packages installed.
+To build with PostgreSQL database support, simply configure the CMake project with the associated library development OS packages installed.
 When detected, the use of database persistence will be enabled for the REFDM and the associated command options will be made available at runtime.
+Otherwise, the REFDM will use only process-local storage which does not persist between running instances.
 
 The runtime configuration of which Postgres server to connect to is controlled by the following environment variables.
 The names of these variables is identical to and consistent with other command tools such as `psql`.

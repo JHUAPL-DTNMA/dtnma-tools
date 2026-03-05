@@ -310,6 +310,21 @@ const struct cace_ari_rptset_s *cace_ari_cget_rptset(const cace_ari_t *ari);
  */
 struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari);
 
+/** Require an OBJPAT value and extract a pointer to its struct.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained struct, if present, otherwise NULL.
+ */
+struct cace_ari_objpat_s *cace_ari_cget_objpat(const cace_ari_t *ari);
+
+/** Set an ARI as an OBJPAT literal value.
+ * Any previous value is de-initialized.
+ *
+ * @param[out] ari The value to set.
+ * @return The new struct.
+ */
+struct cace_ari_objpat_s *cace_ari_set_objpat(cace_ari_t *ari);
+
 /** Require a reference value and extract a pointer to its struct.
  *
  * @param[in] ari The ARI to read.

@@ -116,7 +116,7 @@ typedef struct cace_ari_tbl_s
 
 void cace_ari_tbl_init(cace_ari_tbl_t *obj);
 void cace_ari_tbl_deinit(cace_ari_tbl_t *obj);
-bool cace_ari_tbl_cmp(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right);
+int  cace_ari_tbl_cmp(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right);
 bool cace_ari_tbl_equal(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right);
 
 /** Reset a table to a specific size.

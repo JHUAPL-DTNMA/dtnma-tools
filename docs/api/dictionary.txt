@@ -155,6 +155,7 @@ Notational
 ns
 nsec
 num
+OBJPAT
 objpath
 objref
 odm
@@ -168,6 +169,7 @@ OPLIST
 orgs
 OSAL
 param
+params
 PARAMS
 PCRE
 PID

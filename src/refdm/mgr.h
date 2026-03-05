@@ -58,7 +58,7 @@ extern "C" {
 // Forward declarations
 struct mg_context;
 
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
 #define UI_SQL_SERVERLEN (80)
 #define UI_SQL_ACCTLEN   (20)
 #define UI_SQL_DBLEN     (20)
@@ -126,7 +126,7 @@ typedef struct refdm_mgr_s
     /// HTTP server state, managed by a background thread
     struct mg_context *rest;
 #endif
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
     /// SQL client state, managed by a background thread
     refdm_db_t      sql_info;
     pthread_mutex_t sql_lock;

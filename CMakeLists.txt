@@ -132,6 +132,7 @@ if(BUILD_UNITTEST)
       "--track-origins=yes"
       "--leak-check=full" "--show-leak-kinds=all"
       "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/memcheck.supp"
+      "--gen-suppressions=all"
       "--error-exitcode=2"
     )
     # Arguments as list into global scope for Findunitytools.cmake
@@ -217,8 +218,6 @@ endif(ARI_TEXT_PARSE)
 
 if(BUILD_MANAGER)
     # All these are optional
-    pkg_search_module(MYSQLCLIENT mysqlclient IMPORTED_TARGET)
-    message(STATUS "Found MySQLClient version ${MYSQLCLIENT_VERSION}")
     find_package(PostgreSQL)
     message(STATUS "Found PostgreSQL version ${PostgreSQL_VERSION_STRING}")
     find_package(civetweb)

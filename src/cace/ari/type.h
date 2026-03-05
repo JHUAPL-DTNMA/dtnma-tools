@@ -57,6 +57,7 @@ typedef enum
     CACE_ARI_TYPE_LABEL   = 14,
     CACE_ARI_TYPE_CBOR    = 15,
     CACE_ARI_TYPE_ARITYPE = 16,
+    CACE_ARI_TYPE_OBJPAT  = 24,
 
     // Container types
     CACE_ARI_TYPE_AC      = 17,

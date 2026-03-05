@@ -21,6 +21,7 @@
 #include "ref.h"
 #include "containers.h"
 #include "text_util.h"
+#include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include <inttypes.h>
 
@@ -137,7 +138,7 @@ bool cace_ari_objpath_equal(const cace_ari_objpath_t *left, const cace_ari_objpa
             && cace_ari_idseg_equal(&(left->obj_id), &(right->obj_id)));
 }
 
-bool cace_ari_objpath_cmp(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right)
+int cace_ari_objpath_cmp(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right)
 {
     int part_cmp = cace_ari_idseg_cmp(&(left->org_id), &(right->org_id));
     if (part_cmp)
@@ -158,7 +159,7 @@ bool cace_ari_objpath_cmp(const cace_ari_objpath_t *left, const cace_ari_objpath
     // prefer derived values
     if (left->has_ari_type && right->has_ari_type)
     {
-        part_cmp = left->ari_type < right->ari_type;
+        part_cmp = M_CMP_DEFAULT(left->ari_type, right->ari_type);
     }
     else
     {
@@ -169,7 +170,8 @@ bool cace_ari_objpath_cmp(const cace_ari_objpath_t *left, const cace_ari_objpath
         return part_cmp;
     }
 
-    return cace_ari_idseg_cmp(&(left->obj_id), &(right->obj_id));
+    part_cmp = cace_ari_idseg_cmp(&(left->obj_id), &(right->obj_id));
+    return part_cmp;
 }
 
 static bool cace_ari_valid_type_for_objpath(cace_ari_type_t type)
@@ -217,6 +219,7 @@ int cace_ari_objpath_derive_type(cace_ari_objpath_t *path)
                 cace_ari_type_t found = path->type_id.as_int;
                 if (!cace_ari_valid_type_for_objpath(found))
                 {
+                    CACE_LOG_WARNING("invalid reference type-id: %d", found);
                     retval = 3; // Invalid ARI
                 }
                 else

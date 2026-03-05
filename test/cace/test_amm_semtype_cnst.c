@@ -73,12 +73,12 @@ void test_amm_semtype_cnst_range_int64_1intvl_finite(const char *inhex, bool exp
 {
     cace_amm_semtype_cnst_t cnst;
     cace_amm_semtype_cnst_init(&cnst);
-    cace_amm_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(&cnst);
+    cace_util_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(&cnst);
     TEST_ASSERT_NOT_NULL(range);
     {
-        cace_amm_range_intvl_int64_t intvl;
-        cace_amm_range_intvl_int64_set_finite(&intvl, -5, 5);
-        cace_amm_range_intvl_int64_seq_push(range->intvls, intvl);
+        cace_util_range_intvl_int64_t intvl;
+        cace_util_range_intvl_int64_set_finite(&intvl, -5, 5);
+        cace_util_range_int64_push(*range, intvl);
     }
 
     check_cnst(&cnst, inhex, expect);
@@ -128,12 +128,12 @@ void test_amm_semtype_cnst_strlen_1intvl_finite(const char *inhex, bool expect)
 {
     cace_amm_semtype_cnst_t cnst;
     cace_amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    cace_util_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
     TEST_ASSERT_NOT_NULL(range);
     {
-        cace_amm_range_intvl_size_t intvl;
-        cace_amm_range_intvl_size_set_finite(&intvl, 3, 5);
-        cace_amm_range_intvl_size_seq_push(range->intvls, intvl);
+        cace_util_range_intvl_size_t intvl;
+        cace_util_range_intvl_size_set_finite(&intvl, 3, 5);
+        cace_util_range_size_push(*range, intvl);
     }
 
     check_cnst(&cnst, inhex, expect);
@@ -146,7 +146,7 @@ void test_amm_semtype_cnst_strlen_empty(const char *inhex, bool expect)
 {
     cace_amm_semtype_cnst_t cnst;
     cace_amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    cace_util_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
     TEST_ASSERT_NOT_NULL(range);
 
     check_cnst(&cnst, inhex, expect);
@@ -160,12 +160,12 @@ void test_amm_semtype_cnst_strlen_1intvl_infinite(const char *inhex, bool expect
 {
     cace_amm_semtype_cnst_t cnst;
     cace_amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    cace_util_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
     TEST_ASSERT_NOT_NULL(range);
     {
-        cace_amm_range_intvl_size_t intvl;
-        cace_amm_range_intvl_size_set_infinite(&intvl);
-        cace_amm_range_intvl_size_seq_push(range->intvls, intvl);
+        cace_util_range_intvl_size_t intvl;
+        cace_util_range_intvl_size_set_infinite(&intvl);
+        cace_util_range_size_push(*range, intvl);
     }
 
     check_cnst(&cnst, inhex, expect);
@@ -179,14 +179,14 @@ void test_amm_semtype_cnst_strlen_1intvl_lowindef(const char *inhex, bool expect
 {
     cace_amm_semtype_cnst_t cnst;
     cace_amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    cace_util_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
     TEST_ASSERT_NOT_NULL(range);
     {
-        cace_amm_range_intvl_size_t intvl;
-        cace_amm_range_intvl_size_set_infinite(&intvl);
+        cace_util_range_intvl_size_t intvl;
+        cace_util_range_intvl_size_set_infinite(&intvl);
         intvl.has_max = true;
         intvl.i_max   = 5;
-        cace_amm_range_intvl_size_seq_push(range->intvls, intvl);
+        cace_util_range_size_push(*range, intvl);
     }
 
     check_cnst(&cnst, inhex, expect);
@@ -200,14 +200,14 @@ void test_amm_semtype_cnst_strlen_1intvl_highindef(const char *inhex, bool expec
 {
     cace_amm_semtype_cnst_t cnst;
     cace_amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    cace_util_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
     TEST_ASSERT_NOT_NULL(range);
     {
-        cace_amm_range_intvl_size_t intvl;
-        cace_amm_range_intvl_size_set_infinite(&intvl);
+        cace_util_range_intvl_size_t intvl;
+        cace_util_range_intvl_size_set_infinite(&intvl);
         intvl.has_min = true;
         intvl.i_min   = 4;
-        cace_amm_range_intvl_size_seq_push(range->intvls, intvl);
+        cace_util_range_size_push(*range, intvl);
     }
 
     check_cnst(&cnst, inhex, expect);
@@ -221,14 +221,14 @@ void test_amm_semtype_cnst_strlen_2intvl_finite(const char *inhex, bool expect)
 {
     cace_amm_semtype_cnst_t cnst;
     cace_amm_semtype_cnst_init(&cnst);
-    cace_amm_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
+    cace_util_range_size_t *range = cace_amm_semtype_cnst_set_strlen(&cnst);
     TEST_ASSERT_NOT_NULL(range);
     {
-        cace_amm_range_intvl_size_t intvl;
-        cace_amm_range_intvl_size_set_finite(&intvl, 0, 3);
-        cace_amm_range_intvl_size_seq_push(range->intvls, intvl);
-        cace_amm_range_intvl_size_set_finite(&intvl, 5, 10);
-        cace_amm_range_intvl_size_seq_push(range->intvls, intvl);
+        cace_util_range_intvl_size_t intvl;
+        cace_util_range_intvl_size_set_finite(&intvl, 0, 3);
+        cace_util_range_size_push(*range, intvl);
+        cace_util_range_intvl_size_set_finite(&intvl, 5, 10);
+        cace_util_range_size_push(*range, intvl);
     }
 
     check_cnst(&cnst, inhex, expect);
