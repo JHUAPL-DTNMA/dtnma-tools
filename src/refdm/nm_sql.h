@@ -113,7 +113,12 @@ int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...);
 uint32_t       refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agent);
 uint32_t       refdm_db_insert_agent(const m_string_t eid);
 uint32_t       refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent);
-refdm_agent_t *refdm_db_fetch_agent(int32_t id);
+
+/** Initialize the manager store of agents from the DB.
+ *
+ * @param[in] mgr The manager to add agents into.
+ */
+void refdm_db_load_agents(refdm_mgr_t *mgr);
 
 /** Get the index of an Agent from its endpoint name.
  *
