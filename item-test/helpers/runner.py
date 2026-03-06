@@ -76,10 +76,10 @@ class CmdRunner:
         self._args = args
         self._kwargs = kwargs
 
-        self.proc = None
-        self._stdout_reader = None
-        self._stderr_reader = None
-        self._stdin_writer = None
+        self.proc: Optional[subprocess.Popen] = None
+        self._stdout_reader: Optional[threading.Thread] = None
+        self._stderr_reader: Optional[threading.Thread] = None
+        self._stdin_writer: Optional[threading.Thread] = None
 
         self._stdin_lines = queue.Queue()
         self._stdout_lines = queue.Queue()
@@ -259,19 +259,21 @@ class CmdRunner:
         expr = re.compile(pattern)
         LOGGER.debug('Waiting for pattern "%s" ...', pattern)
 
-        with Timer(timeout) as deadline:
-            while deadline:
-                remain_time = deadline.remaining()
-                if remain_time is None:
-                    break
+        deadline = Timer(timeout)
+        while deadline:
+            remain_time = deadline.remaining()
+            if remain_time is None:
+                break
 
-                try:
-                    text = self._stdout_lines.get(timeout=remain_time)
-                except queue.Empty:
-                    raise TimeoutError('text not received before timeout')
+            try:
+                text = self._stdout_lines.get(timeout=remain_time)
+            except queue.Empty:
+                break
 
-                if expr.match(text) is not None:
-                    return text
+            if expr.match(text) is not None:
+                return text
+
+        raise TimeoutError('text not received before timeout')
 
     def send_stdin(self, text: str):
         ''' Send an exact line of text to the process stdin.
