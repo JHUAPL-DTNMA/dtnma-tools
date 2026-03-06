@@ -361,8 +361,8 @@ create table if not exists data_model (
 CREATE TABLE if not exists registered_agents (
     registered_agents_id serial  NOT NULL,
     agent_endpoint_uri TEXT NOT NULL,
-    first_registered TIMESTAMP NOT NULL DEFAULT NOW(),
-    last_registered TIMESTAMP NOT NULL DEFAULT NOW(),
+    first_registered TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_registered TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (registered_agents_id),
     UNIQUE (agent_endpoint_uri)
 );
@@ -873,7 +873,7 @@ drop table if exists DB_LOG_INFO;
 
 create table if not exists DB_LOG_INFO (
   id SERIAL not null ,
-  time TIMESTAMP not null default NOW(),
+  time TIMESTAMPTZ not null default NOW(),
   msg varchar not null,
   level INT null,
   source VARCHAR(32) null,
