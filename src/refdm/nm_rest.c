@@ -300,13 +300,13 @@ static int agentParseCbor(struct mg_connection *conn, cace_ari_list_t tosend)
     if (!retval)
     {
         // iterate until all read or an error occurs
-        size_t curs = 0;
+        size_t curs   = 0;
         size_t remain = m_bstring_size(body);
 
         while (remain > 0)
         {
             size_t used = 0;
-            char *errm = NULL;
+            char  *errm = NULL;
 
             cace_ari_t *item = cace_ari_list_push_back_new(tosend);
 
@@ -607,9 +607,9 @@ static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *age
         return HTTP_NO_CONTENT;
     }
 
-    int        retval = 0;
-    const char *ctype = NULL;
-    size_t clen = 0;
+    int         retval = 0;
+    const char *ctype  = NULL;
+    size_t      clen   = 0;
     // Optional one of text or bytes body
     m_string_t body_text;
     m_string_init(body_text);
@@ -641,7 +641,7 @@ static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *age
         }
 
         ctype = "text/uri-list";
-        clen = m_string_size(body_text);
+        clen  = m_string_size(body_text);
     }
     else if (strcasecmp(form, "cbor") == 0)
     {
@@ -667,7 +667,7 @@ static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *age
         }
 
         ctype = "application/cbor-seq";
-        clen = m_bstring_size(body_bytes);
+        clen  = m_bstring_size(body_bytes);
     }
     else if (strcasecmp(form, "cborhex") == 0)
     {
@@ -699,7 +699,7 @@ static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *age
         }
 
         ctype = "text/plain";
-        clen = m_string_size(body_text);
+        clen  = m_string_size(body_text);
     }
 
     if (!retval)
@@ -803,7 +803,9 @@ static int getFormParam(struct mg_connection *conn, char *form, size_t form_len)
     if (ri->query_string)
     {
         int res = mg_get_var(ri->query_string, strlen(ri->query_string), "form", form, form_len);
-        if ((res == -2) || ((strcasecmp(form, "uri") != 0) && (strcasecmp(form, "cbor") != 0) && (strcasecmp(form, "cborhex") != 0)))
+        if ((res == -2)
+            || ((strcasecmp(form, "uri") != 0) && (strcasecmp(form, "cbor") != 0)
+                && (strcasecmp(form, "cborhex") != 0)))
         {
             mg_send_http_error(conn, HTTP_BAD_REQUEST, "Form parameter must be either uri, cbor, or cborhex");
             return HTTP_BAD_REQUEST;
@@ -849,7 +851,8 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
         {
             if (requireContentType(conn, "application/cbor-seq") && requireContentType(conn, "application/cbor"))
             {
-                mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE, "Only application/cbor-seq or application/cbor supported");
+                mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE,
+                                   "Only application/cbor-seq or application/cbor supported");
                 retval = HTTP_UNSUP_MEDIA_TYPE;
             }
             if (!retval)
