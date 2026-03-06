@@ -109,29 +109,29 @@ class TestCaceAri(unittest.TestCase):
         runner.proc.stdin.close()
         self.assertEqual(0, runner.proc.wait(timeout=5))
 
-    def test_translate_inform_text(self):
-        runner = self._start('--inform=text', '--outform=cborhex')
-
-        runner.send_stdin('ari:10\n')
-        got = runner.wait_for_line()
-        self.assertEqual('0A\n', got)
-
-    def test_translate_inform_auto(self):
+    def test_translate_inform_auto_text(self):
         runner = self._start('--inform=auto', '--outform=cborhex')
 
         runner.send_stdin('ari:10\n')
         got = runner.wait_for_line()
         self.assertEqual('0A\n', got)
 
-    def test_translate_inform_auto_hex(self):
+    def test_translate_inform_auto_cborhex(self):
         runner = self._start('--inform=auto')
 
         runner.send_stdin('0A\n')
         got = runner.wait_for_line()
         self.assertEqual('ari:10\n', got)
 
+    def test_translate_inform_uri(self):
+        runner = self._start('--inform=uri', '--outform=cborhex')
+
+        runner.send_stdin('ari:10\n')
+        got = runner.wait_for_line()
+        self.assertEqual('0A\n', got)
+
     def test_translate_inform_cborhex(self):
-        runner = self._start('--inform=cborhex', '--outform=text')
+        runner = self._start('--inform=cborhex', '--outform=uri')
 
         runner.send_stdin('0A\n')
         got = runner.wait_for_line()

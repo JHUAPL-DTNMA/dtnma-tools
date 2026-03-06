@@ -37,7 +37,7 @@ typedef enum
      */
     CACE_ARI_FORM_AUTO,
     /// Use text form ARIs
-    CACE_ARI_FORM_TEXT,
+    CACE_ARI_FORM_URI,
     /// Use binary form ARIs
     CACE_ARI_FORM_CBOR,
     /// Use hex-encoded binary form ARIs
@@ -50,9 +50,9 @@ static cace_ari_form_t get_form(const char *text)
     {
         return CACE_ARI_FORM_AUTO;
     }
-    else if (strcasecmp(text, "text") == 0)
+    else if (strcasecmp(text, "uri") == 0)
     {
-        return CACE_ARI_FORM_TEXT;
+        return CACE_ARI_FORM_URI;
     }
     else if (strcasecmp(text, "cbor") == 0)
     {
@@ -229,7 +229,7 @@ static int read_auto(cace_ari_form_t *inform, cace_ari_form_t *outform, cace_ari
 
     if ((len >= 4) && (strncasecmp(buf, "ari:", 4) == 0))
     {
-        *inform  = CACE_ARI_FORM_TEXT;
+        *inform  = CACE_ARI_FORM_URI;
         *outform = CACE_ARI_FORM_CBORHEX;
 
         FILE *tmp = fmemopen(buf, len, "rb");
@@ -243,7 +243,7 @@ static int read_auto(cace_ari_form_t *inform, cace_ari_form_t *outform, cace_ari
     else
     {
         *inform  = CACE_ARI_FORM_CBORHEX;
-        *outform = CACE_ARI_FORM_TEXT;
+        *outform = CACE_ARI_FORM_URI;
 
         FILE *tmp = fmemopen(buf, len, "rb");
         if (!tmp)
@@ -420,7 +420,7 @@ int main(int argc, char *argv[])
             case 'i':
                 inform = get_form(optarg);
 #if !defined(ARI_TEXT_PARSE)
-                if (inform == CACE_ARI_FORM_INVALID || inform == CACE_ARI_FORM_TEXT || inform == CACE_ARI_FORM_AUTO)
+                if (inform == CACE_ARI_FORM_INVALID || inform == CACE_ARI_FORM_URI || inform == CACE_ARI_FORM_AUTO)
                 {
                     retval = 1;
                     cont   = false;
@@ -474,7 +474,7 @@ int main(int argc, char *argv[])
                 res = read_auto(&inform, &outform, &inval, source);
 #endif /* ARI_TEXT_PARSE */
                 break;
-            case CACE_ARI_FORM_TEXT:
+            case CACE_ARI_FORM_URI:
 #if defined(ARI_TEXT_PARSE)
                 res = read_text(&inval, source);
 #endif /* ARI_TEXT_PARSE */
@@ -510,7 +510,7 @@ int main(int argc, char *argv[])
         // output the value
         switch (outform)
         {
-            case CACE_ARI_FORM_TEXT:
+            case CACE_ARI_FORM_URI:
                 write_text(outval, dest, text_opts);
                 break;
             case CACE_ARI_FORM_CBOR:

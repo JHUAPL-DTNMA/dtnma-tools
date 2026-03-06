@@ -143,9 +143,10 @@ int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count);
  *
  * @param agent_idx The row index of the source Agent.
  * @param[out] rptsets The list used to hold the retrieved RPTSETs.
+ * @param[out] mgr_time The manager timestamp for the latest record.
  * @return Returns ::RET_PASS on success otherwise @c RET_FAIL_* on failure.
  */
-int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets);
+int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, struct tm *mgr_time);
 
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.

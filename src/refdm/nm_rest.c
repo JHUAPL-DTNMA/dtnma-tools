@@ -288,6 +288,66 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
     }
 }
 
+static int agentParseCbor(struct mg_connection *conn, cace_ari_list_t tosend)
+{
+    int retval = 0;
+
+    // Request body contains binary-encoded ARIs concatenated
+    m_bstring_t body;
+    m_bstring_init(body);
+    retval = readRequstBody(conn, body);
+
+    if (!retval)
+    {
+        // iterate until all read or an error occurs
+        size_t curs   = 0;
+        size_t remain = m_bstring_size(body);
+
+        while (remain > 0)
+        {
+            size_t used = 0;
+            char  *errm = NULL;
+
+            cace_ari_t *item = cace_ari_list_push_back_new(tosend);
+
+            cace_data_t databuf;
+            cace_data_init_view(&databuf, remain, (cace_data_ptr_t)m_bstring_view(body, curs, remain));
+
+            int res = cace_ari_cbor_decode(item, &databuf, &used, &errm);
+            cace_data_deinit(&databuf);
+            if (res)
+            {
+                mg_send_http_error(conn, HTTP_BAD_REQUEST, "Error decoding execution ARI: %s", errm);
+                retval = HTTP_BAD_REQUEST;
+
+                CACE_FREE(errm);
+                errm = NULL;
+                break;
+            }
+            if (cace_log_is_enabled_for(LOG_DEBUG))
+            {
+                m_string_t buf;
+                m_string_init(buf);
+                cace_ari_text_encode(buf, item, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                CACE_LOG_DEBUG("decoded ARI as %s", m_string_get_cstr(buf));
+                m_string_clear(buf);
+            }
+
+            if (!cace_ari_is_lit_typed(item, CACE_ARI_TYPE_EXECSET))
+            {
+                mg_send_http_error(conn, HTTP_BAD_REQUEST, "One value is not an EXECSET");
+                retval = HTTP_BAD_REQUEST;
+            }
+
+            curs += used;
+            remain -= used;
+        }
+    }
+
+    m_bstring_clear(body);
+    return retval;
+}
+
 static int agentParseHex(struct mg_connection *conn, cace_ari_list_t tosend)
 {
     int retval = 0;
@@ -364,8 +424,6 @@ static int agentParseHex(struct mg_connection *conn, cace_ari_list_t tosend)
                 mg_send_http_error(conn, HTTP_BAD_REQUEST, "One value is not an EXECSET");
                 retval = HTTP_BAD_REQUEST;
             }
-
-            // FIXME: what is this? ui_postprocess_ctrl(id);
 
             curs += part_len;
             size_t sep_len = strspn(curs, arisep);
@@ -498,10 +556,12 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
     return retval;
 }
 
-static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent)
+static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *agent, const char *form)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
+    CHKRET(form, HTTP_INTERNAL_ERROR);
 
+    struct tm mgr_time;
     // Flag that defines if the rptsets came from a remote source (i.e. a database). If this
     // is set to true, then the variable ptr_rptsets should be cleared within this method.
     bool             is_remote_rptsets = false;
@@ -514,7 +574,7 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 
     int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
     // Retrieve the rptsets from the remote (database) source
-    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
+    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets, &mgr_time);
     if (ecode != 0)
     {
         cace_ari_list_clear(rptsets);
@@ -528,7 +588,8 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     is_remote_rptsets = true;
 #else  // defined(HAVE_POSTGRESQL)
     // Set the prt_rptsets to point to the local copy on the agent
-    ptr_rptsets       = &agent->rptsets;
+    ptr_rptsets = &agent->rptsets;
+    gmtime_r(&agent->mgr_time, &mgr_time);
     is_remote_rptsets = false;
 #endif // defined(HAVE_POSTGRESQL)
 
@@ -541,40 +602,127 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
             cace_ari_list_clear(*ptr_rptsets);
         }
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
 
-    int        retval = 0;
-    m_string_t body;
-    m_string_init(body);
+    int         retval = 0;
+    const char *ctype  = NULL;
+    size_t      clen   = 0;
+    // Optional one of text or bytes body
+    m_string_t body_text;
+    m_string_init(body_text);
+    m_bstring_t body_bytes;
+    m_bstring_init(body_bytes);
 
-    /* Iterate through all RPTSET for this agent in one buffer */
-    cace_ari_list_it_t rpt_it;
-    for (cace_ari_list_it(rpt_it, *ptr_rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
+    if (strcasecmp(form, "uri") == 0)
     {
-        const cace_ari_t *val = cace_ari_list_cref(rpt_it);
-
-        m_string_t uristr;
-        m_string_init(uristr);
-        int enc_ret = cace_ari_text_encode(uristr, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-
-        m_string_cat(body, uristr);
-        m_string_clear(uristr);
-        m_string_cat_cstr(body, "\r\n"); // HTTP convention
-
-        if (enc_ret)
+        /* Iterate through all RPTSET for this agent in one buffer */
+        cace_ari_list_it_t rpt_it;
+        for (cace_ari_list_it(rpt_it, *ptr_rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
         {
-            mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "encoding failure");
-            retval = HTTP_INTERNAL_ERROR;
-            break;
+            const cace_ari_t *val = cace_ari_list_cref(rpt_it);
+
+            m_string_t uristr;
+            m_string_init(uristr);
+            int enc_ret = cace_ari_text_encode(uristr, val, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+
+            m_string_cat(body_text, uristr);
+            m_string_clear(uristr);
+            m_string_cat_cstr(body_text, "\r\n"); // HTTP convention
+
+            if (enc_ret)
+            {
+                mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "encoding failure");
+                retval = HTTP_INTERNAL_ERROR;
+                break;
+            }
         }
+
+        ctype = "text/uri-list";
+        clen  = m_string_size(body_text);
+    }
+    else if (strcasecmp(form, "cbor") == 0)
+    {
+        /* Iterate through all RPTSET for this agent. */
+        cace_ari_list_it_t rpt_it;
+        for (cace_ari_list_it(rpt_it, *ptr_rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
+        {
+            const cace_ari_t *val = cace_ari_list_cref(rpt_it);
+
+            cace_data_t bytestr;
+            cace_data_init(&bytestr);
+            int enc_ret = cace_ari_cbor_encode(&bytestr, val);
+
+            m_bstring_push_back_bytes(body_bytes, bytestr.len, bytestr.ptr);
+            cace_data_deinit(&bytestr);
+
+            if (enc_ret)
+            {
+                mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "encoding failure");
+                retval = HTTP_INTERNAL_ERROR;
+                break;
+            }
+        }
+
+        ctype = "application/cbor-seq";
+        clen  = m_bstring_size(body_bytes);
+    }
+    else if (strcasecmp(form, "cborhex") == 0)
+    {
+        /* Iterate through all RPTSET for this agent. */
+        cace_ari_list_it_t rpt_it;
+        for (cace_ari_list_it(rpt_it, *ptr_rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
+        {
+            const cace_ari_t *val = cace_ari_list_cref(rpt_it);
+
+            cace_data_t bytestr;
+            cace_data_init(&bytestr);
+            int enc_ret = cace_ari_cbor_encode(&bytestr, val);
+
+            m_string_t hexstr;
+            m_string_init(hexstr);
+            int hex_ret = cace_base16_encode(hexstr, &bytestr, false);
+            cace_data_deinit(&bytestr);
+
+            m_string_cat(body_text, hexstr);
+            m_string_clear(hexstr);
+            m_string_cat_cstr(body_text, "\r\n"); // HTTP convention
+
+            if (enc_ret || hex_ret)
+            {
+                mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "encoding failure");
+                retval = HTTP_INTERNAL_ERROR;
+                break;
+            }
+        }
+
+        ctype = "text/plain";
+        clen  = m_string_size(body_text);
     }
 
     if (!retval)
     {
-        mg_send_http_ok(conn, "text/uri-list", m_string_size(body));
-        mg_write(conn, m_string_get_cstr(body), m_string_size(body));
+        mg_response_header_start(conn, HTTP_OK);
+        mg_response_header_add(conn, "Content-Type", ctype, -1);
+
+        char   buf[64];
+        size_t buf_used = snprintf(buf, sizeof(buf), "%zu", clen);
+        mg_response_header_add(conn, "Content-Length", buf, buf_used);
+
+        buf_used = strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &mgr_time);
+        mg_response_header_add(conn, "Last-Modified", buf, buf_used);
+
+        mg_response_header_send(conn);
+        if (!m_string_empty_p(body_text))
+        {
+            mg_write(conn, m_string_get_cstr(body_text), clen);
+        }
+        else if (!m_bstring_empty_p(body_bytes))
+        {
+            mg_write(conn, m_bstring_view(body_bytes, 0, clen), clen);
+        }
         retval = HTTP_OK;
     }
 
@@ -584,102 +732,8 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
         cace_ari_list_clear(*ptr_rptsets);
     }
 
-    m_string_clear(body);
-    return retval;
-}
-
-static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
-{
-    CHKRET(agent, HTTP_INTERNAL_ERROR);
-
-    // Flag that defines if the rptsets came from a remote source (i.e. a database). If this
-    // is set to true, then the variable ptr_rptsets should be cleared within this method.
-    bool             is_remote_rptsets = false;
-    cace_ari_list_t *ptr_rptsets       = NULL;
-
-#if defined(HAVE_POSTGRESQL)
-    // Synthesize the rptsets (on the stack)
-    cace_ari_list_t rptsets;
-    cace_ari_list_init(rptsets);
-
-    int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
-    // Retrieve the rptsets from the remote (database) source
-    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
-    if (ecode != 0)
-    {
-        cace_ari_list_clear(rptsets);
-
-        mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "Database error encountered.");
-        return HTTP_INTERNAL_ERROR;
-    }
-
-    // Set the prt_rptsets to point to the stack
-    ptr_rptsets       = &rptsets;
-    is_remote_rptsets = true;
-#else  // defined(HAVE_POSTGRESQL)
-    // Set the prt_rptsets to point to the local copy on the agent
-    ptr_rptsets       = &agent->rptsets;
-    is_remote_rptsets = false;
-#endif // defined(HAVE_POSTGRESQL)
-
-    // Return no content if there are no reports
-    if (cace_ari_list_empty_p(*ptr_rptsets))
-    {
-        // Clear the internals of data pointed to by ptr_rptsets (if it was sourced remotely).
-        if (is_remote_rptsets == true)
-        {
-            cace_ari_list_clear(*ptr_rptsets);
-        }
-
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
-        return HTTP_NO_CONTENT;
-    }
-
-    int        retval = 0;
-    m_string_t body;
-    m_string_init(body);
-
-    /* Iterate through all RPTSET for this agent. */
-    cace_ari_list_it_t rpt_it;
-    for (cace_ari_list_it(rpt_it, *ptr_rptsets); !cace_ari_list_end_p(rpt_it); cace_ari_list_next(rpt_it))
-    {
-        const cace_ari_t *val = cace_ari_list_cref(rpt_it);
-
-        cace_data_t bytestr;
-        cace_data_init(&bytestr);
-        int enc_ret = cace_ari_cbor_encode(&bytestr, val);
-
-        m_string_t hexstr;
-        m_string_init(hexstr);
-        int hex_ret = cace_base16_encode(hexstr, &bytestr, false);
-        cace_data_deinit(&bytestr);
-
-        m_string_cat(body, hexstr);
-        m_string_clear(hexstr);
-        m_string_cat_cstr(body, "\r\n"); // HTTP convention
-
-        if (enc_ret || hex_ret)
-        {
-            mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "encoding failure");
-            retval = HTTP_INTERNAL_ERROR;
-            break;
-        }
-    }
-
-    if (!retval)
-    {
-        mg_send_http_ok(conn, "text/plain", m_string_size(body));
-        mg_write(conn, m_string_get_cstr(body), m_string_size(body));
-        retval = HTTP_OK;
-    }
-
-    // Release the resources of rptsets (if it is sourced remotely)
-    if (is_remote_rptsets == true)
-    {
-        cace_ari_list_clear(*ptr_rptsets);
-    }
-
-    m_string_clear(body);
+    m_bstring_clear(body_bytes);
+    m_string_clear(body_text);
     return retval;
 }
 
@@ -749,9 +803,11 @@ static int getFormParam(struct mg_connection *conn, char *form, size_t form_len)
     if (ri->query_string)
     {
         int res = mg_get_var(ri->query_string, strlen(ri->query_string), "form", form, form_len);
-        if ((res == -2) || ((strcasecmp(form, "text") != 0) && (strcasecmp(form, "hex") != 0)))
+        if ((res == -2)
+            || ((strcasecmp(form, "uri") != 0) && (strcasecmp(form, "cbor") != 0)
+                && (strcasecmp(form, "cborhex") != 0)))
         {
-            mg_send_http_error(conn, HTTP_BAD_REQUEST, "Form parameter must be either text or hex");
+            mg_send_http_error(conn, HTTP_BAD_REQUEST, "Form parameter must be either uri, cbor, or cborhex");
             return HTTP_BAD_REQUEST;
         }
     }
@@ -766,7 +822,7 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
 
-    char form[10] = "text"; // size enough to hold valid values
+    char form[10] = "uri"; // size enough to hold valid values
 
     int retval = getFormParam(conn, form, sizeof(form));
     if (retval)
@@ -778,7 +834,7 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
     {
         cace_ari_list_t tosend;
         cace_ari_list_init(tosend);
-        if (strcasecmp(form, "text") == 0)
+        if (strcasecmp(form, "uri") == 0)
         {
             // either is acceptable
             if (requireContentType(conn, "text/uri-list") && requireContentType(conn, "text/plain"))
@@ -791,7 +847,20 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
                 retval = agentParseText(conn, tosend);
             }
         }
-        else if (strcasecmp(form, "hex") == 0)
+        else if (strcasecmp(form, "cbor") == 0)
+        {
+            if (requireContentType(conn, "application/cbor-seq") && requireContentType(conn, "application/cbor"))
+            {
+                mg_send_http_error(conn, HTTP_UNSUP_MEDIA_TYPE,
+                                   "Only application/cbor-seq or application/cbor supported");
+                retval = HTTP_UNSUP_MEDIA_TYPE;
+            }
+            if (!retval)
+            {
+                retval = agentParseCbor(conn, tosend);
+            }
+        }
+        else if (strcasecmp(form, "cborhex") == 0)
         {
             if (requireContentType(conn, "text/plain"))
             {
@@ -803,6 +872,7 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
                 retval = agentParseHex(conn, tosend);
             }
         }
+
         if (retval)
         {
             cace_ari_list_clear(tosend);
@@ -853,7 +923,8 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
     else
@@ -869,7 +940,7 @@ static int agentAnyReportsHandler(struct mg_connection *conn, refdm_agent_t *age
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
 
-    char form[10] = "text"; // size enough to hold valid values
+    char form[10] = "uri"; // size enough to hold valid values
 
     int retval = getFormParam(conn, form, sizeof(form));
     if (retval)
@@ -879,14 +950,7 @@ static int agentAnyReportsHandler(struct mg_connection *conn, refdm_agent_t *age
 
     if (0 == strcasecmp(ri->request_method, "GET"))
     {
-        if (strcasecmp(form, "text") == 0)
-        {
-            retval = agentShowTextReports(conn, agent);
-        }
-        else if (strcasecmp(form, "hex") == 0)
-        {
-            retval = agentShowHexReports(conn, agent);
-        }
+        retval = agentShowReports(conn, agent, form);
     }
     else
     {

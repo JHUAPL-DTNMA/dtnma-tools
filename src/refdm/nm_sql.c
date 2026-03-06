@@ -701,7 +701,7 @@ int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
 }
 
 //-------------------------------------------------------------------------------------
-int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
+int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, struct tm *mgr_time)
 {
     // Get the rptset rows from the database
     PGresult *res   = NULL;
@@ -749,10 +749,26 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets)
         // Add the report to the list
         cace_ari_list_push_back_move(*rptsets, &ari_item);
     }
+    PQclear(res);
+
+    ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT MAX(mgr_time) FROM %s WHERE agent_id=%d",
+                                     TBL_NAME_RPTSET, agent_idx);
+    if (ecode != RET_PASS)
+    {
+        CACE_LOG_ERR("Failed to retrieve the RPTSET mgr_time");
+    }
+    else
+    {
+        const char *ts_str = PQgetvalue(res, 0, 0);
+
+        if (strptime(ts_str, "%Y-%m-%d %H:%M:%S", mgr_time) == NULL)
+        {
+            CACE_LOG_ERR("Failed to parse mgr_time: %s", ts_str);
+        }
+    }
+    PQclear(res);
 
     CACE_LOG_INFO("Success with retrieval of rptset items. Num items: %d", num_rows);
-
-    PQclear(res);
     return RET_PASS;
 }
 

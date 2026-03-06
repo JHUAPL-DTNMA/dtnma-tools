@@ -237,6 +237,16 @@ class BaseRefdm(unittest.TestCase):
             val = ari_cbor.Decoder().decode(buf)
         return val
 
+    def _cbor_items(self, data:bytes) -> list:
+        items = []
+        with io.BytesIO(data) as infile:
+            while True:
+                try:
+                    items.append(cbor2.load(infile))
+                except cbor2.CBORDecodeEOF:
+                    break
+        return items
+
 
 class TestRefdmSocket(BaseRefdm):
     ''' Verify whole-agent behavior with the refdm-socket '''
@@ -489,42 +499,42 @@ class TestRefdmSocket(BaseRefdm):
         resp = self._req.get(self._base_url + f'agents/eid/missing/reports')
         self.assertEqual(404, resp.status_code)
 
-    def test_agents_eid_reports_text_404(self):
+    def test_agents_eid_reports_uri_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=text')
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=uri')
         self.assertEqual(404, resp.status_code)
         self.assertIn('Unknown agent', resp.text)
 
-    def test_agents_eid_reports_text_404_longname(self):
+    def test_agents_eid_reports_uri_404_longname(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing-with-a-{"longer-" * 40}eid/reports?form=text')
+        resp = self._req.get(self._base_url + f'agents/eid/missing-with-a-{"longer-" * 40}eid/reports?form=uri')
         self.assertEqual(404, resp.status_code)
         self.assertIn('Unknown agent', resp.text)
 
-    def test_agents_eid_reports_hex_404(self):
+    def test_agents_eid_reports_cborhex_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=cborhex')
         self.assertEqual(404, resp.status_code)
         self.assertIn('Unknown agent', resp.text)
 
-    def test_agents_idx_reports_text_404(self):
+    def test_agents_eid_reports_uri_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/10/reports?form=text')
+        resp = self._req.get(self._base_url + f'agents/eid/10/reports?form=uri')
         self.assertEqual(404, resp.status_code)
 
-    def test_agents_idx_reports_hex_404(self):
+    def test_agents_eid_reports_cborhex_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/10/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/eid/10/reports?form=cborhex')
         self.assertEqual(404, resp.status_code)
 
-    def test_agents_idx_reports_text_400(self):
+    def test_agents_idx_reports_uri_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=text')
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=uri')
         self.assertEqual(404, resp.status_code)
 
-    def test_agents_idx_reports_hex_400(self):
+    def test_agents_idx_reports_cborhex_404(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=cborhex')
         self.assertEqual(404, resp.status_code)
 
     def test_recv_one_agent_one_rptset(self):
@@ -539,6 +549,9 @@ class TestRefdmSocket(BaseRefdm):
         )
         agent_eid = 'file:' + sock_path
         eid_seg = quote(agent_eid)
+        rptset_count = 1
+
+        self._wait_for_db_table('ari_rptset', rptset_count)
 
         LOGGER.info('Waiting for agent %s', agent_eid)
         timer = Timer(5)
@@ -549,28 +562,43 @@ class TestRefdmSocket(BaseRefdm):
                 timer.finish()
                 break
 
-        self._wait_for_db_table('ari_rptset', 1)
+        # valid agent but invalid form
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=other')
+        self.assertEqual(400, resp.status_code)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cbor')
         self.assertEqual(200, resp.status_code)
+        lastmod = resp.headers.get('last-modified')
+        self.assertIsNotNone(lastmod)
+        self.assertEqual('application/cbor-seq', split_content_type(resp.headers['content-type']))
+        items = self._cbor_items(resp.content)
+        self.assertEqual(rptset_count, len(items))
+
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cborhex')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
-        self.assertEqual(1, len(lines))
+        self.assertEqual(rptset_count, len(lines))
+        for line in lines:
+            cbor2.loads(bytes.fromhex(line))
 
-        # Verify path segment handling
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex&test=ignored')
+        # Verify query handling
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cborhex&test=ignored')
         self.assertEqual(200, resp.status_code)
+        self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
         other_lines = resp.text.splitlines()
         self.assertEqual(lines, other_lines)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=text')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=uri')
         self.assertEqual(200, resp.status_code)
+        self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
-        self.assertEqual(1, len(lines))
+        self.assertEqual(rptset_count, len(lines))
         for line in lines:
-            self.assertTrue(line.startswith('ari:/RPTSET/'))
+            self.assertTrue(line.casefold().startswith('ari:/rptset/'))
 
     def test_recv_one_agent_three_rptset(self):
         self._start()
@@ -590,30 +618,44 @@ class TestRefdmSocket(BaseRefdm):
 
         self._wait_for_db_table('ari_rptset', rptset_count)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cbor')
         self.assertEqual(200, resp.status_code)
+        lastmod = resp.headers.get('last-modified')
+        self.assertIsNotNone(lastmod)
+        self.assertEqual('application/cbor-seq', split_content_type(resp.headers['content-type']))
+        items = self._cbor_items(resp.content)
+        self.assertEqual(rptset_count, len(items))
+
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cborhex')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
         self.assertEqual(rptset_count, len(lines))
+        for line in lines:
+            cbor2.loads(bytes.fromhex(line))
 
         # index resource gets the same result
-        resp = self._req.get(self._base_url + f'agents/idx/0/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/idx/0/reports?form=cborhex')
         self.assertEqual(200, resp.status_code)
+        self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
         other_lines = resp.text.splitlines()
         self.assertEqual(lines, other_lines)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=text')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=uri')
         self.assertEqual(200, resp.status_code)
+        self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         lines = resp.text.splitlines()
         self.assertEqual(rptset_count, len(lines))
         for line in lines:
-            self.assertTrue(line.startswith('ari:/RPTSET/'))
+            self.assertTrue(line.casefold().startswith('ari:/rptset/'))
 
         # index resource gets the same result
-        resp = self._req.get(self._base_url + f'agents/idx/0/reports?form=text')
+        resp = self._req.get(self._base_url + f'agents/idx/0/reports?form=uri')
         self.assertEqual(200, resp.status_code)
+        self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
         other_lines = resp.text.splitlines()
         self.assertEqual(lines, other_lines)
@@ -634,10 +676,10 @@ class TestRefdmSocket(BaseRefdm):
         eid_seg1 = quote('file:' + sock_path)
 
         self._wait_for_db_table('ari_rptset', 2)
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=cborhex')
         self.assertEqual(200, resp.status_code)
         self.assertEqual(1, len(resp.text.splitlines()))
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=cborhex')
         self.assertEqual(200, resp.status_code)
         self.assertEqual(1, len(resp.text.splitlines()))
 
@@ -645,7 +687,7 @@ class TestRefdmSocket(BaseRefdm):
         resp = self._req.post(self._base_url + f'agents/eid/{eid_seg0}/clear_reports')
         self.assertEqual(204, resp.status_code)
         self._wait_for_db_table('ari_rptset', 1)
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=cborhex')
         self.assertEqual(204, resp.status_code)
         # repeats do nothing
         resp = self._req.post(self._base_url + f'agents/eid/{eid_seg0}/clear_reports')
@@ -654,10 +696,10 @@ class TestRefdmSocket(BaseRefdm):
         resp = self._req.post(self._base_url + f'agents/eid/{eid_seg1}/clear_reports')
         self.assertEqual(204, resp.status_code)
         self._wait_for_db_table('ari_rptset', 0)
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=hex')
+        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=cborhex')
         self.assertEqual(204, resp.status_code)
 
-    def test_agents_send_hex(self):
+    def test_agents_send_cbor(self):
         self._start()
 
         agent_bind = self._agent_bind[0]
@@ -678,7 +720,44 @@ class TestRefdmSocket(BaseRefdm):
         send_data = self._ari_obj_to_cbor(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=hex',
+            self._base_url + f'agents/eid/{eid_seg}/send?form=cbor',
+            data=send_data,
+            headers={
+                'content-type': 'application/cbor-seq',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+
+        msg_vals = self._wait_msg(agent_ix=0)
+        self.assertEqual([send_ari], msg_vals)
+
+        # no other datagrams
+        with self.assertRaises(TimeoutError):
+            self._wait_msg(agent_ix=0)
+
+    def test_agents_send_cborhex(self):
+        self._start()
+
+        agent_bind = self._agent_bind[0]
+        agent_eid = 'file:' + agent_bind["path"]
+        eid_seg = quote(agent_eid)
+
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data=(agent_eid + '\r\n'),
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
+        send_ari = self._ari_text_to_obj(textform)
+        send_data = self._ari_obj_to_cbor(send_ari)
+
+        resp = self._req.post(
+            self._base_url + f'agents/eid/{eid_seg}/send?form=cborhex',
             data=f'{send_data.hex()}\r\n',
             headers={
                 'content-type': 'text/plain',
@@ -694,7 +773,7 @@ class TestRefdmSocket(BaseRefdm):
         with self.assertRaises(TimeoutError):
             self._wait_msg(agent_ix=0)
 
-    def test_agents_send_text(self):
+    def test_agents_send_uri(self):
         self._start()
 
         agent_bind = self._agent_bind[0]
@@ -715,7 +794,7 @@ class TestRefdmSocket(BaseRefdm):
         send_text = self._ari_obj_to_text(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=text',
+            self._base_url + f'agents/eid/{eid_seg}/send?form=uri',
             data=f'{send_text}\r\n',
             headers={
                 'content-type': 'text/uri-list',
@@ -754,7 +833,7 @@ ari:/EXECSET/n=1234;(//ietf/dtnma-agent/CTRL/inspect)\r\n\
 ari:/EXECSET/n='test';(//ietf/dtnma-agent/CTRL/inspect)\r\n\
 "
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=text',
+            self._base_url + f'agents/eid/{eid_seg}/send?form=uri',
             data=send_text,
             headers={
                 'content-type': 'text/uri-list',
@@ -973,7 +1052,7 @@ class TestRefdmProxy(BaseRefdm):
         self._wait_for_db_table('ari_rptset', 1)
         self.assertSetEqual(set(["data:agent0"]), self._get_agent_names())
 
-    def test_agents_send_hex(self):
+    def test_agents_send_cborhex(self):
         self._start()
 
         agent_eid = 'data:agent0'
@@ -993,7 +1072,7 @@ class TestRefdmProxy(BaseRefdm):
         send_data = self._ari_obj_to_cbor(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=hex',
+            self._base_url + f'agents/eid/{eid_seg}/send?form=cborhex',
             data=f'{send_data.hex()}\r\n',
             headers={
                 'content-type': 'text/plain',
