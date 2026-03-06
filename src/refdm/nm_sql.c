@@ -759,8 +759,7 @@ void refdm_db_load_agents(refdm_mgr_t *mgr)
     refdm_agent_t *agent = NULL;
     PGresult      *res   = NULL;
 
-    if (refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT agent_endpoint_uri FROM registered_agents")
-        != RET_PASS)
+    if (refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT agent_endpoint_uri FROM registered_agents") != RET_PASS)
     {
         CACE_LOG_ERR("Cant fetch agent list");
         return;

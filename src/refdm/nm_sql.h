@@ -110,9 +110,9 @@ int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...);
 int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...);
 
 /* Functions to process outgoing EXECSET and incoming RPTSET. */
-uint32_t       refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agent);
-uint32_t       refdm_db_insert_agent(const m_string_t eid);
-uint32_t       refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent);
+uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agent);
+uint32_t refdm_db_insert_agent(const m_string_t eid);
+uint32_t refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent);
 
 /** Initialize the manager store of agents from the DB.
  *
