@@ -45,6 +45,7 @@ enum cace_amm_semtype_cnst_type_e
     AMM_SEMTYPE_CNST_INT_BITS,
     /// Text- or byte-string length range
     AMM_SEMTYPE_CNST_STRLEN,
+    AMM_SEMTYPE_CNST_INT_ENUM,
 #if defined(PCRE_FOUND)
     /// Text-string pattern expression
     AMM_SEMTYPE_CNST_TEXTPAT,
@@ -63,7 +64,6 @@ typedef struct cace_amm_semtype_cnst_s
 {
     /// The type of constraint present
     enum cace_amm_semtype_cnst_type_e type;
-;
     union
     {
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
