@@ -45,11 +45,13 @@ enum cace_amm_semtype_cnst_type_e
     AMM_SEMTYPE_CNST_INT_BITS,
     /// Text- or byte-string length range
     AMM_SEMTYPE_CNST_STRLEN,
+    AMM_SEMTYPE_CNST_INT_ENUM,
 #if defined(PCRE_FOUND)
     /// Text-string pattern expression
     AMM_SEMTYPE_CNST_TEXTPAT,
 #endif /* PCRE_FOUND */
 };
+
 
 /** A single constraint on a cace_amm_semtype_use_t
  */
@@ -57,7 +59,6 @@ typedef struct cace_amm_semtype_cnst_s
 {
     /// The type of constraint present
     enum cace_amm_semtype_cnst_type_e type;
-
     union
     {
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
@@ -70,6 +71,10 @@ typedef struct cace_amm_semtype_cnst_s
         /// Used when #type is ::AMM_SEMTYPE_CNST_TEXTPAT
         pcre2_code *as_textpat;
 #endif /* PCRE_FOUND */
+
+        /// NEW: Used when #type is ::AMM_SEMTYPE_CNST_INT_ENUM
+        /// This is now a direct pointer
+        cace_ari_am_t *as_enum; 
     };
 } cace_amm_semtype_cnst_t;
 
@@ -88,7 +93,7 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj);
  * @param[in,out] obj The struct to set the state of.
  * @return The specific parameters for this constraint type.
  */
-cace_util_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj);
+cace_util_range_int64_t * cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj);
 
 /** Configure a constraint on integer values based on a mask of valid
  * bit positions (in an integer value).
@@ -137,9 +142,15 @@ int cace_amm_semtype_cnst_set_textpat(cace_amm_semtype_cnst_t *obj, const char *
  */
 bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const cace_ari_t *val);
 
+// Clear an enum constraint's associated map
+void cace_ari_am_clear(cace_ari_am_t *am);
+
 /// M*LIB OPLIST for cace_amm_semtype_cnst_t
 #define M_OPL_cace_amm_semtype_cnst_t() \
     (INIT(API_2(cace_amm_semtype_cnst_init)), CLEAR(API_2(cace_amm_semtype_cnst_deinit)))
+
+/* Prototype for the setter function */
+int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *cnst, cace_ari_am_t *mappings);
 
 #ifdef __cplusplus
 }
