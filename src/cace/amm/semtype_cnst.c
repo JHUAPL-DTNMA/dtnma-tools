@@ -142,11 +142,21 @@ int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *obj, cace_ari_am_t *
 {
     CHKERR1(obj);
     CHKERR1(mappings);
+<<<<<<< HEAD
 
     cace_amm_semtype_cnst_deinit(obj);
 
     obj->type = AMM_SEMTYPE_CNST_INT_ENUM;
     obj->as_enum.enum_map = mappings; 
+=======
+    
+    /* 1. Clean up any existing constraint data in this object */
+    cace_amm_semtype_cnst_deinit(obj);
+
+    /* 2. Set the type and attach the mapping tree */
+    obj->type = AMM_SEMTYPE_CNST_INT_ENUM;
+    obj->as_enum = mappings;
+>>>>>>> 2dae73d (setter and validator logic added)
 
     return 0;
 }
@@ -215,6 +225,7 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
         case AMM_SEMTYPE_CNST_INT_ENUM:
         {
             /* 
+<<<<<<< HEAD
             * Access the internal tree inside the wrapper
             * Using the _get function from the B-tree interface
             */
@@ -222,6 +233,16 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
                 return 1; // Value found in enum
             }
             return 0; // Not found
+=======
+             * NEW VALIDATOR CASE:
+             * This checks if the value 'val' is present as a key in our map.
+             */
+            if (obj->as_enum && cace_ari_am_find_key(obj->as_enum, val) != NULL)
+            {
+                retval = true;
+            }
+            break;
+>>>>>>> 2dae73d (setter and validator logic added)
         }
 
 #if defined(PCRE_FOUND)
