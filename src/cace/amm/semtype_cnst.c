@@ -217,15 +217,6 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
         case AMM_SEMTYPE_CNST_INT_ENUM:
         {
             /* 
-<<<<<<< HEAD
-            * Access the internal tree inside the wrapper
-            * Using the _get function from the B-tree interface
-            */
-            if (cace_ari_tree_get(obj->as_enum.enum_map->tree, val) != NULL) {
-                return 1; // Value found in enum
-            }
-            return 0; // Not found
-=======
              * NEW VALIDATOR CASE:
              * This checks if the value 'val' is present as a key in our map.
              */
@@ -234,7 +225,6 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
                 retval = true;
             }
             break;
->>>>>>> 2dae73d (setter and validator logic added)
         }
 
 #if defined(PCRE_FOUND)
