@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -54,7 +54,7 @@ typedef struct
     /// Endpoint ID (opaque URI) for this agent
     m_string_t eid;
 
-#if !(defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL))
+#if !(defined(HAVE_POSTGRESQL))
     /// Received RPTSET values
     cace_ari_list_t rptsets;
 #endif

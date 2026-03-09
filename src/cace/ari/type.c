@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -51,6 +51,7 @@ static _ari_type_name_pair_t _ari_type_names[] = {
     {CACE_ARI_TYPE_LABEL, "LABEL"},
     {CACE_ARI_TYPE_CBOR, "CBOR"},
     {CACE_ARI_TYPE_ARITYPE, "ARITYPE"},
+    {CACE_ARI_TYPE_OBJPAT, "OBJPAT"},
     {CACE_ARI_TYPE_AC, "AC"},
     {CACE_ARI_TYPE_AM, "AM"},
     {CACE_ARI_TYPE_TBL, "TBL"},

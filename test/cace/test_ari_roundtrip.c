@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -75,9 +75,17 @@ TEST_CASE("ari:/REAL64/Infinity")
 TEST_CASE("ari:/REAL64/-Infinity")
 TEST_CASE("ari:/BYTESTR/h'6869'")
 TEST_CASE("ari:/TEXTSTR/%22hi%20there%22")
-TEST_CASE("ari:/LABEL/hi")
 TEST_CASE("ari:/TP/20230102T030405Z")
 TEST_CASE("ari:/TD/PT20.5S")
+TEST_CASE("ari:/LABEL/hi")
+TEST_CASE("ari:/LABEL/1")
+TEST_CASE("ari:/CBOR/h'0A'")
+TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
+TEST_CASE("ari:/OBJPAT/(*)(*)(*)(*)")
+TEST_CASE("ari:/OBJPAT/(65535)(-10)(-2)(45)")
+TEST_CASE("ari:/OBJPAT/(example)(adm)(ctrl)(hi)")
+TEST_CASE("ari:/OBJPAT/(65535)(-10..-1,1)(*)(10..100)")
+TEST_CASE("ari:/OBJPAT/(example)(..-1)(10..)(*)")
 TEST_CASE("ari:/AC/()")
 TEST_CASE("ari:/AC/(null,/INT/23)")
 TEST_CASE("ari:/AM/()")
@@ -105,7 +113,7 @@ void test_ari_roundtrip_text_cbor(const char *intext)
         m_string_init_set_cstr(inbuf, intext);
         int res = cace_ari_text_decode(&ari_dn, inbuf, &errm);
         m_string_clear(inbuf);
-        if ((res != 0) ^ (errm != NULL)) // only error message upon failure
+        if ((res != 0) && (errm != NULL)) // only error message upon failure
         {
             TEST_FAIL_MESSAGE(errm);
         }
@@ -140,7 +148,7 @@ void test_ari_roundtrip_text_cbor(const char *intext)
     {
         m_string_t outtext;
         m_string_init(outtext);
-        int res = cace_ari_text_encode(outtext, &ari_dn, opts);
+        int res = cace_ari_text_encode(outtext, &ari_up, opts);
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_encode() failed");
 
         TEST_ASSERT_EQUAL_STRING(intext, m_string_get_cstr(outtext));
@@ -150,8 +158,9 @@ void test_ari_roundtrip_text_cbor(const char *intext)
     if (true)
     {
         // optional checks
-        TEST_ASSERT_EQUAL_INT_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "ari_hash() mismatch");
-        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "ari_equal() mismatch");
+        TEST_ASSERT_EQUAL_size_t_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "cace_ari_hash() mismatch");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_ari_cmp(&ari_dn, &ari_up), "cace_ari_cmp() mismatch");
+        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "cace_ari_equal() mismatch");
     }
 
     cace_ari_deinit(&ari_up);
@@ -219,7 +228,7 @@ void test_ari_roundtrip_cbor_text(const char *inhex)
 
         res = cace_ari_text_decode(&ari_up, text, &errm);
         m_string_clear(text);
-        if ((res != 0) ^ (errm != NULL)) // only error message upon failure
+        if ((res != 0) && (errm != NULL)) // only error message upon failure
         {
             TEST_FAIL_MESSAGE(errm);
         }
@@ -238,8 +247,9 @@ void test_ari_roundtrip_cbor_text(const char *inhex)
     if (true)
     {
         // optional checks
-        TEST_ASSERT_EQUAL_INT_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "ari_hash() mismatch");
-        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "ari_equal() mismatch");
+        TEST_ASSERT_EQUAL_size_t_MESSAGE(cace_ari_hash(&ari_dn), cace_ari_hash(&ari_up), "cace_ari_hash() mismatch");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, cace_ari_cmp(&ari_dn, &ari_up), "cace_ari_cmp() mismatch");
+        TEST_ASSERT_TRUE_MESSAGE(cace_ari_equal(&ari_dn, &ari_up), "cace_ari_equal() mismatch");
     }
 
     cace_ari_deinit(&ari_up);

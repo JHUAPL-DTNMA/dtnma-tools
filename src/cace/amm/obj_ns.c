@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -41,7 +41,7 @@ void cace_amm_obj_ns_init(cace_amm_obj_ns_t *ns)
     cace_ari_date_init(&ns->model_rev);
     string_tree_set_init(ns->feature_supp);
     cace_amm_obj_ns_ctr_dict_init(ns->object_types);
-    ns->obsolete = false;
+    ns->status = CACE_AMM_STATUS_CURRENT;
 }
 
 void cace_amm_obj_ns_deinit(cace_amm_obj_ns_t *ns)

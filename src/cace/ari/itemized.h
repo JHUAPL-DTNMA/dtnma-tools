@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -81,4 +81,4 @@ void cace_ari_itemized_reset(cace_ari_itemized_t *obj);
 } // extern C
 #endif
 
-#endif /* CACE_AMM_PARAMETERS_H_ */
+#endif /* CACE_ARI_ITEMIZED_H_ */

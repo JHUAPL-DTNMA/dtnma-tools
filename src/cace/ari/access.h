@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -83,11 +83,12 @@ bool cace_ari_is_bool(const cace_ari_t *ari);
 int cace_ari_get_bool(const cace_ari_t *ari, cace_ari_bool *out);
 
 /** Extract an integer value, if present, from an ARI.
- * This works for both typed and untyped literal values and will coerce signed and unsigned values to the desired type
- * where possible.
+ * This works for both typed and untyped literal values and will coerce signed
+ * and unsigned values to the desired type where possible.
  *
  * @param[in] ari Non-null pointer to the ARI to read.
- * @param[out] out The value to output.
+ * @param[out] out The value to output, or NULL to not actually get the value
+ * just check that it could be.
  * @return Zero upon success.
  */
 int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out);
@@ -197,6 +198,11 @@ void cace_ari_set_tp_posix(cace_ari_t *ari, struct timespec ptime);
 void cace_ari_set_td(cace_ari_t *ari, struct timespec delta);
 
 /// @overload
+void cace_ari_set_label_int(cace_ari_t *ari, cace_ari_int value);
+/// @overload
+void cace_ari_set_label_tstr(cace_ari_t *ari, const char *buf, bool copy);
+
+/// @overload
 void cace_ari_set_aritype(cace_ari_t *ari, cace_ari_type_t type);
 /// @overload
 void cace_ari_set_aritype_text(cace_ari_t *ari, cace_ari_type_t type);
@@ -303,6 +309,21 @@ const struct cace_ari_rptset_s *cace_ari_cget_rptset(const cace_ari_t *ari);
  * @return The new rptset struct.
  */
 struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari);
+
+/** Require an OBJPAT value and extract a pointer to its struct.
+ *
+ * @param[in] ari The ARI to read.
+ * @return Pointer to the contained struct, if present, otherwise NULL.
+ */
+struct cace_ari_objpat_s *cace_ari_cget_objpat(const cace_ari_t *ari);
+
+/** Set an ARI as an OBJPAT literal value.
+ * Any previous value is de-initialized.
+ *
+ * @param[out] ari The value to set.
+ * @return The new struct.
+ */
+struct cace_ari_objpat_s *cace_ari_set_objpat(cace_ari_t *ari);
 
 /** Require a reference value and extract a pointer to its struct.
  *

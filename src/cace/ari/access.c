@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "access.h"
+#include "objpat.h"
 #include "cace/util/defs.h"
 #include <timespec.h>
 
@@ -125,7 +126,6 @@ void cace_ari_set_prim_float64(cace_ari_t *ari, cace_ari_real64 src)
 int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out)
 {
     CHKERR1(ari);
-    CHKERR1(out);
     if (ari->is_ref)
     {
         return 1;
@@ -139,7 +139,10 @@ int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out)
             {
                 return 3;
             }
-            *out = *val;
+            if (out)
+            {
+                *out = *val;
+            }
             break;
         }
         case CACE_ARI_PRIM_INT64:
@@ -149,7 +152,10 @@ int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out)
             {
                 return 3;
             }
-            *out = *val;
+            if (out)
+            {
+                *out = *val;
+            }
             break;
         }
         default:
@@ -161,7 +167,6 @@ int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out)
 int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out)
 {
     CHKERR1(ari);
-    CHKERR1(out);
     if (ari->is_ref)
     {
         return 1;
@@ -175,7 +180,10 @@ int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out)
             {
                 return 3;
             }
-            *out = *val;
+            if (out)
+            {
+                *out = *val;
+            }
             break;
         }
         case CACE_ARI_PRIM_INT64:
@@ -185,7 +193,10 @@ int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out)
             {
                 return 3;
             }
-            *out = *val;
+            if (out)
+            {
+                *out = *val;
+            }
             break;
         }
         default:
@@ -197,7 +208,6 @@ int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out)
 int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out)
 {
     CHKERR1(ari);
-    CHKERR1(out);
     if (ari->is_ref)
     {
         return 1;
@@ -211,7 +221,10 @@ int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out)
             {
                 return 3;
             }
-            *out = *val;
+            if (out)
+            {
+                *out = *val;
+            }
             break;
         }
         case CACE_ARI_PRIM_INT64:
@@ -221,7 +234,10 @@ int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out)
             {
                 return 3;
             }
-            *out = *val;
+            if (out)
+            {
+                *out = *val;
+            }
             break;
         }
         default:
@@ -233,7 +249,6 @@ int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out)
 int cace_ari_get_vast(const cace_ari_t *ari, cace_ari_vast *out)
 {
     CHKERR1(ari);
-    CHKERR1(out);
     if (ari->is_ref)
     {
         return 1;
@@ -247,7 +262,10 @@ int cace_ari_get_vast(const cace_ari_t *ari, cace_ari_vast *out)
             {
                 return 3;
             }
-            *out = *val;
+            if (out)
+            {
+                *out = *val;
+            }
             break;
         }
         case CACE_ARI_PRIM_INT64:
@@ -262,7 +280,6 @@ int cace_ari_get_vast(const cace_ari_t *ari, cace_ari_vast *out)
 int cace_ari_get_uvast(const cace_ari_t *ari, cace_ari_uvast *out)
 {
     CHKERR1(ari);
-    CHKERR1(out);
     if (ari->is_ref)
     {
         return 1;
@@ -279,7 +296,10 @@ int cace_ari_get_uvast(const cace_ari_t *ari, cace_ari_uvast *out)
             {
                 return 3;
             }
-            *out = *val;
+            if (out)
+            {
+                *out = *val;
+            }
             break;
         }
         default:
@@ -508,6 +528,42 @@ void cace_ari_set_td(cace_ari_t *ari, struct timespec delta)
                                                  .ari_type     = CACE_ARI_TYPE_TD,
                                                  .prim_type    = CACE_ARI_PRIM_TIMESPEC,
                                                  .value        = { .as_timespec = delta } };
+}
+
+void cace_ari_set_label_int(cace_ari_t *ari, cace_ari_int value)
+{
+    CHKVOID(ari);
+    cace_ari_deinit(ari);
+    *cace_ari_init_lit(ari) = (cace_ari_lit_t) { .has_ari_type = true,
+                                                 .ari_type     = CACE_ARI_TYPE_LABEL,
+                                                 .prim_type    = CACE_ARI_PRIM_INT64,
+                                                 .value        = { .as_int64 = value } };
+}
+
+void cace_ari_set_label_tstr(cace_ari_t *ari, const char *buf, bool copy)
+{
+    CHKVOID(ari);
+    CHKVOID(buf);
+    cace_ari_deinit(ari);
+
+    cace_data_t data;
+    {
+        const size_t len = strlen(buf) + 1;
+        if (copy)
+        {
+            cace_data_init(&data);
+            cace_data_copy_from(&data, len, (cace_data_ptr_t)buf);
+        }
+        else
+        {
+            cace_data_init_view(&data, len, (cace_data_ptr_t)buf);
+        }
+    }
+
+    *cace_ari_init_lit(ari) = (cace_ari_lit_t) { .has_ari_type = true,
+                                                 .ari_type     = CACE_ARI_TYPE_LABEL,
+                                                 .prim_type    = CACE_ARI_PRIM_TSTR,
+                                                 .value        = { .as_data = data } };
 }
 
 void cace_ari_set_aritype(cace_ari_t *ari, cace_ari_type_t type)
@@ -743,6 +799,33 @@ struct cace_ari_rptset_s *cace_ari_set_rptset(cace_ari_t *ari)
                                                  } };
 
     return ctr;
+}
+
+struct cace_ari_objpat_s *cace_ari_cget_objpat(const cace_ari_t *ari)
+{
+    if (!cace_ari_is_lit_typed(ari, CACE_ARI_TYPE_OBJPAT))
+    {
+        return NULL;
+    }
+    return ari->as_lit.value.as_objpat;
+}
+
+struct cace_ari_objpat_s *cace_ari_set_objpat(cace_ari_t *ari)
+{
+    CHKNULL(ari);
+    cace_ari_deinit(ari);
+
+    cace_ari_objpat_t *pat = CACE_MALLOC(sizeof(cace_ari_objpat_t));
+    cace_ari_objpat_init(pat);
+
+    *cace_ari_init_lit(ari) = (cace_ari_lit_t) { .has_ari_type = true,
+                                                 .ari_type     = CACE_ARI_TYPE_OBJPAT,
+                                                 .prim_type    = CACE_ARI_PRIM_OTHER,
+                                                 .value        = {
+                                                            .as_objpat = pat,
+                                                 } };
+
+    return pat;
 }
 
 const cace_ari_ref_t *cace_ari_cget_ref(const cace_ari_t *ari)

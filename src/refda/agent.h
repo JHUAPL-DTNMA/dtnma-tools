@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -25,6 +25,7 @@
 #include "rpt_agg.h"
 #include "timeline.h"
 #include "acl.h"
+#include "alarms.h"
 #include <cace/util/daemon_run.h>
 #include <cace/util/threadset.h>
 #include <cace/amm/obj_ns.h>
@@ -72,6 +73,9 @@ typedef struct refda_agent_s
     /// Mutex for the state of #acl
     pthread_mutex_t acl_mutex;
 
+    /// Agent alarms state and config
+    refda_alarms_t alarms;
+
     /// Text string ownership for ODM (runtime-defined) text names
     string_list_t odm_names;
     /// Runtime AMM object store
@@ -96,7 +100,8 @@ typedef struct refda_agent_s
     /// The next-to-use execution PID
     uint64_t exec_next_pid;
     /** Execution sequence state table.
-     * This is owned by the refda_exec_worker() thread.
+     * This is owned by the refda_exec_worker() thread, but visible
+     * from the Agent ADM.
      */
     refda_exec_seq_list_t exec_state;
     /// Mutex for the state of #exec_state
@@ -105,6 +110,10 @@ typedef struct refda_agent_s
      * This is owned by the refda_exec_worker() thread.
      */
     refda_timeline_t exec_timeline;
+    /** Execution shutdown state.
+     * This is owned by the refda_exec_worker() thread.
+     */
+    atomic_bool exec_end;
 
     /// Egress RPTSET queue
     refda_msgdata_queue_t rptgs;

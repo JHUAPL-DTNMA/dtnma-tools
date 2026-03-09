@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -19,6 +19,7 @@
  * @ingroup ari
  */
 #include "containers.h"
+#include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include <inttypes.h>
 
@@ -172,7 +173,7 @@ void cace_ari_tbl_deinit(cace_ari_tbl_t *obj)
     cace_ari_array_clear(obj->items);
 }
 
-bool cace_ari_tbl_cmp(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right)
+int cace_ari_tbl_cmp(const cace_ari_tbl_t *left, const cace_ari_tbl_t *right)
 {
     // column count exactly equal
     int part_cmp = M_CMP_BASIC(left->ncols, right->ncols);

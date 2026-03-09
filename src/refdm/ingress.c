@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -44,7 +44,7 @@
 #include "ingress.h"
 #include "mgr.h"
 #include "agents.h"
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
 #include "nm_sql.h"
 #endif
 #include <cace/ari/text.h>
@@ -59,7 +59,7 @@
  */
 static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 {
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     refdm_db_insert_rptset(val, agent);
 #else

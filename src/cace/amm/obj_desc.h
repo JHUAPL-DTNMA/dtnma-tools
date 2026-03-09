@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -21,6 +21,7 @@
 #include "idseg_val.h"
 #include "user_data.h"
 #include "parameters.h"
+#include "status.h"
 #include "cace/ari.h"
 #include "cace/util/nocase.h"
 
@@ -37,6 +38,9 @@ typedef struct cace_amm_obj_desc_s
 
     /// Formal parameters of this object instance, which may be empty
     cace_amm_formal_param_list_t fparams;
+
+    /// The status of this object, which can change over time
+    cace_amm_status_t status;
 
     /** Object-type-specific application data.
      */

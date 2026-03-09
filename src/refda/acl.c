@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -44,6 +44,7 @@ void refda_acl_access_init(refda_acl_access_t *obj)
     CHKVOID(obj);
     obj->id = 0;
     refda_acl_id_tree_init(obj->groups);
+    cace_ari_init(&obj->objects);
     refda_amm_ident_base_list_init(obj->permissions);
     obj->added_at   = CACE_ARI_INIT_UNDEFINED;
     obj->updated_at = CACE_ARI_INIT_UNDEFINED;
@@ -53,8 +54,25 @@ void refda_acl_access_deinit(refda_acl_access_t *obj)
 {
     CHKVOID(obj);
     refda_amm_ident_base_list_clear(obj->permissions);
+    cace_ari_deinit(&obj->objects);
     refda_acl_id_tree_clear(obj->groups);
     obj->id = 0;
+}
+
+void refda_acl_access_get_str_id(m_string_t out, const refda_acl_access_t *obj, bool append)
+{
+    if (!obj)
+    {
+        return;
+    }
+    if (append)
+    {
+        m_string_cat_printf(out, "%" PRIu32, obj->id);
+    }
+    else
+    {
+        m_string_printf(out, "%" PRIu32, obj->id);
+    }
 }
 
 void refda_acl_init(refda_acl_t *obj)
@@ -136,11 +154,18 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
 }
 
 bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-                                 const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
+                                 const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
                                  refda_amm_ident_base_ptr_set_t match)
 {
     bool found = false;
-    CACE_LOG_DEBUG("matched from %zu groups", refda_acl_id_tree_size(groups));
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        refda_acl_id_tree_get_str(buf, groups, false);
+        CACE_LOG_DEBUG("matched from %zu groups: %s", refda_acl_id_tree_size(groups), m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
     if (pthread_mutex_lock(&(agent->acl_mutex)))
     {
         CACE_LOG_CRIT("failed to lock agent ACL");
@@ -154,11 +179,24 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
 
         const refda_acl_access_ptr_set_t *accesses =
             refda_acl_access_by_group_cget(agent->acl.access_by_group, *grp_id);
+        if (cace_log_is_enabled_for(LOG_DEBUG))
+        {
+            m_string_t buf;
+            m_string_init(buf);
+            size_t count = 0;
+            if (accesses)
+            {
+                count = refda_acl_access_ptr_set_size(*accesses);
+                refda_acl_access_ptr_set_get_str(buf, *accesses, false);
+            }
+            CACE_LOG_DEBUG("matched to %zu accesses: %s", count, m_string_get_cstr(buf));
+            m_string_clear(buf);
+        }
         if (!accesses)
         {
             continue;
         }
-        CACE_LOG_DEBUG("matched to %zu accesses", refda_acl_access_ptr_set_size(*accesses));
+        CACE_LOG_DEBUG("", refda_acl_access_ptr_set_size(*accesses));
 
         refda_acl_access_ptr_set_it_t acc_it;
         for (refda_acl_access_ptr_set_it(acc_it, *accesses); !refda_acl_access_ptr_set_end_p(acc_it);
@@ -167,8 +205,10 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
             refda_acl_access_t *const *acc_ptr = refda_acl_access_ptr_set_cref(acc_it);
             const refda_acl_access_t  *acc     = *acc_ptr;
 
-            // TODO filter by acc_obj
-            (void)acc_obj;
+            if (!cace_amm_objpat_set_match(&acc->objects, acc_obj))
+            {
+                continue;
+            }
 
             refda_amm_ident_base_list_it_t perm_it;
             for (refda_amm_ident_base_list_it(perm_it, acc->permissions); !refda_amm_ident_base_list_end_p(perm_it);
@@ -192,12 +232,21 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
         return false;
     }
 
-    CACE_LOG_DEBUG("matched to %zu permissions", refda_amm_ident_base_ptr_set_size(match));
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        refda_amm_ident_base_ptr_set_get_str(buf, match, false);
+        CACE_LOG_DEBUG("matched to %zu permissions: %s", refda_amm_ident_base_ptr_set_size(match),
+                       m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+
     return found;
 }
 
 bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-                                     const cace_amm_obj_desc_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
+                                     const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
                                      refda_amm_ident_base_ptr_set_t match)
 {
     cace_amm_obj_desc_ptr_set_t perm_objs;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -847,6 +847,13 @@ static cace_amm_type_t cace_amm_builtins[] = {
     {
         .type_class          = CACE_AMM_TYPE_BUILTIN,
         .as_builtin.ari_type = CACE_ARI_TYPE_RPTSET,
+        .ari_name            = builtin_ari_name,
+        .match               = builtin_default_match,
+        .convert             = builtin_default_convert,
+    },
+    {
+        .type_class          = CACE_AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = CACE_ARI_TYPE_OBJPAT,
         .ari_name            = builtin_ari_name,
         .match               = builtin_default_match,
         .convert             = builtin_default_convert,

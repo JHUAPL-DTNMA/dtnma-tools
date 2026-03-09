@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -148,5 +148,20 @@ int cace_amm_lookup_deref(cace_amm_lookup_t *res, const cace_amm_obj_store_t *st
         return 7 + pop_res;
     }
 
+    return 0;
+}
+
+int cace_amm_lookup_ref_int(cace_ari_t *ref, const cace_amm_lookup_t *src)
+{
+    CHKERR1(ref);
+    CHKERR1(src);
+    CHKRET(src->ns, 2);
+    CHKRET(src->obj, 2);
+    CHKRET(src->ns->org_id.has_intenum, 3);
+    CHKRET(src->ns->model_id.has_intenum, 3);
+    CHKRET(src->obj->obj_id.has_intenum, 3);
+
+    cace_ari_set_objref_path_intid(ref, src->ns->org_id.intenum, src->ns->model_id.intenum, src->obj_type,
+                                   src->obj->obj_id.intenum);
     return 0;
 }

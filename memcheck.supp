@@ -51,11 +51,20 @@
    fun:_ari_type_dict_init
 }
 {
+   _ari_type_dict_init5
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   fun:_ari_type_by_id_i_resize_up
+   fun:_ari_type_by_id_set_at
+   fun:_ari_type_dict_init
+}
+{
    _ari_type_dict_init2
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:realloc
-   fun:*_resize_up
+   fun:_ari_type_by_name_i_resize_up
    fun:_ari_type_by_name_set_at
    fun:_ari_type_dict_init
 }
@@ -70,7 +79,7 @@
    fun:_ari_type_dict_init
 }
 {
-   _ari_type_dict_init2
+   _ari_type_dict_init4
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:malloc
@@ -97,6 +106,19 @@
    fun:cace_amm_type_lookup_list_pair_push_raw
    fun:cace_amm_type_lookup_set_at
    fun:cace_amm_builtin_dict_init
+}
+{
+   cace_ari_test_fixture1
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   fun:m_str1ng_fit2size
+   fun:m_string_set
+   fun:m_string_init_set
+   fun:test_seen_ari_i_search_and_insert_in_node
+   fun:test_seen_ari_set_at
+   fun:test_seen_ari_safe_get
+   fun:suiteSetUp
 }
 {
    readline

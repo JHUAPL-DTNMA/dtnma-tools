@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 // forward declaration for callback reference
-struct refda_ctrl_exec_ctx_s;
 typedef struct refda_ctrl_exec_ctx_s refda_ctrl_exec_ctx_t;
 
 /** A control (CTRL) descriptor.
