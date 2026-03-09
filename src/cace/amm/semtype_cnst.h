@@ -51,14 +51,19 @@ enum cace_amm_semtype_cnst_type_e
 #endif /* PCRE_FOUND */
 };
 
+typedef struct cace_amm_range_int64_s {
+    int64_t min;
+    int64_t max;
+} cace_amm_range_int64_t;
+
+
 /** A single constraint on a cace_amm_semtype_use_t
  */
 typedef struct cace_amm_semtype_cnst_s
 {
     /// The type of constraint present
     enum cace_amm_semtype_cnst_type_e type;
-
-    uint8_t type;
+;
     union
     {
         /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
