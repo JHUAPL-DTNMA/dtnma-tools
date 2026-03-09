@@ -142,13 +142,6 @@ int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *obj, cace_ari_am_t *
 {
     CHKERR1(obj);
     CHKERR1(mappings);
-<<<<<<< HEAD
-
-    cace_amm_semtype_cnst_deinit(obj);
-
-    obj->type = AMM_SEMTYPE_CNST_INT_ENUM;
-    obj->as_enum.enum_map = mappings; 
-=======
     
     /* 1. Clean up any existing constraint data in this object */
     cace_amm_semtype_cnst_deinit(obj);
@@ -156,7 +149,6 @@ int cace_amm_semtype_cnst_set_enum(cace_amm_semtype_cnst_t *obj, cace_ari_am_t *
     /* 2. Set the type and attach the mapping tree */
     obj->type = AMM_SEMTYPE_CNST_INT_ENUM;
     obj->as_enum = mappings;
->>>>>>> 2dae73d (setter and validator logic added)
 
     return 0;
 }
