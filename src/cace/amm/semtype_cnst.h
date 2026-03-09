@@ -52,11 +52,6 @@ enum cace_amm_semtype_cnst_type_e
 #endif /* PCRE_FOUND */
 };
 
-typedef struct cace_amm_range_int64_s {
-    int64_t min;
-    int64_t max;
-} cace_amm_range_int64_t;
-
 
 /** A single constraint on a cace_amm_semtype_use_t
  */
@@ -76,8 +71,6 @@ typedef struct cace_amm_semtype_cnst_s
         /// Used when #type is ::AMM_SEMTYPE_CNST_TEXTPAT
         pcre2_code *as_textpat;
 #endif /* PCRE_FOUND */
-        /// Used when #type is ::AMM_SEMTYPE_CNST_RANGE_INT64
-        cace_amm_range_int64_t as_range_int64;
 
         /// NEW: Used when #type is ::AMM_SEMTYPE_CNST_INT_ENUM
         /// This is now a direct pointer
@@ -100,7 +93,7 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj);
  * @param[in,out] obj The struct to set the state of.
  * @return The specific parameters for this constraint type.
  */
-cace_util_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj);
+cace_util_range_int64_t * cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj);
 
 /** Configure a constraint on integer values based on a mask of valid
  * bit positions (in an integer value).
@@ -148,6 +141,9 @@ int cace_amm_semtype_cnst_set_textpat(cace_amm_semtype_cnst_t *obj, const char *
  * @return True if the value is valid.
  */
 bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const cace_ari_t *val);
+
+// Clear an enum constraint's associated map
+void cace_ari_am_clear(cace_ari_am_t *am);
 
 /// M*LIB OPLIST for cace_amm_semtype_cnst_t
 #define M_OPL_cace_amm_semtype_cnst_t() \

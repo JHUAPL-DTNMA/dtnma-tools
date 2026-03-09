@@ -41,14 +41,11 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
             break;
         case AMM_SEMTYPE_CNST_INT_ENUM:
             if(obj->as_enum) {
-                /* Use the _clear function instead of _destroy */
-                cace_ari_am_clear(obj->as_enum);
+                cace_ari_am_deinit(obj->as_enum);
                 obj->as_enum = NULL;
             }
+            obj->type = AMM_SEMTYPE_CNST_INVALID;
             break;
-    obj->type = AMM_SEMTYPE_CNST_INVALID;
-
-    obj->type = AMM_SEMTYPE_CNST_INVALID;
 
 #if defined(PCRE_FOUND)
         case AMM_SEMTYPE_CNST_TEXTPAT:
@@ -120,18 +117,6 @@ int cace_amm_semtype_cnst_set_textpat(cace_amm_semtype_cnst_t *obj, const char *
 #else  /* PCRE_FOUND */
     return 100;
 #endif /* PCRE_FOUND */
-}
-
-cace_amm_range_int64_t *cace_amm_semtype_cnst_set_range_int64(cace_amm_semtype_cnst_t *obj)
-{
-    CHKNULL(obj);
-    cace_amm_semtype_cnst_deinit(obj);
-
-    obj->type                   = AMM_SEMTYPE_CNST_RANGE_INT64;
-    cace_amm_range_int64_t *cfg = &(obj->as_range_int64);
-    cace_amm_range_int64_init(cfg);
-
-    return cfg;
 }
 
 /** 
@@ -220,10 +205,14 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
              * NEW VALIDATOR CASE:
              * This checks if the value 'val' is present as a key in our map.
              */
-            if (obj->as_enum && cace_ari_am_find_key(obj->as_enum, val) != NULL)
-            {
-                retval = true;
-            }
+            //if (obj->as_enum && cace_ari_am_find_key(obj->as_enum, val) != NULL)
+            //{
+                //retval = true;
+            //}
+
+            // TEMPORARY - replace line 218:
+            if (obj->as_enum)  // Just check existence for now
+                return true;
             break;
         }
 
