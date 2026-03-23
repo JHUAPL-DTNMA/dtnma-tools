@@ -277,5 +277,6 @@ void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
     }
 #else
     cace_ari_list_reset(agent->rptsets);
+    agent->mgr_time = 0;
 #endif
 }

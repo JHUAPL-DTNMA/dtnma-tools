@@ -502,6 +502,7 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
+    struct tm mgr_time;
     // Flag that defines if the rptsets came from a remote source (i.e. a database). If this
     // is set to true, then the variable ptr_rptsets should be cleared within this method.
     bool             is_remote_rptsets = false;
@@ -514,7 +515,7 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 
     int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
     // Retrieve the rptsets from the remote (database) source
-    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
+    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets, &mgr_time);
     if (ecode != 0)
     {
         cace_ari_list_clear(rptsets);
@@ -528,7 +529,8 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
     is_remote_rptsets = true;
 #else  // defined(HAVE_POSTGRESQL)
     // Set the prt_rptsets to point to the local copy on the agent
-    ptr_rptsets       = &agent->rptsets;
+    ptr_rptsets = &agent->rptsets;
+    gmtime_r(&agent->mgr_time, &mgr_time);
     is_remote_rptsets = false;
 #endif // defined(HAVE_POSTGRESQL)
 
@@ -541,7 +543,8 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
             cace_ari_list_clear(*ptr_rptsets);
         }
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
 
@@ -573,7 +576,17 @@ static int agentShowTextReports(struct mg_connection *conn, refdm_agent_t *agent
 
     if (!retval)
     {
-        mg_send_http_ok(conn, "text/uri-list", m_string_size(body));
+        mg_response_header_start(conn, HTTP_OK);
+        mg_response_header_add(conn, "Content-Type", "text/uri-list", -1);
+
+        char   buf[64];
+        size_t buf_used = snprintf(buf, sizeof(buf), "%zu", m_string_size(body));
+        mg_response_header_add(conn, "Content-Length", buf, buf_used);
+
+        buf_used = strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &mgr_time);
+        mg_response_header_add(conn, "Last-Modified", buf, buf_used);
+
+        mg_response_header_send(conn);
         mg_write(conn, m_string_get_cstr(body), m_string_size(body));
         retval = HTTP_OK;
     }
@@ -592,6 +605,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
 
+    struct tm mgr_time;
     // Flag that defines if the rptsets came from a remote source (i.e. a database). If this
     // is set to true, then the variable ptr_rptsets should be cleared within this method.
     bool             is_remote_rptsets = false;
@@ -604,7 +618,7 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 
     int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
     // Retrieve the rptsets from the remote (database) source
-    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets);
+    int ecode = refdm_db_fetch_rptset_list(idx, &rptsets, &mgr_time);
     if (ecode != 0)
     {
         cace_ari_list_clear(rptsets);
@@ -618,7 +632,8 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
     is_remote_rptsets = true;
 #else  // defined(HAVE_POSTGRESQL)
     // Set the prt_rptsets to point to the local copy on the agent
-    ptr_rptsets       = &agent->rptsets;
+    ptr_rptsets = &agent->rptsets;
+    gmtime_r(&agent->mgr_time, &mgr_time);
     is_remote_rptsets = false;
 #endif // defined(HAVE_POSTGRESQL)
 
@@ -631,7 +646,8 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
             cace_ari_list_clear(*ptr_rptsets);
         }
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
 
@@ -668,7 +684,18 @@ static int agentShowHexReports(struct mg_connection *conn, refdm_agent_t *agent)
 
     if (!retval)
     {
-        mg_send_http_ok(conn, "text/plain", m_string_size(body));
+        mg_response_header_start(conn, HTTP_OK);
+        mg_response_header_add(conn, "Content-Type", "text/plain", -1);
+
+        char   buf[64];
+        size_t buf_used = snprintf(buf, sizeof(buf), "%zu", m_string_size(body));
+        mg_response_header_add(conn, "Content-Length", buf, buf_used);
+
+        buf_used = strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &mgr_time);
+        CACE_LOG_DEBUG("Last-Modified: %s", buf);
+        mg_response_header_add(conn, "Last-Modified", buf, buf_used);
+
+        mg_response_header_send(conn);
         mg_write(conn, m_string_get_cstr(body), m_string_size(body));
         retval = HTTP_OK;
     }
@@ -853,7 +880,8 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
 
-        mg_send_http_error(conn, HTTP_NO_CONTENT, "");
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
     else
