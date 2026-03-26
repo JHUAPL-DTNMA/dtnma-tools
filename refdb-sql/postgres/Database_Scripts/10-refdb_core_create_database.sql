@@ -361,8 +361,8 @@ create table if not exists data_model (
 CREATE TABLE if not exists registered_agents (
     registered_agents_id serial  NOT NULL,
     agent_endpoint_uri TEXT NOT NULL,
-    first_registered TIMESTAMP NOT NULL DEFAULT NOW(),
-    last_registered TIMESTAMP NOT NULL DEFAULT NOW(),
+    first_registered TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_registered TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (registered_agents_id),
     UNIQUE (agent_endpoint_uri)
 );
@@ -542,6 +542,27 @@ create table if not exists ari_rptset (
 );
 CREATE INDEX idx_rptset_nonce ON ari_rptset (nonce_cbor);
 CREATE INDEX idx_rptset_reftime ON ari_rptset (reference_time);
+
+
+-- rpt-container/list
+create table if not exists ari_rpt_list (
+    ari_rpt_list_id serial NOT NULL,
+    ari_rptset_id INTEGER NOT NULL,
+    time_offset INTEGER default=0,
+    report_source BYTEA NOT NULL,
+    report_entries BYTEA NOT NULL,
+    primary key (ari_rpt_list_id),
+    foreign key (ari_rptset_id) references ari_rptset (ari_rptset_id)
+);
+
+-- rpt-item
+-- create table if not exists ari_rpt_item (
+--     ari_rpt_item_id serial NOT NULL, 
+--     ari_rpt_container_id INTEGER NOT NULL,
+--     report_entry BYTEA NOT NULL,
+--     primary key(ari_rpt_item_id),
+--     foreign key (ari_rpt_container_id) references ari_rpt_container (ari_rpt_container_id)
+-- );
 
 
 create table if not exists formal_parmspec (
@@ -873,7 +894,7 @@ drop table if exists DB_LOG_INFO;
 
 create table if not exists DB_LOG_INFO (
   id SERIAL not null ,
-  time TIMESTAMP not null default NOW(),
+  time TIMESTAMPTZ not null default NOW(),
   msg varchar not null,
   level INT null,
   source VARCHAR(32) null,
