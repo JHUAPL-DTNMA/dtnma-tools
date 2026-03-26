@@ -882,21 +882,43 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
 
     uint32_t rtv = 0;
 
+
+// typedef struct cace_ari_rptset_s
+// {
+//     /// Nonce stored as an ARI
+//     cace_ari_t nonce;
+//     /// Reference absolute time
+//     cace_ari_t reftime;
+//     /// Reports in this set
+//     cace_ari_report_list_t reports;
+// } cace_ari_rptset_t;
     const cace_ari_rptset_t *rpt_set = cace_ari_cget_rptset(val);
     if (!rpt_set)
     {
         return 1;
     }
 
+// typedef struct cace_ari_report_s
+// {
+//     /// Relative time within the reporting-set
+//     cace_ari_t reltime;
+//     /// Source of this report data
+//     cace_ari_t source;
+//     /// Items of the report itself
+//     cace_ari_list_t items; // alist of ari 
+// } cace_ari_report_t;
+
+    // M_DEQUE_DEF(cace_ari_report_list, cace_ari_report_t)  list of reports 
+    
     // correlator_nonce: either NULL, UVAST, or BYTES
+    m_string_t buf;
+    m_string_init(buf);
+    cace_ari_text_encode(buf, &rpt_set->nonce, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        m_string_t buf;
-        m_string_init(buf);
-        cace_ari_text_encode(buf, &rpt_set->nonce, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("inserting RPTSET with nonce %s", m_string_get_cstr(buf));
-        m_string_clear(buf);
     }
+    m_string_clear(buf);
 
     cace_data_t nonce_cbor = CACE_DATA_INIT_NULL;
     cace_ari_cbor_encode(&nonce_cbor, &rpt_set->nonce);
@@ -923,18 +945,61 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
     cace_ari_cbor_encode(&cbordata, val);
 
     getConn(DB_RPT_CON);
+    
+    //insert into rpt set and dependant tables 
     dbprep_declare(DB_RPT_CON, ARI_RPTSET_INSERT, 5, 1);
-
     dbprep_bind_param_byte(0, nonce_cbor.ptr, nonce_cbor.len);
-    dbprep_bind_param_str(1, m_string_get_cstr(tp));
-    dbprep_bind_param_str(2, m_string_get_cstr(rpt));
-    dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
-    dbprep_bind_param_str(4, m_string_get_cstr(agent->eid));
-
+    dbprep_bind_param_str(1, m_string_get_cstr(tp));         //  report timestamp 
+    dbprep_bind_param_str(2, m_string_get_cstr(rpt));        // report_list
+    dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);   // report_list_cbor
+    dbprep_bind_param_str(4, m_string_get_cstr(agent->eid)); // agent_id
     dbexec_prepared;
     giveConn(DB_RPT_CON);
     PQclear(res);
 
+    const cace_ari_report_list_t *reports = &rtp_set->reports;
+    size_t report_size = cace_ari_report_list_size(reports);
+    // make array into formated string to pass into postgres 
+    // char times[report_size*(sizeof(cace_ari_t)+2)];
+    // char sources[report_size*(sizeof(cace_ari_t)+2)];
+    char items[report_size*(sizeof(cace_ari_list_t)+2)];
+    // for report in reports
+    // create an rel_times
+    // create an array of source 
+    // create an array of items c
+    // need rpt_set id 
+    // for each item in reports add to rpt_list
+    cace_data_t cbordata_reltime;
+    cace_data_t cbordata_source;
+    for(size_t i = 0; i < report_size; i++) {
+        const cace_ari_report_t curr_report = cace_ari_report_list_get(reports, i);
+        
+        cace_data_init(&cbordata_reltime);
+        cace_ari_cbor_encode(&cbordata_reltime, &curr_report->reltime);
+        
+        cace_data_init(&cbordata_source);
+        cace_ari_cbor_encode(&cbordata_source, &curr_report->source);
+
+        // for each item in report items add to byte array
+        const cace_ari_report_t curr_report_items=  &curr_report->items;
+
+        getConn(DB_RPT_CON);
+    
+        //insert into rpt set and dependant tables 
+        dbprep_declare(DB_RPT_CON, ARI_RPTLIST_INSERT, 5, 1);
+        dbprep_bind_param_int(0, rpt_set_id);
+        dbprep_bind_param_byte(1, cbordata_reltime.ptr, cbordata_reltime.len);   // report_list_cbor
+        dbprep_bind_param_byte(2, cbordata_source.ptr, cbordata_source.len);   // report_list_cbor
+        dbprep_bind_param_str(3, m_string_get_cstr(agent->eid)); // agent_id
+            /
+        dbexec_prepared;
+        giveConn(DB_RPT_CON);
+        PQclear(res);
+
+
+    }
+ 
+    
     // cleaning up vars
     m_string_clear(tp);
     m_string_clear(rpt);
