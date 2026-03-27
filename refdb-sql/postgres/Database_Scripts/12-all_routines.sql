@@ -1309,16 +1309,25 @@ as $$ BEGIN
 END$$;
 
 
-create or replace procedure SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time TIMESTAMPTZ, p_report_list TEXT, p_report_list_cbor BYTEA, p_agent_endpoint_uri TEXT)
+create or replace procedure SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time TIMESTAMPTZ, p_agent_endpoint_uri TEXT, out r_ari_rptset_id integer)
 language plpgsql
 as $$
 DECLARE
     agent_row_id INTEGER;
 BEGIN
     CALL SP__insert_agent(p_agent_endpoint_uri, agent_row_id);
-    INSERT INTO ari_rptset(mgr_time, nonce_cbor, reference_time, report_list, report_list_cbor, agent_id)
-        VALUES(now(), p_nonce_cbor, p_reference_time, p_report_list, p_report_list_cbor, agent_row_id);
+    INSERT INTO ari_rptset(mgr_time, nonce_cbor, reference_time, agent_id)
+        VALUES(now(), p_nonce_cbor, p_reference_time, agent_row_id) RETURNING ari_rptset_id into r_ari_rptset_id;;
 End$$;
+
+create or replace procedure SP__insert_rptlist(in p_ari_rptset_id INTEGER, p_reference_time  BYTEA, p_source BYTEA, p_itmes BYTEA)
+language plpgsql
+as $$
+BEGIN
+    INSERT INTO ari_rptlist(ari_rptset_id, time_offset, report_source, report_entries)
+        VALUES(p_ari_rptset_id, p_reference_time, p_source, p_itmes);
+End$$;
+
 
 create or replace procedure SP__insert_execset(in p_nonce_cbor BYTEA, p_use_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries INT)
 language plpgsql

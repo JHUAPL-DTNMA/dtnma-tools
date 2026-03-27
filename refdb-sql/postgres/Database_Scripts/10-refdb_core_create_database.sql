@@ -534,8 +534,6 @@ create table if not exists ari_rptset (
     mgr_time TIMESTAMPTZ not null,
     nonce_cbor BYTEA NOT NULL,
     reference_time TIMESTAMPTZ NOT NULL,
-    report_list TEXT NOT NULL,
-    report_list_cbor BYTEA NOT NULL,
     agent_id INTEGER NOT NULL,
     primary key (ari_rptset_id),
     foreign key (agent_id) references registered_agents (registered_agents_id)
@@ -545,13 +543,13 @@ CREATE INDEX idx_rptset_reftime ON ari_rptset (reference_time);
 
 
 -- rpt-container/list
-create table if not exists ari_rpt_list (
-    ari_rpt_list_id serial NOT NULL,
+create table if not exists ari_rptlist (
+    ari_rptlist_id serial NOT NULL,
     ari_rptset_id INTEGER NOT NULL,
-    time_offset INTEGER default=0,
+    time_offset BYTEA,
     report_source BYTEA NOT NULL,
     report_entries BYTEA NOT NULL,
-    primary key (ari_rpt_list_id),
+    primary key (ari_rptlist_id),
     foreign key (ari_rptset_id) references ari_rptset (ari_rptset_id)
 );
 

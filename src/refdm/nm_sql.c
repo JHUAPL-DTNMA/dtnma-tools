@@ -98,7 +98,7 @@ cace_ari_ac_t *db_query_ac(size_t dbidx, int ac_id);
 enum queries
 {
     ARI_RPTSET_INSERT,
-
+    ARI_RPTLIST_INSERT,
     ARI_AGENT_INSERT,
 
     ARI_EXECSET_INSERT,
@@ -317,6 +317,10 @@ static uint32_t refdm_db_pool_connect(refdm_db_pool_t *conn, size_t idx)
     queries[idx][ARI_RPTSET_INSERT] =
         db_mgr_sql_prepare(idx, "call sp__insert_rptset($1::bytea, $2::timestamptz, $3::text, $4::bytea, $5::text)",
                            "ARI_RPTSET_INSERT", 5, NULL);
+
+    queries[idx][ARI_RPTLIST_INSERT]=
+            db_mgr_sql_prepare(idx,"call sp__insert_rptlist($1::int, $2::bytea, $3::bytea, $4::bytea)",
+                           "ARI_RPTLIST_INSERT", 4, NULL);
 
     queries[idx][REFDM_DB_LOG_MSG] = db_mgr_sql_prepare(idx,
                                                         "INSERT INTO DB_LOG_INFO (msg,level,source,file,line) "
@@ -898,17 +902,6 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
         return 1;
     }
 
-// typedef struct cace_ari_report_s
-// {
-//     /// Relative time within the reporting-set
-//     cace_ari_t reltime;
-//     /// Source of this report data
-//     cace_ari_t source;
-//     /// Items of the report itself
-//     cace_ari_list_t items; // alist of ari 
-// } cace_ari_report_t;
-
-    // M_DEQUE_DEF(cace_ari_report_list, cace_ari_report_t)  list of reports 
     
     // correlator_nonce: either NULL, UVAST, or BYTES
     m_string_t buf;
@@ -954,57 +947,54 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
     dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);   // report_list_cbor
     dbprep_bind_param_str(4, m_string_get_cstr(agent->eid)); // agent_id
     dbexec_prepared;
-    giveConn(DB_RPT_CON);
-    PQclear(res);
-
-    const cace_ari_report_list_t *reports = &rtp_set->reports;
-    size_t report_size = cace_ari_report_list_size(reports);
-    // make array into formated string to pass into postgres 
-    // char times[report_size*(sizeof(cace_ari_t)+2)];
-    // char sources[report_size*(sizeof(cace_ari_t)+2)];
-    char items[report_size*(sizeof(cace_ari_list_t)+2)];
-    // for report in reports
-    // create an rel_times
-    // create an array of source 
-    // create an array of items c
-    // need rpt_set id 
-    // for each item in reports add to rpt_list
-    cace_data_t cbordata_reltime;
-    cace_data_t cbordata_source;
-    for(size_t i = 0; i < report_size; i++) {
-        const cace_ari_report_t curr_report = cace_ari_report_list_get(reports, i);
-        
-        cace_data_init(&cbordata_reltime);
-        cace_ari_cbor_encode(&cbordata_reltime, &curr_report->reltime);
-        
-        cace_data_init(&cbordata_source);
-        cace_ari_cbor_encode(&cbordata_source, &curr_report->source);
-
-        // for each item in report items add to byte array
-        const cace_ari_report_t curr_report_items=  &curr_report->items;
-
-        getConn(DB_RPT_CON);
     
-        //insert into rpt set and dependant tables 
-        dbprep_declare(DB_RPT_CON, ARI_RPTLIST_INSERT, 5, 1);
-        dbprep_bind_param_int(0, rpt_set_id);
-        dbprep_bind_param_byte(1, cbordata_reltime.ptr, cbordata_reltime.len);   // report_list_cbor
-        dbprep_bind_param_byte(2, cbordata_source.ptr, cbordata_source.len);   // report_list_cbor
-        dbprep_bind_param_str(3, m_string_get_cstr(agent->eid)); // agent_id
-            /
-        dbexec_prepared;
-        giveConn(DB_RPT_CON);
+    // check if rpt_set stored correctly 
+     if (PQntuples(res) > 0) {
+        char *returned_value_str = PQgetvalue(res, 0, 0);
+        int rpt_set_id = atoi(returned_value_str);
         PQclear(res);
+        const cace_ari_report_list_t *reports = &rtp_set->reports;
+        size_t reports_size = cace_ari_report_list_size(reports);// number of report list in set 
+        
+        // for each report in reports add to rpt_list table with rpt_set_id from above
+        cace_data_t cbordata_reltime;
+        cace_data_t cbordata_source;
+        for(size_t i = 0; i < reports_size; i++) {
+            const cace_ari_report_t curr_report = cace_ari_report_list_get(reports, i);
+            
+            cace_data_init(&cbordata_reltime);
+            cace_ari_cbor_encode(&cbordata_reltime, &curr_report->reltime);
+            
+            cace_data_init(&cbordata_source);
+            cace_ari_cbor_encode(&cbordata_source, &curr_report->source);
+            
+            //encode items 
+            m_bstring_t rpt_str; 
+            const cace_ari_report_t curr_report_items=  &curr_report->items;
+            cace_amp_msg_encode(rpt_str, curr_report_items);
 
+            //insert into rpt set and dependant tables 
+            dbprep_declare(DB_RPT_CON, ARI_RPTLIST_INSERT, 4, 1);
+            dbprep_bind_param_int(0, rpt_set_id);
+            dbprep_bind_param_byte(1, cbordata_reltime.ptr, cbordata_reltime.len);   // report_list_reltime
+            dbprep_bind_param_byte(2, cbordata_source.ptr, cbordata_source.len);   // report_list_source
+            dbprep_bind_param_byte(3, m_bstring_t.ptr, m_bstring_t.size)
 
+            dbexec_prepared;
+            
+            PQclear(res);
+        }
+        cace_data_deinit(&cbordata_reltime);
+        cace_data_deinit(&cbordata_source);
     }
- 
-    
+    PQclear(res);
+    giveConn(DB_RPT_CON);
     // cleaning up vars
     m_string_clear(tp);
     m_string_clear(rpt);
     cace_data_deinit(&cbordata);
     cace_data_deinit(&nonce_cbor);
+    
     return rtv;
 }
 
