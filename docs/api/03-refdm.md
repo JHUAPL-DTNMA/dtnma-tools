@@ -37,18 +37,19 @@ The URI template parameter `{/TYPE,ID}` below refers to a unique identifier for 
    This index is dependent upon the order in which the agents are seen by a specific manager instance.
 
 The template parameter `{?form}` below refers to a choice of encoded form for ARIs to be sent or retrieved, as one of either:
- * The form "text" meaning a newline-separated, URI-encoded form of ARIs consistent with the "application/uri-list" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
- * The form "hex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
+ * The form "uri" meaning a newline-separated, URI-encoded form of ARIs consistent with the "application/uri-list" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
+ * The form "cbor" meaning a sequence of CBOR-encoded form of ARIs consistent with the "application/cbor-seq" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
+ * The form "cborhex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
 
  | Method | Path                              | Description                                  |
  |--------|-----------------------------------|----------------------------------------------|
  | GET    | `/version`                        | Return version information as a JSON object. |
  | GET    | `/agents`                         | Get a listing of registered agents as a JSON object. |
  | POST   | `/agents`                         | Register a new Agent at specified EID. The EID is encoded as a URI in request body. |
- | GET    | `/agents/{/TYP,ID}`               | Retrieve node information, including index order, name, and number of reports available. |
- | PUT    | `/agents/{/TYP,ID}/clear_reports` | Clear all available reports for given Agent. |
- | PUT    | `/agents/{/TYP,ID}/send{?form}`   | Send one or more EXECSET to the specific Agent. The encoded form is in the request body. |
- | GET    | `/agents/{/TYP,ID}/reports{?form}`| Retrieve list of RPTSET for a specific Agent. The encoded form is in the response body. |
+ | GET    | `/agents/{/TYPE,ID}`               | Retrieve node information, including index order, name, and number of reports available. |
+ | PUT    | `/agents/{/TYPE,ID}/clear_reports` | Clear all available reports for given Agent. |
+ | PUT    | `/agents/{/TYPE,ID}/send{?form}`   | Send one or more EXECSET to the specific Agent. The encoded form is in the request body. |
+ | GET    | `/agents/{/TYPE,ID}/reports{?form}`| Retrieve list of RPTSET for a specific Agent. The encoded form is in the response body. |
 
 # Transport Interface
 
