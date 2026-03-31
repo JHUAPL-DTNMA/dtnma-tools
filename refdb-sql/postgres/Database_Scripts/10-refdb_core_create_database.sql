@@ -548,19 +548,18 @@ create table if not exists ari_rptlist (
     ari_rptset_id INTEGER NOT NULL,
     time_offset BYTEA,
     report_source BYTEA NOT NULL,
-    report_entries BYTEA NOT NULL,
     primary key (ari_rptlist_id),
     foreign key (ari_rptset_id) references ari_rptset (ari_rptset_id)
 );
 
 -- rpt-item
--- create table if not exists ari_rpt_item (
---     ari_rpt_item_id serial NOT NULL, 
---     ari_rpt_container_id INTEGER NOT NULL,
---     report_entry BYTEA NOT NULL,
---     primary key(ari_rpt_item_id),
---     foreign key (ari_rpt_container_id) references ari_rpt_container (ari_rpt_container_id)
--- );
+create table if not exists ari_rpt_item (
+    ari_rpt_item_id serial NOT NULL, 
+    ari_rptlist_id INTEGER NOT NULL,
+    report_entry BYTEA NOT NULL,
+    primary key(ari_rpt_item_id),
+    foreign key (ari_rptlist_id) references ari_rptlist (ari_rptlist_id)
+);
 
 
 create table if not exists formal_parmspec (

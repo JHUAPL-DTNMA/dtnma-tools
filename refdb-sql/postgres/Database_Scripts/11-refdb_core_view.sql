@@ -1000,3 +1000,29 @@ ari_collection.num_entries,
 ari_collection.entries
 from execution_set join ari_collection on execution_set.ac_id = ari_collection.ac_id
 ;
+
+create or replace
+view vw_ari_rpt_set as
+select 
+ari_rptset.ari_rptset_id,
+ari_rptset.mgr_time,	
+ari_rptset.reference_time,
+ari_rptset.nonce_cbor,
+ari_rptset.agent_id,
+rpt_list_item_vw.ari_rptlist_id,
+rpt_list_item_vw.time_offset,
+rpt_list_item_vw.report_source,
+rpt_list_item_vw.report_items
+from 
+ari_rptset join
+(select
+ari_rptlist.ari_rptlist_id,
+ari_rptlist.ari_rptset_id,
+ari_rptlist.time_offset,
+ari_rptlist.report_source,
+ARRAY_AGG(ari_rpt_item.report_entry) AS report_items 
+FROM 
+ari_rpt_item join ari_rptlist on ari_rpt_item.ari_rptlist_id = ari_rptlist.ari_rptlist_id
+GROUP BY
+  ari_rptlist.ari_rptlist_id)
+AS rpt_list_item_vw on ari_rptset.ari_rptset_id = rpt_list_item_vw.ari_rptset_id;

@@ -1323,13 +1323,24 @@ BEGIN
 	RETURN r_ari_rptset_id;
 End$$;
 
-create or replace procedure SP__insert_rptlist(in p_ari_rptset_id INTEGER, p_reference_time  BYTEA, p_source BYTEA, p_itmes BYTEA)
+create or replace FUNCTION SP__insert_rptlist(in p_ari_rptset_id INTEGER, p_reference_time  BYTEA, p_source BYTEA)
+RETURNS integer
 language plpgsql
 as $$
+DECLARE
+	r_ari_rptlist_id INTEGER;
 BEGIN
-    INSERT INTO ari_rptlist(ari_rptset_id, time_offset, report_source, report_entries)
-        VALUES(p_ari_rptset_id, p_reference_time, p_source, p_itmes);
+    INSERT INTO ari_rptlist(ari_rptset_id, time_offset, report_source)
+        VALUES(p_ari_rptset_id, p_reference_time, p_source) RETURNING ari_rptlist_id into r_ari_rptlist_id;
+	RETURN r_ari_rptlist_id;
 End$$;
+
+CREATE OR REPLACE PROCEDURE SP__insert_rptitem(IN  p_ari_rptlist_id INTEGER, p_item BYTEA )
+LANGUAGE plpgsql
+as $$ BEGIN
+    INSERT INTO ari_rpt_item(ari_rptlist_id, report_entry) VALUES(p_ari_rptlist_id, p_item);
+END$$;
+
 
 
 create or replace procedure SP__insert_execset(in p_nonce_cbor BYTEA, p_use_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries INT)
