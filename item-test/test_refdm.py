@@ -249,7 +249,7 @@ class BaseRefdm(unittest.TestCase):
 
 
 class TestRefdmSocket(BaseRefdm):
-    ''' Verify whole-agent behavior with the refdm-socket '''
+    ''' Verify whole-manager behavior with the refdm-socket '''
 
     def setUp(self) -> None:
         self._req = requests.Session()
@@ -408,6 +408,17 @@ class TestRefdmSocket(BaseRefdm):
 
         resp = self._req.get(self._base_url + 'versionplus')
         self.assertEqual(404, resp.status_code)
+
+    def test_init_agents_startup(self):
+        # existing DB names
+        with self._db_eng.connect() as conn:
+            query = sqlalchemy.insert(sqlalchemy.table('registered_agents', sqlalchemy.column('agent_endpoint_uri')))
+            res = conn.execute(query, {'agent_endpoint_uri': 'file:/tmp/invalid1'})
+            conn.commit()
+
+        self._start()
+        self.assertSetEqual(set(['file:/tmp/invalid1']), self._get_agent_names())
+
 
     def test_rest_agents_add_valid(self):
         self._start()
