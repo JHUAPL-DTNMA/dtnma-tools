@@ -616,7 +616,7 @@ static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *age
     m_bstring_t body_bytes;
     m_bstring_init(body_bytes);
 
-    if (strcasecmp(form, "uri") == 0)
+    if ((strcasecmp(form, "uri") == 0) || (strcasecmp(form, "text") == 0))
     {
         /* Iterate through all RPTSET for this agent in one buffer */
         cace_ari_list_it_t rpt_it;
@@ -669,7 +669,7 @@ static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *age
         ctype = "application/cbor-seq";
         clen  = m_bstring_size(body_bytes);
     }
-    else if (strcasecmp(form, "cborhex") == 0)
+    else if ((strcasecmp(form, "cborhex") == 0) || (strcasecmp(form, "hex") == 0))
     {
         /* Iterate through all RPTSET for this agent. */
         cace_ari_list_it_t rpt_it;
@@ -804,8 +804,8 @@ static int getFormParam(struct mg_connection *conn, char *form, size_t form_len)
     {
         int res = mg_get_var(ri->query_string, strlen(ri->query_string), "form", form, form_len);
         if ((res == -2)
-            || ((strcasecmp(form, "uri") != 0) && (strcasecmp(form, "cbor") != 0)
-                && (strcasecmp(form, "cborhex") != 0)))
+            || !((strcasecmp(form, "uri") == 0) || (strcasecmp(form, "text") == 0) || (strcasecmp(form, "cbor") == 0)
+                 || (strcasecmp(form, "cborhex") == 0) || (strcasecmp(form, "hex") == 0)))
         {
             mg_send_http_error(conn, HTTP_BAD_REQUEST, "Form parameter must be either uri, cbor, or cborhex");
             return HTTP_BAD_REQUEST;
@@ -834,7 +834,7 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
     {
         cace_ari_list_t tosend;
         cace_ari_list_init(tosend);
-        if (strcasecmp(form, "uri") == 0)
+        if ((strcasecmp(form, "uri") == 0) || (strcasecmp(form, "text") == 0))
         {
             // either is acceptable
             if (requireContentType(conn, "text/uri-list") && requireContentType(conn, "text/plain"))
@@ -860,7 +860,7 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
                 retval = agentParseCbor(conn, tosend);
             }
         }
-        else if (strcasecmp(form, "cborhex") == 0)
+        else if ((strcasecmp(form, "cborhex") == 0) || (strcasecmp(form, "hex") == 0))
         {
             if (requireContentType(conn, "text/plain"))
             {
