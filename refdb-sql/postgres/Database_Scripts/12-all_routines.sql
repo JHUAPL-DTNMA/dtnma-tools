@@ -1309,15 +1309,18 @@ as $$ BEGIN
 END$$;
 
 
-create or replace procedure SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time TIMESTAMPTZ, p_agent_endpoint_uri TEXT, out r_ari_rptset_id integer)
-language plpgsql
+create or replace FUNCTION SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time TIMESTAMPTZ, p_agent_endpoint_uri TEXT)
+RETURNS integer
+LANGUAGE plpgsql
 as $$
 DECLARE
     agent_row_id INTEGER;
+	r_ari_rptset_id INTEGER;
 BEGIN
     CALL SP__insert_agent(p_agent_endpoint_uri, agent_row_id);
     INSERT INTO ari_rptset(mgr_time, nonce_cbor, reference_time, agent_id)
-        VALUES(now(), p_nonce_cbor, p_reference_time, agent_row_id) RETURNING ari_rptset_id into r_ari_rptset_id;;
+        VALUES(now(), p_nonce_cbor, p_reference_time, agent_row_id) RETURNING ari_rptset_id into r_ari_rptset_id;
+	RETURN r_ari_rptset_id;
 End$$;
 
 create or replace procedure SP__insert_rptlist(in p_ari_rptset_id INTEGER, p_reference_time  BYTEA, p_source BYTEA, p_itmes BYTEA)
