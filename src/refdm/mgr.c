@@ -100,7 +100,12 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     mgr->sql_info.database = refdm_envdup("DB_NAME");
 
     pthread_mutex_init(&(mgr->sql_lock), NULL);
-    refdm_db_mgt_init(&(mgr->sql_info), 0, 1);
+    int res = refdm_db_mgt_init(&(mgr->sql_info), 0, 1);
+    if (!res)
+    {
+        CACE_LOG_INFO("Initializing agents from DB");
+        refdm_db_load_agents(mgr);
+    }
 #endif
 }
 

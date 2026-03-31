@@ -23,7 +23,7 @@ import os
 import signal
 import subprocess
 import time
-from typing import List, Tuple
+from typing import Optional, List, Tuple
 import unittest
 import cbor2
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
@@ -53,7 +53,7 @@ class TestCaceAri(unittest.TestCase):
         os.chdir(path)
         LOGGER.info('Working in %s', path)
 
-        self._runner = None
+        self._runner: Optional[CmdRunner] = None
 
     def tearDown(self):
         if self._runner:
@@ -61,13 +61,13 @@ class TestCaceAri(unittest.TestCase):
             self.assertEqual(0, self._runner.wait())
             self._runner = None
 
-    def _start(self, *cmd_args: Tuple[str]) -> CmdRunner:
+    def _start(self, *cmd_args: str) -> CmdRunner:
         ''' Spawn the process. '''
         base_args = (
             'cace_ari',
             '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
         )
-        args = compose_args(base_args + cmd_args)
+        args = compose_args(list(base_args + cmd_args))
         self._runner = CmdRunner(args)
         self._runner.start()
         return self._runner

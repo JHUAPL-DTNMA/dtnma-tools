@@ -85,8 +85,6 @@ refdm_db_pool_t dbpool[MGR_NUM_SQL_CONNECTIONS];
 // Private functions
 static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, int nParams, const Oid *paramTypes);
 
-cace_ari_ac_t *db_query_ac(size_t dbidx, int ac_id);
-
 /* Prepared query definitions
  *
  * This enumeration provides a consistent interface for selecting a
@@ -246,8 +244,8 @@ static uint32_t refdm_db_pool_connect(refdm_db_pool_t *conn, size_t idx);
  *
  * \par Initializes the gConnection to the database.
  *
- * \retval 0 Failure
- *        !0 Success
+ * \retval 0 Success
+ *        !0 Failure
  *
  * \param[in]  parms The parameters for connecting to the SQL database.
  * The referenced object must outlive any DB connection.
@@ -734,7 +732,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, stru
     }
 
     // Iterate through each row and transform to the equivalent rptset
-    int num_rows = PQntuples(res);
+    const int num_rows = PQntuples(res);
     for (int row = 0; row < num_rows; row++)
     {
         // Extract the report_list_cbor from the database row
@@ -780,54 +778,28 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, stru
     return RET_PASS;
 }
 
-/******************************************************************************
- *
- * \par Function Name: db_fetch_reg_agent
- *
- * \par Creates an adm_reg_agent_t structure from the database.
- *
- * \retval NULL Failure
- *        !NULL The built adm_reg_agent_t  structure.
- *
- * \param[in] id The Primary Key of the desired registered agent.
- *
- * Modification History:
- *  MM/DD/YY  AUTHOR         DESCRIPTION
- *  --------  ------------   ---------------------------------------------
- *  07/12/13  S. Jacobs      Initial implementation,
- *  01/25/17  E. Birrane     Update to AMP 3.5.0 (JHU/APL)
- *****************************************************************************/
-refdm_agent_t *refdm_db_fetch_agent(int32_t id)
+void refdm_db_load_agents(refdm_mgr_t *mgr)
 {
-    refdm_agent_t *result = NULL;
-    PGresult      *res    = NULL;
+    refdm_agent_t *agent = NULL;
+    PGresult      *res   = NULL;
 
-    CACE_LOG_INFO("(%d)", id);
-
-    /* Step 1: Grab the OID row. */
-    if (refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT * FROM registered_agents WHERE registered_agents_id=%d", id)
-        != RET_PASS)
+    if (refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT agent_endpoint_uri FROM registered_agents") != RET_PASS)
     {
-        CACE_LOG_ERR("Cant fetch agent %d", id);
-        return NULL;
+        CACE_LOG_ERR("Cant fetch agent list");
+        return;
     }
 
     int name_fnum = PQfnumber(res, "agent_endpoint_uri");
-    if (PQntuples(res) != 0)
-    {
-        m_string_t eid;
-        m_string_init(eid);
-        m_string_set_cstr(eid, PQgetvalue(res, 0, name_fnum));
 
-        /* Step 3: Create structure for agent */
-        refdm_agent_init(result);
-        m_string_set(result->eid, eid);
+    const int num_rows = PQntuples(res);
+    CACE_LOG_INFO("Initializing %d agents", num_rows);
+    for (int row = 0; row < num_rows; row++)
+    {
+        const char *eid = PQgetvalue(res, 0, name_fnum);
+        refdm_mgr_agent_add(mgr, eid);
     }
 
     PQclear(res);
-
-    CACE_LOG_INFO("-->%p", result);
-    return result;
 }
 
 int32_t refdm_db_fetch_agent_idx(const char *eid)
