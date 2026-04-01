@@ -204,7 +204,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_current_groups(refda_edd_prod_ctx
  * Produced type: TBLT with 5 columns:
  *   - Index 0, name "group-id", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
  *   - Index 1, name "name", type use of ari://ietf/amm-base/TYPEDEF/id-text
- *   - Index 2, name "members", type ulist of use of ari://ietf/network-base/TYPEDEF/endpoint-pattern
+ *   - Index 2, name "members", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/group-member-filter
  *   - Index 3, name "added-at", type use of ari://ietf/amm-base/TYPEDEF/timestamp
  *   - Index 4, name "updated-at", type use of ari://ietf/amm-base/TYPEDEF/timestamp
  */
@@ -234,18 +234,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
 
         cace_ari_set_uint(cace_ari_array_get(row, 0), grp->id);
         cace_ari_set_tstr(cace_ari_array_get(row, 1), m_string_get_cstr(grp->name), true);
-        {
-            cace_ari_ac_t *memb_ac = cace_ari_set_ac(cace_ari_array_get(row, 2), NULL);
-
-            refda_amm_ident_base_list_it_t memb_it;
-            for (refda_amm_ident_base_list_it(memb_it, grp->member_pats); !refda_amm_ident_base_list_end_p(memb_it);
-                 refda_amm_ident_base_list_next(memb_it))
-            {
-                const refda_amm_ident_base_t *memb = refda_amm_ident_base_list_cref(memb_it);
-
-                cace_ari_list_push_back(memb_ac->items, memb->name);
-            }
-        }
+        cace_ari_set_copy(cace_ari_array_get(row, 2), &grp->member_filter);
         cace_ari_set_copy(cace_ari_array_get(row, 3), &grp->added_at);
         cace_ari_set_copy(cace_ari_array_get(row, 4), &grp->updated_at);
 
@@ -572,7 +561,7 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group(refda_ctrl_exec_ctx
  *
  * Parameters list:
  *   - Index 0, name "group-id", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
- *   - Index 1, name "members", type ulist of use of ari://ietf/network-base/TYPEDEF/endpoint-pattern
+ *   - Index 1, name "members", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/group-member-filter
  *
  * Result: none
  */
@@ -617,19 +606,11 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_group_members(refda_ctrl_
     }
     if (found_id)
     {
+        // update to the record
         atomic_fetch_add(&agent->acl.generation, 1);
 
         // exact copy
-        refda_amm_ident_base_list_reset(found_id->member_pats);
-
-        cace_ari_list_it_t memb_it;
-        for (cace_ari_list_it(memb_it, memb_ac->items); !cace_ari_list_end_p(memb_it); cace_ari_list_next(memb_it))
-        {
-            const cace_ari_t *memb_ref = cace_ari_list_cref(memb_it);
-
-            refda_amm_ident_base_t *memb = refda_amm_ident_base_list_push_new(found_id->member_pats);
-            refda_amm_ident_base_populate(memb, memb_ref, &agent->objs);
-        }
+        cace_ari_set_copy(&found_id->member_filter, p_memb);
 
         cace_get_system_time(&found_id->updated_at);
         refda_ctrl_exec_ctx_set_result_null(ctx);
@@ -921,7 +902,22 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // use of ari:/ARITYPE/IDENT
                     cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                    cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
+                    cace_amm_semtype_use_t *semtype_d1 =
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
+
+                    cace_amm_semtype_cnst_t *cnst;
+                    {
+                        // Constraint: IdentRefBase(base_text='./ident/permission',
+                        // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='dtnma-agent-acl',
+                        // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='permission'), params=None),
+                        // base_ident=None)
+                        cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
+
+                        // FIXME unhandled constraint IdentRefBase(base_text='./ident/permission',
+                        // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='dtnma-agent-acl',
+                        // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='permission'), params=None),
+                        // base_ident=None)
+                    }
                 }
             }
 
@@ -929,6 +925,24 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 adm,
                 cace_amm_idseg_ref_withenum("permission-list",
                                             REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_TYPEDEF_PERMISSION_LIST),
+                objdata);
+            // no parameters possible
+        }
+        { // For ./TYPEDEF/group-member-filter
+            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named semantic type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/EXPR
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+            }
+
+            obj = refda_register_typedef(
+                adm,
+                cace_amm_idseg_ref_withenum("group-member-filter",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_TYPEDEF_GROUP_MEMBER_FILTER),
                 objdata);
             // no parameters possible
         }
@@ -1099,14 +1113,10 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "members");
                     {
-                        // uniform list
-                        cace_amm_semtype_ulist_t *semtype_d1 = cace_amm_type_set_ulist(&(col->typeobj));
-                        {
-                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                            // reference to ari://ietf/network-base/TYPEDEF/endpoint-pattern
-                            cace_ari_set_objref_path_intid(&typeref, 1, 26, CACE_ARI_TYPE_TYPEDEF, 2);
-                            cace_amm_type_set_use_ref_move(&(semtype_d1->item_type), &typeref);
-                        }
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/group-member-filter
+                        cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 4);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
@@ -1280,14 +1290,10 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "members");
                 {
-                    // uniform list
-                    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
-                    {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/network-base/TYPEDEF/endpoint-pattern
-                        cace_ari_set_objref_path_intid(&typeref, 1, 26, CACE_ARI_TYPE_TYPEDEF, 2);
-                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
-                    }
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/group-member-filter
+                    cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 4);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
         }

@@ -4097,6 +4097,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "val", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
@@ -4149,6 +4152,10 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
@@ -4183,6 +4190,10 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
@@ -4214,6 +4225,10 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
  *   arithmetic.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -4248,6 +4263,10 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
  *   numeric type before the arithmetic.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -4285,6 +4304,10 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx)
@@ -4316,6 +4339,9 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
  *   Perform a bitwise NOT on an integer value.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "val", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
@@ -4364,6 +4390,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
@@ -4392,6 +4422,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
  *   Perform a bitwise OR between two integer values.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
@@ -4422,6 +4456,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
@@ -4450,6 +4488,9 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
  *   Perform a boolean NOT on a boolean value.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "val", type use of ari:/ARITYPE/BOOL
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4482,6 +4523,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
  *   Perform a boolean AND between two boolean values.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari:/ARITYPE/BOOL
+ *   - Index 1, name "right", type use of ari:/ARITYPE/BOOL
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4516,6 +4561,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari:/ARITYPE/BOOL
+ *   - Index 1, name "right", type use of ari:/ARITYPE/BOOL
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
@@ -4548,6 +4597,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
  *   Perform a boolean XOR between two boolean values.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari:/ARITYPE/BOOL
+ *   - Index 1, name "right", type use of ari:/ARITYPE/BOOL
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4583,6 +4636,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ctx)
@@ -4615,6 +4672,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ct
  *   AMM.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4650,6 +4711,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ctx)
@@ -4681,6 +4746,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ct
  *   compatible numeric type before the comparison.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4714,6 +4783,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ctx)
@@ -4746,6 +4819,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ctx)
@@ -4770,6 +4847,82 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
      */
 }
 
+/* Name: match-regexp
+ * Description:
+ *   This is a unary predicate operator which will compare a text value to
+ *   a regular expression pattern. The regular expression is limited to
+ *   I-Regexp compatibility.
+ *
+ * Parameters list:
+ *   - Index 0, name "regexp", type use of ari:/ARITYPE/TEXTSTR
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari:/ARITYPE/TEXTSTR
+ *
+ * Result name "is-match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_regexp BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    const cace_ari_t *regexp      = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const char       *regexp_text = cace_ari_cget_tstr_cstr(regexp);
+
+    const cace_ari_t *value      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const char       *value_text = cace_ari_cget_tstr_cstr(value);
+
+    bool is_match = false;
+    // match only text string values
+    if (regexp_text && value_text)
+    {
+#if defined(PCRE_FOUND)
+        const int   opts        = PCRE2_ANCHORED | PCRE2_ENDANCHORED;
+        int         errorcode   = 0;
+        PCRE2_SIZE  erroroffset = 0;
+        pcre2_code *cfg =
+            pcre2_compile((PCRE2_SPTR8)regexp_text, strlen(regexp_text), opts, &errorcode, &erroroffset, NULL);
+        if (!cfg)
+        {
+            CACE_LOG_ERR("Failed to compile regex pattern (error %d at %z): %s", errorcode, erroroffset, regexp_text);
+        }
+        else
+        {
+            pcre2_match_data *md   = pcre2_match_data_create_from_pattern(cfg, NULL);
+            const int         opts = 0;
+            // ignore terminating null
+            int res = pcre2_match(cfg, (PCRE2_SPTR8)value_text, strlen(value_text), 0, opts, md, NULL);
+            CACE_LOG_DEBUG("Matching pattern %s with value %s, result %d", regexp_text, value, res);
+            if (res > 0)
+            {
+                is_match = true;
+            }
+            pcre2_match_data_free(md);
+
+            pcre2_code_free(cfg);
+        }
+#else  /* PCRE_FOUND */
+        CACE_LOG_CRIT("Cannot evaluate oper match-regexp without PCRE");
+#endif /* PCRE_FOUND */
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, is_match);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_regexp BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: tbl-filter
  * Description:
  *   Filter a table first by rows (using an expression) and then by columns
@@ -4778,6 +4931,9 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
  * Parameters list:
  *   - Index 0, name "rows", type use of ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
  *   - Index 1, name "columns", type ulist of use of ari:/ARITYPE/UVAST
+ *
+ * Operand list:
+ *   - Index 0, name "in", type use of ari:/ARITYPE/TBL
  *
  * Result name "out", type use of ari:/ARITYPE/TBL
  */
@@ -4912,6 +5068,9 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
  * Parameters list:
  *   - Index 0, name "index", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  *
+ * Operand list:
+ *   - Index 0, name "in", type use of ari:/ARITYPE/AC
+ *
  * Result name "out", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_oper_list_get(refda_oper_eval_ctx_t *ctx)
@@ -4934,6 +5093,9 @@ static void refda_adm_ietf_dtnma_agent_oper_list_get(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters list:
  *   - Index 0, name "key", type use of ari://ietf/amm-base/TYPEDEF/primitive
+ *
+ * Operand list:
+ *   - Index 0, name "in", type use of ari:/ARITYPE/AM
  *
  * Result name "out", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -7629,6 +7791,46 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 adm, cace_amm_idseg_ref_withenum("compare-le", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LE),
                 objdata);
             // no parameters
+        }
+        { // For ./OPER/match-regexp
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TEXTSTR
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_match_regexp;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("match-regexp", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_REGEXP),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "regexp");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TEXTSTR
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
         }
         { // For ./OPER/tbl-filter
             refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));

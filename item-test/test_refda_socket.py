@@ -90,7 +90,7 @@ class TestRefdaSocket(unittest.TestCase):
         with open(startup_path, 'w') as startup_file:
             startup_file.writelines([
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group(1,test-agents)\n',
-                '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/ident/uri-regexp-pattern(%22file%3A.%2A%22)))\n',
+                '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(%22file%3A.%2A%22)))\n',
                 # group 0 (agent) and 1 (all test mgrs) have all access
                 '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(0,1),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
                 + '//ietf/dtnma-agent-acl/ident/execute,'
@@ -1330,7 +1330,7 @@ class TestRefdaSocket(unittest.TestCase):
                 'ari:/EXECSET/n=123;(/ac/('
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'  # duplicate no-op
-                + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(10,/ac/(//ietf/network-base/ident/uri-regexp-pattern(' + pat + '))),'
+                + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(10,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(' + pat + '))),'
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-access(10,/ac/(10),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
                 + '//ietf/dtnma-agent-acl/ident/execute,'
                 + '//ietf/dtnma-agent-acl/ident/produce'

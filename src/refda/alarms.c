@@ -451,7 +451,7 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
 
     size_t affected = 0;
 
-    cace_ari_translator_t translator = { .map_ari = alarm_list_filter_sub_label };
+    const cace_ari_translator_t translator = { .map_ari = alarm_list_filter_sub_label };
 
     refda_alarms_entry_list_it_t entry_it;
     for (refda_alarms_entry_list_it(entry_it, alarms->alarm_list); !refda_alarms_entry_list_end_p(entry_it);)
