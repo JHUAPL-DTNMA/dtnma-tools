@@ -49,7 +49,7 @@ void *refda_egress_worker(void *arg)
             cace_ari_set_move(&meta.dest, &item.ident);
             cace_ari_list_push_back_move(data, &item.value);
 
-            int send_res = (agent->mif.send)(data, &meta, agent->mif.ctx);
+            int send_res = (agent->mif.send)(data, &meta, NULL, agent->mif.ctx);
             if (send_res)
             {
                 CACE_LOG_WARNING("Got mif.send result=%d", send_res);

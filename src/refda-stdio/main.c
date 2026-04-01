@@ -38,7 +38,8 @@ static void daemon_signal_handler(int signum)
     cace_daemon_run_stop(&agent.running);
 }
 
-static int stdout_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta _U_, void *ctx _U_)
+static int stdout_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta _U_,
+                       const struct timespec *timeout _U_, void *ctx _U_)
 {
     int retval = 0;
     CACE_LOG_DEBUG("Sending message with %d ARIs", cace_ari_list_size(data));

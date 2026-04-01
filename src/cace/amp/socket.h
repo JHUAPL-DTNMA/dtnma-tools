@@ -70,7 +70,8 @@ void cace_amp_socket_state_unbind(cace_amp_socket_state_t *state);
 /** Provider of ::cace_amm_msg_if_send_f interface for POSIX socket transport.
  * The user data for this function is a ::cace_amp_socket_state_t instance.
  */
-int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx);
+int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta,
+                         const struct timespec *timeout, void *ctx);
 
 /** Provider of ::cace_amm_msg_if_recv_f interface for POSIX socket transport.
  * The user data for this function is a ::cace_amp_socket_state_t instance.
