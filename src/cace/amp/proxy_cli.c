@@ -73,7 +73,7 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state, co
         cutoff = timespec_add(current, *timeout);
 
         // exponential backoff difference starting at 10ms
-        long delta_ms = 10;
+        long              delta_ms    = 10;
         static const long delta_scale = 2;
 
         struct sockaddr_un laddr;
