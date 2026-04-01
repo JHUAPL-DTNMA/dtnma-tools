@@ -101,7 +101,7 @@ void test_util_group_add(refda_agent_t *agent, refda_acl_id_t group_id, const ch
             cace_ari_t     *item_pred = cace_ari_list_push_back_new(filter_ac->items);
             cace_ari_ref_t *ref       = cace_ari_set_objref_path_intid(
                 item_pred, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_OPER,
-                REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_REGEXP_PATTERN);
+                REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_REGEXP);
 
             cace_ari_list_t params;
             cace_ari_list_init(params);

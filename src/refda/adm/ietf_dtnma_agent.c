@@ -3437,7 +3437,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
     const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
 
-    cace_ari_t     ari_result;
     refda_agent_t *agent = ctx->runctx->agent;
 
     REFDA_AGENT_LOCK(agent, );
@@ -3639,8 +3638,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     const cace_ari_t *ari_period       = refda_ctrl_exec_ctx_get_aparam_index(ctx, 5);
     const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
     const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
-
-    cace_ari_t ari_result;
 
     refda_agent_t *agent = ctx->runctx->agent;
 
