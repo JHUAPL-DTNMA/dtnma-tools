@@ -86,7 +86,7 @@ The daemon for this binding has the following additional command-line options.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
- | -a \<EID\>   | Register endpoint        | Register on and listen on this BPv7 EID
+ | -a \<EID\> | Register endpoint        | Register on and listen on this BPv7 EID
 
 
 ## AMP Proxy Reliable Datagram Sockets {#refdm-proxy}
@@ -94,14 +94,15 @@ The daemon for this binding has the following additional command-line options.
 This binding uses the Unix reliable datagram sockets (`AF_UNIX` with `SOCK_SEQPACKET`) to connect to a local AMP proxy server and communicate in accordance with Section 4.2 of AMP @cite ietf-dtn-amp-02.
 The daemon executable is named `refdm-proxy`.
 
-The daemon will attempt to connect to the proxy server at start up, with linear back-off if the server is not responsive.
-If an initial connection cannot be made after 600 attempts the daemon will exit with an error code.
+The daemon will attempt to connect to the proxy server at start up, with exponential back-off if the server is not responsive.
+If an initial connection cannot be made after the startup timeout the daemon will exit with an error code.
 
 The daemon for this binding has the following additional command-line options.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
- | -a \<path\>  | Proxy server path        | Connect to this proxy socket file
+ | -a \<path\> | Proxy server path       | Connect to this proxy socket file.
+ | -t \<timeout\> | Startup connect timeout | Length of time to wait in seconds, which must be greater than zero. Defaults to 10s.
 
 ### Proxy Server
 
