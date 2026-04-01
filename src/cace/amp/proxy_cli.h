@@ -56,9 +56,11 @@ void cace_amp_proxy_cli_state_deinit(cace_amp_proxy_cli_state_t *state);
  *
  * @param[in,out] state The state to bind.
  * @param[in] sock_path The file path to bind to.
+ * @param[in] timeout An initial connection timeout, or null to default to a short timeout.
  * @return Zero if successful.
  */
-int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path);
+int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path,
+                                     const struct timespec *timeout);
 
 /** Disconnect any current socket and remove it if necessary.
  *

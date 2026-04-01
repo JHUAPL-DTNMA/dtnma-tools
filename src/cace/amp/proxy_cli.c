@@ -144,14 +144,15 @@ static void cace_amp_proxy_cli_real_disconnect(cace_amp_proxy_cli_state_t *state
     }
 }
 
-int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path)
+int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path,
+                                     const struct timespec *timeout)
 {
     CHKERR1(state);
     pthread_mutex_lock(&state->sock_mutex);
     m_string_set(state->path, sock_path);
 
     // just try the connection
-    int sock_fd = cace_amp_proxy_cli_real_connect(state, NULL);
+    int sock_fd = cace_amp_proxy_cli_real_connect(state, timeout);
     pthread_mutex_unlock(&state->sock_mutex);
     return (sock_fd < 0 ? 1 : 0);
 }
