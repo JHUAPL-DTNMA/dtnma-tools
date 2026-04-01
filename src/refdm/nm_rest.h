@@ -51,6 +51,7 @@ void refdm_nm_rest_stop(struct mg_context *ctx);
 #define HTTP_INTERNAL_ERROR     500
 #define HTTP_NOT_IMPLEMENTED    501
 #define HTTP_NO_SERVICE         503
+#define HTTP_GATEWAY_TIMEOUT    504
 
 #ifdef __cplusplus
 }

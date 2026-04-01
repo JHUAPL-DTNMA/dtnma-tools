@@ -283,7 +283,7 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
     }
     else
     {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET and PUT methods supported");
+        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET and POST methods supported");
         return HTTP_METHOD_NOT_ALLOWED;
     }
 }
@@ -510,20 +510,6 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
     int retval = 0;
     CACE_LOG_INFO("Sending message with %d EXECSETs", cace_ari_list_size(tosend));
 
-    // add EXECSETs to Database
-#if defined(HAVE_POSTGRESQL)
-    /* Copy the message group to the database tables */
-    CACE_LOG_INFO("logging EXECSETs in db started");
-    // add all execset
-    cace_ari_list_it_t it;
-    for (cace_ari_list_it(it, tosend); !cace_ari_list_end_p(it); cace_ari_list_next(it))
-    {
-        const cace_ari_t *curr_set = cace_ari_list_cref(it);
-        refdm_db_insert_execset(curr_set, agent);
-    }
-    CACE_LOG_INFO("logging EXECSETs in db finished");
-#endif // defined(HAVE_POSTGRESQL)
-
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
 
@@ -531,28 +517,44 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
         cace_amm_msg_if_metadata_init(&meta);
         cace_ari_set_tstr(&meta.dest, m_string_get_cstr(agent->eid), true);
 
-        int res = (mgr->mif.send)(tosend, &meta, mgr->mif.ctx);
+        struct timespec timeout = { .tv_sec = 5 };
+
+        int res = (mgr->mif.send)(tosend, &meta, &timeout, mgr->mif.ctx);
         cace_amm_msg_if_metadata_deinit(&meta);
         if (res)
         {
             CACE_LOG_ERR("failed to send with status %d", res);
-            mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "Failed sending to agent");
-            retval = HTTP_INTERNAL_ERROR;
+            mg_send_http_error(conn, HTTP_GATEWAY_TIMEOUT, "Failed sending to agent");
+            retval = HTTP_GATEWAY_TIMEOUT;
         }
     }
 
     if (!retval)
     {
-        const char *resp = "Successfully sent EXECSETs";
-        cace_ari_list_clear(tosend);
+        // add EXECSETs to Database after successful send
+#if defined(HAVE_POSTGRESQL)
+        /* Copy the message group to the database tables */
+        CACE_LOG_INFO("logging EXECSETs in db started");
+        // add all execset
+        cace_ari_list_it_t it;
+        for (cace_ari_list_it(it, tosend); !cace_ari_list_end_p(it); cace_ari_list_next(it))
+        {
+            const cace_ari_t *curr_set = cace_ari_list_cref(it);
+            refdm_db_insert_execset(curr_set, agent);
+        }
+        CACE_LOG_INFO("logging EXECSETs in db finished");
+#endif // defined(HAVE_POSTGRESQL)
 
         CACE_LOG_INFO("Successfully sent EXECSETs");
+
+        const char *resp = "Successfully sent EXECSETs";
         mg_send_http_ok(conn, "text/plain", strlen(resp));
         mg_printf(conn, "%s", resp);
 
         retval = HTTP_OK;
     }
 
+    cace_ari_list_clear(tosend);
     return retval;
 }
 

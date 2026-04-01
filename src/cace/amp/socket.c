@@ -131,7 +131,8 @@ void cace_amp_socket_state_unbind(cace_amp_socket_state_t *state)
     m_string_reset(state->path);
 }
 
-int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
+int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta,
+                         const struct timespec *timeout, void *ctx)
 {
     CHKERR1(data);
     CHKERR1(meta);
@@ -170,6 +171,30 @@ int cace_amp_socket_send(const cace_ari_list_t data, const cace_amm_msg_if_metad
     if (cace_amp_msg_encode(msgbuf, data))
     {
         retval = 2;
+    }
+
+    // respect the timeout
+    if (!retval && timeout)
+    {
+        struct pollfd fds[1] = { { .fd = state->sock_fd, .events = POLLOUT } };
+
+        int res = poll(fds, 1, timeout->tv_sec);
+        if (res == 0)
+        {
+            CACE_LOG_WARNING("timed out waiting to send");
+            retval = 2;
+        }
+        else if (res < 0)
+        {
+            CACE_LOG_WARNING("failed poll() with errno %d", errno);
+            retval = 2;
+        }
+
+        if (!(fds[0].revents & POLLOUT))
+        {
+            CACE_LOG_WARNING("poll waited but still not ready");
+            retval = 2;
+        }
     }
 
     if (!retval)

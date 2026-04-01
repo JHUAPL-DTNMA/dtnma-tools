@@ -1033,12 +1033,14 @@ class TestRefdmProxy(BaseRefdm):
         self._start()
         self.assertSetEqual(set(), self._get_agent_names())
 
-        time.sleep(0.01)
-        # close connection, still listen
+        self._mgr.wait_for_text(r'.*\:cace_amp_proxy_cli_real_connect\] Connected to proxy .*', stream='stderr')
+        # close connection, still listening
         self._proxy_sock_conn.close()
         self._proxy_sock_conn = None
 
+        # reconnection is autonomous
         self._wait_mgr()
+        self._mgr.wait_for_text(r'.*\:cace_amp_proxy_cli_real_connect\] Connected to proxy .*', stream='stderr')
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=1234;r=/TP/20240102T030405Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
@@ -1050,7 +1052,11 @@ class TestRefdmProxy(BaseRefdm):
     def test_start_before_proxy(self):
         # start daemon before listen
         self._mgr.start()
-        time.sleep(0.01)
+
+        time.sleep(0.1)
+        # want to see this fail twice
+        for _ix in range(2):
+            self._mgr.wait_for_text(r'.*\:cace_amp_proxy_cli_real_connect\] Failed to connect proxy .*', stream='stderr')
 
         self._proxy_listen()
         self._wait_mgr()
@@ -1098,3 +1104,36 @@ class TestRefdmProxy(BaseRefdm):
         # no other datagrams
         with self.assertRaises(TimeoutError):
             self._wait_msg(agent_eid)
+
+    def test_agents_send_failure_proxy(self):
+        # normal startup, proxy fails later
+        self._start()
+
+        self._proxy_sock_conn.close()
+        self._proxy_sock_conn = None
+        self._proxy_sock.close()
+        self._proxy_sock = None
+
+        agent_eid = 'data:agent0'
+        eid_seg = quote(agent_eid)
+        resp = self._req.post(
+            self._base_url + 'agents',
+            data=(agent_eid + '\r\n'),
+            headers={
+                'content-type': 'text/plain',
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
+        send_ari = self._ari_text_to_obj(textform)
+        send_data = self._ari_obj_to_cbor(send_ari)
+
+        resp = self._req.post(
+            self._base_url + f'agents/eid/{eid_seg}/send?form=cbor',
+            data=send_data,
+            headers={
+                'content-type': 'application/cbor-seq',
+            }
+        )
+        self.assertEqual(504, resp.status_code)
