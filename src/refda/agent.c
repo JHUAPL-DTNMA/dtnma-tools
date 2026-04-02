@@ -47,7 +47,13 @@ void refda_agent_init(refda_agent_t *agent)
 
     string_list_init(agent->odm_names);
     cace_amm_obj_store_init(&(agent->objs));
-    pthread_mutex_init(&(agent->objs_mutex), NULL);
+    {
+        pthread_mutexattr_t mutexattr;
+        pthread_mutexattr_init(&mutexattr);
+//        pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+        pthread_mutex_init(&(agent->objs_mutex), &mutexattr);
+        pthread_mutexattr_destroy(&mutexattr);
+    }
 
     refda_msgdata_queue_init(agent->execs, AGENT_QUEUE_SIZE);
     atomic_store(&agent->execs_enable, false);

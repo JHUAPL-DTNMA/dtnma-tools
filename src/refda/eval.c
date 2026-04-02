@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 #include "eval.h"
-#include "eval_ctx.h"
 #include "oper_eval_ctx.h"
 #include "valprod.h"
 #include "amm/oper.h"
@@ -26,9 +25,8 @@
 #include "cace/util/defs.h"
 
 /** Expand a reference to a literal value matching SIMPLE or EXPR typedef
- *
  */
-static int refda_eval_expand(refda_runctx_t *runctx, refda_eval_item_t out, const cace_ari_t *in)
+static int refda_eval_expand_item(refda_runctx_t *runctx, refda_eval_item_t out, const cace_ari_t *in)
 {
     int retval = 0;
     if (in->is_ref)
@@ -88,7 +86,7 @@ static int refda_eval_expand(refda_runctx_t *runctx, refda_eval_item_t out, cons
     return retval;
 }
 
-int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx)
+int refda_eval_oper(refda_eval_ctx_t *ctx, const cace_amm_lookup_t *deref)
 {
     const refda_amm_oper_desc_t *desc = deref->obj->app_data.ptr;
     CHKRET(desc->evaluate, 2);
@@ -141,10 +139,9 @@ int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx)
     return retval;
 }
 
-int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr)
+int refda_eval_expand_expr(refda_eval_ctx_t *ctx, const cace_ari_t *expr)
 {
-    CHKERR1(runctx);
-    CHKERR1(result);
+    CHKERR1(ctx);
     CHKERR1(expr);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
@@ -163,9 +160,6 @@ int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t
         return REFDA_EVAL_ERR_BAD_TYPE;
     }
 
-    refda_eval_ctx_t eval_ctx;
-    refda_eval_ctx_init(&eval_ctx, runctx);
-
     int retval = 0;
     {
         // Expansion phase of the procedure
@@ -174,9 +168,9 @@ int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t
         {
             const cace_ari_t *in_item = cace_ari_list_cref(it);
 
-            refda_eval_item_t *exp_item = refda_eval_list_push_back_new(eval_ctx.input);
+            refda_eval_item_t *exp_item = refda_eval_list_push_back_new(ctx->input);
 
-            int res = refda_eval_expand(runctx, *exp_item, in_item);
+            int res = refda_eval_expand_item(ctx->runctx, *exp_item, in_item);
             if (res)
             {
                 // stop early if expansion fails
@@ -184,41 +178,43 @@ int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t
             }
         }
     }
-    CACE_LOG_DEBUG("Evaluation expansion results in %zu items", refda_eval_list_size(eval_ctx.input));
+    CACE_LOG_DEBUG("Evaluation expansion results in %zu items", refda_eval_list_size(ctx->input));
+    return retval;
+}
 
-    if (!retval)
+int refda_eval_reduce(refda_eval_ctx_t *ctx, cace_ari_t *result)
+{
+    int retval = 0;
+
+    // Reduction phase of the procedure
+    refda_eval_list_it_t in_it;
+    for (refda_eval_list_it(in_it, ctx->input); !refda_eval_list_end_p(in_it) && !retval; refda_eval_list_next(in_it))
     {
-        // Reduction phase of the procedure
-        refda_eval_list_it_t in_it;
-        for (refda_eval_list_it(in_it, eval_ctx.input); !refda_eval_list_end_p(in_it) && !retval;
-             refda_eval_list_next(in_it))
-        {
-            refda_eval_item_t *item = refda_eval_list_ref(in_it);
+        refda_eval_item_t *item = refda_eval_list_ref(in_it);
 
-            cace_ari_t *as_value = refda_eval_item_get_value(*item);
-            if (as_value)
+        cace_ari_t *as_value = refda_eval_item_get_value(*item);
+        if (as_value)
+        {
+            cace_ari_list_push_back_move(ctx->stack, as_value);
+        }
+        else
+        {
+            const cace_amm_lookup_t *as_obj = refda_eval_item_get_deref(*item);
+            switch (as_obj->obj_type)
             {
-                cace_ari_list_push_back_move(eval_ctx.stack, as_value);
-            }
-            else
-            {
-                const cace_amm_lookup_t *as_obj = refda_eval_item_get_deref(*item);
-                switch (as_obj->obj_type)
+                case CACE_ARI_TYPE_OPER:
                 {
-                    case CACE_ARI_TYPE_OPER:
+                    int res = refda_eval_oper(ctx, as_obj);
+                    if (res)
                     {
-                        int res = refda_eval_oper(as_obj, &eval_ctx);
-                        if (res)
-                        {
-                            CACE_LOG_WARNING("OPER evaluation return code %d", res);
-                            // stop early if reduction fails
-                            retval = res;
-                        }
-                        break;
+                        CACE_LOG_WARNING("OPER evaluation return code %d", res);
+                        // stop early if reduction fails
+                        retval = res;
                     }
-                    default:
-                        break;
+                    break;
                 }
+                default:
+                    break;
             }
         }
     }
@@ -226,9 +222,9 @@ int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t
     if (!retval)
     {
         // overall result is the single value left on the stack
-        if (cace_ari_list_size(eval_ctx.stack) == 1)
+        if (cace_ari_list_size(ctx->stack) == 1)
         {
-            cace_ari_set_copy(result, cace_ari_list_front(eval_ctx.stack));
+            cace_ari_set_copy(result, cace_ari_list_front(ctx->stack));
             if (cace_log_is_enabled_for(LOG_DEBUG))
             {
                 m_string_t buf;
@@ -240,19 +236,17 @@ int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t
         }
         else
         {
-            CACE_LOG_WARNING("Evaluation ends with %d stack items", cace_ari_list_size(eval_ctx.stack));
+            CACE_LOG_WARNING("Evaluation ends with %d stack items", cace_ari_list_size(ctx->stack));
             retval = REFDA_EVAL_ERR_NON_SINGLE;
         }
     }
 
-    refda_eval_ctx_deinit(&eval_ctx);
     return retval;
 }
 
-int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target)
+int refda_eval_expand_target(refda_eval_ctx_t *ctx, const cace_ari_t *target)
 {
-    CHKERR1(runctx);
-    CHKERR1(result);
+    CHKERR1(ctx);
     CHKERR1(target);
 
     int retval = 0;
@@ -261,17 +255,17 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
         cace_amm_lookup_t deref;
         cace_amm_lookup_init(&deref);
 
-        int res = cace_amm_lookup_deref(&deref, &(runctx->agent->objs), target);
+        int res = cace_amm_lookup_deref(&deref, &(ctx->runctx->agent->objs), target);
         CACE_LOG_DEBUG("Lookup result %d", res);
         if (!res)
         {
             refda_valprod_ctx_t prodctx;
-            refda_valprod_ctx_init(&prodctx, runctx, target, &deref);
+            refda_valprod_ctx_init(&prodctx, ctx->runctx, target, &deref);
             res = refda_valprod_run(&prodctx);
             if (!res)
             {
                 // evaluate the produced value
-                retval = refda_eval_expr(runctx, result, &prodctx.value);
+                retval = refda_eval_expand_expr(ctx, &prodctx.value);
             }
             else
             {
@@ -285,7 +279,22 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     else
     {
         // evalute the target directly
-        retval = refda_eval_expr(runctx, result, target);
+        retval = refda_eval_expand_expr(ctx, target);
     }
     return retval;
+}
+
+int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr)
+{
+    refda_eval_ctx_t ctx;
+    refda_eval_ctx_init(&ctx, runctx);
+
+    int res = refda_eval_expand_expr(&ctx, expr);
+    if (!res)
+    {
+        res = refda_eval_reduce(&ctx, result);
+    }
+
+    refda_eval_ctx_deinit(&ctx);
+    return res;
 }

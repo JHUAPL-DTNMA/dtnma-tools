@@ -678,6 +678,7 @@ static int timespec_numeric_mod(cace_ari_t *result _U_, const cace_ari_t *left _
     // Calculating the remainder associated with timespec objects is unsupported
     return RET_FAIL_UNDEFINED;
 }
+
 /**
  * Translation helper function to substitute LABEL value 0 in a filter with
  * the endpoint identity.
@@ -710,6 +711,78 @@ static cace_ari_translate_result_t predicate_eval_sub_label(cace_ari_t *out, con
         }
     }
     return CACE_ARI_TRANSLATE_DEFAULT;
+}
+
+/** Expand an AC of operator references into a lookup list for later evaluation.
+ *
+ */
+bool predicate_expand(refda_runctx_t *runctx, const cace_ari_ac_t *operators_ac, const cace_ari_t *value, bool empty,
+                      bool init, bool stop)
+{
+    if (cace_ari_list_empty_p(operators_ac->items))
+    {
+        return empty;
+    }
+
+    bool combined = init;
+
+    cace_amm_lookup_list_t deref_list;
+    cace_amm_lookup_list_init(deref_list);
+    cace_amm_lookup_list_reserve(deref_list, cace_ari_list_size(operators_ac->items));
+
+    refda_agent_t *agent = runctx->agent;
+    REFDA_AGENT_LOCK(agent, 2);
+
+    cace_ari_list_it_t oper_it;
+    for (cace_ari_list_it(oper_it, operators_ac->items); !cace_ari_list_end_p(oper_it); cace_ari_list_next(oper_it))
+    {
+        const cace_ari_t *oper_item = cace_ari_list_cref(oper_it);
+
+        cace_amm_lookup_t deref;
+        cace_amm_lookup_init(&deref);
+        int res = cace_amm_lookup_deref(&deref, &(agent->objs), oper_item);
+        if (res)
+        {
+            CACE_LOG_ERR("Operator dereference failed, treating as undefined sub-result");
+        }
+        cace_amm_lookup_list_push_move(deref_list, &deref);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, 2);
+
+    // actually evaluate and accumulate
+    cace_amm_lookup_list_it_t deref_it;
+    for (cace_amm_lookup_list_it(deref_it, deref_list); !cace_amm_lookup_list_end_p(deref_it);
+         cace_amm_lookup_list_next(deref_it))
+    {
+        const cace_amm_lookup_t *deref = cace_amm_lookup_list_cref(deref_it);
+
+        cace_ari_t sub_result = CACE_ARI_INIT_UNDEFINED;
+
+        // Synthesized context for one operator evaluation
+        refda_eval_ctx_t sub_ctx;
+        refda_eval_ctx_init(&sub_ctx, runctx);
+
+        // copy this operand to the synth stack
+        cace_ari_list_push_back(sub_ctx.stack, *value);
+        int res = refda_eval_oper(&sub_ctx, deref);
+        if (!res)
+        {
+            // actual result
+            cace_ari_list_pop_back_move(&sub_result, sub_ctx.stack);
+        }
+
+        refda_eval_ctx_deinit(&sub_ctx);
+
+        if (cace_amm_ari_is_truthy(&sub_result) == stop)
+        {
+            combined = !init;
+            break;
+        }
+    }
+
+    cace_amm_lookup_list_clear(deref_list);
+    return combined;
 }
 
 typedef struct
@@ -2042,7 +2115,12 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
     }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (refda_eval_expr(ctx->runctx, &result, ari_condition))
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    int res = refda_eval_expr(ctx->runctx, &result, ari_condition);
+    REFDA_AGENT_UNLOCK(agent, );
+    if (res)
     {
         CACE_LOG_ERR("Unable to evaluate if-then-else condition");
         return;
@@ -4838,6 +4916,67 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
      */
 }
 
+/* Name: is-undefined
+ * Description:
+ *   Predicate to check for the undefined value.
+ *
+ * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_is_undefined(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_undefined BODY
+     * +-------------------------------------------------------------------------+
+     */
+    const cace_ari_t *value      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, cace_ari_is_undefined(value));
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_undefined BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: is-not-undefined
+ * Description:
+ *   Predicate to check for the undefined value.
+ *
+ * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_is_not_undefined(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_not_undefined BODY
+     * +-------------------------------------------------------------------------+
+     */
+    const cace_ari_t *value      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, cace_ari_not_undefined(value));
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_not_undefined BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: match-regexp
  * Description:
  *   This is a unary predicate operator which will compare a text value to
@@ -4958,61 +5097,7 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_all(refda_oper_eval_ctx_t 
     const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     // combined result is false if any subordinate is not truthy
-    bool combined = true;
-
-    if (cace_ari_list_empty_p(operators_ac->items))
-    {
-        // trivial case of nothing evaluated
-        combined = false;
-    }
-    else
-    {
-        // mutex-serialize object store access
-        refda_agent_t *agent = ctx->evalctx->runctx->agent;
-        REFDA_AGENT_LOCK(agent, );
-
-        cace_ari_list_it_t oper_it;
-        for (cace_ari_list_it(oper_it, operators_ac->items); !cace_ari_list_end_p(oper_it); cace_ari_list_next(oper_it))
-        {
-            const cace_ari_t *oper_item = cace_ari_list_cref(oper_it);
-
-            cace_ari_t sub_result = CACE_ARI_INIT_UNDEFINED;
-
-            cace_amm_lookup_t deref;
-            cace_amm_lookup_init(&deref);
-            int res = cace_amm_lookup_deref(&deref, &(agent->objs), oper_item);
-            if (res)
-            {
-                CACE_LOG_ERR("Operator dereference failed, treating as undefined sub-result");
-            }
-            else
-            {
-                // Synthesized context for one operator evaluation
-                refda_eval_ctx_t sub_ctx;
-                refda_eval_ctx_init(&sub_ctx, ctx->evalctx->runctx);
-
-                // copy this operand to the synth stack
-                cace_ari_list_push_back(sub_ctx.stack, *value);
-                res = refda_eval_oper(&deref, &sub_ctx);
-                if (!res)
-                {
-                    // actual result
-                    cace_ari_list_pop_back_move(&sub_result, sub_ctx.stack);
-                }
-
-                refda_eval_ctx_deinit(&sub_ctx);
-            }
-            cace_amm_lookup_deinit(&deref);
-
-            if (!cace_amm_ari_is_truthy(&sub_result))
-            {
-                combined = false;
-                break;
-            }
-        }
-
-        REFDA_AGENT_UNLOCK(agent, );
-    }
+    bool combined = predicate_expand(ctx->evalctx->runctx, operators_ac, value, false, true, false);
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_bool(&result, combined);
@@ -5068,60 +5153,7 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_any(refda_oper_eval_ctx_t 
     const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     // combined result is true if any subordinate is truthy
-    bool combined = false;
-
-    if (cace_ari_list_empty_p(operators_ac->items))
-    {
-        // trivial case of nothing evaluated
-    }
-    else
-    {
-        // mutex-serialize object store access
-        refda_agent_t *agent = ctx->evalctx->runctx->agent;
-        REFDA_AGENT_LOCK(agent, );
-
-        cace_ari_list_it_t oper_it;
-        for (cace_ari_list_it(oper_it, operators_ac->items); !cace_ari_list_end_p(oper_it); cace_ari_list_next(oper_it))
-        {
-            const cace_ari_t *oper_item = cace_ari_list_cref(oper_it);
-
-            cace_ari_t sub_result = CACE_ARI_INIT_UNDEFINED;
-
-            cace_amm_lookup_t deref;
-            cace_amm_lookup_init(&deref);
-            int res = cace_amm_lookup_deref(&deref, &(agent->objs), oper_item);
-            if (res)
-            {
-                CACE_LOG_ERR("Operator dereference failed, treating as undefined sub-result");
-            }
-            else
-            {
-                // Synthesized context for one operator evaluation
-                refda_eval_ctx_t sub_ctx;
-                refda_eval_ctx_init(&sub_ctx, ctx->evalctx->runctx);
-
-                // copy this operand to the synth stack
-                cace_ari_list_push_back(sub_ctx.stack, *value);
-                res = refda_eval_oper(&deref, &sub_ctx);
-                if (!res)
-                {
-                    // actual result
-                    cace_ari_list_pop_back_move(&sub_result, sub_ctx.stack);
-                }
-
-                refda_eval_ctx_deinit(&sub_ctx);
-            }
-            cace_amm_lookup_deinit(&deref);
-
-            if (cace_amm_ari_is_truthy(&sub_result))
-            {
-                combined = true;
-                break;
-            }
-        }
-
-        REFDA_AGENT_UNLOCK(agent, );
-    }
+    bool combined = predicate_expand(ctx->evalctx->runctx, operators_ac, value, false, false, true);
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_bool(&result, combined);
@@ -5178,60 +5210,7 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_none(refda_oper_eval_ctx_t
     const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     // combined result is false if any subordinate is truthy
-    bool combined = true;
-
-    if (cace_ari_list_empty_p(operators_ac->items))
-    {
-        // trivial case of nothing evaluated
-    }
-    else
-    {
-        // mutex-serialize object store access
-        refda_agent_t *agent = ctx->evalctx->runctx->agent;
-        REFDA_AGENT_LOCK(agent, );
-
-        cace_ari_list_it_t oper_it;
-        for (cace_ari_list_it(oper_it, operators_ac->items); !cace_ari_list_end_p(oper_it); cace_ari_list_next(oper_it))
-        {
-            const cace_ari_t *oper_item = cace_ari_list_cref(oper_it);
-
-            cace_ari_t sub_result = CACE_ARI_INIT_UNDEFINED;
-
-            cace_amm_lookup_t deref;
-            cace_amm_lookup_init(&deref);
-            int res = cace_amm_lookup_deref(&deref, &(agent->objs), oper_item);
-            if (res)
-            {
-                CACE_LOG_ERR("Operator dereference failed, treating as undefined sub-result");
-            }
-            else
-            {
-                // Synthesized context for one operator evaluation
-                refda_eval_ctx_t sub_ctx;
-                refda_eval_ctx_init(&sub_ctx, ctx->evalctx->runctx);
-
-                // copy this operand to the synth stack
-                cace_ari_list_push_back(sub_ctx.stack, *value);
-                res = refda_eval_oper(&deref, &sub_ctx);
-                if (!res)
-                {
-                    // actual result
-                    cace_ari_list_pop_back_move(&sub_result, sub_ctx.stack);
-                }
-
-                refda_eval_ctx_deinit(&sub_ctx);
-            }
-            cace_amm_lookup_deinit(&deref);
-
-            if (cace_amm_ari_is_truthy(&sub_result))
-            {
-                combined = false;
-                break;
-            }
-        }
-
-        REFDA_AGENT_UNLOCK(agent, );
-    }
+    bool combined = predicate_expand(ctx->evalctx->runctx, operators_ac, value, true, true, true);
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_bool(&result, combined);
@@ -5295,21 +5274,24 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_eval(refda_oper_eval_ctx_t
         return;
     }
 
+    refda_eval_ctx_t evalctx;
+    refda_eval_ctx_init(&evalctx, ctx->evalctx->runctx);
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->evalctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
-
-    res = refda_eval_target(ctx->evalctx->runctx, &result, &sub_tgt);
+    res = refda_eval_expand_target(&evalctx, &sub_tgt);
+    REFDA_AGENT_UNLOCK(agent, );
+    cace_ari_deinit(&sub_tgt);
     if (!res)
     {
-        // actual result
-        refda_oper_eval_ctx_set_result_move(ctx, &result);
+        res = refda_eval_reduce(&evalctx, &result);
     }
-    cace_ari_deinit(&sub_tgt);
+    refda_eval_ctx_deinit(&evalctx);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    // evaluation may still result in undefined value
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_eval BODY
@@ -5344,20 +5326,23 @@ static void refda_adm_ietf_dtnma_agent_oper_eval(refda_oper_eval_ctx_t *ctx)
     }
     const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
 
+    refda_eval_ctx_t evalctx;
+    refda_eval_ctx_init(&evalctx, ctx->evalctx->runctx);
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->evalctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
-
-    int res = refda_eval_target(ctx->evalctx->runctx, &result, target);
+    int res = refda_eval_expand_target(&evalctx, target);
+    REFDA_AGENT_UNLOCK(agent, );
     if (!res)
     {
-        // actual result
-        refda_oper_eval_ctx_set_result_move(ctx, &result);
+        res = refda_eval_reduce(&evalctx, &result);
     }
+    refda_eval_ctx_deinit(&evalctx);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    // evaluation may still result in undefined value
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_eval BODY
@@ -5444,7 +5429,12 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
 
         // Evaluate the row filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_expr(ctx->evalctx->runctx, &eval_result, &current_row);
+
+        refda_agent_t *agent = ctx->evalctx->runctx->agent;
+        REFDA_AGENT_LOCK(agent, );
+        int res = refda_eval_expr(ctx->evalctx->runctx, &eval_result, &current_row);
+        REFDA_AGENT_UNLOCK(agent, );
+
         cace_ari_deinit(&current_row); // No longer needed at this point
         if (res)
         {
@@ -8231,6 +8221,69 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 
             obj = refda_register_oper(
                 adm, cace_amm_idseg_ref_withenum("compare-le", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LE),
+                objdata);
+            // no parameters
+        }
+        { // For ./OPER/is-undefined
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_is_undefined;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("is-undefined", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_UNDEFINED),
+                objdata);
+            // no parameters
+        }
+        { // For ./OPER/is-not-undefined
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_is_not_undefined;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("is-not-undefined",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_NOT_UNDEFINED),
                 objdata);
             // no parameters
         }

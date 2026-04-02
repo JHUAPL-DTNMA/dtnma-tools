@@ -177,9 +177,23 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
         }
 
         // Evaluate the filter EXPR
+        refda_eval_ctx_t evalctx;
+        refda_eval_ctx_init(&evalctx, &runctx);
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_expr(&runctx, &eval_result, &expr);
+
+        REFDA_AGENT_LOCK(agent, 2);
+        int res = refda_eval_expand_expr(&evalctx, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
+        REFDA_AGENT_UNLOCK(agent, 2);
+        if (res)
+        {
+            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
+            refda_eval_ctx_deinit(&evalctx);
+            continue;
+        }
+
+        res = refda_eval_reduce(&evalctx, &eval_result);
+        refda_eval_ctx_deinit(&evalctx);
         if (res)
         {
             CACE_LOG_ERR("failed to evaluate condition, error %d", res);
