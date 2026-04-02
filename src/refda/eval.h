@@ -40,7 +40,7 @@ extern "C" {
 /** Perform the expansion portion of the evaluation procedure from either an
  * inline expression (literal value) or produced expression (from reference value).
  *
- * @pre The refda_agent_t::objs_mutex must already be locked.
+ * @pre The @c refda_agent_s::objs_mutex must already be locked.
  * @param[in] ctx The evaluation context, which must already be initialized.
  * @param[in] target The literal-value EXPR to evaluate or reference-value
  * to produce and evaluate.
@@ -51,7 +51,7 @@ int refda_eval_expand_target(refda_eval_ctx_t *ctx, const cace_ari_t *target);
 /** Perform the expansion portion of the evaluation procedure from
  * a literal value expression.
  *
- * @pre The refda_agent_t::objs_mutex must already be locked.
+ * @pre The @c refda_agent_s::objs_mutex must already be locked.
  * @param[in] ctx The evaluation context, which must already be initialized.
  * @param[in] expr The literal-value EXPR to evaluate.
  * @return Zero if successful.
@@ -70,7 +70,7 @@ int refda_eval_reduce(refda_eval_ctx_t *ctx, cace_ari_t *result);
 
 /** A shortcut to fully evaluate an expression.
  *
- * @pre The refda_agent_t::objs_mutex must already be locked.
+ * @pre The @c refda_agent_s::objs_mutex must already be locked.
  * @param[in] runctx The running context for evaluation.
  * @param[out] result The single result value from the evaluation.
  * This ARI must be initialized before the call and will be valid if the

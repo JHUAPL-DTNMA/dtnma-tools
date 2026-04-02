@@ -63,7 +63,7 @@ jobs:
           MISSPELLING_TXT: 'build/default/docs/api/misspelling.txt'
           MISSPELLING_CTX_TXT: 'build/default/docs/api/misspelling-ctx.txt'
         # success means file is present and empty
-        run: test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}" || (cat "${MISSPELLING_TXT}"; printf "\nIn context:\n"; cat ${MISSPELLING_CTX_TXT}"; exit 1)
+        run: test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}" || (cat "${MISSPELLING_TXT}"; printf "\nIn context:\n"; cat "${MISSPELLING_CTX_TXT}"; exit 1)
       - name: Install
         run: ./build.sh install --component docs-api
       - name: Compress
