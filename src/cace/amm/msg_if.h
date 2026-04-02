@@ -42,10 +42,12 @@ void cace_amm_msg_if_metadata_deinit(cace_amm_msg_if_metadata_t *meta);
 /** Message sending function.
  * @param[in] data The list of ARIs to send.
  * @param[in] meta The destination endpoint.
+ * @param[in] timeout The maximum time to wait, or a null pointer meaning wait indefinitely.
  * @param[in] ctx The user context, which may be NULL.
  * @return Zero if successful, 2 if the output has closed.
  */
-typedef int (*cace_amm_msg_if_send_f)(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx);
+typedef int (*cace_amm_msg_if_send_f)(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta,
+                                      const struct timespec *timeout, void *ctx);
 
 /// Status to indicate end-of-input
 #define CACE_AMM_MSG_IF_RECV_END 2

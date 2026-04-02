@@ -64,7 +64,8 @@ void cace_amp_ion_bp_state_unbind(cace_amp_ion_bp_state_t *state)
     m_string_reset(state->eid);
 }
 
-int cace_amp_ion_bp_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
+int cace_amp_ion_bp_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta,
+                         const struct timespec *timeout _U_, void *ctx)
 {
     CHKERR1(data);
     CHKERR1(meta);

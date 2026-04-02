@@ -71,4 +71,3 @@ class Timer:
         if now > self._timeout:
             raise TimeoutError('Timer did not finish before timeout')
         return now < self._timeout
-
