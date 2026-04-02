@@ -63,13 +63,8 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state, co
     }
     else
     {
-        if (!timeout)
-        {
-            timeout = &default_timeout;
-        }
-
         struct timespec current, cutoff;
-        clock_gettime(CLOCK_MONOTONIC, &current);
+        clock_gettime(CLOCK_REALTIME, &current);
         cutoff = timespec_add(current, *timeout);
 
         // exponential backoff difference starting at 10ms
@@ -87,7 +82,7 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state, co
 
         while (true)
         {
-            clock_gettime(CLOCK_MONOTONIC, &current);
+            clock_gettime(CLOCK_REALTIME, &current);
             if (timespec_gt(current, cutoff))
             {
                 CACE_LOG_WARNING("Timed out connecting");
@@ -152,7 +147,7 @@ int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_
     m_string_set(state->path, sock_path);
 
     // just try the connection
-    int sock_fd = cace_amp_proxy_cli_real_connect(state, timeout);
+    int sock_fd = cace_amp_proxy_cli_real_connect(state, timeout ? timeout : &default_timeout);
     pthread_mutex_unlock(&state->sock_mutex);
     return (sock_fd < 0 ? 1 : 0);
 }
@@ -182,9 +177,28 @@ int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_me
     cace_amp_proxy_cli_state_t *state = ctx;
     CHKERR1(state);
 
+    if (!timeout)
+    {
+        timeout = &default_timeout;
+    }
+
+    struct timespec current, cutoff;
+    clock_gettime(CLOCK_REALTIME, &current);
+    cutoff = timespec_add(current, *timeout);
+
     CACE_LOG_DEBUG("getting FD");
-    pthread_mutex_lock(&state->sock_mutex);
-    int sock_fd = cace_amp_proxy_cli_real_connect(state, timeout);
+    int res = pthread_mutex_timedlock(&state->sock_mutex, timeout);
+    if (res)
+    {
+        // timed out or other failure
+        CACE_LOG_ERR("Failed to obtain mutex");
+        return 2;
+    }
+
+    clock_gettime(CLOCK_REALTIME, &current);
+    struct timespec remain = timespec_sub(cutoff, current);
+
+    int sock_fd = cace_amp_proxy_cli_real_connect(state, &remain);
     pthread_mutex_unlock(&state->sock_mutex);
     if (sock_fd < 0)
     {
@@ -274,8 +288,14 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
 
         // try connection each iteration
         CACE_LOG_DEBUG("getting FD");
-        pthread_mutex_lock(&state->sock_mutex);
-        int sock_fd = cace_amp_proxy_cli_real_connect(state, NULL);
+        int res = pthread_mutex_timedlock(&state->sock_mutex, &default_timeout);
+        if (res)
+        {
+            // try again later
+            CACE_LOG_ERR("Failed to obtain mutex");
+            continue;
+        }
+        int sock_fd = cace_amp_proxy_cli_real_connect(state, &default_timeout);
         pthread_mutex_unlock(&state->sock_mutex);
         if (sock_fd < 0)
         {
