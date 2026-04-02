@@ -5046,6 +5046,86 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_any(refda_oper_eval_ctx_t 
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_any BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t    *operators    = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_ac_t *operators_ac = cace_ari_cget_ac(operators);
+    if (operators_ac == NULL)
+    {
+        CACE_LOG_ERR("Parameter operators is not an AC");
+        return;
+    }
+
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    // combined result is true if any subordinate is truthy
+    bool combined = false;
+
+    if (cace_ari_list_empty_p(operators_ac->items))
+    {
+        // trivial case of nothing evaluated
+    }
+    else
+    {
+        // mutex-serialize object store access
+        refda_agent_t *agent = ctx->evalctx->runctx->agent;
+        REFDA_AGENT_LOCK(agent, );
+
+        cace_ari_list_it_t oper_it;
+        for (cace_ari_list_it(oper_it, operators_ac->items); !cace_ari_list_end_p(oper_it); cace_ari_list_next(oper_it))
+        {
+            const cace_ari_t *oper_item = cace_ari_list_cref(oper_it);
+
+            cace_ari_t sub_result = CACE_ARI_INIT_UNDEFINED;
+
+            cace_amm_lookup_t deref;
+            cace_amm_lookup_init(&deref);
+            int res = cace_amm_lookup_deref(&deref, &(agent->objs), oper_item);
+            if (res)
+            {
+                CACE_LOG_ERR("Operator dereference failed, treating as undefined sub-result");
+            }
+            else
+            {
+                // Synthesized context for one operator evaluation
+                refda_eval_ctx_t sub_ctx;
+                refda_eval_ctx_init(&sub_ctx, ctx->evalctx->runctx);
+
+                // copy this operand to the synth stack
+                cace_ari_list_push_back(sub_ctx.stack, *value);
+                res = refda_eval_oper(&deref, &sub_ctx);
+                if (!res)
+                {
+                    // actual result
+                    cace_ari_list_pop_back_move(&sub_result, sub_ctx.stack);
+                }
+
+                refda_eval_ctx_deinit(&sub_ctx);
+            }
+            cace_amm_lookup_deinit(&deref);
+
+            if (cace_amm_ari_is_truthy(&sub_result))
+            {
+                combined = true;
+                break;
+            }
+        }
+
+        REFDA_AGENT_UNLOCK(agent, );
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, combined);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_any BODY
@@ -5076,6 +5156,86 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_none(refda_oper_eval_ctx_t
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_none BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t    *operators    = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_ac_t *operators_ac = cace_ari_cget_ac(operators);
+    if (operators_ac == NULL)
+    {
+        CACE_LOG_ERR("Parameter operators is not an AC");
+        return;
+    }
+
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    // combined result is false if any subordinate is truthy
+    bool combined = true;
+
+    if (cace_ari_list_empty_p(operators_ac->items))
+    {
+        // trivial case of nothing evaluated
+    }
+    else
+    {
+        // mutex-serialize object store access
+        refda_agent_t *agent = ctx->evalctx->runctx->agent;
+        REFDA_AGENT_LOCK(agent, );
+
+        cace_ari_list_it_t oper_it;
+        for (cace_ari_list_it(oper_it, operators_ac->items); !cace_ari_list_end_p(oper_it); cace_ari_list_next(oper_it))
+        {
+            const cace_ari_t *oper_item = cace_ari_list_cref(oper_it);
+
+            cace_ari_t sub_result = CACE_ARI_INIT_UNDEFINED;
+
+            cace_amm_lookup_t deref;
+            cace_amm_lookup_init(&deref);
+            int res = cace_amm_lookup_deref(&deref, &(agent->objs), oper_item);
+            if (res)
+            {
+                CACE_LOG_ERR("Operator dereference failed, treating as undefined sub-result");
+            }
+            else
+            {
+                // Synthesized context for one operator evaluation
+                refda_eval_ctx_t sub_ctx;
+                refda_eval_ctx_init(&sub_ctx, ctx->evalctx->runctx);
+
+                // copy this operand to the synth stack
+                cace_ari_list_push_back(sub_ctx.stack, *value);
+                res = refda_eval_oper(&deref, &sub_ctx);
+                if (!res)
+                {
+                    // actual result
+                    cace_ari_list_pop_back_move(&sub_result, sub_ctx.stack);
+                }
+
+                refda_eval_ctx_deinit(&sub_ctx);
+            }
+            cace_amm_lookup_deinit(&deref);
+
+            if (cace_amm_ari_is_truthy(&sub_result))
+            {
+                combined = false;
+                break;
+            }
+        }
+
+        REFDA_AGENT_UNLOCK(agent, );
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, combined);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_none BODY
@@ -5125,9 +5285,9 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_eval(refda_oper_eval_ctx_t
 
     cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
 
-    // Step 1 substitute the operand value
     const cace_ari_translator_t translator = { .map_ari = predicate_eval_sub_label };
-    int                         res        = cace_ari_translate(&sub_tgt, target, &translator, (void *)value);
+    // Step 1 substitute the operand value
+    int res = cace_ari_translate(&sub_tgt, target, &translator, (void *)value);
     if (res)
     {
         CACE_LOG_ERR("Unable to translate target, error %d", res);
@@ -5147,6 +5307,7 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_eval(refda_oper_eval_ctx_t
         // actual result
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
+    cace_ari_deinit(&sub_tgt);
 
     REFDA_AGENT_UNLOCK(agent, );
     /*
@@ -5176,6 +5337,27 @@ static void refda_adm_ietf_dtnma_agent_oper_eval(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_eval BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->evalctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    int res = refda_eval_target(ctx->evalctx->runctx, &result, target);
+    if (!res)
+    {
+        // actual result
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_eval BODY

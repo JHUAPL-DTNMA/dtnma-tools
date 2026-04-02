@@ -40,6 +40,7 @@ static int refda_eval_expand(refda_runctx_t *runctx, refda_eval_item_t out, cons
         CACE_LOG_DEBUG("Lookup result %d", res);
         if (res)
         {
+            cace_amm_lookup_deinit(&deref);
             retval = REFDA_EVAL_ERR_DEREF_FAILED;
         }
         else
@@ -81,7 +82,6 @@ static int refda_eval_expand(refda_runctx_t *runctx, refda_eval_item_t out, cons
     }
     else
     {
-        // FIXME check literal type(s)
         refda_eval_item_set_value(out, *in);
     }
 
