@@ -70,7 +70,6 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
     # spellcheck on combined XML output
     set(DICTIONARY_TXT "${CMAKE_CURRENT_SOURCE_DIR}/dictionary.txt")
     set(SPELLCHECK_XSL "${CMAKE_CURRENT_SOURCE_DIR}/spellcheck.xsl")
-    set(MISSPELLING_TXT "misspelling.txt")
     add_custom_command(
         OUTPUT "dictionary.cwl"
         DEPENDS ${DICTIONARY_TXT}
@@ -78,19 +77,32 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
             ${ASPELL_EXECUTABLE} --lang=en create master "./dictionary.cwl"
     )
     add_custom_command(
-        OUTPUT ${MISSPELLING_TXT}
+        OUTPUT "spellcheck-combined.xml"
         DEPENDS
-            ${XML_COMBINE} ${XML_INDEX}
-            ${SPELLCHECK_XSL} "dictionary.cwl"
+            ${XML_COMBINE} ${XML_INDEX} ${SPELLCHECK_XSL}
         COMMAND
             ${XMLSTARLET_EXECUTABLE} tr "${XML_COMBINE}" "${XML_INDEX}" |
-            ${XMLSTARLET_EXECUTABLE} tr "${SPELLCHECK_XSL}" |
+            ${XMLSTARLET_EXECUTABLE} tr "${SPELLCHECK_XSL}" >"spellcheck-combined.xml"
+    )
+    add_custom_command(
+        OUTPUT "misspelling.txt"
+        DEPENDS
+            "spellcheck-combined.xml" "dictionary.cwl"
+        COMMAND
+            cat "spellcheck-combined.xml" |
             ${ASPELL_EXECUTABLE} --mode=html --lang=EN_US --extra-dicts=./dictionary.cwl list |
-            sort | uniq > "${MISSPELLING_TXT}"
+            sort -u >"misspelling.txt"
+    )
+    add_custom_command(
+        OUTPUT "misspelling-ctx.txt"
+        DEPENDS
+            "spellcheck-combined.xml" "misspelling.txt"
+        COMMAND
+            grep --file "misspelling.txt" "spellcheck-combined.xml" >"misspelling-ctx.txt"
     )
     add_custom_target(
         docs-api-misspelling
-        DEPENDS "${MISSPELLING_TXT}"
+        DEPENDS "misspelling.txt" "misspelling-ctx.txt"
     )
 endif(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
 
