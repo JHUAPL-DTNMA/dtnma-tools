@@ -178,7 +178,7 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
 
         // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_target(&runctx, &eval_result, &expr);
+        int        res         = refda_eval_expr(&runctx, &eval_result, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
         if (res)
         {

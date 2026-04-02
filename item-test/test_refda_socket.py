@@ -678,6 +678,39 @@ class TestRefdaSocket(unittest.TestCase):
         # substitution
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'), rpt.items[0])
 
+    def test_eval_predicates(self):
+        # evaluate through report template items with inline expressions
+        exprs, expect_items = map(list, zip(
+            ('/ac/(true)', ari.LiteralARI(True)),
+            ('/ac/(false)', ari.LiteralARI(False)),
+            ('/ac/(10)', ari.LiteralARI(10)),
+            ('/ac/(//ietf/!odm/oper/undefined-name)', ari.UNDEFINED),
+            # direct predicates
+            ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22ll%22))', ari.TYPED_FALSE),
+            ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22.*ll.*%22))', ari.TYPED_TRUE),
+            ('/ac/(2,10,//ietf/dtnma-agent/oper/compare-eq)', ari.TYPED_FALSE),
+            ('/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq)', ari.TYPED_TRUE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-eval(/ac/(/label/0,10,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-eval(/ac/(/label/0,2,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_TRUE),
+            # combined predicate
+        ))
+        self.assertIsInstance(exprs, list)
+        self.assertIsInstance(expect_items, list)
+
+        self._start()
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
+        )
+
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=1)
+        self.assertEqual(1, len(rpts))
+
+        rpt = rpts.pop(0)
+        self.assertIsInstance(rpt.source, ari.LiteralARI)
+        self.assertEqual(rpt.source.type_id, ari.StructType.AC)
+        # items of the report
+        self.assertListEqual(expect_items, rpt.items)
+
     def test_odm(self):
         self._start()
 
@@ -1188,7 +1221,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
 
-    def test_agent_control_flow_ctrls(self):
+    def test_exec_control_flow_ctrls(self):
         self._start()
 
         LOGGER.setLevel(logging.INFO)

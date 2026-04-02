@@ -473,7 +473,7 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
 
         // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_target(runctx, &eval_result, &expr);
+        int        res         = refda_eval_expr(runctx, &eval_result, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
         if (res)
         {
@@ -539,7 +539,7 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
 
         // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_target(runctx, &eval_result, &expr);
+        int        res         = refda_eval_expr(runctx, &eval_result, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
         if (res)
         {
@@ -607,7 +607,7 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
 
         // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        res                    = refda_eval_target(runctx, &eval_result, &expr);
+        res                    = refda_eval_expr(runctx, &eval_result, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
         if (res)
         {

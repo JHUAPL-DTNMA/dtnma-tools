@@ -21,6 +21,7 @@
 
 #include "agent.h"
 #include "runctx.h"
+#include "eval_ctx.h"
 #include <cace/ari.h>
 
 #ifdef __cplusplus
@@ -36,6 +37,19 @@ extern "C" {
 /// Error result when the evaluation does not resolve to a single value
 #define REFDA_EVAL_ERR_NON_SINGLE 6
 
+/** Evaluate as either an inline expression (literal value) or produced
+ * expression (from reference value).
+ *
+ * @param[in] agent The agent state for ARI lookup.
+ * @param[out] result The single result value from the evaluation.
+ * This ARI must be initialized before the call and will be valid if the
+ * return code is zero but must be deinitialized regardless.
+ * @param[in] target The literal-value EXPR to evaluate or reference-value
+ * to produce and evaluate.
+ * @return Zero if successful.
+ */
+int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target);
+
 /** Implement the evaluation procedure from Section TBD of @cite ietf-dtn-amm-01.
  *
  * @param[in] agent The agent state for ARI lookup.
@@ -45,19 +59,20 @@ extern "C" {
  * @param[in] expr The literal-value EXPR to evaluate.
  * @return Zero if successful.
  */
-int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr);
+int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr);
 
-/** Evaluate given conditional ARI expression and return a boolean ARI indicating whether
- * the condition was true or false.
+/** This is a semi-internal function for evaluating a single operator in
+ * an existing evaluation context.
  *
- * @param[in] runctx The run context.
- * @param[out] result The single result value from the evaluation.
- * This ARI must be initialized before the call and will be valid if the
- * return code is zero but must be deinitialized regardless.
- * @param[in] condition The ARI to dereference, if necessary, and evaluate.
+ * @param[in] deref The dereferenced operator with any needed actual parameters.
+ * @param[in,out] ctx The evaluation context already populated with
+ * refda_eval_ctx_t::stack values.
+ * At the start of evaluation any named operands are popped from the stack
+ * At the completion of evaluation the result value is pushed onto the stack.
+ * This function does not use the refda_eval_ctx_t::input value.
  * @return Zero if successful.
  */
-int refda_eval_condition(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *condition);
+int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx);
 
 #ifdef __cplusplus
 } // extern C

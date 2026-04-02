@@ -88,7 +88,7 @@ static int refda_eval_expand(refda_runctx_t *runctx, refda_eval_item_t out, cons
     return retval;
 }
 
-static int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx)
+int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx)
 {
     const refda_amm_oper_desc_t *desc = deref->obj->app_data.ptr;
     CHKRET(desc->evaluate, 2);
@@ -141,9 +141,10 @@ static int refda_eval_oper(const cace_amm_lookup_t *deref, refda_eval_ctx_t *ctx
     return retval;
 }
 
-int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr)
+int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr)
 {
     CHKERR1(runctx);
+    CHKERR1(result);
     CHKERR1(expr);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
@@ -248,26 +249,43 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     return retval;
 }
 
-int refda_eval_condition(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *condition)
+int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target)
 {
-    cace_ari_t ari_res = CACE_ARI_INIT_UNDEFINED;
-    int        res     = refda_eval_target(runctx, &ari_res, condition);
+    CHKERR1(runctx);
+    CHKERR1(result);
+    CHKERR1(target);
 
-    if (res)
+    int retval = 0;
+    if (target->is_ref)
     {
-        CACE_LOG_ERR("Unable to evaluate condition");
+        cace_amm_lookup_t deref;
+        cace_amm_lookup_init(&deref);
+
+        int res = cace_amm_lookup_deref(&deref, &(runctx->agent->objs), target);
+        CACE_LOG_DEBUG("Lookup result %d", res);
+        if (!res)
+        {
+            refda_valprod_ctx_t prodctx;
+            refda_valprod_ctx_init(&prodctx, runctx, target, &deref);
+            res = refda_valprod_run(&prodctx);
+            if (!res)
+            {
+                // evaluate the produced value
+                retval = refda_eval_expr(runctx, result, &prodctx.value);
+            }
+            else
+            {
+                retval = 1;
+            }
+            refda_valprod_ctx_deinit(&prodctx);
+        }
+
+        cace_amm_lookup_deinit(&deref);
     }
     else
     {
-        const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
-        res                            = cace_amm_type_convert(typeobj, result, &ari_res);
-        if (res)
-        {
-            CACE_LOG_ERR("Unable to convert condition result to boolean");
-        }
+        // evalute the target directly
+        retval = refda_eval_expr(runctx, result, target);
     }
-
-    cace_ari_deinit(&ari_res);
-
-    return res;
+    return retval;
 }

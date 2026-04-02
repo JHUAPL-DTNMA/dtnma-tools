@@ -1239,6 +1239,11 @@ bool cace_amm_builtin_validate(const cace_ari_t *ari)
 
 bool cace_amm_ari_is_truthy(const cace_ari_t *in)
 {
+    if (!in)
+    {
+        return false;
+    }
+
     bool result = true;
     // any object reference is truthy
     if (!(in->is_ref))

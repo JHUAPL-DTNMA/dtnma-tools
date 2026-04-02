@@ -106,7 +106,7 @@ static void refda_reporting_item_lit(refda_runctx_t *runctx, cace_ari_t *rpt_ite
     else
     {
         // item is an expression to be evaluated
-        if (refda_eval_target(runctx, rpt_item, rptt_item))
+        if (refda_eval_expr(runctx, rpt_item, rptt_item))
         {
             CACE_LOG_WARNING("reporting item failed to evaluate expression");
             cace_ari_reset(rpt_item);

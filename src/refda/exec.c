@@ -491,7 +491,7 @@ static int refda_exec_check_sbr_condition(refda_agent_t *agent, const refda_amm_
     refda_runctx_init(&runctx);
     refda_runctx_from(&runctx, agent, NULL);
 
-    int res = refda_eval_condition(&runctx, result, &(sbr->condition));
+    int res = refda_eval_expr(&runctx, result, &(sbr->condition));
     refda_runctx_deinit(&runctx);
 
     return res;
