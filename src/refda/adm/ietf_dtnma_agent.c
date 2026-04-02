@@ -713,11 +713,11 @@ static cace_ari_translate_result_t predicate_eval_sub_label(cace_ari_t *out, con
     return CACE_ARI_TRANSLATE_DEFAULT;
 }
 
-/** Expand an AC of operator references into a lookup list for later evaluation.
- *
+/** Expand an AC of operator references into a lookup list and then
+ * combine sub-evaluation results.
  */
-bool predicate_expand(refda_runctx_t *runctx, const cace_ari_ac_t *operators_ac, const cace_ari_t *value, bool empty,
-                      bool init, bool stop)
+static bool predicate_compose(refda_runctx_t *runctx, const cace_ari_ac_t *operators_ac, const cace_ari_t *value,
+                              bool empty, bool init, bool stop)
 {
     if (cace_ari_list_empty_p(operators_ac->items))
     {
@@ -4934,7 +4934,7 @@ static void refda_adm_ietf_dtnma_agent_oper_is_undefined(refda_oper_eval_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_undefined BODY
      * +-------------------------------------------------------------------------+
      */
-    const cace_ari_t *value      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_bool(&result, cace_ari_is_undefined(value));
@@ -4964,7 +4964,7 @@ static void refda_adm_ietf_dtnma_agent_oper_is_not_undefined(refda_oper_eval_ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_not_undefined BODY
      * +-------------------------------------------------------------------------+
      */
-    const cace_ari_t *value      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_bool(&result, cace_ari_not_undefined(value));
@@ -5097,7 +5097,7 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_all(refda_oper_eval_ctx_t 
     const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     // combined result is false if any subordinate is not truthy
-    bool combined = predicate_expand(ctx->evalctx->runctx, operators_ac, value, false, true, false);
+    bool combined = predicate_compose(ctx->evalctx->runctx, operators_ac, value, false, true, false);
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_bool(&result, combined);
@@ -5153,7 +5153,7 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_any(refda_oper_eval_ctx_t 
     const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     // combined result is true if any subordinate is truthy
-    bool combined = predicate_expand(ctx->evalctx->runctx, operators_ac, value, false, false, true);
+    bool combined = predicate_compose(ctx->evalctx->runctx, operators_ac, value, false, false, true);
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_bool(&result, combined);
@@ -5210,7 +5210,7 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_none(refda_oper_eval_ctx_t
     const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     // combined result is false if any subordinate is truthy
-    bool combined = predicate_expand(ctx->evalctx->runctx, operators_ac, value, true, true, true);
+    bool combined = predicate_compose(ctx->evalctx->runctx, operators_ac, value, true, true, true);
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_set_bool(&result, combined);

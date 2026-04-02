@@ -50,7 +50,8 @@ void refda_agent_init(refda_agent_t *agent)
     {
         pthread_mutexattr_t mutexattr;
         pthread_mutexattr_init(&mutexattr);
-//        pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+        // be lax about recursion when ADM callbacks need to access objects
+        pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
         pthread_mutex_init(&(agent->objs_mutex), &mutexattr);
         pthread_mutexattr_destroy(&mutexattr);
     }
