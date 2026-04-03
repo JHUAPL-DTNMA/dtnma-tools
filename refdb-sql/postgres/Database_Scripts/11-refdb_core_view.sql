@@ -166,16 +166,25 @@ join
 -- const view
 create or replace 
 view vw_const_actual as 
-SELECT 
-const_actual_definition.obj_actual_definition_id, 
-data_type, 
-data_value, 
-obj_actual_definition.use_desc, 
-obj_metadata.*
-FROM const_actual_definition, obj_actual_definition, obj_metadata
-WHERE 
-	const_actual_definition.obj_actual_definition_id = obj_actual_definition.obj_actual_definition_id
-	AND obj_actual_definition.obj_metadata_id = obj_metadata.obj_metadata_id;
+SELECT const_actual_definition.obj_actual_definition_id,
+    const_actual_definition.data_type,
+    const_actual_definition.data_value,
+    obj_actual_definition.use_desc,
+    obj_metadata.obj_metadata_id,
+    data_model.name as data_model_name,
+    data_model.namespace,
+    obj_metadata.data_type_id,
+    obj_metadata.name,
+    obj_metadata.data_model_id,
+    obj_metadata.object_enumeration,
+    obj_metadata.status,
+    obj_metadata.reference,
+    obj_metadata.description
+   FROM const_actual_definition,
+    obj_actual_definition,
+    obj_metadata,
+    data_model
+  WHERE ((const_actual_definition.obj_actual_definition_id = obj_actual_definition.obj_actual_definition_id) AND (obj_actual_definition.obj_metadata_id = obj_metadata.obj_metadata_id) AND (obj_metadata.data_model_id = data_model.data_model_id));
 
 
 -- typedef view 
@@ -1009,6 +1018,7 @@ ari_rptset.mgr_time,
 ari_rptset.reference_time,
 ari_rptset.nonce_cbor,
 ari_rptset.agent_id,
+ari_rptset.ari_rptset_cbor,
 rpt_list_item_vw.ari_rptlist_id,
 rpt_list_item_vw.time_offset,
 rpt_list_item_vw.report_source,

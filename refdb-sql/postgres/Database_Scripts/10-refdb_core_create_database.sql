@@ -535,8 +535,11 @@ create table if not exists ari_rptset (
     nonce_cbor BYTEA NOT NULL,
     reference_time TIMESTAMPTZ NOT NULL,
     agent_id INTEGER NOT NULL,
+    ari_rptset_cbor BYTEA NOT NULL, 
     primary key (ari_rptset_id),
-    foreign key (agent_id) references registered_agents (registered_agents_id)
+    foreign key (agent_id) references registered_agents (registered_agents_id)  on
+delete
+	cascade
 );
 CREATE INDEX idx_rptset_nonce ON ari_rptset (nonce_cbor);
 CREATE INDEX idx_rptset_reftime ON ari_rptset (reference_time);
@@ -549,7 +552,9 @@ create table if not exists ari_rptlist (
     time_offset BYTEA,
     report_source BYTEA NOT NULL,
     primary key (ari_rptlist_id),
-    foreign key (ari_rptset_id) references ari_rptset (ari_rptset_id)
+    foreign key (ari_rptset_id) references ari_rptset (ari_rptset_id)   on
+delete
+	cascade
 );
 
 -- rpt-item
@@ -558,7 +563,9 @@ create table if not exists ari_rpt_item (
     ari_rptlist_id INTEGER NOT NULL,
     report_entry BYTEA NOT NULL,
     primary key(ari_rpt_item_id),
-    foreign key (ari_rptlist_id) references ari_rptlist (ari_rptlist_id)
+    foreign key (ari_rptlist_id) references ari_rptlist (ari_rptlist_id)  on
+delete
+	cascade
 );
 
 
