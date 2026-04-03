@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -251,6 +251,13 @@ int cace_amm_type_convert(const cace_amm_type_t *type, cace_ari_t *out, const ca
  * cace_ari_lit_t::value within each ARI type.
  */
 bool cace_amm_builtin_validate(const cace_ari_t *ari);
+
+/** Determine if the given ARI object is truthy
+ *
+ * @param in Object to check for truthiness
+ * @return Boolean indicating if obj is truthy
+ */
+bool cace_amm_ari_is_truthy(const cace_ari_t *in);
 
 #ifdef __cplusplus
 }

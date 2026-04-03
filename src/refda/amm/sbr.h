@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -63,10 +63,6 @@ typedef struct
     /** Current enabled state of the rule.
      */
     bool enabled;
-
-    /** Determine whether the rule has been marked obsolete
-     */
-    bool obsolete;
 
     /** Track state of current number of executions since the rule was enabled.
      */

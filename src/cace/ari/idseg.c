@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -79,7 +79,7 @@ size_t cace_ari_idseg_hash(const cace_ari_idseg_t *obj)
 int cace_ari_idseg_cmp(const cace_ari_idseg_t *left, const cace_ari_idseg_t *right)
 {
     CHKRET(left, -2);
-    CHKRET(right, -2);
+    CHKRET(right, 2);
 
     if (left->form != right->form)
     {

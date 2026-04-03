@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -31,7 +31,6 @@ void refda_amm_sbr_desc_init(refda_amm_sbr_desc_t *obj)
     obj->max_exec_count = 0;
     obj->init_enabled   = true;
     obj->enabled        = false;
-    obj->obsolete       = false;
     obj->exec_count     = 0;
 }
 

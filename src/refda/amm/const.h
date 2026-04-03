@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -43,9 +43,6 @@ typedef struct
      */
     cace_ari_t value;
 
-    /** Determine whether the const has been marked obsolete
-     */
-    bool obsolete;
 } refda_amm_const_desc_t;
 
 void refda_amm_const_desc_init(refda_amm_const_desc_t *obj);

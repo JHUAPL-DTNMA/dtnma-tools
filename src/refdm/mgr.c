@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -48,7 +48,7 @@
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
 #include "nm_sql.h"
 
 /** Get a copy of a specific environment variable, if defined.
@@ -91,7 +91,7 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     mgr->rest_listen_port = 8089;
     mgr->rest             = NULL;
 #endif
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
 
     // setting sql info
     mgr->sql_info.server   = refdm_envdup("DB_HOST");
@@ -100,7 +100,12 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     mgr->sql_info.database = refdm_envdup("DB_NAME");
 
     pthread_mutex_init(&(mgr->sql_lock), NULL);
-    refdm_db_mgt_init(&(mgr->sql_info), 0, 1);
+    int res = refdm_db_mgt_init(&(mgr->sql_info), 0, 1);
+    if (!res)
+    {
+        CACE_LOG_INFO("Initializing agents from DB");
+        refdm_db_load_agents(mgr);
+    }
 #endif
 }
 
@@ -108,7 +113,7 @@ void refdm_mgr_deinit(refdm_mgr_t *mgr)
 {
     CHKVOID(mgr);
 
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
     refdm_db_mgt_close();
     free(mgr->sql_info.server);
     free(mgr->sql_info.username);
@@ -178,7 +183,7 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
 
     if (pthread_mutex_lock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to lock mutex");
+        CACE_LOG_CRIT("failed to lock mutex");
         return NULL;
     }
 
@@ -206,7 +211,7 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
         refdm_agent_rotate_log(agent, &mgr->agent_log_cfg, true);
     }
 
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
     /* Copy the message group to the database tables */
     CACE_LOG_INFO("logging agent in db started");
 
@@ -228,7 +233,7 @@ refdm_agent_t *refdm_mgr_agent_get_eid(refdm_mgr_t *mgr, const char *eid)
 
     if (pthread_mutex_lock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to lock mutex");
+        CACE_LOG_CRIT("failed to lock mutex");
         return NULL;
     }
 
@@ -236,7 +241,7 @@ refdm_agent_t *refdm_mgr_agent_get_eid(refdm_mgr_t *mgr, const char *eid)
 
     if (pthread_mutex_unlock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to unlock mutex");
+        CACE_LOG_CRIT("failed to unlock mutex");
     }
 
     return got ? *got : NULL;
@@ -248,7 +253,7 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
     if (pthread_mutex_lock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to lock mutex");
+        CACE_LOG_CRIT("failed to lock mutex");
         return NULL;
     }
 
@@ -256,7 +261,7 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
     if (pthread_mutex_unlock(&(mgr->agent_mutex)))
     {
-        CACE_LOG_ERR("failed to unlock mutex");
+        CACE_LOG_CRIT("failed to unlock mutex");
     }
 
     return got ? *got : NULL;
@@ -264,7 +269,7 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
 void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
 {
-#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+#if defined(HAVE_POSTGRESQL)
     int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
     if (idx > 0)
     {
@@ -272,5 +277,6 @@ void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
     }
 #else
     cace_ari_list_reset(agent->rptsets);
+    agent->mgr_time = 0;
 #endif
 }

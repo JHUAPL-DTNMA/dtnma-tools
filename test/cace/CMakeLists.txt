@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Delay-Tolerant Networking Management
@@ -17,6 +17,9 @@ limitations under the License.
 ]]
 
 if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
+  add_unity_test(SOURCE "test_util_range.c")
+  target_link_libraries(test_util_range PUBLIC cace)
+  
   add_unity_test(SOURCE "test_ari_cbor.c")
   target_link_libraries(test_ari_cbor PUBLIC cace)
   

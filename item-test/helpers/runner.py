@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+# Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
 # Laboratory LLC.
 #
 # This file is part of the Delay-Tolerant Networking Management
@@ -23,7 +23,7 @@ import signal
 import subprocess
 import time
 import threading
-from typing import List, Optional
+from typing import List, Literal, Optional, Union
 import queue
 from .timer import Timer
 
@@ -40,18 +40,31 @@ def compose_args(args: List[str]) -> List[str]:
     needed to run from the `testroot` environment.
     '''
     args = list(args)
-    if os.environ.get('TEST_MEMCHECK', ''):
-        valgrind = [
+
+    wrap = os.environ.get('TEST_EXEC_WRAP', '').casefold()
+    prefix = []
+    if wrap == 'memcheck':
+        prefix = [
             'valgrind',
             '--tool=memcheck',
-            '--leak-check=full',
+            '--leak-check=full', '--show-leak-kinds=all',
             f'--suppressions={PROJPATH}/memcheck.supp',
             '--gen-suppressions=all',
             '--error-exitcode=2',
         ]
-        args = valgrind + args
-    args = [os.path.join(PROJPATH, 'run.sh')] + args
+    elif wrap == 'gdb':
+        prefix = [
+            'gdb',
+            '-batch', '-ex', 'run', '-ex', 'bt',
+            '--args'
+        ]
+
+    args = [os.path.join(PROJPATH, 'run.sh')] + prefix + args
     return args
+
+
+WaitStream = Union[Literal['stdout'], Literal['stderr']]
+''' Name for output stream '''
 
 
 class CmdRunner:
@@ -67,10 +80,10 @@ class CmdRunner:
         self._args = args
         self._kwargs = kwargs
 
-        self.proc = None
-        self._stdout_reader = None
-        self._stderr_reader = None
-        self._stdin_writer = None
+        self.proc: Optional[subprocess.Popen] = None
+        self._stdout_reader: Optional[threading.Thread] = None
+        self._stderr_reader: Optional[threading.Thread] = None
+        self._stdin_writer: Optional[threading.Thread] = None
 
         self._stdin_lines = queue.Queue()
         self._stdout_lines = queue.Queue()
@@ -94,9 +107,12 @@ class CmdRunner:
         while not self._stderr_lines.empty():
             self._stderr_lines.get()
 
-        do_stdin = (self._kwargs.setdefault('stdin', subprocess.PIPE) == subprocess.PIPE)
-        do_stdout = (self._kwargs.setdefault('stdout', subprocess.PIPE) == subprocess.PIPE)
-        do_stderr = (self._kwargs.setdefault('stderr', subprocess.PIPE) == subprocess.PIPE)
+        do_stdin = (self._kwargs.setdefault(
+            'stdin', subprocess.PIPE) == subprocess.PIPE)
+        do_stdout = (self._kwargs.setdefault(
+            'stdout', subprocess.PIPE) == subprocess.PIPE)
+        do_stderr = (self._kwargs.setdefault(
+            'stderr', subprocess.PIPE) == subprocess.PIPE)
 
         LOGGER.info('Starting process: %s', self._fmt_args())
         self.proc = subprocess.Popen(
@@ -188,7 +204,8 @@ class CmdRunner:
             try:
                 self.proc.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
-                LOGGER.error('Timed-out after SIGINT, killing process: %s', self._fmt_args())
+                LOGGER.error(
+                    'Timed-out after SIGINT, killing process: %s', self._fmt_args())
                 self.proc.kill()
                 self.proc.wait(timeout=timeout)
                 self._finish()
@@ -224,20 +241,21 @@ class CmdRunner:
         LOGGER.debug('Stopping stdin thread')
         stream.close()
 
-    def wait_for_line(self, timeout:float=5) -> str:
+    def wait_for_line(self, stream: WaitStream = 'stdout', timeout: float = 5) -> str:
         ''' Wait for any received stdout line.
 
         :param timeout: The total time to wait for this line.
         :return The matching line.
         :raise TimeoutError: If the line was not seen in time.
         '''
+        source = self._stdout_lines if stream == 'stdout' else self._stderr_lines
         try:
-            text = self._stdout_lines.get(timeout=timeout)
+            text = source.get(timeout=timeout)
         except queue.Empty:
             raise TimeoutError('no lines received before timeout')
         return text
 
-    def wait_for_text(self, pattern:str, timeout:float=5) -> str:
+    def wait_for_text(self, pattern: str, stream: WaitStream = 'stdout', timeout: float = 5) -> str:
         ''' Iterate through the received stdout lines until a specific
         full matching line is seen.
 
@@ -249,22 +267,25 @@ class CmdRunner:
         '''
         expr = re.compile(pattern)
         LOGGER.debug('Waiting for pattern "%s" ...', pattern)
+        source = self._stdout_lines if stream == 'stdout' else self._stderr_lines
 
-        with Timer(timeout) as deadline:
-            while deadline:
-                remain_time = deadline.remaining()
-                if remain_time is None:
-                    break
+        deadline = Timer(timeout)
+        while deadline:
+            remain_time = deadline.remaining()
+            if remain_time is None:
+                break
 
-                try:
-                    text = self._stdout_lines.get(timeout=remain_time)
-                except queue.Empty:
-                    raise TimeoutError('text not received before timeout')
+            try:
+                text = source.get(timeout=remain_time)
+            except queue.Empty:
+                break
 
-                if expr.match(text) is not None:
-                    return text
+            if expr.match(text) is not None:
+                return text
 
-    def send_stdin(self, text:str):
+        raise TimeoutError('text not received before timeout')
+
+    def send_stdin(self, text: str):
         ''' Send an exact line of text to the process stdin.
 
         :param text: The line to send, which should include a newline

@@ -37,18 +37,19 @@ The URI template parameter `{/TYPE,ID}` below refers to a unique identifier for 
    This index is dependent upon the order in which the agents are seen by a specific manager instance.
 
 The template parameter `{?form}` below refers to a choice of encoded form for ARIs to be sent or retrieved, as one of either:
- * The form "text" meaning a newline-separated, URI-encoded form of ARIs consistent with the "application/uri-list" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
- * The form "hex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
+ * The form "uri" meaning a newline-separated, URI-encoded form of ARIs consistent with the "application/uri-list" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
+ * The form "cbor" meaning a sequence of CBOR-encoded form of ARIs consistent with the "application/cbor-seq" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
+ * The form "cborhex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
 
  | Method | Path                              | Description                                  |
  |--------|-----------------------------------|----------------------------------------------|
  | GET    | `/version`                        | Return version information as a JSON object. |
  | GET    | `/agents`                         | Get a listing of registered agents as a JSON object. |
  | POST   | `/agents`                         | Register a new Agent at specified EID. The EID is encoded as a URI in request body. |
- | GET    | `/agents/{/TYP,ID}`               | Retrieve node information, including index order, name, and number of reports available. |
- | PUT    | `/agents/{/TYP,ID}/clear_reports` | Clear all available reports for given Agent. |
- | PUT    | `/agents/{/TYP,ID}/send{?form}`   | Send one or more EXECSET to the specific Agent. The encoded form is in the request body. |
- | GET    | `/agents/{/TYP,ID}/reports{?form}`| Retrieve list of RPTSET for a specific Agent. The encoded form is in the response body. |
+ | GET    | `/agents/{/TYPE,ID}`               | Retrieve node information, including index order, name, and number of reports available. |
+ | PUT    | `/agents/{/TYPE,ID}/clear_reports` | Clear all available reports for given Agent. |
+ | PUT    | `/agents/{/TYPE,ID}/send{?form}`   | Send one or more EXECSET to the specific Agent. The encoded form is in the request body. |
+ | GET    | `/agents/{/TYPE,ID}/reports{?form}`| Retrieve list of RPTSET for a specific Agent. The encoded form is in the response body. |
 
 # Transport Interface
 
@@ -85,7 +86,7 @@ The daemon for this binding has the following additional command-line options.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
- | -a \<EID\>   | Register endpoint        | Register on and listen on this BPv7 EID
+ | -a \<EID\> | Register endpoint        | Register on and listen on this BPv7 EID
 
 
 ## AMP Proxy Reliable Datagram Sockets {#refdm-proxy}
@@ -93,14 +94,15 @@ The daemon for this binding has the following additional command-line options.
 This binding uses the Unix reliable datagram sockets (`AF_UNIX` with `SOCK_SEQPACKET`) to connect to a local AMP proxy server and communicate in accordance with Section 4.2 of AMP @cite ietf-dtn-amp-02.
 The daemon executable is named `refdm-proxy`.
 
-The daemon will attempt to connect to the proxy server at start up, with linear back-off if the server is not responsive.
-If an initial connection cannot be made after 600 attempts the daemon will exit with an error code.
+The daemon will attempt to connect to the proxy server at start up, with exponential back-off if the server is not responsive.
+If an initial connection cannot be made after the startup timeout the daemon will exit with an error code.
 
 The daemon for this binding has the following additional command-line options.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
- | -a \<path\>  | Proxy server path        | Connect to this proxy socket file
+ | -a \<path\> | Proxy server path       | Connect to this proxy socket file.
+ | -t \<timeout\> | Startup connect timeout | Length of time to wait in seconds, which must be greater than zero. Defaults to 10s.
 
 ### Proxy Server
 
@@ -119,8 +121,9 @@ The server daemon has the following additional command-line options.
 
 # Persistent Database Support
 
-To build with MySQL or PostgreSQL database support, simply configure the CMake project with the associated library development OS packages installed.
+To build with PostgreSQL database support, simply configure the CMake project with the associated library development OS packages installed.
 When detected, the use of database persistence will be enabled for the REFDM and the associated command options will be made available at runtime.
+Otherwise, the REFDM will use only process-local storage which does not persist between running instances.
 
 The runtime configuration of which Postgres server to connect to is controlled by the following environment variables.
 The names of these variables is identical to and consistent with other command tools such as `psql`.

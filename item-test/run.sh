@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+## Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Delay-Tolerant Networking Management
@@ -17,7 +17,7 @@
 ## limitations under the License.
 ##
 
-# Execute the agent test in a virtualenv environment.
+# Prepare or execute the item test in a virtualenv environment.
 #
 set -e
 
@@ -27,21 +27,49 @@ echo "Using ${PYTHON}"
 
 cd ${SELFDIR}
 
-echo "Installing virtualenv..."
-${PYTHON} -m venv ./build/venv
-source ./build/venv/bin/activate
+# Prepare the test environment
+#
+do_prep() {
+    echo "Installing virtualenv..."
+    ${PYTHON} -m venv ./build/venv
+    source ./build/venv/bin/activate
 
-echo "Installing dependencies..."
-if [[ ! -d ./deps/adms ]]
-then
-    git clone --branch 27-acl-adm https://github.com/JHUAPL-DTNMA/dtnma-adms.git ./deps/adms
-fi
-if [[ ! -d ./deps/dtnma-ace ]]
-then
-    git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-ace.git ./deps/dtnma-ace
-fi
-${PYTHON} -m pip install -e ./deps/dtnma-ace
-${PYTHON} -m pip install -r requirements.txt
+    echo "Installing dependencies..."
+    if [[ ! -d ./deps/adms ]]
+    then
+        git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-adms.git ./deps/adms
+    fi
+    if [[ ! -d ./deps/dtnma-ace ]]
+    then
+        git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-ace.git ./deps/dtnma-ace
+    fi
 
-echo "Executing tests..."
-${PYTHON} -m pytest . "$@"
+    ${PYTHON} -m pip install -e ./deps/dtnma-ace
+    ${PYTHON} -m pip install -r requirements.txt
+}
+
+# Execute the tests, passing through command arguments
+#
+do_test() {
+    source ./build/venv/bin/activate
+
+    echo "Executing tests..."
+    ${PYTHON} -m pytest . "$@"
+}
+
+# Actual execution
+ACTION=$1
+shift
+
+case "$ACTION" in
+  prep)
+    do_prep
+    ;;
+  test)
+    do_test "$@"
+    ;;
+  *)
+    echo "Usage: $0 {prep,test} [extra args]"
+    exit 1
+    ;;
+esac

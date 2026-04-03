@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+# Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
 # Laboratory LLC.
 #
 # This file is part of the Delay-Tolerant Networking Management
@@ -71,4 +71,3 @@ class Timer:
         if now > self._timeout:
             raise TimeoutError('Timer did not finish before timeout')
         return now < self._timeout
-

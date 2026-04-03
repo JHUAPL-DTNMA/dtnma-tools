@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -22,6 +22,7 @@
 #include "cace/ari/time_util.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
+#include <timespec.h>
 #include <qcbor/qcbor.h>
 #include <m-bstring.h>
 #include <sys/socket.h>
@@ -44,11 +45,16 @@ void cace_amp_proxy_cli_state_deinit(cace_amp_proxy_cli_state_t *state)
     m_string_clear(state->path);
 }
 
+/// Limited internal timeout to avoid indefinite mutex blocking
+static const struct timespec default_timeout = { .tv_sec = 1 };
+
 /** Check socket state and reconnect if necessary.
  * @pre This occurs while holding the mutex lock.
+ * @param state The state to check and connect for.
+ * @param[in] timeout The total time to wait.
  * @return The socket FD to use outside of the mutex lock.
  */
-static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state)
+static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state, const struct timespec *timeout)
 {
     int ret = -1;
     if (state->sock_fd >= 0)
@@ -57,6 +63,19 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state)
     }
     else
     {
+        if (!timeout)
+        {
+            timeout = &default_timeout;
+        }
+
+        struct timespec current, cutoff;
+        clock_gettime(CLOCK_MONOTONIC, &current);
+        cutoff = timespec_add(current, *timeout);
+
+        // exponential backoff difference starting at 10ms
+        long              delta_ms    = 10;
+        static const long delta_scale = 2;
+
         struct sockaddr_un laddr;
         laddr.sun_family = AF_UNIX;
         char *sun_end    = stpncpy(laddr.sun_path, m_string_get_cstr(state->path), sizeof(laddr.sun_path));
@@ -66,32 +85,45 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state)
             ret = -2;
         }
 
-        for (int try_ix = 0; (ret == -1) && (try_ix < 600); ++try_ix)
+        while (true)
         {
+            clock_gettime(CLOCK_MONOTONIC, &current);
+            if (timespec_gt(current, cutoff))
+            {
+                CACE_LOG_WARNING("Timed out connecting");
+                ret = -1;
+                break;
+            }
+
             state->sock_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
             if (state->sock_fd == -1)
             {
                 CACE_LOG_ERR("Failed to create socket %d", errno);
-                return -1;
-            }
-
-            CACE_LOG_INFO("Connecting to proxy %s", laddr.sun_path);
-            int res = connect(state->sock_fd, (struct sockaddr *)&laddr, sizeof(laddr));
-            if (res)
-            {
-                CACE_LOG_ERR("Failed to connect proxy %s with errno %d", laddr.sun_path, errno);
-                close(state->sock_fd);
-                state->sock_fd = -2;
+                // try again after sleep
             }
             else
             {
-                CACE_LOG_INFO("Connected to proxy %s", laddr.sun_path);
-                ret = state->sock_fd;
-                break;
+                CACE_LOG_INFO("Connecting to proxy %s", laddr.sun_path);
+                int res = connect(state->sock_fd, (struct sockaddr *)&laddr, sizeof(laddr));
+                if (res)
+                {
+                    CACE_LOG_ERR("Failed to connect proxy %s with errno %d", laddr.sun_path, errno);
+                    close(state->sock_fd);
+                    state->sock_fd = -2;
+                    // try again after sleep
+                }
+                else
+                {
+                    CACE_LOG_INFO("Connected to proxy %s", laddr.sun_path);
+                    ret = state->sock_fd;
+                    break;
+                }
             }
 
             // linear back-off
-            sleep(try_ix);
+            struct timespec delta = timespec_from_ms(delta_ms);
+            nanosleep(&delta, NULL);
+            delta_ms *= delta_scale;
         }
     }
     return ret;
@@ -112,16 +144,17 @@ static void cace_amp_proxy_cli_real_disconnect(cace_amp_proxy_cli_state_t *state
     }
 }
 
-int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path)
+int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path,
+                                     const struct timespec *timeout)
 {
     CHKERR1(state);
     pthread_mutex_lock(&state->sock_mutex);
     m_string_set(state->path, sock_path);
 
     // just try the connection
-    int sock_fd = cace_amp_proxy_cli_real_connect(state);
+    int sock_fd = cace_amp_proxy_cli_real_connect(state, timeout);
     pthread_mutex_unlock(&state->sock_mutex);
-    return (sock_fd < 0);
+    return (sock_fd < 0 ? 1 : 0);
 }
 
 void cace_amp_proxy_cli_state_disconnect(cace_amp_proxy_cli_state_t *state)
@@ -142,15 +175,22 @@ int cace_amp_proxy_cli_state_getfd(cace_amp_proxy_cli_state_t *state)
     return res;
 }
 
-int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx)
+int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta,
+                            const struct timespec *timeout, void *ctx)
 {
     CHKERR1(meta);
     cace_amp_proxy_cli_state_t *state = ctx;
     CHKERR1(state);
 
+    CACE_LOG_DEBUG("getting FD");
     pthread_mutex_lock(&state->sock_mutex);
-    int sock_fd = cace_amp_proxy_cli_real_connect(state);
+    int sock_fd = cace_amp_proxy_cli_real_connect(state, timeout);
     pthread_mutex_unlock(&state->sock_mutex);
+    if (sock_fd < 0)
+    {
+        // timed out, failure
+        return 2;
+    }
 
     int result = 0;
 
@@ -225,30 +265,33 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
 
     while (true)
     {
+        if (!cace_daemon_run_get(running))
+        {
+            CACE_LOG_DEBUG("returning due to running state change");
+            result = CACE_AMM_MSG_IF_RECV_END;
+            break;
+        }
+
         // try connection each iteration
+        CACE_LOG_DEBUG("getting FD");
         pthread_mutex_lock(&state->sock_mutex);
-        int sock_fd = cace_amp_proxy_cli_real_connect(state);
+        int sock_fd = cace_amp_proxy_cli_real_connect(state, NULL);
         pthread_mutex_unlock(&state->sock_mutex);
+        if (sock_fd < 0)
+        {
+            // timed out, try again
+            continue;
+        }
 
         // first peek at message size
         int     flags = MSG_PEEK | MSG_TRUNC;
         ssize_t got   = recv(sock_fd, NULL, 0, flags);
         if (got == 0)
         {
-            CACE_LOG_DEBUG("empty recv() message");
-            if (!cace_daemon_run_get(running))
-            {
-                CACE_LOG_DEBUG("returning due to running state change");
-                result = CACE_AMM_MSG_IF_RECV_END;
-                break;
-            }
-            else
-            {
-                pthread_mutex_lock(&state->sock_mutex);
-                cace_amp_proxy_cli_real_disconnect(state);
-                pthread_mutex_unlock(&state->sock_mutex);
-                continue;
-            }
+            pthread_mutex_lock(&state->sock_mutex);
+            cace_amp_proxy_cli_real_disconnect(state);
+            pthread_mutex_unlock(&state->sock_mutex);
+            continue;
         }
         else if (got < 0)
         {

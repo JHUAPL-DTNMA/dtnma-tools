@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * This file is only included in the build when either ::HAVE_POSTGRESQL or
- * ::HAVE_MYSQL are defined.
+ * This file is only included in the build when ::HAVE_POSTGRESQL is defined.
  */
 #ifndef REFDM_NM_SQL_H_
 #define REFDM_NM_SQL_H_
@@ -25,10 +24,6 @@
 /* System Headers */
 #include <stdio.h>
 #include <unistd.h>
-
-#ifdef HAVE_MYSQL
-#include <mysql.h>
-#endif // HAVE_MYSQL
 
 #ifdef HAVE_POSTGRESQL
 #include <libpq-fe.h>
@@ -104,25 +99,26 @@ extern "C" {
 int32_t db_add_agent(const cace_data_t *agent_eid);
 
 /* Database Management Functions. */
-uint32_t refdm_db_mgt_init(refdm_db_t *parms, uint32_t clear, uint32_t log);
-uint32_t refdm_db_mgt_init_con(size_t idx, refdm_db_t *parms);
+uint32_t refdm_db_mgt_init(const refdm_db_t *parms, uint32_t clear, uint32_t log);
 
 void refdm_db_mgt_close(void);
 void refdm__db_mgt_close_conn(size_t i);
 int  refdm_db_mgt_connected(size_t i);
-#ifdef HAVE_MYSQL
-int32_t refdm_db_mgt_query_fetch(int db_idx, MYSQL_RES **res, char *format, ...);
-#endif // HAVE_MYSQL
-#ifdef HAVE_POSTGRESQL
+#if defined(HAVE_POSTGRESQL)
 int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...);
-#endif // HAVE_POSTGRESQL
+#endif // defined(HAVE_POSTGRESQL)
 int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...);
 
 /* Functions to process outgoing EXECSET and incoming RPTSET. */
-uint32_t       refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agent);
-uint32_t       refdm_db_insert_agent(const m_string_t eid);
-uint32_t       refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent);
-refdm_agent_t *refdm_db_fetch_agent(int32_t id);
+uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agent);
+uint32_t refdm_db_insert_agent(const m_string_t eid);
+uint32_t refdm_db_insert_execset(const cace_ari_t *val, const refdm_agent_t *agent);
+
+/** Initialize the manager store of agents from the DB.
+ *
+ * @param[in] mgr The manager to add agents into.
+ */
+void refdm_db_load_agents(refdm_mgr_t *mgr);
 
 /** Get the index of an Agent from its endpoint name.
  *
@@ -152,9 +148,10 @@ int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count);
  *
  * @param agent_idx The row index of the source Agent.
  * @param[out] rptsets The list used to hold the retrieved RPTSETs.
+ * @param[out] mgr_time The manager timestamp for the latest record.
  * @return Returns ::RET_PASS on success otherwise @c RET_FAIL_* on failure.
  */
-int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets);
+int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, struct tm *mgr_time);
 
 /** Utility function to insert debug or error informational messages into the database.
  * NOTE: If operating within a transaction, caller is responsible for committing transaction.

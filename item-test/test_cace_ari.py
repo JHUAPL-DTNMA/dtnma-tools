@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+# Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
 # Laboratory LLC.
 #
 # This file is part of the Delay-Tolerant Networking Management
@@ -23,7 +23,7 @@ import os
 import signal
 import subprocess
 import time
-from typing import List, Tuple
+from typing import Optional, List, Tuple
 import unittest
 import cbor2
 from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
@@ -53,7 +53,7 @@ class TestCaceAri(unittest.TestCase):
         os.chdir(path)
         LOGGER.info('Working in %s', path)
 
-        self._runner = None
+        self._runner: Optional[CmdRunner] = None
 
     def tearDown(self):
         if self._runner:
@@ -61,13 +61,13 @@ class TestCaceAri(unittest.TestCase):
             self.assertEqual(0, self._runner.wait())
             self._runner = None
 
-    def _start(self, *cmd_args: Tuple[str]) -> CmdRunner:
+    def _start(self, *cmd_args: str) -> CmdRunner:
         ''' Spawn the process. '''
         base_args = (
             'cace_ari',
             '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
         )
-        args = compose_args(base_args + cmd_args)
+        args = compose_args(list(base_args + cmd_args))
         self._runner = CmdRunner(args)
         self._runner.start()
         return self._runner
@@ -109,29 +109,29 @@ class TestCaceAri(unittest.TestCase):
         runner.proc.stdin.close()
         self.assertEqual(0, runner.proc.wait(timeout=5))
 
-    def test_translate_inform_text(self):
-        runner = self._start('--inform=text', '--outform=cborhex')
-
-        runner.send_stdin('ari:10\n')
-        got = runner.wait_for_line()
-        self.assertEqual('0A\n', got)
-
-    def test_translate_inform_auto(self):
+    def test_translate_inform_auto_text(self):
         runner = self._start('--inform=auto', '--outform=cborhex')
 
         runner.send_stdin('ari:10\n')
         got = runner.wait_for_line()
         self.assertEqual('0A\n', got)
 
-    def test_translate_inform_auto_hex(self):
+    def test_translate_inform_auto_cborhex(self):
         runner = self._start('--inform=auto')
 
         runner.send_stdin('0A\n')
         got = runner.wait_for_line()
         self.assertEqual('ari:10\n', got)
 
+    def test_translate_inform_uri(self):
+        runner = self._start('--inform=uri', '--outform=cborhex')
+
+        runner.send_stdin('ari:10\n')
+        got = runner.wait_for_line()
+        self.assertEqual('0A\n', got)
+
     def test_translate_inform_cborhex(self):
-        runner = self._start('--inform=cborhex', '--outform=text')
+        runner = self._start('--inform=cborhex', '--outform=uri')
 
         runner.send_stdin('0A\n')
         got = runner.wait_for_line()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -57,6 +57,7 @@ typedef enum
     CACE_ARI_TYPE_LABEL   = 14,
     CACE_ARI_TYPE_CBOR    = 15,
     CACE_ARI_TYPE_ARITYPE = 16,
+    CACE_ARI_TYPE_OBJPAT  = 24,
 
     // Container types
     CACE_ARI_TYPE_AC      = 17,

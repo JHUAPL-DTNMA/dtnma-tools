@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -56,9 +56,11 @@ void cace_amp_proxy_cli_state_deinit(cace_amp_proxy_cli_state_t *state);
  *
  * @param[in,out] state The state to bind.
  * @param[in] sock_path The file path to bind to.
+ * @param[in] timeout An initial connection timeout, or null to default to a short timeout.
  * @return Zero if successful.
  */
-int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path);
+int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_string_t sock_path,
+                                     const struct timespec *timeout);
 
 /** Disconnect any current socket and remove it if necessary.
  *
@@ -71,7 +73,8 @@ int cace_amp_proxy_cli_state_getfd(cace_amp_proxy_cli_state_t *state);
 /** Provider of cace_amm_msg_if_t::send interface for BP-proxy socket transport.
  * The user data for this function is a ::cace_amp_proxy_cli_state_t instance.
  */
-int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx);
+int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta,
+                            const struct timespec *timeout, void *ctx);
 
 /** Provider of cace_amm_msg_if_t::recv interface for BP-proxy socket transport.
  * The user data for this function is a ::cace_amp_proxy_cli_state_t instance.

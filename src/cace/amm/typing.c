@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -168,57 +168,8 @@ static int builtin_bool_convert(const cace_amm_type_t *self, cace_ari_t *out, co
     {
         return 0;
     }
-    // truthy check
-    bool result = true;
-    // any object reference is truthy
-    if (!(in->is_ref))
-    {
-        switch (in->as_lit.prim_type)
-        {
-            case CACE_ARI_PRIM_UNDEFINED:
-                // not really needed but satisfies the compiler
-            case CACE_ARI_PRIM_NULL:
-                result = false;
-                break;
-            case CACE_ARI_PRIM_BOOL:
-                result = in->as_lit.value.as_bool;
-                break;
-            case CACE_ARI_PRIM_UINT64:
-                result = (in->as_lit.value.as_uint64 != 0);
-                break;
-            case CACE_ARI_PRIM_INT64:
-                result = (in->as_lit.value.as_int64 != 0);
-                break;
-            case CACE_ARI_PRIM_FLOAT64:
-                result = (!isnan(in->as_lit.value.as_float64) && (in->as_lit.value.as_float64 != 0));
-                break;
-            case CACE_ARI_PRIM_TSTR:
-            case CACE_ARI_PRIM_BSTR:
-                result = (in->as_lit.value.as_data.len != 0);
-                break;
-            case CACE_ARI_PRIM_TIMESPEC:
-                result = ((in->as_lit.value.as_timespec.tv_sec != 0) || (in->as_lit.value.as_timespec.tv_nsec != 0));
-                break;
-            case CACE_ARI_PRIM_OTHER:
-                switch (in->as_lit.ari_type)
-                {
-                    case CACE_ARI_TYPE_ARITYPE:
-                    case CACE_ARI_TYPE_AC:
-                    case CACE_ARI_TYPE_AM:
-                    case CACE_ARI_TYPE_TBL:
-                    case CACE_ARI_TYPE_EXECSET:
-                    case CACE_ARI_TYPE_RPTSET:
-                        // unconditional on content
-                        result = true;
-                        break;
-                    default:
-                        // all object reference types
-                        break;
-                }
-                break;
-        }
-    }
 
+    bool result = cace_amm_ari_is_truthy(in);
     cace_ari_set_prim_bool(out, result);
     cace_ari_force_lit_type(out, self->as_builtin.ari_type);
     return 0;
@@ -900,6 +851,13 @@ static cace_amm_type_t cace_amm_builtins[] = {
         .match               = builtin_default_match,
         .convert             = builtin_default_convert,
     },
+    {
+        .type_class          = CACE_AMM_TYPE_BUILTIN,
+        .as_builtin.ari_type = CACE_ARI_TYPE_OBJPAT,
+        .ari_name            = builtin_ari_name,
+        .match               = builtin_default_match,
+        .convert             = builtin_default_convert,
+    },
     // reference types below
     {
         .type_class          = CACE_AMM_TYPE_BUILTIN,
@@ -1277,4 +1235,59 @@ bool cace_amm_builtin_validate(const cace_ari_t *ari)
 
     // the visit functions keep the value const
     return (cace_ari_visit((cace_ari_t *)ari, &visitor, NULL) == 0);
+}
+
+bool cace_amm_ari_is_truthy(const cace_ari_t *in)
+{
+    bool result = true;
+    // any object reference is truthy
+    if (!(in->is_ref))
+    {
+        switch (in->as_lit.prim_type)
+        {
+            case CACE_ARI_PRIM_UNDEFINED:
+                // not really needed but satisfies the compiler
+            case CACE_ARI_PRIM_NULL:
+                result = false;
+                break;
+            case CACE_ARI_PRIM_BOOL:
+                result = in->as_lit.value.as_bool;
+                break;
+            case CACE_ARI_PRIM_UINT64:
+                result = (in->as_lit.value.as_uint64 != 0);
+                break;
+            case CACE_ARI_PRIM_INT64:
+                result = (in->as_lit.value.as_int64 != 0);
+                break;
+            case CACE_ARI_PRIM_FLOAT64:
+                result = (!isnan(in->as_lit.value.as_float64) && (in->as_lit.value.as_float64 != 0));
+                break;
+            case CACE_ARI_PRIM_TSTR:
+            case CACE_ARI_PRIM_BSTR:
+                result = (in->as_lit.value.as_data.len != 0);
+                break;
+            case CACE_ARI_PRIM_TIMESPEC:
+                result = ((in->as_lit.value.as_timespec.tv_sec != 0) || (in->as_lit.value.as_timespec.tv_nsec != 0));
+                break;
+            case CACE_ARI_PRIM_OTHER:
+                switch (in->as_lit.ari_type)
+                {
+                    case CACE_ARI_TYPE_ARITYPE:
+                    case CACE_ARI_TYPE_AC:
+                    case CACE_ARI_TYPE_AM:
+                    case CACE_ARI_TYPE_TBL:
+                    case CACE_ARI_TYPE_EXECSET:
+                    case CACE_ARI_TYPE_RPTSET:
+                        // unconditional on content
+                        result = true;
+                        break;
+                    default:
+                        // all object reference types
+                        break;
+                }
+                break;
+        }
+    }
+
+    return result;
 }

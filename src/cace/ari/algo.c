@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -17,6 +17,8 @@
  */
 #include "algo.h"
 #include "containers.h"
+#include "objpat.h"
+#include "text.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include "cace/amm/numeric.h"
@@ -166,6 +168,7 @@ static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor
             CHKERRVAL(retval);
         }
 
+        // recurse into given parameters
         switch (ari->as_ref.params.state)
         {
             case CACE_ARI_PARAMS_NONE:
@@ -196,6 +199,7 @@ static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor
             CHKERRVAL(retval);
         }
 
+        // recurse into containers
         if (ari->as_lit.has_ari_type)
         {
             switch (ari->as_lit.ari_type)
@@ -253,7 +257,8 @@ static int cace_ari_map_ac(cace_ari_ac_t *out, const cace_ari_ac_t *in, const ca
     {
         const cace_ari_t *in_item  = cace_ari_list_cref(it);
         cace_ari_t       *out_item = cace_ari_list_push_back_new(out->items);
-        retval                     = cace_ari_translate_ari(out_item, in_item, translator, ctx);
+
+        retval = cace_ari_translate_ari(out_item, in_item, translator, ctx);
         CHKERRVAL(retval);
     }
     return 0;
@@ -294,7 +299,8 @@ static int cace_ari_map_tbl(cace_ari_tbl_t *out, const cace_ari_tbl_t *in, const
     {
         const cace_ari_t *in_item  = cace_ari_array_cref(it);
         cace_ari_t        out_item = CACE_ARI_INIT_UNDEFINED;
-        retval                     = cace_ari_translate_ari(&out_item, in_item, translator, ctx);
+
+        retval = cace_ari_translate_ari(&out_item, in_item, translator, ctx);
         cace_ari_array_push_move(out->items, &out_item);
         CHKERRVAL(retval);
     }
@@ -304,18 +310,24 @@ static int cace_ari_map_tbl(cace_ari_tbl_t *out, const cace_ari_tbl_t *in, const
 static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const cace_ari_translator_t *translator,
                                   const cace_ari_translate_ctx_t *ctx)
 {
-    int retval;
+    int retval = 0;
 
     // handle main ARI first
+    cace_ari_translate_result_t res = CACE_ARI_TRANSLATE_DEFAULT;
     if (translator->map_ari)
     {
-        retval = translator->map_ari(out, in, ctx);
-        CHKERRVAL(retval);
+        res = translator->map_ari(out, in, ctx);
+        if (res == CACE_ARI_TRANSLATE_FAILURE)
+        {
+            return 2;
+        }
+        if (res == CACE_ARI_TRANSLATE_FINAL)
+        {
+            // all done
+            return 0;
+        }
     }
-    else
-    {
-        out->is_ref = in->is_ref;
-    }
+    // at this point res == CACE_ARI_TRANSLATE_DEFAULT
 
     cace_ari_translate_ctx_t sub_ctx = {
         .parent     = in,
@@ -323,6 +335,7 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
         .user_data  = ctx->user_data,
     };
 
+    out->is_ref = in->is_ref;
     if (in->is_ref)
     {
         if (translator->map_objpath)
@@ -376,16 +389,6 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
     }
     else
     {
-        if (translator->map_lit)
-        {
-            retval = translator->map_lit(&(out->as_lit), &(in->as_lit), ctx);
-            CHKERRVAL(retval);
-        }
-        else
-        {
-            cace_ari_lit_copy(&(out->as_lit), &(in->as_lit));
-        }
-
         if (in->as_lit.has_ari_type)
         {
             switch (in->as_lit.ari_type)
@@ -410,7 +413,28 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
                     break;
                 }
                 default:
+                    if (translator->map_lit)
+                    {
+                        retval = translator->map_lit(&(out->as_lit), &(in->as_lit), ctx);
+                        CHKERRVAL(retval);
+                    }
+                    else
+                    {
+                        cace_ari_lit_copy(&(out->as_lit), &(in->as_lit));
+                    }
                     break;
+            }
+        }
+        else
+        {
+            if (translator->map_lit)
+            {
+                retval = translator->map_lit(&(out->as_lit), &(in->as_lit), ctx);
+                CHKERRVAL(retval);
+            }
+            else
+            {
+                cace_ari_lit_copy(&(out->as_lit), &(in->as_lit));
             }
         }
     }
@@ -431,9 +455,11 @@ int cace_ari_translate(cace_ari_t *out, const cace_ari_t *in, const cace_ari_tra
     return cace_ari_translate_ari(out, in, translator, &sub_ctx);
 }
 
-static int cace_ari_hash_visit_objpath(cace_ari_objpath_t *path, const cace_ari_visit_ctx_t *ctx)
+static int cace_ari_hash_visit_ref(cace_ari_ref_t *ref, const cace_ari_visit_ctx_t *ctx)
 {
     size_t *accum = ctx->user_data;
+
+    const cace_ari_objpath_t *path = &(ref->objpath);
     M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->org_id)));
     M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->model_id)));
     M_HASH_UP(*accum, M_HASH_DEFAULT(path->model_rev.valid));
@@ -453,6 +479,20 @@ static int cace_ari_hash_visit_objpath(cace_ari_objpath_t *path, const cace_ari_
         M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->type_id)));
     }
     M_HASH_UP(*accum, cace_ari_idseg_hash(&(path->obj_id)));
+
+    M_HASH_UP(*accum, M_HASH_DEFAULT(ref->params.state));
+    switch (ref->params.state)
+    {
+        case CACE_ARI_PARAMS_NONE:
+            break;
+        case CACE_ARI_PARAMS_AC:
+            M_HASH_UP(*accum, cace_ari_list_hash(ref->params.as_ac->items));
+            break;
+        case CACE_ARI_PARAMS_AM:
+            M_HASH_UP(*accum, cace_ari_tree_hash(ref->params.as_am->items));
+            break;
+    }
+
     return 0;
 }
 
@@ -469,6 +509,10 @@ static int cace_ari_hash_visit_lit(cace_ari_lit_t *obj, const cace_ari_visit_ctx
             case CACE_ARI_TYPE_TBL:
                 // include metadata
                 M_HASH_UP(*accum, M_HASH_DEFAULT(obj->value.as_tbl->ncols));
+                break;
+            case CACE_ARI_TYPE_OBJPAT:
+                // this is not an ARI container
+                M_HASH_UP(*accum, cace_ari_objpat_hash(obj->value.as_objpat));
                 break;
             default:
                 // container contents are visited separately
@@ -511,8 +555,8 @@ size_t cace_ari_hash(const cace_ari_t *ari)
 {
     CHKRET(ari, 0);
     static const cace_ari_visitor_t visitor = {
-        .visit_objpath = cace_ari_hash_visit_objpath,
-        .visit_lit     = cace_ari_hash_visit_lit,
+        .visit_ref = cace_ari_hash_visit_ref,
+        .visit_lit = cace_ari_hash_visit_lit,
     };
 
     M_HASH_DECL(accum);
@@ -520,60 +564,6 @@ size_t cace_ari_hash(const cace_ari_t *ari)
     cace_ari_visit((cace_ari_t *)ari, &visitor, &accum);
     accum = M_HASH_FINAL(accum);
     return accum;
-}
-
-static bool cace_ari_objpath_cmp(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right)
-{
-    int part_cmp = cace_ari_idseg_cmp(&(left->org_id), &(right->org_id));
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-    part_cmp = cace_ari_idseg_cmp(&(left->model_id), &(right->model_id));
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-    part_cmp = cace_ari_date_cmp(&(left->model_rev), &(right->model_rev));
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-
-    // prefer derived values
-    if (left->has_ari_type && right->has_ari_type)
-    {
-        part_cmp = left->ari_type < right->ari_type;
-    }
-    else
-    {
-        part_cmp = cace_ari_idseg_cmp(&(left->type_id), &(right->type_id));
-    }
-    if (part_cmp)
-    {
-        return part_cmp;
-    }
-
-    return cace_ari_idseg_cmp(&(left->obj_id), &(right->obj_id));
-}
-
-static bool cace_ari_objpath_equal(const cace_ari_objpath_t *left, const cace_ari_objpath_t *right)
-{
-    // prefer derived values
-    bool type_equal;
-    if (left->has_ari_type && right->has_ari_type)
-    {
-        type_equal = left->ari_type == right->ari_type;
-    }
-    else
-    {
-        type_equal = cace_ari_idseg_equal(&(left->type_id), &(right->type_id));
-    }
-
-    return (cace_ari_idseg_equal(&(left->org_id), &(right->org_id))
-            && cace_ari_idseg_equal(&(left->model_id), &(right->model_id))
-            && (cace_ari_date_cmp(&(left->model_rev), &(right->model_rev)) == 0) && type_equal
-            && cace_ari_idseg_equal(&(left->obj_id), &(right->obj_id)));
 }
 
 static int cace_ari_params_cmp(const cace_ari_params_t *left, const cace_ari_params_t *right)
@@ -681,6 +671,13 @@ int cace_ari_cmp(const cace_ari_t *left, const cace_ari_t *right)
                     break;
                 case CACE_ARI_TYPE_RPTSET:
                     part_cmp = cace_ari_rptset_cmp(left->as_lit.value.as_rptset, right->as_lit.value.as_rptset);
+                    if (part_cmp)
+                    {
+                        return part_cmp;
+                    }
+                    break;
+                case CACE_ARI_TYPE_OBJPAT:
+                    part_cmp = cace_ari_objpat_cmp(left->as_lit.value.as_objpat, right->as_lit.value.as_objpat);
                     if (part_cmp)
                     {
                         return part_cmp;
@@ -804,6 +801,12 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
                         return false;
                     }
                     break;
+                case CACE_ARI_TYPE_OBJPAT:
+                    if (!cace_ari_objpat_equal(left->as_lit.value.as_objpat, right->as_lit.value.as_objpat))
+                    {
+                        return false;
+                    }
+                    break;
                 default:
                     break;
             }
@@ -890,5 +893,21 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
         cace_ari_deinit(&lt_prom);
         cace_ari_deinit(&rt_prom);
         return result;
+    }
+}
+
+void cace_ari_get_str(m_string_t out, const cace_ari_t obj, bool append)
+{
+    m_string_t buf;
+    m_string_init(buf);
+    cace_ari_text_encode(buf, &obj, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    if (append)
+    {
+        m_string_cat(out, buf);
+        m_string_clear(buf);
+    }
+    else
+    {
+        m_string_move(out, buf);
     }
 }

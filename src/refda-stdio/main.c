@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -16,13 +16,7 @@
  * limitations under the License.
  */
 #include "refda/agent.h"
-#include "refda/adm/ietf.h"
-#include "refda/adm/ietf_amm.h"
-#include "refda/adm/ietf_amm_base.h"
-#include "refda/adm/ietf_amm_semtype.h"
-#include "refda/adm/ietf_network_base.h"
-#include "refda/adm/ietf_dtnma_agent.h"
-#include "refda/adm/ietf_dtnma_agent_acl.h"
+#include "refda/loader.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 #include "cace/ari/text_util.h"
@@ -44,7 +38,8 @@ static void daemon_signal_handler(int signum)
     cace_daemon_run_stop(&agent.running);
 }
 
-static int stdout_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta _U_, void *ctx _U_)
+static int stdout_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta _U_,
+                       const struct timespec *timeout _U_, void *ctx _U_)
 {
     int retval = 0;
     CACE_LOG_DEBUG("Sending message with %d ARIs", cace_ari_list_size(data));
@@ -304,27 +299,11 @@ int main(int argc, char *argv[])
 
     if (!retval)
     {
-        // ADM initialization
-        refda_adm_ietf_amm_init(&agent);
-        refda_adm_ietf_amm_base_init(&agent);
-        refda_adm_ietf_amm_semtype_init(&agent);
-        refda_adm_ietf_network_base_init(&agent);
-        refda_adm_ietf_dtnma_agent_init(&agent);
-        refda_adm_ietf_dtnma_agent_acl_init(&agent);
-#if 0
-  dtn_bp_agent_init();
-  dtn_ion_ionadmin_init();
-  dtn_ion_ipnadmin_init();
-  dtn_ion_ionsecadmin_init();
-  dtn_ion_ltpadmin_init();
-  dtn_ltp_agent_init();
-  dtn_ion_bpadmin_init();
-#ifdef BUILD_BPv6
-  dtn_sbsp_init();
-#else
-//  dtn_bpsec_init();
-#endif
-#endif
+        if (refda_loader_basemods(&agent))
+        {
+            CACE_LOG_ERR("Failed to load base ADMs");
+            retval = 5;
+        }
     }
 
     if (!retval)

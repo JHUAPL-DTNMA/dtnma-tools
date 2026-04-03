@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -51,6 +51,7 @@ void refdm_nm_rest_stop(struct mg_context *ctx);
 #define HTTP_INTERNAL_ERROR     500
 #define HTTP_NOT_IMPLEMENTED    501
 #define HTTP_NO_SERVICE         503
+#define HTTP_GATEWAY_TIMEOUT    504
 
 #ifdef __cplusplus
 }

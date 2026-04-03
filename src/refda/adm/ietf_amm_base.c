@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -63,6 +63,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // no IDENT bases
 
             obj = refda_register_ident(
@@ -73,6 +74,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint-integer
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -90,6 +92,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint-float
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -107,6 +110,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint-bstr
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -124,6 +128,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
         { // For ./IDENT/display-hint-time
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = true;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
@@ -136,23 +141,6 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                 cace_amm_idseg_ref_withenum("display-hint-time",
                                             REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_IDENT_DISPLAY_HINT_TIME),
                 objdata);
-            // no parameters
-        }
-        { // For ./IDENT/bstr-ari-pattern
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            // IDENT bases:
-            {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // reference to ari://ietf/amm-base/IDENT/display-hint-bstr
-                cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
-            }
-
-            obj =
-                refda_register_ident(adm,
-                                     cace_amm_idseg_ref_withenum(
-                                         "bstr-ari-pattern", REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_IDENT_BSTR_ARI_PATTERN),
-                                     objdata);
             // no parameters
         }
 
@@ -594,7 +582,15 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/TEXTSTR
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: TextPattern(pattern='!?[A-Za-z_][0-9A-Za-z_\\-\\.]*')
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                    cace_amm_semtype_cnst_set_textpat(cnst, "!?[A-Za-z_][0-9A-Za-z_\\-\\.]*");
+                }
             }
 
             obj = refda_register_typedef(
@@ -703,18 +699,9 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             // named semantic type:
             {
                 // union
-                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 3);
+                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 2);
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
-                    {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/simple
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 6);
-                        cace_amm_type_set_use_ref_move(choice, &typeref);
-                    }
-                }
-                {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // reference to ari://ietf/amm-base/TYPEDEF/value-obj
@@ -723,7 +710,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 2);
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // reference to ari://ietf/amm-base/TYPEDEF/expr
@@ -980,22 +967,6 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
 
             obj = refda_register_typedef(
                 adm, cace_amm_idseg_ref_withenum("rptt", REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_RPTT), objdata);
-            // no parameters possible
-        }
-        { // For ./TYPEDEF/ari-pattern
-            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
-            refda_amm_typedef_desc_init(objdata);
-            // named semantic type:
-            {
-                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // use of ari:/ARITYPE/CBOR
-                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_CBOR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
-            }
-
-            obj = refda_register_typedef(
-                adm, cace_amm_idseg_ref_withenum("ari-pattern", REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_ARI_PATTERN),
-                objdata);
             // no parameters possible
         }
     }

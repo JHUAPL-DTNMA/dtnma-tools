@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+## Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Delay-Tolerant Networking Management
@@ -91,7 +91,7 @@ then
     echo
 
     # Verify empty listing
-    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=text"
+    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=uri"
     RPTLINES=$(echo $CMD | ${DEXEC} bash)
     if [ -n "${RPTLINES}" ]
     then
@@ -100,8 +100,8 @@ then
 
     # send an inspect execution with a nonce, expecting a report back
     CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/report-on(/ac/(//ietf/dtnma-agent/EDD/sw-version)))' | \
-        ace_ari --log-level=warning --inform text --outform cborhex --must-nickname | \
-        curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/send?form=hex -H 'Content-Type: text/plain' --data-binary @-; echo"
+        ace_ari --log-level=warning --inform text --outform cbor --must-nickname | \
+        curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/send?form=cbor -H 'Content-Type: application/cbor-seq' --data-binary @-; echo"
     echo $CMD | ${DEXEC} bash
     echo
 
@@ -111,7 +111,7 @@ then
         echo "Waiting on reports back..."
         sleep 1
 
-        CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=text"
+        CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=uri"
         RPTLINES=$(echo $CMD | ${DEXEC} bash)
         LINECOUNT=$(echo "${RPTLINES}" | wc -l)
         echo "Got ${LINECOUNT} lines"
@@ -133,7 +133,7 @@ then
     fi
 
     # view the hex-binary version also
-    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=hex | ace_ari --log-level=warning --inform cborhex --outform text"
+    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=cbor | ace_ari --log-level=warning --inform cbor --outform text"
     echo $CMD | ${DEXEC} bash
 
 fi

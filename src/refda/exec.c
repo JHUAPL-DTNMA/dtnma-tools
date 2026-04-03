@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -114,7 +114,7 @@ int refda_exec_waiting(refda_agent_t *agent)
     // the sequences themselves will not be touched outside of this worker
     if (pthread_mutex_lock(&(agent->exec_state_mutex)))
     {
-        CACE_LOG_ERR("failed to lock exec_state_mutex");
+        CACE_LOG_CRIT("failed to lock exec_state_mutex");
         return 2;
     }
 
@@ -279,14 +279,36 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
     {
         // sentinel for end-of-input
         const bool at_end = cace_ari_is_undefined(&(item.value));
-        if (!at_end)
+        if (at_end)
+        {
+            CACE_LOG_INFO("Got undefined exec, stopping after empty timeline");
+            // keep this state but continue executing non-rule events
+            atomic_store(&agent->exec_end, true);
+
+            // remove rule events
+            refda_timeline_it_t tl_it;
+            for (refda_timeline_it(tl_it, agent->exec_timeline); !refda_timeline_end_p(tl_it);)
+            {
+                refda_timeline_event_t *event = refda_timeline_ref(tl_it);
+                if (event->purpose == REFDA_TIMELINE_EXEC)
+                {
+                    refda_timeline_next(tl_it);
+                }
+                else
+                {
+                    refda_timeline_remove(agent->exec_timeline, tl_it);
+                }
+            }
+        }
+        else
         {
             refda_exec_add_execset(agent, &item);
         }
         refda_msgdata_deinit(&item);
-        if (at_end && refda_timeline_empty_p(agent->exec_timeline))
+
+        if (atomic_load(&agent->exec_end) && refda_timeline_empty_p(agent->exec_timeline))
         {
-            CACE_LOG_INFO("Got undefined exec, stopping");
+            CACE_LOG_INFO("Stopping with empty timeline");
 
             // flush the input queue but keep the daemon running
             refda_msgdata_t undef;
@@ -406,6 +428,11 @@ static int refda_exec_tbr_next_scheduled_time(struct timespec *schedtime, const 
  */
 static int refda_exec_schedule_tbr(refda_agent_t *agent, refda_amm_tbr_desc_t *tbr, bool starting)
 {
+    if (atomic_load(&agent->exec_end))
+    {
+        // no further executions
+        return 0;
+    }
     // Do not schedule TBR if it has reached its execution threshold
     if (refda_amm_tbr_desc_reached_max_exec_count(tbr))
     {
@@ -501,12 +528,10 @@ static void refda_exec_run_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
     int result = refda_exec_check_sbr_condition(agent, sbr, &ari_result);
     if (!result)
     {
-        bool bool_result = false;
-        result           = cace_ari_get_bool(&ari_result, &bool_result);
-        CACE_LOG_INFO("SBR %p condition is err %d, bool %d, current count %" PRIu64, sbr, result, bool_result,
-                      sbr->exec_count);
+        bool bool_result = cace_amm_ari_is_truthy(&ari_result);
+        CACE_LOG_INFO("SBR %p condition is bool %d, current count %" PRIu64, sbr, bool_result, sbr->exec_count);
 
-        if (!result && bool_result)
+        if (bool_result)
         {
             if (!refda_exec_rule_action(agent, &(sbr->action)))
             {
@@ -543,6 +568,11 @@ static int refda_exec_sbr_next_scheduled_time(struct timespec *schedtime, const 
  */
 static int refda_exec_schedule_sbr(refda_agent_t *agent, refda_amm_sbr_desc_t *sbr)
 {
+    if (atomic_load(&agent->exec_end))
+    {
+        // no further executions
+        return 0;
+    }
     // Do not schedule SBR if it has reached its execution threshold
     if (refda_amm_sbr_desc_reached_max_exec_count(sbr))
     {

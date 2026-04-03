@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -24,6 +24,10 @@
 
 void refda_instr_init(refda_instr_t *obj)
 {
+    pthread_mutex_init(&obj->mutex, NULL);
+
+    cace_ari_init(&(obj->last_time_recv));
+
     atomic_init(&(obj->num_execset_recv), 0);
     atomic_init(&(obj->num_execset_recv_failure), 0);
     atomic_init(&(obj->num_rptset_sent), 0);
@@ -37,7 +41,11 @@ void refda_instr_init(refda_instr_t *obj)
     atomic_init(&(obj->num_ctrls_failed), 0);
 }
 
-void refda_instr_deinit(refda_instr_t *obj _U_)
+void refda_instr_deinit(refda_instr_t *obj)
 {
-    // no corresponding clear functions
+    pthread_mutex_destroy(&obj->mutex);
+
+    cace_ari_deinit(&obj->last_time_recv);
+
+    // no corresponding clear functions for atomic state
 }

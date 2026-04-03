@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2011-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Delay-Tolerant Networking Management
@@ -45,8 +45,9 @@ void refdm_agent_init(refdm_agent_t *obj)
 {
     CHKVOID(obj);
     m_string_init(obj->eid);
-#if !(defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL))
+#if !(defined(HAVE_POSTGRESQL))
     cace_ari_list_init(obj->rptsets);
+    obj->mgr_time = 0;
 #endif
 
     pthread_mutex_init(&(obj->log_mutex), NULL);
@@ -66,7 +67,7 @@ void refdm_agent_deinit(refdm_agent_t *obj)
     }
 
     pthread_mutex_destroy(&(obj->log_mutex));
-#if !(defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL))
+#if !(defined(HAVE_POSTGRESQL))
     cace_ari_list_clear(obj->rptsets);
 #endif
     m_string_clear(obj->eid);
