@@ -23,6 +23,8 @@
 #include <semaphore.h>
 #include <stdbool.h>
 
+#include <cace/util/defs.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,8 +36,6 @@ typedef struct
     /// Once #finished has a value, this is an indicator that a CTRL failed
     atomic_bool failed;
 } refda_exec_status_t;
-
-#include <cace/util/defs.h>
 
 static inline void refda_exec_status_init(refda_exec_status_t *obj)
 {
