@@ -110,22 +110,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         cace_ari_set_bool(&result, false);
     }
 
-    cace_ari_t             as_bool = CACE_ARI_INIT_UNDEFINED;
-    const cace_amm_type_t *typeobj = cace_amm_type_get_builtin(CACE_ARI_TYPE_BOOL);
-    res                            = cace_amm_type_convert(typeobj, &as_bool, &result);
-    if (res)
-    {
-        CACE_LOG_ERR("failed to get bool state, error %d", res);
-        cace_ari_set_bool(&as_bool, false);
-    }
-
-    bool truthy;
-    if (cace_ari_get_bool(&as_bool, &truthy))
-    {
-        CACE_LOG_ERR("failed to get bool value");
-        truthy = false;
-    }
-
+    const bool truthy = cace_amm_ari_is_truthy(&result);
+    CACE_LOG_DEBUG("condition result truthy=%d", truthy);
     if (truthy)
     {
         refda_ctrl_exec_ctx_set_result_copy(ctx, &result);
@@ -139,6 +125,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         {
             // handled as failure
             CACE_LOG_CRIT("Failed clock_gettime()");
+            cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+            refda_ctrl_exec_ctx_set_result_move(ctx, &result);
         }
         else
         {
@@ -154,7 +142,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         }
     }
 
-    cace_ari_deinit(&as_bool);
     cace_ari_deinit(&result);
 }
 
@@ -207,76 +194,59 @@ typedef struct
     refda_exec_status_t status;
     /// Target if status indicates failure
     cace_ari_t on_failure;
+    /// Execution item of catch to mark result on, not part of the try target
+    refda_exec_item_t *item;
 } refda_try_catch_data_t;
 
-static void refda_try_catch_data_init(refda_try_catch_data_t *obj)
+static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(refda_exec_status_t *status _U_, void *user_data);
+
+static void refda_try_catch_data_init(refda_try_catch_data_t *obj, refda_exec_item_t *item, const cace_ari_t *on_failure)
 {
     refda_exec_status_init(&obj->status);
-    cace_ari_init(&obj->on_failure);
+    obj->status.on_finished     = refda_adm_ietf_dtnma_agent_ctrl_catch_finished;
+    obj->status.on_finished_arg = obj;
+
+    cace_ari_init_copy(&obj->on_failure, on_failure);
+    obj->item = item;
 }
 static void refda_try_catch_data_deinit(refda_try_catch_data_t *obj)
 {
+    obj->item = NULL;
     cace_ari_deinit(&obj->on_failure);
     refda_exec_status_deinit(&obj->status);
 }
 
-static void refda_adm_ietf_dtnma_agent_ctrl_catch_try_check(refda_ctrl_exec_ctx_t *ctx, void *user_data)
+/** Callback to handle finish of the try target for catch CTRL.
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(refda_exec_status_t *status _U_, void *user_data)
 {
     refda_try_catch_data_t *trycatch = user_data;
 
-    if (!sem_trywait(&(trycatch->status.finished)))
+    refda_exec_item_t *item = trycatch->item;
+
+    // finished already
+    const bool failure = atomic_load(&(trycatch->status.failed));
+    CACE_LOG_INFO("Finished executing catch target, failure=%d", failure);
+    if (failure)
     {
-        // finished already
-        bool failure = atomic_load(&(trycatch->status.failed));
-        if (failure)
-        {
-            CACE_LOG_ERR("Failed executing try target");
-
-            // queue the failure target but do not wait on it here
-            int res = refda_exec_next(ctx->item->seq, &(trycatch->on_failure));
-            if (res)
-            {
-                CACE_LOG_ERR("Failed expanding failure target");
-            }
-        }
-        else
-        {
-            CACE_LOG_INFO("Finished try target, nothing more to do");
-        }
-
-        refda_try_catch_data_deinit(trycatch);
-        CACE_FREE(trycatch);
-
-        // result value regardless of above error
-        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-        cace_ari_set_bool(&result, !failure);
-        refda_ctrl_exec_ctx_set_result_move(ctx, &result);
-    }
-    else
-    {
-        // still waiting, callback later
-        struct timespec nowtime;
-
-        int res = clock_gettime(CLOCK_REALTIME, &nowtime);
+        // queue the failure target but do not wait on it here
+        int res = refda_exec_next(item->seq, &(trycatch->on_failure));
         if (res)
         {
-            // handled as failure
-            CACE_LOG_CRIT("Failed clock_gettime()");
-            cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-            refda_ctrl_exec_ctx_set_result_move(ctx, &result);
+            CACE_LOG_ERR("Failed expanding failure target");
         }
-        else
+    }
+
+    {
+        refda_ctrl_exec_ctx_t ctx;
+        refda_ctrl_exec_ctx_init(&ctx, trycatch->item);
         {
-            // check again in 100ms
-            refda_timeline_event_t event = {
-                .purpose        = REFDA_TIMELINE_EXEC,
-                .ts             = timespec_add(nowtime, timespec_from_ms(100)),
-                .exec.item      = ctx->item,
-                .exec.user_data = trycatch,
-                .exec.callback  = refda_adm_ietf_dtnma_agent_ctrl_catch_try_check,
-            };
-            refda_ctrl_exec_ctx_set_waiting(ctx, &event);
+            // result value regardless of above error
+            cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+            cace_ari_set_bool(&result, !failure);
+            refda_ctrl_exec_ctx_set_result_move(&ctx, &result);
         }
+        refda_ctrl_exec_ctx_deinit(&ctx);
     }
 }
 
@@ -2188,49 +2158,23 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
     const cace_ari_t *ari_try        = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *ari_on_failure = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
 
-    // free this in callback when finished
     refda_try_catch_data_t *trycatch = CACE_MALLOC(sizeof(refda_try_catch_data_t));
-    refda_try_catch_data_init(trycatch);
-    cace_ari_set_copy(&trycatch->on_failure, ari_on_failure);
+    refda_try_catch_data_init(trycatch, ctx->item, ari_on_failure);
+    // free this in when execution item is finished
+    cace_amm_user_data_set_from(&ctx->item->user_data, trycatch, true, (cace_amm_user_data_deinit_f)refda_try_catch_data_deinit);
 
     // Run try target as a separate sequence and wait on its finish
     CACE_LOG_DEBUG("Sending try target");
-    bool valid = true;
     if (refda_exec_add_target(ctx->item->seq->runctx, ari_try, &(trycatch->status)))
     {
         CACE_LOG_ERR("Failed adding try target");
-        valid = false;
-    }
-
-    struct timespec nowtime;
-    if (valid)
-    {
-        // still waiting, callback later
-        int res = clock_gettime(CLOCK_REALTIME, &nowtime);
-        if (res)
-        {
-            // handled as failure
-            CACE_LOG_CRIT("Failed clock_gettime()");
-            valid = false;
-        }
-    }
-
-    if (valid)
-    {
-        // check again in 100ms
-        refda_timeline_event_t event = {
-            .purpose        = REFDA_TIMELINE_EXEC,
-            .ts             = timespec_add(nowtime, timespec_from_ms(100)),
-            .exec.item      = ctx->item,
-            .exec.user_data = trycatch,
-            .exec.callback  = refda_adm_ietf_dtnma_agent_ctrl_catch_try_check,
-        };
-        refda_ctrl_exec_ctx_set_waiting(ctx, &event);
+        // cleanup from internal failure
+        refda_try_catch_data_deinit(trycatch);
+        CACE_FREE(trycatch);
     }
     else
     {
-        refda_try_catch_data_deinit(trycatch);
-        CACE_FREE(trycatch);
+        refda_ctrl_exec_ctx_set_waiting(ctx, NULL);
     }
     /*
      * +-------------------------------------------------------------------------+
@@ -3548,7 +3492,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
     const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
 
-    cace_ari_t     ari_result;
     refda_agent_t *agent = ctx->runctx->agent;
 
     REFDA_AGENT_LOCK(agent, );
@@ -3750,8 +3693,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     const cace_ari_t *ari_period       = refda_ctrl_exec_ctx_get_aparam_index(ctx, 5);
     const cace_ari_t *ari_max_count    = refda_ctrl_exec_ctx_get_aparam_index(ctx, 6);
     const cace_ari_t *ari_init_enabled = refda_ctrl_exec_ctx_get_aparam_index(ctx, 7);
-
-    cace_ari_t ari_result;
 
     refda_agent_t *agent = ctx->runctx->agent;
 

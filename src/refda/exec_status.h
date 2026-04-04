@@ -23,44 +23,53 @@
 #include <semaphore.h>
 #include <stdbool.h>
 
-#include <cace/util/defs.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct
+/** Mechanism to provide a "future"-type interface for execution.
+ * This allows a caller to refda_exec_add_target() to synchronize on the
+ * finish of the execution, either as success or failure.
+ * The user can either set #on_finished callback or wait on the #finished
+ * semaphore.
+ */
+typedef struct refda_exec_status_s
 {
-    /// A semaphore which has a value when the target is finished executing
-    sem_t finished;
     /// Once #finished has a value, this is an indicator that a CTRL failed
     atomic_bool failed;
+
+    /** An optional callback executed when target has finished and
+     * #failed is marked but before the #finished semaphore is posted.
+     * This callback can be executed from any execution thread.
+     */
+    void (*on_finished)(struct refda_exec_status_s *status, void *user_data);
+    /// User data for #on_finished
+    void *on_finished_arg;
+
+    /** A semaphore which has a value when the target is finished executing
+     * and #failed is marked.
+     */
+    sem_t finished;
 } refda_exec_status_t;
 
-static inline void refda_exec_status_init(refda_exec_status_t *obj)
-{
-    CHKVOID(obj);
-    sem_init(&obj->finished, 0, 0);
-    atomic_store(&obj->failed, false);
-}
+void refda_exec_status_init(refda_exec_status_t *obj);
 
-static inline void refda_exec_status_deinit(refda_exec_status_t *obj)
-{
-    CHKVOID(obj);
-    sem_destroy(&obj->finished);
-}
+void refda_exec_status_deinit(refda_exec_status_t *obj);
 
 /** Wait for the finished semaphore and take it.
  *
  * @param[in] obj The status to wait on.
  * @return True if there was a failure.
  */
-static inline bool refda_exec_status_wait(refda_exec_status_t *obj)
-{
-    CHKRET(obj, true);
-    sem_wait(&obj->finished);
-    return atomic_load(&obj->failed);
-}
+bool refda_exec_status_wait(refda_exec_status_t *obj);
+
+/** Set the failed state and post the semaphore.
+ *
+ * @param[in,out] obj The status to update.
+ * @param failed True to mark as a failure.
+ * @post Any waiting call will be awoken.
+ */
+void refda_exec_status_post(refda_exec_status_t *obj, bool failed);
 
 #ifdef __cplusplus
 } // extern C

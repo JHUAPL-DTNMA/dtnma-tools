@@ -28,17 +28,19 @@ void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *ite
     CHKVOID(obj);
     CHKVOID(item);
 
-    obj->runctx = refda_runctx_ptr_ref(item->seq->runctx);
+    obj->item     = item;
+
+    obj->runctx = refda_runctx_ptr_ref(obj->item->seq->runctx);
     // check ACL cache at last moment
     refda_runctx_check_acl(obj->runctx);
 
-    obj->ctrl = item->deref.obj ? item->deref.obj->app_data.ptr : NULL;
-    obj->item = item;
+    obj->ctrl = obj->item->deref.obj ? obj->item->deref.obj->app_data.ptr : NULL;
 }
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj)
 {
     CHKVOID(obj);
+    memset(obj, 0, sizeof(*obj));
 }
 
 bool refda_ctrl_exec_ctx_has_aparam_undefined(const refda_ctrl_exec_ctx_t *ctx)
@@ -117,7 +119,13 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
         }
     }
 
+    int old_state = atomic_load(&(ctx->item->execution_stage));
     atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
+    if (old_state == REFDA_EXEC_WAITING)
+    {
+        // wake up if called from other thread
+        sem_post(&(ctx->runctx->agent->execs_sem));
+    }
 
     if (valid)
     {

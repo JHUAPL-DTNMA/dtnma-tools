@@ -83,6 +83,11 @@ typedef struct
      */
     atomic_int execution_stage;
 
+    /** Store of optional CTRL-specific user data which will be cleaned
+     * up at the end of execution of this item.
+     */
+    cace_amm_user_data_t user_data;
+
 } refda_exec_item_t;
 
 /**
@@ -103,6 +108,16 @@ void refda_exec_item_deinit(refda_exec_item_t *obj);
 /// M*LIB OPLIST for refda_exec_item_t
 #define M_OPL_refda_exec_item_t() \
     (INIT(API_2(refda_exec_item_init)), CLEAR(API_2(refda_exec_item_deinit)), INIT_SET(0), SET(0))
+
+/** @struct refda_exec_item_ptr
+ * A shared pointer to a ::refda_exec_item_t instance guarded by external
+ * thread mutex.
+ */
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+M_SHARED_WEAK_PTR_DEF(refda_exec_item_ptr, refda_exec_item_t)
+// GCOV_EXCL_STOP
+/// @endcond
 
 #ifdef __cplusplus
 } // extern C

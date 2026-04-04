@@ -74,13 +74,9 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
                          m_string_get_cstr(item->deref.obj->obj_id.name), m_string_get_cstr(buf));
         m_string_clear(buf);
 
-        if (seq->status)
-        {
-            atomic_store(&seq->status->failed, true);
-        }
         refda_exec_item_list_reset(seq->items);
     }
-    else if (item->seq)
+    else if (seq)
     {
         // done with this item
         refda_exec_item_list_pop_at(NULL, seq->items, 0);
@@ -88,8 +84,8 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
 
     if (seq->status && refda_exec_item_list_empty_p(seq->items))
     {
-        CACE_LOG_DEBUG("Agent-directed sequence finished");
-        sem_post(&seq->status->finished);
+        CACE_LOG_DEBUG("Agent-directed sequence finished, failure=%d", is_failure);
+        refda_exec_status_post(seq->status, is_failure);
     }
 
     return 0;
@@ -119,7 +115,6 @@ int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
     {
         refda_ctrl_exec_ctx_t ctx;
         refda_ctrl_exec_ctx_init(&ctx, item);
-        atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
         (ctrl->execute)(&ctx);
         refda_ctrl_exec_ctx_deinit(&ctx);
         CACE_LOG_DEBUG("execution callback returned");

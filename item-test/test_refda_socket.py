@@ -1285,6 +1285,25 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'), rpt.source)
         self.assertEqual([str], literal_prim_types(rpt.items))
 
+        # failed try target and failure target
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/catch(//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing),//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/another)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=3)
+        self.assertEqual(3, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
+        # catch result after try target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/catch'), self._ari_strip_params(rpt.source))
+        self.assertEqual([bool], literal_prim_types(rpt.items))
+        self.assertIs(False, rpt.items[0].value)
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/another)'), rpt.source)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
+
     def test_odm_const_invalid(self):
         self._start()
 
