@@ -103,7 +103,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
     }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    int        res    = refda_eval_expr(ctx->runctx, &result, cond);
+    int        res    = refda_eval_target(ctx->runctx, &result, cond);
     if (res)
     {
         CACE_LOG_ERR("failed to evaluate condition, error %d", res);
@@ -2118,7 +2118,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
 
     refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
-    int res = refda_eval_expr(ctx->runctx, &result, ari_condition);
+    int res = refda_eval_target(ctx->runctx, &result, ari_condition);
     REFDA_AGENT_UNLOCK(agent, );
     if (res)
     {
@@ -5432,7 +5432,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
 
         refda_agent_t *agent = ctx->evalctx->runctx->agent;
         REFDA_AGENT_LOCK(agent, );
-        int res = refda_eval_expr(ctx->evalctx->runctx, &eval_result, &current_row);
+        int res = refda_eval_target(ctx->evalctx->runctx, &eval_result, &current_row);
         REFDA_AGENT_UNLOCK(agent, );
 
         cace_ari_deinit(&current_row); // No longer needed at this point

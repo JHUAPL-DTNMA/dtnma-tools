@@ -552,9 +552,9 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
             }
         }
 
-        // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_expr(runctx, &eval_result, &expr);
+        // Evaluate the filter EXPR
+        int res = refda_eval_target(runctx, &eval_result, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
         if (res)
         {
@@ -563,7 +563,7 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
             continue;
         }
 
-        // True result indicates entry is commpressed
+        // True result indicates entry is compressed
         if (cace_amm_ari_is_truthy(&eval_result))
         {
             size_t hist_size = refda_alarms_history_list_size(entry->history);
@@ -620,9 +620,9 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
             }
         }
 
-        // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        res                    = refda_eval_expr(runctx, &eval_result, &expr);
+        // Evaluate the filter EXPR
+        res = refda_eval_target(runctx, &eval_result, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
         if (res)
         {

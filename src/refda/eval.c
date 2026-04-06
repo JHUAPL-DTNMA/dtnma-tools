@@ -278,18 +278,18 @@ int refda_eval_expand_target(refda_eval_ctx_t *ctx, const cace_ari_t *target)
     }
     else
     {
-        // evalute the target directly
+        // evaluate the literal target directly
         retval = refda_eval_expand_expr(ctx, target);
     }
     return retval;
 }
 
-int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr)
+int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target)
 {
     refda_eval_ctx_t ctx;
     refda_eval_ctx_init(&ctx, runctx);
 
-    int res = refda_eval_expand_expr(&ctx, expr);
+    int res = refda_eval_expand_target(&ctx, target);
     if (!res)
     {
         res = refda_eval_reduce(&ctx, result);

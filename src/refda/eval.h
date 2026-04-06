@@ -75,10 +75,11 @@ int refda_eval_reduce(refda_eval_ctx_t *ctx, cace_ari_t *result);
  * @param[out] result The single result value from the evaluation.
  * This ARI must be initialized before the call and will be valid if the
  * return code is zero but must be deinitialized regardless.
- * @param[in] expr The literal-value EXPR to evaluate.
+ * @param[in] target The literal-value EXPR to evaluate or reference-value
+ * to produce and evaluate.
  * @return Zero if successful.
  */
-int refda_eval_expr(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr);
+int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target);
 
 /** This is a semi-internal function for evaluating a single operator in
  * an existing evaluation context.
