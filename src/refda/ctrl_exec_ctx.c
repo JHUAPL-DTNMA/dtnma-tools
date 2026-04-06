@@ -119,8 +119,7 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
         }
     }
 
-    int old_state = atomic_load(&(ctx->item->execution_stage));
-    atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
+    int old_state = atomic_exchange(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
     if (old_state == REFDA_EXEC_WAITING)
     {
         // wake up if called from other thread
