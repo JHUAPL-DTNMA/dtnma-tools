@@ -1023,6 +1023,7 @@ rpt_list_item_vw.ari_rptlist_id,
 rpt_list_item_vw.time_offset,
 rpt_list_item_vw.report_source,
 rpt_list_item_vw.report_items
+rpt_list_item_vw.report_item_indexes
 from 
 ari_rptset join
 (select
@@ -1030,7 +1031,8 @@ ari_rptlist.ari_rptlist_id,
 ari_rptlist.ari_rptset_id,
 ari_rptlist.time_offset,
 ari_rptlist.report_source,
-ARRAY_AGG(ari_rpt_item.report_entry) AS report_items 
+ARRAY_AGG(ari_rpt_item.report_entry) AS report_items,
+ARRAY_AGG(ari_rpt_item.ari_rpt_item_index) AS report_item_indexes 
 FROM 
 ari_rpt_item join ari_rptlist on ari_rpt_item.ari_rptlist_id = ari_rptlist.ari_rptlist_id
 GROUP BY

@@ -561,6 +561,7 @@ delete
 create table if not exists ari_rpt_item (
     ari_rpt_item_id serial NOT NULL, 
     ari_rptlist_id INTEGER NOT NULL,
+    ari_rpt_item_index INTEGER NOT NULL,
     report_entry BYTEA NOT NULL,
     primary key(ari_rpt_item_id),
     foreign key (ari_rptlist_id) references ari_rptlist (ari_rptlist_id)  on

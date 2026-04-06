@@ -324,7 +324,7 @@ static uint32_t refdm_db_pool_connect(refdm_db_pool_t *conn, size_t idx)
         idx, "SELECT SP__insert_rptlist($1::int, $2::bytea, $3::bytea)", "ARI_RPTLIST_INSERT", 3, NULL);
 
     queries[idx][ARI_RPTITEM_INSERT] =
-        db_mgr_sql_prepare(idx, "call SP__insert_rptitem($1::int, $2::bytea)", "ARI_RPTITEM_INSERT", 2, NULL);
+        db_mgr_sql_prepare(idx, "call SP__insert_rptitem($1::int, $2::int, $3::bytea)", "ARI_RPTITEM_INSERT", 3, NULL);
 
     queries[idx][REFDM_DB_LOG_MSG] = db_mgr_sql_prepare(idx,
                                                         "INSERT INTO DB_LOG_INFO (msg,level,source,file,line) "
@@ -953,6 +953,7 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
                 CACE_LOG_DEBUG("New Report List with id: %d", rpt_list_id);
                 PQclear(res);
                 cace_ari_list_it_t item_it;
+                int rpt_list_index = 0;
                 // add items to rptitems
                 for (cace_ari_list_it(item_it, curr_report->items); !cace_ari_list_end_p(item_it);
                      cace_ari_list_next(item_it))
@@ -961,11 +962,13 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
                     cace_data_t       cbordata_item;
                     cace_data_init(&cbordata_item);
                     cace_ari_cbor_encode(&cbordata_item, item);
-
-                    dbprep_declare(DB_RPT_CON, ARI_RPTITEM_INSERT, 2, 1);
+                    
+                    dbprep_declare(DB_RPT_CON, ARI_RPTITEM_INSERT, 3, 1);
                     dbprep_bind_param_int(0, rpt_list_id);
-                    dbprep_bind_param_byte(1, cbordata_item.ptr, cbordata_item.len); // report_list_reltime
+                    dbprep_bind_param_int(1, rpt_list_index);
+                    dbprep_bind_param_byte(2, cbordata_item.ptr, cbordata_item.len); // report_list_reltime
                     dbexec_prepared;
+                    rpt_list_index++;
                 }
 
                 // insert into rpt set and dependant tables

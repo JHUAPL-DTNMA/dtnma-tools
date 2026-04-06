@@ -1335,10 +1335,10 @@ BEGIN
 	RETURN r_ari_rptlist_id;
 End$$;
 
-CREATE OR REPLACE PROCEDURE SP__insert_rptitem(IN  p_ari_rptlist_id INTEGER, p_item BYTEA )
+CREATE OR REPLACE PROCEDURE SP__insert_rptitem(IN  p_ari_rptlist_id INTEGER, p_ari_rptlist_index INTEGER, p_item BYTEA )
 LANGUAGE plpgsql
 as $$ BEGIN
-    INSERT INTO ari_rpt_item(ari_rptlist_id, report_entry) VALUES(p_ari_rptlist_id, p_item);
+    INSERT INTO ari_rpt_item(ari_rptlist_id, ari_rpt_item_index, report_entry) VALUES(p_ari_rptlist_id, p_ari_rptlist_index, p_item);
 END$$;
 
 
