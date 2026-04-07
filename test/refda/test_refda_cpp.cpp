@@ -33,7 +33,7 @@
 /// Per-process state
 static refda_agent_t agent;
 
-static int dummy_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, void *ctx _U_)
+static int dummy_send(const cace_ari_list_t data, const cace_amm_msg_if_metadata_t *meta, const struct timespec *timeout _U_, void *ctx _U_)
 {
     CHKERR1(data);
     CHKERR1(meta);

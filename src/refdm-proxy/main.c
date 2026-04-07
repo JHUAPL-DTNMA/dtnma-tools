@@ -48,7 +48,7 @@ static void daemon_signal_handler(int signum)
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} -a <listen-path>\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} -a <listen-path> {-t <startup-timeout>}\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -60,13 +60,16 @@ int main(int argc, char *argv[])
     refdm_mgr_init(&mgr);
 
     /* Process Command Line Arguments. */
-    int        log_limit = LOG_WARNING;
+    int log_limit = LOG_WARNING;
+
     m_string_t sock_path;
     m_string_init(sock_path);
+
+    long timeout_s = 10;
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, ":hl:a:")) != -1)
+            while ((opt = getopt(argc, argv, ":hl:a:t:")) != -1)
             {
                 switch (opt)
                 {
@@ -80,6 +83,17 @@ int main(int argc, char *argv[])
                     case 'a':
                         m_string_set_cstr(sock_path, optarg);
                         break;
+                    case 't':
+                    {
+                        char *end = NULL;
+                        timeout_s = strtol(optarg, &end, 10);
+                        if ((end == optarg) || (timeout_s <= 0))
+                        {
+                            fprintf(stderr, "A connection timeout must be positive value in seconds");
+                            retval = 1;
+                        }
+                        break;
+                    }
                     case 'h':
                     default:
                         show_usage(argv[0]);
@@ -103,7 +117,8 @@ int main(int argc, char *argv[])
     if (!retval)
     {
         // Wait to connect to socket for one round of attempts, no work threads yet
-        if (cace_amp_proxy_cli_state_connect(&proxy, sock_path))
+        const struct timespec timeout = { .tv_sec = timeout_s };
+        if (cace_amp_proxy_cli_state_connect(&proxy, sock_path, &timeout))
         {
             CACE_LOG_ERR("Failed to connect socket after all retries");
             retval = 4;
