@@ -549,7 +549,7 @@ CREATE INDEX idx_rptset_reftime ON ari_rptset (reference_time);
 create table if not exists ari_rptlist (
     ari_rptlist_id serial NOT NULL,
     ari_rptset_id INTEGER NOT NULL,
-    time_offset BYTEA,
+    time_offset TIMESTAMPTZ NOT NULL,
     report_source BYTEA NOT NULL,
     primary key (ari_rptlist_id),
     foreign key (ari_rptset_id) references ari_rptset (ari_rptset_id)   on

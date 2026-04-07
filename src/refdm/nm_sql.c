@@ -30,6 +30,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <m-bstring.h>
+#include <timespec.h>
+
 
 // Constants: Database table names
 const char *TBL_NAME_RPTSET = "vw_ari_rpt_set";
@@ -313,10 +315,6 @@ static uint32_t refdm_db_pool_connect(refdm_db_pool_t *conn, size_t idx)
     }
 
     // Initialize prepared queries
-
-    // RPTSET values
-    // signature IN p_nonce_cbor BYTEA, p_reference_time TIMESTAMPTZ, p_report_list TEXT, p_report_list_cbor BYTEA,
-    // p_agent_endpoint_uri TEXT
     queries[idx][ARI_RPTSET_INSERT] = db_mgr_sql_prepare(
         idx, "SELECT SP__insert_rptset($1::bytea, $2::timestamptz, $3::text, $4::bytea)", "ARI_RPTSET_INSERT", 4, NULL);
 
@@ -863,16 +861,6 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
     CACE_LOG_INFO("logging report set in db started");
 
     uint32_t rtv = 0;
-
-    // typedef struct cace_ari_rptset_s
-    // {
-    //     /// Nonce stored as an ARI
-    //     cace_ari_t nonce;
-    //     /// Reference absolute time
-    //     cace_ari_t reftime;
-    //     /// Reports in this set
-    //     cace_ari_report_list_t reports;
-    // } cace_ari_rptset_t;
     const cace_ari_rptset_t *rpt_set = cace_ari_cget_rptset(val);
     if (!rpt_set)
     {
@@ -917,6 +905,7 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
     dbprep_bind_param_str(2, m_string_get_cstr(agent->eid)); // agent_id
     dbprep_bind_param_byte(3, cbordata.ptr, cbordata.len);
     dbexec_prepared;
+    CACE_LOG_DEBUG("Done insert into ARI_RPTSET");
 
     // check if rpt_set stored correctly
     if (PQntuples(res) > 0)
@@ -937,19 +926,21 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
             m_string_t rel_time;
             m_string_init(rel_time);
             struct timespec rel_time_ref;
-            if (cace_ari_get_tp(&curr_report->reltime, &rel_time_ref))
+            if (cace_ari_get_td(&curr_report->reltime, &rel_time_ref))
             {
-                CACE_LOG_ERR("unhandled ref_time value");
+                CACE_LOG_ERR("unhandled reltime value");
                 return 1;
             }
-            cace_utctime_encode(rel_time, &rel_time_ref, true);
+            // add rel_time to report_set Ref_time
+            struct timespec rpt_list_ref_time;
+            rpt_list_ref_time = timespec_add(ref_time, rel_time_ref);
+            cace_utctime_encode(rel_time, &rpt_list_ref_time, true);
+            CACE_LOG_INFO("rel_time: %s",m_string_get_cstr(rel_time));
 
-            // cace_data_init(&cbordata_reltime);
-            // cace_ari_cbor_encode(&cbordata_reltime, );
 
             cace_data_init(&cbordata_source);
             cace_ari_cbor_encode(&cbordata_source, &curr_report->source);
-
+            
             dbprep_declare(DB_RPT_CON, ARI_RPTLIST_INSERT, 3, 1);
             dbprep_bind_param_int(0, rpt_set_id);
             dbprep_bind_param_str(1, m_string_get_cstr(rel_time)); // report_list_reltime
@@ -976,18 +967,16 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
                     dbprep_declare(DB_RPT_CON, ARI_RPTITEM_INSERT, 3, 1);
                     dbprep_bind_param_int(0, rpt_list_id);
                     dbprep_bind_param_int(1, rpt_list_index);
-                    dbprep_bind_param_byte(2, cbordata_item.ptr, cbordata_item.len); // report_list_reltime
+                    dbprep_bind_param_byte(2, cbordata_item.ptr, cbordata_item.len); 
                     dbexec_prepared;
                     rpt_list_index++;
                 }
-
-                // insert into rpt set and dependant tables
             }
             m_string_clear(rel_time);
         }
-        // cace_data_deinit(&cbordata_reltime);
-        
         cace_data_deinit(&cbordata_source);
+    }else{
+        CACE_LOG_ERR("ARI_RPTLIST_INSERT did not return rptset_id");
     }
     PQclear(res);
     giveConn(DB_RPT_CON);
