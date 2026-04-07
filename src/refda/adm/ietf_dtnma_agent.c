@@ -198,7 +198,7 @@ typedef struct
     refda_exec_item_t *item;
 } refda_try_catch_data_t;
 
-static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(refda_exec_status_t *status _U_, void *user_data);
+static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(bool failed, void *user_data);
 
 static void refda_try_catch_data_init(refda_try_catch_data_t *obj, refda_exec_item_t *item, const cace_ari_t *on_failure)
 {
@@ -218,16 +218,15 @@ static void refda_try_catch_data_deinit(refda_try_catch_data_t *obj)
 
 /** Callback to handle finish of the try target for catch CTRL.
  */
-static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(refda_exec_status_t *status _U_, void *user_data)
+static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(bool failed, void *user_data)
 {
     refda_try_catch_data_t *trycatch = user_data;
 
     refda_exec_item_t *item = trycatch->item;
 
     // finished already
-    const bool failure = atomic_load(&(trycatch->status.failed));
-    CACE_LOG_INFO("Finished executing catch target, failure=%d", failure);
-    if (failure)
+    CACE_LOG_INFO("Finished executing catch target, failed=%d", failed);
+    if (failed)
     {
         // queue the failure target but do not wait on it here
         int res = refda_exec_next(item->seq, &(trycatch->on_failure));
@@ -243,7 +242,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(refda_exec_status_t *
         {
             // result value regardless of above error
             cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-            cace_ari_set_bool(&result, !failure);
+            cace_ari_set_bool(&result, !failed);
             refda_ctrl_exec_ctx_set_result_move(&ctx, &result);
         }
         refda_ctrl_exec_ctx_deinit(&ctx);

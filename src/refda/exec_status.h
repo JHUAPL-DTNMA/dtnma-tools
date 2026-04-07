@@ -35,17 +35,19 @@ extern "C" {
  */
 typedef struct refda_exec_status_s
 {
-    /// Once #finished has a value, this is an indicator that a CTRL failed
-    atomic_bool failed;
-
-    /** An optional callback executed when target has finished and
-     * #failed is marked but before the #finished semaphore is posted.
+    /** An optional callback executed when target has finished
+     * but before the #finished semaphore is posted.
      * This callback can be executed from any execution thread.
+     *
+     * @param failed The finished failed state.
+     * @param[in] user_data A copy of the #on_finished_arg for this status.
      */
-    void (*on_finished)(struct refda_exec_status_s *status, void *user_data);
+    void (*on_finished)(bool failed, void *user_data);
     /// User data for #on_finished
     void *on_finished_arg;
 
+    /// Once #finished has a value, this is an indicator that a CTRL failed
+    atomic_bool failed;
     /** A semaphore which has a value when the target is finished executing
      * and #failed is marked.
      */

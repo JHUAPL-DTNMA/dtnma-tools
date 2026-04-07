@@ -32,7 +32,7 @@ void refda_exec_status_post(refda_exec_status_t *obj, bool failed)
     atomic_store(&obj->failed, failed);
     if (obj->on_finished)
     {
-        (obj->on_finished)(obj, obj->on_finished_arg);
+        (obj->on_finished)(failed, obj->on_finished_arg);
     }
     // post after all caller-thread work done
     sem_post(&obj->finished);
