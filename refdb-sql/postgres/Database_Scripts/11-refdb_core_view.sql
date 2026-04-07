@@ -1022,7 +1022,7 @@ ari_rptset.ari_rptset_cbor,
 rpt_list_item_vw.ari_rptlist_id,
 rpt_list_item_vw.time_offset,
 rpt_list_item_vw.report_source,
-rpt_list_item_vw.report_items
+rpt_list_item_vw.report_items,
 rpt_list_item_vw.report_item_indexes
 from 
 ari_rptset join
