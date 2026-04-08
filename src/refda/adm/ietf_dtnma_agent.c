@@ -715,6 +715,14 @@ static cace_ari_translate_result_t predicate_eval_sub_label(cace_ari_t *out, con
 
 /** Expand an AC of operator references into a lookup list and then
  * combine sub-evaluation results.
+ * @param[in] runctx The evaluation context.
+ * @param[in] operators_ac The subordinate unary operators to evaluate.
+ * @param[in] value The operand value for each operator.
+ * @param empty The result if the list of operators is empty.
+ * @param init The initial result before evaluating any operator.
+ * @param stop The sub-evaluation result which stops the composed processing
+ * and results in the opposite of the @c init argument.
+ * @return The result of the composed operator.
  */
 static bool predicate_compose(refda_runctx_t *runctx, const cace_ari_ac_t *operators_ac, const cace_ari_t *value,
                               bool empty, bool init, bool stop)
