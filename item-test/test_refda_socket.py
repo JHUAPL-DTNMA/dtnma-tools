@@ -693,19 +693,19 @@ class TestRefdaSocket(unittest.TestCase):
             # produced expression vs eval sub-expression
             ('/ac/(//ietf/!odm/const/true-expr)', self._ari_text_to_obj('/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq)')),
             ('/ac/(//ietf/dtnma-agent/oper/eval(//ietf/!odm/const/true-expr))', ari.TYPED_TRUE),
-            # direct predicates
+            # direct predicate operators
             ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22ll%22))', ari.TYPED_FALSE),
             ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22.*ll.*%22))', ari.TYPED_TRUE),
             ('/ac/(undefined, //ietf/dtnma-agent/oper/is-undefined)', ari.TYPED_TRUE),
             ('/ac/(undefined, //ietf/dtnma-agent/oper/is-not-undefined)', ari.TYPED_FALSE),
             ('/ac/(2, //ietf/dtnma-agent/oper/is-undefined)', ari.TYPED_FALSE),
             ('/ac/(2, //ietf/dtnma-agent/oper/is-not-undefined)', ari.TYPED_TRUE),
-            # bound operators
+            # bound evaluation operator as a predicate
             ('/ac/(2,10,//ietf/dtnma-agent/oper/compare-eq)', ari.TYPED_FALSE),
             ('/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq)', ari.TYPED_TRUE),
-            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-eval(/ac/(/label/0,10,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_FALSE),
-            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-eval(/ac/(/label/0,2,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_TRUE),
-            # combined predicates
+            ('/ac/(2,//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,10,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,2,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_TRUE),
+            # predicate composing operators
             ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/()))', ari.TYPED_FALSE),
             ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/(//ietf/dtnma-agent/oper/is-not-undefined)))', ari.TYPED_TRUE),
             ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/(//ietf/dtnma-agent/oper/is-undefined)))', ari.TYPED_FALSE),
