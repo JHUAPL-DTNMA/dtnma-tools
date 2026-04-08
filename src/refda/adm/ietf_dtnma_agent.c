@@ -683,8 +683,8 @@ static int timespec_numeric_mod(cace_ari_t *result _U_, const cace_ari_t *left _
  * Translation helper function to substitute LABEL value 0 in a filter with
  * the endpoint identity.
  */
-static cace_ari_translate_result_t predicate_eval_sub_label(cace_ari_t *out, const cace_ari_t *in,
-                                                            const cace_ari_translate_ctx_t *ctx)
+static cace_ari_translate_result_t unary_eval_sub_label(cace_ari_t *out, const cace_ari_t *in,
+                                                        const cace_ari_translate_ctx_t *ctx)
 {
     if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
     {
@@ -5230,88 +5230,14 @@ static void refda_adm_ietf_dtnma_agent_oper_predicate_none(refda_oper_eval_ctx_t
      */
 }
 
-/* Name: predicate-eval
- * Description:
- *   A unary predicate operator which functions by evaluating a sub-
- *   expression using the following phases:   1. Substitute the bind-value
- *   for </label/0> items      within the target (expression or reference).
- *   2. If the target is a reference, it is used to produce      a value
- *   which itself SHALL be an expression.      Otherwise, the target SHALL
- *   itself be an expression.   3. Evaluate the expression and consider the
- *   evaluation      result as this operator result.
- *
- * Parameters list:
- *   - Index 0, name "target", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
- *
- * Operand list:
- *   - Index 0, name "bind-value", type use of ari://ietf/amm-base/TYPEDEF/any
- *
- * Result name "sub-result", type use of ari://ietf/amm-base/TYPEDEF/any
- */
-static void refda_adm_ietf_dtnma_agent_oper_predicate_eval(refda_oper_eval_ctx_t *ctx)
-{
-    /*
-     * +-------------------------------------------------------------------------+
-     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_eval BODY
-     * +-------------------------------------------------------------------------+
-     */
-    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
-    {
-        CACE_LOG_ERR("Invalid parameter, unable to continue");
-        return;
-    }
-    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
-    {
-        CACE_LOG_ERR("Invalid operand, unable to continue");
-        return;
-    }
-
-    const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
-
-    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-
-    cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
-
-    const cace_ari_translator_t translator = { .map_ari = predicate_eval_sub_label };
-    // Step 1 substitute the operand value
-    int res = cace_ari_translate(&sub_tgt, target, &translator, (void *)value);
-    if (res)
-    {
-        CACE_LOG_ERR("Unable to translate target, error %d", res);
-        cace_ari_deinit(&sub_tgt); // No longer needed at this point
-        return;
-    }
-
-    refda_eval_ctx_t evalctx;
-    refda_eval_ctx_init(&evalctx, ctx->evalctx->runctx);
-    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-
-    // mutex-serialize object store access
-    refda_agent_t *agent = ctx->evalctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
-    res = refda_eval_expand_target(&evalctx, &sub_tgt);
-    REFDA_AGENT_UNLOCK(agent, );
-    cace_ari_deinit(&sub_tgt);
-    if (!res)
-    {
-        res = refda_eval_reduce(&evalctx, &result);
-    }
-    refda_eval_ctx_deinit(&evalctx);
-
-    // evaluation may still result in undefined value
-    refda_oper_eval_ctx_set_result_move(ctx, &result);
-    /*
-     * +-------------------------------------------------------------------------+
-     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_eval BODY
-     * +-------------------------------------------------------------------------+
-     */
-}
-
 /* Name: eval
  * Description:
- *   A zero-ary operator which evaluates a sub-expression or by reference
- *   to expression-producing VALUE-OBJ. The result of the evaluation is the
- *   result of this operator.
+ *   A zero-ary operator which functions by evaluating a target sub-
+ *   expression using the following phases:   1. If the target is a
+ *   reference, it is used to produce      a value which SHALL be an
+ *   expression.      Otherwise, the target SHALL itself be an expression.
+ *   2. Evaluate the expression and consider the evaluation      result as
+ *   this operator result.
  *
  * Parameters list:
  *   - Index 0, name "target", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
@@ -5354,6 +5280,85 @@ static void refda_adm_ietf_dtnma_agent_oper_eval(refda_oper_eval_ctx_t *ctx)
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_eval BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: unary-eval
+ * Description:
+ *   A unary operator which functions by evaluating a target sub-expression
+ *   using the following phases:   1. Substitute the bind-value actual
+ *   parameter for      </label/0> items within the target value
+ *   (literal expression or object reference).   2. If the target is a
+ *   reference, it is used to produce      a value which SHALL be an
+ *   expression.      Otherwise, the target SHALL itself be an expression.
+ *   3. Evaluate the expression and consider the evaluation      result as
+ *   this operator result. This is similar to the <./oper/eval> object with
+ *   the addition of the unary operand binding.
+ *
+ * Parameters list:
+ *   - Index 0, name "target", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
+ *
+ * Operand list:
+ *   - Index 0, name "bind-value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "sub-result", type use of ari://ietf/amm-base/TYPEDEF/any
+ */
+static void refda_adm_ietf_dtnma_agent_oper_unary_eval(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_unary_eval BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
+
+    const cace_ari_translator_t translator = { .map_ari = unary_eval_sub_label };
+    // Step 1 substitute the operand value
+    int res = cace_ari_translate(&sub_tgt, target, &translator, (void *)value);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to translate target, error %d", res);
+        cace_ari_deinit(&sub_tgt); // No longer needed at this point
+        return;
+    }
+
+    refda_eval_ctx_t evalctx;
+    refda_eval_ctx_init(&evalctx, ctx->evalctx->runctx);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->evalctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    res = refda_eval_expand_target(&evalctx, &sub_tgt);
+    REFDA_AGENT_UNLOCK(agent, );
+    cace_ari_deinit(&sub_tgt);
+    if (!res)
+    {
+        res = refda_eval_reduce(&evalctx, &result);
+    }
+    refda_eval_ctx_deinit(&evalctx);
+
+    // evaluation may still result in undefined value
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_unary_eval BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -8467,7 +8472,35 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
             }
         }
-        { // For ./OPER/predicate-eval
+        { // For ./OPER/eval
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 0);
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/any
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_eval;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_EVAL), objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./OPER/unary-eval
             refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
             // operands:
@@ -8490,40 +8523,11 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
             }
             // callback:
-            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_predicate_eval;
-
-            obj = refda_register_oper(adm,
-                                      cace_amm_idseg_ref_withenum(
-                                          "predicate-eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_PREDICATE_EVAL),
-                                      objdata);
-            // parameters:
-            {
-                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
-                {
-                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
-                }
-            }
-        }
-        { // For ./OPER/eval
-            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
-            refda_amm_oper_desc_init(objdata);
-            // operands:
-            cace_amm_named_type_array_resize(objdata->operand_types, 0);
-            // result type:
-            {
-                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // reference to ari://ietf/amm-base/TYPEDEF/any
-                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
-            }
-            // callback:
-            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_eval;
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_unary_eval;
 
             obj = refda_register_oper(
-                adm, cace_amm_idseg_ref_withenum("eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_EVAL), objdata);
+                adm, cace_amm_idseg_ref_withenum("unary-eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_UNARY_EVAL),
+                objdata);
             // parameters:
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
