@@ -38,7 +38,6 @@ static int refda_eval_expand_item(refda_runctx_t *runctx, refda_eval_item_t out,
         CACE_LOG_DEBUG("Lookup result %d", res);
         if (res)
         {
-            cace_amm_lookup_deinit(&deref);
             retval = REFDA_EVAL_ERR_DEREF_FAILED;
             cace_amm_lookup_deinit(&deref);
         }
