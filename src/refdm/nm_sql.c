@@ -951,14 +951,16 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
                 int   rpt_list_id        = atoi(returned_value_str);
                 CACE_LOG_DEBUG("New Report List with id: %d", rpt_list_id);
                 PQclear(res);
-                cace_ari_list_it_t item_it;
-                int                rpt_list_index = 0;
+
+                int rpt_list_index = 0;
                 // add items to rptitems
+                cace_ari_list_it_t item_it;
                 for (cace_ari_list_it(item_it, curr_report->items); !cace_ari_list_end_p(item_it);
                      cace_ari_list_next(item_it))
                 {
                     const cace_ari_t *item = cace_ari_list_cref(item_it);
-                    cace_data_t       cbordata_item;
+
+                    cace_data_t cbordata_item;
                     cace_data_init(&cbordata_item);
                     cace_ari_cbor_encode(&cbordata_item, item);
 
@@ -967,6 +969,8 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
                     dbprep_bind_param_int(1, rpt_list_index);
                     dbprep_bind_param_byte(2, cbordata_item.ptr, cbordata_item.len);
                     dbexec_prepared;
+
+                    cace_data_deinit(&cbordata_item);
                     rpt_list_index++;
                 }
             }
