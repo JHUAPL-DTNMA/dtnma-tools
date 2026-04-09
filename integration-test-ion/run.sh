@@ -23,6 +23,9 @@ cd "${SELFDIR}"
 
 DOCKER=${DOCKER:-docker}
 
+DEXEC="${DOCKER} compose exec -T -e REFDA_EID=ipn:2.6 manager"
+AEXEC="${DOCKER} compose exec -T agent1"
+
 if [ "$1" = "start" ]
 then
     export DOCKER_BUILDKIT=1
@@ -33,12 +36,18 @@ elif [ "$1" = "stop" ]
 then
     ${DOCKER} compose down --rmi local --volumes
     ${DOCKER} compose rm --force --volumes
+elif [ "$1" = "logs" ]
+then
+    echo "Manager log..."
+    ${DEXEC} journalctl --unit refdm-ion
+    echo
+
+    echo "Agent log..."
+    ${AEXEC} journalctl --unit refda-ion
+    echo
 elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
-
-    DEXEC="${DOCKER} compose exec -T -e REFDA_EID=ipn:2.6 manager"
-    AEXEC="${DOCKER} compose exec -T agent1"
 
     # Wait for necessary daemons to start
     for IX in $(seq 10)
