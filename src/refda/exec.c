@@ -236,7 +236,6 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
             {
                 case REFDA_TIMELINE_EXEC:
                 {
-                    atomic_fetch_add(&agent->instr.num_ctrls_run, 1);
                     {
                         refda_ctrl_exec_ctx_t ctx;
                         refda_ctrl_exec_ctx_init(&ctx, next->exec.item);

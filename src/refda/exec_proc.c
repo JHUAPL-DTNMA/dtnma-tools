@@ -115,6 +115,7 @@ int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
     {
         refda_ctrl_exec_ctx_t ctx;
         refda_ctrl_exec_ctx_init(&ctx, item);
+        atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
         (ctrl->execute)(&ctx);
         refda_ctrl_exec_ctx_deinit(&ctx);
         CACE_LOG_DEBUG("execution callback returned");
