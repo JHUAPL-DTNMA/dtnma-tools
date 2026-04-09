@@ -200,7 +200,8 @@ typedef struct
 
 static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(bool failed, void *user_data);
 
-static void refda_try_catch_data_init(refda_try_catch_data_t *obj, refda_exec_item_t *item, const cace_ari_t *on_failure)
+static void refda_try_catch_data_init(refda_try_catch_data_t *obj, refda_exec_item_t *item,
+                                      const cace_ari_t *on_failure)
 {
     refda_exec_status_init(&obj->status);
     obj->status.on_finished     = refda_adm_ietf_dtnma_agent_ctrl_catch_finished;
@@ -2240,7 +2241,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
     refda_try_catch_data_t *trycatch = CACE_MALLOC(sizeof(refda_try_catch_data_t));
     refda_try_catch_data_init(trycatch, ctx->item, ari_on_failure);
     // free this in when execution item is finished
-    cace_amm_user_data_set_from(&ctx->item->user_data, trycatch, true, (cace_amm_user_data_deinit_f)refda_try_catch_data_deinit);
+    cace_amm_user_data_set_from(&ctx->item->user_data, trycatch, true,
+                                (cace_amm_user_data_deinit_f)refda_try_catch_data_deinit);
 
     // Run try target as a separate sequence and wait on its finish
     CACE_LOG_DEBUG("Sending try target");

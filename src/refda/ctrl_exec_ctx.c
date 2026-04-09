@@ -28,7 +28,7 @@ void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *ite
     CHKVOID(obj);
     CHKVOID(item);
 
-    obj->item     = item;
+    obj->item = item;
 
     obj->runctx = refda_runctx_ptr_ref(obj->item->seq->runctx);
     // check ACL cache at last moment
