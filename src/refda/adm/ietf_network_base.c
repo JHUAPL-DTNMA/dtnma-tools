@@ -109,46 +109,6 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/abstract-endpoint-pattern
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            objdata->abstract = true;
-            // no IDENT bases
-
-            obj = refda_register_ident(
-                adm,
-                cace_amm_idseg_ref_withenum("abstract-endpoint-pattern",
-                                            REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_ABSTRACT_ENDPOINT_PATTERN),
-                objdata);
-            // no parameters
-        }
-        { // For ./IDENT/uri-regexp-pattern
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            objdata->abstract = false;
-            // IDENT bases:
-            {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // reference to ari://ietf/network-base/IDENT/abstract-endpoint-pattern
-                cace_ari_set_objref_path_intid(&(base->name), 1, 26, CACE_ARI_TYPE_IDENT, 1);
-            }
-
-            obj = refda_register_ident(
-                adm,
-                cace_amm_idseg_ref_withenum("uri-regexp-pattern",
-                                            REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_URI_REGEXP_PATTERN),
-                objdata);
-            // parameters:
-            {
-                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "regexp");
-                {
-                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // use of ari:/ARITYPE/TEXTSTR
-                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
-                }
-            }
-        }
 
         /**
          * Register TYPEDEF objects
@@ -161,7 +121,15 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/TEXTSTR
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: TextPattern(pattern='[a-z][a-z0-9+-.]*:.*')
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                    cace_amm_semtype_cnst_set_textpat(cnst, "[a-z][a-z0-9+-.]*:.*");
+                }
             }
 
             obj = refda_register_typedef(
@@ -176,7 +144,21 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/BYTESTR
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BYTESTR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: StringLength(ranges=[16])
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                    cace_util_range_size_t *range = cace_amm_semtype_cnst_set_strlen(cnst);
+                    {
+                        cace_util_range_intvl_size_t intvl;
+                        cace_util_range_intvl_size_set_min(&intvl, 16);
+                        cace_util_range_intvl_size_set_max(&intvl, 16);
+                        cace_util_range_size_push(*range, intvl);
+                    }
+                }
             }
 
             obj = refda_register_typedef(
@@ -191,7 +173,21 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/BYTESTR
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BYTESTR);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: StringLength(ranges=[2,inf])
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                    cace_util_range_size_t *range = cace_amm_semtype_cnst_set_strlen(cnst);
+                    {
+                        cace_util_range_intvl_size_t intvl;
+                        cace_util_range_intvl_size_set_min(&intvl, 2);
+                        cace_util_range_intvl_size_clear_max(&intvl);
+                        cace_util_range_size_push(*range, intvl);
+                    }
+                }
             }
 
             obj = refda_register_typedef(
@@ -206,7 +202,19 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/IDENT
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: IdentRefBase(base_text='./IDENT/abstract-endpoint',
+                    // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='network-base', model_rev=None,
+                    // type_id=<StructType.IDENT: -1>, obj_id='abstract-endpoint'), params=None), base_ident=None)
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                    // FIXME unhandled constraint IdentRefBase(base_text='./IDENT/abstract-endpoint',
+                    // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='network-base', model_rev=None,
+                    // type_id=<StructType.IDENT: -1>, obj_id='abstract-endpoint'), params=None), base_ident=None)
+                }
             }
 
             obj = refda_register_typedef(
@@ -245,24 +253,6 @@ int refda_adm_ietf_network_base_init(refda_agent_t *agent)
                 adm,
                 cace_amm_idseg_ref_withenum("endpoint-or-uri",
                                             REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_ENDPOINT_OR_URI),
-                objdata);
-            // no parameters possible
-        }
-        { // For ./TYPEDEF/endpoint-pattern
-            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
-            refda_amm_typedef_desc_init(objdata);
-            // named semantic type:
-            {
-                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // use of ari:/ARITYPE/IDENT
-                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
-            }
-
-            obj = refda_register_typedef(
-                adm,
-                cace_amm_idseg_ref_withenum("endpoint-pattern",
-                                            REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_ENDPOINT_PATTERN),
                 objdata);
             // no parameters possible
         }

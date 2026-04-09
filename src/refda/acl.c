@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include "acl.h"
-#include "endpoint.h"
+#include "eval.h"
 #include "cace/ari/text.h"
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
@@ -26,15 +26,17 @@ void refda_acl_group_init(refda_acl_group_t *obj)
     CHKVOID(obj);
     obj->id = 0;
     m_string_init(obj->name);
-    refda_amm_ident_base_list_init(obj->member_pats);
-    obj->added_at   = CACE_ARI_INIT_UNDEFINED;
-    obj->updated_at = CACE_ARI_INIT_UNDEFINED;
+    obj->member_filter = CACE_ARI_INIT_UNDEFINED;
+    obj->added_at      = CACE_ARI_INIT_UNDEFINED;
+    obj->updated_at    = CACE_ARI_INIT_UNDEFINED;
 }
 
 void refda_acl_group_deinit(refda_acl_group_t *obj)
 {
     CHKVOID(obj);
-    refda_amm_ident_base_list_clear(obj->member_pats);
+    cace_ari_deinit(&obj->updated_at);
+    cace_ari_deinit(&obj->added_at);
+    cace_ari_deinit(&obj->member_filter);
     m_string_clear(obj->name);
     obj->id = 0;
 }
@@ -96,6 +98,40 @@ void refda_acl_deinit(refda_acl_t *obj)
     obj->perm_base    = NULL;
 }
 
+/**
+ * Translation helper function to substitute LABEL value 0 in a filter with
+ * the endpoint identity.
+ */
+static cace_ari_translate_result_t acl_endpoint_filter_sub_label(cace_ari_t *out, const cace_ari_t *in,
+                                                                 const cace_ari_translate_ctx_t *ctx)
+{
+    if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
+    {
+        const cace_ari_t *endpoint = ctx->user_data;
+
+        cace_ari_int as_int;
+        if (!cace_ari_get_int(in, &as_int))
+        {
+            if (as_int == 0)
+            {
+                cace_ari_set_copy(out, endpoint);
+                return CACE_ARI_TRANSLATE_FINAL;
+            }
+            else
+            {
+                CACE_LOG_ERR("invalid LABEL value %d", as_int);
+                return CACE_ARI_TRANSLATE_FAILURE;
+            }
+        }
+        else
+        {
+            CACE_LOG_ERR("invalid LABEL primitive type");
+            return CACE_ARI_TRANSLATE_FAILURE;
+        }
+    }
+    return CACE_ARI_TRANSLATE_DEFAULT;
+}
+
 int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, refda_acl_id_tree_t groups)
 {
     CHKERR1(agent);
@@ -109,7 +145,12 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
         m_string_clear(buf);
     }
 
+    refda_runctx_t runctx;
+    refda_runctx_init(&runctx);
+    refda_runctx_from(&runctx, agent, NULL);
+
     refda_acl_id_tree_reset(groups);
+    const cace_ari_translator_t translator = { .map_ari = acl_endpoint_filter_sub_label };
 
     if (pthread_mutex_lock(&(agent->acl_mutex)))
     {
@@ -123,16 +164,47 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
     {
         const refda_acl_group_t *grp = refda_acl_group_list_cref(grp_it);
 
-        refda_amm_ident_base_list_it_t pat_it;
-        for (refda_amm_ident_base_list_it(pat_it, grp->member_pats); !refda_amm_ident_base_list_end_p(pat_it);
-             refda_amm_ident_base_list_next(pat_it))
+        // Substitute endpoint value for LABEL items within filter EXPR
+        cace_ari_t expr = CACE_ARI_INIT_UNDEFINED;
         {
-            const refda_amm_ident_base_t *pat = refda_amm_ident_base_list_cref(pat_it);
-
-            if (refda_endpoint_pat_match(agent, endpoint, pat))
+            int res = cace_ari_translate(&expr, &grp->member_filter, &translator, (void *)endpoint);
+            if (res)
             {
-                refda_acl_id_tree_push(groups, grp->id);
+                CACE_LOG_ERR("Unable to translate filter, error %d", res);
+                cace_ari_deinit(&expr); // No longer needed at this point
+                continue;
             }
+        }
+
+        // Evaluate the filter EXPR
+        refda_eval_ctx_t evalctx;
+        refda_eval_ctx_init(&evalctx, &runctx);
+        cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
+
+        REFDA_AGENT_LOCK(agent, 2);
+        int res = refda_eval_expand_expr(&evalctx, &expr);
+        cace_ari_deinit(&expr); // No longer needed at this point
+        REFDA_AGENT_UNLOCK(agent, 2);
+        if (res)
+        {
+            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
+            refda_eval_ctx_deinit(&evalctx);
+            continue;
+        }
+
+        res = refda_eval_reduce(&evalctx, &eval_result);
+        refda_eval_ctx_deinit(&evalctx);
+        if (res)
+        {
+            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
+            cace_ari_deinit(&eval_result);
+            continue;
+        }
+
+        // True result indicates entry is purged
+        if (cace_amm_ari_is_truthy(&eval_result))
+        {
+            refda_acl_id_tree_push(groups, grp->id);
         }
     }
 
@@ -141,6 +213,8 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
         CACE_LOG_CRIT("failed to unlock agent ACL");
         return 2;
     }
+
+    refda_runctx_deinit(&runctx);
 
     if (cace_log_is_enabled_for(LOG_INFO))
     {

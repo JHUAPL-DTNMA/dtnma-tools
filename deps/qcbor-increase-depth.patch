@@ -1,0 +1,13 @@
+diff --git a/inc/qcbor/qcbor_common.h b/inc/qcbor/qcbor_common.h
+index 0027cf9..f350f05 100644
+--- a/inc/qcbor/qcbor_common.h
++++ b/inc/qcbor/qcbor_common.h
+@@ -561,7 +561,7 @@ qcbor_err_to_str(QCBORError uErr);
+  * returned on encoding or @ref QCBOR_ERR_ARRAY_DECODE_NESTING_TOO_DEEP on
+  * decoding if it is exceeded. Do not increase this over 255.
+  */
+-#define QCBOR_MAX_ARRAY_NESTING  15
++#define QCBOR_MAX_ARRAY_NESTING  25
+ 
+ 
+ /**

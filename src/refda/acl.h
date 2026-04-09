@@ -45,8 +45,8 @@ typedef struct
     refda_acl_id_t id;
     /// Unique group name
     m_string_t name;
-    /// Endpoint patterns for members of this group
-    refda_amm_ident_base_list_t member_pats;
+    /// Endpoint filter for members of this group
+    cace_ari_t member_filter;
 
     /// Added-at timestamp
     cace_ari_t added_at;

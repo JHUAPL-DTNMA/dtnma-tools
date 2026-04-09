@@ -8,7 +8,8 @@ Type=notify
 PassEnvironment=DTNMA_LOGLEVEL AMP_PROXY_SOCKET \
     DB_HOST DB_USER DB_PASSWORD DB_NAME
 EnvironmentFile=-/etc/environment
-ExecStart=refdm-proxy -l ${DTNMA_LOGLEVEL} -a ${AMP_PROXY_SOCKET}
+# Startup connection timeout agrees with systemd start timeout
+ExecStart=refdm-proxy -l ${DTNMA_LOGLEVEL} -a ${AMP_PROXY_SOCKET} -t 30
 
 [Install]
 WantedBy=multi-user.target

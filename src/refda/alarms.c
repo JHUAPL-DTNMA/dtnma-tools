@@ -451,7 +451,7 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
 
     size_t affected = 0;
 
-    cace_ari_translator_t translator = { .map_ari = alarm_list_filter_sub_label };
+    const cace_ari_translator_t translator = { .map_ari = alarm_list_filter_sub_label };
 
     refda_alarms_entry_list_it_t entry_it;
     for (refda_alarms_entry_list_it(entry_it, alarms->alarm_list); !refda_alarms_entry_list_end_p(entry_it);)
@@ -472,9 +472,24 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
         }
 
         // Evaluate the filter EXPR
+        refda_eval_ctx_t evalctx;
+        refda_eval_ctx_init(&evalctx, runctx);
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_target(runctx, &eval_result, &expr);
+
+        REFDA_AGENT_LOCK(runctx->agent, 0);
+        int res = refda_eval_expand_expr(&evalctx, &expr);
+        REFDA_AGENT_UNLOCK(runctx->agent, 0);
         cace_ari_deinit(&expr); // No longer needed at this point
+        if (res)
+        {
+            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
+            cace_ari_deinit(&eval_result);
+            refda_alarms_entry_list_next(entry_it);
+            continue;
+        }
+
+        res = refda_eval_reduce(&evalctx, &eval_result);
+        refda_eval_ctx_deinit(&evalctx);
         if (res)
         {
             CACE_LOG_ERR("failed to evaluate condition, error %d", res);
@@ -537,9 +552,9 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
             }
         }
 
-        // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_target(runctx, &eval_result, &expr);
+        // Evaluate the filter EXPR
+        int res = refda_eval_target(runctx, &eval_result, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
         if (res)
         {
@@ -548,7 +563,7 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
             continue;
         }
 
-        // True result indicates entry is commpressed
+        // True result indicates entry is compressed
         if (cace_amm_ari_is_truthy(&eval_result))
         {
             size_t hist_size = refda_alarms_history_list_size(entry->history);
@@ -605,9 +620,9 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
             }
         }
 
-        // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        res                    = refda_eval_target(runctx, &eval_result, &expr);
+        // Evaluate the filter EXPR
+        res = refda_eval_target(runctx, &eval_result, &expr);
         cace_ari_deinit(&expr); // No longer needed at this point
         if (res)
         {
