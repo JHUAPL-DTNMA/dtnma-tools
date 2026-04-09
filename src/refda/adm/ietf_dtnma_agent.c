@@ -87,13 +87,18 @@ static void timespec_normalize(struct timespec *target)
     }
 }
 
-static void refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_ctrl_exec_ctx_t *ctx, void *user_data _U_)
+/** Mark an execution item as finished with a null result.
+ * Matches the signature of refda_timeline_exec_event_t::callback.
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_ctrl_exec_ctx_t *ctx)
 {
-    atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
     refda_ctrl_exec_ctx_set_result_null(ctx);
 }
 
-static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_t *ctx, void *user_data)
+/** Check an SBR condition and execute if truthy.
+ * Matches the signature of refda_timeline_exec_event_t::callback.
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_t *ctx)
 {
     const cace_ari_t *cond = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     if (!cond)
@@ -103,7 +108,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
     }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    int        res    = refda_eval_target(ctx->runctx, &result, cond);
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    int res = refda_eval_target(ctx->runctx, &result, cond);
+    REFDA_AGENT_UNLOCK(agent, );
     if (res)
     {
         CACE_LOG_ERR("failed to evaluate condition, error %d", res);
@@ -111,10 +120,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
     }
 
     const bool truthy = cace_amm_ari_is_truthy(&result);
+    cace_ari_deinit(&result);
     CACE_LOG_DEBUG("condition result truthy=%d", truthy);
     if (truthy)
     {
-        refda_ctrl_exec_ctx_set_result_copy(ctx, &result);
+        refda_ctrl_exec_ctx_set_result_null(ctx);
     }
     else
     {
@@ -132,17 +142,14 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         {
             // check again in 1s
             refda_timeline_event_t event = {
-                .purpose        = REFDA_TIMELINE_EXEC,
-                .ts             = timespec_add(nowtime, timespec_from_ms(1000)),
-                .exec.item      = ctx->item,
-                .exec.user_data = user_data,
-                .exec.callback  = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
+                .purpose       = REFDA_TIMELINE_EXEC,
+                .ts            = timespec_add(nowtime, timespec_from_ms(1000)),
+                .exec.item     = ctx->item,
+                .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
             };
             refda_ctrl_exec_ctx_set_waiting(ctx, &event);
         }
     }
-
-    cace_ari_deinit(&result);
 }
 
 static void refda_adm_ietf_dtnma_agent_read_fparams(cace_amm_obj_desc_t *obj, const cace_ari_t *ari_fparams,
@@ -2375,7 +2382,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx
      * +-------------------------------------------------------------------------+
      */
     // initial check and kickoff timers
-    refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(ctx, NULL);
+    refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(ctx);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY

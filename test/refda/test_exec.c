@@ -297,7 +297,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 refda_ctrl_exec_ctx_t ctx;
                 refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
 
-                (next->exec.callback)(&ctx, next->exec.user_data);
+                (next->exec.callback)(&ctx);
 
                 if (!(atomic_load(&(ctx.item->execution_stage)) == REFDA_EXEC_WAITING))
                 {
