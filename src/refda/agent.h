@@ -131,6 +131,7 @@ void refda_agent_deinit(refda_agent_t *agent);
 /** Lock the object mutex on an agent and return if failed.
  */
 #define REFDA_AGENT_LOCK(agent, err)                   \
+    CACE_LOG_DEBUG("locking agent objects");           \
     if (pthread_mutex_lock(&(agent->objs_mutex)))      \
     {                                                  \
         CACE_LOG_CRIT("failed to lock agent objects"); \
@@ -139,6 +140,7 @@ void refda_agent_deinit(refda_agent_t *agent);
 /** Unlock the object mutex on an agent and return if failed.
  */
 #define REFDA_AGENT_UNLOCK(agent, err)                   \
+    CACE_LOG_DEBUG("unlocking agent objects");           \
     if (pthread_mutex_unlock(&(agent->objs_mutex)))      \
     {                                                    \
         CACE_LOG_CRIT("failed to unlock agent objects"); \

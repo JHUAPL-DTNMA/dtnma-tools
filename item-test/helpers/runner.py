@@ -43,7 +43,9 @@ def compose_args(args: List[str]) -> List[str]:
 
     wrap = os.environ.get('TEST_EXEC_WRAP', '').casefold()
     prefix = []
-    if wrap == 'memcheck':
+    if wrap == '':
+        pass
+    elif wrap == 'memcheck':
         prefix = [
             'valgrind',
             '--tool=memcheck',
@@ -61,9 +63,14 @@ def compose_args(args: List[str]) -> List[str]:
     elif wrap == 'gdb':
         prefix = [
             'gdb',
-            '-batch', '-ex', 'run', '-ex', 'bt',
+            '-batch',
+            '-ex', 'handle SIGINT nostop noprint pass',
+            '-ex', 'run',
+            '-ex', 'bt',
             '--args'
         ]
+    else:
+        raise ValueError(f'Unhandled TEST_EXEC_WRAP value: {wrap}')
 
     args = [os.path.join(PROJPATH, 'run.sh')] + prefix + args
     return args

@@ -1176,7 +1176,6 @@ cace_amm_type_match_res_t cace_amm_type_match(const cace_amm_type_t *type, const
         return CACE_AMM_TYPE_MATCH_NEGATIVE;
     }
 
-    CACE_LOG_DEBUG("matching with type class %d", type->type_class);
     return type->match(type, ari);
 }
 
@@ -1188,7 +1187,6 @@ int cace_amm_type_convert(const cace_amm_type_t *type, cace_ari_t *out, const ca
 
     CHKRET(type->convert, CACE_AMM_ERR_CONVERT_NULLFUNC);
 
-    CACE_LOG_DEBUG("converting with type class %d", type->type_class);
     return type->convert(type, out, in);
 }
 
@@ -1239,6 +1237,11 @@ bool cace_amm_builtin_validate(const cace_ari_t *ari)
 
 bool cace_amm_ari_is_truthy(const cace_ari_t *in)
 {
+    if (!in)
+    {
+        return false;
+    }
+
     bool result = true;
     // any object reference is truthy
     if (!(in->is_ref))
