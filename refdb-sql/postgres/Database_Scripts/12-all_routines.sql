@@ -1323,15 +1323,15 @@ BEGIN
 	RETURN r_ari_rptset_id;
 End$$;
 
-create or replace FUNCTION SP__insert_rptlist(in p_ari_rptset_id INTEGER, p_reference_time  TIMESTAMPTZ, p_source BYTEA)
+create or replace FUNCTION SP__insert_rptlist(in p_ari_rptset_id INTEGER, p_agent_time  TIMESTAMPTZ, p_source BYTEA)
 RETURNS integer
 language plpgsql
 as $$
 DECLARE
 	r_ari_rptlist_id INTEGER;
 BEGIN
-    INSERT INTO ari_rptlist(ari_rptset_id, time_offset, report_source)
-        VALUES(p_ari_rptset_id, p_reference_time, p_source) RETURNING ari_rptlist_id into r_ari_rptlist_id;
+    INSERT INTO ari_rptlist(ari_rptset_id, agent_time, report_source)
+        VALUES(p_ari_rptset_id, p_agent_time, p_source) RETURNING ari_rptlist_id into r_ari_rptlist_id;
 	RETURN r_ari_rptlist_id;
 End$$;
 

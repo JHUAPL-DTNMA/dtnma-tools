@@ -532,9 +532,12 @@ create table if not exists ari_rptset (
     ari_rptset_id serial NOT NULL,
     -- timestamp from the Manager
     mgr_time TIMESTAMPTZ not null,
+    -- CBOR form of the RPTSET nonce field
     nonce_cbor BYTEA NOT NULL,
+    -- Extracted reference time from the Agent
     reference_time TIMESTAMPTZ NOT NULL,
     agent_id INTEGER NOT NULL,
+    -- CBOR form of the entire RPTSET value
     ari_rptset_cbor BYTEA NOT NULL, 
     primary key (ari_rptset_id),
     foreign key (agent_id) references registered_agents (registered_agents_id)  on
@@ -549,7 +552,9 @@ CREATE INDEX idx_rptset_reftime ON ari_rptset (reference_time);
 create table if not exists ari_rptlist (
     ari_rptlist_id serial NOT NULL,
     ari_rptset_id INTEGER NOT NULL,
-    time_offset TIMESTAMPTZ NOT NULL,
+    -- Absolute time of the report from the Agent
+    agent_time TIMESTAMPTZ NOT NULL,
+    -- CBOR form of the report source field
     report_source BYTEA NOT NULL,
     primary key (ari_rptlist_id),
     foreign key (ari_rptset_id) references ari_rptset (ari_rptset_id)   on
@@ -559,9 +564,12 @@ delete
 
 -- rpt-item
 create table if not exists ari_rpt_item (
-    ari_rpt_item_id serial NOT NULL, 
+    ari_rpt_item_id serial NOT NULL,
+    -- Row ID of parent report
     ari_rptlist_id INTEGER NOT NULL,
+    -- The zero-based position of the item in the parent report
     ari_rpt_item_index INTEGER NOT NULL,
+    -- CBOR form of the item
     report_entry BYTEA NOT NULL,
     primary key(ari_rpt_item_id),
     foreign key (ari_rptlist_id) references ari_rptlist (ari_rptlist_id)  on

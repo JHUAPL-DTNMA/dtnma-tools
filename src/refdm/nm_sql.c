@@ -33,7 +33,8 @@
 #include <timespec.h>
 
 // Constants: Database table names
-const char *TBL_NAME_RPTSET = "vw_ari_rpt_set";
+const char *TBL_NAME_RPTSET = "ari_rptset";
+const char *VW_NAME_RPTSET  = "vw_ari_rpt_set";
 
 // Constants: Database column names for the RPTSET table
 const char *COL_NAME_REFERENCE_TIME   = "reference_time";
@@ -684,9 +685,9 @@ int refdm_db_clear_rptset(int32_t agent_idx)
 //-------------------------------------------------------------------------------------
 int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
 {
-    PGresult *res   = NULL;
-    int       ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d",
-                                               TBL_NAME_RPTSET, agent_idx);
+    PGresult *res = NULL;
+    int ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET,
+                                         agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to retrieve the count of table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
@@ -757,7 +758,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, stru
     PQclear(res);
 
     ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT MAX(mgr_time) FROM %s WHERE agent_id=%d",
-                                     TBL_NAME_RPTSET, agent_idx);
+            TBL_NAME_RPTSET, agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to retrieve the RPTSET mgr_time");
@@ -912,6 +913,7 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
         char *returned_value_str = PQgetvalue(res, 0, 0);
         int   rpt_set_id         = atoi(returned_value_str);
         CACE_LOG_DEBUG("New Report Set with id: %d", rpt_set_id);
+        PQclear(res);
 
         // for each report in reports add to rpt_list table with rpt_set_id from above
         // cace_data_t               cbordata_reltime;
@@ -922,8 +924,6 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
         {
             const cace_ari_report_t *curr_report = cace_ari_report_list_cref(rpt_it);
 
-            m_string_t rel_time;
-            m_string_init(rel_time);
             struct timespec rel_time_ref;
             if (cace_ari_get_td(&curr_report->reltime, &rel_time_ref))
             {
@@ -931,24 +931,27 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
                 return 1;
             }
             // add rel_time to report_set Ref_time
-            struct timespec rpt_list_ref_time;
-            rpt_list_ref_time = timespec_add(ref_time, rel_time_ref);
-            cace_utctime_encode(rel_time, &rpt_list_ref_time, true);
-            CACE_LOG_INFO("rel_time: %s", m_string_get_cstr(rel_time));
+            struct timespec rpt_agent_time;
+            rpt_agent_time = timespec_add(ref_time, rel_time_ref);
+
+            m_string_t agent_time_text;
+            m_string_init(agent_time_text);
+            cace_utctime_encode(agent_time_text, &rpt_agent_time, true);
+            CACE_LOG_INFO("rel_time: %s", m_string_get_cstr(agent_time_text));
 
             cace_data_init(&cbordata_source);
             cace_ari_cbor_encode(&cbordata_source, &curr_report->source);
 
             dbprep_declare(DB_RPT_CON, ARI_RPTLIST_INSERT, 3, 1);
             dbprep_bind_param_int(0, rpt_set_id);
-            dbprep_bind_param_str(1, m_string_get_cstr(rel_time));               // report_list_reltime
+            dbprep_bind_param_str(1, m_string_get_cstr(agent_time_text));        // agent_time
             dbprep_bind_param_byte(2, cbordata_source.ptr, cbordata_source.len); // report_list_source
             dbexec_prepared;
 
             if (PQntuples(res) > 0)
             {
-                char *returned_value_str = PQgetvalue(res, 0, 0);
-                int   rpt_list_id        = atoi(returned_value_str);
+                const char *returned_value_str = PQgetvalue(res, 0, 0);
+                int         rpt_list_id        = atoi(returned_value_str);
                 CACE_LOG_DEBUG("New Report List with id: %d", rpt_list_id);
                 PQclear(res);
 
@@ -969,20 +972,26 @@ uint32_t refdm_db_insert_rptset(const cace_ari_t *val, const refdm_agent_t *agen
                     dbprep_bind_param_int(1, rpt_list_index);
                     dbprep_bind_param_byte(2, cbordata_item.ptr, cbordata_item.len);
                     dbexec_prepared;
+                    PQclear(res);
 
                     cace_data_deinit(&cbordata_item);
                     rpt_list_index++;
                 }
             }
-            m_string_clear(rel_time);
+            else
+            {
+                // nothing to do
+                PQclear(res);
+            }
+            m_string_clear(agent_time_text);
         }
         cace_data_deinit(&cbordata_source);
     }
     else
     {
         CACE_LOG_ERR("ARI_RPTLIST_INSERT did not return rptset_id");
+        PQclear(res);
     }
-    PQclear(res);
     giveConn(DB_RPT_CON);
     // cleaning up vars
     m_string_clear(tp);
