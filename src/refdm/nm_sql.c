@@ -685,9 +685,9 @@ int refdm_db_clear_rptset(int32_t agent_idx)
 //-------------------------------------------------------------------------------------
 int refdm_db_fetch_rptset_count(int32_t agent_idx, size_t *count)
 {
-    PGresult *res = NULL;
-    int ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d", TBL_NAME_RPTSET,
-                                         agent_idx);
+    PGresult *res   = NULL;
+    int       ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT COUNT(*) FROM %s WHERE agent_id=%d",
+                                               TBL_NAME_RPTSET, agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to retrieve the count of table '%s' items. ecode: %d", TBL_NAME_RPTSET, ecode);
@@ -758,7 +758,7 @@ int refdm_db_fetch_rptset_list(int32_t agent_idx, cace_ari_list_t *rptsets, stru
     PQclear(res);
 
     ecode = refdm_db_mgt_query_fetch(DB_REST_CON, &res, "SELECT MAX(mgr_time) FROM %s WHERE agent_id=%d",
-            TBL_NAME_RPTSET, agent_idx);
+                                     TBL_NAME_RPTSET, agent_idx);
     if (ecode != RET_PASS)
     {
         CACE_LOG_ERR("Failed to retrieve the RPTSET mgr_time");
