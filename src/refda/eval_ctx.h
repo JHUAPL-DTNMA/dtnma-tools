@@ -43,9 +43,10 @@ typedef struct
     /** Parent running context.
      * This will never be null.
      */
-    refda_runctx_t *parent;
+    refda_runctx_t *runctx;
 
     /** Storage for the input expanded list.
+     * This is internal bookkeeping not part of evaluation itself.
      */
     refda_eval_list_t input;
 

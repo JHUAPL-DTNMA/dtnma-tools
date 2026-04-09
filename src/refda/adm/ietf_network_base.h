@@ -49,10 +49,6 @@ extern "C" {
 #define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_DISPLAY_BSTR_OID 18
 /// For ./IDENT/abstract-endpoint
 #define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_ABSTRACT_ENDPOINT 0
-/// For ./IDENT/abstract-endpoint-pattern
-#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_ABSTRACT_ENDPOINT_PATTERN 1
-/// For ./IDENT/uri-regexp-pattern
-#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_URI_REGEXP_PATTERN 2
 
 /*
  * Enumerations for TYPEDEF objects
@@ -67,8 +63,6 @@ extern "C" {
 #define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_ENDPOINT 1
 /// For ./TYPEDEF/endpoint-or-uri
 #define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_ENDPOINT_OR_URI 3
-/// For ./TYPEDEF/endpoint-pattern
-#define REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_TYPEDEF_ENDPOINT_PATTERN 2
 
 /** Initializer for the ADM module ietf-network-base.
  * @param[in,out] agent The agent to register this namespace and its

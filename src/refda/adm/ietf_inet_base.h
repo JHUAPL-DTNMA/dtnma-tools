@@ -49,8 +49,6 @@ extern "C" {
 #define REFDA_ADM_IETF_INET_BASE_ENUM_OBJID_IDENT_IP_ENDPOINT 0
 /// For ./IDENT/ip-transport
 #define REFDA_ADM_IETF_INET_BASE_ENUM_OBJID_IDENT_IP_TRANSPORT 1
-/// For ./IDENT/ip-vlsm-pattern
-#define REFDA_ADM_IETF_INET_BASE_ENUM_OBJID_IDENT_IP_VLSM_PATTERN 3
 
 /*
  * Enumerations for TYPEDEF objects
@@ -67,6 +65,12 @@ extern "C" {
 #define REFDA_ADM_IETF_INET_BASE_ENUM_OBJID_TYPEDEF_PORT_NUMBER 3
 /// For ./TYPEDEF/domain-name
 #define REFDA_ADM_IETF_INET_BASE_ENUM_OBJID_TYPEDEF_DOMAIN_NAME 5
+
+/*
+ * Enumerations for OPER objects
+ */
+/// For ./OPER/match-ip-vlsm
+#define REFDA_ADM_IETF_INET_BASE_ENUM_OBJID_OPER_MATCH_IP_VLSM 0
 
 /** Initializer for the ADM module ietf-inet-base.
  * @param[in,out] agent The agent to register this namespace and its

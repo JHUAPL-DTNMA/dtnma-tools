@@ -89,27 +89,28 @@ void test_util_group_add(refda_agent_t *agent, refda_acl_id_t group_id, const ch
 
     m_string_printf(grp->name, "%" PRIu32, group_id);
 
+    // filter expression with one predicate: /ac/(/label/0,./oper/match-regexp-pattern(pat))
     {
-        cace_ari_t      pat_name = CACE_ARI_INIT_UNDEFINED;
-        cace_ari_ref_t *ref      = cace_ari_set_objref_path_intid(
-            &pat_name, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_NETWORK_BASE_ENUM_ADM, CACE_ARI_TYPE_IDENT,
-            REFDA_ADM_IETF_NETWORK_BASE_ENUM_OBJID_IDENT_URI_REGEXP_PATTERN);
+        cace_ari_ac_t *filter_ac = cace_ari_set_ac(&grp->member_filter, NULL);
 
-        cace_ari_list_t params;
-        cace_ari_list_init(params);
         {
-            cace_ari_t *param = cace_ari_list_push_back_new(params);
-            cace_ari_set_tstr(param, uri_pattern, true);
+            cace_ari_t *item_label = cace_ari_list_push_back_new(filter_ac->items);
+            cace_ari_set_label_int(item_label, 0);
         }
-        cace_ari_params_set_ac(&(ref->params), params);
+        {
+            cace_ari_t     *item_pred = cace_ari_list_push_back_new(filter_ac->items);
+            cace_ari_ref_t *ref       = cace_ari_set_objref_path_intid(
+                item_pred, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_OPER,
+                REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_REGEXP);
 
-        refda_amm_ident_base_t *pat = refda_amm_ident_base_list_push_new(grp->member_pats);
-        if (refda_amm_ident_base_populate(pat, &pat_name, &agent->objs))
-        {
-            CACE_LOG_CRIT("no uri_regexp_pattern found");
-            assert(false);
+            cace_ari_list_t params;
+            cace_ari_list_init(params);
+            {
+                cace_ari_t *param = cace_ari_list_push_back_new(params);
+                cace_ari_set_tstr(param, uri_pattern, true);
+            }
+            cace_ari_params_set_ac(&(ref->params), params);
         }
-        cace_ari_deinit(&pat_name);
     }
 }
 

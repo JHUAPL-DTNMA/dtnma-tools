@@ -679,6 +679,120 @@ static int timespec_numeric_mod(cace_ari_t *result _U_, const cace_ari_t *left _
     return RET_FAIL_UNDEFINED;
 }
 
+/**
+ * Translation helper function to substitute LABEL value 0 in a filter with
+ * the endpoint identity.
+ */
+static cace_ari_translate_result_t unary_eval_sub_label(cace_ari_t *out, const cace_ari_t *in,
+                                                        const cace_ari_translate_ctx_t *ctx)
+{
+    if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
+    {
+        const cace_ari_t *value = ctx->user_data;
+
+        cace_ari_int as_int;
+        if (!cace_ari_get_int(in, &as_int))
+        {
+            if (as_int == 0)
+            {
+                cace_ari_set_copy(out, value);
+                return CACE_ARI_TRANSLATE_FINAL;
+            }
+            else
+            {
+                CACE_LOG_ERR("invalid LABEL value %d", as_int);
+                return CACE_ARI_TRANSLATE_FAILURE;
+            }
+        }
+        else
+        {
+            CACE_LOG_ERR("invalid LABEL primitive type");
+            return CACE_ARI_TRANSLATE_FAILURE;
+        }
+    }
+    return CACE_ARI_TRANSLATE_DEFAULT;
+}
+
+/** Expand an AC of operator references into a lookup list and then
+ * combine sub-evaluation results.
+ * @param[in] runctx The evaluation context.
+ * @param[in] operators_ac The subordinate unary operators to evaluate.
+ * @param[in] value The operand value for each operator.
+ * @param empty The result if the list of operators is empty.
+ * @param init The initial result before evaluating any operator.
+ * @param stop The sub-evaluation result which stops the composed processing
+ * and results in the opposite of the @c init argument.
+ * @return The result of the composed operator.
+ */
+static bool predicate_compose(refda_runctx_t *runctx, const cace_ari_ac_t *operators_ac, const cace_ari_t *value,
+                              bool empty, bool init, bool stop)
+{
+    if (cace_ari_list_empty_p(operators_ac->items))
+    {
+        return empty;
+    }
+
+    bool combined = init;
+
+    cace_amm_lookup_list_t deref_list;
+    cace_amm_lookup_list_init(deref_list);
+    cace_amm_lookup_list_reserve(deref_list, cace_ari_list_size(operators_ac->items));
+
+    refda_agent_t *agent = runctx->agent;
+    REFDA_AGENT_LOCK(agent, 2);
+
+    cace_ari_list_it_t oper_it;
+    for (cace_ari_list_it(oper_it, operators_ac->items); !cace_ari_list_end_p(oper_it); cace_ari_list_next(oper_it))
+    {
+        const cace_ari_t *oper_item = cace_ari_list_cref(oper_it);
+
+        cace_amm_lookup_t deref;
+        cace_amm_lookup_init(&deref);
+        int res = cace_amm_lookup_deref(&deref, &(agent->objs), oper_item);
+        if (res)
+        {
+            CACE_LOG_ERR("Operator dereference failed, treating as undefined sub-result");
+        }
+        cace_amm_lookup_list_push_move(deref_list, &deref);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, 2);
+
+    // actually evaluate and accumulate
+    cace_amm_lookup_list_it_t deref_it;
+    for (cace_amm_lookup_list_it(deref_it, deref_list); !cace_amm_lookup_list_end_p(deref_it);
+         cace_amm_lookup_list_next(deref_it))
+    {
+        const cace_amm_lookup_t *deref = cace_amm_lookup_list_cref(deref_it);
+
+        cace_ari_t sub_result = CACE_ARI_INIT_UNDEFINED;
+
+        // Synthesized context for one operator evaluation
+        refda_eval_ctx_t sub_ctx;
+        refda_eval_ctx_init(&sub_ctx, runctx);
+
+        // copy this operand to the synth stack
+        cace_ari_list_push_back(sub_ctx.stack, *value);
+        int res = refda_eval_oper(&sub_ctx, deref);
+        if (!res)
+        {
+            // actual result
+            cace_ari_list_pop_back_move(&sub_result, sub_ctx.stack);
+        }
+
+        refda_eval_ctx_deinit(&sub_ctx);
+
+        if (cace_amm_ari_is_truthy(&sub_result) == stop)
+        {
+            combined = !init;
+            break;
+        }
+    }
+
+    cace_amm_lookup_list_clear(deref_list);
+    return combined;
+}
+
 typedef struct
 {
     /// Entire table being filtered
@@ -693,73 +807,41 @@ typedef struct
  *
  * Assumes the LABEL contains an index of the column which will substitute data
  */
-static int tbl_filter_sub_label(cace_ari_lit_t *out, const cace_ari_lit_t *in, const cace_ari_translate_ctx_t *ctx)
+static cace_ari_translate_result_t tbl_filter_sub_label(cace_ari_t *out, const cace_ari_t *in,
+                                                        const cace_ari_translate_ctx_t *ctx)
 {
-    int              res;
-    _tbl_row_pair_t *table_data = (_tbl_row_pair_t *)ctx->user_data;
-
-    if (in->has_ari_type && in->ari_type == CACE_ARI_TYPE_LABEL)
+    if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
     {
+        _tbl_row_pair_t *table_data = (_tbl_row_pair_t *)ctx->user_data;
+
         const cace_ari_tbl_t *tbl_data  = table_data->tbl;
-        int                   row_index = table_data->row_index;
-        int                   label_id  = 0;
+        const int             row_index = table_data->row_index;
 
         // Get label ID value
-        switch (in->prim_type)
+        cace_ari_int col_index;
+        if (cace_ari_get_int(in, &col_index))
         {
-            case CACE_ARI_PRIM_UINT64:
-            {
-                const uint64_t *val = &(in->value.as_uint64);
-                if (*val > INT32_MAX)
-                {
-                    return 3;
-                }
-                label_id = *val;
-                break;
-            }
-            case CACE_ARI_PRIM_INT64:
-            {
-                const int64_t *val = &(in->value.as_int64);
-                if ((*val < INT32_MIN) || (*val > INT32_MAX))
-                {
-                    return 3;
-                }
-                label_id = *val;
-                break;
-            }
-            default:
-                return 2;
+            CACE_LOG_ERR("Given non-int label");
+            return CACE_ARI_TRANSLATE_FAILURE;
         }
 
         // Get column index
-        int col_index = label_id;
         if (col_index >= (int)tbl_data->ncols)
         {
             CACE_LOG_WARNING("Invalid colum index %d, skipping", col_index);
-            return 1;
+            return CACE_ARI_TRANSLATE_FAILURE;
         }
 
+        size_t array_index = (row_index * tbl_data->ncols) + col_index;
         // Get data value from table
-        size_t      array_index   = (row_index * tbl_data->ncols) + col_index;
-        cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, array_index);
+        const cace_ari_t *tbl_data_item = cace_ari_array_cget(tbl_data->items, array_index);
 
         // Replace label with table data
-        if (tbl_data_item->is_ref)
-        {
-            CACE_LOG_WARNING("Substitution of lit with ref currently not supported");
-            res = cace_ari_lit_copy(out, in);
-        }
-        else
-        {
-            res = cace_ari_lit_copy(out, &(tbl_data_item->as_lit));
-        }
-    }
-    else
-    {
-        res = cace_ari_lit_copy(out, in);
+        cace_ari_set_copy(out, tbl_data_item);
+        return CACE_ARI_TRANSLATE_FINAL;
     }
 
-    return res;
+    return CACE_ARI_TRANSLATE_DEFAULT;
 }
 
 void refda_adm_ietf_dtnma_agent_append_derived_ident(cace_ari_tbl_t *table, const cace_amm_lookup_t *deref,
@@ -2041,28 +2123,27 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
     }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-    if (refda_eval_condition(ctx->runctx, &result, ari_condition))
+
+    refda_agent_t *agent = ctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    int res = refda_eval_target(ctx->runctx, &result, ari_condition);
+    REFDA_AGENT_UNLOCK(agent, );
+    if (res)
     {
         CACE_LOG_ERR("Unable to evaluate if-then-else condition");
         return;
     }
 
-    bool condition;
-    if (cace_ari_get_bool(&result, &condition))
-    {
-        CACE_LOG_ERR("Unable to unpack boolean returned from refda_eval_condition");
-        return;
-    }
+    const bool result_truthy = cace_amm_ari_is_truthy(&result);
+    // write back result for this operator
+    cace_ari_set_bool(&result, result_truthy);
 
-    result = CACE_ARI_INIT_UNDEFINED;
-
-    if (condition)
+    if (result_truthy)
     {
         if (!cace_ari_is_null(ari_on_truthy))
         {
             refda_exec_next(ctx->item->seq, ari_on_truthy);
         }
-        cace_ari_set_bool(&result, true);
     }
     else
     {
@@ -2070,7 +2151,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
         {
             refda_exec_next(ctx->item->seq, ari_on_falsy);
         }
-        cace_ari_set_bool(&result, false);
     }
 
     refda_ctrl_exec_ctx_set_result_move(ctx, &result);
@@ -3499,7 +3579,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
         // action
         if (valid)
         {
-            struct cace_ari_ac_s *action_ac = cace_ari_get_ac((cace_ari_t *)ari_action);
+            const struct cace_ari_ac_s *action_ac = cace_ari_cget_ac(ari_action);
             if (action_ac == NULL)
             {
                 CACE_LOG_ERR("Invalid ARI received for action");
@@ -3515,7 +3595,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
         // condition
         if (valid)
         {
-            struct cace_ari_ac_s *condition_ac = cace_ari_get_ac((cace_ari_t *)ari_condition);
+            const struct cace_ari_ac_s *condition_ac = cace_ari_cget_ac(ari_condition);
             if (condition_ac == NULL)
             {
                 CACE_LOG_ERR("Invalid ARI received for condition");
@@ -3701,7 +3781,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         // action
         if (valid)
         {
-            struct cace_ari_ac_s *action_ac = cace_ari_get_ac((cace_ari_t *)ari_action);
+            const struct cace_ari_ac_s *action_ac = cace_ari_cget_ac(ari_action);
             if (action_ac == NULL)
             {
                 CACE_LOG_ERR("Invalid ARI received for action");
@@ -4096,6 +4176,9 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "val", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
@@ -4148,6 +4231,10 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
@@ -4182,6 +4269,10 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
 static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
@@ -4213,6 +4304,10 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
  *   arithmetic.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -4247,6 +4342,10 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
  *   numeric type before the arithmetic.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -4284,6 +4383,10 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
 static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx)
@@ -4315,6 +4418,9 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
  *   Perform a bitwise NOT on an integer value.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "val", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
@@ -4363,6 +4469,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_not(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
@@ -4391,6 +4501,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
  *   Perform a bitwise OR between two integer values.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
@@ -4421,6 +4535,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
  */
 static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
@@ -4449,6 +4567,9 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
  *   Perform a boolean NOT on a boolean value.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "val", type use of ari:/ARITYPE/BOOL
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4481,6 +4602,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_not(refda_oper_eval_ctx_t *ctx)
  *   Perform a boolean AND between two boolean values.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari:/ARITYPE/BOOL
+ *   - Index 1, name "right", type use of ari:/ARITYPE/BOOL
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4515,6 +4640,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_and(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari:/ARITYPE/BOOL
+ *   - Index 1, name "right", type use of ari:/ARITYPE/BOOL
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
@@ -4547,6 +4676,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_or(refda_oper_eval_ctx_t *ctx)
  *   Perform a boolean XOR between two boolean values.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari:/ARITYPE/BOOL
+ *   - Index 1, name "right", type use of ari:/ARITYPE/BOOL
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4582,6 +4715,10 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ctx)
@@ -4614,6 +4751,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ct
  *   AMM.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4649,6 +4790,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ctx)
@@ -4680,6 +4825,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ct
  *   compatible numeric type before the comparison.
  *
  * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4713,6 +4862,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ctx)
@@ -4745,6 +4898,10 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ct
  *
  * Parameters: none
  *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
 static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ctx)
@@ -4769,6 +4926,445 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
      */
 }
 
+/* Name: is-undefined
+ * Description:
+ *   Predicate to check for the undefined value.
+ *
+ * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_is_undefined(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_undefined BODY
+     * +-------------------------------------------------------------------------+
+     */
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, cace_ari_is_undefined(value));
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_undefined BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: is-not-undefined
+ * Description:
+ *   Predicate to check for the undefined value.
+ *
+ * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_is_not_undefined(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_not_undefined BODY
+     * +-------------------------------------------------------------------------+
+     */
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, cace_ari_not_undefined(value));
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_not_undefined BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: match-regexp
+ * Description:
+ *   This is a unary predicate operator which will compare a text value to
+ *   a regular expression pattern. The regular expression is limited to
+ *   I-Regexp compatibility.
+ *
+ * Parameters list:
+ *   - Index 0, name "regexp", type use of ari:/ARITYPE/TEXTSTR
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari:/ARITYPE/TEXTSTR
+ *
+ * Result name "is-match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_regexp BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    const cace_ari_t *regexp      = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const char       *regexp_text = cace_ari_cget_tstr_cstr(regexp);
+
+    const cace_ari_t *value      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const char       *value_text = cace_ari_cget_tstr_cstr(value);
+
+    bool is_match = false;
+    // match only text string values
+    if (regexp_text && value_text)
+    {
+#if defined(PCRE_FOUND)
+        const int   opts        = PCRE2_ANCHORED | PCRE2_ENDANCHORED;
+        int         errorcode   = 0;
+        PCRE2_SIZE  erroroffset = 0;
+        pcre2_code *cfg =
+            pcre2_compile((PCRE2_SPTR8)regexp_text, strlen(regexp_text), opts, &errorcode, &erroroffset, NULL);
+        if (!cfg)
+        {
+            CACE_LOG_ERR("Failed to compile regex pattern (error %d at %z): %s", errorcode, erroroffset, regexp_text);
+        }
+        else
+        {
+            pcre2_match_data *md   = pcre2_match_data_create_from_pattern(cfg, NULL);
+            const int         opts = 0;
+            // ignore terminating null
+            int res = pcre2_match(cfg, (PCRE2_SPTR8)value_text, strlen(value_text), 0, opts, md, NULL);
+            CACE_LOG_DEBUG("Matching pattern %s with value %s, result %d", regexp_text, value, res);
+            if (res > 0)
+            {
+                is_match = true;
+            }
+            pcre2_match_data_free(md);
+
+            pcre2_code_free(cfg);
+        }
+#else  /* PCRE_FOUND */
+        CACE_LOG_CRIT("Cannot evaluate oper match-regexp without PCRE");
+#endif /* PCRE_FOUND */
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, is_match);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_regexp BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: predicate-all
+ * Description:
+ *   Compose unary predicate operators with a result that is true only when
+ *   all of the subordinate operators evaluate to a truthy result. If any
+ *   operator evaluates to the undefined value it is considered not truthy
+ *   and this result will be false.
+ *
+ * Parameters list:
+ *   - Index 0, name "operators", type ulist of use of ari:/ARITYPE/OPER
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "combined", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_predicate_all(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_all BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t    *operators    = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_ac_t *operators_ac = cace_ari_cget_ac(operators);
+    if (operators_ac == NULL)
+    {
+        CACE_LOG_ERR("Parameter operators is not an AC");
+        return;
+    }
+
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    // combined result is false if any subordinate is not truthy
+    bool combined = predicate_compose(ctx->evalctx->runctx, operators_ac, value, false, true, false);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, combined);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_all BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: predicate-any
+ * Description:
+ *   Compose unary predicate operators with a result that is true when any
+ *   of the subordinate operators evaluate to a truthy result. If any
+ *   operator evaluates to the undefined value it is considered not truthy,
+ *   so other operators are still part of the result which may be true.
+ *
+ * Parameters list:
+ *   - Index 0, name "operators", type ulist of use of ari:/ARITYPE/OPER
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "combined", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_predicate_any(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_any BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t    *operators    = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_ac_t *operators_ac = cace_ari_cget_ac(operators);
+    if (operators_ac == NULL)
+    {
+        CACE_LOG_ERR("Parameter operators is not an AC");
+        return;
+    }
+
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    // combined result is true if any subordinate is truthy
+    bool combined = predicate_compose(ctx->evalctx->runctx, operators_ac, value, false, false, true);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, combined);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_any BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: predicate-none
+ * Description:
+ *   Compose unary predicate operators with a result that is true when all
+ *   of the subordinate operators do not evaluate to a truthy result. If
+ *   any operator evaluates to the undefined value it is considered not
+ *   truthy, so other operators are still part of the result which may be
+ *   true.
+ *
+ * Parameters list:
+ *   - Index 0, name "operators", type ulist of use of ari:/ARITYPE/OPER
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "combined", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_predicate_none(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_none BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t    *operators    = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_ac_t *operators_ac = cace_ari_cget_ac(operators);
+    if (operators_ac == NULL)
+    {
+        CACE_LOG_ERR("Parameter operators is not an AC");
+        return;
+    }
+
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    // combined result is false if any subordinate is truthy
+    bool combined = predicate_compose(ctx->evalctx->runctx, operators_ac, value, true, true, true);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, combined);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_predicate_none BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: eval
+ * Description:
+ *   A zero-ary operator which functions by evaluating a target sub-
+ *   expression using the following phases:   1. If the target is a
+ *   reference, it is used to produce      a value which SHALL be an
+ *   expression.      Otherwise, the target SHALL itself be an expression.
+ *   2. Evaluate the expression and consider the evaluation      result as
+ *   this operator result.
+ *
+ * Parameters list:
+ *   - Index 0, name "target", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
+ *
+ * Operands: none
+ *
+ * Result name "sub-result", type use of ari://ietf/amm-base/TYPEDEF/any
+ */
+static void refda_adm_ietf_dtnma_agent_oper_eval(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_eval BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+
+    refda_eval_ctx_t evalctx;
+    refda_eval_ctx_init(&evalctx, ctx->evalctx->runctx);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->evalctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    int res = refda_eval_expand_target(&evalctx, target);
+    REFDA_AGENT_UNLOCK(agent, );
+    if (!res)
+    {
+        res = refda_eval_reduce(&evalctx, &result);
+    }
+    refda_eval_ctx_deinit(&evalctx);
+
+    // evaluation may still result in undefined value
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_eval BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: unary-eval
+ * Description:
+ *   A unary operator which functions by evaluating a target sub-expression
+ *   using the following phases:   1. Substitute the bind-value actual
+ *   parameter for      </label/0> items within the target value
+ *   (literal expression or object reference).   2. If the target is a
+ *   reference, it is used to produce      a value which SHALL be an
+ *   expression.      Otherwise, the target SHALL itself be an expression.
+ *   3. Evaluate the expression and consider the evaluation      result as
+ *   this operator result. This is similar to the <./oper/eval> object with
+ *   the addition of the unary operand binding.
+ *
+ * Parameters list:
+ *   - Index 0, name "target", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
+ *
+ * Operand list:
+ *   - Index 0, name "bind-value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "sub-result", type use of ari://ietf/amm-base/TYPEDEF/any
+ */
+static void refda_adm_ietf_dtnma_agent_oper_unary_eval(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_unary_eval BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
+
+    const cace_ari_translator_t translator = { .map_ari = unary_eval_sub_label };
+    // Step 1 substitute the operand value
+    int res = cace_ari_translate(&sub_tgt, target, &translator, (void *)value);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to translate target, error %d", res);
+        cace_ari_deinit(&sub_tgt); // No longer needed at this point
+        return;
+    }
+
+    refda_eval_ctx_t evalctx;
+    refda_eval_ctx_init(&evalctx, ctx->evalctx->runctx);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->evalctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    res = refda_eval_expand_target(&evalctx, &sub_tgt);
+    REFDA_AGENT_UNLOCK(agent, );
+    cace_ari_deinit(&sub_tgt);
+    if (!res)
+    {
+        res = refda_eval_reduce(&evalctx, &result);
+    }
+    refda_eval_ctx_deinit(&evalctx);
+
+    // evaluation may still result in undefined value
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_unary_eval BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: tbl-filter
  * Description:
  *   Filter a table first by rows (using an expression) and then by columns
@@ -4777,6 +5373,9 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
  * Parameters list:
  *   - Index 0, name "rows", type use of ari://ietf/dtnma-agent/TYPEDEF/tbl-row-filter
  *   - Index 1, name "columns", type ulist of use of ari:/ARITYPE/UVAST
+ *
+ * Operand list:
+ *   - Index 0, name "in", type use of ari:/ARITYPE/TBL
  *
  * Result name "out", type use of ari:/ARITYPE/TBL
  */
@@ -4799,8 +5398,8 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     }
 
     // Local variables from operand
-    const cace_ari_t *tbl      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    cace_ari_tbl_t   *tbl_data = cace_ari_get_tbl((cace_ari_t *)tbl);
+    const cace_ari_t     *tbl      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_tbl_t *tbl_data = cace_ari_cget_tbl(tbl);
     if (tbl_data == NULL)
     {
         CACE_LOG_ERR("operand is not a TBL, unable to continue");
@@ -4808,9 +5407,9 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     }
 
     // Local variables from parameters
-    const cace_ari_t *row_match  = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
-    const cace_ari_t *columns    = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
-    cace_ari_ac_t    *columns_ac = cace_ari_get_ac((cace_ari_t *)columns);
+    const cace_ari_t    *row_match  = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t    *columns    = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_ac_t *columns_ac = cace_ari_cget_ac(columns);
     if (columns_ac == NULL)
     {
         CACE_LOG_ERR("Column is not an AC");
@@ -4819,22 +5418,20 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     int num_filter_cols = cace_ari_list_size(columns_ac->items);
 
     // Local variables for result
-    cace_ari_t     result = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_tbl_t result_tbl;
-    cace_ari_tbl_init(&result_tbl);
-    cace_ari_tbl_reset(&result_tbl, num_filter_cols, 0);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    // manipulate result as a table
+    cace_ari_tbl_t *result_tbl = cace_ari_set_tbl(&result, NULL);
+    cace_ari_tbl_reset(result_tbl, num_filter_cols, 0);
 
     // for each row of the table
-    int num_rows = cace_ari_tbl_num_rows(cace_ari_get_tbl((cace_ari_t *)tbl));
+    int num_rows = cace_ari_tbl_num_rows(cace_ari_cget_tbl(tbl));
     for (int r = 0; r < num_rows; r++)
     {
         // Substitute row values for LABEL items within row filter EXPR
         cace_ari_t current_row = CACE_ARI_INIT_UNDEFINED;
         {
-            cace_ari_translator_t translator = {
-                .map_lit = tbl_filter_sub_label,
-            };
-            _tbl_row_pair_t table_data = { tbl_data, r };
+            const cace_ari_translator_t translator = { .map_ari = tbl_filter_sub_label };
+            _tbl_row_pair_t             table_data = { tbl_data, r };
 
             int res = cace_ari_translate(&current_row, row_match, &translator, &table_data);
             if (res)
@@ -4847,12 +5444,17 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
 
         // Evaluate the row filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        int        res         = refda_eval_target(ctx->evalctx->parent, &eval_result, &current_row);
+
+        refda_agent_t *agent = ctx->evalctx->runctx->agent;
+        REFDA_AGENT_LOCK(agent, );
+        int res = refda_eval_target(ctx->evalctx->runctx, &eval_result, &current_row);
+        REFDA_AGENT_UNLOCK(agent, );
+
         cace_ari_deinit(&current_row); // No longer needed at this point
         if (res)
         {
             CACE_LOG_ERR("failed to evaluate condition, error %d", res);
-            return; // cace_ari_set_bool(&result, false);
+            return;
         }
 
         // True result indicates row not filtered, add data values from 'columns' to result
@@ -4861,17 +5463,20 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
             // Copy current row into result set
             cace_ari_array_t row;
             cace_ari_array_init(row);
-            cace_ari_array_resize(row, num_filter_cols);
-            for (int c = 0; c < num_filter_cols; c++)
-            {
-                cace_ari_t    *col_filter_item = cace_ari_list_get(columns_ac->items, c);
-                cace_ari_uvast col_filter_index;
+            cace_ari_array_reserve(row, num_filter_cols);
 
+            cace_ari_list_it_t col_filter_it;
+            for (cace_ari_list_it(col_filter_it, columns_ac->items); !cace_ari_list_end_p(col_filter_it);
+                 cace_ari_list_next(col_filter_it))
+            {
+                const cace_ari_t *col_filter_item = cace_ari_list_cref(col_filter_it);
+
+                cace_ari_uvast col_filter_index;
                 res = cace_ari_get_uvast(col_filter_item, &col_filter_index);
                 if (res)
                 {
-                    CACE_LOG_WARNING("Unable to retrieve column filter at index %d", c);
-                    cace_ari_tbl_deinit(&result_tbl);
+                    CACE_LOG_WARNING("Column filter value is not an integer");
+                    cace_ari_deinit(&result);
                     cace_ari_array_clear(row);
                     return;
                 }
@@ -4879,23 +5484,22 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
                 if (col_filter_index >= tbl_data->ncols)
                 {
                     CACE_LOG_WARNING("Invalid colum index %d, skipping", col_filter_index);
-                    cace_ari_tbl_deinit(&result_tbl);
+                    cace_ari_deinit(&result);
                     cace_ari_array_clear(row);
                     return;
                 }
 
+                const size_t array_index = (r * tbl_data->ncols) + col_filter_index;
                 // Get data from input TBL for the current column
-                size_t      array_index   = (r * tbl_data->ncols) + col_filter_index;
-                cace_ari_t *tbl_data_item = cace_ari_array_get(tbl_data->items, array_index);
+                const cace_ari_t *tbl_data_item = cace_ari_array_cget(tbl_data->items, array_index);
 
                 // Copy data from input TBL to output TBL row
-                res = cace_ari_init_copy(cace_ari_array_get(row, c), tbl_data_item);
+                cace_ari_array_push_back(row, *tbl_data_item);
             }
-            cace_ari_tbl_move_row_array(&result_tbl, row);
+            cace_ari_tbl_move_row_array(result_tbl, row);
         }
     }
 
-    cace_ari_set_tbl(&result, &result_tbl);
     refda_oper_eval_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
@@ -4910,6 +5514,9 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
  *
  * Parameters list:
  *   - Index 0, name "index", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *
+ * Operand list:
+ *   - Index 0, name "in", type use of ari:/ARITYPE/AC
  *
  * Result name "out", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -4970,6 +5577,9 @@ static void refda_adm_ietf_dtnma_agent_oper_list_get(refda_oper_eval_ctx_t *ctx)
  *
  * Parameters list:
  *   - Index 0, name "key", type use of ari://ietf/amm-base/TYPEDEF/primitive
+ *
+ * Operand list:
+ *   - Index 0, name "in", type use of ari:/ARITYPE/AM
  *
  * Result name "out", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -7690,6 +8300,308 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 adm, cace_amm_idseg_ref_withenum("compare-le", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_COMPARE_LE),
                 objdata);
             // no parameters
+        }
+        { // For ./OPER/is-undefined
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_is_undefined;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("is-undefined", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_UNDEFINED),
+                objdata);
+            // no parameters
+        }
+        { // For ./OPER/is-not-undefined
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_is_not_undefined;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("is-not-undefined",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_NOT_UNDEFINED),
+                objdata);
+            // no parameters
+        }
+        { // For ./OPER/match-regexp
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TEXTSTR
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_match_regexp;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("match-regexp", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_REGEXP),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "regexp");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TEXTSTR
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TEXTSTR);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./OPER/predicate-all
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_predicate_all;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("predicate-all", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_PREDICATE_ALL),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "operators");
+                {
+                    // uniform list
+                    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/OPER
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OPER);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
+                    }
+                }
+            }
+        }
+        { // For ./OPER/predicate-any
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_predicate_any;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("predicate-any", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_PREDICATE_ANY),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "operators");
+                {
+                    // uniform list
+                    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/OPER
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OPER);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
+                    }
+                }
+            }
+        }
+        { // For ./OPER/predicate-none
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_predicate_none;
+
+            obj = refda_register_oper(adm,
+                                      cace_amm_idseg_ref_withenum(
+                                          "predicate-none", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_PREDICATE_NONE),
+                                      objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "operators");
+                {
+                    // uniform list
+                    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/OPER
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OPER);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
+                    }
+                }
+            }
+        }
+        { // For ./OPER/eval
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 0);
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/any
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_eval;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_EVAL), objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./OPER/unary-eval
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "bind-value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/any
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_unary_eval;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("unary-eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_UNARY_EVAL),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
         }
         { // For ./OPER/tbl-filter
             refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));

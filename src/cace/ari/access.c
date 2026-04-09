@@ -390,7 +390,7 @@ void cace_ari_set_real64(cace_ari_t *ari, cace_ari_real64 src)
 
 const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari)
 {
-    if (ari->is_ref || (ari->as_lit.prim_type != CACE_ARI_PRIM_TSTR))
+    if (!ari || ari->is_ref || (ari->as_lit.prim_type != CACE_ARI_PRIM_TSTR))
     {
         return NULL;
     }
@@ -399,7 +399,7 @@ const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari)
 
 const char *cace_ari_cget_tstr_cstr(const cace_ari_t *ari)
 {
-    if (ari->is_ref || (ari->as_lit.prim_type != CACE_ARI_PRIM_TSTR))
+    if (!ari || ari->is_ref || (ari->as_lit.prim_type != CACE_ARI_PRIM_TSTR))
     {
         return NULL;
     }
@@ -441,7 +441,7 @@ void cace_ari_set_tstr(cace_ari_t *ari, const char *buf, bool copy)
 
 const cace_data_t *cace_ari_cget_bstr(const cace_ari_t *ari)
 {
-    if (ari->is_ref || (ari->as_lit.prim_type != CACE_ARI_PRIM_BSTR))
+    if (!ari || ari->is_ref || (ari->as_lit.prim_type != CACE_ARI_PRIM_BSTR))
     {
         return NULL;
     }

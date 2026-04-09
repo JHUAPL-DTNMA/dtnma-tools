@@ -90,7 +90,7 @@ class TestRefdaSocket(unittest.TestCase):
         with open(startup_path, 'w') as startup_file:
             startup_file.writelines([
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group(1,test-agents)\n',
-                '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(//ietf/network-base/ident/uri-regexp-pattern(%22file%3A.%2A%22)))\n',
+                '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(%22file%3A.%2A%22)))\n',
                 # group 0 (agent) and 1 (all test mgrs) have all access
                 '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(0,1),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
                 + '//ietf/dtnma-agent-acl/ident/execute,'
@@ -695,7 +695,74 @@ class TestRefdaSocket(unittest.TestCase):
         ))
 
         self._start()
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
+        )
 
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=1, timeout=5)
+        self.assertEqual(1, len(rpts))
+
+        rpt = rpts.pop(0)
+        self.assertIsInstance(rpt.source, ari.LiteralARI)
+        self.assertEqual(rpt.source.type_id, ari.StructType.AC)
+        # items of the report
+        self.assertEqual(len(expect_items), len(rpt.items))
+        for expr, expect, got in zip(exprs, expect_items, rpt.items):
+            self.assertEqual(expect, got, msg=f'Failed item for expr {expr}')
+
+    def test_eval_predicates(self):
+        # precondition macro
+        mac_items = [
+           '//ietf/dtnma-agent/CTRL/ensure-odm(ietf,1,!odm,-1)',
+           '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,true-expr,1,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/expr),/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq))'
+        ]
+        # evaluate through report template items with inline expressions
+        exprs, expect_items = map(list, zip(
+            ('/ac/(true)', ari.LiteralARI(True)),
+            ('/ac/(false)', ari.LiteralARI(False)),
+            ('/ac/(10)', ari.LiteralARI(10)),
+            ('/ac/(//ietf/!odm/oper/undefined-name)', ari.UNDEFINED),
+            # produced expression vs eval sub-expression
+            ('/ac/(//ietf/!odm/const/true-expr)', self._ari_text_to_obj('/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq)')),
+            ('/ac/(//ietf/dtnma-agent/oper/eval(//ietf/!odm/const/true-expr))', ari.TYPED_TRUE),
+            # direct predicate operators
+            ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22ll%22))', ari.TYPED_FALSE),
+            ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22.*ll.*%22))', ari.TYPED_TRUE),
+            ('/ac/(undefined, //ietf/dtnma-agent/oper/is-undefined)', ari.TYPED_TRUE),
+            ('/ac/(undefined, //ietf/dtnma-agent/oper/is-not-undefined)', ari.TYPED_FALSE),
+            ('/ac/(2, //ietf/dtnma-agent/oper/is-undefined)', ari.TYPED_FALSE),
+            ('/ac/(2, //ietf/dtnma-agent/oper/is-not-undefined)', ari.TYPED_TRUE),
+            # bound evaluation operator as a predicate
+            ('/ac/(2,10,//ietf/dtnma-agent/oper/compare-eq)', ari.TYPED_FALSE),
+            ('/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq)', ari.TYPED_TRUE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,10,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,2,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_TRUE),
+            # predicate composing operators
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/()))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/(//ietf/dtnma-agent/oper/is-not-undefined)))', ari.TYPED_TRUE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/(//ietf/dtnma-agent/oper/is-undefined)))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/(//ietf/dtnma-agent/oper/is-not-undefined,//ietf/dtnma-agent/oper/is-undefined)))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-any(/ac/()))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-any(/ac/(//ietf/dtnma-agent/oper/is-not-undefined)))', ari.TYPED_TRUE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-any(/ac/(//ietf/dtnma-agent/oper/is-undefined)))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-any(/ac/(//ietf/dtnma-agent/oper/is-not-undefined,//ietf/dtnma-agent/oper/is-undefined)))', ari.TYPED_TRUE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-none(/ac/()))', ari.TYPED_TRUE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-none(/ac/(//ietf/dtnma-agent/oper/is-not-undefined)))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-none(/ac/(//ietf/dtnma-agent/oper/is-undefined)))', ari.TYPED_TRUE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/predicate-none(/ac/(//ietf/dtnma-agent/oper/is-not-undefined,//ietf/dtnma-agent/oper/is-undefined)))', ari.TYPED_FALSE),
+        ))
+
+        self._start()
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(/ac/(' + ','.join(mac_items) + '))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=len(mac_items))
+        self.assertEqual(len(mac_items), len(rpts))
+        for _ix in range(len(mac_items)):
+            rpt = rpts.pop(0)
+            self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        # actual reporting
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
         )
@@ -1221,7 +1288,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
 
-    def test_agent_control_flow_ctrls(self):
+    def test_exec_control_flow_ctrls(self):
         self._start()
 
         LOGGER.setLevel(logging.INFO)
@@ -1363,7 +1430,7 @@ class TestRefdaSocket(unittest.TestCase):
                 'ari:/EXECSET/n=123;(/ac/('
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'  # duplicate no-op
-                + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(10,/ac/(//ietf/network-base/ident/uri-regexp-pattern(' + pat + '))),'
+                + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(10,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(' + pat + '))),'
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-access(10,/ac/(10),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
                 + '//ietf/dtnma-agent-acl/ident/execute,'
                 + '//ietf/dtnma-agent-acl/ident/produce'
