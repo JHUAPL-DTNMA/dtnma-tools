@@ -8,4 +8,4 @@ __pycache__
 deps/build
 build
 testroot
-/deps/
+/deps/*/

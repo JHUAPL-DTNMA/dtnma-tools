@@ -21,6 +21,7 @@
 
 #include "agent.h"
 #include "runctx.h"
+#include "eval_ctx.h"
 #include <cace/ari.h>
 
 #ifdef __cplusplus
@@ -36,28 +37,62 @@ extern "C" {
 /// Error result when the evaluation does not resolve to a single value
 #define REFDA_EVAL_ERR_NON_SINGLE 6
 
-/** Implement the evaluation procedure from Section TBD of @cite ietf-dtn-amm-01.
+/** Perform the expansion portion of the evaluation procedure from either an
+ * inline expression (literal value) or produced expression (from reference value).
  *
- * @param[in] agent The agent state for ARI lookup.
- * @param[out] result The single result value from the evaluation.
- * This ARI must be initialized before the call and will be valid if the
- * return code is zero but must be deinitialized regardless.
+ * @pre The @c refda_agent_s::objs_mutex must already be locked.
+ * @param[in] ctx The evaluation context, which must already be initialized.
+ * @param[in] target The literal-value EXPR to evaluate or reference-value
+ * to produce and evaluate.
+ * @return Zero if successful.
+ */
+int refda_eval_expand_target(refda_eval_ctx_t *ctx, const cace_ari_t *target);
+
+/** Perform the expansion portion of the evaluation procedure from
+ * a literal value expression.
+ *
+ * @pre The @c refda_agent_s::objs_mutex must already be locked.
+ * @param[in] ctx The evaluation context, which must already be initialized.
  * @param[in] expr The literal-value EXPR to evaluate.
  * @return Zero if successful.
  */
-int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *expr);
+int refda_eval_expand_expr(refda_eval_ctx_t *ctx, const cace_ari_t *expr);
 
-/** Evaluate given conditional ARI expression and return a boolean ARI indicating whether
- * the condition was true or false.
+/** Implement the reduction portion of the evaluation procedure.
  *
- * @param[in] runctx The run context.
+ * @param[in] ctx The evaluation context, which must already be expanded into.
  * @param[out] result The single result value from the evaluation.
  * This ARI must be initialized before the call and will be valid if the
  * return code is zero but must be deinitialized regardless.
- * @param[in] condition The ARI to dereference, if necessary, and evaluate.
  * @return Zero if successful.
  */
-int refda_eval_condition(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *condition);
+int refda_eval_reduce(refda_eval_ctx_t *ctx, cace_ari_t *result);
+
+/** A shortcut to fully evaluate an expression.
+ *
+ * @pre The @c refda_agent_s::objs_mutex must already be locked.
+ * @param[in] runctx The running context for evaluation.
+ * @param[out] result The single result value from the evaluation.
+ * This ARI must be initialized before the call and will be valid if the
+ * return code is zero but must be deinitialized regardless.
+ * @param[in] target The literal-value EXPR to evaluate or reference-value
+ * to produce and evaluate.
+ * @return Zero if successful.
+ */
+int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target);
+
+/** This is a semi-internal function for evaluating a single operator in
+ * an existing evaluation context.
+ *
+ * @param[in,out] ctx The evaluation context already populated with
+ * refda_eval_ctx_t::stack values.
+ * At the start of evaluation any named operands are popped from the stack
+ * At the completion of evaluation the result value is pushed onto the stack.
+ * This function does not use the refda_eval_ctx_t::input value.
+ * @param[in] deref The dereferenced operator with any needed actual parameters.
+ * @return Zero if successful.
+ */
+int refda_eval_oper(refda_eval_ctx_t *ctx, const cace_amm_lookup_t *deref);
 
 #ifdef __cplusplus
 } // extern C

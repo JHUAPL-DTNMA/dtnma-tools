@@ -49,8 +49,6 @@ extern "C" {
 #define REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_IDENT_DISPLAY_BSTR_EID_PATTERN 3
 /// For ./IDENT/bp-endpoint
 #define REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_IDENT_BP_ENDPOINT 0
-/// For ./IDENT/bp-eid-pattern
-#define REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_IDENT_BP_EID_PATTERN 2
 
 /*
  * Enumerations for TYPEDEF objects
@@ -61,6 +59,12 @@ extern "C" {
 #define REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_TYPEDEF_EID_CBOR 1
 /// For ./TYPEDEF/eid-pattern-cbor
 #define REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_TYPEDEF_EID_PATTERN_CBOR 2
+
+/*
+ * Enumerations for OPER objects
+ */
+/// For ./OPER/match-eid-pattern
+#define REFDA_ADM_IETF_BP_BASE_ENUM_OBJID_OPER_MATCH_EID_PATTERN 0
 
 /** Initializer for the ADM module ietf-bp-base.
  * @param[in,out] agent The agent to register this namespace and its

@@ -132,8 +132,8 @@ typedef enum
  * and other functions to access its state.
  *
  * Both #match and #convert should be non-null for any type.
- * Details about AMM typing are discussed in the page @ref cace_amm_typing.
- * This includes the valid possibility of circular references.
+ * This structure includes the valid possibility of circular references,
+ * which are resolved at run time through reference binding in the Agent.
  */
 struct cace_amm_type_s
 {
