@@ -491,7 +491,18 @@ static int refda_exec_check_sbr_condition(refda_agent_t *agent, const refda_amm_
     refda_runctx_init(&runctx);
     refda_runctx_from(&runctx, agent, NULL);
 
-    int res = refda_eval_condition(&runctx, result, &(sbr->condition));
+    refda_eval_ctx_t evalctx;
+    refda_eval_ctx_init(&evalctx, &runctx);
+
+    REFDA_AGENT_LOCK(agent, 2);
+    int res = refda_eval_expand_expr(&evalctx, &(sbr->condition));
+    REFDA_AGENT_UNLOCK(agent, 2);
+    if (!res)
+    {
+        res = refda_eval_reduce(&evalctx, result);
+    }
+
+    refda_eval_ctx_deinit(&evalctx);
     refda_runctx_deinit(&runctx);
 
     return res;

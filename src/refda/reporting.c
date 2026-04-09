@@ -106,10 +106,22 @@ static void refda_reporting_item_lit(refda_runctx_t *runctx, cace_ari_t *rpt_ite
     else
     {
         // item is an expression to be evaluated
-        if (refda_eval_target(runctx, rpt_item, rptt_item))
+        refda_eval_ctx_t ctx;
+        refda_eval_ctx_init(&ctx, runctx);
+
+        refda_agent_t *agent = runctx->agent;
+        REFDA_AGENT_LOCK(agent, );
+        int res = refda_eval_expand_expr(&ctx, rptt_item);
+        REFDA_AGENT_UNLOCK(agent, );
+        if (!res)
+        {
+            res = refda_eval_reduce(&ctx, rpt_item);
+        }
+
+        refda_eval_ctx_deinit(&ctx);
+        if (res)
         {
             CACE_LOG_WARNING("reporting item failed to evaluate expression");
-            cace_ari_reset(rpt_item);
         }
     }
 }

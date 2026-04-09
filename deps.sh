@@ -56,6 +56,7 @@ if [ ! -e ${DESTDIR}/usr/include/qcbor/qcbor.h ]
 then
   echo "Building QCBOR..."
   pushd ${DEPSDIR}/QCBOR
+  patch -p1 <${SELFDIR}/deps/qcbor-increase-depth.patch
   cmake -S . -B ${BUILDDIR}/QCBOR \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
