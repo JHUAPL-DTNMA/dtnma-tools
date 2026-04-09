@@ -43,7 +43,9 @@ def compose_args(args: List[str]) -> List[str]:
 
     wrap = os.environ.get('TEST_EXEC_WRAP', '').casefold()
     prefix = []
-    if wrap == 'memcheck':
+    if wrap == '':
+        pass
+    elif wrap == 'memcheck':
         prefix = [
             'valgrind',
             '--tool=memcheck',
