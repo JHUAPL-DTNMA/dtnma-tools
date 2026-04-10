@@ -22,7 +22,6 @@
 #include "agent.h"
 #include "runctx.h"
 
-// FIXME: is this needed?? A post is done now in refda_ctrl_exec_ctx_check_result()
 void refda_exec_item_resume(refda_exec_item_t *obj)
 {
     atomic_store(&obj->execution_stage, REFDA_EXEC_COMPLETE);
