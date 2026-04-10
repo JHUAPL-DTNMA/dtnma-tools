@@ -5550,7 +5550,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_get(refda_oper_eval_ctx_t *ctx)
     }
 
     // Local variables from operand
-    const cace_ari_t    *in     = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t     *in     = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_tbl_t *in_tbl = cace_ari_cget_tbl(in);
     if (in_tbl == NULL)
     {
@@ -5612,7 +5612,7 @@ static void refda_adm_ietf_dtnma_agent_oper_list_get(refda_oper_eval_ctx_t *ctx)
 
     const cace_ari_t *index = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
 
-    cace_ari_uint     index_uint;
+    cace_ari_uint index_uint;
     if (cace_ari_get_uint(index, &index_uint))
     {
         CACE_LOG_ERR("index is not a uint, unable to continue");
