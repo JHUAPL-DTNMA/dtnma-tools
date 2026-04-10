@@ -561,6 +561,8 @@ create table if not exists ari_rptlist (
 delete
 	cascade
 );
+CREATE INDEX idx_rptlist_agent_time ON ari_rptlist (agent_time);
+CREATE INDEX idx_rptlist_source ON ari_rptlist (report_source);
 
 -- rpt-item
 create table if not exists ari_rpt_item (
@@ -576,6 +578,7 @@ create table if not exists ari_rpt_item (
 delete
 	cascade
 );
+CREATE UNIQUE INDEX idx_rpt_item_agent_time ON ari_rpt_item (ari_rptlist_id, ari_rpt_item_index);
 
 
 create table if not exists formal_parmspec (
