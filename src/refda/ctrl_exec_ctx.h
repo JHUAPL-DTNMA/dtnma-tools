@@ -40,11 +40,6 @@ typedef struct refda_ctrl_exec_ctx_s
      */
     refda_runctx_t *runctx;
 
-    /** Descriptor for the CTRL being executed.
-     * This will never be null.
-     */
-    const refda_amm_ctrl_desc_t *ctrl;
-
     /** Internal execution bookkeeping item.
      * This will never be null.
      */

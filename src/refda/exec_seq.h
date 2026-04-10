@@ -45,6 +45,7 @@ M_ARRAY_DEF(refda_exec_item_list, refda_exec_item_ptr_t *,
 typedef struct refda_exec_seq_s
 {
     /** Context for the source of this sequence.
+     * This will never be null.
      */
     refda_runctx_ptr_t *runctx;
 
@@ -60,6 +61,7 @@ typedef struct refda_exec_seq_s
     refda_exec_item_list_t items;
 
     /** Pointer to optional externally-owned finish state tracker.
+     * This is null when there is no tracker.
      */
     refda_exec_status_t *status;
 
