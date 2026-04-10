@@ -684,14 +684,22 @@ class TestRefdaSocket(unittest.TestCase):
             ('/ac/(true)', ari.LiteralARI(True)),
             # list access
             ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(1))', ari.LiteralARI(2)),
-            ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(10))', ari.UNDEFINED), # bad index
+            ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(10))', ari.UNDEFINED), # missing index
             ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(hi))', ari.UNDEFINED), # bad parameter
-            ('/ac/(2,//ietf/dtnma-agent/oper/list-get(1))', ari.UNDEFINED), # bad operand
+            ('/ac/(2,//ietf/dtnma-agent/oper/list-get(0))', ari.UNDEFINED), # bad operand
             # map access
             ('/ac/(/am/(1=one,2=two),//ietf/dtnma-agent/oper/map-get(1))', ari.LiteralARI('one')),
             ('/ac/(/am/(1=one,2=two),//ietf/dtnma-agent/oper/map-get(10))', ari.UNDEFINED), # missing key
             ('/ac/(/am/(1=one,2=two),//ietf/dtnma-agent/oper/map-get(hi))', ari.UNDEFINED), # missing key but valid
-            ('/ac/(2,//ietf/dtnma-agent/oper/map-get(1))', ari.UNDEFINED), # bad operand
+            ('/ac/(2,//ietf/dtnma-agent/oper/map-get(0))', ari.UNDEFINED), # bad operand
+            # table access
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(1,0))', ari.LiteralARI(3)),
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(0,1))', ari.LiteralARI(2)),
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(10,0))', ari.UNDEFINED), # missing index
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(0,10))', ari.UNDEFINED), # missing index
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(hi,0))', ari.UNDEFINED), # bad parameter
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(0,hi))', ari.UNDEFINED), # bad parameter
+            ('/ac/(2,//ietf/dtnma-agent/oper/tbl-get(0,0))', ari.UNDEFINED), # bad operand
         ))
 
         self._start()
