@@ -346,31 +346,13 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // use of ari:/ARITYPE/NULL
-                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
-                        cace_amm_type_set_use_ref_move(choice, &typeref);
-                    }
-                }
-                {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
-                    {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // use of ari:/ARITYPE/BOOL
-                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
-                        cace_amm_type_set_use_ref_move(choice, &typeref);
-                    }
-                }
-                {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 2);
-                    {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // reference to ari://ietf/amm-base/TYPEDEF/numeric
                         cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
                         cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
                 {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 3);
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/TEXTSTR
@@ -379,11 +361,29 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 4);
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 2);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/BYTESTR
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BYTESTR);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
+                    }
+                }
+                {
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 3);
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/BOOL
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
+                    }
+                }
+                {
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 4);
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/NULL
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
                         cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
@@ -436,8 +436,8 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/PRIMITIVE
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 4);
+                        // reference to ari://ietf/amm-base/TYPEDEF/TIME
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 5);
                         cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
@@ -445,8 +445,8 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/TIME
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 5);
+                        // reference to ari://ietf/amm-base/TYPEDEF/PRIMITIVE
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 4);
                         cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
@@ -765,13 +765,13 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             // named semantic type:
             {
                 // union
-                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 5);
+                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 4);
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/simple
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 6);
+                        // use of ari:/ARITYPE/LITERAL
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_LITERAL);
                         cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
@@ -795,15 +795,6 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                 }
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 3);
-                    {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // use of ari:/ARITYPE/LABEL
-                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_LABEL);
-                        cace_amm_type_set_use_ref_move(choice, &typeref);
-                    }
-                }
-                {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 4);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/OPER

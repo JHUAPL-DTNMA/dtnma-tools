@@ -2568,6 +2568,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
             else
             {
                 // actual failure
+                CACE_LOG_ERR("cannot report without manager identity in runctx");
                 return;
             }
         }
@@ -2585,6 +2586,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_report_on(refda_ctrl_exec_ctx_t *ctx
     else
     {
         // actual failure
+        CACE_LOG_ERR("Invalid destination parameter, unable to continue");
         return;
     }
 
@@ -5795,6 +5797,43 @@ static void refda_adm_ietf_dtnma_agent_oper_list_get(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_list_get BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t *index = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    cace_ari_uint     index_uint;
+    if (cace_ari_get_uint(index, &index_uint))
+    {
+        CACE_LOG_ERR("index is not a uint, unable to continue");
+        return;
+    }
+
+    // Local variables from operand
+    const cace_ari_t    *in    = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_ac_t *in_ac = cace_ari_cget_ac(in);
+    if (in_ac == NULL)
+    {
+        CACE_LOG_ERR("operand is not an AC, unable to continue");
+        return;
+    }
+
+    if (index_uint >= cace_ari_list_size(in_ac->items))
+    {
+        CACE_LOG_ERR("index %u is too large for AC size %zu", index_uint, cace_ari_list_size(in_ac->items));
+        return;
+    }
+
+    // cast is workaround for M*LIB interface type issue https://github.com/P-p-H-d/mlib/issues/151
+    const cace_ari_t *item = cace_ari_list_cget(*(cace_ari_list_t *)&(in_ac->items), index_uint);
+    refda_oper_eval_ctx_set_result_copy(ctx, item);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_list_get BODY
@@ -5821,6 +5860,31 @@ static void refda_adm_ietf_dtnma_agent_oper_map_get(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_map_get BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    // key can technically be undefined value so do not guard that case
+    const cace_ari_t *key = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    if (!key)
+    {
+        CACE_LOG_ERR("key is missing, unable to continue");
+        return;
+    }
+
+    // Local variables from operand
+    const cace_ari_t    *in    = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_am_t *in_am = cace_ari_cget_am(in);
+    if (in_am == NULL)
+    {
+        CACE_LOG_ERR("operand is not an AM, unable to continue");
+        return;
+    }
+
+    const cace_ari_t *item = cace_ari_tree_cget(in_am->items, *key);
+    refda_oper_eval_ctx_set_result_copy(ctx, item);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_map_get BODY
