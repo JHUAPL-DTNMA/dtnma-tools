@@ -85,7 +85,7 @@ enum cace_ari_prim_type_e
     CACE_ARI_PRIM_BSTR,
     /// A selector for cace_ari_prim_val_u::as_data associated with ::CACE_ARI_TYPE_TEXTSTR
     CACE_ARI_PRIM_TSTR,
-    /// A selector for cace_ari_prim_val_u::as_data associated with ::CACE_ARI_TYPE_TP and ::CACE_ARI_TYPE_TD
+    /// A selector for cace_ari_prim_val_u::as_timespec associated with ::CACE_ARI_TYPE_TP and ::CACE_ARI_TYPE_TD
     CACE_ARI_PRIM_TIMESPEC,
     /// Some other type which requires an cace_ari_lit_t::ari_type identifier
     CACE_ARI_PRIM_OTHER,

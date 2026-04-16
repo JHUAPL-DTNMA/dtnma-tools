@@ -25,6 +25,7 @@
 #include <refda/amm/const.h>
 #include <refda/amm/edd.h>
 #include <cace/amm/semtype.h>
+#include <cace/amm/promote.h>
 #include <cace/amm/numeric.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -79,32 +80,29 @@ static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
 
 static int ari_numeric_add(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val)
 {
-    cace_ari_type_t promote;
-    if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
+    cace_amm_promote_state_t promote;
+    cace_amm_promote_init(&promote);
+    if (cace_amm_promote_process(&promote, lt_val, rt_val))
     {
+        cace_amm_promote_deinit(&promote);
         return 2;
     }
-
-    const cace_amm_type_t *amm_promote = cace_amm_type_get_builtin(promote);
-    cace_ari_t             lt_prom     = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_t             rt_prom     = CACE_ARI_INIT_UNDEFINED;
-    cace_amm_type_convert(amm_promote, &lt_prom, lt_val);
-    cace_amm_type_convert(amm_promote, &rt_prom, rt_val);
 
     cace_ari_deinit(result);
     cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
 
     int retval = 0;
-    switch (lt_prom.as_lit.prim_type)
+    switch (promote.lt_use->as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
-            res_lit->value.as_uint64 = lt_prom.as_lit.value.as_uint64 + rt_prom.as_lit.value.as_uint64;
+            res_lit->value.as_uint64 = promote.lt_use->as_lit.value.as_uint64 + promote.rt_use->as_lit.value.as_uint64;
             break;
         case CACE_ARI_PRIM_INT64:
-            res_lit->value.as_int64 = lt_prom.as_lit.value.as_int64 + rt_prom.as_lit.value.as_int64;
+            res_lit->value.as_int64 = promote.lt_use->as_lit.value.as_int64 + promote.rt_use->as_lit.value.as_int64;
             break;
         case CACE_ARI_PRIM_FLOAT64:
-            res_lit->value.as_float64 = lt_prom.as_lit.value.as_float64 + rt_prom.as_lit.value.as_float64;
+            res_lit->value.as_float64 =
+                promote.lt_use->as_lit.value.as_float64 + promote.rt_use->as_lit.value.as_float64;
             break;
         default:
             // leave lit as default undefined
@@ -114,13 +112,12 @@ static int ari_numeric_add(cace_ari_t *result, const cace_ari_t *lt_val, const c
 
     if (!retval)
     {
-        res_lit->prim_type    = lt_prom.as_lit.prim_type;
+        res_lit->prim_type    = promote.lt_use->as_lit.prim_type;
         res_lit->has_ari_type = true;
-        res_lit->ari_type     = promote;
+        res_lit->ari_type     = promote.common;
     }
 
-    cace_ari_deinit(&lt_prom);
-    cace_ari_deinit(&rt_prom);
+    cace_amm_promote_deinit(&promote);
     return retval;
 }
 

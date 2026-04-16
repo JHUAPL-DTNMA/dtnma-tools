@@ -88,8 +88,16 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
  */
 bool refda_oper_eval_ctx_has_aparam_undefined(const refda_oper_eval_ctx_t *ctx);
 
+/** Access an actual parameter by index.
+ *
+ * @param[in] ctx The evaluation context.
+ * @param index The index of the parameter.
+ * @return The value of that parameter or a NULL pointer if there is no such parameter.
+ */
 const cace_ari_t *refda_oper_eval_ctx_get_aparam_index(const refda_oper_eval_ctx_t *ctx, size_t index);
-
+/** @overload
+ * Access an actual parameter by name.
+ */
 const cace_ari_t *refda_oper_eval_ctx_get_aparam_name(const refda_oper_eval_ctx_t *ctx, const char *name);
 
 /** Determine if any operand value is undefined.
@@ -99,12 +107,29 @@ const cace_ari_t *refda_oper_eval_ctx_get_aparam_name(const refda_oper_eval_ctx_
  */
 bool refda_oper_eval_ctx_has_operand_undefined(const refda_oper_eval_ctx_t *ctx);
 
+/** Access an operand by index.
+ *
+ * @param[in] ctx The evaluation context.
+ * @param index The index of the parameter.
+ * Index zero is the bottom-most operand popped from the stack.
+ * @return The value of that parameter or a NULL pointer if there is no such parameter.
+ */
 const cace_ari_t *refda_oper_eval_ctx_get_operand_index(const refda_oper_eval_ctx_t *ctx, size_t index);
 
+/** @overload
+ * Access an operand by name.
+ */
 const cace_ari_t *refda_oper_eval_ctx_get_operand_name(const refda_oper_eval_ctx_t *ctx, const char *name);
 
+/** Set the result for an operator evaluation, which marks it as finished.
+ *
+ * @param[in,out] ctx The context to update.
+ * @param[in] value The value to use as the evaluation result and push on the stack.
+ */
 void refda_oper_eval_ctx_set_result_copy(refda_oper_eval_ctx_t *ctx, const cace_ari_t *value);
-
+/** @overload
+ * Set the result with move semantics.
+ */
 void refda_oper_eval_ctx_set_result_move(refda_oper_eval_ctx_t *ctx, cace_ari_t *value);
 
 #ifdef __cplusplus
