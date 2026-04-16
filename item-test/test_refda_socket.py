@@ -733,21 +733,21 @@ class TestRefdaSocket(unittest.TestCase):
             'undefined',
             'null',
             'false',
-            # 'true',
-            # '-10',
-            # '0',
-            # '10',
-            # '0.0',
-            # '10.0',
-            # '/null/null',
-            # '/bool/false',
-            # '/bool/true',
-            # '/byte/0',
-            # '/byte/10',
-            # '/int/0',
-            # '/int/10',
-            # '/vast/0',
-            # '/vast/10',
+            'true',
+            '-10',
+            '0',
+            '10',
+            '0.0',
+            '10.0',
+            '/null/null',
+            '/bool/false',
+            '/bool/true',
+            '/byte/0',
+            '/byte/10',
+            '/int/0',
+            '/int/10',
+            '/vast/0',
+            '/vast/10',
         ]
 
         self._start()
@@ -770,7 +770,6 @@ class TestRefdaSocket(unittest.TestCase):
                     execset = self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')
                     # rpt source will be the first parameter to the target ctrl
                     source = execset.value.targets[0].params[0]
-                    LOGGER.info('source is %s', source)
                     expect_sources[source] = expect_items
                     self._send_msg([execset])
 
