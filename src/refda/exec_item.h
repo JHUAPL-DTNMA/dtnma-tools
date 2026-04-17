@@ -59,7 +59,10 @@ typedef enum
  */
 typedef struct
 {
-    /// Weak reference to a parent execution sequence
+    /** Weak reference to a parent execution sequence.
+     * This will be non-null while the item is valid, and will be set
+     * null if the sequence is terminated (e.g. because of failure).
+     */
     refda_exec_seq_t *seq;
 
     /** A copy of the single-CTRL reference which created this item.

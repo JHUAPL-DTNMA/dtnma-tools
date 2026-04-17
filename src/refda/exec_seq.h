@@ -31,14 +31,14 @@ extern "C" {
 #endif
 
 /** @struct refda_exec_item_ptr
- * A shared pointer to a ::refda_exec_item_t instance guarded by external
- * thread mutex.
+ * A reference counted pointer to a ::refda_exec_item_t instance guarded
+ * by internal mutex.
  */
 /** @struct refda_exec_item_list_t
  * A list of execution items ::refda_exec_item_t managed by shared pointers.
  */
 /// @cond Doxygen_Suppress
-M_SHARED_WEAK_PTR_DEF(refda_exec_item_ptr, refda_exec_item_t)
+M_SHARED_PTR_DEF(refda_exec_item_ptr, refda_exec_item_t)
 M_ARRAY_DEF(refda_exec_item_list, refda_exec_item_ptr_t *,
             M_SHARED_PTR_OPLIST(refda_exec_item_ptr, M_OPL_refda_exec_item_t()))
 /// @endcond
@@ -88,6 +88,13 @@ int refda_exec_seq_cmp(const refda_exec_seq_t *lt, const refda_exec_seq_t *rt);
  * @return Zero if the sequence is non-empty and has a status.
  */
 int refda_exec_seq_front_status(refda_exec_item_status_t *status, refda_exec_seq_t *obj);
+
+/** Decouple all items from a sequence and mark it as having failed.
+ * This will cause the sequence to be cleaned up later in the exec thread.
+ *
+ * @param[in,out] obj The sequence to termiante.
+ */
+void refda_exec_seq_terminate(refda_exec_seq_t *obj);
 
 /** @struct refda_exec_seq_list_t
  * An ordered list of reference-counted pointer to ::refda_exec_seq_t.

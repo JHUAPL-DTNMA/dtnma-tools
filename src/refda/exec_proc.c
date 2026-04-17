@@ -75,6 +75,8 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
                          item->seq, m_string_get_cstr(item->deref.obj->obj_id.name), m_string_get_cstr(buf));
         m_string_clear(buf);
 
+        //FIXME refactor into refda_exec_seq_terminate(seq)
+
         if (seq->status)
         {
             atomic_store(&seq->status->failed, true);
@@ -83,6 +85,13 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
         if (pthread_mutex_lock(&seq->items_mutex))
         {
             CACE_LOG_CRIT("failed to lock mutex");
+        }
+        // decouple all items from the sequence
+        refda_exec_item_list_it_t item_it;
+        for (refda_exec_item_list_it(item_it, seq->items); !refda_exec_item_list_end_p(item_it); refda_exec_item_list_next(item_it))
+        {
+            refda_exec_item_ptr_t **item_ptr = refda_exec_item_list_ref(item_it);
+            refda_exec_item_ptr_ref(*item_ptr)->seq = NULL;
         }
         refda_exec_item_list_reset(seq->items);
         is_empty = true;
@@ -98,7 +107,10 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
         {
             CACE_LOG_CRIT("failed to lock mutex");
         }
+        // decouple from the sequence
+        item->seq = NULL;
         refda_exec_item_list_pop_at(NULL, seq->items, 0);
+
         is_empty = refda_exec_item_list_empty_p(seq->items);
         if (pthread_mutex_unlock(&seq->items_mutex))
         {

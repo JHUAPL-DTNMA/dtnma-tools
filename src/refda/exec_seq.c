@@ -84,3 +84,8 @@ int refda_exec_seq_front_status(refda_exec_item_status_t *status, refda_exec_seq
     }
     return retval;
 }
+
+void refda_exec_seq_terminate(refda_exec_seq_t *obj)
+{
+
+}
