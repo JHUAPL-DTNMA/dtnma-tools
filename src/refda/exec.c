@@ -150,8 +150,8 @@ int refda_exec_waiting(refda_agent_t *agent)
             break;
         }
 
+        CACE_LOG_DEBUG("Removing completed sequence PID %" PRIu64 " from exec_state queue", seq->pid);
         refda_exec_seq_list_pop_front(NULL, agent->exec_state);
-        CACE_LOG_DEBUG("Removed completed sequence from agent exec_state queue");
     }
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))

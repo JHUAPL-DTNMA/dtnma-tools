@@ -1512,10 +1512,8 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
 
-    def test_exec_control_flow_ctrls(self):
+    def test_exec_control_flow_if_then_else(self):
         self._start()
-
-        LOGGER.setLevel(logging.INFO)
 
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true),null,null))')]
@@ -1530,11 +1528,17 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),null))')]
         )
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
-        self.assertEqual(1, len(rpts))
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        # if control
         rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/if-then-else'), self._ari_strip_params(rpt.source))
         self.assertEqual([bool], literal_prim_types(rpt.items))
         self.assertEqual(True, rpt.items[0].value)
+        # truthy control
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect'), self._ari_strip_params(rpt.source))
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
 
     def test_odm_const_invalid(self):
         self._start()

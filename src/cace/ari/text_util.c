@@ -1199,9 +1199,9 @@ int cace_utctime_decode(struct timespec *out, const cace_data_t *in)
     curs = m_string_get_cstr(unsep);
     end  = curs + m_string_size(unsep);
 
+    time_t fullsec = 0;
     // extract full seconds
-    time_t fullsec;
-    int    retval = 0;
+    int retval = 0;
     {
         struct tm   parts  = { 0 };
         const char *subend = strptime(curs, "%Y%m%dT%H%M%S", &parts);
@@ -1225,8 +1225,8 @@ int cace_utctime_decode(struct timespec *out, const cace_data_t *in)
             {
                 unsetenv("TZ");
             }
+            fullsec -= cace_ari_dtn_epoch;
         }
-        fullsec -= cace_ari_dtn_epoch;
     }
 
     // extract subseconds as nanoseconds
