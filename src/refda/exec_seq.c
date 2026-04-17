@@ -101,6 +101,7 @@ void refda_exec_seq_pop_front(refda_exec_seq_t *seq)
     {
         refda_exec_item_ptr_ref(item_ptr)->seq = NULL;
     }
+    refda_exec_item_ptr_release(item_ptr);
 
     bool is_empty = refda_exec_item_list_empty_p(seq->items);
     if (pthread_mutex_unlock(&seq->items_mutex))
