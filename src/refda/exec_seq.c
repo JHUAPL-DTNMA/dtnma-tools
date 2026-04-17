@@ -71,7 +71,7 @@ int refda_exec_seq_front_status(refda_exec_item_status_t *status, refda_exec_seq
         // safe during mutex lock
         refda_exec_item_t *item = refda_exec_item_ptr_ref(*front_ptr);
 
-        *status                 = atomic_load(&(item->execution_stage));
+        *status = atomic_load(&(item->execution_stage));
     }
     else
     {

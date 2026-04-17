@@ -84,7 +84,7 @@ int refda_exec_seq_cmp(const refda_exec_seq_t *lt, const refda_exec_seq_t *rt);
 /** Get the status of the front item in a thread safe way.
  *
  * @param[out] status The variable to store into.
- * @parm[in] obj The sequence to take status for.
+ * @param[in] obj The sequence to take status for.
  * @return Zero if the sequence is non-empty and has a status.
  */
 int refda_exec_seq_front_status(refda_exec_item_status_t *status, refda_exec_seq_t *obj);
