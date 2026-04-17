@@ -296,14 +296,15 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
 
                 refda_ctrl_exec_ctx_t ctx;
                 refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
-                (next->exec.callback)(&ctx);
-                refda_ctrl_exec_ctx_deinit(&ctx);
 
-                if (!(atomic_load(&(next->exec.item->execution_stage)) == REFDA_EXEC_WAITING))
+                (next->exec.callback)(&ctx);
+
+                if (!(atomic_load(&(ctx.item->execution_stage)) == REFDA_EXEC_WAITING))
                 {
                     CACE_LOG_DEBUG("callback finished after %d iterations", ix + 1);
                     success = true;
                 }
+                refda_ctrl_exec_ctx_deinit(&ctx);
 
                 refda_timeline_remove(agent.exec_timeline, tl_it);
             }
