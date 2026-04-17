@@ -36,11 +36,13 @@ void refda_exec_item_init(refda_exec_item_t *obj)
     cace_amm_lookup_init(&(obj->deref));
     atomic_init(&(obj->execution_stage), REFDA_EXEC_PENDING);
     cace_ari_init(&(obj->result));
+    cace_amm_user_data_init(&obj->user_data);
 }
 
 void refda_exec_item_deinit(refda_exec_item_t *obj)
 {
     CHKVOID(obj);
+    cace_amm_user_data_deinit(&obj->user_data);
     cace_ari_deinit(&(obj->result));
     cace_amm_lookup_deinit(&(obj->deref));
     cace_ari_deinit(&(obj->ref));

@@ -149,7 +149,6 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), timeout=5)
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
 
     def _ari_text_to_obj(self, text: str, id_convert: bool=True, nn: bool=True) -> ARI:
@@ -478,7 +477,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
         rpt = rpts.pop(0)
-        self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'), rpt.source)
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
@@ -529,7 +527,6 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
         rpt = rpts.pop(0)
-        self.assertIsInstance(rpt, ari.Report)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//!private/!odm/EDD/missing)'), rpt.source)
         self.assertEqual([ari.UNDEFINED], rpt.items)
 
@@ -1288,13 +1285,12 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
 
-    def test_exec_control_flow_ctrls(self):
+    def test_exec_control_flow_if_then_else(self):
         self._start()
 
-        LOGGER.setLevel(logging.INFO)
-
+        # do nothing either way
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), null, null))')]
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true),null,null))')]
         )
         msg_vals = self._wait_msg(mgr_ix=0)
         self.assertEqual(1, len(msg_vals))
@@ -1303,15 +1299,110 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([bool], literal_prim_types(rpt.items))
         self.assertEqual(True, rpt.items[0].value)
 
+        # true path
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true), //ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version), null))')]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
         )
-        msg_vals = self._wait_msg(mgr_ix=0)
-        rptset = msg_vals[0].value
-        rpt = rptset.reports[0]
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/if-then-else'), self._ari_strip_params(rpt.source))
+        self.assertEqual(1, len(rpt.items))
+        self.assertIs(True, rpt.items[0].value)
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        # false path
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(false),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/if-then-else'), self._ari_strip_params(rpt.source))
+        self.assertEqual(1, len(rpt.items))
+        self.assertIs(False, rpt.items[0].value)
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        # true path with default else parameter
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/if-then-else'), self._ari_strip_params(rpt.source))
+        self.assertEqual(1, len(rpt.items))
+        self.assertIs(True, rpt.items[0].value)
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertEqual(1, len(rpt.items))
+        self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+    def test_exec_control_flow_catch(self):
+        self._start()
+
+        # successful try target
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/catch(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertEqual([str], literal_prim_types(rpt.items))
+        # catch result after try target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/catch'), self._ari_strip_params(rpt.source))
         self.assertEqual([bool], literal_prim_types(rpt.items))
-        self.assertEqual(True, rpt.items[0].value)
+        self.assertIs(True, rpt.items[0].value)
+
+        # failed try target
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/catch(//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing),//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=3)
+        self.assertEqual(3, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
+        # catch result after try target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/catch'), self._ari_strip_params(rpt.source))
+        self.assertEqual([bool], literal_prim_types(rpt.items))
+        self.assertIs(False, rpt.items[0].value)
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'), rpt.source)
+        self.assertEqual([str], literal_prim_types(rpt.items))
+
+        # failed try target and failure target
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/catch(//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing),//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/another)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=3)
+        self.assertEqual(3, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
+        # catch result after try target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/catch'), self._ari_strip_params(rpt.source))
+        self.assertEqual([bool], literal_prim_types(rpt.items))
+        self.assertIs(False, rpt.items[0].value)
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/another)'), rpt.source)
+        self.assertEqual([ari.UNDEFINED], rpt.items)
 
     def test_odm_const_invalid(self):
         self._start()

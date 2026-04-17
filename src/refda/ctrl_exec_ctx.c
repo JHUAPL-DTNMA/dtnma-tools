@@ -28,17 +28,17 @@ void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *ite
     CHKVOID(obj);
     CHKVOID(item);
 
-    obj->runctx = refda_runctx_ptr_ref(item->seq->runctx);
+    obj->item = item;
+
+    obj->runctx = refda_runctx_ptr_ref(obj->item->seq->runctx);
     // check ACL cache at last moment
     refda_runctx_check_acl(obj->runctx);
-
-    obj->ctrl = item->deref.obj ? item->deref.obj->app_data.ptr : NULL;
-    obj->item = item;
 }
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj)
 {
     CHKVOID(obj);
+    memset(obj, 0, sizeof(*obj));
 }
 
 bool refda_ctrl_exec_ctx_has_aparam_undefined(const refda_ctrl_exec_ctx_t *ctx)
@@ -70,42 +70,46 @@ void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_tim
     }
 }
 
-static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
+int refda_exec_item_finish_result(refda_exec_item_t *item)
 {
+    CHKERR1(item);
+    const refda_amm_ctrl_desc_t *const ctrl = item->deref.obj ? item->deref.obj->app_data.ptr : NULL;
+    CHKERR1(ctrl);
+
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         m_string_t buf;
         m_string_init(buf);
-        cace_ari_text_encode(buf, &(ctx->item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, &(item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("CTRL result value %s", m_string_get_cstr(buf));
         m_string_clear(buf);
     }
 
     bool valid = false;
-    if (cace_amm_type_is_valid(&(ctx->ctrl->res_type)))
+    if (cace_amm_type_is_valid(&(ctrl->res_type)))
     {
         // undefined is the failure indicator
-        if (!cace_ari_is_undefined(&(ctx->item->result)))
+        if (!cace_ari_is_undefined(&(item->result)))
         {
-            valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctx->ctrl->res_type), &(ctx->item->result)));
+            valid = (CACE_AMM_TYPE_MATCH_POSITIVE == cace_amm_type_match(&(ctrl->res_type), &(item->result)));
             if (!valid)
             {
                 if (cace_log_is_enabled_for(LOG_ERR))
                 {
                     m_string_t buf;
                     m_string_init(buf);
-                    cace_ari_text_encode(buf, &(ctx->item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                    cace_ari_text_encode(buf, &(item->result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                     CACE_LOG_ERR("CTRL result type failed to match the value %s", m_string_get_cstr(buf));
                     m_string_clear(buf);
                 }
-                cace_ari_set_undefined(&(ctx->item->result));
+                cace_ari_set_undefined(&(item->result));
             }
         }
     }
     else
     {
         // no explicit result type means only the null value is acceptable
-        if (cace_ari_is_null(&(ctx->item->result)))
+        if (cace_ari_is_null(&(item->result)))
         {
             valid = true;
         }
@@ -113,11 +117,20 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
         {
             CACE_LOG_ERR("CTRL result value without result type");
             // should not have a result
-            cace_ari_set_undefined(&(ctx->item->result));
+            cace_ari_set_undefined(&(item->result));
         }
     }
 
-    atomic_store(&(ctx->item->execution_stage), REFDA_EXEC_COMPLETE);
+    int old_state = atomic_exchange(&(item->execution_stage), REFDA_EXEC_COMPLETE);
+    if (old_state == REFDA_EXEC_WAITING)
+    {
+        if (item->seq)
+        {
+            // wake up if called from other thread
+            refda_runctx_t *runctx = refda_runctx_ptr_ref(item->seq->runctx);
+            sem_post(&(runctx->agent->execs_sem));
+        }
+    }
 
     if (valid)
     {
@@ -125,7 +138,7 @@ static int refda_ctrl_exec_ctx_check_result(refda_ctrl_exec_ctx_t *ctx)
     }
     else
     {
-        cace_ari_deinit(&(ctx->item->result));
+        cace_ari_deinit(&(item->result));
         return REFDA_CTRL_EXEC_RESULT_TYPE_NOMATCH;
     }
 }
@@ -135,7 +148,7 @@ int refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const cace_a
     CHKERR1(ctx);
     CHKERR1(value);
     cace_ari_set_copy(&(ctx->item->result), value);
-    return refda_ctrl_exec_ctx_check_result(ctx);
+    return refda_exec_item_finish_result(ctx->item);
 }
 
 int refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, cace_ari_t *value)
@@ -143,12 +156,12 @@ int refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, cace_ari_t *
     CHKERR1(ctx);
     CHKERR1(value);
     cace_ari_set_move(&(ctx->item->result), value);
-    return refda_ctrl_exec_ctx_check_result(ctx);
+    return refda_exec_item_finish_result(ctx->item);
 }
 
 int refda_ctrl_exec_ctx_set_result_null(refda_ctrl_exec_ctx_t *ctx)
 {
     CHKERR1(ctx);
     cace_ari_set_null(&(ctx->item->result));
-    return refda_ctrl_exec_ctx_check_result(ctx);
+    return refda_exec_item_finish_result(ctx->item);
 }
