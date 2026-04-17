@@ -678,6 +678,38 @@ class TestRefdaSocket(unittest.TestCase):
         # substitution
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'), rpt.items[0])
 
+    def test_eval_opers(self):
+        # evaluate through report template items with inline expressions
+        exprs, expect_items = map(list, zip(
+            ('/ac/(true)', ari.LiteralARI(True)),
+            # list access
+            ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(1))', ari.LiteralARI(2)),
+            ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(10))', ari.UNDEFINED), # bad index
+            ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(hi))', ari.UNDEFINED), # bad parameter
+            ('/ac/(2,//ietf/dtnma-agent/oper/list-get(1))', ari.UNDEFINED), # bad operand
+            # map access
+            ('/ac/(/am/(1=one,2=two),//ietf/dtnma-agent/oper/map-get(1))', ari.LiteralARI('one')),
+            ('/ac/(/am/(1=one,2=two),//ietf/dtnma-agent/oper/map-get(10))', ari.UNDEFINED), # missing key
+            ('/ac/(/am/(1=one,2=two),//ietf/dtnma-agent/oper/map-get(hi))', ari.UNDEFINED), # missing key but valid
+            ('/ac/(2,//ietf/dtnma-agent/oper/map-get(1))', ari.UNDEFINED), # bad operand
+        ))
+
+        self._start()
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
+        )
+
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=1, timeout=5)
+        self.assertEqual(1, len(rpts))
+
+        rpt = rpts.pop(0)
+        self.assertIsInstance(rpt.source, ari.LiteralARI)
+        self.assertEqual(rpt.source.type_id, ari.StructType.AC)
+        # items of the report
+        self.assertEqual(len(expect_items), len(rpt.items))
+        for expr, expect, got in zip(exprs, expect_items, rpt.items):
+            self.assertEqual(expect, got, msg=f'Failed item for expr {expr}')
+
     def test_eval_predicates(self):
         # precondition macro
         mac_items = [

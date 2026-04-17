@@ -229,6 +229,9 @@ jobs:
         run: ./integration-test-${{matrix.transport}}/run.sh start
       - name: Test
         run: ./integration-test-${{matrix.transport}}/run.sh check
+      - name: Logs
+        if: always()
+        run: ./integration-test-${{matrix.transport}}/run.sh logs
       - name: Stop
         if: always()
         run: ./integration-test-${{matrix.transport}}/run.sh stop

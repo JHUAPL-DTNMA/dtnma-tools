@@ -38,8 +38,8 @@ static int refda_eval_expand_item(refda_runctx_t *runctx, refda_eval_item_t out,
         CACE_LOG_DEBUG("Lookup result %d", res);
         if (res)
         {
-            cace_amm_lookup_deinit(&deref);
             retval = REFDA_EVAL_ERR_DEREF_FAILED;
+            cace_amm_lookup_deinit(&deref);
         }
         else
         {
@@ -72,14 +72,15 @@ static int refda_eval_expand_item(refda_runctx_t *runctx, refda_eval_item_t out,
                     refda_eval_item_move_deref(out, deref);
                     break;
                 default:
-                    cace_amm_lookup_deinit(&deref);
                     retval = REFDA_EVAL_ERR_BAD_TYPE;
+                    cace_amm_lookup_deinit(&deref);
                     break;
             }
         }
     }
     else
     {
+        // any literal is used directly
         refda_eval_item_set_value(out, *in);
     }
 
