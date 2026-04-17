@@ -265,13 +265,11 @@ static int numeric_add_timespec(cace_ari_t *result, const cace_ari_t *valueA, co
     cace_ari_type_t typeB = cace_amm_promote_eqiv_lit_type(&(valueB->as_lit));
 
     // Addition of TD and TD results in a TD value
-    bool is_result_TD = false;
-    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
+    bool is_result_TD = (typeA == CACE_ARI_TYPE_TD) && (typeB == CACE_ARI_TYPE_TD);
 
     // Addition of TP and TD results in a TP value
-    bool is_result_TP = false;
-    is_result_TP |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TP;
-    is_result_TP |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TD;
+    bool is_result_TP = ((typeA == CACE_ARI_TYPE_TD) && (typeB == CACE_ARI_TYPE_TP))
+                        || ((typeA == CACE_ARI_TYPE_TP) && (typeB == CACE_ARI_TYPE_TD));
 
     // Determine the cace_ari_type_t of the result
     cace_ari_type_t ari_type;
@@ -337,14 +335,12 @@ static int numeric_sub_timespec(cace_ari_t *result, const cace_ari_t *valueA, co
     // Note the following will result in TD:
     // - Subtraction of TP from TP
     // - Subtraction of TD from TD
-    bool is_result_TD = false;
-    is_result_TD |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TP;
-    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
+    bool is_result_TD = ((typeA == CACE_ARI_TYPE_TP) && (typeB == CACE_ARI_TYPE_TP))
+                        || ((typeA == CACE_ARI_TYPE_TD) && (typeB == CACE_ARI_TYPE_TD));
 
     // Note the following will result in TP:
     // - Subtraction of TD from TP
-    bool is_result_TP = false;
-    is_result_TP |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TD;
+    bool is_result_TP = (typeA == CACE_ARI_TYPE_TP) && (typeB == CACE_ARI_TYPE_TD);
 
     // Determine the cace_ari_type_t of the result
     cace_ari_type_t ari_type;
@@ -407,8 +403,14 @@ static int numeric_mul_timespec(cace_ari_t *result, const cace_ari_t *valueA, co
     CHKERR1(valueA);
     CHKERR1(valueB);
 
-    cace_ari_type_t typeA              = cace_amm_promote_eqiv_lit_type(&(valueA->as_lit));
-    bool            typeB_is_primitive = cace_has_numeric_prim_type(valueB);
+    // Multiplication is commutative, so set left argument to the time type
+    cace_ari_type_t typeA = cace_amm_promote_eqiv_lit_type(&(valueA->as_lit));
+    if (typeA != CACE_ARI_TYPE_TD)
+    {
+        M_SWAP(const cace_ari_t *, valueA, valueB);
+        typeA = cace_amm_promote_eqiv_lit_type(&(valueA->as_lit));
+    }
+    bool typeB_is_primitive = cace_has_numeric_prim_type(valueB);
 
     // Note the following will (typically) result in TD:
     // - Multiplication of TD with a scalar (numeric primitive)
@@ -515,7 +517,7 @@ static int numeric_div_timespec(cace_ari_t *result, const cace_ari_t *valueA, co
     // Note the following will (typically) result in TD:
     // - Division of TD with a scalar (numeric primitive)
     bool is_result_TD = false;
-    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
+    is_result_TD |= (typeA == CACE_ARI_TYPE_TD) && (typeB_is_primitive == true);
     if (is_result_TD == false)
     {
         // Bail if the result will not be a TD

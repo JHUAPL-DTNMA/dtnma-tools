@@ -259,7 +259,7 @@ DECDIG [0-9]
     return T_BSTR;
 }
 
-<LT_TIMEPOINT>({DECDIG}{4})\-?({DECDIG}{2})\-?({DECDIG}{2})T({DECDIG}{2}):?({DECDIG}{2}):?({DECDIG}{2})(\.({DECDIG}{1,6}))?Z {
+<LT_TIMEPOINT>({DECDIG}{4})\-?({DECDIG}{2})\-?({DECDIG}{2})T({DECDIG}{2}):?({DECDIG}{2}):?({DECDIG}{2})(\.({DECDIG}{1,9}))?Z {
     cace_data_t text_view;
     cace_data_init_view(&text_view, yyleng, (cace_data_ptr_t)yytext);
 
@@ -278,7 +278,7 @@ DECDIG [0-9]
     return T_TIMEPOINT;
 }
 
-<LT_TIMEDIFF>([+-])?P(({DECDIG}+)D)?T(({DECDIG}+)H)?(({DECDIG}+)M)?(({DECDIG}+)(\.({DECDIG}{1,6}))?S)? {
+<LT_TIMEDIFF>([+-])?P(({DECDIG}+)D)?T(({DECDIG}+)H)?(({DECDIG}+)M)?(({DECDIG}+)(\.({DECDIG}{1,9}))?S)? {
     cace_data_t text_view;
     cace_data_init_view(&text_view, yyleng, (cace_data_ptr_t)yytext);
 
