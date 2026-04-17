@@ -46,6 +46,8 @@ bool refda_exec_status_wait(refda_exec_status_t *obj)
 
 void refda_exec_status_post(refda_exec_status_t *obj, bool failed)
 {
+    CACE_LOG_DEBUG("sequence status finished, failed=%d", failed);
+
     atomic_store(&obj->failed, failed);
     if (obj->on_finished)
     {
