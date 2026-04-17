@@ -756,22 +756,25 @@ class TestRefdaSocket(unittest.TestCase):
         expect_sources: Dict[ARI, List[ARI]] = dict()
         # check in both directions
         for left in cases:
-            for right in cases:
-                with self.subTest(f'{left} and {right}'):
-                    exprs = [
+            with self.subTest(left):
+                exprs = []
+                expect_items = []
+
+                for right in cases:
+                    exprs += [
                         ('/ac/(' + left + ',' + right + ',' + '//ietf/dtnma-agent/oper/strict-eq)'),
                         ('/ac/(' + left + ',' + right + ',' + '//ietf/dtnma-agent/oper/strict-ne)'),
                     ]
-                    expect_items = [
+                    expect_items += [
                         ari.TYPED_TRUE if left == right else ari.TYPED_FALSE,
                         ari.TYPED_FALSE if left == right else ari.TYPED_TRUE,
                     ]
 
-                    execset = self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')
-                    # rpt source will be the first parameter to the target ctrl
-                    source = execset.value.targets[0].params[0]
-                    expect_sources[source] = expect_items
-                    self._send_msg([execset])
+                execset = self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')
+                # rpt source will be the first parameter to the target ctrl
+                source = execset.value.targets[0].params[0]
+                expect_sources[source] = expect_items
+                self._send_msg([execset])
 
         # check reports in arbitrary order until all expected are seen
         LOGGER.info('Waiting on %d reports', len(expect_sources))

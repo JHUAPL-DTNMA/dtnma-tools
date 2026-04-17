@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "exec_seq.h"
+#include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
 void refda_exec_seq_init(refda_exec_seq_t *obj)
@@ -24,6 +25,7 @@ void refda_exec_seq_init(refda_exec_seq_t *obj)
     obj->runctx = refda_runctx_ptr_new();
     obj->pid    = 0;
     refda_exec_item_list_init(obj->items);
+    pthread_mutex_init(&obj->items_mutex, NULL);
     obj->status = NULL;
 }
 
@@ -31,6 +33,7 @@ void refda_exec_seq_deinit(refda_exec_seq_t *obj)
 {
     CHKVOID(obj);
     obj->status = NULL;
+    pthread_mutex_destroy(&obj->items_mutex);
     refda_exec_item_list_clear(obj->items);
     obj->pid = 0;
     refda_runctx_ptr_clear(obj->runctx);
@@ -49,4 +52,35 @@ int refda_exec_seq_cmp(const refda_exec_seq_t *lt, const refda_exec_seq_t *rt)
         return 1;
     }
     return 0;
+}
+
+int refda_exec_seq_front_status(refda_exec_item_status_t *status, refda_exec_seq_t *obj)
+{
+    CHKERR1(status);
+    CHKERR1(obj);
+
+    int retval = 0;
+    if (pthread_mutex_lock(&obj->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to lock mutex");
+        return 2;
+    }
+    if (!refda_exec_item_list_empty_p(obj->items))
+    {
+        refda_exec_item_ptr_t **front_ptr = refda_exec_item_list_front(obj->items);
+        // safe during mutex lock
+        refda_exec_item_t *item = refda_exec_item_ptr_ref(*front_ptr);
+
+        *status                 = atomic_load(&(item->execution_stage));
+    }
+    else
+    {
+        retval = 2;
+    }
+    if (pthread_mutex_unlock(&obj->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to unlock mutex");
+        return 2;
+    }
+    return retval;
 }

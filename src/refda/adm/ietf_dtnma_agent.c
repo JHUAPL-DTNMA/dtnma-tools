@@ -1432,7 +1432,9 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
     for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);
          refda_exec_seq_list_next(seq_it))
     {
-        refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
+        refda_exec_seq_ptr_t **seq_ptr = refda_exec_seq_list_ref(seq_it);
+
+        refda_exec_seq_t *seq = refda_exec_seq_ptr_ref(*seq_ptr);
         if (refda_exec_item_list_empty_p(seq->items))
         {
             // intermediate state is ignored
