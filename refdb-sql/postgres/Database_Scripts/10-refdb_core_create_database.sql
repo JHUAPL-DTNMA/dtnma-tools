@@ -532,16 +532,53 @@ create table if not exists ari_rptset (
     ari_rptset_id serial NOT NULL,
     -- timestamp from the Manager
     mgr_time TIMESTAMPTZ not null,
+    -- CBOR form of the RPTSET nonce field
     nonce_cbor BYTEA NOT NULL,
+    -- Extracted reference time from the Agent
     reference_time TIMESTAMPTZ NOT NULL,
-    report_list TEXT NOT NULL,
-    report_list_cbor BYTEA NOT NULL,
     agent_id INTEGER NOT NULL,
+    -- CBOR form of the entire RPTSET value
+    ari_rptset_cbor BYTEA NOT NULL, 
     primary key (ari_rptset_id),
-    foreign key (agent_id) references registered_agents (registered_agents_id)
+    foreign key (agent_id) references registered_agents (registered_agents_id)  on
+delete
+	cascade
 );
 CREATE INDEX idx_rptset_nonce ON ari_rptset (nonce_cbor);
 CREATE INDEX idx_rptset_reftime ON ari_rptset (reference_time);
+
+
+-- rpt-container/list
+create table if not exists ari_rptlist (
+    ari_rptlist_id serial NOT NULL,
+    ari_rptset_id INTEGER NOT NULL,
+    -- Absolute time of the report from the Agent
+    agent_time TIMESTAMPTZ NOT NULL,
+    -- CBOR form of the report source field
+    report_source BYTEA NOT NULL,
+    primary key (ari_rptlist_id),
+    foreign key (ari_rptset_id) references ari_rptset (ari_rptset_id)   on
+delete
+	cascade
+);
+CREATE INDEX idx_rptlist_agent_time ON ari_rptlist (agent_time);
+CREATE INDEX idx_rptlist_source ON ari_rptlist (report_source);
+
+-- rpt-item
+create table if not exists ari_rpt_item (
+    ari_rpt_item_id serial NOT NULL,
+    -- Row ID of parent report
+    ari_rptlist_id INTEGER NOT NULL,
+    -- The zero-based position of the item in the parent report
+    ari_rpt_item_index INTEGER NOT NULL,
+    -- CBOR form of the item
+    report_entry BYTEA NOT NULL,
+    primary key(ari_rpt_item_id),
+    foreign key (ari_rptlist_id) references ari_rptlist (ari_rptlist_id)  on
+delete
+	cascade
+);
+CREATE UNIQUE INDEX idx_rpt_item_agent_time ON ari_rpt_item (ari_rptlist_id, ari_rpt_item_index);
 
 
 create table if not exists formal_parmspec (

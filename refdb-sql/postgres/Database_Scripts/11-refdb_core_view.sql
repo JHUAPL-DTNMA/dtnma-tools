@@ -166,16 +166,25 @@ join
 -- const view
 create or replace 
 view vw_const_actual as 
-SELECT 
-const_actual_definition.obj_actual_definition_id, 
-data_type, 
-data_value, 
-obj_actual_definition.use_desc, 
-obj_metadata.*
-FROM const_actual_definition, obj_actual_definition, obj_metadata
-WHERE 
-	const_actual_definition.obj_actual_definition_id = obj_actual_definition.obj_actual_definition_id
-	AND obj_actual_definition.obj_metadata_id = obj_metadata.obj_metadata_id;
+SELECT const_actual_definition.obj_actual_definition_id,
+    const_actual_definition.data_type,
+    const_actual_definition.data_value,
+    obj_actual_definition.use_desc,
+    obj_metadata.obj_metadata_id,
+    data_model.name as data_model_name,
+    data_model.namespace,
+    obj_metadata.data_type_id,
+    obj_metadata.name,
+    obj_metadata.data_model_id,
+    obj_metadata.object_enumeration,
+    obj_metadata.status,
+    obj_metadata.reference,
+    obj_metadata.description
+   FROM const_actual_definition,
+    obj_actual_definition,
+    obj_metadata,
+    data_model
+  WHERE ((const_actual_definition.obj_actual_definition_id = obj_actual_definition.obj_actual_definition_id) AND (obj_actual_definition.obj_metadata_id = obj_metadata.obj_metadata_id) AND (obj_metadata.data_model_id = data_model.data_model_id));
 
 
 -- typedef view 
@@ -1000,3 +1009,30 @@ ari_collection.num_entries,
 ari_collection.entries
 from execution_set join ari_collection on execution_set.ac_id = ari_collection.ac_id
 ;
+
+create or replace
+view vw_ari_rpt_set as
+select 
+ari_rptset.ari_rptset_id,
+ari_rptset.mgr_time,	
+ari_rptset.reference_time,
+ari_rptset.nonce_cbor,
+ari_rptset.agent_id,
+ari_rptset.ari_rptset_cbor,
+rpt_list_item_vw.ari_rptlist_id,
+rpt_list_item_vw.agent_time,
+rpt_list_item_vw.report_source,
+rpt_list_item_vw.report_items
+from 
+ari_rptset join
+(select
+ari_rptlist.ari_rptlist_id,
+ari_rptlist.ari_rptset_id,
+ari_rptlist.agent_time,
+ari_rptlist.report_source,
+ARRAY_AGG(ari_rpt_item.report_entry ORDER BY ari_rpt_item.ari_rpt_item_index) AS report_items
+FROM 
+ari_rpt_item join ari_rptlist on ari_rpt_item.ari_rptlist_id = ari_rptlist.ari_rptlist_id
+GROUP BY
+  ari_rptlist.ari_rptlist_id)
+AS rpt_list_item_vw on ari_rptset.ari_rptset_id = rpt_list_item_vw.ari_rptset_id;
