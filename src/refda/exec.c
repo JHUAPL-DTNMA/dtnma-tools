@@ -59,15 +59,14 @@ int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target,
     int res = refda_exec_proc_expand(seq, &seq_ix, target);
     if (res)
     {
-        // clean up useless sequence
-        refda_exec_seq_list_pop_back(NULL, agent->exec_state);
-
-        if (status)
+        if (seq->status)
         {
             CACE_LOG_ERR("Agent-directed sequence failed to expand");
-            atomic_store(&status->failed, true);
-            sem_post(&status->finished);
+            refda_exec_status_post(seq->status, true);
         }
+        // clean up useless sequence
+        refda_exec_seq_list_pop_back(NULL, agent->exec_state);
+        seq = NULL;
     }
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
@@ -217,7 +216,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
         }
         while (!refda_timeline_end_p(tl_it))
         {
-            const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
+            refda_timeline_event_t *next = refda_timeline_ref(tl_it);
             if (timespec_gt(next->ts, nowtime))
             {
                 break;
@@ -231,13 +230,15 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                     {
                         refda_ctrl_exec_ctx_t ctx;
                         refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
-                        atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
+
                         (next->exec.callback)(&ctx);
+
+                        if (!((atomic_load(&(ctx.item->execution_stage))) == REFDA_EXEC_WAITING))
+                        {
+                            refda_exec_proc_ctrl_finish(ctx.item);
+                        }
+
                         refda_ctrl_exec_ctx_deinit(&ctx);
-                    }
-                    if (!((atomic_load(&(next->exec.item->execution_stage))) == REFDA_EXEC_WAITING))
-                    {
-                        refda_exec_proc_ctrl_finish(next->exec.item);
                     }
                     break;
                 }

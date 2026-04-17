@@ -40,11 +40,6 @@ typedef struct refda_ctrl_exec_ctx_s
      */
     refda_runctx_t *runctx;
 
-    /** Descriptor for the CTRL being executed.
-     * This will never be null.
-     */
-    const refda_amm_ctrl_desc_t *ctrl;
-
     /** Internal execution bookkeeping item.
      * This will never be null.
      */
@@ -55,7 +50,7 @@ typedef struct refda_ctrl_exec_ctx_s
  * a target object's formal parameters.
  *
  * @param[out] obj The context to initialize.
- * @param[in] item The internal execution item.
+ * @param[in] item_ptr The internal execution item.
  * The result must outlive this context.
  */
 void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *item);

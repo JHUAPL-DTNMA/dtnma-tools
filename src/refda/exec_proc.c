@@ -64,28 +64,28 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
     // item will be invalidated when removed from sequence
     refda_exec_seq_t *seq = item->seq;
 
-    bool is_empty = false;
-    if (is_failure)
+    if (is_failure && cace_log_is_enabled_for(LOG_WARNING))
     {
         // done with this whole sequence
         m_string_t buf;
         m_string_init(buf);
         cace_ari_text_encode_objpath(buf, cace_ari_cget_ref_objpath(&item->ref), CACE_ARI_TEXT_ARITYPE_TEXT);
-        CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " (at %p) failed on %s (as %s), halting", item->seq->pid,
-                         item->seq, m_string_get_cstr(item->deref.obj->obj_id.name), m_string_get_cstr(buf));
+        CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " (at %p) failed on %s (as %s), halting", seq->pid,
+                seq, m_string_get_cstr(item->deref.obj->obj_id.name), m_string_get_cstr(buf));
         m_string_clear(buf);
+    }
+
+    bool is_empty = false;
+    if (pthread_mutex_lock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to lock mutex");
+    }
+    if (is_failure)
+    {
+        // done with this whole sequence
 
         //FIXME refactor into refda_exec_seq_terminate(seq)
 
-        if (seq->status)
-        {
-            atomic_store(&seq->status->failed, true);
-        }
-        // remove items but leave initialized for exec thread cleanup
-        if (pthread_mutex_lock(&seq->items_mutex))
-        {
-            CACE_LOG_CRIT("failed to lock mutex");
-        }
         // decouple all items from the sequence
         refda_exec_item_list_it_t item_it;
         for (refda_exec_item_list_it(item_it, seq->items); !refda_exec_item_list_end_p(item_it); refda_exec_item_list_next(item_it))
@@ -93,6 +93,7 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
             refda_exec_item_ptr_t **item_ptr = refda_exec_item_list_ref(item_it);
             refda_exec_item_ptr_ref(*item_ptr)->seq = NULL;
         }
+        // remove items but leave container for exec thread cleanup
         refda_exec_item_list_reset(seq->items);
         is_empty = true;
         if (pthread_mutex_unlock(&seq->items_mutex))
@@ -100,28 +101,24 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
             CACE_LOG_CRIT("failed to unlock mutex");
         }
     }
-    else if (item->seq)
+    else if (seq)
     {
         // done with this item
-        if (pthread_mutex_lock(&seq->items_mutex))
-        {
-            CACE_LOG_CRIT("failed to lock mutex");
-        }
         // decouple from the sequence
         item->seq = NULL;
         refda_exec_item_list_pop_at(NULL, seq->items, 0);
 
         is_empty = refda_exec_item_list_empty_p(seq->items);
-        if (pthread_mutex_unlock(&seq->items_mutex))
-        {
-            CACE_LOG_CRIT("failed to unlock mutex");
-        }
+    }
+    if (pthread_mutex_unlock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to unlock mutex");
     }
 
     if (seq->status && is_empty)
     {
-        CACE_LOG_DEBUG("Agent-directed sequence finished");
-        sem_post(&seq->status->finished);
+        CACE_LOG_DEBUG("Agent-directed sequence finished, failure=%d", is_failure);
+        refda_exec_status_post(seq->status, is_failure);
     }
 
     return 0;

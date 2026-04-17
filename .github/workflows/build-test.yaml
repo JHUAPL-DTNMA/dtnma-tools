@@ -67,12 +67,12 @@ jobs:
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.22
         with:
           create-symlink: true
       - name: Dependencies
@@ -102,7 +102,7 @@ jobs:
         run: ./build.sh coverage
       - name: Archive coverage
         if: matrix.os != 'ubuntu-22.04'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-${{matrix.deps}}-coverage
           path: build/default/coverage*
@@ -163,12 +163,12 @@ jobs:
               python3-pip python3-wheel python3-devel postgresql
           pip3 install gcovr
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.22
         with:
           create-symlink: true
       - name: Dependencies
@@ -203,7 +203,7 @@ jobs:
       - name: Collect coverage
         run: ./build.sh coverage
       - name: Archive coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{github.job}}-${{matrix.os}}-gcc-coverage
           path: build/default/coverage*
@@ -219,7 +219,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive

@@ -54,6 +54,12 @@ def compose_args(args: List[str]) -> List[str]:
             '--gen-suppressions=all',
             '--error-exitcode=2',
         ]
+    elif wrap == 'helgrind':
+        prefix = [
+            'valgrind',
+            '--tool=helgrind',
+            '--error-exitcode=2',
+        ]
     elif wrap == 'gdb':
         prefix = [
             'gdb',
