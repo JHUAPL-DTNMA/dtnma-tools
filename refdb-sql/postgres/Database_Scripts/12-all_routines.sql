@@ -1309,16 +1309,39 @@ as $$ BEGIN
 END$$;
 
 
-create or replace procedure SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time TIMESTAMPTZ, p_report_list TEXT, p_report_list_cbor BYTEA, p_agent_endpoint_uri TEXT)
-language plpgsql
+create or replace FUNCTION SP__insert_rptset(in p_nonce_cbor BYTEA, p_reference_time TIMESTAMPTZ, p_agent_endpoint_uri TEXT, p_ari_rptset_cbor BYTEA)
+RETURNS integer
+LANGUAGE plpgsql
 as $$
 DECLARE
     agent_row_id INTEGER;
+	r_ari_rptset_id INTEGER;
 BEGIN
     CALL SP__insert_agent(p_agent_endpoint_uri, agent_row_id);
-    INSERT INTO ari_rptset(mgr_time, nonce_cbor, reference_time, report_list, report_list_cbor, agent_id)
-        VALUES(now(), p_nonce_cbor, p_reference_time, p_report_list, p_report_list_cbor, agent_row_id);
+    INSERT INTO ari_rptset(mgr_time, nonce_cbor, reference_time, agent_id, ari_rptset_cbor)
+        VALUES(now(), p_nonce_cbor, p_reference_time, agent_row_id,p_ari_rptset_cbor) RETURNING ari_rptset_id into r_ari_rptset_id;
+	RETURN r_ari_rptset_id;
 End$$;
+
+create or replace FUNCTION SP__insert_rptlist(in p_ari_rptset_id INTEGER, p_agent_time  TIMESTAMPTZ, p_source BYTEA)
+RETURNS integer
+language plpgsql
+as $$
+DECLARE
+	r_ari_rptlist_id INTEGER;
+BEGIN
+    INSERT INTO ari_rptlist(ari_rptset_id, agent_time, report_source)
+        VALUES(p_ari_rptset_id, p_agent_time, p_source) RETURNING ari_rptlist_id into r_ari_rptlist_id;
+	RETURN r_ari_rptlist_id;
+End$$;
+
+CREATE OR REPLACE PROCEDURE SP__insert_rptitem(IN  p_ari_rptlist_id INTEGER, p_ari_rptlist_index INTEGER, p_item BYTEA )
+LANGUAGE plpgsql
+as $$ BEGIN
+    INSERT INTO ari_rpt_item(ari_rptlist_id, ari_rpt_item_index, report_entry) VALUES(p_ari_rptlist_id, p_ari_rptlist_index, p_item);
+END$$;
+
+
 
 create or replace procedure SP__insert_execset(in p_nonce_cbor BYTEA, p_use_desc varchar, p_agent_id varchar, p_exec_set bytea, p_num_entries INT)
 language plpgsql
