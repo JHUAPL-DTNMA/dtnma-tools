@@ -92,13 +92,16 @@ int refda_exec_seq_front_status(refda_exec_item_status_t *status, refda_exec_seq
 /** Pop the front execution item after it has finished successfully.
  *
  * @param[in,out] seq The sequence to pop.
+ * @post After this the front item will be removed.
  */
 void refda_exec_seq_pop_front(refda_exec_seq_t *seq);
 
 /** Decouple all items from a sequence and mark it as having failed.
  * This will cause the sequence to be cleaned up later in the exec thread.
  *
- * @param[in,out] seq The sequence to termiante.
+ * @param[in,out] seq The sequence to terminate.
+ * @post After this the items will all be removed and, if present,
+ * the status will be marked as failed.
  */
 void refda_exec_seq_terminate(refda_exec_seq_t *seq);
 
