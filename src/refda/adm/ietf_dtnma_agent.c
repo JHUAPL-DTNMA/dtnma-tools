@@ -5571,12 +5571,84 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
      */
 }
 
+/* Name: tbl-get
+ * Description:
+ *   Retrieve an item from the given table.
+ *
+ * Parameters list:
+ *   - Index 0, name "row", type use of ari:/ARITYPE/UINT
+ *   - Index 1, name "column", type use of ari:/ARITYPE/UINT
+ *
+ * Operand list:
+ *   - Index 0, name "in", type use of ari:/ARITYPE/TBL
+ *
+ * Result name "out", type use of ari://ietf/amm-base/TYPEDEF/any
+ */
+static void refda_adm_ietf_dtnma_agent_oper_tbl_get(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_get BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t *row = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *col = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
+
+    cace_ari_uint row_uint, col_uint;
+    if (cace_ari_get_uint(row, &row_uint) || cace_ari_get_uint(col, &col_uint))
+    {
+        CACE_LOG_ERR("index is not a uint, unable to continue");
+        return;
+    }
+
+    // Local variables from operand
+    const cace_ari_t     *in     = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_tbl_t *in_tbl = cace_ari_cget_tbl(in);
+    if (in_tbl == NULL)
+    {
+        CACE_LOG_ERR("operand is not a TBL, unable to continue");
+        return;
+    }
+
+    if (col_uint >= in_tbl->ncols)
+    {
+        CACE_LOG_ERR("column index %u is too large for TBL size %zu", col_uint, in_tbl->ncols);
+        return;
+    }
+    const size_t nrows = cace_ari_tbl_num_rows(in_tbl);
+    if (row_uint >= nrows)
+    {
+        CACE_LOG_ERR("row index %u is too large for TBL size %zu", row_uint, nrows);
+        return;
+    }
+
+    // cast is workaround for M*LIB interface type issue https://github.com/P-p-H-d/mlib/issues/151
+    const cace_ari_t *item = cace_ari_array_cget(in_tbl->items, row_uint * in_tbl->ncols + col_uint);
+    refda_oper_eval_ctx_set_result_copy(ctx, item);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_get BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: list-get
  * Description:
  *   Retrieve an item from the given list.
  *
  * Parameters list:
- *   - Index 0, name "index", type use of ari://ietf/amm-base/TYPEDEF/INTEGER
+ *   - Index 0, name "index", type use of ari:/ARITYPE/UINT
  *
  * Operand list:
  *   - Index 0, name "in", type use of ari:/ARITYPE/AC
@@ -5602,7 +5674,8 @@ static void refda_adm_ietf_dtnma_agent_oper_list_get(refda_oper_eval_ctx_t *ctx)
     }
 
     const cace_ari_t *index = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
-    cace_ari_uint     index_uint;
+
+    cace_ari_uint index_uint;
     if (cace_ari_get_uint(index, &index_uint))
     {
         CACE_LOG_ERR("index is not a uint, unable to continue");
@@ -8718,6 +8791,54 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 }
             }
         }
+        { // For ./OPER/tbl-get
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "in");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TBL
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TBL);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/any
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_tbl_get;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("tbl-get", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_TBL_GET),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "row");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/UINT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "column");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/UINT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
         { // For ./OPER/list-get
             refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
@@ -8751,8 +8872,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "index");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/INTEGER
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 1);
+                    // use of ari:/ARITYPE/UINT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }

@@ -179,7 +179,7 @@ class TestRefdaSocket(unittest.TestCase):
     def _ari_strip_params(self, val: ARI) -> ARI:
         ''' Remove any parameters from a reference value. '''
         if isinstance(val, ari.ReferenceARI):
-            val.params = None
+            val = ari.ReferenceARI(ident=val.ident)
         return val
 
     def _send_msg(self, values: List[ARI], mgr_ix: int = 0) -> str:
@@ -297,7 +297,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
         # items of the report
-        self.assertEqual([ari.LiteralARI('0.0.0')], rpt.items)
+        self.assertEqual((ari.LiteralARI('0.0.0'),), rpt.items)
 
     def test_exec_report_on_multi_mgr(self):
         self._start()
@@ -331,7 +331,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpts))
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on'), self._ari_strip_params(rpt.source))
-        self.assertEqual([ari.LiteralARI(None)], rpt.items)
+        self.assertEqual((ari.LiteralARI(None),), rpt.items)
 
     def test_exec_report_on_no_destination(self):
         self._start()
@@ -354,7 +354,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on(//ietf/dtnma-agent/CONST/hello)'), rpt.source)
         # items of the report
-        self.assertEqual([ari.LiteralARI(None)], rpt.items)
+        self.assertEqual((ari.LiteralARI(None),), rpt.items)
 
     def test_exec_report_on_variations(self):
         self._start()
@@ -419,7 +419,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/!odm/const/expr-sum)'), rpt.source)
         # the produced AC directly
-        self.assertEqual([list], literal_prim_types(rpt.items))
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
         self.assertEqual(
             self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)'),
             rpt.items[0]
@@ -428,7 +428,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('/ac/(/ac/(//ietf/!odm/const/expr-sum))'), rpt.source)
         # the evaluated expression with no operations
-        self.assertEqual([list], literal_prim_types(rpt.items))
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
         self.assertEqual(
             self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed,//ietf/dtnma-agent/oper/add)'),
             rpt.items[0]
@@ -452,11 +452,11 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/wait-for(/TD/PT1.5S)'), rpt.source)
         # items of the report
-        self.assertEqual([ari.LiteralARI(None)], rpt.items)
+        self.assertEqual((ari.LiteralARI(None),), rpt.items)
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
-        self.assertEqual([ari.LiteralARI('0.0.0')], rpt.items)
+        self.assertEqual((ari.LiteralARI('0.0.0'),), rpt.items)
 
     def test_exec_macro_success(self):
         self._start()
@@ -501,7 +501,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(false)'), rpt.source)
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
 
         # no other RPTSET
         with self.assertRaises(TimeoutError):
@@ -528,7 +528,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//!private/!odm/EDD/missing)'), rpt.source)
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
 
         # no other RPTSET
         with self.assertRaises(TimeoutError):
@@ -635,7 +635,7 @@ class TestRefdaSocket(unittest.TestCase):
             self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-labels)'),
             rpt.source
         )
-        self.assertEqual([list], literal_prim_types(rpt.items))
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
         # no substitution
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,/label/hello)'), rpt.items[0])
 
@@ -644,7 +644,7 @@ class TestRefdaSocket(unittest.TestCase):
             self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-int)'),
             rpt.source
         )
-        self.assertEqual([list], literal_prim_types(rpt.items))
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
         # processed, but no given parameter
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,undefined)'), rpt.items[0])
 
@@ -653,7 +653,7 @@ class TestRefdaSocket(unittest.TestCase):
             self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-int(//ietf/dtnma-agent/EDD/num-msg-rx-failed))'),
             rpt.source
         )
-        self.assertEqual([list], literal_prim_types(rpt.items))
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
         # substitution
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'), rpt.items[0])
 
@@ -662,7 +662,7 @@ class TestRefdaSocket(unittest.TestCase):
             self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-tstr)'),
             rpt.source
         )
-        self.assertEqual([list], literal_prim_types(rpt.items))
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
         # processed, but no given parameter
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,undefined)'), rpt.items[0])
 
@@ -671,7 +671,7 @@ class TestRefdaSocket(unittest.TestCase):
             self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/const/expr-with-params-tstr(//ietf/dtnma-agent/EDD/num-msg-rx-failed))'),
             rpt.source
         )
-        self.assertEqual([list], literal_prim_types(rpt.items))
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
         # substitution
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'), rpt.items[0])
 
@@ -681,14 +681,22 @@ class TestRefdaSocket(unittest.TestCase):
             ('/ac/(true)', ari.LiteralARI(True)),
             # list access
             ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(1))', ari.LiteralARI(2)),
-            ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(10))', ari.UNDEFINED), # bad index
+            ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(10))', ari.UNDEFINED), # missing index
             ('/ac/(/ac/(1,2,3),//ietf/dtnma-agent/oper/list-get(hi))', ari.UNDEFINED), # bad parameter
-            ('/ac/(2,//ietf/dtnma-agent/oper/list-get(1))', ari.UNDEFINED), # bad operand
+            ('/ac/(2,//ietf/dtnma-agent/oper/list-get(0))', ari.UNDEFINED), # bad operand
             # map access
             ('/ac/(/am/(1=one,2=two),//ietf/dtnma-agent/oper/map-get(1))', ari.LiteralARI('one')),
             ('/ac/(/am/(1=one,2=two),//ietf/dtnma-agent/oper/map-get(10))', ari.UNDEFINED), # missing key
             ('/ac/(/am/(1=one,2=two),//ietf/dtnma-agent/oper/map-get(hi))', ari.UNDEFINED), # missing key but valid
-            ('/ac/(2,//ietf/dtnma-agent/oper/map-get(1))', ari.UNDEFINED), # bad operand
+            ('/ac/(2,//ietf/dtnma-agent/oper/map-get(0))', ari.UNDEFINED), # bad operand
+            # table access
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(1,0))', ari.LiteralARI(3)),
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(0,1))', ari.LiteralARI(2)),
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(10,0))', ari.UNDEFINED), # missing index
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(0,10))', ari.UNDEFINED), # missing index
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(hi,0))', ari.UNDEFINED), # bad parameter
+            ('/ac/(/tbl/c=2;(1,2)(3,4),//ietf/dtnma-agent/oper/tbl-get(0,hi))', ari.UNDEFINED), # bad parameter
+            ('/ac/(2,//ietf/dtnma-agent/oper/tbl-get(0,0))', ari.UNDEFINED), # bad operand
         ))
 
         self._start()
@@ -1192,7 +1200,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
 
         # attempt to create with an invalid value
         self._send_msg(
@@ -1202,7 +1210,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
 
         # verify failures are not listed
         self._send_msg(
@@ -1375,7 +1383,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(3, len(rpts))
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
         # catch result after try target
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/catch'), self._ari_strip_params(rpt.source))
@@ -1394,7 +1402,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(3, len(rpts))
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
         # catch result after try target
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/catch'), self._ari_strip_params(rpt.source))
@@ -1402,7 +1410,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertIs(False, rpt.items[0].value)
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/another)'), rpt.source)
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
 
     def test_odm_const_invalid(self):
         self._start()
@@ -1423,7 +1431,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
 
         # attempt to create with an invalid value
         self._send_msg(
@@ -1433,7 +1441,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
 
         # verify failures are not listed
         self._send_msg(
@@ -1499,8 +1507,8 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/current-groups)'), rpt.source)
-        self.assertEqual([list], literal_prim_types(rpt.items))
-        self.assertEqual([ari.typed_uint(1)], rpt.items[0].value)
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
+        self.assertEqual(self._ari_text_to_obj('/ac/(/uint/1)'), rpt.items[0])
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
@@ -1556,8 +1564,8 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/current-groups)'), rpt.source)
-        self.assertEqual([list], literal_prim_types(rpt.items))
-        self.assertEqual([ari.typed_uint(1), ari.typed_uint(10)], rpt.items[0].value)
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
+        self.assertEqual(self._ari_text_to_obj('/ac/(/uint/1,/uint/10)'), rpt.items[0])
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
@@ -1594,9 +1602,8 @@ class TestRefdaSocket(unittest.TestCase):
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/current-groups)'), rpt.source)
-        self.assertEqual([list], literal_prim_types(rpt.items))
-        # group number 10
-        self.assertEqual([ari.typed_uint(1)], rpt.items[0].value)
+        self.assertEqual([tuple], literal_prim_types(rpt.items))
+        self.assertEqual(self._ari_text_to_obj('/ac/(/uint/1)'), rpt.items[0])
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
@@ -1622,7 +1629,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent-acl/CTRL/ensure-access'), self._ari_strip_params(rpt.source))
-        self.assertEqual([ari.UNDEFINED], rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
 
     def test_alarms(self):
         self._start()
