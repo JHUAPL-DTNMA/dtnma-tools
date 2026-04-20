@@ -5677,7 +5677,7 @@ static void refda_adm_ietf_dtnma_agent_oper_unary_eval(refda_oper_eval_ctx_t *ct
     cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
 
     const cace_ari_translator_t translator = { .map_ari = unary_eval_sub_label };
-    // Step 1 substitute the operand value
+    // substitute the operand value
     int res = cace_ari_translate(&sub_tgt, target, &translator, (void *)value);
     if (res)
     {
@@ -5777,22 +5777,27 @@ static void refda_adm_ietf_dtnma_agent_oper_nary_eval(refda_oper_eval_ctx_t *ctx
     if (cace_ari_list_size(ctx->evalctx->stack) < count_uint)
     {
         CACE_LOG_ERR("Too few values on evaluation stack");
+        cace_ari_list_reset(ctx->evalctx->stack);
         return;
     }
+
     cace_ari_array_t operands;
     cace_ari_array_init(operands);
-    for (cace_ari_uint ix = 0; ix < count_uint; ++ix)
+    cace_ari_array_resize(operands, count_uint);
+    // preserve operand order from stack
+    cace_ari_array_it_t ops_it;
+    cace_ari_array_it_last(ops_it, operands);
+    for (cace_ari_uint ix = 0; ix < count_uint; ++ix, cace_ari_array_previous(ops_it))
     {
-        cace_ari_t val = CACE_ARI_INIT_UNDEFINED;
-        cace_ari_list_pop_back_move(&val, ctx->evalctx->stack);
-        cace_ari_array_push_move(operands, &val);
+        cace_ari_t *val = cace_ari_array_ref(ops_it);
+        cace_ari_list_pop_back_move(val, ctx->evalctx->stack);
     }
     CACE_LOG_DEBUG("Popped %u operands from eval stack", count_uint);
 
     cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
 
     const cace_ari_translator_t translator = { .map_ari = nary_eval_sub_label };
-    // Step 1 substitute the operand value
+    // substitute the operand value
     int res = cace_ari_translate(&sub_tgt, target, &translator, (void *)operands);
     cace_ari_array_clear(operands);
     if (res)

@@ -966,6 +966,8 @@ class TestRefdaSocket(unittest.TestCase):
             ('/ac/(//ietf/dtnma-agent/oper/nary-eval(0,/ac/(10)))', ari.LiteralARI(10)),
             ('/ac/(//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0)))', ari.UNDEFINED), # fail from too small stack
             ('/ac/(10,//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0)))', ari.LiteralARI(10)),
+            ('/ac/(10,2,//ietf/dtnma-agent/oper/nary-eval(2,/ac/(/label/0,/label/1,//ietf/dtnma-agent/oper/sub)))', ari.typed_int(-8)), #FIXME order
+            ('/ac/(10,2,//ietf/dtnma-agent/oper/nary-eval(2,/ac/(/label/1,/label/0,//ietf/dtnma-agent/oper/sub)))', ari.typed_int(8)),
             # direct predicate operators
             ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22ll%22))', ari.TYPED_FALSE),
             ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22.*ll.*%22))', ari.TYPED_TRUE),
