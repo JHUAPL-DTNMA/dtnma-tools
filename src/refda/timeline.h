@@ -35,8 +35,10 @@ typedef struct refda_ctrl_exec_ctx_s refda_ctrl_exec_ctx_t;
 
 typedef struct refda_timeline_exec_event_s
 {
-    /// Execution item which created the wait
-    refda_exec_item_t *item;
+    /** Execution item which created the wait.
+     * This member is not reference counted to allow POD copying.
+     */
+    refda_exec_item_ptr_t *item_ptr;
 
     /** Execution-defined callback, which should not be null.
      *

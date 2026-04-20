@@ -30,6 +30,11 @@
 
 int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
 {
+    if (!item->seq)
+    {
+        // item is already terminated
+        return 0;
+    }
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         m_string_t buf;
@@ -40,7 +45,10 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
     }
     const bool is_failure = cace_ari_is_undefined(&(item->result));
 
-    refda_runctx_t *runctx = refda_runctx_ptr_ref(item->seq->runctx);
+    // item will be invalidated when removed from sequence
+    refda_exec_seq_t *seq = item->seq;
+
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(seq->runctx);
 
     // Track number of successes/failures
     refda_agent_t *agent = runctx->agent;
@@ -60,9 +68,6 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
         // this moves the result value
         refda_reporting_ctrl(runctx, &(item->ref), &(item->result));
     }
-
-    // item will be invalidated when removed from sequence
-    refda_exec_seq_t *seq = item->seq;
 
     if (is_failure && cace_log_is_enabled_for(LOG_WARNING))
     {
@@ -99,7 +104,7 @@ int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
     refda_exec_item_ptr_t  *item_ptr  = refda_exec_item_ptr_acquire(*front_ptr);
     if (pthread_mutex_unlock(&seq->items_mutex))
     {
-        CACE_LOG_CRIT("failed to lock mutex");
+        CACE_LOG_CRIT("failed to unlock mutex");
     }
 
     refda_exec_item_t *item = refda_exec_item_ptr_ref(item_ptr);
@@ -120,7 +125,7 @@ int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
     if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_PENDING)
     {
         refda_ctrl_exec_ctx_t ctx;
-        refda_ctrl_exec_ctx_init(&ctx, item);
+        refda_ctrl_exec_ctx_init(&ctx, item_ptr);
         atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
         (ctrl->execute)(&ctx);
         refda_ctrl_exec_ctx_deinit(&ctx);
@@ -208,7 +213,7 @@ static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq
 
                 {
                     refda_exec_item_t *item = refda_exec_item_ptr_ref(ptr);
-
+                    // back reference to parent
                     item->seq = seq;
                     cace_ari_set_copy(&(item->ref), target);
                     cace_amm_lookup_set_move(&(item->deref), &deref);

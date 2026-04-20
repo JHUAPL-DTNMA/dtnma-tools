@@ -298,14 +298,14 @@ class TestRefdaSocket(unittest.TestCase):
                 try:
                     if nonce is None:
                         # any reports
-                        if not bind.recv:
+                        if not bind.recv and timer:
                             bind.recv_avail.wait(timeout=timer.remaining())
                         for _nonce, rpts in bind.recv.items():
                             reports += rpts
                         bind.recv.clear()
                     else:
                         # only for a single nonce
-                        while nonce not in bind.recv:
+                        while nonce not in bind.recv and timer:
                             bind.recv_avail.wait(timeout=timer.remaining())
                         rpts = bind.recv.pop(nonce, [])
                         reports += rpts
@@ -1629,6 +1629,62 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/another)'), rpt.source)
         self.assertTupleEqual((ari.UNDEFINED,), rpt.items)
+
+    def test_exec_control_flow_exec_deadline(self):
+        self._start()
+
+        # successful finish of target
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/exec-deadline(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),/td/PT2S,//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        # target itself
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertEqual([str], literal_prim_types(rpt.items))
+        # result after target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))
+        self.assertEqual([bool], literal_prim_types(rpt.items))
+        self.assertIs(True, rpt.items[0].value)
+
+        # failure finish of target
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/exec-deadline(//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing),/td/PT2S,//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        # target itself
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
+        self.assertTupleEqual((ari.UNDEFINED,), rpt.items)
+        # result after target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))
+        self.assertTupleEqual((ari.UNDEFINED,), rpt.items)
+
+        # timeout of target (a wait on a trivial falsy condition)
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/exec-deadline(//ietf/dtnma-agent/CTRL/wait-cond(/ac/(false)),/td/PT2S,//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=3, timeout=3)
+        self.assertEqual(2, len(rpts))
+        # target itself
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
+        self.assertTupleEqual((ari.UNDEFINED,), rpt.items)
+        # result after target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))
+        self.assertTupleEqual((ari.UNDEFINED,), rpt.items)
+        # on-timeout
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'), rpt.source)
+        self.assertEqual([str], literal_prim_types(rpt.items))
 
     def test_odm_const_invalid(self):
         self._start()

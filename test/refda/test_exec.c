@@ -295,7 +295,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
 
                 refda_ctrl_exec_ctx_t ctx;
-                refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                refda_ctrl_exec_ctx_init(&ctx, next->exec.item_ptr);
 
                 (next->exec.callback)(&ctx);
 

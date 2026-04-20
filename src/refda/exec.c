@@ -229,7 +229,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                 {
                     {
                         refda_ctrl_exec_ctx_t ctx;
-                        refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                        refda_ctrl_exec_ctx_init(&ctx, next->exec.item_ptr);
 
                         (next->exec.callback)(&ctx);
 
