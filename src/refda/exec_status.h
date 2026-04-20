@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+// Forward declaration
+typedef struct refda_exec_seq_s refda_exec_seq_t;
+
 /** Mechanism to provide a "future"-type interface for execution.
  * This allows a caller to refda_exec_add_target() to synchronize on the
  * finish of the execution, either as success or failure.
@@ -35,6 +38,11 @@ extern "C" {
  */
 typedef struct refda_exec_status_s
 {
+    /** Sequence associated with this status.
+     * This is non-null while the sequence is valid.
+     */
+    refda_exec_seq_t *seq;
+
     /** An optional callback executed when target has finished
      * but before the #finished semaphore is posted.
      * This callback can be executed from any execution thread.

@@ -126,11 +126,27 @@ void refda_exec_seq_terminate(refda_exec_seq_t *seq)
         CACE_LOG_CRIT("failed to lock mutex");
         return;
     }
+
+    // mark the current item as finished
+    if (!refda_exec_item_list_empty_p(seq->items))
+    {
+        refda_exec_item_ptr_t **front_ptr = refda_exec_item_list_front(seq->items);
+        // safe during mutex lock
+        refda_exec_item_t *item = refda_exec_item_ptr_ref(*front_ptr);
+
+        if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_WAITING)
+        {
+            // leave undefined
+            refda_exec_item_finish_result(item);
+        }
+    }
+
     // decouple and release all items from the sequence
     refda_exec_item_list_it_t item_it;
     for (refda_exec_item_list_it(item_it, seq->items); !refda_exec_item_list_end_p(item_it);)
     {
         refda_exec_item_ptr_t **item_ptr = refda_exec_item_list_ref(item_it);
+
         // clear parent reference
         refda_exec_item_ptr_ref(*item_ptr)->seq = NULL;
 

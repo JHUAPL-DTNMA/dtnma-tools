@@ -23,19 +23,27 @@
 #include "cace/ari/text.h"
 #include "cace/util/defs.h"
 
-void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_ptr_t *item_ptr)
+int refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_ptr_t *item_ptr)
 {
-    CHKVOID(obj);
-    CHKVOID(item_ptr);
+    CHKERR1(obj);
+    CHKERR1(item_ptr);
 
     obj->item_ptr = refda_exec_item_ptr_acquire(item_ptr);
-    obj->item = refda_exec_item_ptr_ref(item_ptr);
+    obj->item     = refda_exec_item_ptr_ref(item_ptr);
 
     refda_exec_seq_t *seq = obj->item->seq;
-
-    obj->runctx = seq ? refda_runctx_ptr_ref(seq->runctx) : NULL;
-    // check ACL cache at last moment
-    refda_runctx_check_acl(obj->runctx);
+    if (seq)
+    {
+        obj->runctx = refda_runctx_ptr_ref(seq->runctx);
+        // check ACL cache at last moment
+        refda_runctx_check_acl(obj->runctx);
+    }
+    else
+    {
+        CACE_LOG_DEBUG("ignoring item no longer bound to sequence");
+        obj->runctx = NULL;
+    }
+    return seq ? 0 : 2;
 }
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj)

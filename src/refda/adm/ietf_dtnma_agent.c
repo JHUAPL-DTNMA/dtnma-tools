@@ -153,7 +153,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
             refda_timeline_event_t event = {
                 .purpose       = REFDA_TIMELINE_EXEC,
                 .ts            = next_time,
-                .exec.item_ptr = ctx->item_ptr,
+                .exec.item_ptr = refda_exec_item_ptr_acquire(ctx->item_ptr),
                 .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
             };
             refda_ctrl_exec_ctx_set_waiting(ctx, &event);
@@ -276,8 +276,6 @@ typedef struct
     refda_exec_status_t status;
     /// Target if status indicates failure
     cace_ari_t on_timeout;
-    /// Target sequence associated with #status
-    refda_exec_seq_ptr_t *seq;
     /** Execution item of catch to mark result on, not part of the try target.
      * This is not reference counted because it is part of the item itself!
      */
@@ -328,15 +326,16 @@ static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_finished(bool failed, 
 
 /** Callback to handle timeout of the deadline CTRL.
  */
-static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_timeout(refda_ctrl_exec_ctx_t *ctx) {
+static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_timeout(refda_ctrl_exec_ctx_t *ctx)
+{
     refda_exec_deadline_data_t *state = ctx->item->user_data.ptr;
     CACE_LOG_DEBUG("exec-deadline target timeout");
 
     // the target may have already finished, this callback only occurs once
     if (atomic_load(&ctx->item->execution_stage) == REFDA_EXEC_WAITING)
     {
-        // force the target sequence
-        refda_exec_seq_terminate(ctx->item->seq);
+        // terminate the target sequence
+        refda_exec_seq_terminate(state->status.seq);
 
         // queue the failure target but do not wait on it here
         int res = refda_exec_next(ctx->item->seq, &(state->on_timeout));
@@ -2563,7 +2562,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline(refda_ctrl_exec_ctx_t 
     refda_timeline_event_t event = {
         .purpose       = REFDA_TIMELINE_EXEC,
         .ts            = deadline_ts,
-        .exec.item_ptr = ctx->item_ptr,
+        .exec.item_ptr = refda_exec_item_ptr_acquire(ctx->item_ptr),
         .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_timeout,
     };
     refda_ctrl_exec_ctx_set_waiting(ctx, &event);
@@ -2612,7 +2611,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
     refda_timeline_event_t event = {
         .purpose       = REFDA_TIMELINE_EXEC,
         .ts            = timespec_add(nowtime, duration),
-        .exec.item_ptr = ctx->item_ptr,
+        .exec.item_ptr = refda_exec_item_ptr_acquire(ctx->item_ptr),
         .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
     refda_ctrl_exec_ctx_set_waiting(ctx, &event);
@@ -2654,7 +2653,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
     refda_timeline_event_t event = {
         .purpose       = REFDA_TIMELINE_EXEC,
         .ts            = abstime,
-        .exec.item_ptr = ctx->item_ptr,
+        .exec.item_ptr = refda_exec_item_ptr_acquire(ctx->item_ptr),
         .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
     refda_ctrl_exec_ctx_set_waiting(ctx, &event);

@@ -57,8 +57,10 @@ typedef struct refda_ctrl_exec_ctx_s
  * @param[out] obj The context to initialize.
  * @param[in] item_ptr The internal execution item.
  * The result must outlive this context.
+ * @return Zero if the item is still valid, or non-zero if the item
+ * has already been terminated.
  */
-void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_ptr_t *item_ptr);
+int refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_ptr_t *item_ptr);
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj);
 

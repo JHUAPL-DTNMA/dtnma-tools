@@ -53,6 +53,10 @@ int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target,
     seq->pid = agent->exec_next_pid++;
     // no dereference here, allowed to be null
     seq->status = status;
+    if (seq->status)
+    {
+        seq->status->seq = seq;
+    }
 
     size_t seq_ix = 0;
     // Expand now and wait for actual run later
@@ -229,17 +233,19 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                 {
                     {
                         refda_ctrl_exec_ctx_t ctx;
-                        refda_ctrl_exec_ctx_init(&ctx, next->exec.item_ptr);
-
-                        (next->exec.callback)(&ctx);
-
-                        if (!((atomic_load(&(ctx.item->execution_stage))) == REFDA_EXEC_WAITING))
+                        // ignore events on now-terminated items
+                        if (!refda_ctrl_exec_ctx_init(&ctx, next->exec.item_ptr))
                         {
-                            refda_exec_proc_ctrl_finish(ctx.item);
-                        }
+                            (next->exec.callback)(&ctx);
 
+                            if (!((atomic_load(&(ctx.item->execution_stage))) == REFDA_EXEC_WAITING))
+                            {
+                                refda_exec_proc_ctrl_finish(ctx.item);
+                            }
+                        }
                         refda_ctrl_exec_ctx_deinit(&ctx);
                     }
+                    refda_exec_item_ptr_release(next->exec.item_ptr);
                     break;
                 }
                 case REFDA_TIMELINE_SBR:

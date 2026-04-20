@@ -1668,27 +1668,28 @@ class TestRefdaSocket(unittest.TestCase):
         # target itself
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
-        self.assertTupleEqual((ari.UNDEFINED,), rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
         # result after target
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))
-        self.assertTupleEqual((ari.UNDEFINED,), rpt.items)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
 
         # timeout of target (a wait on a trivial falsy condition)
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/exec-deadline(//ietf/dtnma-agent/CTRL/wait-cond(/ac/(false)),/td/PT2S,//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
         )
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=3, timeout=3)
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2, timeout=3)
         self.assertEqual(2, len(rpts))
         # target itself
-        rpt = rpts.pop(0)
-        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
-        self.assertTupleEqual((ari.UNDEFINED,), rpt.items)
+        # rpt = rpts.pop(0)
+        # self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
+        # self.assertEqual((ari.UNDEFINED,), rpt.items)
         # result after target
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))
-        self.assertTupleEqual((ari.UNDEFINED,), rpt.items)
+        self.assertEqual([bool], literal_prim_types(rpt.items))
+        self.assertIs(False, rpt.items[0].value)
         # on-timeout
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'), rpt.source)
