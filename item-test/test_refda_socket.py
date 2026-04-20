@@ -106,7 +106,8 @@ class TestRefdaSocket(unittest.TestCase):
         # listen in work thread
         self._mgr_reader = threading.Thread(
             target=self._read_mgr,
-            args=[self._mgr_bind]
+            args=[self._mgr_bind],
+            daemon=True
         )
         self._mgr_reader.start()
 
@@ -1657,7 +1658,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))
         self.assertEqual([bool], literal_prim_types(rpt.items))
         self.assertIs(True, rpt.items[0].value)
-
+        
         # failure finish of target
         self._send_msg(
             [self._ari_text_to_obj(
@@ -1679,12 +1680,12 @@ class TestRefdaSocket(unittest.TestCase):
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/exec-deadline(//ietf/dtnma-agent/CTRL/wait-cond(/ac/(false)),/td/PT2S,//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
         )
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2, timeout=3)
-        self.assertEqual(2, len(rpts))
-        # target itself
-        # rpt = rpts.pop(0)
-        # self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
-        # self.assertEqual((ari.UNDEFINED,), rpt.items)
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=3, timeout=3)
+        self.assertEqual(3, len(rpts))
+        # target itself failed
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/wait-cond(/ac/(false))'), rpt.source)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
         # result after target
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))

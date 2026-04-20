@@ -20,7 +20,6 @@
 #include "eval.h"
 #include "ctrl_exec_ctx.h"
 #include "valprod.h"
-#include "reporting.h"
 #include "amm/ctrl.h"
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
@@ -132,7 +131,7 @@ int refda_exec_waiting(refda_agent_t *agent)
         refda_exec_seq_t *seq = refda_exec_seq_ptr_ref(*seq_ptr);
 
         refda_exec_item_status_t front_status;
-        if (!refda_exec_seq_front_status(&front_status, seq))
+        if (!refda_exec_proc_front_status(&front_status, seq))
         {
             // execute the front item as long as it's not still waiting
             if (front_status != REFDA_EXEC_WAITING)

@@ -37,6 +37,7 @@
 /*   START CUSTOM INCLUDES HERE  */
 #include "refda/eval.h"
 #include "refda/exec.h"
+#include "refda/exec_proc.h"
 #include "refda/binding.h"
 #include "refda/reporting.h"
 #include "cace/amm/promote.h"
@@ -335,9 +336,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_timeout(refda_ctrl_exe
     if (atomic_load(&ctx->item->execution_stage) == REFDA_EXEC_WAITING)
     {
         // terminate the target sequence
-        refda_exec_seq_terminate(state->status.seq);
+        refda_exec_proc_terminate(state->status.seq);
 
         // queue the failure target but do not wait on it here
+        CACE_LOG_CRIT("running on-timeout target");
         int res = refda_exec_next(ctx->item->seq, &(state->on_timeout));
         if (res)
         {
