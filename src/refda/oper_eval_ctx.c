@@ -79,8 +79,7 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
     int failcnt = 0;
 
     // iterate in reverse index order
-    cace_amm_named_type_array_it_t typ_it;
-    cace_ari_array_it_t            val_it;
+    cace_ari_array_it_t val_it;
     for (cace_amm_named_type_array_it_last(typ_it, oper->operand_types),
          cace_ari_array_it_last(val_it, obj->operands.ordered);
          !cace_amm_named_type_array_end_p(typ_it);
