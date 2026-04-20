@@ -298,14 +298,14 @@ class TestRefdaSocket(unittest.TestCase):
                 try:
                     if nonce is None:
                         # any reports
-                        if not bind.recv:
+                        if not bind.recv and timer:
                             bind.recv_avail.wait(timeout=timer.remaining())
                         for _nonce, rpts in bind.recv.items():
                             reports += rpts
                         bind.recv.clear()
                     else:
                         # only for a single nonce
-                        while nonce not in bind.recv:
+                        while nonce not in bind.recv and timer:
                             bind.recv_avail.wait(timeout=timer.remaining())
                         rpts = bind.recv.pop(nonce, [])
                         reports += rpts
