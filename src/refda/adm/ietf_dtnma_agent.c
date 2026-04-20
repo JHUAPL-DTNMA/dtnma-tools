@@ -6018,6 +6018,51 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_get(refda_oper_eval_ctx_t *ctx)
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_get BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+
+    const cace_ari_t *row = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *col = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
+
+    cace_ari_uint row_uint, col_uint;
+    if (cace_ari_get_uint(row, &row_uint) || cace_ari_get_uint(col, &col_uint))
+    {
+        CACE_LOG_ERR("index is not a uint, unable to continue");
+        return;
+    }
+
+    // Local variables from operand
+    const cace_ari_t     *in     = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_tbl_t *in_tbl = cace_ari_cget_tbl(in);
+    if (in_tbl == NULL)
+    {
+        CACE_LOG_ERR("operand is not a TBL, unable to continue");
+        return;
+    }
+
+    if (col_uint >= in_tbl->ncols)
+    {
+        CACE_LOG_ERR("column index %u is too large for TBL size %zu", col_uint, in_tbl->ncols);
+        return;
+    }
+    const size_t nrows = cace_ari_tbl_num_rows(in_tbl);
+    if (row_uint >= nrows)
+    {
+        CACE_LOG_ERR("row index %u is too large for TBL size %zu", row_uint, nrows);
+        return;
+    }
+
+    // cast is workaround for M*LIB interface type issue https://github.com/P-p-H-d/mlib/issues/151
+    const cace_ari_t *item = cace_ari_array_cget(in_tbl->items, row_uint * in_tbl->ncols + col_uint);
+    refda_oper_eval_ctx_set_result_copy(ctx, item);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_tbl_get BODY
@@ -6056,7 +6101,8 @@ static void refda_adm_ietf_dtnma_agent_oper_list_get(refda_oper_eval_ctx_t *ctx)
     }
 
     const cace_ari_t *index = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
-    cace_ari_uint     index_uint;
+
+    cace_ari_uint index_uint;
     if (cace_ari_get_uint(index, &index_uint))
     {
         CACE_LOG_ERR("index is not a uint, unable to continue");
