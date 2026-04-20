@@ -5856,43 +5856,6 @@ static void refda_adm_ietf_dtnma_agent_oper_unary_eval(refda_oper_eval_ctx_t *ct
      */
 }
 
-/* Name: nary-eval
- * Description:
- *   An N-ary operator which functions by evaluating a target sub-
- *   expression using the following phases:   1. Substitute the bind-values
- *   actual parameter for      LABEL items with integer primitive (e.g.
- *   </label/0>)      within the target value      (literal expression or
- *   object reference).      The number of bind-able operands is given by
- *   the      operand-count parameter.   2. If the target is a reference,
- *   it is used to produce      a value which SHALL be an expression.
- *   Otherwise, the target SHALL itself be an expression.   3. Evaluate the
- *   expression and consider the evaluation      result as this operator
- *   result. This is similar to the <./oper/eval> object with the addition
- *   of the unary operand binding.
- *
- * Parameters list:
- *   - Index 0, name "operand-count", type use of ari:/ARITYPE/UINT
- *   - Index 1, name "target", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
- *
- * Operand list:
- *   - Index 0, name "bind-values", type sequence of use of ari://ietf/amm-base/TYPEDEF/any
- *
- * Result name "sub-result", type use of ari://ietf/amm-base/TYPEDEF/any
- */
-static void refda_adm_ietf_dtnma_agent_oper_nary_eval(refda_oper_eval_ctx_t *ctx)
-{
-    /*
-     * +-------------------------------------------------------------------------+
-     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_nary_eval BODY
-     * +-------------------------------------------------------------------------+
-     */
-    /*
-     * +-------------------------------------------------------------------------+
-     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_nary_eval BODY
-     * +-------------------------------------------------------------------------+
-     */
-}
-
 /* Name: tbl-filter
  * Description:
  *   Filter a table first by rows (using an expression) and then by columns
@@ -7488,8 +7451,11 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                         cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
                     }
                 }
-
-                // FIXME unhandled value LiteralARI(value=[], type_id=<StructType.AC: 17>)
+                {
+                    cace_ari_ac_t *acinit = cace_ari_set_ac(&(fparam->defval), NULL);
+                    // AC is empty
+                    (void)acinit;
+                }
             }
         }
         { // For ./CTRL/ensure-odm
@@ -9390,57 +9356,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 adm, cace_amm_idseg_ref_withenum("unary-eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_UNARY_EVAL),
                 objdata);
             // parameters:
-            {
-                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
-                {
-                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
-                }
-            }
-        }
-        { // For ./OPER/nary-eval
-            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
-            refda_amm_oper_desc_init(objdata);
-            // operands:
-            cace_amm_named_type_array_resize(objdata->operand_types, 1);
-            {
-                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
-                m_string_set_cstr(operand->name, "bind-values");
-                {
-                    cace_amm_semtype_seq_t *semtype = cace_amm_type_set_seq(&(operand->typeobj));
-                    {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/any
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
-                    }
-                }
-            }
-            // result type:
-            {
-                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                // reference to ari://ietf/amm-base/TYPEDEF/any
-                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
-                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
-            }
-            // callback:
-            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_nary_eval;
-
-            obj = refda_register_oper(
-                adm, cace_amm_idseg_ref_withenum("nary-eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_NARY_EVAL),
-                objdata);
-            // parameters:
-            {
-                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "operand-count");
-                {
-                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // use of ari:/ARITYPE/UINT
-                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
-                }
-            }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
                 {
