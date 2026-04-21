@@ -1031,6 +1031,12 @@ bool cace_amm_type_is_valid(const cace_amm_type_t *type)
     return type->type_class != CACE_AMM_TYPE_INVALID;
 }
 
+bool cace_amm_type_is_seq(const cace_amm_type_t *type)
+{
+    CHKFALSE(type)
+    return type->type_class == CACE_AMM_TYPE_SEQ;
+}
+
 bool cace_amm_type_get_name(const cace_amm_type_t *type, cace_ari_t *name)
 {
     CHKFALSE(type);
@@ -1249,7 +1255,7 @@ bool cace_amm_ari_is_truthy(const cace_ari_t *in)
         switch (in->as_lit.prim_type)
         {
             case CACE_ARI_PRIM_UNDEFINED:
-                // not really needed but satisfies the compiler
+                // fall through
             case CACE_ARI_PRIM_NULL:
                 result = false;
                 break;

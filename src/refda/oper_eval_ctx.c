@@ -53,6 +53,21 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
 
     cace_ari_itemized_reset(&(obj->operands));
 
+    // Special case if any operand type is a bare sequence.
+    // If that is present, the operator itself will need to handle the stack.
+    cace_amm_named_type_array_it_t typ_it;
+    for (cace_amm_named_type_array_it(typ_it, oper->operand_types); !cace_amm_named_type_array_end_p(typ_it);
+         cace_amm_named_type_array_next(typ_it))
+    {
+        const cace_amm_named_type_t *typ = cace_amm_named_type_array_cref(typ_it);
+        if (cace_amm_type_is_seq(&(typ->typeobj)))
+        {
+            CACE_LOG_DEBUG("The operand %s uses bare sequence type so cannot be auto-popped",
+                           m_string_get_cstr(typ->name));
+            return 0;
+        }
+    }
+
     const size_t operand_size = cace_amm_named_type_array_size(oper->operand_types);
     if (cace_ari_list_size(eval->stack) < operand_size)
     {
@@ -63,10 +78,12 @@ int refda_oper_eval_ctx_populate(refda_oper_eval_ctx_t *obj, const cace_amm_look
 
     int failcnt = 0;
 
-    cace_amm_named_type_array_it_t typ_it;
-    cace_ari_array_it_t            val_it;
-    for (cace_amm_named_type_array_it(typ_it, oper->operand_types), cace_ari_array_it(val_it, obj->operands.ordered);
-         !cace_amm_named_type_array_end_p(typ_it); cace_amm_named_type_array_next(typ_it), cace_ari_array_next(val_it))
+    // iterate in reverse index order
+    cace_ari_array_it_t val_it;
+    for (cace_amm_named_type_array_it_last(typ_it, oper->operand_types),
+         cace_ari_array_it_last(val_it, obj->operands.ordered);
+         !cace_amm_named_type_array_end_p(typ_it);
+         cace_amm_named_type_array_previous(typ_it), cace_ari_array_previous(val_it))
     {
         const cace_amm_named_type_t *typ = cace_amm_named_type_array_cref(typ_it);
 

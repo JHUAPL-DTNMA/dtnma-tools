@@ -24,6 +24,7 @@
 #include "runctx.h"
 #include <m-shared-ptr.h>
 #include <m-deque.h>
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,6 +60,8 @@ typedef struct refda_exec_seq_s
      * front item.
      */
     refda_exec_item_list_t items;
+    /// A mutex for access to #items
+    pthread_mutex_t items_mutex;
 
     /** Pointer to optional externally-owned finish state tracker.
      * This is null when there is no tracker.
@@ -74,14 +77,47 @@ void refda_exec_seq_deinit(refda_exec_seq_t *obj);
 /// Comparison function to allow sorting by PID
 int refda_exec_seq_cmp(const refda_exec_seq_t *lt, const refda_exec_seq_t *rt);
 
-/// M*LIB OPLIST for refda_exec_seq_t
+/// M*LIB OPLIST for ::refda_exec_seq_t
 #define M_OPL_refda_exec_seq_t() \
     (INIT(API_2(refda_exec_seq_init)), CLEAR(API_2(refda_exec_seq_deinit)), CMP(API_6(refda_exec_seq_cmp)))
 
+/** Get the status of the front item in a thread safe way.
+ *
+ * @param[out] status The variable to store into.
+ * @param[in] seq The sequence to take status for.
+ * @return Zero if the sequence is non-empty and has a status.
+ */
+int refda_exec_seq_front_status(refda_exec_item_status_t *status, refda_exec_seq_t *seq);
+
+/** Pop the front execution item after it has finished successfully.
+ *
+ * @param[in,out] seq The sequence to pop.
+ * @post After this the front item will be removed.
+ */
+void refda_exec_seq_pop_front(refda_exec_seq_t *seq);
+
+/** Decouple all items from a sequence and mark it as having failed.
+ * This will cause the sequence to be cleaned up later in the exec thread.
+ *
+ * @param[in,out] seq The sequence to terminate.
+ * @post After this the items will all be removed and, if present,
+ * the status will be marked as failed.
+ */
+void refda_exec_seq_terminate(refda_exec_seq_t *seq);
+
+/** @struct refda_exec_seq_list_t
+ * An ordered list of reference-counted pointer to ::refda_exec_seq_t.
+ */
+/** @struct refda_exec_seq_ptr_tree_t
+ * A sorted tree of plain pointer to ::refda_exec_seq_t ordered by PID number.
+ */
 /// @cond Doxygen_Suppress
-M_DEQUE_DEF(refda_exec_seq_list, refda_exec_seq_t)
-M_DEQUE_DEF(refda_exec_seq_ptr_list, refda_exec_seq_t *, M_PTR_OPLIST)
+// GCOV_EXCL_START
+M_SHARED_WEAK_PTR_DEF(refda_exec_seq_ptr, refda_exec_seq_t)
+M_DEQUE_DEF(refda_exec_seq_list, refda_exec_seq_ptr_t *,
+            M_SHARED_PTR_OPLIST(refda_exec_seq_ptr, M_OPL_refda_exec_seq_t()))
 M_RBTREE_DEF(refda_exec_seq_ptr_tree, refda_exec_seq_t *, M_OPEXTEND(M_PTR_OPLIST, CMP(refda_exec_seq_cmp)))
+// GCOV_EXCL_STOP
 /// @endcond
 
 #ifdef __cplusplus

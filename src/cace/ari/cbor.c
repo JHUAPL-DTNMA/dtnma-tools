@@ -178,15 +178,13 @@ static int cace_ari_cbor_decode_optdate(QCBORDecodeContext *dec, cace_ari_date_t
     return retval;
 }
 
-static const int64_t nsec_scale = (int64_t)1e9;
-
 static int cace_ari_cbor_encode_timespec(QCBOREncodeContext *enc, const struct timespec *ts)
 {
     if (ts->tv_nsec)
     {
         // naive encoding without check for truncation
         int64_t exp = -9;
-        int64_t val = ts->tv_sec * nsec_scale + ts->tv_nsec;
+        int64_t val = ts->tv_sec * CACE_ARI_SUBSEC_SCALE + ts->tv_nsec;
         while (val && (val % 10 == 0))
         {
             ++exp;
@@ -242,9 +240,16 @@ static int cace_ari_cbor_decode_timespec(QCBORDecodeContext *dec, struct timespe
             --exp;
             val *= 10;
         }
+        time_t            fullsec = val / CACE_ARI_SUBSEC_SCALE;
+        cace_ari_subsec_t subsec  = labs(val % CACE_ARI_SUBSEC_SCALE);
+        if ((fullsec < 0) && (subsec > 0))
+        {
+            fullsec -= 1;
+            subsec = 1000000000 - subsec;
+        }
         *ts = (struct timespec) {
-            .tv_sec  = (val / nsec_scale),
-            .tv_nsec = (val % nsec_scale),
+            .tv_sec  = fullsec,
+            .tv_nsec = subsec,
         };
     }
     else
