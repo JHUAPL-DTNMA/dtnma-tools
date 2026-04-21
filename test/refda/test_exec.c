@@ -58,6 +58,7 @@ void suiteSetUp(void)
     refda_agent_init(&agent);
     test_util_agent_crit_adms(&agent);
     suite_adms_init(&agent);
+    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_EXECUTE);
     test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 }
 
@@ -497,7 +498,7 @@ void test_refda_exec_wait_cond(int delay_ms)
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/60
 TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D183C", 1, true, 1)
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/1
-// FIXME TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D01", 2, true, 2)
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D01", 2, true, 2)
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/60
 TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", true, "820D183C", 1, true, 1)
 void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex, bool convert_start_to_tp,

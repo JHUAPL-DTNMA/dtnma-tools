@@ -81,8 +81,7 @@ void refda_acl_init(refda_acl_t *obj)
 {
     CHKVOID(obj);
     atomic_store(&obj->generation, 0);
-    obj->perm_base    = NULL;
-    obj->perm_produce = NULL;
+    obj->permissions = (refda_acl_permissions_t){ NULL };
     refda_acl_group_list_init(obj->groups);
     refda_acl_access_list_init(obj->access);
     refda_acl_access_by_group_init(obj->access_by_group);
@@ -94,8 +93,7 @@ void refda_acl_deinit(refda_acl_t *obj)
     refda_acl_access_by_group_clear(obj->access_by_group);
     refda_acl_access_list_clear(obj->access);
     refda_acl_group_list_clear(obj->groups);
-    obj->perm_produce = NULL;
-    obj->perm_base    = NULL;
+    obj->permissions = (refda_acl_permissions_t){ NULL };
 }
 
 /**

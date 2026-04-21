@@ -122,6 +122,27 @@ M_BPTREE_DEF2(refda_acl_access_by_group, 4, refda_acl_id_t, M_BASIC_OPLIST, refd
 // GCOV_EXCL_STOP
 /// @endcond
 
+/** Objects from the ACL ADM.
+ */
+typedef struct {
+    /** Base IDENT for <ari://ietf/dtnma-agent-acl/ident/permission>.
+     */
+    cace_amm_obj_desc_t *base;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/execute>.
+     */
+    cace_amm_obj_desc_t *execute;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/produce>.
+     */
+    cace_amm_obj_desc_t *produce;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/modify-var>.
+     */
+    cace_amm_obj_desc_t *modify_var;
+
+} refda_acl_permissions_t;
+
 /** Storage of the agent ACL and its derived caches.
  */
 typedef struct
@@ -134,13 +155,10 @@ typedef struct
      */
     atomic_size_t generation;
 
-    /** Base IDENT for permissions.
+    /** Permission objects looked up from the ACL ADM.
+     *
      */
-    cace_amm_obj_desc_t *perm_base;
-
-    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/produce>.
-     */
-    cace_amm_obj_desc_t *perm_produce;
+    refda_acl_permissions_t permissions;
 
     /** All groups configured in the Agent.
      */

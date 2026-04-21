@@ -190,18 +190,34 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         ++failcnt;
     }
 
-    agent->acl.perm_base =
+    agent->acl.permissions.base =
         refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
                                REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PERMISSION);
-    if (!agent->acl.perm_base)
+    if (!agent->acl.permissions.base)
     {
         ++failcnt;
     }
 
-    agent->acl.perm_produce =
+    agent->acl.permissions.execute =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_EXECUTE);
+    if (!agent->acl.permissions.execute)
+    {
+        ++failcnt;
+    }
+
+    agent->acl.permissions.produce =
         refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
                                REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
-    if (!agent->acl.perm_produce)
+    if (!agent->acl.permissions.produce)
+    {
+        ++failcnt;
+    }
+
+    agent->acl.permissions.modify_var =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_MODIFY_VAR);
+    if (!agent->acl.permissions.modify_var)
     {
         ++failcnt;
     }
