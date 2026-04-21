@@ -44,7 +44,7 @@ const char *COL_NAME_ARI_RPTSET_ID    = "ari_rptset_id";
 const char *COL_NAME_REPORT_LIST_CBOR = "ari_rptset_cbor";
 const char *COL_NAME_NONCE_CBOR       = "nonce_cbor";
 const char *COL_NAME_ARI_RPTLIST_ID   = "ari_rptlist_id";
-const char *COL_NAME_TIME_OFFSET      = "time_offset";
+const char *COL_NAME_AGENT_TIME      = "agent_time";
 const char *COL_NAME_REPORT_SOURCE    = "report_source";
 const char *COL_NAME_REPORT_ITEMSs    = "report_items";
 
