@@ -5123,7 +5123,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
             const int         opts = 0;
             // ignore terminating null
             int res = pcre2_match(cfg, (PCRE2_SPTR8)value_text, strlen(value_text), 0, opts, md, NULL);
-            CACE_LOG_DEBUG("Matching pattern %s with value %s, result %d", regexp_text, value, res);
+            CACE_LOG_DEBUG("Matching pattern %s with value %s, result %d", regexp_text, value_text, res);
             if (res > 0)
             {
                 is_match = true;

@@ -21,6 +21,7 @@ import io
 import logging
 import numpy
 import os
+import re
 import signal
 import socket
 import subprocess
@@ -86,12 +87,16 @@ class TestRefdaSocket(unittest.TestCase):
             for index in range(3)
         ]
 
+        mgr_pat = quote('"' + '|'.join([
+            re.escape('file:' + self._mgr_bind[0]['path']),
+            re.escape('file:' + self._mgr_bind[1]['path'])
+        ]) + '"')
         startup_path = os.path.join(self._tmp.name, 'startup.uri')
         with open(startup_path, 'w') as startup_file:
             startup_file.writelines([
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group(1,test-agents)\n',
-                '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(%22file%3A.%2A%22)))\n',
-                # group 0 (agent) and 1 (all test mgrs) have all access
+                '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(' + mgr_pat + ')))\n',
+                # group 0 (agent) and 1 (mgr0 and mgr1) have all access
                 '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(0,1),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
                 + '//ietf/dtnma-agent-acl/ident/execute,'
                 + '//ietf/dtnma-agent-acl/ident/produce'
@@ -150,6 +155,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
+        self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
 
     def _ari_text_to_obj(self, text: str, id_convert: bool=True, nn: bool=True) -> ARI:
         with io.StringIO(text) as buf:
@@ -302,9 +308,11 @@ class TestRefdaSocket(unittest.TestCase):
     def test_exec_report_on_multi_mgr(self):
         self._start()
 
+        # mgr0 and mgr1 has full access, mgr2 has none
         mgr_eids = [
             quote('"file:' + self._mgr_bind[0]['path'] + '"'),
             quote('"file:' + self._mgr_bind[1]['path'] + '"'),
+            quote('"file:' + self._mgr_bind[2]['path'] + '"'),
         ]
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,/ac/(' + ','.join(mgr_eids) + ')))')]
@@ -315,16 +323,17 @@ class TestRefdaSocket(unittest.TestCase):
         # RPTSET for the generated report
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
-        # items of the report
-        self.assertLessEqual(3, len(rpt.items))
+        self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
 
         rpts = self._wait_reports(mgr_ix=1, nonce=ari.LiteralARI(None))
         self.assertEqual(1, len(rpts))
         # RPTSET for the generated report
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
-        # items of the report
-        self.assertLessEqual(3, len(rpt.items))
+        self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
+
+        with self.assertRaises(TimeoutError):
+            self._wait_msg(mgr_ix=2, timeout=0.1)
 
         # RPTSET for the execution itself
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
@@ -346,7 +355,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
         # items of the report
-        self.assertLessEqual(3, len(rpt.items))
+        self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
 
         # RPTSET for the execution itself
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
