@@ -2706,7 +2706,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
     int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
-
     if (res)
     {
         m_string_t buf;
@@ -2718,7 +2717,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
     else
     {
         refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
-        // FIXME need agent access control
+
+        // access check, this permission has no parameters
+        refda_amm_ident_base_ptr_set_t acl_match;
+        refda_amm_ident_base_ptr_set_init(acl_match);
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+                                                         ctx->runctx->agent->acl.permissions.modify_var, acl_match);
+        refda_amm_ident_base_ptr_set_clear(acl_match);
+        if (!acl_found)
+        {
+            CACE_LOG_ERR("Lack of permission for: modify-var");
+            var = NULL;
+        }
 
         if (var && !cace_ari_is_undefined(&(var->init_val)))
         {
@@ -2784,7 +2794,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
     else
     {
         refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
-        // FIXME need agent access control
+
+        // access check, this permission has no parameters
+        refda_amm_ident_base_ptr_set_t acl_match;
+        refda_amm_ident_base_ptr_set_init(acl_match);
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+                                                         ctx->runctx->agent->acl.permissions.modify_var, acl_match);
+        refda_amm_ident_base_ptr_set_clear(acl_match);
+        if (!acl_found)
+        {
+            CACE_LOG_ERR("Lack of permission for: modify-var");
+            var = NULL;
+        }
 
         if (var)
         {

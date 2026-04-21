@@ -124,7 +124,8 @@ M_BPTREE_DEF2(refda_acl_access_by_group, 4, refda_acl_id_t, M_BASIC_OPLIST, refd
 
 /** Objects from the ACL ADM.
  */
-typedef struct {
+typedef struct
+{
     /** Base IDENT for <ari://ietf/dtnma-agent-acl/ident/permission>.
      */
     cace_amm_obj_desc_t *base;
