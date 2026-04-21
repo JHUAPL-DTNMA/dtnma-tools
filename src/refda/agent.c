@@ -222,6 +222,22 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         ++failcnt;
     }
 
+    agent->acl.permissions.create_obj =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_CREATE_OBJECT);
+    if (!agent->acl.permissions.create_obj)
+    {
+        ++failcnt;
+    }
+
+    agent->acl.permissions.obsolete_obj =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_OBSOLETE_OBJECT);
+    if (!agent->acl.permissions.obsolete_obj)
+    {
+        ++failcnt;
+    }
+
     if (failcnt)
     {
         CACE_LOG_WARNING("agent required type binding failures: %d", failcnt);
