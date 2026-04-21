@@ -229,6 +229,9 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
                                  const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
                                  refda_amm_ident_base_ptr_set_t match)
 {
+    CHKFALSE(agent);
+    CHKFALSE(acc_obj);
+
     bool found = false;
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
@@ -248,6 +251,13 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
     for (refda_acl_id_tree_it(grp_it, groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
     {
         const refda_acl_id_t *grp_id = refda_acl_id_tree_cref(grp_it);
+        if (*grp_id == 0)
+        {
+            // Agent group 0 has all-access
+            CACE_LOG_DEBUG("matched as Agent group 0, short circuit");
+            found = true;
+            break;
+        }
 
         const refda_acl_access_ptr_set_t *accesses =
             refda_acl_access_by_group_cget(agent->acl.access_by_group, *grp_id);
@@ -268,7 +278,6 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
         {
             continue;
         }
-        CACE_LOG_DEBUG("", refda_acl_access_ptr_set_size(*accesses));
 
         refda_acl_access_ptr_set_it_t acc_it;
         for (refda_acl_access_ptr_set_it(acc_it, *accesses); !refda_acl_access_ptr_set_end_p(acc_it);
@@ -321,6 +330,8 @@ bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tr
                                      const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
                                      refda_amm_ident_base_ptr_set_t match)
 {
+    CHKFALSE(perm_obj);
+
     cace_amm_obj_desc_ptr_set_t perm_objs;
     cace_amm_obj_desc_ptr_set_init(perm_objs);
     cace_amm_obj_desc_ptr_set_push(perm_objs, (cace_amm_obj_desc_t *)perm_obj);

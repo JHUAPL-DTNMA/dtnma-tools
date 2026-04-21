@@ -50,8 +50,7 @@ void suiteSetUp(void)
     refda_agent_init(&agent);
     test_util_agent_crit_adms(&agent);
     suite_adms_init(&agent);
-    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_EXECUTE);
-    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
+
     test_util_group_add(&agent, 1, "data:.*");
     test_util_group_permission(&agent, 1, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 }
