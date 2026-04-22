@@ -46,7 +46,7 @@ void refda_acl_access_init(refda_acl_access_t *obj)
     CHKVOID(obj);
     obj->id = 0;
     refda_acl_id_tree_init(obj->groups);
-    cace_ari_init(&obj->objects);
+    cace_ari_init(&obj->objects_filter);
     refda_amm_ident_base_list_init(obj->permissions);
     obj->added_at   = CACE_ARI_INIT_UNDEFINED;
     obj->updated_at = CACE_ARI_INIT_UNDEFINED;
@@ -56,7 +56,7 @@ void refda_acl_access_deinit(refda_acl_access_t *obj)
 {
     CHKVOID(obj);
     refda_amm_ident_base_list_clear(obj->permissions);
-    cace_ari_deinit(&obj->objects);
+    cace_ari_deinit(&obj->objects_filter);
     refda_acl_id_tree_clear(obj->groups);
     obj->id = 0;
 }
@@ -162,39 +162,12 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
     {
         const refda_acl_group_t *grp = refda_acl_group_list_cref(grp_it);
 
-        // Substitute endpoint value for LABEL items within filter EXPR
-        cace_ari_t expr = CACE_ARI_INIT_UNDEFINED;
-
-        int res = cace_ari_translate(&expr, &grp->member_filter, &translator, (void *)endpoint);
-        if (res)
-        {
-            CACE_LOG_ERR("Unable to translate filter, error %d", res);
-            cace_ari_deinit(&expr); // No longer needed at this point
-            continue;
-        }
-
-        // Evaluate the filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-
-        refda_eval_ctx_t evalctx;
-        refda_eval_ctx_init(&evalctx, &runctx);
-        REFDA_AGENT_LOCK(agent, 2);
-        res = refda_eval_expand_expr(&evalctx, &expr);
-        cace_ari_deinit(&expr); // No longer needed at this point
-        REFDA_AGENT_UNLOCK(agent, 2);
+        // Substitute endpoint value for </label/0> items within filter EXPR
+        int res = refda_eval_filter(&runctx, &eval_result, &grp->member_filter, &translator, (void *)endpoint);
         if (res)
         {
-            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
-            refda_eval_ctx_deinit(&evalctx);
-            continue;
-        }
-
-        res = refda_eval_reduce(&evalctx, &eval_result);
-        refda_eval_ctx_deinit(&evalctx);
-        if (res)
-        {
-            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
-            cace_ari_deinit(&eval_result);
+            cace_ari_deinit(&eval_result); // No longer needed at this point
             continue;
         }
 
@@ -319,6 +292,8 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
             continue;
         }
 
+        const cace_ari_translator_t translator = { .map_ari = acl_target_filter_sub_label };
+
         refda_acl_access_ptr_set_it_t acc_it;
         for (refda_acl_access_ptr_set_it(acc_it, *accesses); !refda_acl_access_ptr_set_end_p(acc_it);
              refda_acl_access_ptr_set_next(acc_it))
@@ -326,35 +301,17 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
             refda_acl_access_t *const *acc_ptr = refda_acl_access_ptr_set_cref(acc_it);
             const refda_acl_access_t  *acc     = *acc_ptr;
 
-            cace_ari_t sub_filter = CACE_ARI_INIT_UNDEFINED;
-
-            const cace_ari_translator_t translator = { .map_ari = acl_target_filter_sub_label };
-            // substitute the target reference
-            int res = cace_ari_translate(&sub_filter, &acc->objects, &translator, (void *)target);
+            cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
+            // Substitute target reference value for </label/0> items within filter EXPR
+            int res = refda_eval_filter(&runctx, &eval_result, &acc->objects_filter, &translator, (void *)target);
             if (res)
             {
-                CACE_LOG_ERR("Unable to translate filter, error %d", res);
-                cace_ari_deinit(&sub_filter); // No longer needed at this point
+                cace_ari_deinit(&eval_result); // No longer needed at this point
                 continue;
             }
 
-            cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-
-            refda_eval_ctx_t evalctx;
-            refda_eval_ctx_init(&evalctx, &runctx);
-            // mutex-serialize object store access
-            REFDA_AGENT_LOCK(agent, false);
-            res = refda_eval_expand_target(&evalctx, &sub_filter);
-            REFDA_AGENT_UNLOCK(agent, false);
-            cace_ari_deinit(&sub_filter);
-            if (!res)
-            {
-                res = refda_eval_reduce(&evalctx, &result);
-            }
-            refda_eval_ctx_deinit(&evalctx);
-
-            bool is_match = cace_amm_ari_is_truthy(&result);
-            cace_ari_deinit(&result);
+            bool is_match = cace_amm_ari_is_truthy(&eval_result);
+            cace_ari_deinit(&eval_result);
             if (!is_match)
             {
                 continue;

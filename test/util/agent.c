@@ -87,7 +87,7 @@ void test_util_group_permission(refda_agent_t *agent, refda_acl_id_t group_id, c
     refda_acl_id_tree_push(access->groups, group_id);
 
     {
-        cace_ari_ac_t *filter_ac = cace_ari_set_ac(&access->objects, NULL);
+        cace_ari_ac_t *filter_ac = cace_ari_set_ac(&access->objects_filter, NULL);
         // match all
         cace_ari_set_bool(cace_ari_list_push_back_new(filter_ac->items), true);
     }

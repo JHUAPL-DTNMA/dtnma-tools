@@ -88,7 +88,7 @@ typedef struct
     /// Groups to which this entry applies
     refda_acl_id_tree_t groups;
     /// Filter for objects to which this entry applies
-    cace_ari_t objects;
+    cace_ari_t objects_filter;
     /// Permissions granted to these groups and objects
     refda_amm_ident_base_list_t permissions;
 

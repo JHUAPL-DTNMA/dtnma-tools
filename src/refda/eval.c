@@ -290,12 +290,60 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     refda_eval_ctx_t ctx;
     refda_eval_ctx_init(&ctx, runctx);
 
+    REFDA_AGENT_LOCK(runctx->agent, 1);
     int res = refda_eval_expand_target(&ctx, target);
-    if (!res)
+    REFDA_AGENT_UNLOCK(runctx->agent, 1);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to expand target, error %d", res);
+    }
+    else
     {
         res = refda_eval_reduce(&ctx, result);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to reduce target, error %d", res);
+        }
     }
 
     refda_eval_ctx_deinit(&ctx);
+    return res;
+}
+
+int refda_eval_filter(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target, const cace_ari_translator_t *translator, void *user_data)
+{
+    cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
+
+    // substitute the operand value
+    int res = cace_ari_translate(&sub_tgt, target, translator, user_data);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to translate filter, error %d", res);
+        cace_ari_deinit(&sub_tgt); // No longer needed at this point
+        return 2;
+    }
+
+    refda_eval_ctx_t evalctx;
+    refda_eval_ctx_init(&evalctx, runctx);
+
+    // mutex-serialize object store access
+    REFDA_AGENT_LOCK(runctx->agent, 1);
+    res = refda_eval_expand_target(&evalctx, &sub_tgt);
+    REFDA_AGENT_UNLOCK(runctx->agent, 1);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to expand substituted filter, error %d", res);
+    }
+    cace_ari_deinit(&sub_tgt);
+    if (!res)
+    {
+        res = refda_eval_reduce(&evalctx, result);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to reduce substituted filter, error %d", res);
+        }
+    }
+    refda_eval_ctx_deinit(&evalctx);
+
     return res;
 }

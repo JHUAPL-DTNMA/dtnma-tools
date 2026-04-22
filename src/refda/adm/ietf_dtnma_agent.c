@@ -109,10 +109,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
 
-    refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
     int res = refda_eval_target(ctx->runctx, &result, cond);
-    REFDA_AGENT_UNLOCK(agent, );
     if (res)
     {
         CACE_LOG_ERR("failed to evaluate condition, error %d", res);
@@ -839,7 +836,9 @@ static bool predicate_compose(refda_runctx_t *runctx, const cace_ari_ac_t *opera
 
         refda_eval_ctx_deinit(&sub_ctx);
 
-        if (cace_amm_ari_is_truthy(&sub_result) == stop)
+        const bool result_truthy = cace_amm_ari_is_truthy(&sub_result);
+        cace_ari_deinit(&sub_result);
+        if (result_truthy == stop)
         {
             combined = !init;
             break;
@@ -947,7 +946,7 @@ static bool refda_acl_check_create_object(refda_runctx_t *runctx, cace_amm_obj_n
 {
     // Permission for hypothetical object
     cace_ari_t fake = CACE_ARI_INIT_UNDEFINED;
-    //FIXME what if no intenum
+    // FIXME what if no intenum
     cace_ari_set_objref_path_intid(&fake, odm->org_id.intenum, odm->model_id.intenum, obj_type, obj_id);
 
     // access check, this permission has no parameters
@@ -2206,10 +2205,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_if_then_else(refda_ctrl_exec_ctx_t *
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
 
-    refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
     int res = refda_eval_target(ctx->runctx, &result, ari_condition);
-    REFDA_AGENT_UNLOCK(agent, );
     if (res)
     {
         CACE_LOG_ERR("Unable to evaluate if-then-else condition");
@@ -5308,14 +5304,14 @@ static void refda_adm_ietf_dtnma_agent_oper_is_org_private(refda_oper_eval_ctx_t
     bool is_match = false;
     switch (path->org_id.form)
     {
-    case CACE_ARI_IDSEG_INT:
-        is_match = (path->org_id.as_int < 0);
-        break;
-    case CACE_ARI_IDSEG_TEXT:
-        is_match = m_string_start_with_str_p(path->org_id.as_text, "!");
-        break;
-    default:
-        break;
+        case CACE_ARI_IDSEG_INT:
+            is_match = (path->org_id.as_int < 0);
+            break;
+        case CACE_ARI_IDSEG_TEXT:
+            is_match = m_string_start_with_str_p(path->org_id.as_text, "!");
+            break;
+        default:
+            break;
     }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
@@ -5361,7 +5357,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_org_int_range(refda_oper_eval_
     }
     const cace_ari_t *min_val = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *max_val = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
-    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *value   = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     cace_ari_int min_int, max_int;
     if (cace_ari_get_int(min_val, &min_int) || cace_ari_get_int(max_val, &max_int))
@@ -5380,27 +5376,27 @@ static void refda_adm_ietf_dtnma_agent_oper_match_org_int_range(refda_oper_eval_
     cace_ari_int_id_t org_int;
     switch (path->org_id.form)
     {
-    case CACE_ARI_IDSEG_INT:
-        org_int = path->org_id.as_int;
-        break;
-    case CACE_ARI_IDSEG_TEXT:
-    {
-        refda_agent_t *agent = ctx->evalctx->runctx->agent;
-        REFDA_AGENT_LOCK(agent, );
-        const cace_amm_obj_ns_t *ns = cace_amm_obj_store_find_ns(&agent->objs, value);
-        REFDA_AGENT_UNLOCK(agent, );
-        if (ns && ns->org_id.has_intenum)
+        case CACE_ARI_IDSEG_INT:
+            org_int = path->org_id.as_int;
+            break;
+        case CACE_ARI_IDSEG_TEXT:
         {
-            org_int = ns->org_id.intenum;
+            refda_agent_t *agent = ctx->evalctx->runctx->agent;
+            REFDA_AGENT_LOCK(agent, );
+            const cace_amm_obj_ns_t *ns = cace_amm_obj_store_find_ns(&agent->objs, value);
+            REFDA_AGENT_UNLOCK(agent, );
+            if (ns && ns->org_id.has_intenum)
+            {
+                org_int = ns->org_id.intenum;
+            }
+            else
+            {
+                return;
+            }
+            break;
         }
-        else
-        {
+        default:
             return;
-        }
-        break;
-    }
-    default:
-        return;
     }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
@@ -5450,14 +5446,14 @@ static void refda_adm_ietf_dtnma_agent_oper_is_model_odm(refda_oper_eval_ctx_t *
     bool is_match = false;
     switch (path->model_id.form)
     {
-    case CACE_ARI_IDSEG_INT:
-        is_match = (path->model_id.as_int < 0);
-        break;
-    case CACE_ARI_IDSEG_TEXT:
-        is_match = m_string_start_with_str_p(path->model_id.as_text, "!");
-        break;
-    default:
-        break;
+        case CACE_ARI_IDSEG_INT:
+            is_match = (path->model_id.as_int < 0);
+            break;
+        case CACE_ARI_IDSEG_TEXT:
+            is_match = m_string_start_with_str_p(path->model_id.as_text, "!");
+            break;
+        default:
+            break;
     }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
@@ -5503,7 +5499,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_model_int_range(refda_oper_eva
     }
     const cace_ari_t *min_val = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *max_val = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
-    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *value   = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     cace_ari_int min_int, max_int;
     if (cace_ari_get_int(min_val, &min_int) || cace_ari_get_int(max_val, &max_int))
@@ -5522,27 +5518,27 @@ static void refda_adm_ietf_dtnma_agent_oper_match_model_int_range(refda_oper_eva
     cace_ari_int_id_t model_int;
     switch (path->model_id.form)
     {
-    case CACE_ARI_IDSEG_INT:
-        model_int = path->model_id.as_int;
-        break;
-    case CACE_ARI_IDSEG_TEXT:
-    {
-        refda_agent_t *agent = ctx->evalctx->runctx->agent;
-        REFDA_AGENT_LOCK(agent, );
-        const cace_amm_obj_ns_t *ns = cace_amm_obj_store_find_ns(&agent->objs, value);
-        REFDA_AGENT_UNLOCK(agent, );
-        if (ns && ns->model_id.has_intenum)
+        case CACE_ARI_IDSEG_INT:
+            model_int = path->model_id.as_int;
+            break;
+        case CACE_ARI_IDSEG_TEXT:
         {
-            model_int = ns->model_id.intenum;
+            refda_agent_t *agent = ctx->evalctx->runctx->agent;
+            REFDA_AGENT_LOCK(agent, );
+            const cace_amm_obj_ns_t *ns = cace_amm_obj_store_find_ns(&agent->objs, value);
+            REFDA_AGENT_UNLOCK(agent, );
+            if (ns && ns->model_id.has_intenum)
+            {
+                model_int = ns->model_id.intenum;
+            }
+            else
+            {
+                return;
+            }
+            break;
         }
-        else
-        {
+        default:
             return;
-        }
-        break;
-    }
-    default:
-        return;
     }
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
@@ -5754,20 +5750,9 @@ static void refda_adm_ietf_dtnma_agent_oper_eval(refda_oper_eval_ctx_t *ctx)
     }
     const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
 
-    refda_eval_ctx_t evalctx;
-    refda_eval_ctx_init(&evalctx, ctx->evalctx->runctx);
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
 
-    // mutex-serialize object store access
-    refda_agent_t *agent = ctx->evalctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
-    int res = refda_eval_expand_target(&evalctx, target);
-    REFDA_AGENT_UNLOCK(agent, );
-    if (!res)
-    {
-        res = refda_eval_reduce(&evalctx, &result);
-    }
-    refda_eval_ctx_deinit(&evalctx);
+    refda_eval_target(ctx->evalctx->runctx, &result, target);
 
     // evaluation may still result in undefined value
     refda_oper_eval_ctx_set_result_move(ctx, &result);
@@ -5817,36 +5802,13 @@ static void refda_adm_ietf_dtnma_agent_oper_unary_eval(refda_oper_eval_ctx_t *ct
     }
 
     const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *value  = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
-    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-
-    cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
-
-    const cace_ari_translator_t translator = { .map_ari = unary_eval_sub_label };
-    // Step 1 substitute the operand value
-    int res = cace_ari_translate(&sub_tgt, target, &translator, (void *)value);
-    if (res)
-    {
-        CACE_LOG_ERR("Unable to translate target, error %d", res);
-        cace_ari_deinit(&sub_tgt); // No longer needed at this point
-        return;
-    }
-
-    refda_eval_ctx_t evalctx;
-    refda_eval_ctx_init(&evalctx, ctx->evalctx->runctx);
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
-
-    // mutex-serialize object store access
-    refda_agent_t *agent = ctx->evalctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
-    res = refda_eval_expand_target(&evalctx, &sub_tgt);
-    REFDA_AGENT_UNLOCK(agent, );
-    cace_ari_deinit(&sub_tgt);
-    if (!res)
-    {
-        res = refda_eval_reduce(&evalctx, &result);
-    }
-    refda_eval_ctx_deinit(&evalctx);
+    // label substitution
+    const cace_ari_translator_t translator = { .map_ari = unary_eval_sub_label };
+    // sub operand value for label
+    refda_eval_filter(ctx->evalctx->runctx, &result, target, &translator, (void *)value);
 
     // evaluation may still result in undefined value
     refda_oper_eval_ctx_set_result_move(ctx, &result);
@@ -5915,42 +5877,29 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     cace_ari_tbl_t *result_tbl = cace_ari_set_tbl(&result, NULL);
     cace_ari_tbl_reset(result_tbl, num_filter_cols, 0);
 
+    const cace_ari_translator_t translator = { .map_ari = tbl_filter_sub_label };
+
     // for each row of the table
     int num_rows = cace_ari_tbl_num_rows(cace_ari_cget_tbl(tbl));
     for (int r = 0; r < num_rows; r++)
     {
         // Substitute row values for LABEL items within row filter EXPR
-        cace_ari_t current_row = CACE_ARI_INIT_UNDEFINED;
-        {
-            const cace_ari_translator_t translator = { .map_ari = tbl_filter_sub_label };
-            _tbl_row_pair_t             table_data = { tbl_data, r };
-
-            int res = cace_ari_translate(&current_row, row_match, &translator, &table_data);
-            if (res)
-            {
-                CACE_LOG_ERR("Unable to translate condition expression ARI, error %d", res);
-                cace_ari_deinit(&current_row); // No longer needed at this point
-                return;
-            }
-        }
-
-        // Evaluate the row filter EXPR
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-
-        refda_agent_t *agent = ctx->evalctx->runctx->agent;
-        REFDA_AGENT_LOCK(agent, );
-        int res = refda_eval_target(ctx->evalctx->runctx, &eval_result, &current_row);
-        REFDA_AGENT_UNLOCK(agent, );
-
-        cace_ari_deinit(&current_row); // No longer needed at this point
+        // label substitution
+        _tbl_row_pair_t table_data = { tbl_data, r };
+        // sub operand value for label
+        int res = refda_eval_filter(ctx->evalctx->runctx, &eval_result, row_match, &translator, (void *)&table_data);
         if (res)
         {
-            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
+            cace_ari_deinit(&eval_result);
+            // treat as a failure, not row omission
             return;
         }
 
         // True result indicates row not filtered, add data values from 'columns' to result
-        if (cace_amm_ari_is_truthy(&eval_result))
+        bool is_match = cace_amm_ari_is_truthy(&eval_result);
+        cace_ari_deinit(&eval_result);
+        if (is_match)
         {
             // Copy current row into result set
             cace_ari_array_t row;

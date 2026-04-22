@@ -537,6 +537,7 @@ void test_refda_eval_target_check(const char *targethex, const char *expectloghe
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+
     int        res    = refda_eval_target(&runctx, &result, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_eval_target() disagrees");
 
@@ -562,6 +563,7 @@ void test_refda_eval_target_failure(const char *targethex, int expect_res)
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+
     int        res    = refda_eval_target(&runctx, &result, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_eval_target() disagrees");
 
