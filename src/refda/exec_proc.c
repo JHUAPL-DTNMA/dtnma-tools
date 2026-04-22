@@ -201,7 +201,7 @@ static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq
                     // access check, this permission has no parameters
                     refda_amm_ident_base_ptr_set_t acl_match;
                     refda_amm_ident_base_ptr_set_init(acl_match);
-                    bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &item->deref,
+                    bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &item->ref,
                                                                      runctx->agent->acl.permissions.execute, acl_match);
                     refda_amm_ident_base_ptr_set_clear(acl_match);
                     if (!acl_found)

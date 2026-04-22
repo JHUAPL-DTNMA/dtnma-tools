@@ -97,7 +97,7 @@ class TestRefdaSocket(unittest.TestCase):
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group(1,manager0-1)\n',
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(' + mgr_pat + ')))\n',
                 # group 1 (mgr0 and mgr1) have all access
-                '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(1),/ac/(/objpat/(*)(*)(*)(*)),/ac/(' + ','.join([
+                '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(1),/ac/(true),/ac/(' + ','.join([
                     '//ietf/dtnma-agent-acl/ident/execute',
                     '//ietf/dtnma-agent-acl/ident/produce',
                     '//ietf/dtnma-agent-acl/ident/modify-var',
@@ -1564,7 +1564,7 @@ class TestRefdaSocket(unittest.TestCase):
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'  # duplicate no-op
                 + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(10,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(' + pat + '))),'
-                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(10,/ac/(10),/ac/(/objpat/(*)(*)(*)(*)),/ac/(' + ','.join([
+                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(10,/ac/(10),/ac/(true),/ac/(' + ','.join([
                     '//ietf/dtnma-agent-acl/ident/execute',
                     '//ietf/dtnma-agent-acl/ident/produce',
                     '//ietf/dtnma-agent-acl/ident/modify-var',
@@ -1656,7 +1656,7 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj(
                 'ari:/EXECSET/n=123;('
-                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(10),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
+                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(10),/ac/(false),/ac/('
                 + '//ietf/!missing-odm/ident/other'
                 + '))'
                 + ')'

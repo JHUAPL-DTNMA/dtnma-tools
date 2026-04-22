@@ -946,29 +946,21 @@ static bool refda_acl_check_create_object(refda_runctx_t *runctx, cace_amm_obj_n
                                           cace_ari_int obj_id)
 {
     // Permission for hypothetical object
-    cace_amm_obj_desc_t fake;
-    cace_amm_obj_desc_init(&fake);
-    fake.obj_id.has_intenum = true;
-    fake.obj_id.intenum     = obj_id;
-
-    cace_amm_lookup_t deref;
-    cace_amm_lookup_init(&deref);
-    deref.ns       = odm;
-    deref.obj_type = obj_type;
-    deref.obj      = &fake;
+    cace_ari_t fake = CACE_ARI_INIT_UNDEFINED;
+    //FIXME what if no intenum
+    cace_ari_set_objref_path_intid(&fake, odm->org_id.intenum, odm->model_id.intenum, obj_type, obj_id);
 
     // access check, this permission has no parameters
     refda_amm_ident_base_ptr_set_t acl_match;
     refda_amm_ident_base_ptr_set_init(acl_match);
-    bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &deref,
+    bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &fake,
                                                      runctx->agent->acl.permissions.obsolete_obj, acl_match);
     refda_amm_ident_base_ptr_set_clear(acl_match);
+    cace_ari_deinit(&fake);
     if (!acl_found)
     {
         CACE_LOG_ERR("Lack of permission for: create-object");
     }
-    cace_amm_lookup_deinit(&deref);
-    cace_amm_obj_desc_deinit(&fake);
 
     return acl_found;
 }
@@ -2754,7 +2746,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
         // access check, this permission has no parameters
         refda_amm_ident_base_ptr_set_t acl_match;
         refda_amm_ident_base_ptr_set_init(acl_match);
-        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
                                                          ctx->runctx->agent->acl.permissions.modify_var, acl_match);
         refda_amm_ident_base_ptr_set_clear(acl_match);
         if (!acl_found)
@@ -2831,7 +2823,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
         // access check, this permission has no parameters
         refda_amm_ident_base_ptr_set_t acl_match;
         refda_amm_ident_base_ptr_set_init(acl_match);
-        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
                                                          ctx->runctx->agent->acl.permissions.modify_var, acl_match);
         refda_amm_ident_base_ptr_set_clear(acl_match);
         if (!acl_found)
@@ -3103,7 +3095,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_ident(refda_ctrl_exec_ctx_t
         // access check, this permission has no parameters
         refda_amm_ident_base_ptr_set_t acl_match;
         refda_amm_ident_base_ptr_set_init(acl_match);
-        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
         refda_amm_ident_base_ptr_set_clear(acl_match);
         if (!acl_found)
@@ -3366,7 +3358,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
         // access check, this permission has no parameters
         refda_amm_ident_base_ptr_set_t acl_match;
         refda_amm_ident_base_ptr_set_init(acl_match);
-        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
         refda_amm_ident_base_ptr_set_clear(acl_match);
         if (!acl_found)
@@ -3635,7 +3627,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
         // access check, this permission has no parameters
         refda_amm_ident_base_ptr_set_t acl_match;
         refda_amm_ident_base_ptr_set_init(acl_match);
-        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
         refda_amm_ident_base_ptr_set_clear(acl_match);
         if (!acl_found)
@@ -4325,7 +4317,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
         // access check, this permission has no parameters
         refda_amm_ident_base_ptr_set_t acl_match;
         refda_amm_ident_base_ptr_set_init(acl_match);
-        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
         refda_amm_ident_base_ptr_set_clear(acl_match);
         if (!acl_found)
@@ -4353,7 +4345,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
         // access check, this permission has no parameters
         refda_amm_ident_base_ptr_set_t acl_match;
         refda_amm_ident_base_ptr_set_init(acl_match);
-        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
         refda_amm_ident_base_ptr_set_clear(acl_match);
         if (!acl_found)

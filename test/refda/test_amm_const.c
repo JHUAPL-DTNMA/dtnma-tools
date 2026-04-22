@@ -126,7 +126,7 @@ static void check_produce(const char *refhex, const char *outhex, int expect_res
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
     refda_valprod_ctx_t ctx;
-    refda_valprod_ctx_init(&ctx, &runctx, NULL, &deref);
+    refda_valprod_ctx_init(&ctx, &runctx, &inref, &deref);
 
     res = refda_valprod_run(&ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_valprod_run() mismatch");
