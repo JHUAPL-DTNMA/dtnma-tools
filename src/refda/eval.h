@@ -94,7 +94,8 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
  * @param[in] user_data Pointer for the @c translator to use.
  * @return Zero if successful.
  */
-int refda_eval_filter(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target, const cace_ari_translator_t *translator, void *user_data);
+int refda_eval_filter(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target,
+                      const cace_ari_translator_t *translator, void *user_data);
 
 /** This is a semi-internal function for evaluating a single operator in
  * an existing evaluation context.

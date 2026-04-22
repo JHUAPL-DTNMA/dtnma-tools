@@ -204,7 +204,7 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
  * the endpoint identity.
  */
 static cace_ari_translate_result_t acl_target_filter_sub_label(cace_ari_t *out, const cace_ari_t *in,
-                                                                 const cace_ari_translate_ctx_t *ctx)
+                                                               const cace_ari_translate_ctx_t *ctx)
 {
     if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
     {
@@ -233,9 +233,8 @@ static cace_ari_translate_result_t acl_target_filter_sub_label(cace_ari_t *out, 
     return CACE_ARI_TRANSLATE_DEFAULT;
 }
 
-bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-                                 const cace_ari_t *target, const cace_amm_obj_desc_ptr_set_t perm_objs,
-                                 refda_amm_ident_base_ptr_set_t match)
+bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *target,
+                                 const cace_amm_obj_desc_ptr_set_t perm_objs, refda_amm_ident_base_ptr_set_t match)
 {
     CHKFALSE(agent);
     CHKFALSE(target);
@@ -354,9 +353,8 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
     return found;
 }
 
-bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-        const cace_ari_t *target, const cace_amm_obj_desc_t *perm_obj,
-                                     refda_amm_ident_base_ptr_set_t match)
+bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *target,
+                                     const cace_amm_obj_desc_t *perm_obj, refda_amm_ident_base_ptr_set_t match)
 {
     CHKFALSE(perm_obj);
 

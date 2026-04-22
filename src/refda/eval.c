@@ -310,7 +310,8 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     return res;
 }
 
-int refda_eval_filter(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target, const cace_ari_translator_t *translator, void *user_data)
+int refda_eval_filter(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target,
+                      const cace_ari_translator_t *translator, void *user_data)
 {
     cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
 
