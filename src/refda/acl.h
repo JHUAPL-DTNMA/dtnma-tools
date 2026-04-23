@@ -142,9 +142,17 @@ typedef struct
      */
     cace_amm_obj_desc_t *modify_var;
 
-    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/create-object>.
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/ensure-odm>.
      */
-    cace_amm_obj_desc_t *create_obj;
+    cace_amm_obj_desc_t *ensure_odm;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/obsolete-odm>.
+     */
+    cace_amm_obj_desc_t *obsolete_odm;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/ensure-object>.
+     */
+    cace_amm_obj_desc_t *ensure_obj;
 
     /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/obsolete-object>.
      */

@@ -941,7 +941,7 @@ void refda_adm_ietf_dtnma_agent_append_derived_ident(cace_ari_tbl_t *table, cons
     }
 }
 
-static bool refda_acl_check_create_object(refda_runctx_t *runctx, const cace_amm_obj_ns_t *odm,
+static bool refda_acl_check_ensure_object(refda_runctx_t *runctx, const cace_amm_obj_ns_t *odm,
                                           cace_ari_type_t obj_type, cace_ari_int_id_t obj_id)
 {
     // Permission for hypothetical object
@@ -957,7 +957,7 @@ static bool refda_acl_check_create_object(refda_runctx_t *runctx, const cace_amm
 
     // access check, this permission has no parameters
     bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &fake, NULL,
-                                                     runctx->agent->acl.permissions.create_obj, NULL);
+                                                     runctx->agent->acl.permissions.ensure_obj, NULL);
 
     cace_ari_deinit(&fake);
     return acl_found;
@@ -2653,6 +2653,30 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
     }
 
     refda_agent_t *agent = ctx->runctx->agent;
+    {
+        // Permission for hypothetical ODM
+        cace_ari_t fake = CACE_ARI_INIT_UNDEFINED;
+        {
+            cace_ari_ref_t *ref = cace_ari_set_objref(&fake);
+            {
+                ref->objpath.org_id.form   = CACE_ARI_IDSEG_INT;
+                ref->objpath.org_id.as_int = org_id;
+            }
+            {
+                ref->objpath.model_id.form   = CACE_ARI_IDSEG_INT;
+                ref->objpath.model_id.as_int = model_id;
+            }
+        }
+
+        // access check, this permission has no parameters
+        bool acl_found = refda_acl_search_one_permission(agent, ctx->runctx->acl_groups, &fake, NULL,
+                                                         agent->acl.permissions.ensure_odm, NULL);
+        if (!acl_found)
+        {
+            return;
+        }
+    }
+
     REFDA_AGENT_LOCK(agent, );
 
     m_string_t *rev_date = string_list_push_new(agent->odm_names);
@@ -2710,11 +2734,35 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
     const cace_ari_t *odm_ns = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
-    refda_agent_t    *agent  = ctx->runctx->agent;
 
+    refda_agent_t *agent = ctx->runctx->agent;
     REFDA_AGENT_LOCK(agent, );
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
+
+    if (odm)
+    {
+        // Permission for ODM
+        cace_ari_t fake = CACE_ARI_INIT_UNDEFINED;
+        {
+            cace_ari_ref_t *ref = cace_ari_set_objref(&fake);
+            cace_ari_idseg_set_from_val(&ref->objpath.org_id, &odm->org_id);
+            cace_ari_idseg_set_from_val(&ref->objpath.model_id, &odm->model_id);
+        }
+
+        // access check, this permission has no parameters
+        bool acl_found = refda_acl_search_one_permission(agent, ctx->runctx->acl_groups, &fake, NULL,
+                                                         agent->acl.permissions.obsolete_odm, NULL);
+        if (!acl_found)
+        {
+            odm = NULL;
+        }
+    }
 
     if (odm)
     {
@@ -2726,7 +2774,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
     }
     else
     {
-        CACE_LOG_ERR("ODM not found");
+        CACE_LOG_ERR("ODM not found or no access");
     }
 
     REFDA_AGENT_UNLOCK(agent, );
@@ -2960,7 +3008,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_IDENT, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_IDENT, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );
@@ -3186,7 +3234,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_CONST, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_CONST, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );
@@ -3429,7 +3477,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_VAR, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_VAR, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );
@@ -3664,7 +3712,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_SBR, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_SBR, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );
@@ -3852,7 +3900,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_TBR, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_TBR, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );
