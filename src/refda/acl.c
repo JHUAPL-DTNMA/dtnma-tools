@@ -233,14 +233,18 @@ static cace_ari_translate_result_t acl_target_filter_sub_label(cace_ari_t *out, 
     return CACE_ARI_TRANSLATE_DEFAULT;
 }
 
-bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *target,
-                                 const cace_amm_obj_desc_ptr_set_t perm_objs, refda_amm_ident_base_ptr_set_t *match)
+bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *tgt_ref,
+                                 const cace_amm_lookup_t *tgt_deref, const cace_amm_obj_desc_ptr_set_t perm_objs,
+                                 refda_amm_ident_base_ptr_set_t *match)
 {
     CHKFALSE(agent);
-    CHKFALSE(target);
+    CHKFALSE(tgt_ref);
 
-    bool   is_grp_zero = false;
-    size_t found       = 0;
+    // group zero is special
+    bool is_grp_zero = false;
+    // otherwise count found
+    size_t found = 0;
+
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         m_string_t buf;
@@ -249,16 +253,40 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
         CACE_LOG_DEBUG("matched from %zu groups: %s", refda_acl_id_tree_size(groups), m_string_get_cstr(buf));
         m_string_clear(buf);
     }
-    if (pthread_mutex_lock(&(agent->acl_mutex)))
+
+    const cace_ari_translator_t translator = { .map_ari = acl_target_filter_sub_label };
+
+    const cace_ari_t *target;
+    // Prefer integer forms from actual object
+    cace_ari_t from_deref = CACE_ARI_INIT_UNDEFINED;
+    if (tgt_deref)
     {
-        CACE_LOG_CRIT("failed to lock agent ACL");
-        return false;
+        cace_amm_lookup_ref_int(&from_deref, tgt_deref);
+        target = &from_deref;
+    }
+    else
+    {
+        target = tgt_ref;
+    }
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("matching for target: %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     // evaluate as the agent
     refda_runctx_t runctx;
     refda_runctx_init(&runctx);
     refda_runctx_from(&runctx, agent, NULL);
+
+    if (pthread_mutex_lock(&(agent->acl_mutex)))
+    {
+        CACE_LOG_CRIT("failed to lock agent ACL");
+        return false;
+    }
 
     refda_acl_id_tree_it_t grp_it;
     for (refda_acl_id_tree_it(grp_it, groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
@@ -291,8 +319,6 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
         {
             continue;
         }
-
-        const cace_ari_translator_t translator = { .map_ari = acl_target_filter_sub_label };
 
         refda_acl_access_ptr_set_it_t acc_it;
         for (refda_acl_access_ptr_set_it(acc_it, *accesses); !refda_acl_access_ptr_set_end_p(acc_it);
@@ -343,6 +369,7 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
     }
 
     refda_runctx_deinit(&runctx);
+    cace_ari_deinit(&from_deref);
 
     if (!is_grp_zero && cace_log_is_enabled_for(LOG_DEBUG))
     {
@@ -363,15 +390,16 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
     return is_grp_zero || (found > 0);
 }
 
-bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *target,
-                                     const cace_amm_obj_desc_t *perm_obj, refda_amm_ident_base_ptr_set_t *match)
+bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *tgt_ref,
+                                     const cace_amm_lookup_t *tgt_deref, const cace_amm_obj_desc_t *perm_obj,
+                                     refda_amm_ident_base_ptr_set_t *match)
 {
     CHKFALSE(perm_obj);
 
     cace_amm_obj_desc_ptr_set_t perm_objs;
     cace_amm_obj_desc_ptr_set_init(perm_objs);
     cace_amm_obj_desc_ptr_set_push(perm_objs, (cace_amm_obj_desc_t *)perm_obj);
-    bool found = refda_acl_search_permission(agent, groups, target, perm_objs, match);
+    bool found = refda_acl_search_permission(agent, groups, tgt_ref, tgt_deref, perm_objs, match);
     cace_amm_obj_desc_ptr_set_clear(perm_objs);
     return found;
 }

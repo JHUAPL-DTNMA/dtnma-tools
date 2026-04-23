@@ -198,7 +198,7 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
     }
 
     // access check, this permission has no parameters
-    bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, ctx->ref,
+    bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, ctx->ref, ctx->deref,
                                                      ctx->runctx->agent->acl.permissions.produce, NULL);
     if (!acl_found)
     {

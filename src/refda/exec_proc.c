@@ -199,7 +199,7 @@ static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq
                     cace_amm_lookup_init(&deref);
 
                     // access check, this permission has no parameters
-                    bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &item->ref,
+                    bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &item->ref, &item->deref,
                                                                      runctx->agent->acl.permissions.execute, NULL);
                     if (!acl_found)
                     {

@@ -209,21 +209,24 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
  *
  * @param[in] agent The agent state for reference lookup.
  * @param[in] groups The set of groups to filter-in.
- * @param[in] target The target object/namespace being accessed.
+ * @param[in] tgt_ref The original target object/namespace reference.
+ * @param[in] tgt_deref The optional target object/namespace being accessed, if valid.
  * @param[in] perm_objs The set of permission objects to filter-in.
  * @param[out] match The matching permissions, or null pointer if they
  * are not needed.
  * @return True if either group 0 is present, or if
  * the permission is present and the @c match is non-empty.
  */
-bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *target,
-                                 const cace_amm_obj_desc_ptr_set_t perm_objs, refda_amm_ident_base_ptr_set_t *match);
+bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *tgt_ref,
+                                 const cace_amm_lookup_t *tgt_deref, const cace_amm_obj_desc_ptr_set_t perm_objs,
+                                 refda_amm_ident_base_ptr_set_t *match);
 /** @overload
  * This searches for a single permission @c perm_obj which avoids needing
  * to construct a permission set.
  */
-bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *target,
-                                     const cace_amm_obj_desc_t *perm_obj, refda_amm_ident_base_ptr_set_t *match);
+bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *tgt_ref,
+                                     const cace_amm_lookup_t *tgt_deref, const cace_amm_obj_desc_t *perm_obj,
+                                     refda_amm_ident_base_ptr_set_t *match);
 
 #ifdef __cplusplus
 } // extern C
