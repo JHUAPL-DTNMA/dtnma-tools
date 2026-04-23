@@ -53,7 +53,7 @@ jobs:
               ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
               ${{matrix.deps=='full' && 'flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev' || ''}} libpcre2-dev \
               valgrind xmlstarlet python3-pip
-          sudo pip3 install --break-system-packages gcovr
+          sudo pip3 install ${{ matrix.os == 'ubuntu-22.04' && '' || '--break-system-packages' }} gcovr
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -149,7 +149,7 @@ jobs:
               binutils \
               valgrind xmlstarlet \
               python3-pip python3-wheel python3-venv postgresql-client
-          pip3 install gcovr
+          pip3 install --break-system-packages gcovr
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
