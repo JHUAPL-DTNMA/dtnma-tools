@@ -230,15 +230,14 @@ TEST_CASE("F7", CACE_AMM_TYPE_MATCH_UNDEFINED)                    // ari:undefin
 TEST_CASE("F6", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:null
 TEST_CASE("F4", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:false
 TEST_CASE("F5", CACE_AMM_TYPE_MATCH_NEGATIVE)                     // ari:true
-TEST_CASE("0A", CACE_AMM_TYPE_MATCH_POSITIVE)                     // ari:10
-TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_POSITIVE)               // ari:/INT/100 matches
-TEST_CASE("82061864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/VAST/100 explicitly not an INT
-TEST_CASE("FA49864700", CACE_AMM_TYPE_MATCH_POSITIVE)             // ari:1.1e+06
-TEST_CASE("8208FA49864700", CACE_AMM_TYPE_MATCH_NEGATIVE)         // ari:/REAL32/1.1e+06 explicitly not an INT
+TEST_CASE("07", CACE_AMM_TYPE_MATCH_POSITIVE)                     // ari:7
+TEST_CASE("82041864", CACE_AMM_TYPE_MATCH_NEGATIVE)               // ari:/INT/100 explicitly not an ARITYPE
+TEST_CASE("FA49864700", CACE_AMM_TYPE_MATCH_NEGATIVE)             // ari:1.1e+06
+TEST_CASE("657576617374", CACE_AMM_TYPE_MATCH_POSITIVE)           // ari:uvast
 TEST_CASE("8519FFFF02200481626869", CACE_AMM_TYPE_MATCH_NEGATIVE) // ari://65535/2/-1/4(hi)
-void test_amm_type_match_int(const char *inhex, cace_amm_type_match_res_t expect)
+void test_amm_type_match_aritype(const char *inhex, cace_amm_type_match_res_t expect)
 {
-    const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_INT);
+    const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_ARITYPE);
     check_match(type, inhex, expect);
 }
 
@@ -588,6 +587,22 @@ TEST_CASE("8519FFFF02200481626869", NULL)     // ari://65535/2/-1/4(hi)
 void test_amm_type_convert_real64(const char *inhex, const char *expecthex)
 {
     const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_REAL64);
+    check_convert(type, inhex, expecthex);
+}
+
+TEST_CASE("F7", "F7")                         // ari:undefined
+TEST_CASE("F6", NULL)                         // ari:null
+TEST_CASE("F4", NULL)                         // ari:false
+TEST_CASE("F5", NULL)                         // ari:true
+TEST_CASE("07", "821007")                     // ari:7
+TEST_CASE("82041864", NULL)                   // ari:/INT/100 explicitly not an ARITYPE
+TEST_CASE("FA49864700", NULL)                 // ari:1.1e+06
+TEST_CASE("657576617374", "8210657576617374") // ari:uvast
+TEST_CASE("821007", "821007")                 // ari:/aritype/7
+TEST_CASE("8519FFFF02200481626869", NULL)     // ari://65535/2/-1/4(hi)
+void test_amm_type_convert_aritype(const char *inhex, const char *expecthex)
+{
+    const cace_amm_type_t *type = cace_amm_type_get_builtin(CACE_ARI_TYPE_ARITYPE);
     check_convert(type, inhex, expecthex);
 }
 

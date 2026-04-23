@@ -758,6 +758,10 @@ class TestRefdaSocket(unittest.TestCase):
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/dtnma-agent-acl/),//ietf/dtnma-agent/oper/is-same-ns(//ietf/dtnma-agent/))', ari.TYPED_FALSE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/!missing/),//ietf/dtnma-agent/oper/is-same-ns(//ietf/dtnma-agent/))', ari.TYPED_FALSE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/!missing/),//ietf/dtnma-agent/oper/is-same-ns(//ietf/!missing/))', ari.UNDEFINED),  # no such instance
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-type(/aritype/typedef))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-type(/aritype/const))', ari.TYPED_FALSE),
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-type(-12))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-type(/aritype/uint))', ari.UNDEFINED),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/is-same-object(//ietf/amm-base/typedef/integer))', ari.TYPED_TRUE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/numeric),//ietf/dtnma-agent/oper/is-same-object(//ietf/amm-base/typedef/integer))', ari.TYPED_FALSE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/!missing/typedef/obj),//ietf/dtnma-agent/oper/is-same-object(//ietf/amm-base/typedef/integer))', ari.TYPED_FALSE),

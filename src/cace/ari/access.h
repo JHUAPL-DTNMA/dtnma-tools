@@ -127,11 +127,13 @@ int cace_ari_get_td(const cace_ari_t *ari, struct timespec *out);
 bool cace_ari_is_lit_typed(const cace_ari_t *ari, cace_ari_type_t typ);
 
 /** Require an ARITYPE literal value.
+ * This will convert known text primitives to int enum values.
  *
  * @param[in] ari The ARI to read.
- * @return Pointer to the contained type value, if present, otherwise NULL.
+ * @param[out] out The value to write into if successful.
+ * @return Zero if successful.
  */
-const int64_t *cace_ari_get_aritype_int(const cace_ari_t *ari);
+int cace_ari_get_aritype_int(const cace_ari_t *ari, cace_ari_type_t *out);
 
 /** Set an ARI as an untyped literal value.
  *

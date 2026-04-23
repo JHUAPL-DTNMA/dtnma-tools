@@ -5167,9 +5167,9 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
 
 /* Name: is-org-private
  * Description:
- *   Predicate to determine if an associated object namespace is private
- *   (i.e. has an org-id which is a negative integer or text with a leading
- *   bang).
+ *   Predicate to determine if an object or namespace reference value has a
+ *   namespace which is private (i.e. has an org-id which is a negative
+ *   integer or text with a leading bang).
  *
  * Parameters: none
  *
@@ -5224,8 +5224,9 @@ static void refda_adm_ietf_dtnma_agent_oper_is_org_private(refda_oper_eval_ctx_t
 
 /* Name: match-org-int-range
  * Description:
- *   Predicate to determine if an associated object namespace has an org-id
- *   which is within a specific integer range.
+ *   Predicate to determine if a de-referenced object or namespace
+ *   reference value has a namespace which has an org-id which is within a
+ *   specific integer range.
  *
  * Parameters list:
  *   - Index 0, name "min-value", type use of ari://ietf/amm-base/TYPEDEF/id-int
@@ -5309,9 +5310,9 @@ static void refda_adm_ietf_dtnma_agent_oper_match_org_int_range(refda_oper_eval_
 
 /* Name: is-model-odm
  * Description:
- *   Predicate to determine if an associated object namespace is is an ODM
- *   (i.e. has an model-id which is a negative integer or text with a
- *   leading bang).
+ *   Predicate to determine if an object or namespace reference value has a
+ *   namespace which is is an ODM (i.e. has an model-id which is a negative
+ *   integer or text with a leading bang).
  *
  * Parameters: none
  *
@@ -5366,8 +5367,9 @@ static void refda_adm_ietf_dtnma_agent_oper_is_model_odm(refda_oper_eval_ctx_t *
 
 /* Name: match-model-int-range
  * Description:
- *   Predicate to determine if an associated object namespace has a model-
- *   id which is within a specific integer range.
+ *   Predicate to determine if a de-referenced object or namespace
+ *   reference value has a namespace which has a model-id which is within a
+ *   specific integer range.
  *
  * Parameters list:
  *   - Index 0, name "min-value", type use of ari://ietf/amm-base/TYPEDEF/id-int
@@ -5522,6 +5524,66 @@ static void refda_adm_ietf_dtnma_agent_oper_is_same_ns(refda_oper_eval_ctx_t *ct
      */
 }
 
+/* Name: match-object-type
+ * Description:
+ *   Predicate to determine if a de-referenced object reference value has a
+ *   specific object type.
+ *
+ * Parameters list:
+ *   - Index 0, name "desired", type use of ari:/ARITYPE/ARITYPE
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari:/ARITYPE/OBJECT
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_match_object_type(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_object_type BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+    const cace_ari_t *desired = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *value   = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    cace_ari_type_t desired_type;
+    if (!cace_ari_get_aritype_int(desired, &desired_type))
+    {
+        if (desired_type >= 0)
+        {
+            CACE_LOG_ERR("Invalid desired aritype value");
+            return;
+        }
+    }
+    else
+    {
+        CACE_LOG_ERR("Invalid desired value");
+        return;
+    }
+
+    const cace_ari_objpath_t *path = cace_ari_cget_ref_objpath(value);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, path ? (path->ari_type == desired_type) : false);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_object_type BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: is-same-object
  * Description:
  *   Predicate to determine if a de-referenced object reference value
@@ -5592,7 +5654,7 @@ static void refda_adm_ietf_dtnma_agent_oper_is_same_object(refda_oper_eval_ctx_t
 /* Name: ref
  * Description:
  *   A zero-ary operator to copy a reference value parameter into its
- *   result. This is a work-around for the EXPR and expr-item typedef
+ *   result. This is a work-around for <//ietf/amm-base/typedef/expr-item>
  *   permitting only literal or OPER references.
  *
  * Parameters list:
@@ -9263,6 +9325,47 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // use of ari:/ARITYPE/NAMESPACE
                     cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./OPER/match-object-type
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/OBJECT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJECT);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_match_object_type;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("match-object-type",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_OBJECT_TYPE),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "desired");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/ARITYPE
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_ARITYPE);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }

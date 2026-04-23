@@ -598,17 +598,34 @@ bool cace_ari_is_lit_typed(const cace_ari_t *ari, cace_ari_type_t typ)
     return (ari && !(ari->is_ref) && ari->as_lit.has_ari_type && (ari->as_lit.ari_type == typ));
 }
 
-const int64_t *cace_ari_get_aritype_int(const cace_ari_t *ari)
+int cace_ari_get_aritype_int(const cace_ari_t *ari, cace_ari_type_t *out)
 {
+    CHKERR1(ari);
+    CHKERR1(out);
     if (!cace_ari_is_lit_typed(ari, CACE_ARI_TYPE_ARITYPE))
     {
-        return NULL;
+        return 1;
     }
-    if (ari->as_lit.prim_type != CACE_ARI_PRIM_INT64)
+
+    const char *name;
+    if (ari->as_lit.prim_type == CACE_ARI_PRIM_INT64)
     {
-        return NULL;
+        *out = ari->as_lit.value.as_int64;
+        return 0;
     }
-    return &(ari->as_lit.value.as_int64);
+    else if ((name = cace_ari_cget_tstr_cstr(ari)))
+    {
+        if (cace_ari_type_from_name(out, name))
+        {
+            return 2;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    return 3;
 }
 
 struct cace_ari_ac_s *cace_ari_get_ac(cace_ari_t *ari)
