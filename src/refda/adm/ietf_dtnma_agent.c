@@ -958,10 +958,6 @@ static bool refda_acl_check_create_object(refda_runctx_t *runctx, const cace_amm
     // access check, this permission has no parameters
     bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &fake, NULL,
                                                      runctx->agent->acl.permissions.create_obj, NULL);
-    if (!acl_found)
-    {
-        CACE_LOG_ERR("Lack of permission for: create-object");
-    }
 
     cace_ari_deinit(&fake);
     return acl_found;
@@ -2747,7 +2743,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
                                                          ctx->runctx->agent->acl.permissions.modify_var, NULL);
         if (!acl_found)
         {
-            CACE_LOG_ERR("Lack of permission for: modify-var");
             var = NULL;
         }
 
@@ -2821,7 +2816,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
                                                          ctx->runctx->agent->acl.permissions.modify_var, NULL);
         if (!acl_found)
         {
-            CACE_LOG_ERR("Lack of permission for: modify-var");
             var = NULL;
         }
 
@@ -3088,11 +3082,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_ident(refda_ctrl_exec_ctx_t
         // access check, this permission has no parameters
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target, &deref,
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
-        if (!acl_found)
-        {
-            CACE_LOG_ERR("Lack of permission for: obsolete-object");
-        }
-        else
+        if (acl_found)
         {
             CACE_LOG_DEBUG("Marking IDENT as obsolete");
             deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
@@ -3348,11 +3338,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
         // access check, this permission has no parameters
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target, &deref,
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
-        if (!acl_found)
-        {
-            CACE_LOG_ERR("Lack of permission for: obsolete-object");
-        }
-        else
+        if (acl_found)
         {
             CACE_LOG_DEBUG("Marking CONST as obsolete");
             deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
@@ -3614,11 +3600,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
         // access check, this permission has no parameters
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target, &deref,
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
-        if (!acl_found)
-        {
-            CACE_LOG_ERR("Lack of permission for: obsolete-object");
-        }
-        else
+        if (acl_found)
         {
             CACE_LOG_DEBUG("Marking VAR as obsolete");
             deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
@@ -4303,7 +4285,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
         if (!acl_found)
         {
-            CACE_LOG_ERR("Lack of permission for: obsolete-object");
             sbr = NULL;
         }
         else
@@ -4328,7 +4309,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
                                                          ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
         if (!acl_found)
         {
-            CACE_LOG_ERR("Lack of permission for: obsolete-object");
             tbr = NULL;
         }
         else

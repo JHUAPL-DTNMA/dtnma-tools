@@ -204,7 +204,6 @@ static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq
                                                         runctx->agent->acl.permissions.execute, NULL);
                     if (!acl_found)
                     {
-                        CACE_LOG_ERR("Lack of permission for: execute");
                         cace_ari_array_push_back(invalid_items, *target);
                         retval = REFDA_EXEC_ERR_NO_ACCESS;
                     }

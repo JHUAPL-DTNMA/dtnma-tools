@@ -401,5 +401,9 @@ bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tr
     cace_amm_obj_desc_ptr_set_push(perm_objs, (cace_amm_obj_desc_t *)perm_obj);
     bool found = refda_acl_search_permission(agent, groups, tgt_ref, tgt_deref, perm_objs, match);
     cace_amm_obj_desc_ptr_set_clear(perm_objs);
+    if (!found)
+    {
+        CACE_LOG_ERR("Lack of permission for: %s", m_string_get_cstr(perm_obj->obj_id.name));
+    }
     return found;
 }

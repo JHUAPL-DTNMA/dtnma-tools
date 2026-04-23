@@ -202,7 +202,6 @@ int refda_valprod_run(refda_valprod_ctx_t *ctx)
                                                      ctx->runctx->agent->acl.permissions.produce, NULL);
     if (!acl_found)
     {
-        CACE_LOG_ERR("Lack of permission for: produce");
         return 3;
     }
 
