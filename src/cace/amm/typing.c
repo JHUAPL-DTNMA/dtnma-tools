@@ -653,13 +653,7 @@ static cace_amm_type_match_res_t builtin_object_match(const cace_amm_type_t *sel
     {
         return CACE_AMM_TYPE_MATCH_UNDEFINED;
     }
-    const cace_ari_objpath_t *path = cace_ari_cget_ref_objpath(ari);
-    // must have object parts
-    if (!path || (path->type_id.form == CACE_ARI_IDSEG_NULL) || (path->obj_id.form == CACE_ARI_IDSEG_NULL))
-    {
-        return CACE_AMM_TYPE_MATCH_NEGATIVE;
-    }
-    return CACE_AMM_TYPE_MATCH_POSITIVE;
+    return cace_amm_type_match_pos_neg(cace_ari_is_object(ari));
 }
 
 static cace_amm_type_match_res_t builtin_namespace_match(const cace_amm_type_t *self _U_, const cace_ari_t *ari)
@@ -668,13 +662,7 @@ static cace_amm_type_match_res_t builtin_namespace_match(const cace_amm_type_t *
     {
         return CACE_AMM_TYPE_MATCH_UNDEFINED;
     }
-    const cace_ari_objpath_t *path = cace_ari_cget_ref_objpath(ari);
-    // must not have object parts
-    if (!path || (path->type_id.form != CACE_ARI_IDSEG_NULL) || (path->obj_id.form != CACE_ARI_IDSEG_NULL))
-    {
-        return CACE_AMM_TYPE_MATCH_NEGATIVE;
-    }
-    return CACE_AMM_TYPE_MATCH_POSITIVE;
+    return cace_amm_type_match_pos_neg(cace_ari_is_namespace(ari));
 }
 
 static cace_amm_type_match_res_t builtin_common_objref_match(const cace_amm_type_t *self, const cace_ari_t *ari)

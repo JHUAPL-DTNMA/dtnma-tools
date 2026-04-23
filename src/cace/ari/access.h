@@ -325,6 +325,22 @@ struct cace_ari_objpat_s *cace_ari_cget_objpat(const cace_ari_t *ari);
  */
 struct cace_ari_objpat_s *cace_ari_set_objpat(cace_ari_t *ari);
 
+/** Determine if a value is a pure namespace reference.
+ *
+ * @param[in] ari The ARI to read.
+ * @return True if it would match the "namespace" built-in type.
+ * @sa cace_ari_cget_ref()
+ */
+bool cace_ari_is_namespace(const cace_ari_t *ari);
+
+/** Determine if a value is a full object reference.
+ *
+ * @param[in] ari The ARI to read.
+ * @return True if it would match the "object" built-in type.
+ * @sa cace_ari_cget_ref()
+ */
+bool cace_ari_is_object(const cace_ari_t *ari);
+
 /** Require a reference value and extract a pointer to its struct.
  *
  * @param[in] ari The ARI to read.

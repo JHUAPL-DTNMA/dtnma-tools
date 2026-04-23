@@ -5551,6 +5551,176 @@ static void refda_adm_ietf_dtnma_agent_oper_match_model_int_range(refda_oper_eva
      */
 }
 
+/* Name: is-same-ns
+ * Description:
+ *   Predicate to determine if a de-referenced object or namespace
+ *   reference value matches a desired namespace from a parameter. The
+ *   comparison is on the actual namespace, regardless of whether integer
+ *   or text IDs are used in either.
+ *
+ * Parameters list:
+ *   - Index 0, name "desired", type use of ari:/ARITYPE/NAMESPACE
+ *
+ * Operand list:
+ *   - Index 0, name "value", type union of 2 types (use of ari:/ARITYPE/OBJECT, use of ari:/ARITYPE/NAMESPACE)
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_is_same_ns(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_same_ns BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+    const cace_ari_t *desired = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *value   = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    refda_agent_t *agent = ctx->evalctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    cace_amm_obj_ns_t *desired_ns = cace_amm_obj_store_find_ns(&(agent->objs), desired);
+    if (!desired_ns)
+    {
+        CACE_LOG_ERR("No such namespace");
+    }
+    else
+    {
+        if (cace_ari_is_namespace(value))
+        {
+            cace_amm_obj_ns_t *val_ns = cace_amm_obj_store_find_ns(&(agent->objs), value);
+
+            cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+            cace_ari_set_bool(&result, val_ns == desired_ns);
+            refda_oper_eval_ctx_set_result_move(ctx, &result);
+        }
+        else if (cace_ari_is_object(value))
+        {
+            cace_amm_lookup_t deref;
+            cace_amm_lookup_init(&deref);
+            cace_amm_lookup_deref(&deref, &(agent->objs), value);
+            // do not care about success, will leave as null
+            cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+            cace_ari_set_bool(&result, deref.ns == desired_ns);
+            refda_oper_eval_ctx_set_result_move(ctx, &result);
+
+            cace_amm_lookup_deinit(&deref);
+        }
+    }
+    REFDA_AGENT_UNLOCK(agent, );
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_same_ns BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: is-same-object
+ * Description:
+ *   Predicate to determine if a de-referenced object reference value
+ *   matches a desired object from a parameter. The comparison is on the
+ *   actual object instance, regardless of whether integer or text IDs are
+ *   used in either.
+ *
+ * Parameters list:
+ *   - Index 0, name "desired", type use of ari:/ARITYPE/OBJECT
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari:/ARITYPE/OBJECT
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_is_same_object(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_same_object BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+    const cace_ari_t *desired = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *value   = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    refda_agent_t *agent = ctx->evalctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+
+    cace_amm_lookup_t desired_obj;
+    cace_amm_lookup_init(&desired_obj);
+    int res = cace_amm_lookup_deref(&desired_obj, &(agent->objs), desired);
+    if (res)
+    {
+        CACE_LOG_ERR("No such object");
+    }
+    else
+    {
+        cace_amm_lookup_t deref;
+        cace_amm_lookup_init(&deref);
+        cace_amm_lookup_deref(&deref, &(agent->objs), value);
+        // do not care about success, will leave as null
+        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_bool(&result, deref.obj == desired_obj.obj);
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+
+        cace_amm_lookup_deinit(&deref);
+    }
+    cace_amm_lookup_deinit(&desired_obj);
+
+    REFDA_AGENT_UNLOCK(agent, );
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_same_object BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: ref
+ * Description:
+ *   A zero-ary operator to copy a reference value parameter into its
+ *   result. This is a work-around for the EXPR and expr-item typedef
+ *   permitting only literal or OPER references.
+ *
+ * Parameters list:
+ *   - Index 0, name "ref", type union of 2 types (use of ari:/ARITYPE/OBJECT, use of ari:/ARITYPE/NAMESPACE)
+ *
+ * Operands: none
+ *
+ * Result name "ref", type union of 2 types (use of ari:/ARITYPE/OBJECT, use of ari:/ARITYPE/NAMESPACE)
+ */
+static void refda_adm_ietf_dtnma_agent_oper_ref(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_ref BODY
+     * +-------------------------------------------------------------------------+
+     */
+    // Agent will validate the input
+    const cace_ari_t *ref = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    refda_oper_eval_ctx_set_result_copy(ctx, ref);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_ref BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: predicate-all
  * Description:
  *   Compose unary predicate operators with a result that is true only when
@@ -9141,6 +9311,161 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     // reference to ari://ietf/amm-base/TYPEDEF/id-int
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./OPER/is-same-ns
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    // union
+                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(operand->typeobj), 2);
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/OBJECT
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJECT);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NAMESPACE
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_is_same_ns;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("is-same-ns", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_SAME_NS),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "desired");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/NAMESPACE
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./OPER/is-same-object
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/OBJECT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJECT);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_is_same_object;
+
+            obj = refda_register_oper(adm,
+                                      cace_amm_idseg_ref_withenum(
+                                          "is-same-object", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_SAME_OBJECT),
+                                      objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "desired");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/OBJECT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJECT);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./OPER/ref
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 0);
+            // result type:
+            {
+                // union
+                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->res_type), 2);
+                {
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/OBJECT
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJECT);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
+                    }
+                }
+                {
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/NAMESPACE
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
+                    }
+                }
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_ref;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("ref", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_REF), objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "ref");
+                {
+                    // union
+                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(fparam->typeobj), 2);
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/OBJECT
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJECT);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NAMESPACE
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
                 }
             }
         }

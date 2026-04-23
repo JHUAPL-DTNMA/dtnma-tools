@@ -828,6 +828,20 @@ struct cace_ari_objpat_s *cace_ari_set_objpat(cace_ari_t *ari)
     return pat;
 }
 
+bool cace_ari_is_namespace(const cace_ari_t *ari)
+{
+    const cace_ari_objpath_t *path = cace_ari_cget_ref_objpath(ari);
+    // must not have object parts
+    return (path && (path->type_id.form == CACE_ARI_IDSEG_NULL) && (path->obj_id.form == CACE_ARI_IDSEG_NULL));
+}
+
+bool cace_ari_is_object(const cace_ari_t *ari)
+{
+    const cace_ari_objpath_t *path = cace_ari_cget_ref_objpath(ari);
+    // must not have object parts
+    return (path && (path->type_id.form != CACE_ARI_IDSEG_NULL) && (path->obj_id.form != CACE_ARI_IDSEG_NULL));
+}
+
 const cace_ari_ref_t *cace_ari_cget_ref(const cace_ari_t *ari)
 
 {
