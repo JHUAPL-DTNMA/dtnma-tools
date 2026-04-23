@@ -963,6 +963,42 @@ static bool refda_acl_check_create_object(refda_runctx_t *runctx, const cace_amm
     return acl_found;
 }
 
+/** Check for an existing object by its identifiers.
+ * Either both must be present on the same object or neither.
+ */
+static int refda_odm_object_exists(cace_amm_obj_desc_t **obj, cace_amm_obj_ns_t *ns, cace_ari_type_t obj_type,
+                                   const char *name, cace_ari_int_id_t intenum)
+{
+    cace_amm_obj_desc_t *by_name = cace_amm_obj_ns_find_obj_name(ns, obj_type, name);
+    cace_amm_obj_desc_t *by_enum = cace_amm_obj_ns_find_obj_enum(ns, obj_type, intenum);
+    if (!by_name && !by_enum)
+    {
+        CACE_LOG_DEBUG("object does not exist");
+        *obj = NULL;
+        return 0;
+    }
+    else if (by_name == by_enum)
+    {
+        CACE_LOG_DEBUG("object exists with same name and enum");
+        *obj = by_name;
+        return 0;
+    }
+    // multiple failure modes
+    else if (by_name && !by_enum)
+    {
+        CACE_LOG_ERR("object already exists with name %s but no matching enum", name);
+    }
+    else if (by_enum && !by_name)
+    {
+        CACE_LOG_ERR("object already exists with enum %" PRId64 " but no matching enum", intenum);
+    }
+    else
+    {
+        CACE_LOG_ERR("separate objects already exist with name %s and enum %" PRId64, name, intenum);
+    }
+    return 2;
+}
+
 /*   STOP CUSTOM FUNCTIONS HERE  */
 
 /* Name: sw-vendor
@@ -2931,98 +2967,73 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
         return;
     }
 
+    cace_amm_obj_desc_t    *obj     = NULL;
     refda_amm_ident_desc_t *objdata = NULL;
+    if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_IDENT, obj_name, obj_id))
     {
-        cace_amm_obj_desc_t *obj = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_IDENT, obj_name);
-        if (obj)
-        {
-            CACE_LOG_INFO("IDENT already exists");
-        }
-        else
-        {
-            obj = cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_IDENT, obj_id);
-            if (obj)
-            {
-                CACE_LOG_INFO("IDENT already exists");
-            }
-        }
-
-        if (obj)
-        {
-            objdata = obj->app_data.ptr;
-        }
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
     }
 
-    bool is_valid = true;
-    if (objdata)
+    if (obj)
     {
-        // update existing or fail
-        objdata->abstract = is_abstract;
-
-        // todo ensure bases are identical
+        objdata = obj->app_data.ptr;
     }
     else
     {
-        // create new
         objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
         refda_amm_ident_desc_init(objdata);
 
-        if (cace_log_is_enabled_for(LOG_DEBUG))
+        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*cnst_name, obj_name);
+
+        obj = refda_register_ident(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
+        refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
+    }
+
+    bool is_valid = true;
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, ari_bases, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("ensuring IDENT object %s with bases %s", obj_name, m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+
+    if (is_valid)
+    {
+        objdata->abstract = is_abstract;
+
+        const cace_ari_ac_t *bases_ac = cace_ari_cget_ac(ari_bases);
+        if (bases_ac)
         {
-            m_string_t buf;
-            m_string_init(buf);
-            cace_ari_text_encode(buf, ari_bases, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("creating IDENT object %s with bases %s", obj_name, m_string_get_cstr(buf));
-            m_string_clear(buf);
-        }
-
-        if (is_valid)
-        {
-            objdata->abstract = is_abstract;
-
-            const cace_ari_ac_t *bases_ac = cace_ari_cget_ac(ari_bases);
-            if (bases_ac)
+            cace_ari_list_it_t base_it;
+            for (cace_ari_list_it(base_it, bases_ac->items); !cace_ari_list_end_p(base_it); cace_ari_list_next(base_it))
             {
-                cace_ari_list_it_t base_it;
-                for (cace_ari_list_it(base_it, bases_ac->items); !cace_ari_list_end_p(base_it);
-                     cace_ari_list_next(base_it))
-                {
-                    const cace_ari_t *base_ref = cace_ari_list_cref(base_it);
+                const cace_ari_t *base_ref = cace_ari_list_cref(base_it);
 
-                    refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                    cace_ari_set_copy(&(base->name), base_ref);
-                }
-            }
-            else
-            {
-                is_valid = false;
-            }
-        }
-
-        if (is_valid)
-        {
-            m_string_t *cnst_name = string_list_push_new(agent->odm_names);
-            m_string_set_cstr(*cnst_name, obj_name);
-
-            cace_amm_obj_desc_t *obj =
-                refda_register_ident(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
-            refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
-
-            refda_binding_ctx_t bind_ctx = {
-                .store = &(agent->objs),
-                .ns    = odm,
-            };
-            int res = refda_binding_ident(&bind_ctx, obj);
-            if (res)
-            {
-                CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
-                is_valid = false;
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
+                cace_ari_set_copy(&(base->name), base_ref);
             }
         }
         else
         {
-            refda_amm_ident_desc_deinit(objdata);
-            CACE_FREE(objdata);
+            is_valid = false;
+        }
+    }
+
+    if (is_valid)
+    {
+        refda_binding_ctx_t bind_ctx = {
+            .store = &(agent->objs),
+            .ns    = odm,
+        };
+        int res = refda_binding_ident(&bind_ctx, obj);
+        if (res)
+        {
+            CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
+            is_valid = false;
         }
     }
 
@@ -3182,43 +3193,40 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
         return;
     }
 
-    refda_amm_const_desc_t *cnst = NULL;
+    cace_amm_obj_desc_t    *obj     = NULL;
+    refda_amm_const_desc_t *objdata = NULL;
+    if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_CONST, obj_name, obj_id))
     {
-        cace_amm_obj_desc_t *obj = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_CONST, obj_name);
-        if (obj)
-        {
-            CACE_LOG_INFO("CONST already exists");
-        }
-        else
-        {
-            obj = cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_CONST, obj_id);
-            if (obj)
-            {
-                CACE_LOG_INFO("CONST already exists");
-            }
-        }
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
 
-        if (obj)
-        {
-            cnst = obj->app_data.ptr;
-        }
+    if (obj)
+    {
+        objdata = obj->app_data.ptr;
+    }
+    else
+    {
+        objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
+        refda_amm_const_desc_init(objdata);
+
+        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*cnst_name, obj_name);
+
+        obj = refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
+        refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
     }
 
     bool is_valid = true;
-    if (cnst == NULL)
+    if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        refda_amm_const_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
-        refda_amm_const_desc_init(objdata);
-
-        if (cace_log_is_enabled_for(LOG_DEBUG))
-        {
-            m_string_t buf;
-            m_string_init(buf);
-            cace_ari_text_encode(buf, ari_value, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("creating CONST object %s with value %s", obj_name, m_string_get_cstr(buf));
-            m_string_clear(buf);
-        }
-
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, ari_value, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("ensuring CONST object %s with value %s", obj_name, m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+    {
         refda_binding_ctx_t bind_ctx = {
             .store = &(agent->objs),
             .ns    = odm,
@@ -3235,51 +3243,38 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
 
             is_valid = false;
         }
+    }
 
-        if (is_valid)
+    if (is_valid)
+    {
+        // check the given value against given type
+        int match = cace_amm_type_match(&(objdata->val_type), ari_value);
+        if (!((match == CACE_AMM_TYPE_MATCH_POSITIVE) || (match == CACE_AMM_TYPE_MATCH_UNDEFINED)))
         {
-            // check the given value against given type
-            int match = cace_amm_type_match(&(objdata->val_type), ari_value);
-            if (!((match == CACE_AMM_TYPE_MATCH_POSITIVE) || (match == CACE_AMM_TYPE_MATCH_UNDEFINED)))
-            {
-                m_string_t buf;
-                m_string_init(buf);
-                cace_ari_text_encode(buf, ari_value, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_ERR("Failed type match of VAR %s for value %s got %d", obj_name, m_string_get_cstr(buf),
-                             match);
-                m_string_clear(buf);
+            m_string_t buf;
+            m_string_init(buf);
+            cace_ari_text_encode(buf, ari_value, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_ERR("Failed type match of CONST %s for value %s got %d", obj_name, m_string_get_cstr(buf), match);
+            m_string_clear(buf);
 
-                is_valid = false;
-            }
+            is_valid = false;
         }
+    }
 
-        if (is_valid)
+    if (is_valid)
+    {
+        // direct value
+        cace_ari_set_copy(&(objdata->value), ari_value);
+
+        refda_binding_ctx_t bind_ctx = {
+            .store = &(agent->objs),
+            .ns    = odm,
+        };
+        int res = refda_binding_const(&bind_ctx, obj);
+        if (res)
         {
-            // direct value
-            cace_ari_set_copy(&(objdata->value), ari_value);
-
-            m_string_t *cnst_name = string_list_push_new(agent->odm_names);
-            m_string_set_cstr(*cnst_name, obj_name);
-
-            cace_amm_obj_desc_t *obj =
-                refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
-            refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
-
-            refda_binding_ctx_t bind_ctx = {
-                .store = &(agent->objs),
-                .ns    = odm,
-            };
-            int res = refda_binding_const(&bind_ctx, obj);
-            if (res)
-            {
-                CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
-                is_valid = false;
-            }
-        }
-        else
-        {
-            refda_amm_const_desc_deinit(objdata);
-            CACE_FREE(objdata);
+            CACE_LOG_ERR("Failed binding CONST %s with %d errors", obj_name, res);
+            is_valid = false;
         }
     }
 
@@ -3441,44 +3436,40 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    refda_amm_var_desc_t *var = NULL;
+    cace_amm_obj_desc_t  *obj     = NULL;
+    refda_amm_var_desc_t *objdata = NULL;
+    if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_VAR, obj_name, obj_id))
     {
-        cace_amm_obj_desc_t *obj = NULL;
-        obj                      = cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_VAR, obj_name);
-        if (obj)
-        {
-            CACE_LOG_INFO("VAR already exists");
-        }
-        else
-        {
-            obj = cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_VAR, obj_id);
-            if (obj)
-            {
-                CACE_LOG_INFO("VAR already exists");
-            }
-        }
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
 
-        if (obj)
-        {
-            var = obj->app_data.ptr;
-        }
+    if (obj)
+    {
+        objdata = obj->app_data.ptr;
+    }
+    else
+    {
+        objdata = CACE_MALLOC(sizeof(refda_amm_var_desc_t));
+        refda_amm_var_desc_init(objdata);
+
+        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*cnst_name, obj_name);
+
+        obj = refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
+        refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
     }
 
     bool is_valid = true;
-    if (var == NULL)
+    if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        refda_amm_var_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_var_desc_t));
-        refda_amm_var_desc_init(objdata);
-
-        if (cace_log_is_enabled_for(LOG_DEBUG))
-        {
-            m_string_t buf;
-            m_string_init(buf);
-            cace_ari_text_encode(buf, ari_init, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-            CACE_LOG_DEBUG("creating VAR object %s with value %s", obj_name, m_string_get_cstr(buf));
-            m_string_clear(buf);
-        }
-
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, ari_init, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("ensuring VAR object %s with value %s", obj_name, m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+    {
         refda_binding_ctx_t bind_ctx = {
             .store = &(agent->objs),
             .ns    = odm,
@@ -3495,52 +3486,39 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
 
             is_valid = false;
         }
+    }
 
-        if (is_valid)
+    if (is_valid)
+    {
+        // check the given value against given type
+        int match = cace_amm_type_match(&(objdata->val_type), ari_init);
+        if (!((match == CACE_AMM_TYPE_MATCH_POSITIVE) || (match == CACE_AMM_TYPE_MATCH_UNDEFINED)))
         {
-            // check the given value against given type
-            int match = cace_amm_type_match(&(objdata->val_type), ari_init);
-            if (!((match == CACE_AMM_TYPE_MATCH_POSITIVE) || (match == CACE_AMM_TYPE_MATCH_UNDEFINED)))
-            {
-                m_string_t buf;
-                m_string_init(buf);
-                cace_ari_text_encode(buf, ari_init, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_ERR("Failed type match of VAR %s for value %s got %d", obj_name, m_string_get_cstr(buf),
-                             match);
-                m_string_clear(buf);
+            m_string_t buf;
+            m_string_init(buf);
+            cace_ari_text_encode(buf, ari_init, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            CACE_LOG_ERR("Failed type match of VAR %s for value %s got %d", obj_name, m_string_get_cstr(buf), match);
+            m_string_clear(buf);
 
-                is_valid = false;
-            }
+            is_valid = false;
         }
+    }
 
-        if (is_valid)
+    if (is_valid)
+    {
+        // init value and state value
+        cace_ari_set_copy(&(objdata->init_val), ari_init);
+        cace_ari_set_copy(&(objdata->value), ari_init);
+
+        refda_binding_ctx_t bind_ctx = {
+            .store = &(agent->objs),
+            .ns    = odm,
+        };
+        int res = refda_binding_var(&bind_ctx, obj);
+        if (res)
         {
-            // init value and state value
-            cace_ari_set_copy(&(objdata->init_val), ari_init);
-            cace_ari_set_copy(&(objdata->value), ari_init);
-
-            m_string_t *var_name = string_list_push_new(agent->odm_names);
-            m_string_set_cstr(*var_name, obj_name);
-
-            cace_amm_obj_desc_t *obj =
-                refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*var_name), obj_id), objdata);
-            refda_adm_ietf_dtnma_agent_read_fparams(obj, ari_fparams, &agent->objs);
-
-            refda_binding_ctx_t bind_ctx = {
-                .store = &(agent->objs),
-                .ns    = odm,
-            };
-            int res = refda_binding_var(&bind_ctx, obj);
-            if (res)
-            {
-                CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
-                is_valid = false;
-            }
-        }
-        else
-        {
-            refda_amm_var_desc_deinit(objdata);
-            CACE_FREE(objdata);
+            CACE_LOG_ERR("Failed binding VAR %s with %d errors", obj_name, res);
+            is_valid = false;
         }
     }
 
@@ -3693,133 +3671,112 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    bool valid = true, rule_exists = false;
+    cace_amm_obj_desc_t  *obj     = NULL;
+    refda_amm_sbr_desc_t *objdata = NULL;
+    if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_SBR, obj_name, obj_id))
     {
-        if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_SBR, obj_name))
-        {
-            // FIXME: update fields on existing SBR in this case, instead of just returning??
-            CACE_LOG_INFO("SBR already exists");
-            rule_exists = true;
-        }
-
-        if (NULL != cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_SBR, obj_id))
-        {
-            // FIXME: same comment as above
-            CACE_LOG_INFO("SBR already exists");
-            rule_exists = true;
-        }
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
     }
 
-    if (!rule_exists)
-    { // For ./SBR/sbr_rule
-        cace_amm_obj_desc_t  *obj;
-        refda_amm_sbr_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_sbr_desc_t));
+    if (obj)
+    {
+        objdata = obj->app_data.ptr;
+    }
+    else
+    {
+        objdata = CACE_MALLOC(sizeof(refda_amm_sbr_desc_t));
         refda_amm_sbr_desc_init(objdata);
-        // action
-        if (valid)
-        {
-            const struct cace_ari_ac_s *action_ac = cace_ari_cget_ac(ari_action);
-            if (action_ac == NULL)
-            {
-                CACE_LOG_ERR("Invalid ARI received for action");
-                refda_amm_sbr_desc_deinit(objdata);
-                CACE_FREE(objdata);
-                valid = false;
-            }
-            else
-            {
-                cace_ari_set_copy(&(objdata->action), ari_action);
-            }
-        }
-        // condition
-        if (valid)
-        {
-            const struct cace_ari_ac_s *condition_ac = cace_ari_cget_ac(ari_condition);
-            if (condition_ac == NULL)
-            {
-                CACE_LOG_ERR("Invalid ARI received for condition");
-                refda_amm_sbr_desc_deinit(objdata);
-                CACE_FREE(objdata);
-                valid = false;
-            }
-            else
-            {
-                cace_ari_set_copy(&(objdata->condition), ari_condition);
-            }
-        }
-        //  min-interval
-        if (valid)
-        {
-            struct timespec ts;
-            if (cace_ari_get_td(ari_min_interval, &ts))
-            {
-                CACE_LOG_ERR("Invalid ARI received for min interval");
-                refda_amm_sbr_desc_deinit(objdata);
-                CACE_FREE(objdata);
-                valid = false;
-            }
-            else
-            {
-                cace_ari_set_td(&(objdata->min_interval), ts);
-            }
-        }
-        //  init_enabled
-        if (valid)
-        {
-            cace_ari_bool init_enabled;
-            if (cace_ari_get_bool(ari_init_enabled, &init_enabled))
-            {
-                CACE_LOG_ERR("Invalid ARI received for init enabled");
-                refda_amm_sbr_desc_deinit(objdata);
-                CACE_FREE(objdata);
-                valid = false;
-            }
-            else
-            {
-                objdata->init_enabled = init_enabled;
-            }
-        }
-        // max_exec_count
-        if (valid)
-        {
-            cace_ari_uvast max_exec_count;
-            if (cace_ari_get_uvast(ari_max_count, &max_exec_count))
-            {
-                CACE_LOG_ERR("Invalid ARI received for max exec count");
-                refda_amm_sbr_desc_deinit(objdata);
-                CACE_FREE(objdata);
-                valid = false;
-            }
-            else
-            {
-                objdata->max_exec_count = max_exec_count;
-            }
-        }
 
-        if (valid)
+        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*cnst_name, obj_name);
+
+        obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
+    }
+
+    bool valid = true;
+    // action
+    if (valid)
+    {
+        const struct cace_ari_ac_s *action_ac = cace_ari_cget_ac(ari_action);
+        if (action_ac == NULL)
         {
-            m_string_t *sbr_name = string_list_push_new(agent->odm_names);
-            m_string_set_cstr(*sbr_name, obj_name);
-
-            obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*sbr_name), obj_id), objdata);
-
-            if (obj && obj->app_data.ptr)
-            {
-                refda_amm_sbr_desc_t *desc = obj->app_data.ptr;
-                if (desc->init_enabled)
-                {
-                    refda_exec_sbr_enable(agent, desc);
-                }
-            }
+            CACE_LOG_ERR("Invalid ARI received for action");
+            valid = false;
+        }
+        else
+        {
+            cace_ari_set_copy(&(objdata->action), ari_action);
         }
     }
+    // condition
+    if (valid)
+    {
+        const struct cace_ari_ac_s *condition_ac = cace_ari_cget_ac(ari_condition);
+        if (condition_ac == NULL)
+        {
+            CACE_LOG_ERR("Invalid ARI received for condition");
+            valid = false;
+        }
+        else
+        {
+            cace_ari_set_copy(&(objdata->condition), ari_condition);
+        }
+    }
+    //  min-interval
+    if (valid)
+    {
+        struct timespec ts;
+        if (cace_ari_get_td(ari_min_interval, &ts))
+        {
+            CACE_LOG_ERR("Invalid ARI received for min interval");
+            valid = false;
+        }
+        else
+        {
+            cace_ari_set_td(&(objdata->min_interval), ts);
+        }
+    }
+    //  init_enabled
+    if (valid)
+    {
+        cace_ari_bool init_enabled;
+        if (cace_ari_get_bool(ari_init_enabled, &init_enabled))
+        {
+            CACE_LOG_ERR("Invalid ARI received for init enabled");
+            valid = false;
+        }
+        else
+        {
+            objdata->init_enabled = init_enabled;
+        }
+    }
+    // max_exec_count
+    if (valid)
+    {
+        cace_ari_uvast max_exec_count;
+        if (cace_ari_get_uvast(ari_max_count, &max_exec_count))
+        {
+            CACE_LOG_ERR("Invalid ARI received for max exec count");
+            valid = false;
+        }
+        else
+        {
+            objdata->max_exec_count = max_exec_count;
+        }
+    }
+
+    if (valid && objdata->init_enabled)
+    {
+        refda_exec_sbr_enable(agent, objdata);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
 
     if (valid)
     {
         refda_ctrl_exec_ctx_set_result_null(ctx);
     }
-
-    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr BODY
@@ -3902,144 +3859,123 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    bool valid = true, rule_exists = false;
+    cace_amm_obj_desc_t  *obj     = NULL;
+    refda_amm_tbr_desc_t *objdata = NULL;
+    if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_TBR, obj_name, obj_id))
     {
-        if (NULL != cace_amm_obj_ns_find_obj_name(odm, CACE_ARI_TYPE_TBR, obj_name))
-        {
-            // FIXME: update fields on existing TBR in this case, instead of just returning??
-            CACE_LOG_INFO("TBR already exists");
-            rule_exists = true;
-        }
-
-        if (NULL != cace_amm_obj_ns_find_obj_enum(odm, CACE_ARI_TYPE_TBR, obj_id))
-        {
-            // FIXME: same comment as above
-            CACE_LOG_INFO("TBR already exists");
-            rule_exists = true;
-        }
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
     }
 
-    if (!rule_exists)
-    { // For ./TBR/tbr_rule
-        cace_amm_obj_desc_t  *obj;
-        refda_amm_tbr_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_tbr_desc_t));
+    if (obj)
+    {
+        objdata = obj->app_data.ptr;
+    }
+    else
+    {
+        objdata = CACE_MALLOC(sizeof(refda_amm_tbr_desc_t));
         refda_amm_tbr_desc_init(objdata);
-        // action
-        if (valid)
-        {
-            const struct cace_ari_ac_s *action_ac = cace_ari_cget_ac(ari_action);
-            if (action_ac == NULL)
-            {
-                CACE_LOG_ERR("Invalid ARI received for action");
-                refda_amm_tbr_desc_deinit(objdata);
-                CACE_FREE(objdata);
-                valid = false;
-            }
-            else
-            {
-                cace_ari_set_copy(&(objdata->action), ari_action);
-            }
-        }
-        // period
-        if (valid)
-        {
-            struct timespec ts;
-            if (cace_ari_get_td(ari_period, &ts))
-            {
-                CACE_LOG_ERR("Invalid ARI received for period");
-                refda_amm_tbr_desc_deinit(objdata);
-                CACE_FREE(objdata);
-                valid = false;
-            }
-            else
-            {
-                cace_ari_set_td(&(objdata->period), ts);
-            }
-        }
-        // start_time
-        if (valid)
-        {
-            struct timespec ts;
-            int             rv;
 
-            rv = cace_ari_get_td(ari_start_time, &ts);
+        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_set_cstr(*cnst_name, obj_name);
+
+        obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
+    }
+
+    bool valid = true;
+    // action
+    if (valid)
+    {
+        const struct cace_ari_ac_s *action_ac = cace_ari_cget_ac(ari_action);
+        if (action_ac == NULL)
+        {
+            CACE_LOG_ERR("Invalid ARI received for action");
+            valid = false;
+        }
+        else
+        {
+            cace_ari_set_copy(&(objdata->action), ari_action);
+        }
+    }
+    // period
+    if (valid)
+    {
+        struct timespec ts;
+        if (cace_ari_get_td(ari_period, &ts))
+        {
+            CACE_LOG_ERR("Invalid ARI received for period");
+            valid = false;
+        }
+        else
+        {
+            cace_ari_set_td(&(objdata->period), ts);
+        }
+    }
+    // start_time
+    if (valid)
+    {
+        struct timespec ts;
+        int             rv;
+
+        rv = cace_ari_get_td(ari_start_time, &ts);
+        if (!rv)
+        {
+            cace_ari_set_td(&(objdata->start_time), ts);
+        }
+        else
+        {
+            rv = cace_ari_get_tp(ari_start_time, &ts);
             if (!rv)
             {
-                cace_ari_set_td(&(objdata->start_time), ts);
+                cace_ari_set_tp(&(objdata->start_time), ts);
             }
             else
             {
-                rv = cace_ari_get_tp(ari_start_time, &ts);
-                if (!rv)
-                {
-                    cace_ari_set_tp(&(objdata->start_time), ts);
-                }
-                else
-                {
-                    CACE_LOG_ERR("Invalid ARI received for start time");
-                    refda_amm_tbr_desc_deinit(objdata);
-                    CACE_FREE(objdata);
-                    valid = false;
-                }
-            }
-        }
-        //  init_enabled
-        if (valid)
-        {
-            cace_ari_bool init_enabled;
-            if (cace_ari_get_bool(ari_init_enabled, &init_enabled))
-            {
-                CACE_LOG_ERR("Invalid ARI received for init enabled");
-                refda_amm_tbr_desc_deinit(objdata);
-                CACE_FREE(objdata);
+                CACE_LOG_ERR("Invalid ARI received for start time");
                 valid = false;
-            }
-            else
-            {
-                objdata->init_enabled = init_enabled;
-            }
-        }
-        // max_exec_count
-        if (valid)
-        {
-            cace_ari_uvast max_exec_count;
-            if (cace_ari_get_uvast(ari_max_count, &max_exec_count))
-            {
-                CACE_LOG_ERR("Invalid ARI received for max exec count");
-                refda_amm_tbr_desc_deinit(objdata);
-                CACE_FREE(objdata);
-                valid = false;
-            }
-            else
-            {
-                objdata->max_exec_count = max_exec_count;
-            }
-        }
-
-        if (valid)
-        {
-            m_string_t *tbr_name = string_list_push_new(agent->odm_names);
-            m_string_set_cstr(*tbr_name, obj_name);
-
-            obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*tbr_name), obj_id), objdata);
-
-            if (obj && obj->app_data.ptr)
-            {
-                refda_amm_tbr_desc_t *desc = obj->app_data.ptr;
-                if (desc->init_enabled)
-                {
-                    refda_exec_tbr_enable(agent, desc);
-                }
             }
         }
     }
+    //  init_enabled
+    if (valid)
+    {
+        cace_ari_bool init_enabled;
+        if (cace_ari_get_bool(ari_init_enabled, &init_enabled))
+        {
+            CACE_LOG_ERR("Invalid ARI received for init enabled");
+            valid = false;
+        }
+        else
+        {
+            objdata->init_enabled = init_enabled;
+        }
+    }
+    // max_exec_count
+    if (valid)
+    {
+        cace_ari_uvast max_exec_count;
+        if (cace_ari_get_uvast(ari_max_count, &max_exec_count))
+        {
+            CACE_LOG_ERR("Invalid ARI received for max exec count");
+            valid = false;
+        }
+        else
+        {
+            objdata->max_exec_count = max_exec_count;
+        }
+    }
+
+    if (valid && objdata->init_enabled)
+    {
+        refda_exec_tbr_enable(agent, objdata);
+    }
+
+    REFDA_AGENT_UNLOCK(agent, );
 
     if (valid)
     {
         refda_ctrl_exec_ctx_set_result_null(ctx);
     }
-
-    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr BODY
