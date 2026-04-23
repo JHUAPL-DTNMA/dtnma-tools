@@ -90,6 +90,7 @@ set(CFILES
     "amm/semtype.c"
     "amm/numeric.c"
     "amm/parameters.c"
+    "amm/idseg_val.c"
     "amm/obj_desc.c"
     "amm/obj_ns.c"
     "amm/obj_org.c"

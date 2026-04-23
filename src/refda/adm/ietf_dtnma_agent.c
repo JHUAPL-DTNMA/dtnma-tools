@@ -941,26 +941,29 @@ void refda_adm_ietf_dtnma_agent_append_derived_ident(cace_ari_tbl_t *table, cons
     }
 }
 
-static bool refda_acl_check_create_object(refda_runctx_t *runctx, cace_amm_obj_ns_t *odm, cace_ari_type_t obj_type,
-                                          cace_ari_int obj_id)
+static bool refda_acl_check_create_object(refda_runctx_t *runctx, const cace_amm_obj_ns_t *odm,
+                                          cace_ari_type_t obj_type, cace_ari_int_id_t obj_id)
 {
     // Permission for hypothetical object
     cace_ari_t fake = CACE_ARI_INIT_UNDEFINED;
-    // FIXME what if no intenum
-    cace_ari_set_objref_path_intid(&fake, odm->org_id.intenum, odm->model_id.intenum, obj_type, obj_id);
+    {
+        cace_ari_ref_t *ref = cace_ari_set_objref(&fake);
+        // ns part
+        cace_ari_idseg_set_from_val(&ref->objpath.org_id, &odm->org_id);
+        cace_ari_idseg_set_from_val(&ref->objpath.model_id, &odm->model_id);
+        // non-ns part
+        cace_ari_objpath_set_intid_opt(&ref->objpath, NULL, NULL, &obj_type, &obj_id);
+    }
 
     // access check, this permission has no parameters
-    refda_amm_ident_base_ptr_set_t acl_match;
-    refda_amm_ident_base_ptr_set_init(acl_match);
     bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &fake,
-                                                     runctx->agent->acl.permissions.obsolete_obj, acl_match);
-    refda_amm_ident_base_ptr_set_clear(acl_match);
-    cace_ari_deinit(&fake);
+                                                     runctx->agent->acl.permissions.create_obj, NULL);
     if (!acl_found)
     {
         CACE_LOG_ERR("Lack of permission for: create-object");
     }
 
+    cace_ari_deinit(&fake);
     return acl_found;
 }
 
@@ -2740,11 +2743,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
         refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
 
         // access check, this permission has no parameters
-        refda_amm_ident_base_ptr_set_t acl_match;
-        refda_amm_ident_base_ptr_set_init(acl_match);
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
-                                                         ctx->runctx->agent->acl.permissions.modify_var, acl_match);
-        refda_amm_ident_base_ptr_set_clear(acl_match);
+                                                         ctx->runctx->agent->acl.permissions.modify_var, NULL);
         if (!acl_found)
         {
             CACE_LOG_ERR("Lack of permission for: modify-var");
@@ -2817,11 +2817,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
         refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
 
         // access check, this permission has no parameters
-        refda_amm_ident_base_ptr_set_t acl_match;
-        refda_amm_ident_base_ptr_set_init(acl_match);
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
-                                                         ctx->runctx->agent->acl.permissions.modify_var, acl_match);
-        refda_amm_ident_base_ptr_set_clear(acl_match);
+                                                         ctx->runctx->agent->acl.permissions.modify_var, NULL);
         if (!acl_found)
         {
             CACE_LOG_ERR("Lack of permission for: modify-var");
@@ -3089,11 +3086,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_ident(refda_ctrl_exec_ctx_t
     else if (deref.obj_type == CACE_ARI_TYPE_IDENT)
     {
         // access check, this permission has no parameters
-        refda_amm_ident_base_ptr_set_t acl_match;
-        refda_amm_ident_base_ptr_set_init(acl_match);
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
-                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
-        refda_amm_ident_base_ptr_set_clear(acl_match);
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
         if (!acl_found)
         {
             CACE_LOG_ERR("Lack of permission for: obsolete-object");
@@ -3352,11 +3346,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
     else if (deref.obj_type == CACE_ARI_TYPE_CONST)
     {
         // access check, this permission has no parameters
-        refda_amm_ident_base_ptr_set_t acl_match;
-        refda_amm_ident_base_ptr_set_init(acl_match);
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
-                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
-        refda_amm_ident_base_ptr_set_clear(acl_match);
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
         if (!acl_found)
         {
             CACE_LOG_ERR("Lack of permission for: obsolete-object");
@@ -3621,11 +3612,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
     else if (deref.obj_type == CACE_ARI_TYPE_VAR)
     {
         // access check, this permission has no parameters
-        refda_amm_ident_base_ptr_set_t acl_match;
-        refda_amm_ident_base_ptr_set_init(acl_match);
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
-                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
-        refda_amm_ident_base_ptr_set_clear(acl_match);
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
         if (!acl_found)
         {
             CACE_LOG_ERR("Lack of permission for: obsolete-object");
@@ -4311,11 +4299,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
         refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
 
         // access check, this permission has no parameters
-        refda_amm_ident_base_ptr_set_t acl_match;
-        refda_amm_ident_base_ptr_set_init(acl_match);
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
-                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
-        refda_amm_ident_base_ptr_set_clear(acl_match);
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
         if (!acl_found)
         {
             CACE_LOG_ERR("Lack of permission for: obsolete-object");
@@ -4339,11 +4324,8 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
         refda_amm_tbr_desc_t *tbr = deref.obj->app_data.ptr;
 
         // access check, this permission has no parameters
-        refda_amm_ident_base_ptr_set_t acl_match;
-        refda_amm_ident_base_ptr_set_init(acl_match);
         bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target,
-                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
-        refda_amm_ident_base_ptr_set_clear(acl_match);
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, NULL);
         if (!acl_found)
         {
             CACE_LOG_ERR("Lack of permission for: obsolete-object");

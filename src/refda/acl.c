@@ -234,12 +234,13 @@ static cace_ari_translate_result_t acl_target_filter_sub_label(cace_ari_t *out, 
 }
 
 bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *target,
-                                 const cace_amm_obj_desc_ptr_set_t perm_objs, refda_amm_ident_base_ptr_set_t match)
+                                 const cace_amm_obj_desc_ptr_set_t perm_objs, refda_amm_ident_base_ptr_set_t *match)
 {
     CHKFALSE(agent);
     CHKFALSE(target);
 
-    bool found = false;
+    bool   is_grp_zero = false;
+    size_t found       = 0;
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         m_string_t buf;
@@ -267,7 +268,7 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
         {
             // Agent group 0 has all-access
             CACE_LOG_DEBUG("matched as Agent group 0, short circuit");
-            found = true;
+            is_grp_zero = true;
             break;
         }
 
@@ -325,8 +326,11 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
                 // filter-in specific desired permission objects
                 if (cace_amm_obj_desc_ptr_set_cget(perm_objs, perm->deref.obj))
                 {
-                    found = true;
-                    refda_amm_ident_base_ptr_set_push(match, perm);
+                    found += 1;
+                    if (match)
+                    {
+                        refda_amm_ident_base_ptr_set_push(*match, perm);
+                    }
                 }
             }
         }
@@ -340,21 +344,27 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
 
     refda_runctx_deinit(&runctx);
 
-    if (cace_log_is_enabled_for(LOG_DEBUG))
+    if (!is_grp_zero && cace_log_is_enabled_for(LOG_DEBUG))
     {
-        m_string_t buf;
-        m_string_init(buf);
-        refda_amm_ident_base_ptr_set_get_str(buf, match, false);
-        CACE_LOG_DEBUG("matched to %zu permissions: %s", refda_amm_ident_base_ptr_set_size(match),
-                       m_string_get_cstr(buf));
-        m_string_clear(buf);
+        if (match)
+        {
+            m_string_t buf;
+            m_string_init(buf);
+            refda_amm_ident_base_ptr_set_get_str(buf, *match, false);
+            CACE_LOG_DEBUG("matched to %zu permissions: %s", found, m_string_get_cstr(buf));
+            m_string_clear(buf);
+        }
+        else
+        {
+            CACE_LOG_DEBUG("matched to %zu permissions", found);
+        }
     }
 
-    return found;
+    return is_grp_zero || (found > 0);
 }
 
 bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *target,
-                                     const cace_amm_obj_desc_t *perm_obj, refda_amm_ident_base_ptr_set_t match)
+                                     const cace_amm_obj_desc_t *perm_obj, refda_amm_ident_base_ptr_set_t *match)
 {
     CHKFALSE(perm_obj);
 

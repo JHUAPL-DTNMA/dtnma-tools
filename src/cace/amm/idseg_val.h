@@ -36,49 +36,23 @@ typedef struct
     cace_ari_int_id_t intenum;
 } cace_amm_idseg_val_t;
 
-static inline void cace_amm_idseg_val_init(cace_amm_idseg_val_t *obj)
-{
-    CHKVOID(obj);
-    m_string_init(obj->name);
-    obj->has_intenum = false;
-    obj->intenum     = 0;
-}
+void cace_amm_idseg_val_init(cace_amm_idseg_val_t *obj);
 
-static inline void cace_amm_idseg_val_deinit(cace_amm_idseg_val_t *obj)
-{
-    CHKVOID(obj);
-    m_string_clear(obj->name);
-    obj->has_intenum = false;
-    obj->intenum     = 0;
-}
+void cace_amm_idseg_val_deinit(cace_amm_idseg_val_t *obj);
 
 /** Copy by-value from another instance.
  *
  * @param[out] obj The object to set state on.
  * @param[in] src The object to copy from.
  */
-static inline void cace_amm_idseg_val_set(cace_amm_idseg_val_t *obj, const cace_amm_idseg_val_t *src)
-{
-    CHKVOID(obj);
-    CHKVOID(src);
-    m_string_set(obj->name, src->name);
-    obj->has_intenum = src->has_intenum;
-    obj->intenum     = src->intenum;
-}
+void cace_amm_idseg_val_set(cace_amm_idseg_val_t *obj, const cace_amm_idseg_val_t *src);
 
 /** Copy by-value from an ID segment reference.
  *
  * @param[out] obj The object to set state on.
  * @param[in] src The object to copy from.
  */
-static inline void cace_amm_idseg_val_set_fromref(cace_amm_idseg_val_t *obj, const cace_amm_idseg_ref_t *src)
-{
-    CHKVOID(obj);
-    CHKVOID(src);
-    m_string_set_cstr(obj->name, src->name);
-    obj->has_intenum = src->has_intenum;
-    obj->intenum     = src->intenum;
-}
+void cace_amm_idseg_val_set_fromref(cace_amm_idseg_val_t *obj, const cace_amm_idseg_ref_t *src);
 
 /** Check if this ID segment matches a specific integer enumeration.
  *
@@ -86,11 +60,15 @@ static inline void cace_amm_idseg_val_set_fromref(cace_amm_idseg_val_t *obj, con
  * @param id The integer value to check.
  * @return True if the object has the given value.
  */
-static inline bool cace_amm_idseg_val_match_int(const cace_amm_idseg_val_t *obj, cace_ari_int_id_t id)
-{
-    CHKRET(obj, false);
-    return (obj->has_intenum && (obj->intenum == id));
-}
+bool cace_amm_idseg_val_match_int(const cace_amm_idseg_val_t *obj, cace_ari_int_id_t id);
+
+/** Set a specific segment from a source definition.
+ * Integer form is preferred here.
+ *
+ * @param[out] obj The segment value to set.
+ * @param[in] src The source to take the value from.
+ */
+void cace_ari_idseg_set_from_val(cace_ari_idseg_t *obj, const cace_amm_idseg_val_t *src);
 
 #ifdef __cplusplus
 } // extern C

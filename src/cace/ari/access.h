@@ -356,7 +356,10 @@ static inline cace_ari_ref_t *cace_ari_set_nsref_path_intid(cace_ari_t *ari, cac
                                                             cace_ari_int_id_t model_id)
 {
     cace_ari_ref_t *ref = cace_ari_set_objref(ari);
-    cace_ari_objpath_set_intid_opt(&(ref->objpath), &org_id, &model_id, NULL, NULL);
+    if (ref)
+    {
+        cace_ari_objpath_set_intid_opt(&(ref->objpath), &org_id, &model_id, NULL, NULL);
+    }
     return ref;
 }
 /// @overload
@@ -365,7 +368,10 @@ static inline cace_ari_ref_t *cace_ari_set_objref_path_intid(cace_ari_t *ari, ca
                                                              cace_ari_int_id_t obj_id)
 {
     cace_ari_ref_t *ref = cace_ari_set_objref(ari);
-    cace_ari_objpath_set_intid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    if (ref)
+    {
+        cace_ari_objpath_set_intid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    }
     return ref;
 }
 /// @overload
@@ -373,7 +379,10 @@ static inline cace_ari_ref_t *cace_ari_set_objref_path_textid(cace_ari_t *ari, c
                                                               cace_ari_type_t type_id, const char *obj_id)
 {
     cace_ari_ref_t *ref = cace_ari_set_objref(ari);
-    cace_ari_objpath_set_textid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    if (ref)
+    {
+        cace_ari_objpath_set_textid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    }
     return ref;
 }
 
