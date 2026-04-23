@@ -5655,7 +5655,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_object_int_range(refda_oper_ev
             if (deref.obj && deref.obj->obj_id.has_intenum)
             {
                 obj_int = deref.obj->obj_id.intenum;
-                valid = true;
+                valid   = true;
             }
             else
             {
