@@ -752,16 +752,23 @@ class TestRefdaSocket(unittest.TestCase):
             ('/ac/(undefined, //ietf/dtnma-agent/oper/is-not-undefined)', ari.TYPED_FALSE),
             ('/ac/(2, //ietf/dtnma-agent/oper/is-undefined)', ari.TYPED_FALSE),
             ('/ac/(2, //ietf/dtnma-agent/oper/is-not-undefined)', ari.TYPED_TRUE),
-            # ns/object comparisons
+            # verify is-same-ns
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/dtnma-agent/),//ietf/dtnma-agent/oper/is-same-ns(//ietf/dtnma-agent/))', ari.TYPED_TRUE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/dtnma-agent/const/hello),//ietf/dtnma-agent/oper/is-same-ns(//ietf/dtnma-agent/))', ari.TYPED_TRUE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/dtnma-agent-acl/),//ietf/dtnma-agent/oper/is-same-ns(//ietf/dtnma-agent/))', ari.TYPED_FALSE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/!missing/),//ietf/dtnma-agent/oper/is-same-ns(//ietf/dtnma-agent/))', ari.TYPED_FALSE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/!missing/),//ietf/dtnma-agent/oper/is-same-ns(//ietf/!missing/))', ari.UNDEFINED),  # no such instance
+            # verify match-object-type
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-type(/aritype/typedef))', ari.TYPED_TRUE),
-            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-type(/aritype/const))', ari.TYPED_FALSE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-type(-12))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-type(/aritype/const))', ari.TYPED_FALSE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-type(/aritype/uint))', ari.UNDEFINED),
+            # verify match-object-int-range
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/1),//ietf/dtnma-agent/oper/match-object-int-range(1,10))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/match-object-int-range(1,10))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/11),//ietf/dtnma-agent/oper/match-object-int-range(1,10))', ari.TYPED_FALSE),
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/counter32),//ietf/dtnma-agent/oper/match-object-int-range(1,10))', ari.TYPED_FALSE),
+            # verify is-same-object
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/integer),//ietf/dtnma-agent/oper/is-same-object(//ietf/amm-base/typedef/integer))', ari.TYPED_TRUE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/amm-base/typedef/numeric),//ietf/dtnma-agent/oper/is-same-object(//ietf/amm-base/typedef/integer))', ari.TYPED_FALSE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/!missing/typedef/obj),//ietf/dtnma-agent/oper/is-same-object(//ietf/amm-base/typedef/integer))', ari.TYPED_FALSE),

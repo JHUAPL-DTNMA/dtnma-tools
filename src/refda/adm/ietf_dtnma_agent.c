@@ -5427,6 +5427,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_model_int_range(refda_oper_eva
             REFDA_AGENT_LOCK(agent, );
             const cace_amm_obj_ns_t *ns = cace_amm_obj_store_find_ns(&agent->objs, value);
             REFDA_AGENT_UNLOCK(agent, );
+
             if (ns && ns->model_id.has_intenum)
             {
                 model_int = ns->model_id.intenum;
@@ -5580,6 +5581,103 @@ static void refda_adm_ietf_dtnma_agent_oper_match_object_type(refda_oper_eval_ct
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_object_type BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: match-object-int-range
+ * Description:
+ *   Predicate to determine if a de-referenced object reference value has
+ *   an obj-id which is within a specific integer range.
+ *
+ * Parameters list:
+ *   - Index 0, name "min-value", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *   - Index 1, name "max-value", type use of ari://ietf/amm-base/TYPEDEF/id-int
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari:/ARITYPE/OBJECT
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_match_object_int_range(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_object_int_range BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid operand, unable to continue");
+        return;
+    }
+    const cace_ari_t *min_val = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *max_val = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *value   = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    cace_ari_int min_int, max_int;
+    if (cace_ari_get_int(min_val, &min_int) || cace_ari_get_int(max_val, &max_int))
+    {
+        CACE_LOG_ERR("non-int parameter");
+        return;
+    }
+
+    const cace_ari_objpath_t *path = cace_ari_cget_ref_objpath(value);
+    if (!path)
+    {
+        CACE_LOG_ERR("no path available");
+        return;
+    }
+
+    cace_ari_int_id_t obj_int;
+    switch (path->obj_id.form)
+    {
+        case CACE_ARI_IDSEG_INT:
+            obj_int = path->obj_id.as_int;
+            break;
+        case CACE_ARI_IDSEG_TEXT:
+        {
+            cace_amm_lookup_t deref;
+            cace_amm_lookup_init(&deref);
+            {
+                refda_agent_t *agent = ctx->evalctx->runctx->agent;
+                REFDA_AGENT_LOCK(agent, );
+                cace_amm_lookup_deref(&deref, &(agent->objs), value);
+                REFDA_AGENT_UNLOCK(agent, );
+            }
+
+            bool valid;
+            if (deref.obj && deref.obj->obj_id.has_intenum)
+            {
+                obj_int = deref.obj->obj_id.intenum;
+                valid = true;
+            }
+            else
+            {
+                valid = false;
+            }
+            cace_amm_lookup_deinit(&deref);
+            if (!valid)
+            {
+                return;
+            }
+            break;
+        }
+        default:
+            return;
+    }
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, (min_int <= obj_int) && (obj_int <= max_int));
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_object_int_range BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -9366,6 +9464,56 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                     // use of ari:/ARITYPE/ARITYPE
                     cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_ARITYPE);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./OPER/match-object-int-range
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/OBJECT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJECT);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_match_object_int_range;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("match-object-int-range",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_OBJECT_INT_RANGE),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "min-value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "max-value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/id-int
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 26);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
