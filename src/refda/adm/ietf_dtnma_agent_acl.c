@@ -88,7 +88,7 @@ static void refda_acl_post_add_access(refda_acl_t *acl, refda_acl_access_t *acce
  * Produced type: TBLT with 6 columns:
  *   - Index 0, name "access-id", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
  *   - Index 1, name "group-ids", type ulist of use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
- *   - Index 2, name "objects", type ulist of use of ari:/ARITYPE/OBJPAT
+ *   - Index 2, name "objects", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/access-target-filter
  *   - Index 3, name "permissions", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/permission-list
  *   - Index 4, name "added-at", type use of ari://ietf/amm-base/TYPEDEF/timestamp
  *   - Index 5, name "updated-at", type use of ari://ietf/amm-base/TYPEDEF/timestamp
@@ -130,7 +130,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
                 cace_ari_set_uint(cace_ari_list_push_back_new(grps_ac->items), *grpid);
             }
         }
-        cace_ari_set_copy(cace_ari_array_get(row, 2), &acc->objects);
+        cace_ari_set_copy(cace_ari_array_get(row, 2), &acc->objects_filter);
         {
             cace_ari_ac_t *perms_ac = cace_ari_set_ac(cace_ari_array_get(row, 3), NULL);
 
@@ -259,7 +259,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_group_list(refda_edd_prod_ctx_t *
  * Parameters list:
  *   - Index 0, name "access-id", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
  *   - Index 1, name "group-ids", type ulist of use of ari://ietf/dtnma-agent-acl/TYPEDEF/entry-id
- *   - Index 2, name "objects", type ulist of use of ari:/ARITYPE/OBJPAT
+ *   - Index 2, name "objects", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/access-target-filter
  *   - Index 3, name "permissions", type use of ari://ietf/dtnma-agent-acl/TYPEDEF/permission-list
  *
  * Result: none
@@ -349,8 +349,8 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_ensure_access(refda_ctrl_exec_ct
         refda_acl_id_tree_push(found->groups, gid);
     }
 
-    // record and validate the object patterns for this access item
-    cace_amm_objpat_set_from_value(&found->objects, p_objs);
+    // exact copy
+    cace_ari_set_copy(&found->objects_filter, p_objs);
 
     // record and validate the permissions for this access item
     refda_amm_ident_base_list_reset(found->permissions);
@@ -766,7 +766,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/create-odm
+        { // For ./IDENT/ensure-odm
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             objdata->abstract = false;
@@ -779,11 +779,29 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
 
             obj = refda_register_ident(
                 adm,
-                cace_amm_idseg_ref_withenum("create-odm", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_CREATE_ODM),
+                cace_amm_idseg_ref_withenum("ensure-odm", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_ENSURE_ODM),
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/delete-odm
+        { // For ./IDENT/obsolete-odm
+            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
+            refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
+            // IDENT bases:
+            {
+                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
+                // reference to ari://ietf/dtnma-agent-acl/IDENT/permission
+                cace_ari_set_objref_path_intid(&(base->name), 1, 2, CACE_ARI_TYPE_IDENT, 0);
+            }
+
+            obj =
+                refda_register_ident(adm,
+                                     cace_amm_idseg_ref_withenum(
+                                         "obsolete-odm", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_OBSOLETE_ODM),
+                                     objdata);
+            // no parameters
+        }
+        { // For ./IDENT/ensure-object
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             objdata->abstract = false;
@@ -796,11 +814,12 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
 
             obj = refda_register_ident(
                 adm,
-                cace_amm_idseg_ref_withenum("delete-odm", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_DELETE_ODM),
+                cace_amm_idseg_ref_withenum("ensure-object",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_ENSURE_OBJECT),
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/create-object
+        { // For ./IDENT/obsolete-object
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             objdata->abstract = false;
@@ -813,26 +832,8 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
 
             obj = refda_register_ident(
                 adm,
-                cace_amm_idseg_ref_withenum("create-object",
-                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_CREATE_OBJECT),
-                objdata);
-            // no parameters
-        }
-        { // For ./IDENT/delete-object
-            refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
-            refda_amm_ident_desc_init(objdata);
-            objdata->abstract = false;
-            // IDENT bases:
-            {
-                refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // reference to ari://ietf/dtnma-agent-acl/IDENT/permission
-                cace_ari_set_objref_path_intid(&(base->name), 1, 2, CACE_ARI_TYPE_IDENT, 0);
-            }
-
-            obj = refda_register_ident(
-                adm,
-                cace_amm_idseg_ref_withenum("delete-object",
-                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_DELETE_OBJECT),
+                cace_amm_idseg_ref_withenum("obsolete-object",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_OBSOLETE_OBJECT),
                 objdata);
             // no parameters
         }
@@ -928,6 +929,24 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 objdata);
             // no parameters possible
         }
+        { // For ./TYPEDEF/access-target-filter
+            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named semantic type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/EXPR
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 18);
+                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+            }
+
+            obj = refda_register_typedef(
+                adm,
+                cace_amm_idseg_ref_withenum("access-target-filter",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_TYPEDEF_ACCESS_TARGET_FILTER),
+                objdata);
+            // no parameters possible
+        }
         { // For ./TYPEDEF/group-member-filter
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
@@ -1008,14 +1027,10 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                     cace_amm_named_type_t *col = cace_amm_named_type_array_get(semtype->columns, 2);
                     m_string_set_cstr(col->name, "objects");
                     {
-                        // uniform list
-                        cace_amm_semtype_ulist_t *semtype_d1 = cace_amm_type_set_ulist(&(col->typeobj));
-                        {
-                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                            // use of ari:/ARITYPE/OBJPAT
-                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
-                            cace_amm_type_set_use_ref_move(&(semtype_d1->item_type), &typeref);
-                        }
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/access-target-filter
+                        cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 5);
+                        cace_amm_type_set_use_ref_move(&(col->typeobj), &typeref);
                     }
                 }
                 {
@@ -1191,14 +1206,10 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "objects");
                 {
-                    // uniform list
-                    cace_amm_semtype_ulist_t *semtype = cace_amm_type_set_ulist(&(fparam->typeobj));
-                    {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // use of ari:/ARITYPE/OBJPAT
-                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJPAT);
-                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
-                    }
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/dtnma-agent-acl/TYPEDEF/access-target-filter
+                    cace_ari_set_objref_path_intid(&typeref, 1, 2, CACE_ARI_TYPE_TYPEDEF, 5);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
             }
             {

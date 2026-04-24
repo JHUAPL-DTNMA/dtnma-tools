@@ -98,10 +98,10 @@ static int refda_binding_semtype_use(const refda_binding_ctx_t *ctx, cace_amm_se
     }
     else
     {
-        const int64_t *aritype = cace_ari_get_aritype_int(&(semtype->name));
-        if (aritype)
+        cace_ari_type_t aritype;
+        if (!cace_ari_get_aritype_int(&(semtype->name), &aritype))
         {
-            semtype->base = cace_amm_type_get_builtin((cace_ari_type_t)*aritype);
+            semtype->base = cace_amm_type_get_builtin((cace_ari_type_t)aritype);
         }
         else
         {

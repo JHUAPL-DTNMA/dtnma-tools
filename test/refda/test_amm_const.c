@@ -43,7 +43,6 @@ void suiteSetUp(void)
     refda_agent_init(&agent);
     test_util_agent_crit_adms(&agent);
     suite_adms_init(&agent);
-    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 }
 
 int suiteTearDown(int failures)
@@ -127,7 +126,7 @@ static void check_produce(const char *refhex, const char *outhex, int expect_res
     TEST_ASSERT_EQUAL_INT(0, test_util_runctx_init(&runctx, &agent));
 
     refda_valprod_ctx_t ctx;
-    refda_valprod_ctx_init(&ctx, &runctx, NULL, &deref);
+    refda_valprod_ctx_init(&ctx, &runctx, &inref, &deref);
 
     res = refda_valprod_run(&ctx);
     TEST_ASSERT_EQUAL_INT_MESSAGE(expect_res, res, "refda_valprod_run() mismatch");

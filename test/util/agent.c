@@ -41,44 +41,6 @@ void test_util_agent_crit_adms(refda_agent_t *agent)
     assert(0 == refda_adm_ietf_alarms_init(agent));
 }
 
-void test_util_agent_permission(refda_agent_t *agent, cace_ari_int_id_t obj_id)
-{
-    atomic_fetch_add(&agent->acl.generation, 1);
-
-    refda_acl_access_t *access = refda_acl_access_list_push_back_new(agent->acl.access);
-    cace_get_system_time(&access->added_at);
-    access->id = refda_acl_access_list_size(agent->acl.access);
-    // one group: 0
-    refda_acl_id_tree_push(access->groups, 0);
-
-    {
-        cace_ari_ac_t *val_ac = cace_ari_set_ac(&access->objects, NULL);
-        // single pattern
-        cace_ari_objpat_t *pat = cace_ari_set_objpat(cace_ari_list_push_back_new(val_ac->items));
-        // any-object matching
-        cace_ari_objpat_part_set_special(pat->org_pat, true);
-        cace_ari_objpat_part_set_special(pat->model_pat, true);
-        cace_ari_objpat_part_set_special(pat->type_pat, true);
-        cace_ari_objpat_part_set_special(pat->obj_pat, true);
-    }
-
-    {
-        cace_ari_t ref = CACE_ARI_INIT_UNDEFINED;
-        cace_ari_set_objref_path_intid(&ref, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM,
-                                       CACE_ARI_TYPE_IDENT, obj_id);
-
-        refda_amm_ident_base_t *perm = refda_amm_ident_base_list_push_new(access->permissions);
-        if (refda_amm_ident_base_populate(perm, &ref, &agent->objs))
-        {
-            static_assert(true, "no permission found");
-        }
-        cace_ari_deinit(&ref);
-    }
-
-    refda_acl_access_ptr_set_t *set = refda_acl_access_by_group_safe_get(agent->acl.access_by_group, 0);
-    refda_acl_access_ptr_set_push(*set, access);
-}
-
 void test_util_group_add(refda_agent_t *agent, refda_acl_id_t group_id, const char *uri_pattern)
 {
     atomic_fetch_add(&agent->acl.generation, 1);
@@ -125,14 +87,9 @@ void test_util_group_permission(refda_agent_t *agent, refda_acl_id_t group_id, c
     refda_acl_id_tree_push(access->groups, group_id);
 
     {
-        cace_ari_ac_t *val_ac = cace_ari_set_ac(&access->objects, NULL);
-        // single pattern
-        cace_ari_objpat_t *pat = cace_ari_set_objpat(cace_ari_list_push_back_new(val_ac->items));
-        // any-object matching
-        cace_ari_objpat_part_set_special(pat->org_pat, true);
-        cace_ari_objpat_part_set_special(pat->model_pat, true);
-        cace_ari_objpat_part_set_special(pat->type_pat, true);
-        cace_ari_objpat_part_set_special(pat->obj_pat, true);
+        cace_ari_ac_t *filter_ac = cace_ari_set_ac(&access->objects_filter, NULL);
+        // match all
+        cace_ari_set_bool(cace_ari_list_push_back_new(filter_ac->items), true);
     }
 
     {

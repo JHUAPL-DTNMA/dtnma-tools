@@ -127,11 +127,13 @@ int cace_ari_get_td(const cace_ari_t *ari, struct timespec *out);
 bool cace_ari_is_lit_typed(const cace_ari_t *ari, cace_ari_type_t typ);
 
 /** Require an ARITYPE literal value.
+ * This will convert known text primitives to int enum values.
  *
  * @param[in] ari The ARI to read.
- * @return Pointer to the contained type value, if present, otherwise NULL.
+ * @param[out] out The value to write into if successful.
+ * @return Zero if successful.
  */
-const int64_t *cace_ari_get_aritype_int(const cace_ari_t *ari);
+int cace_ari_get_aritype_int(const cace_ari_t *ari, cace_ari_type_t *out);
 
 /** Set an ARI as an untyped literal value.
  *
@@ -325,6 +327,22 @@ struct cace_ari_objpat_s *cace_ari_cget_objpat(const cace_ari_t *ari);
  */
 struct cace_ari_objpat_s *cace_ari_set_objpat(cace_ari_t *ari);
 
+/** Determine if a value is a pure namespace reference.
+ *
+ * @param[in] ari The ARI to read.
+ * @return True if it would match the "namespace" built-in type.
+ * @sa cace_ari_cget_ref()
+ */
+bool cace_ari_is_namespace(const cace_ari_t *ari);
+
+/** Determine if a value is a full object reference.
+ *
+ * @param[in] ari The ARI to read.
+ * @return True if it would match the "object" built-in type.
+ * @sa cace_ari_cget_ref()
+ */
+bool cace_ari_is_object(const cace_ari_t *ari);
+
 /** Require a reference value and extract a pointer to its struct.
  *
  * @param[in] ari The ARI to read.
@@ -340,7 +358,10 @@ static inline cace_ari_ref_t *cace_ari_set_nsref_path_intid(cace_ari_t *ari, cac
                                                             cace_ari_int_id_t model_id)
 {
     cace_ari_ref_t *ref = cace_ari_set_objref(ari);
-    cace_ari_objpath_set_intid_opt(&(ref->objpath), &org_id, &model_id, NULL, NULL);
+    if (ref)
+    {
+        cace_ari_objpath_set_intid_opt(&(ref->objpath), &org_id, &model_id, NULL, NULL);
+    }
     return ref;
 }
 /// @overload
@@ -349,7 +370,10 @@ static inline cace_ari_ref_t *cace_ari_set_objref_path_intid(cace_ari_t *ari, ca
                                                              cace_ari_int_id_t obj_id)
 {
     cace_ari_ref_t *ref = cace_ari_set_objref(ari);
-    cace_ari_objpath_set_intid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    if (ref)
+    {
+        cace_ari_objpath_set_intid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    }
     return ref;
 }
 /// @overload
@@ -357,7 +381,10 @@ static inline cace_ari_ref_t *cace_ari_set_objref_path_textid(cace_ari_t *ari, c
                                                               cace_ari_type_t type_id, const char *obj_id)
 {
     cace_ari_ref_t *ref = cace_ari_set_objref(ari);
-    cace_ari_objpath_set_textid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    if (ref)
+    {
+        cace_ari_objpath_set_textid(&(ref->objpath), org_id, model_id, type_id, obj_id);
+    }
     return ref;
 }
 

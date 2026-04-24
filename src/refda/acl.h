@@ -87,8 +87,8 @@ typedef struct
     refda_acl_id_t id;
     /// Groups to which this entry applies
     refda_acl_id_tree_t groups;
-    /// Object patterns to which this entry applies
-    cace_ari_t objects;
+    /// Filter for objects to which this entry applies
+    cace_ari_t objects_filter;
     /// Permissions granted to these groups and objects
     refda_amm_ident_base_list_t permissions;
 
@@ -122,6 +122,44 @@ M_BPTREE_DEF2(refda_acl_access_by_group, 4, refda_acl_id_t, M_BASIC_OPLIST, refd
 // GCOV_EXCL_STOP
 /// @endcond
 
+/** Objects from the ACL ADM.
+ */
+typedef struct
+{
+    /** Base IDENT for <ari://ietf/dtnma-agent-acl/ident/permission>.
+     */
+    cace_amm_obj_desc_t *base;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/execute>.
+     */
+    cace_amm_obj_desc_t *execute;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/produce>.
+     */
+    cace_amm_obj_desc_t *produce;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/modify-var>.
+     */
+    cace_amm_obj_desc_t *modify_var;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/ensure-odm>.
+     */
+    cace_amm_obj_desc_t *ensure_odm;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/obsolete-odm>.
+     */
+    cace_amm_obj_desc_t *obsolete_odm;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/ensure-object>.
+     */
+    cace_amm_obj_desc_t *ensure_obj;
+
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/obsolete-object>.
+     */
+    cace_amm_obj_desc_t *obsolete_obj;
+
+} refda_acl_permissions_t;
+
 /** Storage of the agent ACL and its derived caches.
  */
 typedef struct
@@ -134,13 +172,10 @@ typedef struct
      */
     atomic_size_t generation;
 
-    /** Base IDENT for permissions.
+    /** Permission objects looked up from the ACL ADM.
+     *
      */
-    cace_amm_obj_desc_t *perm_base;
-
-    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/produce>.
-     */
-    cace_amm_obj_desc_t *perm_produce;
+    refda_acl_permissions_t permissions;
 
     /** All groups configured in the Agent.
      */
@@ -178,24 +213,28 @@ typedef struct refda_agent_s refda_agent_t;
 int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, refda_acl_id_tree_t groups);
 
 /** Search in an ACL for specific access.
+ * Group 0 is granted special all-access without referring to specific permissions.
  *
  * @param[in] agent The agent state for reference lookup.
  * @param[in] groups The set of groups to filter-in.
- * @param[in] acc_obj The object being accessed.
+ * @param[in] tgt_ref The original target object/namespace reference.
+ * @param[in] tgt_deref The optional target object/namespace being accessed, if valid.
  * @param[in] perm_objs The set of permission objects to filter-in.
- * @param[out] match The matching permissions.
- * @return True if permission is present and the @c match is non-empty.
+ * @param[out] match The matching permissions, or null pointer if they
+ * are not needed.
+ * @return True if either group 0 is present, or if
+ * the permission is present and the @c match is non-empty.
  */
-bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-                                 const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
-                                 refda_amm_ident_base_ptr_set_t match);
+bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *tgt_ref,
+                                 const cace_amm_lookup_t *tgt_deref, const cace_amm_obj_desc_ptr_set_t perm_objs,
+                                 refda_amm_ident_base_ptr_set_t *match);
 /** @overload
  * This searches for a single permission @c perm_obj which avoids needing
  * to construct a permission set.
  */
-bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups,
-                                     const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
-                                     refda_amm_ident_base_ptr_set_t match);
+bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *tgt_ref,
+                                     const cace_amm_lookup_t *tgt_deref, const cace_amm_obj_desc_t *perm_obj,
+                                     refda_amm_ident_base_ptr_set_t *match);
 
 #ifdef __cplusplus
 } // extern C

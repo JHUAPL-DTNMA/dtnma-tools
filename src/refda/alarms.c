@@ -458,48 +458,20 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
     {
         refda_alarms_entry_t *entry = refda_alarms_entry_ptr_ref(*refda_alarms_entry_list_cref(entry_it));
 
-        // Substitute entry values for LABEL items within filter EXPR
-        cace_ari_t expr = CACE_ARI_INIT_UNDEFINED;
-        {
-            int res = cace_ari_translate(&expr, filter, &translator, entry);
-            if (res)
-            {
-                CACE_LOG_ERR("Unable to translate filter, error %d", res);
-                cace_ari_deinit(&expr); // No longer needed at this point
-                refda_alarms_entry_list_next(entry_it);
-                continue;
-            }
-        }
-
-        // Evaluate the filter EXPR
-        refda_eval_ctx_t evalctx;
-        refda_eval_ctx_init(&evalctx, runctx);
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-
-        REFDA_AGENT_LOCK(runctx->agent, 0);
-        int res = refda_eval_expand_expr(&evalctx, &expr);
-        REFDA_AGENT_UNLOCK(runctx->agent, 0);
-        cace_ari_deinit(&expr); // No longer needed at this point
+        // Substitute entry fields for LABEL items within filter EXPR
+        int res = refda_eval_filter(runctx, &eval_result, filter, &translator, entry);
         if (res)
         {
-            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
             cace_ari_deinit(&eval_result);
             refda_alarms_entry_list_next(entry_it);
             continue;
         }
 
-        res = refda_eval_reduce(&evalctx, &eval_result);
-        refda_eval_ctx_deinit(&evalctx);
-        if (res)
-        {
-            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
-            cace_ari_deinit(&eval_result);
-            refda_alarms_entry_list_next(entry_it);
-            continue;
-        }
-
-        // True result indicates entry is purged
-        if (cace_amm_ari_is_truthy(&eval_result))
+        // True result indicates entry is matched
+        bool is_match = cace_amm_ari_is_truthy(&eval_result);
+        cace_ari_deinit(&eval_result);
+        if (is_match)
         {
             refda_alarms_purge_entry(alarms, entry_it, entry);
             affected += 1;
@@ -540,31 +512,19 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
     {
         refda_alarms_entry_t *entry = refda_alarms_entry_ptr_ref(*refda_alarms_entry_list_cref(entry_it));
 
-        // Substitute entry values for LABEL items within filter EXPR
-        cace_ari_t expr = CACE_ARI_INIT_UNDEFINED;
-        {
-            int res = cace_ari_translate(&expr, filter, &translator, entry);
-            if (res)
-            {
-                CACE_LOG_ERR("Unable to translate filter, error %d", res);
-                cace_ari_deinit(&expr); // No longer needed at this point
-                continue;
-            }
-        }
-
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        // Evaluate the filter EXPR
-        int res = refda_eval_target(runctx, &eval_result, &expr);
-        cace_ari_deinit(&expr); // No longer needed at this point
+        // Substitute entry fields for LABEL items within filter EXPR
+        int res = refda_eval_filter(runctx, &eval_result, filter, &translator, entry);
         if (res)
         {
-            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
             cace_ari_deinit(&eval_result);
             continue;
         }
 
-        // True result indicates entry is compressed
-        if (cace_amm_ari_is_truthy(&eval_result))
+        // True result indicates entry is matched
+        bool is_match = cace_amm_ari_is_truthy(&eval_result);
+        cace_ari_deinit(&eval_result);
+        if (is_match)
         {
             size_t hist_size = refda_alarms_history_list_size(entry->history);
             if (hist_size > 1)
@@ -597,7 +557,6 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
         return 0;
     }
 
-    int    res;
     size_t affected = 0;
 
     cace_ari_translator_t translator = { .map_ari = alarm_list_filter_sub_label };
@@ -608,31 +567,19 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
     {
         refda_alarms_entry_t *entry = refda_alarms_entry_ptr_ref(*refda_alarms_entry_list_cref(entry_it));
 
-        // Substitute entry values for LABEL items within filter EXPR
-        cace_ari_t expr = CACE_ARI_INIT_UNDEFINED;
-        {
-            res = cace_ari_translate(&expr, filter, &translator, entry);
-            if (res)
-            {
-                CACE_LOG_ERR("Unable to translate filter, error %d", res);
-                cace_ari_deinit(&expr); // No longer needed at this point
-                continue;
-            }
-        }
-
         cace_ari_t eval_result = CACE_ARI_INIT_UNDEFINED;
-        // Evaluate the filter EXPR
-        res = refda_eval_target(runctx, &eval_result, &expr);
-        cace_ari_deinit(&expr); // No longer needed at this point
+        // Substitute entry fields for LABEL items within filter EXPR
+        int res = refda_eval_filter(runctx, &eval_result, filter, &translator, entry);
         if (res)
         {
-            CACE_LOG_ERR("failed to evaluate condition, error %d", res);
             cace_ari_deinit(&eval_result);
             continue;
         }
 
-        // True result indicates entry is commpressed
-        if (cace_amm_ari_is_truthy(&eval_result))
+        // True result indicates entry is matched
+        bool is_match = cace_amm_ari_is_truthy(&eval_result);
+        cace_ari_deinit(&eval_result);
+        if (is_match)
         {
             // special logic when setting to shelved
             if (state == REFDA_ALARMS_MGR_STATE_SHELVED)

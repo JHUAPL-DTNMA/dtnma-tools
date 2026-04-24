@@ -57,14 +57,14 @@ int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target,
     int res = refda_exec_proc_expand(seq, &seq_ix, target);
     if (res)
     {
-        // clean up useless sequence
-        refda_exec_seq_list_pop_back(NULL, agent->exec_state);
-
         if (seq->status)
         {
             CACE_LOG_ERR("Agent-directed sequence failed to expand");
             refda_exec_status_post(seq->status, true);
         }
+
+        // clean up useless sequence
+        refda_exec_seq_list_pop_back(NULL, agent->exec_state);
     }
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
