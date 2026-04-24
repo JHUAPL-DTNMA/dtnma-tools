@@ -1353,9 +1353,9 @@ TEST_CASE("ari:/BOOL/fae")
 TEST_CASE("ari:/BOOL/3")
 TEST_CASE("ari:/TEXTSTR/1")
 TEST_CASE("ari:/BYTESTR/1")
+TEST_CASE("ari:/LABEL/+1")
 TEST_CASE("ari:/LABEL/001234")
 TEST_CASE("ari:/LABEL/01234")
-TEST_CASE("ari:/LABEL/-1")
 TEST_CASE("ari:/AC/")
 TEST_CASE("ari:/AC/(a,")
 TEST_CASE("ari:/AC/(,,,)")
@@ -1395,7 +1395,7 @@ void test_ari_text_decode_failure(const char *intext)
     m_string_clear(inbuf);
     cace_ari_deinit(&ari);
 
-    TEST_ASSERT_NOT_EQUAL_INT(0, ret);
+    TEST_ASSERT_NOT_EQUAL_INT_MESSAGE(0, ret, "cace_ari_text_decode() succeeded");
     TEST_ASSERT_NOT_NULL_MESSAGE(errm, "decode failure must provide a message");
     TEST_MESSAGE(errm);
 }

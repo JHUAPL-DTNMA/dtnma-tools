@@ -65,32 +65,20 @@ DECDIG [0-9]
     return T_BOOL;
 }
 
-<LT_LABEL,LT_ARITYPE>(0|[1-9]{DECDIG}*) {
-    uint64_t val;
-    int ret = cace_ari_uint64_decode(&val, yytext, yyleng);
+<LT_LABEL,LT_ARITYPE>[-]?(0|[1-9]{DECDIG}*) {
+    int64_t val;
+    int ret = cace_ari_int64_decode(&val, yytext, yyleng);
     if (ret)
     {
         cace_ari_text_val_error(yyscanner, yyextra, "number too large to parse");
         return YYerror;
     }
 
-    // prefer signed integer use
-    if (val <= INT64_MAX)
-    {
-        yylval->lit = (cace_ari_lit_t){
-            .prim_type = CACE_ARI_PRIM_INT64,
-            .value.as_int64 = (int64_t)val,
-        };
-        return T_INT;
-    }
-    else
-    {
-        yylval->lit = (cace_ari_lit_t){
-            .prim_type = CACE_ARI_PRIM_UINT64,
-            .value.as_uint64 = val,
-        };
-        return T_UINT;
-    }
+    yylval->lit = (cace_ari_lit_t){
+        .prim_type = CACE_ARI_PRIM_INT64,
+        .value.as_int64 = (int64_t)val,
+    };
+    return T_INT;
 }
 <PRIMITIVE,LT_ANYINT>[+-]?(0[bB][01]+|0[xX]{HEXDIG}+|{DECDIG}+) {
     // infer the base from the text
