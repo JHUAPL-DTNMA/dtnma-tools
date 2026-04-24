@@ -45,6 +45,8 @@ jobs:
     steps:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
+        env:
+          PIP_BREAK_SYSTEM_PACKAGES: 1
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -53,7 +55,7 @@ jobs:
               ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
               ${{matrix.deps=='full' && 'flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev' || ''}} libpcre2-dev \
               valgrind xmlstarlet python3-pip
-          sudo pip3 install ${{ matrix.os == 'ubuntu-22.04' && '' || '--break-system-packages' }} gcovr
+          sudo pip3 install gcovr
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
