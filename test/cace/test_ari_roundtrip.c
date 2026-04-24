@@ -68,7 +68,7 @@ TEST_CASE("ari:/BOOL/false")
 TEST_CASE("ari:/BOOL/true")
 TEST_CASE("ari:/INT/10")
 TEST_CASE("ari:/INT/-10")
-TEST_CASE("ari:/INT/-2147483648")  // domain minimum
+TEST_CASE("ari:/INT/-2147483648") // domain minimum
 TEST_CASE("ari:/INT/2147483647")  // domain maximum
 TEST_CASE("ari:/REAL32/10")
 TEST_CASE("ari:/REAL32/10.1")
