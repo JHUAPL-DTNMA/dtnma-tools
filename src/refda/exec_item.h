@@ -60,7 +60,8 @@ typedef enum
 typedef struct
 {
     /** Weak reference to a parent execution sequence.
-     * This will never be null.
+     * This will be non-null while the item is valid, and will be set
+     * null if the sequence is terminated (e.g. because of failure).
      */
     refda_exec_seq_t *seq;
 
@@ -129,12 +130,12 @@ void refda_exec_item_deinit(refda_exec_item_t *obj);
 int refda_exec_item_finish_result(refda_exec_item_t *item);
 
 /** @struct refda_exec_item_ptr
- * A shared pointer to a ::refda_exec_item_t instance guarded by external
- * thread mutex.
+ * A reference counted pointer to a ::refda_exec_item_t instance guarded
+ * by internal mutex.
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_SHARED_WEAK_PTR_DEF(refda_exec_item_ptr, refda_exec_item_t)
+M_SHARED_PTR_DEF(refda_exec_item_ptr, refda_exec_item_t)
 // GCOV_EXCL_STOP
 /// @endcond
 

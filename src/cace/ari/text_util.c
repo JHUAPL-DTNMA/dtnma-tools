@@ -25,9 +25,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-/// Type for timespec::tv_nsec
-typedef unsigned long subsec_t;
-
 /** Get the size of text ignoring a terminating null.
  */
 static size_t text_real_len(const cace_data_t *data)
@@ -421,7 +418,7 @@ int cace_ari_float64_encode(m_string_t out, double value, char form)
     return 0;
 }
 
-static int subsec_decode(subsec_t *subsec, const char **curs, const char *const end)
+static int subsec_decode(cace_ari_subsec_t *subsec, const char **curs, const char *const end)
 {
     if (*curs == end)
     {
@@ -458,7 +455,7 @@ static int subsec_decode(subsec_t *subsec, const char **curs, const char *const 
     return 0;
 }
 
-int cace_subsec_encode(m_string_t out, subsec_t subsec)
+int cace_subsec_encode(m_string_t out, cace_ari_subsec_t subsec)
 {
     if (!subsec)
     {
@@ -504,7 +501,7 @@ int cace_decfrac_decode(struct timespec *out, const cace_data_t *in)
     curs = subend;
 
     // extract subseconds as nanoseconds
-    subsec_t subsec = 0;
+    cace_ari_subsec_t subsec = 0;
     if (subsec_decode(&subsec, &curs, end))
     {
         return 2;
@@ -1152,11 +1149,13 @@ int cace_utctime_encode(m_string_t out, const struct timespec *in, bool usesep)
     CHKERR1(out);
     CHKERR1(in);
 
+    time_t            fullsec = cace_ari_dtn_epoch + in->tv_sec;
+    cace_ari_subsec_t subsec  = in->tv_nsec;
+
     struct tm parts = { 0 };
     {
-        const time_t fullsecs = cace_ari_dtn_epoch + in->tv_sec;
         // do not apply local zone offset
-        struct tm *got = gmtime_r(&fullsecs, &parts);
+        struct tm *got = gmtime_r(&fullsec, &parts);
         if (!got)
         {
             return 2;
@@ -1178,7 +1177,7 @@ int cace_utctime_encode(m_string_t out, const struct timespec *in, bool usesep)
         m_string_cat_cstr(out, fullsec);
     }
 
-    cace_subsec_encode(out, in->tv_nsec);
+    cace_subsec_encode(out, subsec);
 
     m_string_push_back(out, 'Z');
     return 0;
@@ -1200,19 +1199,19 @@ int cace_utctime_decode(struct timespec *out, const cace_data_t *in)
     curs = m_string_get_cstr(unsep);
     end  = curs + m_string_size(unsep);
 
+    time_t fullsec = 0;
     // extract full seconds
-    time_t fullsec;
-    int    retval = 0;
+    int retval = 0;
     {
         struct tm   parts  = { 0 };
         const char *subend = strptime(curs, "%Y%m%dT%H%M%S", &parts);
         if (subend == NULL)
         {
             retval = 2;
-            goto utctime_decode_cleanup;
         }
         curs = subend;
 
+        if (!retval)
         {
             // work-around lack of portable timegm()
             const char *oldtz = getenv("TZ");
@@ -1226,28 +1225,21 @@ int cace_utctime_decode(struct timespec *out, const cace_data_t *in)
             {
                 unsetenv("TZ");
             }
+            fullsec -= cace_ari_dtn_epoch;
         }
-        if (fullsec < 0)
-        {
-            retval = 2;
-            goto utctime_decode_cleanup;
-        }
-        fullsec -= cace_ari_dtn_epoch;
     }
 
     // extract subseconds as nanoseconds
-    subsec_t subsec = 0;
-    if (subsec_decode(&subsec, &curs, end - 1))
+    cace_ari_subsec_t subsec = 0;
+    if (!retval && subsec_decode(&subsec, &curs, end - 1))
     {
         retval = 2;
-        goto utctime_decode_cleanup;
     }
 
-    if ((curs == end) || (*curs != 'Z'))
+    if (!retval && ((curs == end) || (*curs != 'Z')))
     {
         // no trailing zone
         retval = 2;
-        goto utctime_decode_cleanup;
     }
     ++curs;
 
@@ -1255,13 +1247,14 @@ int cace_utctime_decode(struct timespec *out, const cace_data_t *in)
     if (curs < end)
     {
         retval = 3;
-        goto utctime_decode_cleanup;
     }
 
-    out->tv_sec  = fullsec;
-    out->tv_nsec = subsec;
+    if (!retval)
+    {
+        out->tv_sec  = fullsec;
+        out->tv_nsec = subsec;
+    }
 
-utctime_decode_cleanup:
     m_string_clear(unsep);
     return retval;
 }
@@ -1281,13 +1274,19 @@ int cace_timeperiod_encode(m_string_t out, const struct timespec *in)
         return 0;
     }
 
-    time_t   fullsec = in->tv_sec;
-    subsec_t subsec  = in->tv_nsec;
+    time_t            fullsec = in->tv_sec;
+    cace_ari_subsec_t subsec  = in->tv_nsec;
 
     if (fullsec < 0)
     {
         m_string_push_back(out, '-');
         fullsec = -fullsec;
+        if (subsec > 0)
+        {
+            // add subsec to negative value, move closer to zero
+            fullsec -= 1;
+            subsec = CACE_ARI_SUBSEC_SCALE - subsec;
+        }
     }
 
     m_string_push_back(out, 'P');
@@ -1350,8 +1349,8 @@ int cace_timeperiod_decode(struct timespec *out, const cace_data_t *in)
     ++curs;
 
     // accumulate seconds
-    time_t   fullsec = 0;
-    subsec_t subsec  = 0;
+    time_t            fullsec = 0;
+    cace_ari_subsec_t subsec  = 0;
 
     partend = strchr(curs, 'D');
     if (partend)
@@ -1419,9 +1418,16 @@ int cace_timeperiod_decode(struct timespec *out, const cace_data_t *in)
     if (sign_neg)
     {
         fullsec = -fullsec;
+        if (subsec > 0)
+        {
+            // subsec is addition toward zero
+            fullsec -= 1;
+            subsec = CACE_ARI_SUBSEC_SCALE - subsec;
+        }
     }
 
     out->tv_sec  = fullsec;
     out->tv_nsec = subsec;
+
     return 0;
 }

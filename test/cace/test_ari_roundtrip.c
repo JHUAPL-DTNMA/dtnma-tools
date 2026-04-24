@@ -21,6 +21,7 @@
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
+#include <cace/amm/typing.h>
 #include <cace/util/logging.h>
 #include <unity.h>
 
@@ -67,6 +68,8 @@ TEST_CASE("ari:/BOOL/false")
 TEST_CASE("ari:/BOOL/true")
 TEST_CASE("ari:/INT/10")
 TEST_CASE("ari:/INT/-10")
+TEST_CASE("ari:/INT/-2147483648") // domain minimum
+TEST_CASE("ari:/INT/2147483647")  // domain maximum
 TEST_CASE("ari:/REAL32/10")
 TEST_CASE("ari:/REAL32/10.1")
 TEST_CASE("ari:/REAL32/0.1")
@@ -76,11 +79,28 @@ TEST_CASE("ari:/REAL64/-Infinity")
 TEST_CASE("ari:/BYTESTR/h'6869'")
 TEST_CASE("ari:/TEXTSTR/%22hi%20there%22")
 TEST_CASE("ari:/TP/20230102T030405Z")
+TEST_CASE("ari:/TP/20230102T030405.006007008Z")
+TEST_CASE("ari:/TP/17070922T001244.854775808Z") // domain minimum
+TEST_CASE("ari:/TP/22920410T234716.854775807Z") // domain maximum
 TEST_CASE("ari:/TD/PT20.5S")
+TEST_CASE("ari:/TD/-P70628DT11H15M32S")
+TEST_CASE("ari:/TD/-P70628DT11H15M32.600451616S")
+TEST_CASE("ari:/TD/-P106751DT23H47M15.854775808S") // domain minimum
+TEST_CASE("ari:/TD/P106751DT23H47M15.854775807S")  // domain maximum
 TEST_CASE("ari:/LABEL/hi")
 TEST_CASE("ari:/LABEL/1")
+TEST_CASE("ari:/LABEL/-1")
+TEST_CASE("ari:/LABEL/-2147483648")
+TEST_CASE("ari:/LABEL/2147483647")
 TEST_CASE("ari:/CBOR/h'0A'")
 TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
+TEST_CASE("ari:/ARITYPE/null")
+TEST_CASE("ari:/ARITYPE/uint")
+TEST_CASE("ari:/ARITYPE/hi")
+TEST_CASE("ari:/ARITYPE/1")
+TEST_CASE("ari:/ARITYPE/-1")
+TEST_CASE("ari:/ARITYPE/-2147483648")
+TEST_CASE("ari:/ARITYPE/2147483647")
 TEST_CASE("ari:/OBJPAT/(*)(*)(*)(*)")
 TEST_CASE("ari:/OBJPAT/(65535)(-10)(-2)(45)")
 TEST_CASE("ari:/OBJPAT/(example)(adm)(ctrl)(hi)")
@@ -119,6 +139,8 @@ void test_ari_roundtrip_text_cbor(const char *intext)
         }
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_decode() failed");
     }
+    TEST_ASSERT_TRUE_MESSAGE(cace_amm_builtin_validate(&ari_dn), "cace_amm_builtin_validate() failed");
+
     cace_ari_t ari_up;
     cace_ari_init(&ari_up);
     {
@@ -169,6 +191,11 @@ void test_ari_roundtrip_text_cbor(const char *intext)
 
 TEST_CASE("f7")
 TEST_CASE("f6")
+TEST_CASE("820C82283B7FFFFFFFFFFFFFFF") // domain minimum
+TEST_CASE("820C82281B7FFFFFFFFFFFFFFF") // domain maximum
+TEST_CASE("820D82283B54AFB946829C721F") // ari:/TD/-P70628DT11H15M32.600451616S
+TEST_CASE("820D82283B7FFFFFFFFFFFFFFF") // domain minimum
+TEST_CASE("820D82281B7FFFFFFFFFFFFFFF") // domain maximum
 // Values from draft-ietf-dtn-ari
 TEST_CASE("8214841904d28519ffff01220c8af7f6f5f40a29fa497424006268696a24"
           "2e3f21272009402b3a4268698519ffff0122187b981a8200f68201f58201"
