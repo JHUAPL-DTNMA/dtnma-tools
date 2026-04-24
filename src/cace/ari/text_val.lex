@@ -65,7 +65,7 @@ DECDIG [0-9]
     return T_BOOL;
 }
 
-<LT_LABEL>(0|[1-9]{DECDIG}*) {
+<LT_LABEL,LT_ARITYPE>(0|[1-9]{DECDIG}*) {
     uint64_t val;
     int ret = cace_ari_uint64_decode(&val, yytext, yyleng);
     if (ret)
@@ -92,7 +92,7 @@ DECDIG [0-9]
         return T_UINT;
     }
 }
-<PRIMITIVE,LT_ANYINT,LT_ARITYPE>[+-]?(0[bB][01]+|0[xX]{HEXDIG}+|{DECDIG}+) {
+<PRIMITIVE,LT_ANYINT>[+-]?(0[bB][01]+|0[xX]{HEXDIG}+|{DECDIG}+) {
     // infer the base from the text
     if (yytext[0] == '-')
     {
@@ -259,7 +259,7 @@ DECDIG [0-9]
     return T_BSTR;
 }
 
-<LT_TIMEPOINT>({DECDIG}{4})\-?({DECDIG}{2})\-?({DECDIG}{2})T({DECDIG}{2}):?({DECDIG}{2}):?({DECDIG}{2})(\.({DECDIG}{1,9}))?Z {
+<LT_TIMEPOINT>({DECDIG}{4})\-?({DECDIG}{2})\-?({DECDIG}{2})T({DECDIG}{2}):?({DECDIG}{2}):?({DECDIG}{2})(\.({DECDIG}+))?Z {
     cace_data_t text_view;
     cace_data_init_view(&text_view, yyleng, (cace_data_ptr_t)yytext);
 
@@ -268,6 +268,7 @@ DECDIG [0-9]
     cace_data_deinit(&text_view);
     if (ret)
     {
+        cace_ari_text_val_error(yyscanner, yyextra, "bad date-time");
         return YYerror;
     }
 
@@ -278,7 +279,7 @@ DECDIG [0-9]
     return T_TIMEPOINT;
 }
 
-<LT_TIMEDIFF>([+-])?P(({DECDIG}+)D)?T(({DECDIG}+)H)?(({DECDIG}+)M)?(({DECDIG}+)(\.({DECDIG}{1,9}))?S)? {
+<LT_TIMEDIFF>([+-])?P(({DECDIG}+)D)?T(({DECDIG}+)H)?(({DECDIG}+)M)?(({DECDIG}+)(\.({DECDIG}+))?S)? {
     cace_data_t text_view;
     cace_data_init_view(&text_view, yyleng, (cace_data_ptr_t)yytext);
 
@@ -287,6 +288,7 @@ DECDIG [0-9]
     cace_data_deinit(&text_view);
     if (ret)
     {
+        cace_ari_text_val_error(yyscanner, yyextra, "bad duration");
         return YYerror;
     }
 
@@ -306,6 +308,7 @@ DECDIG [0-9]
     cace_data_deinit(&text_view);
     if (ret)
     {
+        cace_ari_text_val_error(yyscanner, yyextra, "bad decimal fraction");
         return YYerror;
     }
 

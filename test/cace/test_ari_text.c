@@ -1360,9 +1360,12 @@ TEST_CASE("ari:/AC/")
 TEST_CASE("ari:/AC/(a,")
 TEST_CASE("ari:/AC/(,,,)")
 TEST_CASE("ari:/AM/")
+// too many fraction  digits
+TEST_CASE("ari:/TP/20000101T000020.0000000001Z")
 TEST_CASE("ari:/TP/0.0000000001")
 TEST_CASE("ari:/TP/20.0000000001")
 TEST_CASE("ari:/TP/20.00000000001")
+TEST_CASE("ari:/TD/PT20.0000000001S")
 TEST_CASE("ari:/TD/0.0000000001")
 TEST_CASE("ari:/TD/20.0000000001")
 TEST_CASE("ari:/TD/20.00000000001")
@@ -1415,11 +1418,9 @@ void test_ari_text_decode_invalid(const char *intext)
     m_string_init_set_cstr(inbuf, intext);
     int ret = cace_ari_text_decode(&ari, inbuf, &errm);
     m_string_clear(inbuf);
-    if ((ret != 0) ^ (errm != NULL)) // only error message upon failure
-    {
-        TEST_FAIL_MESSAGE(errm);
-    }
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "cace_ari_text_decode() failed");
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "cace_ari_text_decode() succeeded");
+    TEST_ASSERT_NULL(errm);
 
     TEST_ASSERT_FALSE_MESSAGE(cace_amm_builtin_validate(&ari), "cace_amm_builtin_validate() succeeded");
     cace_ari_deinit(&ari);
