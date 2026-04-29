@@ -28,8 +28,86 @@
 #include <cace/util/defs.h>
 #include <timespec.h>
 
+/** Pop the front execution item after it has finished successfully.
+ *
+ * @param[in,out] seq The sequence to pop.
+ * @post After this the front item will be removed, and if necessary
+ * any status will be marked.
+ */
+static void refda_exec_proc_pop_front(refda_exec_seq_t *seq)
+{
+    CHKVOID(seq);
+
+    if (pthread_mutex_lock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to lock mutex");
+        return;
+    }
+    // decouple front item from the sequence
+    refda_exec_item_ptr_t *item_ptr;
+    refda_exec_item_list_pop_at(&item_ptr, seq->items, 0);
+    if (item_ptr)
+    {
+        refda_exec_item_ptr_ref(item_ptr)->seq = NULL;
+    }
+    refda_exec_item_ptr_release(item_ptr);
+
+    bool is_empty = refda_exec_item_list_empty_p(seq->items);
+    if (pthread_mutex_unlock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to unlock mutex");
+    }
+
+    // report after the entire sequence is finished
+    if (seq->status && is_empty)
+    {
+        refda_exec_status_post(seq->status, false);
+    }
+}
+
+/** Clear the entire execution sequence item after an item has failed.
+ *
+ * @param[in,out] seq The sequence to clear.
+ * @post After this the items will be empty and any status will be marked.
+ */
+static void refda_exec_proc_clear(refda_exec_seq_t *seq)
+{
+    CHKVOID(seq);
+
+    if (pthread_mutex_lock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to lock mutex");
+        return;
+    }
+    // decouple and release all items from the sequence
+    refda_exec_item_list_it_t item_it;
+    for (refda_exec_item_list_it(item_it, seq->items); !refda_exec_item_list_end_p(item_it);)
+    {
+        refda_exec_item_ptr_t **item_ptr = refda_exec_item_list_ref(item_it);
+
+        // clear parent reference
+        refda_exec_item_ptr_ref(*item_ptr)->seq = NULL;
+
+        refda_exec_item_list_remove(seq->items, item_it);
+    }
+    if (pthread_mutex_unlock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to unlock mutex");
+    }
+
+    if (seq->status)
+    {
+        refda_exec_status_post(seq->status, true);
+    }
+}
+
 int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
 {
+    if (!item->seq)
+    {
+        // item is already terminated
+        return 0;
+    }
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         m_string_t buf;
@@ -40,7 +118,10 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
     }
     const bool is_failure = cace_ari_is_undefined(&(item->result));
 
-    refda_runctx_t *runctx = refda_runctx_ptr_ref(item->seq->runctx);
+    // item will be invalidated when removed from sequence
+    refda_exec_seq_t *seq = item->seq;
+
+    refda_runctx_t *runctx = refda_runctx_ptr_ref(seq->runctx);
 
     // Track number of successes/failures
     refda_agent_t *agent = runctx->agent;
@@ -61,31 +142,26 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
         refda_reporting_ctrl(runctx, &(item->ref), &(item->result));
     }
 
-    // item will be invalidated when removed from sequence
-    refda_exec_seq_t *seq = item->seq;
-
-    if (is_failure)
+    if (is_failure && cace_log_is_enabled_for(LOG_WARNING))
     {
         // done with this whole sequence
         m_string_t buf;
         m_string_init(buf);
         cace_ari_text_encode_objpath(buf, cace_ari_cget_ref_objpath(&item->ref), CACE_ARI_TEXT_ARITYPE_TEXT);
-        CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " failed on %s (as %s), halting", item->seq->pid,
+        CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " (at %p) failed on %s (as %s), halting", seq->pid, seq,
                          m_string_get_cstr(item->deref.obj->obj_id.name), m_string_get_cstr(buf));
         m_string_clear(buf);
+    }
 
-        refda_exec_item_list_reset(seq->items);
+    if (is_failure)
+    {
+        // done with this whole sequence
+        refda_exec_proc_clear(seq);
     }
     else if (seq)
     {
         // done with this item
-        refda_exec_item_list_pop_at(NULL, seq->items, 0);
-    }
-
-    if (seq->status && refda_exec_item_list_empty_p(seq->items))
-    {
-        CACE_LOG_DEBUG("Agent-directed sequence finished, failure=%d", is_failure);
-        refda_exec_status_post(seq->status, is_failure);
+        refda_exec_proc_pop_front(seq);
     }
 
     return 0;
@@ -93,10 +169,18 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
 
 int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
 {
+    if (pthread_mutex_lock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to lock mutex");
+    }
     refda_exec_item_ptr_t **front_ptr = refda_exec_item_list_front(seq->items);
+    refda_exec_item_ptr_t  *item_ptr  = refda_exec_item_ptr_acquire(*front_ptr);
+    if (pthread_mutex_unlock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to unlock mutex");
+    }
 
-    CHKERR1(front_ptr);
-    refda_exec_item_t *item = refda_exec_item_ptr_ref(*front_ptr);
+    refda_exec_item_t *item = refda_exec_item_ptr_ref(item_ptr);
     CHKERR1(item->deref.obj);
 
     refda_amm_ctrl_desc_t *ctrl = item->deref.obj->app_data.ptr;
@@ -114,7 +198,7 @@ int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
     if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_PENDING)
     {
         refda_ctrl_exec_ctx_t ctx;
-        refda_ctrl_exec_ctx_init(&ctx, item);
+        refda_ctrl_exec_ctx_init(&ctx, item_ptr);
         atomic_fetch_add(&ctx.runctx->agent->instr.num_ctrls_run, 1);
         (ctrl->execute)(&ctx);
         refda_ctrl_exec_ctx_deinit(&ctx);
@@ -129,6 +213,7 @@ int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
     {
         refda_exec_proc_ctrl_finish(item);
     }
+    refda_exec_item_ptr_release(item_ptr);
 
     return 0;
 }
@@ -136,24 +221,104 @@ int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
 int refda_exec_proc_run(refda_exec_seq_t *seq)
 {
     int retval = 0;
-    while (!refda_exec_item_list_empty_p(seq->items))
+    while (true)
     {
-        refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(seq->items);
-        const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
-        if (atomic_load(&(front->execution_stage)) == REFDA_EXEC_WAITING)
+        refda_exec_item_status_t front_status;
+        if (refda_exec_proc_front_status(&front_status, seq))
+        {
+            // nothing to do
+            break;
+        }
+        if (front_status == REFDA_EXEC_WAITING)
         {
             // cannot complete at this time
-            return 0;
+            break;
         }
 
         retval = refda_exec_proc_ctrl_start(seq);
         if (retval)
         {
+            // something went wrong
             break;
         }
     }
 
+    if (retval)
+    {
+        CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " (at %p) failed", seq->pid, seq);
+    }
     return retval;
+}
+
+int refda_exec_proc_front_status(refda_exec_item_status_t *status, refda_exec_seq_t *seq)
+{
+    CHKERR1(status);
+    CHKERR1(seq);
+
+    int retval = 0;
+    if (pthread_mutex_lock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to lock mutex");
+        return 2;
+    }
+    if (!refda_exec_item_list_empty_p(seq->items))
+    {
+        refda_exec_item_ptr_t **front_ptr = refda_exec_item_list_front(seq->items);
+        // safe during mutex lock
+        refda_exec_item_t *item = refda_exec_item_ptr_ref(*front_ptr);
+
+        *status = atomic_load(&(item->execution_stage));
+    }
+    else
+    {
+        retval = 2;
+    }
+    if (pthread_mutex_unlock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to unlock mutex");
+        return 2;
+    }
+    return retval;
+}
+
+void refda_exec_proc_terminate(refda_exec_seq_t *seq)
+{
+    CHKVOID(seq);
+    CACE_LOG_DEBUG("execution of sequence PID %" PRIu64 " (at %p) terminating", seq->pid, seq);
+
+    // mark the front item as failed if already waiting
+    refda_exec_item_ptr_t *item_ptr = NULL;
+
+    if (pthread_mutex_lock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to lock mutex");
+        return;
+    }
+    if (!refda_exec_item_list_empty_p(seq->items))
+    {
+        item_ptr = refda_exec_item_ptr_acquire(*refda_exec_item_list_front(seq->items));
+    }
+    if (pthread_mutex_unlock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to unlock mutex");
+    }
+
+    if (item_ptr)
+    {
+        refda_exec_item_t *item = refda_exec_item_ptr_ref(item_ptr);
+
+        if (atomic_load(&(item->execution_stage)) == REFDA_EXEC_WAITING)
+        {
+            // leave undefined but mark as finished (i.e. failed)
+            refda_exec_proc_ctrl_finish(item);
+        }
+
+        refda_exec_item_ptr_release(item_ptr);
+    }
+    else
+    {
+        refda_exec_proc_clear(seq);
+    }
 }
 
 /** Expand any ARI target (reference or literal).
@@ -192,7 +357,7 @@ static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq
 
                 {
                     refda_exec_item_t *item = refda_exec_item_ptr_ref(ptr);
-
+                    // back reference to parent
                     item->seq = seq;
                     cace_ari_set_copy(&(item->ref), target);
                     cace_amm_lookup_set_move(&(item->deref), &deref);
@@ -302,8 +467,8 @@ int refda_exec_proc_expand(refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari
         m_string_init(mgr_buf);
         cace_ari_text_encode(mgr_buf, &runctx->mgr_ident, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
 
-        CACE_LOG_DEBUG("Expanding PID %" PRIu64 " target %s from manager %s", seq->pid, m_string_get_cstr(buf),
-                       m_string_get_cstr(mgr_buf));
+        CACE_LOG_DEBUG("Expanding sequence PID %" PRIu64 " (at %p) target %s from manager %s", seq->pid, seq,
+                       m_string_get_cstr(buf), m_string_get_cstr(mgr_buf));
         m_string_clear(mgr_buf);
         m_string_clear(buf);
     }
@@ -311,12 +476,18 @@ int refda_exec_proc_expand(refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
 
-    // FIXME: lock more fine-grained level
     REFDA_AGENT_LOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
-
+    if (pthread_mutex_lock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to lock mutex");
+        return REFDA_AGENT_ERR_LOCK_FAILED;
+    }
     int retval = refda_exec_proc_exp_item(runctx, seq, seq_ix, target, invalid_items);
-
-    // FIXME: lock more fine-grained level
+    if (pthread_mutex_unlock(&seq->items_mutex))
+    {
+        CACE_LOG_CRIT("failed to unlock mutex");
+        return REFDA_AGENT_ERR_LOCK_FAILED;
+    }
     REFDA_AGENT_UNLOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
     if (!cace_ari_array_empty_p(invalid_items))

@@ -35,6 +35,11 @@ int test_util_ari_decode(cace_ari_t *ari, const char *inhex);
  */
 int test_util_ari_encode(m_string_t outhex, const cace_ari_t *ari);
 
+/** Compare to values for strict equality and fail if they are not equal.
+ *
+ */
+bool test_util_ari_equal(const cace_ari_t *expect, const cace_ari_t *result);
+
 #ifdef __cplusplus
 } // extern C
 #endif

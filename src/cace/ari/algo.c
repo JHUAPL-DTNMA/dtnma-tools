@@ -814,20 +814,6 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
 
         bool result = true;
 
-        cace_ari_type_t promote;
-        cace_ari_t      lt_prom = CACE_ARI_INIT_UNDEFINED;
-        cace_ari_t      rt_prom = CACE_ARI_INIT_UNDEFINED;
-
-        if (cace_has_numeric_prim_type(left) && cace_has_numeric_prim_type(right)
-            && !cace_amm_numeric_promote_type(&promote, left, right))
-        {
-            const cace_amm_type_t *amm_promote = cace_amm_type_get_builtin(promote);
-            cace_amm_type_convert(amm_promote, &lt_prom, left);
-            cace_amm_type_convert(amm_promote, &rt_prom, right);
-            left  = &lt_prom;
-            right = &rt_prom;
-        }
-
         if (left->as_lit.prim_type != right->as_lit.prim_type)
         {
             result = false;
@@ -890,8 +876,6 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
             }
         }
 
-        cace_ari_deinit(&lt_prom);
-        cace_ari_deinit(&rt_prom);
         return result;
     }
 }

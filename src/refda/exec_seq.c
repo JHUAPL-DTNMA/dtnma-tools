@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "exec_seq.h"
+#include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
 void refda_exec_seq_init(refda_exec_seq_t *obj)
@@ -24,6 +25,7 @@ void refda_exec_seq_init(refda_exec_seq_t *obj)
     obj->runctx = refda_runctx_ptr_new();
     obj->pid    = 0;
     refda_exec_item_list_init(obj->items);
+    pthread_mutex_init(&obj->items_mutex, NULL);
     obj->status = NULL;
 }
 
@@ -31,6 +33,7 @@ void refda_exec_seq_deinit(refda_exec_seq_t *obj)
 {
     CHKVOID(obj);
     obj->status = NULL;
+    pthread_mutex_destroy(&obj->items_mutex);
     refda_exec_item_list_clear(obj->items);
     obj->pid = 0;
     refda_runctx_ptr_clear(obj->runctx);

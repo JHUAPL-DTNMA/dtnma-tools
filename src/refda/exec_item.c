@@ -24,6 +24,10 @@
 
 void refda_exec_item_resume(refda_exec_item_t *obj)
 {
+    if (!obj->seq)
+    {
+        return;
+    }
     atomic_store(&obj->execution_stage, REFDA_EXEC_COMPLETE);
     sem_post(&refda_runctx_ptr_ref(obj->seq->runctx)->agent->execs_sem);
 }

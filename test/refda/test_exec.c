@@ -288,14 +288,14 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
             // manual sleep
             nanosleep(&remain, NULL);
 
-            TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
+            TEST_ASSERT_EQUAL_size_t(1, refda_timeline_size(agent.exec_timeline));
             refda_timeline_it(tl_it, agent.exec_timeline);
             if (!refda_timeline_end_p(tl_it))
             {
                 const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
 
                 refda_ctrl_exec_ctx_t ctx;
-                refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                TEST_ASSERT_EQUAL_INT(0, refda_ctrl_exec_ctx_init(&ctx, next->exec.item_ptr));
 
                 (next->exec.callback)(&ctx);
 
@@ -306,6 +306,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 }
                 refda_ctrl_exec_ctx_deinit(&ctx);
 
+                refda_exec_item_ptr_release(next->exec.item_ptr);
                 refda_timeline_remove(agent.exec_timeline, tl_it);
             }
         }

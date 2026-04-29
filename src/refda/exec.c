@@ -20,7 +20,6 @@
 #include "eval.h"
 #include "ctrl_exec_ctx.h"
 #include "valprod.h"
-#include "reporting.h"
 #include "amm/ctrl.h"
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
@@ -45,26 +44,32 @@ int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target,
         return 2;
     }
 
-    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
+    refda_exec_seq_ptr_t **seq_ptr = refda_exec_seq_list_push_back_new(agent->exec_state);
+
+    refda_exec_seq_t *seq = refda_exec_seq_ptr_ref(*seq_ptr);
 
     refda_runctx_ptr_set(&seq->runctx, runctxp);
     seq->pid = agent->exec_next_pid++;
     // no dereference here, allowed to be null
     seq->status = status;
+    if (seq->status)
+    {
+        seq->status->seq = seq;
+    }
 
     size_t seq_ix = 0;
     // Expand now and wait for actual run later
     int res = refda_exec_proc_expand(seq, &seq_ix, target);
     if (res)
     {
-        // clean up useless sequence
-        refda_exec_seq_list_pop_back(NULL, agent->exec_state);
-
         if (seq->status)
         {
             CACE_LOG_ERR("Agent-directed sequence failed to expand");
             refda_exec_status_post(seq->status, true);
         }
+        // clean up useless sequence
+        refda_exec_seq_list_pop_back(NULL, agent->exec_state);
+        seq = NULL;
     }
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
@@ -106,8 +111,8 @@ static int refda_exec_add_execset(refda_agent_t *agent, const refda_msgdata_t *m
 int refda_exec_waiting(refda_agent_t *agent)
 {
 
-    refda_exec_seq_ptr_list_t ready;
-    refda_exec_seq_ptr_list_init(ready);
+    refda_exec_seq_list_t ready;
+    refda_exec_seq_list_init(ready);
 
     // lock only to collect the ready sequences
     // the sequences themselves will not be touched outside of this worker
@@ -117,40 +122,31 @@ int refda_exec_waiting(refda_agent_t *agent)
         return 2;
     }
 
+    // Safely clear any completed sequences and find which ones are ready to execute
     refda_exec_seq_list_it_t seq_it;
-    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);
-         refda_exec_seq_list_next(seq_it))
+    for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);)
     {
-        refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
+        refda_exec_seq_ptr_t **seq_ptr = refda_exec_seq_list_ref(seq_it);
 
-        // Skip completed or still waiting exec items
-        //
-        // Do not remove completed item now because it will relocate seq in memory and cause
-        // problems with pointers within items. We clean up after iterating.
-        if (!refda_exec_item_list_empty_p(seq->items))
+        refda_exec_seq_t *seq = refda_exec_seq_ptr_ref(*seq_ptr);
+
+        refda_exec_item_status_t front_status;
+        if (!refda_exec_proc_front_status(&front_status, seq))
         {
-            refda_exec_item_ptr_t  **front_ptr = refda_exec_item_list_front(seq->items);
-            const refda_exec_item_t *front     = refda_exec_item_ptr_cref(*front_ptr);
-
-            if (atomic_load(&(front->execution_stage)) != REFDA_EXEC_WAITING)
+            // execute the front item as long as it's not still waiting
+            if (front_status != REFDA_EXEC_WAITING)
             {
                 CACE_LOG_DEBUG("pushing to ready");
-                refda_exec_seq_ptr_list_push_back(ready, seq);
+                refda_exec_seq_list_push_back(ready, *seq_ptr);
             }
+            refda_exec_seq_list_next(seq_it);
         }
-    }
-
-    // Safely clear any completed sequences from the front of the queue
-    while (!refda_exec_seq_list_empty_p(agent->exec_state))
-    {
-        const refda_exec_seq_t *seq = refda_exec_seq_list_front(agent->exec_state);
-        if (!refda_exec_item_list_empty_p(seq->items))
+        else
         {
-            break;
+            // no status so sequence is empty
+            CACE_LOG_DEBUG("removing completed sequence PID %" PRIu64 " (at %p)", seq->pid, seq);
+            refda_exec_seq_list_remove(agent->exec_state, seq_it);
         }
-
-        refda_exec_seq_list_pop_front(NULL, agent->exec_state);
-        CACE_LOG_DEBUG("Removed completed sequence from agent exec_state queue");
     }
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
@@ -159,19 +155,17 @@ int refda_exec_waiting(refda_agent_t *agent)
         return 2;
     }
 
-    refda_exec_seq_ptr_list_it_t ready_it;
-    for (refda_exec_seq_ptr_list_it(ready_it, ready); !refda_exec_seq_ptr_list_end_p(ready_it);
-         refda_exec_seq_ptr_list_next(ready_it))
+    refda_exec_seq_list_it_t ready_it;
+    for (refda_exec_seq_list_it(ready_it, ready); !refda_exec_seq_list_end_p(ready_it);)
     {
-        refda_exec_seq_t *seq = *refda_exec_seq_ptr_list_ref(ready_it);
+        refda_exec_seq_ptr_t **seq_ptr = refda_exec_seq_list_ref(ready_it);
 
-        int res = refda_exec_proc_run(seq);
-        if (res)
-        {
-            CACE_LOG_WARNING("execution of sequence PID %" PRIu64 " failed, continuing", seq->pid);
-        }
+        refda_exec_seq_t *seq = refda_exec_seq_ptr_ref(*seq_ptr);
+        refda_exec_proc_run(seq);
+
+        refda_exec_seq_list_remove(ready, ready_it);
     }
-    refda_exec_seq_ptr_list_clear(ready);
+    refda_exec_seq_list_clear(ready);
 
     return 0;
 }
@@ -238,17 +232,19 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
                 {
                     {
                         refda_ctrl_exec_ctx_t ctx;
-                        refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
-
-                        (next->exec.callback)(&ctx);
-
-                        if (!((atomic_load(&(ctx.item->execution_stage))) == REFDA_EXEC_WAITING))
+                        // ignore events on now-terminated items
+                        if (!refda_ctrl_exec_ctx_init(&ctx, next->exec.item_ptr))
                         {
-                            refda_exec_proc_ctrl_finish(ctx.item);
-                        }
+                            (next->exec.callback)(&ctx);
 
+                            if (!((atomic_load(&(ctx.item->execution_stage))) == REFDA_EXEC_WAITING))
+                            {
+                                refda_exec_proc_ctrl_finish(ctx.item);
+                            }
+                        }
                         refda_ctrl_exec_ctx_deinit(&ctx);
                     }
+                    refda_exec_item_ptr_release(next->exec.item_ptr);
                     break;
                 }
                 case REFDA_TIMELINE_SBR:
@@ -336,14 +332,8 @@ static int refda_exec_rule_action(refda_agent_t *agent, const cace_ari_t *action
     refda_runctx_t *runctx = refda_runctx_ptr_ref(ctxptr);
     refda_runctx_from(runctx, agent, NULL);
 
-    refda_exec_seq_t *seq = refda_exec_seq_list_push_back_new(agent->exec_state);
-    seq->pid              = agent->exec_next_pid++;
-
-    refda_runctx_ptr_set(&seq->runctx, ctxptr);
-
-    size_t seq_ix = 0;
-    // insert at the end of an empty sequence
-    int res = refda_exec_proc_expand(seq, &seq_ix, action);
+    // Add the action as a new target but don't wait for it
+    int res = refda_exec_add_target(ctxptr, action, NULL);
 
     refda_runctx_ptr_clear(ctxptr); // Clean up extra reference created by ptr_ref
     return res;

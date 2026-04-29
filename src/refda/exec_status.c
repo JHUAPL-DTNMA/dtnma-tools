@@ -23,6 +23,7 @@
 void refda_exec_status_init(refda_exec_status_t *obj)
 {
     CHKVOID(obj);
+    obj->seq = NULL;
     sem_init(&obj->finished, 0, 0);
     atomic_store(&obj->failed, false);
     obj->on_finished     = NULL;
@@ -35,6 +36,7 @@ void refda_exec_status_deinit(refda_exec_status_t *obj)
     obj->on_finished_arg = NULL;
     obj->on_finished     = NULL;
     sem_destroy(&obj->finished);
+    obj->seq = NULL;
 }
 
 bool refda_exec_status_wait(refda_exec_status_t *obj)
@@ -46,6 +48,9 @@ bool refda_exec_status_wait(refda_exec_status_t *obj)
 
 void refda_exec_status_post(refda_exec_status_t *obj, bool failed)
 {
+    CACE_LOG_DEBUG("sequence status finished, failed=%d", failed);
+    obj->seq = NULL;
+
     atomic_store(&obj->failed, failed);
     if (obj->on_finished)
     {

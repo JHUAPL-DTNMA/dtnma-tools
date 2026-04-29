@@ -45,12 +45,30 @@ extern "C" {
 int refda_exec_proc_expand(refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *target);
 
 /** Implement the running procedure from Section TBD of @cite ietf-dtn-amm-01.
- * This executes items in a sequence until the first deferred completion.
+ * This executes items in a sequence until the first deferred completion
+ * or execution failure.
  *
  * @param[in,out] seq The sequence which will be popped as items are executed.
  * @return Zero if this sequence executed without error (so far).
  */
 int refda_exec_proc_run(refda_exec_seq_t *seq);
+
+/** Get the status of the front item in a thread safe way.
+ *
+ * @param[out] status The variable to store into.
+ * @param[in] seq The sequence to take status for.
+ * @return Zero if the sequence is non-empty and has a status.
+ */
+int refda_exec_proc_front_status(refda_exec_item_status_t *status, refda_exec_seq_t *seq);
+
+/** Decouple all items from a sequence and mark it as having failed.
+ * This will cause the sequence to be cleaned up later in the exec thread.
+ *
+ * @param[in,out] seq The sequence to terminate.
+ * @post After this the items will all be removed and, if present,
+ * the status will be marked as failed.
+ */
+void refda_exec_proc_terminate(refda_exec_seq_t *seq);
 
 /** Execute a single CTRL, possibly deferring its finish.
  */
