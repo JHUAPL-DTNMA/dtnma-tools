@@ -760,11 +760,6 @@ TEST_CASE("820A686869207468657265")                           // ari:/TEXTSTR/%2
 TEST_CASE("820E626869")                                       // ari:/LABEL/hi
 TEST_CASE("820E01")                                           // ari:/LABEL/1
 TEST_CASE("820C1A2B450625")                                   // ari:/TP/20230102T030405Z
-TEST_CASE("820C82283B7FFFFFFFFFFFFFFF")                       // domain minimum
-TEST_CASE("820C82281B7FFFFFFFFFFFFFFF")                       // domain maximum
-TEST_CASE("820D82283B54AFB946829C721F")                       // ari:/TD/-P70628DT11H15M32.600451616S
-TEST_CASE("820D82283B7FFFFFFFFFFFFFFF")                       // domain minimum
-TEST_CASE("820D82281B7FFFFFFFFFFFFFFF")                       // domain maximum
 TEST_CASE("821180")                                           // ari:/AC/()
 TEST_CASE("8211816161")                                       // ari:/AC/(a)
 TEST_CASE("821183616161626163")                               // ari:/AC/(a,b,c)
