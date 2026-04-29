@@ -1064,7 +1064,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(msg_vals))
         rptset = msg_vals[0].value
         rpt = rptset.reports[0]
-        self.assertEqual([numpy.datetime64], literal_prim_types(rpt.items))
+        self.assertEqual([numpy.timedelta64], literal_prim_types(rpt.items))
 
     def test_odm_ident_valid(self):
         self._start()

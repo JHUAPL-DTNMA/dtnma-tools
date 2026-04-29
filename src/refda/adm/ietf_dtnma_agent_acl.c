@@ -161,7 +161,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
 
 /* Name: current-groups
  * Description:
- *   Get the group IDs for the current execution context, which may incude
+ *   Get the group IDs for the current execution context, which may include
  *   the implicit Agent group ID zero.
  *
  * Parameters: none
