@@ -1240,7 +1240,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
-        self.assertEqual([numpy.datetime64], literal_prim_types(rpt.items))
+        self.assertEqual([numpy.timedelta64], literal_prim_types(rpt.items))
 
     def test_odm_ident(self):
         self._start()
