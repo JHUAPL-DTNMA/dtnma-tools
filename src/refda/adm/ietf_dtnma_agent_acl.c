@@ -783,7 +783,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/delete-odm
+        { // For ./IDENT/obsolete-odm
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             objdata->abstract = false;
@@ -794,10 +794,11 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 cace_ari_set_objref_path_intid(&(base->name), 1, 2, CACE_ARI_TYPE_IDENT, 0);
             }
 
-            obj = refda_register_ident(
-                adm,
-                cace_amm_idseg_ref_withenum("delete-odm", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_DELETE_ODM),
-                objdata);
+            obj =
+                refda_register_ident(adm,
+                                     cace_amm_idseg_ref_withenum(
+                                         "obsolete-odm", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_OBSOLETE_ODM),
+                                     objdata);
             // no parameters
         }
         { // For ./IDENT/create-object
@@ -818,7 +819,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/delete-object
+        { // For ./IDENT/obsolete-object
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             objdata->abstract = false;
@@ -831,8 +832,8 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
 
             obj = refda_register_ident(
                 adm,
-                cace_amm_idseg_ref_withenum("delete-object",
-                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_DELETE_OBJECT),
+                cace_amm_idseg_ref_withenum("obsolete-object",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_OBSOLETE_OBJECT),
                 objdata);
             // no parameters
         }
