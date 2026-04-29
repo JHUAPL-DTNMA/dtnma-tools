@@ -99,6 +99,7 @@ class TestRefdaSocket(unittest.TestCase):
                     '//ietf/dtnma-agent-acl/ident/execute',
                     '//ietf/dtnma-agent-acl/ident/produce',
                     '//ietf/dtnma-agent-acl/ident/modify-var',
+                    '//ietf/dtnma-agent-acl/ident/modify-rule-enabled',
                     '//ietf/dtnma-agent-acl/ident/ensure-odm',
                     '//ietf/dtnma-agent-acl/ident/obsolete-odm',
                     '//ietf/dtnma-agent-acl/ident/ensure-object',
@@ -1584,13 +1585,13 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
-        self.assertEqual((1, 5), rpt.items[0].value.shape)
+        self.assertEqual((2, 5), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
-        self.assertEqual((1, 6), rpt.items[0].value.shape)
+        self.assertEqual((2, 6), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         # Add a group with catch-all on the test socket scheme
@@ -1641,18 +1642,19 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
-        self.assertEqual((2, 5), rpt.items[0].value.shape)
+        self.assertEqual((3, 5), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         # new group number 10
-        self.assertEqual([ari.typed_uint(1), ari.typed_uint(10)], rpt.items[0].value[:, 0])
-        self.assertEqual(ari.LiteralARI("example"), rpt.items[0].value[1, 1])
+        self.assertEqual([ari.typed_uint(1), ari.typed_uint(2), ari.typed_uint(10)], rpt.items[0].value[:, 0])
+        # column 1: name
+        self.assertEqual(ari.LiteralARI("example"), rpt.items[0].value[2, 1])
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
-        self.assertEqual((2, 6), rpt.items[0].value.shape)
+        self.assertEqual((3, 6), rpt.items[0].value.shape)
         # new access number 10
-        self.assertEqual([ari.typed_uint(1), ari.typed_uint(10)], rpt.items[0].value[:, 0])
+        self.assertEqual([ari.typed_uint(1), ari.typed_uint(2), ari.typed_uint(10)], rpt.items[0].value[:, 0])
 
         self._send_msg(
             [self._ari_text_to_obj(
@@ -1679,12 +1681,12 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/group-list)'), rpt.source)
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
-        self.assertEqual((1, 5), rpt.items[0].value.shape)
+        self.assertEqual((2, 5), rpt.items[0].value.shape)
 
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
-        self.assertEqual((1, 6), rpt.items[0].value.shape)
+        self.assertEqual((2, 6), rpt.items[0].value.shape)
 
         # failure adding non-existing permission
         self._send_msg(

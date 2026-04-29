@@ -142,6 +142,10 @@ typedef struct
      */
     cace_amm_obj_desc_t *modify_var;
 
+    /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/modify-rule-enabled>.
+     */
+    cace_amm_obj_desc_t *modify_rule_enabled;
+
     /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/ensure-odm>.
      */
     cace_amm_obj_desc_t *ensure_odm;

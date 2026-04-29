@@ -4071,7 +4071,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
     int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
-
     if (res)
     {
         m_string_t buf;
@@ -4080,47 +4079,55 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
         CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, m_string_get_cstr(buf));
         m_string_clear(buf);
     }
-    else if (deref.obj_type == CACE_ARI_TYPE_SBR)
+
+    // access check, this permission has no parameters
+    bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target, &deref,
+                                                     ctx->runctx->agent->acl.permissions.modify_rule_enabled, NULL);
+
+    if (!res && acl_found)
     {
-        refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
-        // FIXME need agent access control
-
-        if (sbr && sbr->enabled != enabled)
+        if (deref.obj_type == CACE_ARI_TYPE_SBR)
         {
-            CACE_LOG_DEBUG("setting enabled state of %d", enabled);
-            sbr->enabled = enabled;
+            refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
+            if (sbr && (sbr->enabled != enabled))
+            {
+                CACE_LOG_DEBUG("setting enabled state of %d", enabled);
+                sbr->enabled = enabled;
 
-            if (enabled)
-            {
-                refda_exec_sbr_enable(agent, sbr);
+                if (enabled)
+                {
+                    refda_exec_sbr_enable(agent, sbr);
+                }
+                else
+                {
+                    refda_exec_sbr_disable(agent, sbr);
+                }
             }
-            else
-            {
-                refda_exec_sbr_disable(agent, sbr);
-            }
+            refda_ctrl_exec_ctx_set_result_null(ctx);
         }
-        refda_ctrl_exec_ctx_set_result_null(ctx);
-    }
-    else if (deref.obj_type == CACE_ARI_TYPE_TBR)
-    {
-        refda_amm_tbr_desc_t *tbr = deref.obj->app_data.ptr;
-        // FIXME need agent access control
-
-        if (tbr && tbr->enabled != enabled)
+        else if (deref.obj_type == CACE_ARI_TYPE_TBR)
         {
-            CACE_LOG_DEBUG("setting enabled state of %d", enabled);
-            tbr->enabled = enabled;
+            refda_amm_tbr_desc_t *tbr = deref.obj->app_data.ptr;
+            if (tbr && (tbr->enabled != enabled))
+            {
+                CACE_LOG_DEBUG("setting enabled state of %d", enabled);
+                tbr->enabled = enabled;
 
-            if (enabled)
-            {
-                refda_exec_tbr_enable(agent, tbr);
+                if (enabled)
+                {
+                    refda_exec_tbr_enable(agent, tbr);
+                }
+                else
+                {
+                    refda_exec_tbr_disable(agent, tbr);
+                }
             }
-            else
-            {
-                refda_exec_tbr_disable(agent, tbr);
-            }
+            refda_ctrl_exec_ctx_set_result_null(ctx);
         }
-        refda_ctrl_exec_ctx_set_result_null(ctx);
+        else
+        {
+            CACE_LOG_ERR("given non-rule reference");
+        }
     }
     cace_amm_lookup_deinit(&deref);
 
@@ -4157,7 +4164,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
     int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
-
     if (res)
     {
         m_string_t buf;
@@ -4166,48 +4172,57 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
         CACE_LOG_WARNING("Lookup failed with status %d for reference %s", res, m_string_get_cstr(buf));
         m_string_clear(buf);
     }
-    else if (deref.obj_type == CACE_ARI_TYPE_SBR)
+
+    // access check, this permission has no parameters
+    bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, target, &deref,
+                                                     ctx->runctx->agent->acl.permissions.modify_rule_enabled, NULL);
+
+    if (!res && acl_found)
     {
-        refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
-        // FIXME need agent access control
-
-        if (sbr && sbr->enabled != sbr->init_enabled)
+        if (deref.obj_type == CACE_ARI_TYPE_SBR)
         {
-            CACE_LOG_DEBUG("setting back to init_enabled state of %d", sbr->init_enabled);
-            sbr->enabled = sbr->init_enabled;
+            refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
+            if (sbr && (sbr->enabled != sbr->init_enabled))
+            {
+                CACE_LOG_DEBUG("setting back to init_enabled state of %d", sbr->init_enabled);
+                sbr->enabled = sbr->init_enabled;
 
-            if (sbr->enabled)
-            {
-                refda_exec_sbr_enable(agent, sbr);
+                if (sbr->enabled)
+                {
+                    refda_exec_sbr_enable(agent, sbr);
+                }
+                else
+                {
+                    refda_exec_sbr_disable(agent, sbr);
+                }
             }
-            else
-            {
-                refda_exec_sbr_disable(agent, sbr);
-            }
+            refda_ctrl_exec_ctx_set_result_null(ctx);
         }
-        refda_ctrl_exec_ctx_set_result_null(ctx);
-    }
-    else if (deref.obj_type == CACE_ARI_TYPE_TBR)
-    {
-        refda_amm_tbr_desc_t *tbr = deref.obj->app_data.ptr;
-        // FIXME need agent access control
-
-        if (tbr && tbr->enabled != tbr->init_enabled)
+        else if (deref.obj_type == CACE_ARI_TYPE_TBR)
         {
-            CACE_LOG_DEBUG("setting back to init_enabled state of %d", tbr->init_enabled);
-            tbr->enabled = tbr->init_enabled;
+            refda_amm_tbr_desc_t *tbr = deref.obj->app_data.ptr;
+            if (tbr && (tbr->enabled != tbr->init_enabled))
+            {
+                CACE_LOG_DEBUG("setting back to init_enabled state of %d", tbr->init_enabled);
+                tbr->enabled = tbr->init_enabled;
 
-            if (tbr->enabled)
-            {
-                refda_exec_tbr_enable(agent, tbr);
+                if (tbr->enabled)
+                {
+                    refda_exec_tbr_enable(agent, tbr);
+                }
+                else
+                {
+                    refda_exec_tbr_disable(agent, tbr);
+                }
             }
-            else
-            {
-                refda_exec_tbr_disable(agent, tbr);
-            }
+            refda_ctrl_exec_ctx_set_result_null(ctx);
         }
-        refda_ctrl_exec_ctx_set_result_null(ctx);
+        else
+        {
+            CACE_LOG_ERR("given non-rule reference");
+        }
     }
+
     cace_amm_lookup_deinit(&deref);
 
     REFDA_AGENT_UNLOCK(agent, );
