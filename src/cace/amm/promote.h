@@ -67,8 +67,8 @@ typedef struct
  */
 void cace_amm_promote_init(cace_amm_promote_state_t *obj);
 
-/** De-initialze the struct.
- * @post Only the optional storage is touched.
+/** De-initialize the struct.
+ * Only the optional storage is touched.
  */
 void cace_amm_promote_deinit(cace_amm_promote_state_t *obj);
 
