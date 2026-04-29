@@ -101,7 +101,7 @@ class TestRefdaSocket(unittest.TestCase):
                     '//ietf/dtnma-agent-acl/ident/execute',
                     '//ietf/dtnma-agent-acl/ident/produce',
                     '//ietf/dtnma-agent-acl/ident/modify-var',
-                    '//ietf/dtnma-agent-acl/ident/create-object',
+                    '//ietf/dtnma-agent-acl/ident/ensure-object',
                     '//ietf/dtnma-agent-acl/ident/obsolete-object',
                 ]) + '))\n',
             ])
@@ -1568,8 +1568,6 @@ class TestRefdaSocket(unittest.TestCase):
                     '//ietf/dtnma-agent-acl/ident/execute',
                     '//ietf/dtnma-agent-acl/ident/produce',
                     '//ietf/dtnma-agent-acl/ident/modify-var',
-                    '//ietf/dtnma-agent-acl/ident/create-object',
-                    '//ietf/dtnma-agent-acl/ident/obsolete-object',
                 ]) + ')),'
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/current-groups),'  # no effect on this execution
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/group-list),'

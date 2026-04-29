@@ -144,7 +144,7 @@ typedef struct
 
     /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/create-object>.
      */
-    cace_amm_obj_desc_t *create_obj;
+    cace_amm_obj_desc_t *ensure_obj;
 
     /** Leaf IDENT for <ari://ietf/dtnma-agent-acl/ident/obsolete-object>.
      */

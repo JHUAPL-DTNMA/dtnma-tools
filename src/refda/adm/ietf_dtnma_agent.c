@@ -942,7 +942,7 @@ void refda_adm_ietf_dtnma_agent_append_derived_ident(cace_ari_tbl_t *table, cons
     }
 }
 
-static bool refda_acl_check_create_object(refda_runctx_t *runctx, cace_amm_obj_ns_t *odm, cace_ari_type_t obj_type,
+static bool refda_acl_check_ensure_object(refda_runctx_t *runctx, cace_amm_obj_ns_t *odm, cace_ari_type_t obj_type,
                                           cace_ari_int obj_id)
 {
     // Permission for hypothetical object
@@ -2945,7 +2945,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_IDENT, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_IDENT, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );
@@ -3203,7 +3203,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_CONST, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_CONST, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );
@@ -3469,7 +3469,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_VAR, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_VAR, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );
@@ -3728,7 +3728,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_SBR, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_SBR, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );
@@ -3937,7 +3937,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    bool acl_found = refda_acl_check_create_object(ctx->runctx, odm, CACE_ARI_TYPE_TBR, obj_id);
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_TBR, obj_id);
     if (!acl_found)
     {
         REFDA_AGENT_UNLOCK(agent, );

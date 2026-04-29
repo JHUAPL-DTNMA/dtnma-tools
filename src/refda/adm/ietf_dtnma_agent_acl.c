@@ -161,7 +161,7 @@ static void refda_adm_ietf_dtnma_agent_acl_edd_access_list(refda_edd_prod_ctx_t 
 
 /* Name: current-groups
  * Description:
- *   Get the group IDs for the current execution context, which may incude
+ *   Get the group IDs for the current execution context, which may include
  *   the implicit Agent group ID zero.
  *
  * Parameters: none
@@ -766,7 +766,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
-        { // For ./IDENT/create-odm
+        { // For ./IDENT/ensure-odm
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             objdata->abstract = false;
@@ -779,7 +779,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
 
             obj = refda_register_ident(
                 adm,
-                cace_amm_idseg_ref_withenum("create-odm", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_CREATE_ODM),
+                cace_amm_idseg_ref_withenum("ensure-odm", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_ENSURE_ODM),
                 objdata);
             // no parameters
         }
@@ -801,7 +801,7 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                                      objdata);
             // no parameters
         }
-        { // For ./IDENT/create-object
+        { // For ./IDENT/ensure-object
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
             objdata->abstract = false;
@@ -814,8 +814,8 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
 
             obj = refda_register_ident(
                 adm,
-                cace_amm_idseg_ref_withenum("create-object",
-                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_CREATE_OBJECT),
+                cace_amm_idseg_ref_withenum("ensure-object",
+                                            REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_ENSURE_OBJECT),
                 objdata);
             // no parameters
         }
