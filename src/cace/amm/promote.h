@@ -39,12 +39,16 @@ cace_ari_type_t cace_amm_promote_eqiv_lit_type(const cace_ari_lit_t *lit);
  */
 bool cace_amm_promote_is_numeric(cace_ari_type_t typ);
 
+/** Bookkeeping for logic of type promotion.
+ */
 typedef struct
 {
+    /// Original left value
     const cace_ari_t *lt_val;
+    /// Original right value
     const cace_ari_t *rt_val;
 
-    /// Common promotion built-in type
+    /// Common promotion built-in type for #lt_val and #rt_val
     cace_ari_type_t common;
 
     /// Optionally used convert storage
@@ -52,14 +56,20 @@ typedef struct
     /// Optionally used convert storage
     cace_ari_t rt_prom;
 
-    /// The final left value to use
+    /// The final left value to use for type #common
     const cace_ari_t *lt_use;
-    /// The final right value to use
+    /// The final right value to use for type #common
     const cace_ari_t *rt_use;
 } cace_amm_promote_state_t;
 
+/** Initialize the struct.
+ * @post all pointers are null.
+ */
 void cace_amm_promote_init(cace_amm_promote_state_t *obj);
 
+/** De-initialze the struct.
+ * @post Only the optional storage is touched.
+ */
 void cace_amm_promote_deinit(cace_amm_promote_state_t *obj);
 
 /** Determine the numeric type which is the least common promotion type.
