@@ -157,6 +157,10 @@ static int cace_amm_promote_numeric_rank(cace_ari_type_t typ)
     }
 }
 
+/** Implement the numeric type promotion procedure from
+ * Section 6.11.2.1 of the AMM @cite draft-ietf-dtn-amm
+ * by choosing the least compatible type between two values.
+ */
 static int cace_amm_promote_type(cace_ari_type_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val)
 {
     CHKERR1(result);
