@@ -21,6 +21,7 @@
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
+#include <cace/amm/typing.h>
 #include <cace/util/logging.h>
 #include <unity.h>
 
@@ -67,6 +68,8 @@ TEST_CASE("ari:/BOOL/false")
 TEST_CASE("ari:/BOOL/true")
 TEST_CASE("ari:/INT/10")
 TEST_CASE("ari:/INT/-10")
+TEST_CASE("ari:/INT/-2147483648") // domain minimum
+TEST_CASE("ari:/INT/2147483647")  // domain maximum
 TEST_CASE("ari:/REAL32/10")
 TEST_CASE("ari:/REAL32/10.1")
 TEST_CASE("ari:/REAL32/0.1")
@@ -86,8 +89,18 @@ TEST_CASE("ari:/TD/-P106751DT23H47M15.854775808S") // domain minimum
 TEST_CASE("ari:/TD/P106751DT23H47M15.854775807S")  // domain maximum
 TEST_CASE("ari:/LABEL/hi")
 TEST_CASE("ari:/LABEL/1")
+TEST_CASE("ari:/LABEL/-1")
+TEST_CASE("ari:/LABEL/-2147483648")
+TEST_CASE("ari:/LABEL/2147483647")
 TEST_CASE("ari:/CBOR/h'0A'")
 TEST_CASE("ari:/CBOR/h'A164746573748203F94480'")
+TEST_CASE("ari:/ARITYPE/null")
+TEST_CASE("ari:/ARITYPE/uint")
+TEST_CASE("ari:/ARITYPE/hi")
+TEST_CASE("ari:/ARITYPE/1")
+TEST_CASE("ari:/ARITYPE/-1")
+TEST_CASE("ari:/ARITYPE/-2147483648")
+TEST_CASE("ari:/ARITYPE/2147483647")
 TEST_CASE("ari:/OBJPAT/(*)(*)(*)(*)")
 TEST_CASE("ari:/OBJPAT/(65535)(-10)(-2)(45)")
 TEST_CASE("ari:/OBJPAT/(example)(adm)(ctrl)(hi)")
@@ -126,6 +139,8 @@ void test_ari_roundtrip_text_cbor(const char *intext)
         }
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "cace_ari_text_decode() failed");
     }
+    TEST_ASSERT_TRUE_MESSAGE(cace_amm_builtin_validate(&ari_dn), "cace_amm_builtin_validate() failed");
+
     cace_ari_t ari_up;
     cace_ari_init(&ari_up);
     {
