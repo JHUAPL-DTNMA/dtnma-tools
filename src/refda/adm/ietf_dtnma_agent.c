@@ -877,17 +877,17 @@ static cace_ari_translate_result_t unary_eval_sub_label(cace_ari_t *out, const c
     {
         const cace_ari_t *operand = ctx->user_data;
 
-        cace_ari_uint as_uint;
-        if (!cace_ari_get_uint(in, &as_uint))
+        cace_ari_int as_int;
+        if (!cace_ari_get_int(in, &as_int))
         {
-            if (as_uint == 0)
+            if (as_int == 0)
             {
                 cace_ari_set_copy(out, operand);
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else
             {
-                CACE_LOG_ERR("invalid LABEL value %u", as_uint);
+                CACE_LOG_ERR("invalid LABEL value %" PRId32, as_int);
                 return CACE_ARI_TRANSLATE_FAILURE;
             }
         }
@@ -908,19 +908,20 @@ static cace_ari_translate_result_t nary_eval_sub_label(cace_ari_t *out, const ca
 {
     if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
     {
+        // size of array is already bounded to INT32_MAX
         const cace_ari_array_t *operands = ctx->user_data;
 
-        cace_ari_uint as_uint;
-        if (!cace_ari_get_uint(in, &as_uint))
+        cace_ari_int as_int;
+        if (!cace_ari_get_int(in, &as_int))
         {
-            if (as_uint < cace_ari_array_size(*operands))
+            if ((as_int >= 0) && (as_int < (cace_ari_int)cace_ari_array_size(*operands)))
             {
-                cace_ari_set_copy(out, cace_ari_array_get(*operands, as_uint));
+                cace_ari_set_copy(out, cace_ari_array_get(*operands, as_int));
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else
             {
-                CACE_LOG_ERR("invalid LABEL value %u", as_uint);
+                CACE_LOG_ERR("invalid LABEL value %" PRIu32, as_int);
                 return CACE_ARI_TRANSLATE_FAILURE;
             }
         }
@@ -1034,8 +1035,9 @@ static cace_ari_translate_result_t tbl_filter_sub_label(cace_ari_t *out, const c
     {
         _tbl_row_pair_t *table_data = (_tbl_row_pair_t *)ctx->user_data;
 
-        const cace_ari_tbl_t *tbl_data  = table_data->tbl;
-        const int             row_index = table_data->row_index;
+        const cace_ari_tbl_t *tbl_data = table_data->tbl;
+        // row index is already validated for the table size
+        const int row_index = table_data->row_index;
 
         // Get label ID value
         cace_ari_int col_index;
@@ -1046,13 +1048,13 @@ static cace_ari_translate_result_t tbl_filter_sub_label(cace_ari_t *out, const c
         }
 
         // Get column index
-        if (col_index >= (int)tbl_data->ncols)
+        if (col_index >= (cace_ari_int)tbl_data->ncols)
         {
-            CACE_LOG_WARNING("Invalid colum index %d, skipping", col_index);
+            CACE_LOG_WARNING("Invalid colum index %" PRId64 ", skipping", col_index);
             return CACE_ARI_TRANSLATE_FAILURE;
         }
 
-        size_t array_index = (row_index * tbl_data->ncols) + col_index;
+        const size_t array_index = (row_index * tbl_data->ncols) + col_index;
         // Get data value from table
         const cace_ari_t *tbl_data_item = cace_ari_array_cget(tbl_data->items, array_index);
 
@@ -5735,7 +5737,7 @@ static void refda_adm_ietf_dtnma_agent_oper_unary_eval(refda_oper_eval_ctx_t *ct
  *   actual parameter for      LABEL items with integer primitive (e.g.
  *   </label/0>)      within the target value      (literal expression or
  *   object reference).      The number of bind-able operands is given by
- *   the      operand-count parameter.   2. If the target is a reference,
+ *   the      _operand-count_ parameter.   2. If the target is a reference,
  *   it is used to produce      a value which SHALL be an expression.
  *   Otherwise, the target SHALL itself be an expression.   3. Evaluate the
  *   expression and consider the evaluation      result as this operator
@@ -5743,7 +5745,7 @@ static void refda_adm_ietf_dtnma_agent_oper_unary_eval(refda_oper_eval_ctx_t *ct
  *   of the unary operand binding.
  *
  * Parameters list:
- *   - Index 0, name "operand-count", type use of ari:/ARITYPE/UINT
+ *   - Index 0, name "operand-count", type use of ari:/ARITYPE/INT
  *   - Index 1, name "target", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
  *
  * Operand list:
@@ -5768,13 +5770,19 @@ static void refda_adm_ietf_dtnma_agent_oper_nary_eval(refda_oper_eval_ctx_t *ctx
     const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
 
     // manual operand popping
-    cace_ari_uint count_uint;
-    if (cace_ari_get_uint(count, &count_uint))
+    cace_ari_int count_int;
+    if (cace_ari_get_int(count, &count_int) || (count_int < 0))
     {
-        CACE_LOG_ERR("Failed getting count uint");
+        CACE_LOG_ERR("Failed getting count int");
         return;
     }
-    if (cace_ari_list_size(ctx->evalctx->stack) < count_uint)
+    const size_t stack_size = cace_ari_list_size(ctx->evalctx->stack);
+    if (stack_size > UINT32_MAX)
+    {
+        CACE_LOG_CRIT("Too many values on evaluation stack to handle");
+        return;
+    }
+    if ((cace_ari_int)stack_size < count_int)
     {
         CACE_LOG_ERR("Too few values on evaluation stack");
         cace_ari_list_reset(ctx->evalctx->stack);
@@ -5783,16 +5791,16 @@ static void refda_adm_ietf_dtnma_agent_oper_nary_eval(refda_oper_eval_ctx_t *ctx
 
     cace_ari_array_t operands;
     cace_ari_array_init(operands);
-    cace_ari_array_resize(operands, count_uint);
+    cace_ari_array_resize(operands, count_int);
     // preserve operand order from stack
     cace_ari_array_it_t ops_it;
     cace_ari_array_it_last(ops_it, operands);
-    for (cace_ari_uint ix = 0; ix < count_uint; ++ix, cace_ari_array_previous(ops_it))
+    for (cace_ari_int ix = 0; ix < count_int; ++ix, cace_ari_array_previous(ops_it))
     {
         cace_ari_t *val = cace_ari_array_ref(ops_it);
         cace_ari_list_pop_back_move(val, ctx->evalctx->stack);
     }
-    CACE_LOG_DEBUG("Popped %u operands from eval stack", count_uint);
+    CACE_LOG_DEBUG("Popped %" PRId32 " operands from eval stack", count_int);
 
     cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
 
@@ -5899,7 +5907,14 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
         CACE_LOG_ERR("Column is not an AC");
         return;
     }
-    int num_filter_cols = cace_ari_list_size(columns_ac->items);
+    const size_t num_filter_cols = cace_ari_list_size(columns_ac->items);
+
+    size_t num_rows = cace_ari_tbl_num_rows(cace_ari_cget_tbl(tbl));
+    if (num_rows > INT32_MAX)
+    {
+        CACE_LOG_CRIT("too many rows to handle");
+        return;
+    }
 
     // Local variables for result
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
@@ -5908,14 +5923,14 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     cace_ari_tbl_reset(result_tbl, num_filter_cols, 0);
 
     // for each row of the table
-    int num_rows = cace_ari_tbl_num_rows(cace_ari_cget_tbl(tbl));
-    for (int r = 0; r < num_rows; r++)
+    for (cace_ari_int row_ix = 0; row_ix < (cace_ari_int)num_rows; row_ix++)
     {
         // Substitute row values for LABEL items within row filter EXPR
         cace_ari_t current_row = CACE_ARI_INIT_UNDEFINED;
         {
             const cace_ari_translator_t translator = { .map_ari = tbl_filter_sub_label };
-            _tbl_row_pair_t             table_data = { tbl_data, r };
+            // context data
+            _tbl_row_pair_t table_data = { tbl_data, row_ix };
 
             int res = cace_ari_translate(&current_row, row_match, &translator, &table_data);
             if (res)
@@ -5973,7 +5988,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
                     return;
                 }
 
-                const size_t array_index = (r * tbl_data->ncols) + col_filter_index;
+                const size_t array_index = (row_ix * tbl_data->ncols) + col_filter_index;
                 // Get data from input TBL for the current column
                 const cace_ari_t *tbl_data_item = cace_ari_array_cget(tbl_data->items, array_index);
 
@@ -9306,9 +9321,23 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "operand-count");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // use of ari:/ARITYPE/UINT
-                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_UINT);
-                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                    // use of ari:/ARITYPE/INT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_INT);
+                    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+
+                    cace_amm_semtype_cnst_t *cnst;
+                    {
+                        // Constraint: NumericRange(ranges=[0,inf])
+                        cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                        cace_util_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
+                        {
+                            cace_util_range_intvl_int64_t intvl;
+                            cace_util_range_intvl_int64_set_min(&intvl, 0);
+                            cace_util_range_intvl_int64_clear_max(&intvl);
+                            cace_util_range_int64_push(*range, intvl);
+                        }
+                    }
                 }
             }
             {

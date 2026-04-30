@@ -106,7 +106,8 @@ class TestRefdaSocket(unittest.TestCase):
         # listen in work thread
         self._mgr_reader = threading.Thread(
             target=self._read_mgr,
-            args=[self._mgr_bind]
+            args=[self._mgr_bind],
+            daemon=True
         )
         self._mgr_reader.start()
 
