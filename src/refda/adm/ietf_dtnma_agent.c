@@ -5300,6 +5300,120 @@ static void refda_adm_ietf_dtnma_agent_oper_is_truthy(refda_oper_eval_ctx_t *ctx
      */
 }
 
+/* Name: match-type
+ * Description:
+ *   Predicate to match against any built-in type or named typedef based on
+ *   the procedures of Section 6.10 of the AMM. If the desired type is not
+ *   known to the agent the result SHALL be undefined.
+ *
+ * Parameters list:
+ *   - Index 0, name "desired", type union of 2 types (use of ari:/ARITYPE/ARITYPE, use of ari:/ARITYPE/TYPEDEF)
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_match_type(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_type BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    const cace_ari_t *desired = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+
+    // must be an existing type
+    refda_agent_t *agent = ctx->evalctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    const cace_amm_type_t *typeobj = refda_binding_type_from_name(desired, &agent->objs);
+    REFDA_AGENT_UNLOCK(agent, );
+    if (!typeobj)
+    {
+        CACE_LOG_ERR("Unknown desired type");
+        return;
+    }
+
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, value, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("checking value %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+    // normal type matching
+    cace_amm_type_match_res_t res = cace_amm_type_match(typeobj, value);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, res == CACE_AMM_TYPE_MATCH_POSITIVE);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_match_type BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: convert-type
+ * Description:
+ *   Type conversion operator to any built-in type or named typedef based
+ *   on the procedures of Section 6.11 of the AMM. If the desired type is
+ *   not known to the agent the result SHALL be undefined. If the
+ *   conversion fails the result SHALL be undefined.
+ *
+ * Parameters list:
+ *   - Index 0, name "desired", type union of 2 types (use of ari:/ARITYPE/ARITYPE, use of ari:/ARITYPE/TYPEDEF)
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "converted", type use of ari://ietf/amm-base/TYPEDEF/any
+ */
+static void refda_adm_ietf_dtnma_agent_oper_convert_type(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_convert_type BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    const cace_ari_t *desired = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+
+    // must be an existing type
+    refda_agent_t *agent = ctx->evalctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    const cace_amm_type_t *typeobj = refda_binding_type_from_name(desired, &agent->objs);
+    REFDA_AGENT_UNLOCK(agent, );
+    if (!typeobj)
+    {
+        CACE_LOG_ERR("Unknown desired type");
+        return;
+    }
+
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    // normal type conversion, do not care about failure
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_amm_type_convert(typeobj, &result, value);
+
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_convert_type BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: match-regexp
  * Description:
  *   This is a unary predicate operator which will compare a text value to
@@ -8859,6 +8973,117 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 adm, cace_amm_idseg_ref_withenum("is-truthy", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_TRUTHY),
                 objdata);
             // no parameters
+        }
+        { // For ./OPER/match-type
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_match_type;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("match-type", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_TYPE),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "desired");
+                {
+                    // union
+                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(fparam->typeobj), 2);
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/ARITYPE
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_ARITYPE);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/TYPEDEF
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TYPEDEF);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                }
+            }
+        }
+        { // For ./OPER/convert-type
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/any
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_convert_type;
+
+            obj = refda_register_oper(
+                adm,
+                cace_amm_idseg_ref_withenum("convert-type", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_CONVERT_TYPE),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "desired");
+                {
+                    // union
+                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(fparam->typeobj), 2);
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/ARITYPE
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_ARITYPE);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/TYPEDEF
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TYPEDEF);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                }
+            }
         }
         { // For ./OPER/match-regexp
             refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
