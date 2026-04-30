@@ -616,17 +616,21 @@ void test_cace_ari_int64_decode_invalid(const char *in)
 }
 
 TEST_CASE(0, 'f', "0.000000")
-TEST_CASE(0, 'g', "0")
+TEST_CASE(0, 'g', "0.")
 TEST_CASE(0, 'e', "0.000000e+00")
 TEST_CASE(0, 'a', "0x0p+0")
 TEST_CASE(10, 'f', "10.000000")
-TEST_CASE(10, 'g', "10")
+TEST_CASE(10, 'g', "10.")
 TEST_CASE(10, 'e', "1.000000e+01")
 TEST_CASE(10, 'a', "0x1.4p+3")
 TEST_CASE(1.1e6, 'f', "1100000.000000")
 TEST_CASE(1.1e6, 'g', "1.1e+06")
 TEST_CASE(1.1e6, 'e', "1.100000e+06")
 TEST_CASE(1.1e6, 'a', "0x1.0c8ep+20")
+TEST_CASE(2e6, 'f', "2000000.000000")
+TEST_CASE(2e6, 'g', "2e+06")
+TEST_CASE(2e6, 'e', "2.000000e+06")
+TEST_CASE(2e6, 'a', "0x1.e848p+20")
 void test_cace_ari_float64_encode(double in, char form, const char *expect)
 {
     m_string_t out_text;

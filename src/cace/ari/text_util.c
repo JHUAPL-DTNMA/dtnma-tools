@@ -397,10 +397,20 @@ int cace_ari_float64_encode(m_string_t out, double value, char form)
     else if (form == 'f')
     {
         m_string_cat_printf(out, "%f", value);
+        // ensure trailing decimal
+        if (m_string_search_rchar(out, '.', 0) == M_STRING_FAILURE)
+        {
+            m_string_push_back(out, '.');
+        }
     }
     else if (form == 'g')
     {
         m_string_cat_printf(out, "%g", value);
+        // ensure trailing decimal
+        if (m_string_search_pbrk(out, ".e", 0) == M_STRING_FAILURE)
+        {
+            m_string_push_back(out, '.');
+        }
     }
     else if (form == 'e')
     {
