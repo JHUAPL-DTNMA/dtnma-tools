@@ -95,7 +95,9 @@ void refda_ctrl_exec_ctx_set_waiting(refda_ctrl_exec_ctx_t *ctx, const refda_tim
  * Otherwise REFDA_CTRL_EXEC_RESULT_TYPE_NOMATCH.
  */
 int refda_ctrl_exec_ctx_set_result_copy(refda_ctrl_exec_ctx_t *ctx, const cace_ari_t *value);
-/// @overload
+/** @overload
+ * Set the result with move semantics.
+ */
 int refda_ctrl_exec_ctx_set_result_move(refda_ctrl_exec_ctx_t *ctx, cace_ari_t *value);
 /** @overload
  * Convenience member to mark the result as successful but null-value.

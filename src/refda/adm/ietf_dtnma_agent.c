@@ -39,6 +39,7 @@
 #include "refda/exec.h"
 #include "refda/binding.h"
 #include "refda/reporting.h"
+#include "cace/amm/promote.h"
 #include "cace/amm/numeric.h"
 #include "cace/ari/text_util.h"
 #include <timespec.h>
@@ -311,153 +312,21 @@ static cace_ari_real64 numeric_add_real64(cace_ari_real64 left, cace_ari_real64 
 {
     return left + right;
 }
-
-static cace_ari_uvast numeric_sub_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left - right;
-}
-static cace_ari_vast numeric_sub_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left - right;
-}
-static cace_ari_real64 numeric_sub_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left - right;
-}
-
-static cace_ari_uvast numeric_mul_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left * right;
-}
-static cace_ari_vast numeric_mul_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left * right;
-}
-static cace_ari_real64 numeric_mul_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left * right;
-}
-
-static cace_ari_uvast numeric_div_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left / right;
-}
-static cace_ari_vast numeric_div_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left / right;
-}
-static cace_ari_real64 numeric_div_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left / right;
-}
-
-static cace_ari_uvast numeric_mod_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left % right;
-}
-static cace_ari_vast numeric_mod_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left % right;
-}
-static cace_ari_real64 numeric_mod_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return fmod(left, right);
-}
-
-static cace_ari_uvast numeric_gt_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left > right;
-}
-static cace_ari_vast numeric_gt_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left > right;
-}
-static cace_ari_real64 numeric_gt_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left > right;
-}
-
-static cace_ari_uvast numeric_gte_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left >= right;
-}
-static cace_ari_vast numeric_gte_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left >= right;
-}
-static cace_ari_real64 numeric_gte_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left >= right;
-}
-
-static cace_ari_uvast numeric_lt_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left < right;
-}
-static cace_ari_vast numeric_lt_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left < right;
-}
-static cace_ari_real64 numeric_lt_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left < right;
-}
-
-static cace_ari_uvast numeric_lte_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left <= right;
-}
-static cace_ari_vast numeric_lte_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left <= right;
-}
-static cace_ari_real64 numeric_lte_real64(cace_ari_real64 left, cace_ari_real64 right)
-{
-    return left <= right;
-}
-
-static cace_ari_uvast bitwise_and_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left & right;
-}
-static cace_ari_vast bitwise_and_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left & right;
-}
-static cace_ari_uvast bitwise_or_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left | right;
-}
-static cace_ari_vast bitwise_or_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left | right;
-}
-static cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast right)
-{
-    return left ^ right;
-}
-static cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right)
-{
-    return left ^ right;
-}
-
-static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
+static int numeric_add_timespec(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
 {
     CHKERR1(result);
     CHKERR1(valueA);
     CHKERR1(valueB);
 
-    cace_ari_type_t typeA = cace_eqiv_ari_type(&(valueA->as_lit));
-    cace_ari_type_t typeB = cace_eqiv_ari_type(&(valueB->as_lit));
+    cace_ari_type_t typeA = cace_amm_promote_eqiv_lit_type(&(valueA->as_lit));
+    cace_ari_type_t typeB = cace_amm_promote_eqiv_lit_type(&(valueB->as_lit));
 
     // Addition of TD and TD results in a TD value
-    bool is_result_TD = false;
-    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
+    bool is_result_TD = (typeA == CACE_ARI_TYPE_TD) && (typeB == CACE_ARI_TYPE_TD);
 
     // Addition of TP and TD results in a TP value
-    bool is_result_TP = false;
-    is_result_TP |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TP;
-    is_result_TP |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TD;
+    bool is_result_TP = ((typeA == CACE_ARI_TYPE_TD) && (typeB == CACE_ARI_TYPE_TP))
+                        || ((typeA == CACE_ARI_TYPE_TP) && (typeB == CACE_ARI_TYPE_TD));
 
     // Determine the cace_ari_type_t of the result
     cace_ari_type_t ari_type;
@@ -492,27 +361,43 @@ static int timespec_numeric_add(cace_ari_t *result, const cace_ari_t *valueA, co
     // Success
     return RET_PASS;
 }
+static const cace_numeric_binary_desc_t oper_add_desc = {
+    .binop_uvast    = numeric_add_uvast,
+    .binop_vast     = numeric_add_vast,
+    .binop_real64   = numeric_add_real64,
+    .binop_timespec = numeric_add_timespec,
+};
 
-static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
+static cace_ari_uvast numeric_sub_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left - right;
+}
+static cace_ari_vast numeric_sub_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left - right;
+}
+static cace_ari_real64 numeric_sub_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left - right;
+}
+static int numeric_sub_timespec(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
 {
     CHKERR1(result);
     CHKERR1(valueA);
     CHKERR1(valueB);
 
-    cace_ari_type_t typeA = cace_eqiv_ari_type(&(valueA->as_lit));
-    cace_ari_type_t typeB = cace_eqiv_ari_type(&(valueB->as_lit));
+    cace_ari_type_t typeA = cace_amm_promote_eqiv_lit_type(&(valueA->as_lit));
+    cace_ari_type_t typeB = cace_amm_promote_eqiv_lit_type(&(valueB->as_lit));
 
     // Note the following will result in TD:
     // - Subtraction of TP from TP
     // - Subtraction of TD from TD
-    bool is_result_TD = false;
-    is_result_TD |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TP;
-    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB == CACE_ARI_TYPE_TD;
+    bool is_result_TD = ((typeA == CACE_ARI_TYPE_TP) && (typeB == CACE_ARI_TYPE_TP))
+                        || ((typeA == CACE_ARI_TYPE_TD) && (typeB == CACE_ARI_TYPE_TD));
 
     // Note the following will result in TP:
     // - Subtraction of TD from TP
-    bool is_result_TP = false;
-    is_result_TP |= typeA == CACE_ARI_TYPE_TP && typeB == CACE_ARI_TYPE_TD;
+    bool is_result_TP = (typeA == CACE_ARI_TYPE_TP) && (typeB == CACE_ARI_TYPE_TD);
 
     // Determine the cace_ari_type_t of the result
     cace_ari_type_t ari_type;
@@ -550,15 +435,39 @@ static int timespec_numeric_sub(cace_ari_t *result, const cace_ari_t *valueA, co
     // Success
     return RET_PASS;
 }
+static const cace_numeric_binary_desc_t oper_sub_desc = {
+    .binop_uvast    = numeric_sub_uvast,
+    .binop_vast     = numeric_sub_vast,
+    .binop_real64   = numeric_sub_real64,
+    .binop_timespec = numeric_sub_timespec,
+};
 
-static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
+static cace_ari_uvast numeric_mul_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left * right;
+}
+static cace_ari_vast numeric_mul_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left * right;
+}
+static cace_ari_real64 numeric_mul_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left * right;
+}
+static int numeric_mul_timespec(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
 {
     CHKERR1(result);
     CHKERR1(valueA);
     CHKERR1(valueB);
 
-    cace_ari_type_t typeA              = cace_eqiv_ari_type(&(valueA->as_lit));
-    bool            typeB_is_primitive = cace_has_numeric_prim_type(valueB);
+    // Multiplication is commutative, so set left argument to the time type
+    cace_ari_type_t typeA = cace_amm_promote_eqiv_lit_type(&(valueA->as_lit));
+    if (typeA != CACE_ARI_TYPE_TD)
+    {
+        M_SWAP(const cace_ari_t *, valueA, valueB);
+        typeA = cace_amm_promote_eqiv_lit_type(&(valueA->as_lit));
+    }
+    bool typeB_is_primitive = cace_has_numeric_prim_type(valueB);
 
     // Note the following will (typically) result in TD:
     // - Multiplication of TD with a scalar (numeric primitive)
@@ -614,7 +523,8 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
             break;
         }
         default:
-            // This should never happen - perhaps throw an exception instead
+            // This should never happen
+            CACE_LOG_CRIT("unhandled branch");
             return RET_FAIL_UNEXPECTED;
     }
 
@@ -633,20 +543,38 @@ static int timespec_numeric_mul(cace_ari_t *result, const cace_ari_t *valueA, co
     // Success
     return RET_PASS;
 }
+static const cace_numeric_binary_desc_t oper_mul_desc = {
+    .binop_uvast    = numeric_mul_uvast,
+    .binop_vast     = numeric_mul_vast,
+    .binop_real64   = numeric_mul_real64,
+    .binop_timespec = numeric_mul_timespec,
+};
 
-static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
+static cace_ari_uvast numeric_div_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left / right;
+}
+static cace_ari_vast numeric_div_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left / right;
+}
+static cace_ari_real64 numeric_div_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left / right;
+}
+static int numeric_div_timespec(cace_ari_t *result, const cace_ari_t *valueA, const cace_ari_t *valueB)
 {
     CHKERR1(result);
     CHKERR1(valueA);
     CHKERR1(valueB);
 
-    cace_ari_type_t typeA              = cace_eqiv_ari_type(&(valueA->as_lit));
+    cace_ari_type_t typeA              = cace_amm_promote_eqiv_lit_type(&(valueA->as_lit));
     bool            typeB_is_primitive = cace_has_numeric_prim_type(valueB);
 
     // Note the following will (typically) result in TD:
     // - Division of TD with a scalar (numeric primitive)
     bool is_result_TD = false;
-    is_result_TD |= typeA == CACE_ARI_TYPE_TD && typeB_is_primitive == true;
+    is_result_TD |= (typeA == CACE_ARI_TYPE_TD) && (typeB_is_primitive == true);
     if (is_result_TD == false)
     {
         // Bail if the result will not be a TD
@@ -710,7 +638,8 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
             break;
         }
         default:
-            // This should never happen - perhaps throw an exception instead
+            // This should never happen
+            CACE_LOG_CRIT("unhandled branch");
             return RET_FAIL_UNEXPECTED;
     }
 
@@ -729,12 +658,213 @@ static int timespec_numeric_div(cace_ari_t *result, const cace_ari_t *valueA, co
     // Success
     return RET_PASS;
 }
+static const cace_numeric_binary_desc_t oper_div_desc = {
+    .binop_uvast    = numeric_div_uvast,
+    .binop_vast     = numeric_div_vast,
+    .binop_real64   = numeric_div_real64,
+    .binop_timespec = numeric_div_timespec,
+};
 
-static int timespec_numeric_mod(cace_ari_t *result _U_, const cace_ari_t *left _U_, const cace_ari_t *right _U_)
+static cace_ari_uvast numeric_mod_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left % right;
+}
+static cace_ari_vast numeric_mod_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left % right;
+}
+static cace_ari_real64 numeric_mod_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return fmod(left, right);
+}
+static int numeric_mod_timespec(cace_ari_t *result _U_, const cace_ari_t *left _U_, const cace_ari_t *right _U_)
 {
     // Calculating the remainder associated with timespec objects is unsupported
     return RET_FAIL_UNDEFINED;
 }
+static const cace_numeric_binary_desc_t oper_mod_desc = {
+    .binop_uvast    = numeric_mod_uvast,
+    .binop_vast     = numeric_mod_vast,
+    .binop_real64   = numeric_mod_real64,
+    .binop_timespec = numeric_mod_timespec,
+};
+
+static bool numeric_eq_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left == right;
+}
+static bool numeric_eq_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left == right;
+}
+static bool numeric_eq_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left == right;
+}
+static bool numeric_eq_timespec(struct timespec left, struct timespec right)
+{
+    return timespec_eq(left, right);
+}
+static const cace_numeric_compare_desc_t oper_loose_eq_desc = {
+    .binop_uvast    = numeric_eq_uvast,
+    .binop_vast     = numeric_eq_vast,
+    .binop_real64   = numeric_eq_real64,
+    .binop_timespec = numeric_eq_timespec,
+};
+
+static bool numeric_ne_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left != right;
+}
+static bool numeric_ne_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left != right;
+}
+static bool numeric_ne_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left != right;
+}
+static bool numeric_ne_timespec(struct timespec left, struct timespec right)
+{
+    return !timespec_eq(left, right);
+}
+static const cace_numeric_compare_desc_t oper_loose_ne_desc = {
+    .binop_uvast    = numeric_ne_uvast,
+    .binop_vast     = numeric_ne_vast,
+    .binop_real64   = numeric_ne_real64,
+    .binop_timespec = numeric_ne_timespec,
+};
+
+static bool numeric_gt_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left > right;
+}
+static bool numeric_gt_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left > right;
+}
+static bool numeric_gt_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left > right;
+}
+static bool numeric_gt_timespec(struct timespec left, struct timespec right)
+{
+    return timespec_gt(left, right);
+}
+static const cace_numeric_compare_desc_t oper_loose_gt_desc = {
+    .binop_uvast    = numeric_gt_uvast,
+    .binop_vast     = numeric_gt_vast,
+    .binop_real64   = numeric_gt_real64,
+    .binop_timespec = numeric_gt_timespec,
+};
+
+static bool numeric_ge_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left >= right;
+}
+static bool numeric_ge_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left >= right;
+}
+static bool numeric_ge_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left >= right;
+}
+static bool numeric_ge_timespec(struct timespec left, struct timespec right)
+{
+    return timespec_ge(left, right);
+}
+static const cace_numeric_compare_desc_t oper_loose_ge_desc = {
+    .binop_uvast    = numeric_ge_uvast,
+    .binop_vast     = numeric_ge_vast,
+    .binop_real64   = numeric_ge_real64,
+    .binop_timespec = numeric_ge_timespec,
+};
+
+static bool numeric_lt_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left < right;
+}
+static bool numeric_lt_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left < right;
+}
+static bool numeric_lt_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left < right;
+}
+static bool numeric_lt_timespec(struct timespec left, struct timespec right)
+{
+    return timespec_lt(left, right);
+}
+static const cace_numeric_compare_desc_t oper_loose_lt_desc = {
+    .binop_uvast    = numeric_lt_uvast,
+    .binop_vast     = numeric_lt_vast,
+    .binop_real64   = numeric_lt_real64,
+    .binop_timespec = numeric_lt_timespec,
+};
+
+static bool numeric_le_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left <= right;
+}
+static bool numeric_le_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left <= right;
+}
+static bool numeric_le_real64(cace_ari_real64 left, cace_ari_real64 right)
+{
+    return left <= right;
+}
+static bool numeric_le_timespec(struct timespec left, struct timespec right)
+{
+    return timespec_le(left, right);
+}
+static const cace_numeric_compare_desc_t oper_loose_le_desc = {
+    .binop_uvast    = numeric_le_uvast,
+    .binop_vast     = numeric_le_vast,
+    .binop_real64   = numeric_le_real64,
+    .binop_timespec = numeric_le_timespec,
+};
+
+static cace_ari_uvast bitwise_and_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left & right;
+}
+static cace_ari_vast bitwise_and_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left & right;
+}
+static const cace_numeric_binary_desc_t oper_bitwise_and_desc = {
+    .binop_uvast = bitwise_and_uvast,
+    .binop_vast  = bitwise_and_vast,
+};
+
+static cace_ari_uvast bitwise_or_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left | right;
+}
+static cace_ari_vast bitwise_or_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left | right;
+}
+static const cace_numeric_binary_desc_t oper_bitwise_or_desc = {
+    .binop_uvast = bitwise_or_uvast,
+    .binop_vast  = bitwise_or_vast,
+};
+
+static cace_ari_uvast bitwise_xor_uvast(cace_ari_uvast left, cace_ari_uvast right)
+{
+    return left ^ right;
+}
+static cace_ari_vast bitwise_xor_vast(cace_ari_vast left, cace_ari_vast right)
+{
+    return left ^ right;
+}
+static const cace_numeric_binary_desc_t oper_bitwise_xor_desc = {
+    .binop_uvast = bitwise_xor_uvast,
+    .binop_vast  = bitwise_xor_vast,
+};
 
 /**
  * Translation helper function to substitute LABEL value 0 in a filter with
@@ -1359,7 +1489,9 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
     for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);
          refda_exec_seq_list_next(seq_it))
     {
-        refda_exec_seq_t *seq = refda_exec_seq_list_ref(seq_it);
+        refda_exec_seq_ptr_t **seq_ptr = refda_exec_seq_list_ref(seq_it);
+
+        refda_exec_seq_t *seq = refda_exec_seq_ptr_ref(*seq_ptr);
         if (refda_exec_item_list_empty_p(seq->items))
         {
             // intermediate state is ignored
@@ -4234,13 +4366,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
 
 /* Name: negate
  * Description:
- *   Negate a value. This is equivalent to multiplying by -1 but a shorter
- *   expression.
+ *   Negate a value, numeric or TD. This is equivalent to multiplying by -1
+ *   but a shorter expression.
  *
  * Parameters: none
  *
  * Operand list:
- *   - Index 0, name "val", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 0, name "val", type use of ari://ietf/amm-base/TYPEDEF/numeric-or-time
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
  */
@@ -4295,8 +4427,8 @@ static void refda_adm_ietf_dtnma_agent_oper_negate(refda_oper_eval_ctx_t *ctx)
  * Parameters: none
  *
  * Operand list:
- *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
- *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/numeric-or-time
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/numeric-or-time
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -4310,8 +4442,7 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_add_uvast, numeric_add_vast, numeric_add_real64,
-                                      timespec_numeric_add))
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, &oper_add_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4333,8 +4464,8 @@ static void refda_adm_ietf_dtnma_agent_oper_add(refda_oper_eval_ctx_t *ctx)
  * Parameters: none
  *
  * Operand list:
- *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
- *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/numeric-or-time
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/numeric-or-time
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -4348,8 +4479,7 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_sub_uvast, numeric_sub_vast, numeric_sub_real64,
-                                      timespec_numeric_sub))
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, &oper_sub_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4369,8 +4499,8 @@ static void refda_adm_ietf_dtnma_agent_oper_sub(refda_oper_eval_ctx_t *ctx)
  * Parameters: none
  *
  * Operand list:
- *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
- *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/numeric-or-time
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/numeric-or-time
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -4384,8 +4514,7 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mul_uvast, numeric_mul_vast, numeric_mul_real64,
-                                      timespec_numeric_mul))
+    if (!cace_numeric_binary_operator(&result, lt_val, rt_val, &oper_mul_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4407,8 +4536,8 @@ static void refda_adm_ietf_dtnma_agent_oper_multiply(refda_oper_eval_ctx_t *ctx)
  * Parameters: none
  *
  * Operand list:
- *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
- *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/numeric-or-time
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/numeric-or-time
  *
  * Result name "result", type use of ari://ietf/amm-base/TYPEDEF/any
  */
@@ -4423,9 +4552,7 @@ static void refda_adm_ietf_dtnma_agent_oper_divide(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
 
-    if (!cace_numeric_is_zero(rt_val)
-        && !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_div_uvast, numeric_div_vast,
-                                         numeric_div_real64, timespec_numeric_div))
+    if (!cace_numeric_is_zero(rt_val) && !cace_numeric_binary_operator(&result, lt_val, rt_val, &oper_div_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4463,9 +4590,7 @@ static void refda_adm_ietf_dtnma_agent_oper_remainder(refda_oper_eval_ctx_t *ctx
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
 
-    if (!cace_numeric_is_zero(rt_val)
-        && !cace_numeric_binary_operator(&result, lt_val, rt_val, numeric_mod_uvast, numeric_mod_vast,
-                                         numeric_mod_real64, timespec_numeric_mod))
+    if (!cace_numeric_is_zero(rt_val) && !cace_numeric_binary_operator(&result, lt_val, rt_val, &oper_mod_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4548,7 +4673,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_and(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_and_uvast, bitwise_and_vast))
+    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, &oper_bitwise_and_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4581,7 +4706,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_or(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_or_uvast, bitwise_or_vast))
+    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, &oper_bitwise_or_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4614,7 +4739,7 @@ static void refda_adm_ietf_dtnma_agent_oper_bit_xor(refda_oper_eval_ctx_t *ctx)
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
     cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, bitwise_xor_uvast, bitwise_xor_vast))
+    if (!cace_numeric_integer_binary_operator(&result, lt_val, rt_val, &oper_bitwise_xor_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4771,10 +4896,79 @@ static void refda_adm_ietf_dtnma_agent_oper_bool_xor(refda_oper_eval_ctx_t *ctx)
      */
 }
 
+/* Name: strict-eq
+ * Description:
+ *   Compare two values for strict equality as defined by Section 6.12.1 of
+ *   the AMM.
+ *
+ * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "result", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_strict_eq(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_strict_eq BODY
+     * +-------------------------------------------------------------------------+
+     */
+    const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+
+    bool val = cace_ari_equal(lt_val, rt_val);
+    cace_ari_set_bool(&result, val);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_strict_eq BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: strict-ne
+ * Description:
+ *   Compare two values for strict inequality as defined by Section 6.12.1
+ *   of the AMM.
+ *
+ * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "result", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_strict_ne(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_strict_ne BODY
+     * +-------------------------------------------------------------------------+
+     */
+    const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
+    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
+
+    bool val = cace_ari_equal(lt_val, rt_val);
+    cace_ari_set_bool(&result, !val);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_strict_ne BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
 /* Name: compare-eq
  * Description:
- *   Compare two values for equality as defined by Section 6.12.1 of the
- *   AMM.
+ *   Compare two values for loose equality as defined by Section 6.12.1 of
+ *   the AMM. Numeric operands MAY be converted to a least compatible
+ *   numeric type for the comparison.
  *
  * Parameters: none
  *
@@ -4791,16 +4985,18 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_eq BODY
      * +-------------------------------------------------------------------------+
      */
-
-    // FIXME: handle non-numeric types
-
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        return;
+    }
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
 
-    bool val = cace_ari_equal(lt_val, rt_val);
-    cace_ari_set_bool(&result, val);
-    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_compare_operator(&result, lt_val, rt_val, &oper_loose_eq_desc))
+    {
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_eq BODY
@@ -4810,8 +5006,9 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_eq(refda_oper_eval_ctx_t *ct
 
 /* Name: compare-ne
  * Description:
- *   Compare two values for inequality as defined by Section 6.12.1 of the
- *   AMM.
+ *   Compare two values for loose equality as defined by Section 6.12.1 of
+ *   the AMM. Numeric operands MAY be converted to a least compatible
+ *   numeric type for the comparison.
  *
  * Parameters: none
  *
@@ -4828,16 +5025,18 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ne BODY
      * +-------------------------------------------------------------------------+
      */
-
-    // FIXME: handle non-numeric types
-
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        return;
+    }
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
 
-    bool val = cace_ari_equal(lt_val, rt_val);
-    cace_ari_set_bool(&result, !val);
-    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_compare_operator(&result, lt_val, rt_val, &oper_loose_ne_desc))
+    {
+        refda_oper_eval_ctx_set_result_move(ctx, &result);
+    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ne BODY
@@ -4854,8 +5053,8 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ne(refda_oper_eval_ctx_t *ct
  * Parameters: none
  *
  * Operand list:
- *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
- *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4866,11 +5065,15 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_gt BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        return;
+    }
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_gt_uvast, numeric_gt_vast,
-                                                 numeric_gt_real64))
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_compare_operator(&result, lt_val, rt_val, &oper_loose_gt_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4890,8 +5093,8 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_gt(refda_oper_eval_ctx_t *ct
  * Parameters: none
  *
  * Operand list:
- *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
- *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4902,11 +5105,15 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_ge BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        return;
+    }
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_gte_uvast, numeric_gte_vast,
-                                                 numeric_gte_real64))
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_compare_operator(&result, lt_val, rt_val, &oper_loose_ge_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4926,8 +5133,8 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_ge(refda_oper_eval_ctx_t *ct
  * Parameters: none
  *
  * Operand list:
- *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
- *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4938,11 +5145,15 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_lt BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        return;
+    }
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_lt_uvast, numeric_lt_vast,
-                                                 numeric_lt_real64))
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_compare_operator(&result, lt_val, rt_val, &oper_loose_lt_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -4962,8 +5173,8 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_lt(refda_oper_eval_ctx_t *ct
  * Parameters: none
  *
  * Operand list:
- *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
- *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/NUMERIC
+ *   - Index 0, name "left", type use of ari://ietf/amm-base/TYPEDEF/any
+ *   - Index 1, name "right", type use of ari://ietf/amm-base/TYPEDEF/any
  *
  * Result name "result", type use of ari:/ARITYPE/BOOL
  */
@@ -4974,11 +5185,15 @@ static void refda_adm_ietf_dtnma_agent_oper_compare_le(refda_oper_eval_ctx_t *ct
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_compare_le BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_oper_eval_ctx_has_operand_undefined(ctx))
+    {
+        return;
+    }
     const cace_ari_t *lt_val = refda_oper_eval_ctx_get_operand_index(ctx, 0);
     const cace_ari_t *rt_val = refda_oper_eval_ctx_get_operand_index(ctx, 1);
-    cace_ari_t        result = CACE_ARI_INIT_UNDEFINED;
-    if (!cace_numeric_binary_comparison_operator(&result, lt_val, rt_val, numeric_lte_uvast, numeric_lte_vast,
-                                                 numeric_lte_real64))
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    if (!cace_numeric_compare_operator(&result, lt_val, rt_val, &oper_loose_le_desc))
     {
         refda_oper_eval_ctx_set_result_move(ctx, &result);
     }
@@ -5046,6 +5261,41 @@ static void refda_adm_ietf_dtnma_agent_oper_is_not_undefined(refda_oper_eval_ctx
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_not_undefined BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: is-truthy
+ * Description:
+ *   Predicate to convert to bool type. This operator will specifically
+ *   consider the undefined value as not-truthy with a match result of
+ *   false. This logic is the same as what is used internal to the Agent
+ *   for conditional expressions and filters.
+ *
+ * Parameters: none
+ *
+ * Operand list:
+ *   - Index 0, name "value", type use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "match", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_oper_is_truthy(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_truthy BODY
+     * +-------------------------------------------------------------------------+
+     */
+    const cace_ari_t *value = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+
+    const bool result_truthy = cace_amm_ari_is_truthy(value);
+
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    cace_ari_set_bool(&result, result_truthy);
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_truthy BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -7682,8 +7932,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "val");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // reference to ari://ietf/amm-base/TYPEDEF/numeric-or-time
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -7711,8 +7961,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/any
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    // reference to ari://ietf/amm-base/TYPEDEF/numeric-or-time
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -7721,8 +7971,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/any
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    // reference to ari://ietf/amm-base/TYPEDEF/numeric-or-time
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -7750,8 +8000,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/any
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    // reference to ari://ietf/amm-base/TYPEDEF/numeric-or-time
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -7760,8 +8010,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/any
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    // reference to ari://ietf/amm-base/TYPEDEF/numeric-or-time
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -7789,8 +8039,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/any
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    // reference to ari://ietf/amm-base/TYPEDEF/numeric-or-time
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -7799,8 +8049,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/any
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    // reference to ari://ietf/amm-base/TYPEDEF/numeric-or-time
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -7829,8 +8079,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/any
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    // reference to ari://ietf/amm-base/TYPEDEF/numeric-or-time
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -7839,8 +8089,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/any
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    // reference to ari://ietf/amm-base/TYPEDEF/numeric-or-time
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 27);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -8197,6 +8447,86 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 objdata);
             // no parameters
         }
+        { // For ./OPER/strict-eq
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "left");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
+                m_string_set_cstr(operand->name, "right");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_strict_eq;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("strict-eq", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_STRICT_EQ),
+                objdata);
+            // no parameters
+        }
+        { // For ./OPER/strict-ne
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 2);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "left");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 1);
+                m_string_set_cstr(operand->name, "right");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_strict_ne;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("strict-ne", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_STRICT_NE),
+                objdata);
+            // no parameters
+        }
         { // For ./OPER/compare-eq
             refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
             refda_amm_oper_desc_init(objdata);
@@ -8287,8 +8617,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -8297,8 +8627,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -8327,8 +8657,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -8337,8 +8667,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -8367,8 +8697,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -8377,8 +8707,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -8407,8 +8737,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "left");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -8417,8 +8747,8 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 m_string_set_cstr(operand->name, "right");
                 {
                     cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                    // reference to ari://ietf/amm-base/TYPEDEF/NUMERIC
-                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
                     cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
                 }
             }
@@ -8497,6 +8827,36 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 adm,
                 cace_amm_idseg_ref_withenum("is-not-undefined",
                                             REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_NOT_UNDEFINED),
+                objdata);
+            // no parameters
+        }
+        { // For ./OPER/is-truthy
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "value");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/any
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                    cace_amm_type_set_use_ref_move(&(operand->typeobj), &typeref);
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_is_truthy;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("is-truthy", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_TRUTHY),
                 objdata);
             // no parameters
         }
