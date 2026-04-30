@@ -17,17 +17,21 @@
 #
 ''' Test the local socket transport of the REFDA.
 '''
+from dataclasses import dataclass, field
 import io
 import logging
 import numpy
 import os
+import queue
 import re
+import select
 import signal
 import socket
 import subprocess
 import sys
 import tempfile
-from typing import List, Optional, Type
+import threading
+from typing import Dict, List, Optional, Type
 import urllib.parse
 import unittest
 import cbor2
@@ -61,6 +65,18 @@ def literal_prim_types(items: list[ARI]) -> list[Optional[Type]]:
     ''' Get a list of literal primitive types to use for test assertions '''
     return list(map(literal_prim_type, items))
 
+@dataclass
+class BindInstance:
+    path: str
+    ''' Filesystem path of the bind '''
+    sock: socket.socket
+    ''' Local end of the bind '''
+
+    recv: Dict[ari.LiteralARI, List[ari.Report]]
+    ''' Queue of decoded report values '''
+    recv_lock: threading.Lock
+    ''' Synchronization for #recv '''
+    recv_avail: threading.Condition
 
 class TestRefdaSocket(unittest.TestCase):
     ''' Verify whole-agent behavior with the refda-socket '''
@@ -73,22 +89,31 @@ class TestRefdaSocket(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory(**tmp_kwargs)
         self._agent_sock_path = os.path.join(self._tmp.name, 'agent.sock')
 
-        def bound_sock(name):
+        def bound_sock(name) -> BindInstance:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 
             path = os.path.join(self._tmp.name, name)
             LOGGER.info('binding to socket at %s', path)
             sock.bind(path)
 
-            return {'path': path, 'sock': sock}
+            lock = threading.Lock()
+            cond = threading.Condition(lock)
+            return BindInstance(path=path, sock=sock, recv={}, recv_lock=lock, recv_avail=cond)
 
-        self._mgr_bind = [
+        self._mgr_bind: List[BindInstance] = [
             bound_sock(f'mgr{index}.sock')
             for index in range(3)
         ]
+        # listen in work thread
+        self._mgr_reader = threading.Thread(
+            target=self._read_mgr,
+            args=[self._mgr_bind],
+            daemon=True
+        )
+        self._mgr_reader.start()
 
-        mgr0_pat = quote('"' + re.escape('file:' + self._mgr_bind[0]['path']) + '"')
-        mgr1_pat = quote('"' + re.escape('file:' + self._mgr_bind[1]['path']) + '"')
+        mgr0_pat = quote('"' + re.escape('file:' + self._mgr_bind[0].path) + '"')
+        mgr1_pat = quote('"' + re.escape('file:' + self._mgr_bind[1].path) + '"')
         startup_path = os.path.join(self._tmp.name, 'startup.uri')
         with open(startup_path, 'w') as startup_file:
             startup_file.writelines([
@@ -122,20 +147,19 @@ class TestRefdaSocket(unittest.TestCase):
             '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
             '-s', startup_path,
             '-a', ('file:' + self._agent_sock_path),
-            '-m', ('file:' + self._mgr_bind[0]['path']),
+            '-m', ('file:' + self._mgr_bind[0].path),
         ])
         self._agent = CmdRunner(args)
-
-        # buffer of received RPTSET pending _wait_reports
-        self._rptsets = {}
 
     def tearDown(self) -> None:
         agent_exit = self._agent.stop()
         self._agent = None
 
         for bind in self._mgr_bind:
-            sock = bind['sock']
-            sock.close()
+            bind.sock.shutdown(socket.SHUT_RDWR)
+            bind.sock.close()
+        self._mgr_reader.join()
+        self._mgr_reader = None
         self._mgr_bind = None
 
         self._agent_sock_path = None
@@ -143,6 +167,59 @@ class TestRefdaSocket(unittest.TestCase):
 
         # assert after all other shutdown
         self.assertEqual(0, agent_exit)
+
+    def _read_mgr(self, mgr_bind: List[BindInstance]):
+        LOGGER.debug('Starting reader thread')
+
+        lookup: Dict[socket.socket, BindInstance] = {}
+        poller = select.poll()
+        for bind in mgr_bind:
+            fd = bind.sock.fileno()
+            lookup[fd] = bind
+            poller.register(fd, select.POLLIN | select.POLLERR | select.POLLHUP | select.POLLNVAL)
+
+        def recv(bind: BindInstance):
+            try:
+                (data, addr) = bind.sock.recvfrom(10240)
+            except OSError:
+                data = None
+            if not data:
+                return
+            LOGGER.info('Received message %s to %s from %s', data.hex(), bind.path, addr)
+
+            values: List[ari.ReportSet] = []
+            dec = ari_cbor.Decoder()
+            with io.BytesIO(data) as infile:
+                vers = cbor2.load(infile)
+                if vers != 1:
+                    LOGGER.error('Invalid AMP version %s', vers)
+                    return
+    
+                while infile.tell() < len(data):
+                    val = dec.decode(infile)
+                    LOGGER.info('Received value %s', self._ari_obj_to_text(val))
+                    if not isinstance(val.value, ari.ReportSet):
+                        LOGGER.warning('Received non-RPTSET item, ignoring it')
+                        continue
+                    values.append(val)
+
+            with bind.recv_lock:
+                for rpt in values:
+                    reports = bind.recv.setdefault(val.value.nonce, [])
+                    LOGGER.debug('Pushing %d new reports', len(val.value.reports))
+                    reports += list(val.value.reports)
+                bind.recv_avail.notify_all()
+
+        running = True
+        while running:
+            for fd, event in poller.poll():
+                if event & select.POLLIN:
+                    bind = lookup[fd]
+                    recv(bind)
+                else:
+                    running = False
+
+        LOGGER.debug('Stopping reader thread')
 
     def _start(self) -> None:
         ''' Spawn the process and wait for the startup report. '''
@@ -215,45 +292,11 @@ class TestRefdaSocket(unittest.TestCase):
             data += self._ari_obj_to_cbor(val)
         addr = self._agent_sock_path
         bind = self._mgr_bind[mgr_ix]
-        LOGGER.info('Sending message %s from %s to %s', data.hex(), bind['path'], addr)
-        bind['sock'].sendto(data, addr)
-        return bind['path']
+        LOGGER.info('Sending message %s from %s to %s', data.hex(), bind.path, addr)
+        bind.sock.sendto(data, addr)
+        return bind.path
 
-    def _wait_msg(self, mgr_ix: int, timeout: float=1) -> List[ARI]:
-        ''' Wait for an AMP message with RPTSET values and decode it.
-
-        :param mgr_ix: The manager index to receive on.
-        :param timeout: The time to wait in seconds.
-        :return: The contained ARIs in decoded form.
-        :raise TimeoutError: If not received in time.
-        '''
-        bind = self._mgr_bind[mgr_ix]
-        recv_sock = bind['sock']
-
-        recv_sock.settimeout(timeout)
-
-        try:
-            (data, addr) = recv_sock.recvfrom(10240)
-        except (socket.timeout, TimeoutError) as err:
-            raise TimeoutError("No message received") from err
-        LOGGER.info('Received message %s to %s from %s', data.hex(), bind['path'], addr)
-        self.assertEqual(self._agent_sock_path, addr)
-
-        values = []
-        dec = ari_cbor.Decoder()
-        with io.BytesIO(data) as infile:
-            vers = cbor2.load(infile)
-            self.assertEqual(1, vers, msg='Invalid AMP version')
-
-            while infile.tell() < len(data):
-                val = dec.decode(infile)
-                LOGGER.info('Received value %s', self._ari_obj_to_text(val))
-                self.assertIsInstance(val.value, ari.ReportSet)
-                values.append(val)
-
-        return values
-
-    def _wait_reports(self, mgr_ix: int, nonce: Optional[ARI], timeout: float=1, stop_count: int=1) -> List[ari.Report]:
+    def _wait_reports(self, mgr_ix: int, nonce: Optional[ARI]=None, timeout: float=1, stop_count: int=1) -> List[ari.Report]:
         ''' Wait for all RPTSETs within a time window and unwrap all contained
         reports.
 
@@ -266,28 +309,35 @@ class TestRefdaSocket(unittest.TestCase):
             they were received.
         :raise TimeoutError: If not received in time.
         '''
-        reports = []
-        self._rptsets.setdefault(mgr_ix, [])
+        reports: List[ari.Report] = []
+        bind = self._mgr_bind[mgr_ix]
 
         timer = Timer(timeout)
-        try:
-            while timer:
-                self._rptsets[mgr_ix] += self._wait_msg(mgr_ix=mgr_ix, timeout=timer.remaining())
-
-                remain = []
-                for val in self._rptsets[mgr_ix]:
-                    if nonce is None or val.value.nonce == nonce:
-                        reports += val.value.reports
+        while timer:
+            LOGGER.debug('waiting up to %s for %d reports, have %d already', timer.remaining(), stop_count, len(reports))
+            with bind.recv_lock:
+                try:
+                    if nonce is None:
+                        # any reports
+                        if not bind.recv and timer:
+                            bind.recv_avail.wait(timeout=timer.remaining())
+                        for _nonce, rpts in bind.recv.items():
+                            reports += rpts
+                        bind.recv.clear()
                     else:
-                        remain.append(val)
-                self._rptsets[mgr_ix] = remain
+                        # only for a single nonce
+                        while nonce not in bind.recv and timer:
+                            bind.recv_avail.wait(timeout=timer.remaining())
+                        rpts = bind.recv.pop(nonce, [])
+                        reports += rpts
+                except (RuntimeError, TimeoutError):
+                    # simply stop listening
+                    pass
 
-                if stop_count > 0 and len(reports) >= stop_count:
-                    break
-        except TimeoutError:
-            # simply stop listening
-            pass
+            if stop_count > 0 and len(reports) >= stop_count:
+                break
 
+        LOGGER.debug('stopping with %d reports', len(reports))
         return reports
 
     def test_start_sigint(self):
@@ -324,9 +374,9 @@ class TestRefdaSocket(unittest.TestCase):
 
         # mgr0 and mgr1 has full access, mgr2 has none
         mgr_eids = [
-            quote('"file:' + self._mgr_bind[0]['path'] + '"'),
-            quote('"file:' + self._mgr_bind[1]['path'] + '"'),
-            quote('"file:' + self._mgr_bind[2]['path'] + '"'),
+            quote('"file:' + self._mgr_bind[0].path + '"'),
+            quote('"file:' + self._mgr_bind[1].path + '"'),
+            quote('"file:' + self._mgr_bind[2].path + '"'),
         ]
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,/ac/(' + ','.join(mgr_eids) + ')))')]
@@ -347,7 +397,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
 
         with self.assertRaises(TimeoutError):
-            self._wait_msg(mgr_ix=2, timeout=0.1)
+            self._wait_reports(mgr_ix=2, timeout=0.1)
 
         # RPTSET for the execution itself
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
@@ -505,7 +555,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         # no other RPTSET
         with self.assertRaises(TimeoutError):
-            self._wait_msg(mgr_ix=0, timeout=0.1)
+            self._wait_reports(mgr_ix=0, timeout=0.1)
 
     def test_exec_macro_failure_expand(self):
         self._start()
@@ -528,7 +578,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         # no other RPTSET
         with self.assertRaises(TimeoutError):
-            self._wait_msg(mgr_ix=0, timeout=0.1)
+            self._wait_reports(mgr_ix=0, timeout=0.1)
 
     def test_exec_macro_failure_exec(self):
         self._start()
@@ -555,7 +605,7 @@ class TestRefdaSocket(unittest.TestCase):
 
         # no other RPTSET
         with self.assertRaises(TimeoutError):
-            self._wait_msg(mgr_ix=0, timeout=0.1)
+            self._wait_reports(mgr_ix=0, timeout=0.1)
 
     def test_exec_introspection(self):
         self._start()
@@ -698,6 +748,189 @@ class TestRefdaSocket(unittest.TestCase):
         # substitution
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'), rpt.items[0])
 
+    def test_eval_strict_compare(self):
+        # cases are organized so that only the same row compares strict equal
+        cases = [
+            'undefined',
+            'null',
+            'false',
+            'true',
+            '-10',
+            '0',
+            '10',
+            '0.0',
+            '10.0',
+            '/null/null',
+            '/bool/false',
+            '/bool/true',
+            '/byte/0',
+            '/byte/10',
+            '/int/0',
+            '/int/10',
+            '/vast/0',
+            '/vast/10',
+        ]
+
+        self._start()
+
+        # pipelined expected reports from source to items
+        expect_sources: Dict[ARI, List[ARI]] = dict()
+        # check in both directions
+        for left in cases:
+            with self.subTest(left):
+                exprs = []
+                expect_items = []
+
+                for right in cases:
+                    exprs += [
+                        ('/ac/(' + left + ',' + right + ',' + '//ietf/dtnma-agent/oper/strict-eq)'),
+                        ('/ac/(' + left + ',' + right + ',' + '//ietf/dtnma-agent/oper/strict-ne)'),
+                    ]
+                    expect_items += [
+                        ari.TYPED_TRUE if left == right else ari.TYPED_FALSE,
+                        ari.TYPED_FALSE if left == right else ari.TYPED_TRUE,
+                    ]
+
+                execset = self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')
+                # rpt source will be the first parameter to the target ctrl
+                source = execset.value.targets[0].params[0]
+                expect_sources[source] = expect_items
+                self._send_msg([execset])
+
+        # check reports in arbitrary order until all expected are seen
+        LOGGER.info('Waiting on %d reports', len(expect_sources))
+        while expect_sources:
+            rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), timeout=5)
+            for rpt in rpts:
+                self.assertEqual(rpt.source.type_id, ari.StructType.AC)
+                if rpt.source not in expect_sources:
+                    self.fail(f'Report with unexpected source {rpt.source}')
+
+                # items of the report
+                expect_items = expect_sources.pop(rpt.source)
+                self.assertEqual(len(expect_items), len(rpt.items))
+                for expr, expect, got in zip(exprs, expect_items, rpt.items):
+                    self.assertEqual(expect, got, msg=f'Failed item for expr {expr}')
+            
+            if expect_sources and not rpts:
+                self.fail(f'No reports received and still expecting {len(expect_sources)} sources')
+
+    def test_eval_loose_compare_opers(self):
+        # expected result columns in cases table
+        oper_name_col = {
+            'compare-eq': 2,
+            'compare-ne': 3,
+            'compare-lt': 4,
+            'compare-le': 5,
+            'compare-gt': 6,
+            'compare-ge': 7,
+        }
+        cases = [
+            # not comparable
+            ('undefined', '10', *([ari.UNDEFINED] * 6)),
+            ('10', 'undefined', *([ari.UNDEFINED] * 6)),
+            ('10', 'hello', *([ari.UNDEFINED] * 6)),
+            # integers
+            ('-10', '10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('1', '10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('10', '10', ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE),
+            ('100', '10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('-10', '-10', ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE),
+            # mix in one float, same comparisons
+            ('-10', '10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('1', '10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('10', '10.0', ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE),
+            ('100', '10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('-10', '-10.0', ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE),
+            # time points
+            # ('10', '/tp/10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('/td/10', '/tp/10', *([ari.UNDEFINED] * 6)),
+
+            # time diffs
+            # ('10', '/td/10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+
+            ('/tp/10', '/td/10', *([ari.UNDEFINED] * 6)),
+            ('/td/-10', '/td/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('/td/1', '/td/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('/td/10', '/td/10.0', ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE),
+            ('/td/100', '/td/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('/td/-10', '/td/-10.0', ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE),
+        ]
+
+        self._start()
+
+        for oper_name, case_col in oper_name_col.items():
+            with self.subTest(oper_name):
+                exprs = [
+                    '/ac/(' + row[0] + ',' + row[1] + ',' + '//ietf/dtnma-agent/oper/' + oper_name + ')'
+                    for row in cases
+                ]
+                expect_items = [row[case_col] for row in cases]
+
+                self._send_msg(
+                    [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
+                )
+        
+                rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=1, timeout=5)
+                self.assertEqual(1, len(rpts))
+        
+                rpt = rpts.pop(0)
+                self.assertIsInstance(rpt.source, ari.LiteralARI)
+                self.assertEqual(rpt.source.type_id, ari.StructType.AC)
+                # items of the report
+                self.assertEqual(len(expect_items), len(rpt.items))
+                for expr, expect, got in zip(exprs, expect_items, rpt.items):
+                    self.assertEqual(expect, got, msg=f'Failed item for expr {expr}')
+
+    def test_eval_predicate_opers(self):
+        # expected result columns in cases table
+        oper_name_col = {
+            'is-undefined': 1,
+            'is-not-undefined': 2,
+            'is-truthy': 3,
+        }
+        cases = [
+            ('undefined', ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('null', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE),
+            ('false', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE),
+            ('true', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE),
+            ('10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('-10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('-10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('/tp/10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('/tp/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('/td/10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('/td/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('/td/-10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+        ]
+
+        self._start()
+
+        for oper_name, case_col in oper_name_col.items():
+            with self.subTest(oper_name):
+                exprs = [
+                    '/ac/(' + row[0] + ',//ietf/dtnma-agent/oper/' + oper_name + ')'
+                    for row in cases
+                ]
+                expect_items = [row[case_col] for row in cases]
+
+                self._send_msg(
+                    [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
+                )
+        
+                rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=1, timeout=5)
+                self.assertEqual(1, len(rpts))
+        
+                rpt = rpts.pop(0)
+                self.assertIsInstance(rpt.source, ari.LiteralARI)
+                self.assertEqual(rpt.source.type_id, ari.StructType.AC)
+                # items of the report
+                self.assertEqual(len(expect_items), len(rpt.items))
+                for expr, expect, got in zip(exprs, expect_items, rpt.items):
+                    self.assertEqual(expect, got, msg=f'Failed item for expr {expr}')
+
     def test_eval_opers(self):
         # evaluate through report template items with inline expressions
         exprs, expect_items = map(list, zip(
@@ -738,7 +971,7 @@ class TestRefdaSocket(unittest.TestCase):
         for expr, expect, got in zip(exprs, expect_items, rpt.items):
             self.assertEqual(expect, got, msg=f'Failed item for expr {expr}')
 
-    def test_eval_predicates(self):
+    def test_eval_predicate_expressions(self):
         # precondition macro
         mac_items = [
            '//ietf/dtnma-agent/CTRL/ensure-odm(ietf,1,!odm,-1)',
@@ -979,7 +1212,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([ari.NoneType], literal_prim_types(rpt.items))
 
         mgr_eids = [
-            quote('"file:' + self._mgr_bind[0]['path'] + '"'),
+            quote('"file:' + self._mgr_bind[0].path + '"'),
         ]
         rptsrc = '/ac/(//ietf/dtnma-agent/EDD/num-msg-rx)'
         macro = '/AC/(//ietf/dtnma-agent/CTRL/report-on(' + rptsrc + ',/ac/(' + ','.join(mgr_eids) + ')))'
@@ -987,7 +1220,7 @@ class TestRefdaSocket(unittest.TestCase):
         # rule is created as enabled
         self._send_msg(
             [self._ari_text_to_obj(
-                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,' + macro + ',' + cond + ',/TD/PT0.5S,0,true))')]
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/ensure-sbr(//ietf/!test-model-1,test-sbr,3,' + macro + ',' + cond + ',/TD/PT0.2S,0,true))')]
         )
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
         self.assertEqual(1, len(rpts))
@@ -996,16 +1229,16 @@ class TestRefdaSocket(unittest.TestCase):
         # items of the report
         self.assertEqual([ari.NoneType], literal_prim_types(rpt.items))
 
-        # no more
+        # no more, wait for more than one condition cycle
         with self.assertRaises(TimeoutError):
-            self._wait_msg(mgr_ix=0, timeout=0.1)
+            self._wait_reports(mgr_ix=0, timeout=0.5)
 
         # At this point ./edd/num-msg-rx is still 2, any next message will satisfy rule condition
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=null;()')]
         )
         # Wait for two action triggers, at least one eval period for each trigger
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=2, timeout=3)
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=2, timeout=2)
         self.assertEqual(2, len(rpts))
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj(rptsrc), rpt.source)
@@ -1061,10 +1294,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/last-msg-rx-time))')]
         )
-        msg_vals = self._wait_msg(mgr_ix=0)
-        self.assertEqual(1, len(msg_vals))
-        rptset = msg_vals[0].value
-        rpt = rptset.reports[0]
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
         self.assertEqual([numpy.timedelta64], literal_prim_types(rpt.items))
 
     def test_odm_ident_valid(self):
@@ -1372,10 +1604,9 @@ class TestRefdaSocket(unittest.TestCase):
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/if-then-else(/AC/(true),null,null))')]
         )
-        msg_vals = self._wait_msg(mgr_ix=0)
-        self.assertEqual(1, len(msg_vals))
-        rptset = msg_vals[0].value
-        rpt = rptset.reports[0]
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
         self.assertEqual([bool], literal_prim_types(rpt.items))
         self.assertEqual(True, rpt.items[0].value)
 
@@ -1645,7 +1876,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual((3, 5), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
         # new group number 10
-        self.assertEqual([ari.typed_uint(1), ari.typed_uint(2), ari.typed_uint(10)], rpt.items[0].value[:, 0])
+        self.assertEqual((ari.typed_uint(1), ari.typed_uint(2), ari.typed_uint(10)), rpt.items[0].value[:, 0])
         # column 1: name
         self.assertEqual(ari.LiteralARI("example"), rpt.items[0].value[2, 1])
 
@@ -1654,7 +1885,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((3, 6), rpt.items[0].value.shape)
         # new access number 10
-        self.assertEqual([ari.typed_uint(1), ari.typed_uint(2), ari.typed_uint(10)], rpt.items[0].value[:, 0])
+        self.assertEqual((ari.typed_uint(1), ari.typed_uint(2), ari.typed_uint(10)), rpt.items[0].value[:, 0])
 
         self._send_msg(
             [self._ari_text_to_obj(

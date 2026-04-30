@@ -367,7 +367,8 @@ TEST_CASE(20, 0, false, "20000101T000020Z")
 TEST_CASE(20, 1e3, false, "20000101T000020.000001Z")
 TEST_CASE(20, 50e6, false, "20000101T000020.05Z")
 TEST_CASE(20, 999999000, false, "20000101T000020.999999Z")
-TEST_CASE(20, 999999999, false, "20000101T000020.999999999Z") // really valid?
+TEST_CASE(20, 999999999, false, "20000101T000020.999999999Z")
+TEST_CASE(20, 999999999, false, "20000101T000020.999999999Z")
 void test_cace_utctime_encode_valid(time_t in_sec, long in_nsec, bool usesep, const char *expect)
 {
     struct timespec in = { .tv_sec = in_sec, .tv_nsec = in_nsec };
@@ -419,11 +420,14 @@ void test_cace_utctime_decode_invalid(const char *text)
 
 TEST_CASE(0, 0, "PT0S")
 TEST_CASE(20, 0, "PT20S")
+TEST_CASE(-20, 0, "-PT20S")
+TEST_CASE(-20, 1e3, "-PT19.999999S")
 TEST_CASE(20, 1e3, "PT20.000001S")
 TEST_CASE(20, 50e6, "PT20.05S")
 TEST_CASE(20, 999999000, "PT20.999999S")
 TEST_CASE(3610, 0, "PT1H10S")
 TEST_CASE(24 * 3600 + 2 * 3600 + 3 * 60 + 4, 500e6, "P1DT2H3M4.5S")
+TEST_CASE(-6102299733, 1000000000 - 600451616, "-P70628DT11H15M32.600451616S")
 void test_cace_timeperiod_encode_valid(time_t in_sec, long in_nsec, const char *expect)
 {
     struct timespec in = { .tv_sec = in_sec, .tv_nsec = in_nsec };
@@ -439,12 +443,16 @@ void test_cace_timeperiod_encode_valid(time_t in_sec, long in_nsec, const char *
 TEST_CASE("PT", 0, 0)
 TEST_CASE("PT0S", 0, 0)
 TEST_CASE("PT10S", 10, 0)
+TEST_CASE("PT20.000001S", 20, 1e3)
+TEST_CASE("-PT20S", -20, 0)
+TEST_CASE("-PT19.999999S", -20, 1e3)
 TEST_CASE("-PT10S", -10, 0)
 TEST_CASE("PT1M", 60, 0)
 TEST_CASE("PT1H", 3600, 0)
 TEST_CASE("P1DT", 24 * 3600, 0)
 TEST_CASE("P1DT0.1S", 24 * 3600, 100e6)
 TEST_CASE("P1DT2H3M4.5S", 24 * 3600 + 2 * 3600 + 3 * 60 + 4, 500e6)
+TEST_CASE("-P70628DT11H15M32.600451616S", -6102299733, 1000000000 - 600451616)
 void test_cace_timeperiod_decode_valid(const char *text, time_t expect_sec, long expect_nsec)
 {
     cace_data_t in_data;

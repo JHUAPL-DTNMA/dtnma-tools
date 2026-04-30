@@ -1271,7 +1271,7 @@ bool cace_amm_ari_is_truthy(const cace_ari_t *in)
         switch (in->as_lit.prim_type)
         {
             case CACE_ARI_PRIM_UNDEFINED:
-                // not really needed but satisfies the compiler
+                // fall through
             case CACE_ARI_PRIM_NULL:
                 result = false;
                 break;

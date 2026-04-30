@@ -301,6 +301,40 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                 objdata);
             // no parameters possible
         }
+        { // For ./TYPEDEF/numeric-or-time
+            refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
+            refda_amm_typedef_desc_init(objdata);
+            // named semantic type:
+            {
+                // union
+                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 2);
+                {
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/numeric
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 3);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
+                    }
+                }
+                {
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/time
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 5);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
+                    }
+                }
+            }
+
+            obj = refda_register_typedef(
+                adm,
+                cace_amm_idseg_ref_withenum("numeric-or-time",
+                                            REFDA_ADM_IETF_AMM_BASE_ENUM_OBJID_TYPEDEF_NUMERIC_OR_TIME),
+                objdata);
+            // no parameters possible
+        }
         { // For ./TYPEDEF/primitive
             refda_amm_typedef_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_typedef_desc_t));
             refda_amm_typedef_desc_init(objdata);
