@@ -867,27 +867,61 @@ static const cace_numeric_binary_desc_t oper_bitwise_xor_desc = {
 };
 
 /**
- * Translation helper function to substitute LABEL value 0 in a filter with
- * the endpoint identity.
+ * Translation helper function to substitute LABEL value 0 in an
+ * evaluation target.
  */
 static cace_ari_translate_result_t unary_eval_sub_label(cace_ari_t *out, const cace_ari_t *in,
                                                         const cace_ari_translate_ctx_t *ctx)
 {
     if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
     {
-        const cace_ari_t *value = ctx->user_data;
+        const cace_ari_t *operand = ctx->user_data;
 
         cace_ari_int as_int;
         if (!cace_ari_get_int(in, &as_int))
         {
             if (as_int == 0)
             {
-                cace_ari_set_copy(out, value);
+                cace_ari_set_copy(out, operand);
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else
             {
-                CACE_LOG_ERR("invalid LABEL value %d", as_int);
+                CACE_LOG_ERR("invalid LABEL value %" PRId32, as_int);
+                return CACE_ARI_TRANSLATE_FAILURE;
+            }
+        }
+        else
+        {
+            CACE_LOG_ERR("invalid LABEL primitive type");
+            return CACE_ARI_TRANSLATE_FAILURE;
+        }
+    }
+    return CACE_ARI_TRANSLATE_DEFAULT;
+}
+/**
+ * Translation helper function to substitute LABEL with integer primitive in an
+ * evaluation target.
+ */
+static cace_ari_translate_result_t nary_eval_sub_label(cace_ari_t *out, const cace_ari_t *in,
+                                                       const cace_ari_translate_ctx_t *ctx)
+{
+    if (cace_ari_is_lit_typed(in, CACE_ARI_TYPE_LABEL))
+    {
+        // size of array is already bounded to INT32_MAX
+        const cace_ari_array_t *operands = ctx->user_data;
+
+        cace_ari_int as_int;
+        if (!cace_ari_get_int(in, &as_int))
+        {
+            if ((as_int >= 0) && (as_int < (cace_ari_int)cace_ari_array_size(*operands)))
+            {
+                cace_ari_set_copy(out, cace_ari_array_get(*operands, as_int));
+                return CACE_ARI_TRANSLATE_FINAL;
+            }
+            else
+            {
+                CACE_LOG_ERR("invalid LABEL value %" PRIu32, as_int);
                 return CACE_ARI_TRANSLATE_FAILURE;
             }
         }
@@ -1001,8 +1035,9 @@ static cace_ari_translate_result_t tbl_filter_sub_label(cace_ari_t *out, const c
     {
         _tbl_row_pair_t *table_data = (_tbl_row_pair_t *)ctx->user_data;
 
-        const cace_ari_tbl_t *tbl_data  = table_data->tbl;
-        const int             row_index = table_data->row_index;
+        const cace_ari_tbl_t *tbl_data = table_data->tbl;
+        // row index is already validated for the table size
+        const int row_index = table_data->row_index;
 
         // Get label ID value
         cace_ari_int col_index;
@@ -1013,13 +1048,13 @@ static cace_ari_translate_result_t tbl_filter_sub_label(cace_ari_t *out, const c
         }
 
         // Get column index
-        if (col_index >= (int)tbl_data->ncols)
+        if (col_index >= (cace_ari_int)tbl_data->ncols)
         {
-            CACE_LOG_WARNING("Invalid colum index %d, skipping", col_index);
+            CACE_LOG_WARNING("Invalid colum index %" PRId64 ", skipping", col_index);
             return CACE_ARI_TRANSLATE_FAILURE;
         }
 
-        size_t array_index = (row_index * tbl_data->ncols) + col_index;
+        const size_t array_index = (row_index * tbl_data->ncols) + col_index;
         // Get data value from table
         const cace_ari_t *tbl_data_item = cace_ari_array_cget(tbl_data->items, array_index);
 
@@ -5644,13 +5679,21 @@ static void refda_adm_ietf_dtnma_agent_oper_unary_eval(refda_oper_eval_ctx_t *ct
     cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
 
     const cace_ari_translator_t translator = { .map_ari = unary_eval_sub_label };
-    // Step 1 substitute the operand value
+    // substitute the operand value
     int res = cace_ari_translate(&sub_tgt, target, &translator, (void *)value);
     if (res)
     {
         CACE_LOG_ERR("Unable to translate target, error %d", res);
         cace_ari_deinit(&sub_tgt); // No longer needed at this point
         return;
+    }
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, &sub_tgt, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("Substituted target to %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
 
     refda_eval_ctx_t evalctx;
@@ -5669,11 +5712,147 @@ static void refda_adm_ietf_dtnma_agent_oper_unary_eval(refda_oper_eval_ctx_t *ct
     }
     refda_eval_ctx_deinit(&evalctx);
 
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, &result, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("Evaluated sub-expression with staus %d to %s", res, m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+
     // evaluation may still result in undefined value
     refda_oper_eval_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_unary_eval BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: nary-eval
+ * Description:
+ *   An N-ary operator which functions by evaluating a target sub-
+ *   expression using the following phases:   1. Substitute the bind-values
+ *   actual parameter for      LABEL items with integer primitive (e.g.
+ *   </label/0>)      within the target value      (literal expression or
+ *   object reference).      The number of bind-able operands is given by
+ *   the      _operand-count_ parameter.   2. If the target is a reference,
+ *   it is used to produce      a value which SHALL be an expression.
+ *   Otherwise, the target SHALL itself be an expression.   3. Evaluate the
+ *   expression and consider the evaluation      result as this operator
+ *   result. This is similar to the <./oper/eval> object with the addition
+ *   of the unary operand binding.
+ *
+ * Parameters list:
+ *   - Index 0, name "operand-count", type use of ari:/ARITYPE/INT
+ *   - Index 1, name "target", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
+ *
+ * Operand list:
+ *   - Index 0, name "bind-values", type sequence of use of ari://ietf/amm-base/TYPEDEF/any
+ *
+ * Result name "sub-result", type use of ari://ietf/amm-base/TYPEDEF/any
+ */
+static void refda_adm_ietf_dtnma_agent_oper_nary_eval(refda_oper_eval_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_nary_eval BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_oper_eval_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+
+    const cace_ari_t *count  = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *target = refda_oper_eval_ctx_get_aparam_index(ctx, 1);
+
+    // manual operand popping
+    cace_ari_int count_int;
+    if (cace_ari_get_int(count, &count_int) || (count_int < 0))
+    {
+        CACE_LOG_ERR("Failed getting count int");
+        return;
+    }
+    const size_t stack_size = cace_ari_list_size(ctx->evalctx->stack);
+    if (stack_size > UINT32_MAX)
+    {
+        CACE_LOG_CRIT("Too many values on evaluation stack to handle");
+        return;
+    }
+    if ((cace_ari_int)stack_size < count_int)
+    {
+        CACE_LOG_ERR("Too few values on evaluation stack");
+        cace_ari_list_reset(ctx->evalctx->stack);
+        return;
+    }
+
+    cace_ari_array_t operands;
+    cace_ari_array_init(operands);
+    cace_ari_array_resize(operands, count_int);
+    // preserve operand order from stack
+    cace_ari_array_it_t ops_it;
+    cace_ari_array_it_last(ops_it, operands);
+    for (cace_ari_int ix = 0; ix < count_int; ++ix, cace_ari_array_previous(ops_it))
+    {
+        cace_ari_t *val = cace_ari_array_ref(ops_it);
+        cace_ari_list_pop_back_move(val, ctx->evalctx->stack);
+    }
+    CACE_LOG_DEBUG("Popped %" PRId32 " operands from eval stack", count_int);
+
+    cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
+
+    const cace_ari_translator_t translator = { .map_ari = nary_eval_sub_label };
+    // substitute the operand value
+    int res = cace_ari_translate(&sub_tgt, target, &translator, (void *)operands);
+    cace_ari_array_clear(operands);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to translate target, error %d", res);
+        cace_ari_deinit(&sub_tgt); // No longer needed at this point
+        return;
+    }
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, &sub_tgt, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("Substituted target to %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+
+    refda_eval_ctx_t evalctx;
+    refda_eval_ctx_init(&evalctx, ctx->evalctx->runctx);
+    cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+
+    // mutex-serialize object store access
+    refda_agent_t *agent = ctx->evalctx->runctx->agent;
+    REFDA_AGENT_LOCK(agent, );
+    res = refda_eval_expand_target(&evalctx, &sub_tgt);
+    REFDA_AGENT_UNLOCK(agent, );
+    cace_ari_deinit(&sub_tgt);
+    if (!res)
+    {
+        res = refda_eval_reduce(&evalctx, &result);
+    }
+    refda_eval_ctx_deinit(&evalctx);
+
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, &result, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("Evaluated sub-expression with staus %d to %s", res, m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+
+    // evaluation may still result in undefined value
+    refda_oper_eval_ctx_set_result_move(ctx, &result);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_nary_eval BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -5728,7 +5907,14 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
         CACE_LOG_ERR("Column is not an AC");
         return;
     }
-    int num_filter_cols = cace_ari_list_size(columns_ac->items);
+    const size_t num_filter_cols = cace_ari_list_size(columns_ac->items);
+
+    size_t num_rows = cace_ari_tbl_num_rows(cace_ari_cget_tbl(tbl));
+    if (num_rows > INT32_MAX)
+    {
+        CACE_LOG_CRIT("too many rows to handle");
+        return;
+    }
 
     // Local variables for result
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
@@ -5737,14 +5923,14 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
     cace_ari_tbl_reset(result_tbl, num_filter_cols, 0);
 
     // for each row of the table
-    int num_rows = cace_ari_tbl_num_rows(cace_ari_cget_tbl(tbl));
-    for (int r = 0; r < num_rows; r++)
+    for (cace_ari_int row_ix = 0; row_ix < (cace_ari_int)num_rows; row_ix++)
     {
         // Substitute row values for LABEL items within row filter EXPR
         cace_ari_t current_row = CACE_ARI_INIT_UNDEFINED;
         {
             const cace_ari_translator_t translator = { .map_ari = tbl_filter_sub_label };
-            _tbl_row_pair_t             table_data = { tbl_data, r };
+            // context data
+            _tbl_row_pair_t table_data = { tbl_data, row_ix };
 
             int res = cace_ari_translate(&current_row, row_match, &translator, &table_data);
             if (res)
@@ -5802,7 +5988,7 @@ static void refda_adm_ietf_dtnma_agent_oper_tbl_filter(refda_oper_eval_ctx_t *ct
                     return;
                 }
 
-                const size_t array_index = (r * tbl_data->ncols) + col_filter_index;
+                const size_t array_index = (row_ix * tbl_data->ncols) + col_filter_index;
                 // Get data from input TBL for the current column
                 const cace_ari_t *tbl_data_item = cace_ari_array_cget(tbl_data->items, array_index);
 
@@ -9089,6 +9275,71 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 adm, cace_amm_idseg_ref_withenum("unary-eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_UNARY_EVAL),
                 objdata);
             // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/eval-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+        }
+        { // For ./OPER/nary-eval
+            refda_amm_oper_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_oper_desc_t));
+            refda_amm_oper_desc_init(objdata);
+            // operands:
+            cace_amm_named_type_array_resize(objdata->operand_types, 1);
+            {
+                cace_amm_named_type_t *operand = cace_amm_named_type_array_get(objdata->operand_types, 0);
+                m_string_set_cstr(operand->name, "bind-values");
+                {
+                    cace_amm_semtype_seq_t *semtype = cace_amm_type_set_seq(&(operand->typeobj));
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // reference to ari://ietf/amm-base/TYPEDEF/any
+                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                        cace_amm_type_set_use_ref_move(&(semtype->item_type), &typeref);
+                    }
+                }
+            }
+            // result type:
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // reference to ari://ietf/amm-base/TYPEDEF/any
+                cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 8);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->evaluate = refda_adm_ietf_dtnma_agent_oper_nary_eval;
+
+            obj = refda_register_oper(
+                adm, cace_amm_idseg_ref_withenum("nary-eval", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_NARY_EVAL),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "operand-count");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/INT
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_INT);
+                    cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+
+                    cace_amm_semtype_cnst_t *cnst;
+                    {
+                        // Constraint: NumericRange(ranges=[0,inf])
+                        cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+
+                        cace_util_range_int64_t *range = cace_amm_semtype_cnst_set_range_int64(cnst);
+                        {
+                            cace_util_range_intvl_int64_t intvl;
+                            cace_util_range_intvl_int64_set_min(&intvl, 0);
+                            cace_util_range_intvl_int64_clear_max(&intvl);
+                            cace_util_range_int64_push(*range, intvl);
+                        }
+                    }
+                }
+            }
             {
                 cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
                 {
