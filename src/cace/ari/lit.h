@@ -37,14 +37,29 @@
 extern "C" {
 #endif
 
-typedef bool     cace_ari_bool;
-typedef uint8_t  cace_ari_byte;
+/// Visible type for BOOL
+typedef bool cace_ari_bool;
+/// Visible type for BYTE
+typedef uint8_t cace_ari_byte;
+/// Visible type for UINT
 typedef uint32_t cace_ari_uint;
-typedef int32_t  cace_ari_int;
+/// Visible type for INT
+typedef int32_t cace_ari_int;
+/// Visible type for UVAST
 typedef uint64_t cace_ari_uvast;
-typedef int64_t  cace_ari_vast;
-typedef float    cace_ari_real32;
-typedef double   cace_ari_real64;
+/// Visible type for VAST
+typedef int64_t cace_ari_vast;
+/// Visible type for REAL32
+typedef float cace_ari_real32;
+/// Visible type for REAL64
+typedef double cace_ari_real64;
+/// Type for timespec::tv_nsec
+typedef long cace_ari_subsec_t;
+
+/** One beyond the maximum of timespec::tv_nsec used
+ * to adjust negative time values.
+ */
+#define CACE_ARI_SUBSEC_SCALE 1000000000L
 
 /** Convenience definition of the DTN Time epoch offset from POSIX time epoch.
  * This is in units of seconds.
@@ -85,7 +100,7 @@ enum cace_ari_prim_type_e
     CACE_ARI_PRIM_BSTR,
     /// A selector for cace_ari_prim_val_u::as_data associated with ::CACE_ARI_TYPE_TEXTSTR
     CACE_ARI_PRIM_TSTR,
-    /// A selector for cace_ari_prim_val_u::as_data associated with ::CACE_ARI_TYPE_TP and ::CACE_ARI_TYPE_TD
+    /// A selector for cace_ari_prim_val_u::as_timespec associated with ::CACE_ARI_TYPE_TP and ::CACE_ARI_TYPE_TD
     CACE_ARI_PRIM_TIMESPEC,
     /// Some other type which requires an cace_ari_lit_t::ari_type identifier
     CACE_ARI_PRIM_OTHER,

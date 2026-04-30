@@ -45,7 +45,8 @@ extern "C" {
 int refda_exec_proc_expand(refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *target);
 
 /** Implement the running procedure from Section TBD of @cite ietf-dtn-amm-01.
- * This executes items in a sequence until the first deferred completion.
+ * This executes items in a sequence until the first deferred completion
+ * or execution failure.
  *
  * @param[in,out] seq The sequence which will be popped as items are executed.
  * @return Zero if this sequence executed without error (so far).

@@ -18,6 +18,7 @@
 
 #include "ari.h"
 #include <cace/ari/text_util.h>
+#include <cace/ari/text.h>
 #include <cace/ari/cbor.h>
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
@@ -74,4 +75,32 @@ int test_util_ari_encode(m_string_t outhex, const cace_ari_t *ari)
     }
 
     return 0;
+}
+
+bool test_util_ari_equal(const cace_ari_t *expect, const cace_ari_t *result)
+{
+    const bool equal = cace_ari_equal(expect, result);
+    if (!equal)
+    {
+        {
+            m_string_t bufe;
+            m_string_init(bufe);
+            cace_ari_text_encode(bufe, expect, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+
+            m_string_t buf;
+            m_string_init(buf);
+            cace_ari_text_encode(buf, result, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            printf("expected %s got %s\n", m_string_get_cstr(bufe), m_string_get_cstr(buf));
+            m_string_clear(buf);
+            m_string_clear(bufe);
+        }
+        {
+            m_string_t buf;
+            m_string_init(buf);
+            test_util_ari_encode(buf, result);
+            printf("got value as cborhex %s\n", m_string_get_cstr(buf));
+            m_string_clear(buf);
+        }
+    }
+    return equal;
 }

@@ -25,6 +25,7 @@
 #include <refda/amm/const.h>
 #include <refda/amm/edd.h>
 #include <cace/amm/semtype.h>
+#include <cace/amm/promote.h>
 #include <cace/amm/numeric.h>
 #include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
@@ -78,32 +79,29 @@ static void test_reporting_edd_one_int(refda_edd_prod_ctx_t *ctx)
 
 static int ari_numeric_add(cace_ari_t *result, const cace_ari_t *lt_val, const cace_ari_t *rt_val)
 {
-    cace_ari_type_t promote;
-    if (cace_amm_numeric_promote_type(&promote, lt_val, rt_val))
+    cace_amm_promote_state_t promote;
+    cace_amm_promote_init(&promote);
+    if (cace_amm_promote_process(&promote, lt_val, rt_val))
     {
+        cace_amm_promote_deinit(&promote);
         return 2;
     }
-
-    const cace_amm_type_t *amm_promote = cace_amm_type_get_builtin(promote);
-    cace_ari_t             lt_prom     = CACE_ARI_INIT_UNDEFINED;
-    cace_ari_t             rt_prom     = CACE_ARI_INIT_UNDEFINED;
-    cace_amm_type_convert(amm_promote, &lt_prom, lt_val);
-    cace_amm_type_convert(amm_promote, &rt_prom, rt_val);
 
     cace_ari_deinit(result);
     cace_ari_lit_t *res_lit = cace_ari_init_lit(result);
 
     int retval = 0;
-    switch (lt_prom.as_lit.prim_type)
+    switch (promote.lt_use->as_lit.prim_type)
     {
         case CACE_ARI_PRIM_UINT64:
-            res_lit->value.as_uint64 = lt_prom.as_lit.value.as_uint64 + rt_prom.as_lit.value.as_uint64;
+            res_lit->value.as_uint64 = promote.lt_use->as_lit.value.as_uint64 + promote.rt_use->as_lit.value.as_uint64;
             break;
         case CACE_ARI_PRIM_INT64:
-            res_lit->value.as_int64 = lt_prom.as_lit.value.as_int64 + rt_prom.as_lit.value.as_int64;
+            res_lit->value.as_int64 = promote.lt_use->as_lit.value.as_int64 + promote.rt_use->as_lit.value.as_int64;
             break;
         case CACE_ARI_PRIM_FLOAT64:
-            res_lit->value.as_float64 = lt_prom.as_lit.value.as_float64 + rt_prom.as_lit.value.as_float64;
+            res_lit->value.as_float64 =
+                promote.lt_use->as_lit.value.as_float64 + promote.rt_use->as_lit.value.as_float64;
             break;
         default:
             // leave lit as default undefined
@@ -113,13 +111,12 @@ static int ari_numeric_add(cace_ari_t *result, const cace_ari_t *lt_val, const c
 
     if (!retval)
     {
-        res_lit->prim_type    = lt_prom.as_lit.prim_type;
+        res_lit->prim_type    = promote.lt_use->as_lit.prim_type;
         res_lit->has_ari_type = true;
-        res_lit->ari_type     = promote;
+        res_lit->ari_type     = promote.common;
     }
 
-    cace_ari_deinit(&lt_prom);
-    cace_ari_deinit(&rt_prom);
+    cace_amm_promote_deinit(&promote);
     return retval;
 }
 
@@ -333,19 +330,21 @@ TEST_CASE("8211838204018207108401012563616464", "820611")
 // ari:/AC/(/REAL64/32,/UVAST/16,//1/1/OPER/add) -> /REAL64/48
 TEST_CASE("8211838209F950008207108401012563616464", "8209F95200")
 
-// ari:/AC/(/BYTE/0x4,/UVAST/16,//1/1/OPER/sub) -> /VAST/12
-TEST_CASE("8211838202048207108401012563737562", "82070C")
-// ari:/AC/(/INT/0x1,/UVAST/16,//1/1/OPER/sub) -> /VAST/15
-TEST_CASE("8211838204018207108401012563737562", "82060F")
-// ari:/AC/(/INT/0x1,/UVAST/16,//1/1/OPER/multiply) -> /VAST/16
+// ari:/AC/(/UVAST/16,/BYTE/4,//1/1/OPER/sub) -> /VAST/12
+TEST_CASE("8211838207108202048401012563737562", "82070C")
+// ari:/AC/(/INT/1,/UVAST/16,//1/1/OPER/sub) -> /VAST/-15
+TEST_CASE("8211838204018207108401012563737562", "82062E")
+// ari:/AC/(/INT/1,/UVAST/16,//1/1/OPER/multiply) -> /VAST/16
 TEST_CASE("82118382040182071084010125686D756C7469706C79", "820610")
-// ari:/AC/(/INT/0x10,/UVAST/1,//1/1/OPER/divide) -> /VAST/0
-TEST_CASE("8211838204108207018401012566646976696465", "820600")
+// ari:/AC/(/INT/16,/UVAST/1,//1/1/OPER/divide) -> /VAST/16
+TEST_CASE("8211838204108207018401012566646976696465", "820610")
+// ari:/AC/(/UVAST/1,/INT/16,//1/1/OPER/divide) -> /VAST/0
+TEST_CASE("8211838207018204108401012566646976696465", "820600")
 
-// ari:/AC/(/INT/0x10,/UVAST/1,//1/1/OPER/remainder) -> /VAST/1
-// TEST_CASE("8211838204108207018301256972656D61696E646572", "820601")
-// ari:/AC/(/INT/3,/UVAST/7,//1/OPER/remainder) -> /VAST/1
-TEST_CASE("821183820410820701840101256972656D61696E646572", "820601")
+// ari:/AC/(/UVAST/1,/INT/16,//1/1/OPER/remainder) -> /VAST/1
+TEST_CASE("821183820701820410840101256972656D61696E646572", "820601")
+// ari:/AC/(/UVAST/7,/INT/3,//1/1/OPER/remainder) -> /VAST/1
+TEST_CASE("821183820707820403840101256972656D61696E646572", "820601")
 
 // ari:/AC/(/INT/3,//1/1/OPER/negate) -> /INT/-3
 TEST_CASE("82118282040384010125666E6567617465", "820422")
@@ -358,24 +357,25 @@ TEST_CASE("8211828208F9420084010125666E6567617465", "8208F9C200")
 TEST_CASE("821183820402820402840101256A636F6D706172652D6571", "8201F5")
 // ari:/AC/(/INT/2,/INT/3,//1/1/OPER/compare-ne) -> /BOOL/true
 TEST_CASE("821183820402820403840101256A636F6D706172652D6E65", "8201F5")
-// ari:/AC/(/INT/2,/INT/46,//1/1/OPER/compare-gt) -> /BOOL/true
-TEST_CASE("8211838204028204182E840101256A636F6D706172652D6774", "8201F5")
-// ari:/AC/(/REAL32/2,/VAST/46,//1/1/OPER/compare-gt) -> /BOOL/true
-// FIXME: need to add builtin_float32_convert in typing.c
-TEST_CASE("8211838208F940008206182E840101256A636F6D706172652D6774", "8201F5")
+// ari:/AC/(/INT/2,/INT/46,//1/1/OPER/compare-gt) -> /BOOL/false
+TEST_CASE("8211838204028204182E840101256A636F6D706172652D6774", "8201F4")
+// ari:/AC/(/REAL32/2,/VAST/46,//1/1/OPER/compare-gt) -> /BOOL/false
+TEST_CASE("8211838208F940008206182E840101256A636F6D706172652D6774", "8201F4")
 // ari:/AC/(/INT/2,/INT/2,//1/1/OPER/compare-ge) -> /BOOL/true
 TEST_CASE("821183820402820402840101256A636F6D706172652D6765", "8201F5")
-// ari:/AC/(/INT/46,/UVAST/2,//1/1/OPER/compare-lt) -> /BOOL/true
-TEST_CASE("8211838204182E820702840101256A636F6D706172652D6C74", "8201F5")
+// ari:/AC/(/INT/46,/UVAST/2,//1/1/OPER/compare-lt) -> /BOOL/false
+TEST_CASE("8211838204182E820702840101256A636F6D706172652D6C74", "8201F4")
 // ari:/AC/(/INT/46,/UINT/46,//1/1/OPER/compare-le) -> /BOOL/true
 TEST_CASE("8211838204182E8205182E840101256A636F6D706172652D6C65", "8201F5")
 
 // ari:/AC/(/BOOL/false,undefined,//1/1/OPER/bool-and) -> undefined
 TEST_CASE("8211838201F4F78401012568626F6F6C2D616E64", "F7")
-// ari:/AC/(/INT/0x0,/UVAST/1,//1/1/OPER/divide) -> undefined
-TEST_CASE("8211838204008207018401012566646976696465", "F7")
-// ari:/AC/(/INT/0x0,/UVAST/1,//1/1/OPER/remainder) -> undefined
-TEST_CASE("821183820400820701840101256972656D61696E646572", "F7")
+// ari:/AC/(/INT/0,/UVAST/1,//1/1/OPER/divide) -> /vast/0
+TEST_CASE("8211838204008207018401012566646976696465", "820600")
+// ari:/AC/(/UVAST/1,/INT/0,//1/1/OPER/divide) -> undefined
+TEST_CASE("8211838207018204008401012566646976696465", "F7")
+// ari:/AC/(/UVAST/1,/INT/0,//1/1/OPER/remainder) -> undefined
+TEST_CASE("821183820701820400840101256972656D61696E646572", "F7")
 
 // Test addition of timespec related logic:
 //
@@ -398,93 +398,92 @@ TEST_CASE("821183820D82211901DB820D82211901138401012563616464", "820D8220184B")
 // --- Subtraction of 2 TP values ---
 // ari:/AC/(/TP/20000101T001640Z,/TP/20000101T001640Z,//1/1/OPER/sub) -> /TD/0
 TEST_CASE("821183820C1903E8820C1903E88401012563737562", "820D00")
-// ari:/AC/(/TP/20000101T001600Z,/TP/20000101T001640Z,//1/1/OPER/sub) -> /TD/40
-TEST_CASE("821183820C1903C0820C1903E88401012563737562", "820D1828")
-// ari:/AC/(/TP/20000101T001640Z,/TP/20000101T001600Z,//1/1/OPER/sub) -> /TD/-40
-TEST_CASE("821183820C1903E8820C1903C08401012563737562", "820D3827")
+// ari:/AC/(/TP/20000101T001600Z,/TP/20000101T001640Z,//1/1/OPER/sub) -> /TD/-40
+TEST_CASE("821183820C1903C0820C1903E88401012563737562", "820D3827")
+// ari:/AC/(/TP/20000101T001640Z,/TP/20000101T001600Z,//1/1/OPER/sub) -> /TD/40
+TEST_CASE("821183820C1903E8820C1903C08401012563737562", "820D1828")
 //
 // --- Subtraction of 2 TD values ---
-// ari:/AC/(/TD/4000,/TD/7000,//1/1/OPER/sub) -> /TD/3000
-TEST_CASE("821183820D190FA0820D191B588401012563737562", "820D190BB8")
-// ari:/AC/(/TD/7000,/TD/4000,//1/1/OPER/sub) -> /TD/-3000
-TEST_CASE("821183820D191B58820D190FA08401012563737562", "820D390BB7")
-// ari:/AC/(/TD/0.25,/TD/3.75,//1/1/OPER/sub) -> /TD/3.5
-TEST_CASE("821183820D82211819820D82211901778401012563737562", "820D82201823")
-//
+// ari:/AC/(/TD/7000,/TD/4000,//1/1/OPER/sub) -> /TD/3000
+TEST_CASE("821183820D191B58820D190FA08401012563737562", "820D190BB8")
+// ari:/AC/(/TD/4000,/TD/7000,//1/1/OPER/sub) -> /TD/-3000
+TEST_CASE("821183820D190FA0820D191B588401012563737562", "820D390BB7")
+// ari:/AC/(/TD/3.75,/TD/0.25,//1/1/OPER/sub) -> /TD/3.5
+TEST_CASE("821183820D8221190177820D822118198401012563737562", "820D82201823")
+// ari:/AC/(/TD/0.25,/TD/3.75,//1/1/OPER/sub) -> /TD/-3.5
+TEST_CASE("821183820D82211819820D82211901778401012563737562", "820D82203822")
+// ari:/AC/(/TD/0.75,/TD/-2.25,//1/1/OPER/sub) -> /TD/2.5
+TEST_CASE("821183820D8221184B820D822138AE8401012563737562", "820D82201819")
+// ari:/AC/(/TD/0.75,/TD/3.25,//1/1/OPER/sub) -> /TD/-2.5
+TEST_CASE("821183820D8221184B820D82211901458401012563737562", "820D82203818")
 // --- Subtraction of TD from TP value ---
-// ari:/AC/(/TD/1000,/TP/20000101T001640Z,//1/1/OPER/sub) -> /TP/20000101T000000Z
-TEST_CASE("821183820D1903E8820C1903E88401012563737562", "820C00")
-//
-//-----------------------------------------------------------------------------------------------------------
-// TODO: The 2 unit tests below fail and it may be due to bad parsing of negative fractional TD values.
-// // ari:/AC/(/TD/-2.25,/TD/0.75,//1/1/OPER/sub) -> /TD/3
-// TEST_CASE("821183820D822138AE820D8221184B8401012563737562", "820D03")
-// // ari:/AC/(/TD/3.25,/TD/0.75,//1/1/OPER/sub) -> /TD/-2.5
-// TEST_CASE("821183820D8221190145820D8221184B8401012563737562", "820D82202E")
+// ari:/AC/(/TP/20000101T001640Z,/TD/1000,//1/1/OPER/sub) -> /TP/20000101T000000Z
+TEST_CASE("821183820C1903E8820D1903E88401012563737562", "820C00")
+// ari:/AC/(/TD/1000,/TP/20000101T001640Z,//1/1/OPER/sub) -> undefined
+TEST_CASE("821183820D1903E8820C1903E88401012563737562", "F7")
 
 // Test scaling (multiplication / division) of TD with a primitive (int or float):
 //
 // --- Multiply of TD value with primitive (int or float) ---
+// ari:/AC/(/TD/7000,/INT/0,//1/1/OPER/multiply) -> /TD/0
+TEST_CASE("821183820D191B5882040084010125686D756C7469706C79", "820D00")
 // ari:/AC/(/INT/0,/TD/7000,//1/1/OPER/multiply) -> /TD/0
 TEST_CASE("821183820400820D191B5884010125686D756C7469706C79", "820D00")
+// ari:/AC/(/TD/7000,/INT/1,//1/1/OPER/multiply) -> /TD/7000
+TEST_CASE("821183820D191B5882040184010125686D756C7469706C79", "820D191B58")
 // ari:/AC/(/INT/1,/TD/7000,//1/1/OPER/multiply) -> /TD/7000
 TEST_CASE("821183820401820D191B5884010125686D756C7469706C79", "820D191B58")
-// ari:/AC/(/INT/7,/TD/7000,//1/1/OPER/multiply) -> /TD/49000
-TEST_CASE("821183820407820D191B5884010125686D756C7469706C79", "820D19BF68")
-// ari:/AC/(/REAL32/3.5,/TD/7000,//1/1/OPER/multiply) -> /TD/24500
-TEST_CASE("8211838208F94300820D191B5884010125686D756C7469706C79", "820D195FB4")
-// ari:/AC/(/REAL32/INFINITY,/TD/7000,//1/1/OPER/multiply) -> undefined
-TEST_CASE("8211838208F97C00820D191B5884010125686D756C7469706C79", "F7") // Undefined Behavoir
-// ari:/AC/(/INT/4,/TD/0.25,//1/1/OPER/multiply) -> /TD/1
-TEST_CASE("821183820404820D8221181984010125686D756C7469706C79", "820D01")
-// ari:/AC/(/INT/15,/TD/0.25,//1/1/OPER/multiply) -> /TD/3.75
-TEST_CASE("82118382040F820D8221181984010125686D756C7469706C79", "820D8221190177")
-// ari:/AC/(/REAL32/2.50,/TD/2.50,//1/1/OPER/multiply) -> /TD/6.25
-TEST_CASE("8211838208F94100820D8220181984010125686D756C7469706C79", "820D8221190271")
-// ari:/AC/(/REAL32/0.75,/TD/1.00,//1/1/OPER/multiply) -> /TD/0.75
-TEST_CASE("8211838208F93A00820D0184010125686D756C7469706C79", "820D8221184B")
-// ari:/AC/(/REAL32/9e6,/TD/1.99,//1/1/OPER/multiply) -> /TD/17910000
-TEST_CASE("8211838208FA4B095440820D822118C784010125686D756C7469706C79", "820D1A011148F0")
-//
-//-----------------------------------------------------------------------------------------------------------
-// TODO: The test cases below result in very high CPU usage if timespec_normalise() method is used over the
-// TODO: custom timespec_normalize() method. The 2nd test cases below will also fail (unrelated to performance)
-// TODO: and it appears to be due to integer/long overflow.
+// ari:/AC/(/TD/7000,/INT/7,//1/1/OPER/multiply) -> /TD/49000
+TEST_CASE("821183820D191B5882040784010125686D756C7469706C79", "820D19BF68")
+// ari:/AC/(/TD/7000,/REAL32/3.5,//1/1/OPER/multiply) -> /TD/24500
+TEST_CASE("821183820D191B588208F9430084010125686D756C7469706C79", "820D195FB4")
+// ari:/AC/(/TD/7000,/REAL32/INFINITY,//1/1/OPER/multiply) -> undefined
+TEST_CASE("821183820D191B588208F97C0084010125686D756C7469706C79", "F7") // Undefined Behavior
+// ari:/AC/(/TD/0.25,/INT/4,//1/1/OPER/multiply) -> /TD/1
+TEST_CASE("821183820D8221181982040484010125686D756C7469706C79", "820D01")
+// ari:/AC/(/TD/0.25,/INT/15,//1/1/OPER/multiply) -> /TD/3.75
+TEST_CASE("821183820D8221181982040F84010125686D756C7469706C79", "820D8221190177")
+// ari:/AC/(/TD/2.50,/REAL32/2.50,//1/1/OPER/multiply) -> /TD/6.25
+TEST_CASE("821183820D822018198208F9410084010125686D756C7469706C79", "820D8221190271")
+// ari:/AC/(/TD/1.00,/REAL32/0.75,//1/1/OPER/multiply) -> /TD/0.75
+TEST_CASE("821183820D018208F93A0084010125686D756C7469706C79", "820D8221184B")
+// ari:/AC/(/TD/1.99,/REAL32/9e6,//1/1/OPER/multiply) -> /TD/17910000
+TEST_CASE("821183820D822118C78208FA4B09544084010125686D756C7469706C79", "820D1A011148F0")
+// ari:/AC/(/TD/0.9999,/VAST/1234567890,//1/1/OPER/multiply) -> /TD/1234444433.211
+TEST_CASE("821183820D822319270F82061A499602D284010125686D756C7469706C79", "820D82221B0000011F6A9F373B")
 // ari:/AC/(/VAST/1234567890,/TD/0.9999,//1/1/OPER/multiply) -> /TD/1234444433.211
 TEST_CASE("82118382061A499602D2820D822319270F84010125686D756C7469706C79", "820D82221B0000011F6A9F373B")
 // ari:/AC/(/VAST/12345678909,/TD/0.9999,//1/1/OPER/multiply) -> /TD/12344444341.1091
-// TEST_CASE("82118382061B00000002DFDC1C3D820D822319270F84010125686D756C7469706C79", "820D82283B54AFB946829C721F")
+TEST_CASE("82118382061B00000002DFDC1C3D820D822319270F84010125686D756C7469706C79", "820D82283B54AFB946829C721F")
 
 //
 // --- Division of TD value with primitive (int or float) ---
-// ari:/AC/(/INT/1,/TD/7000,//1/1/OPER/divide) -> /TD/7000
-TEST_CASE("821183820401820D191B588401012566646976696465", "820D191B58")
-// ari:/AC/(/INT/7000,/TD/49000,//1/1/OPER/divide) -> /TD/7
-TEST_CASE("8211838204191B58820D19BF688401012566646976696465", "820D07")
-// ari:/AC/(/INT/2,/TD/7,//1/1/OPER/divide) -> /TD/3.5
-TEST_CASE("821183820402820D078401012566646976696465", "820D82201823")
-// ari:/AC/(/REAL32/2,/TD/7,//1/1/OPER/divide) -> /TD/3.5
-TEST_CASE("8211838208F94000820D078401012566646976696465", "820D82201823")
-// ari:/AC/(/REAL32/3.5,/TD/7000,//1/1/OPER/divide) -> /TD/2000
-TEST_CASE("8211838208F94300820D191B588401012566646976696465", "820D1907D0")
-// ari:/AC/(/REAL32/0.0,/TD/7000,//1/1/OPER/divide) -> undefined
-TEST_CASE("8211838208F90000820D191B588401012566646976696465", "F7") // Undefined Behavoir
-// ari:/AC/(/REAL32/-INFINITY,/TD/7000,//1/1/OPER/divide) -> /TD/0
-TEST_CASE("8211838208F9FC00820D191B588401012566646976696465", "820D00")
+// ari:/AC/(/TD/7000,/INT/1,//1/1/OPER/divide) -> /TD/7000
+TEST_CASE("821183820D191B588204018401012566646976696465", "820D191B58")
+// ari:/AC/(/TD/49000,/INT/7000,//1/1/OPER/divide) -> /TD/7
+TEST_CASE("821183820D19BF688204191B588401012566646976696465", "820D07")
+// ari:/AC/(/TD/7,/INT/2,//1/1/OPER/divide) -> /TD/3.5
+TEST_CASE("821183820D078204028401012566646976696465", "820D82201823")
+// ari:/AC/(/TD/7,/REAL32/2,//1/1/OPER/divide) -> /TD/3.5
+TEST_CASE("821183820D078208F940008401012566646976696465", "820D82201823")
+// ari:/AC/(/TD/7000,/REAL32/3.5,//1/1/OPER/divide) -> /TD/2000
+TEST_CASE("821183820D191B588208F943008401012566646976696465", "820D1907D0")
+// ari:/AC/(/TD/7000,/REAL32/0.0,//1/1/OPER/divide) -> undefined
+TEST_CASE("821183820D191B588208F900008401012566646976696465", "F7")
+// ari:/AC/(/TD/7000,/REAL32/-INFINITY,//1/1/OPER/divide) -> /TD/0
+TEST_CASE("821183820D191B588208F9FC008401012566646976696465", "820D00")
 
-// Test various undefined behavoir involving TD and TP values
-//
 // --- Multiplication of primitive (int or float) with a TD value ---
-// ari:/AC/(/TD/7000,/INT/1,//1/1/OPER/multiply) -> undefined
-TEST_CASE("821183820D191B5882040184010125686D756C7469706C79", "F7")
-// ari:/AC/(/TD/7000,/REAL32/3.5,//1/1/OPER/multiply) -> undefined
-TEST_CASE("821183820D191B588208F9430084010125686D756C7469706C79", "F7")
+// ari:/AC/(/TD/7000,/INT/1,//1/1/OPER/multiply) -> /TD/7000
+TEST_CASE("821183820D191B5882040184010125686D756C7469706C79", "820D191B58")
+// ari:/AC/(/TD/7000,/REAL32/3.5,//1/1/OPER/multiply) -> /TD/PT1H56M40S
+TEST_CASE("821183820D191B588208F9430084010125686D756C7469706C79", "820D195FB4")
 //
 // --- Division of primitive (int or float) with a TD value ---
 // ari:/AC/(/TD/7000,/INT/1,//1/1/OPER/divide) -> undefined
-TEST_CASE("821183820D191B588204018401012566646976696465", "F7")
-// ari:/AC/(/TD/7000,/REAL32/3.5,//1/1/OPER/divide) -> undefined
-TEST_CASE("821183820D191B588208F943008401012566646976696465", "F7")
+TEST_CASE("821183820D191B588204018401012566646976696465", "820D191B58")
+// ari:/AC/(/TD/7000,/REAL32/3.5,//1/1/OPER/divide) -> ari:/TD/PT33M20S
+TEST_CASE("821183820D191B588208F943008401012566646976696465", "820D1907D0")
 //
 // --- Addition,Subtraction,Multiplication,Division of TP value with a primitive (int) (in either order) ---
 // ari:/AC/(/TP/20000101T001640Z,/INT/1000,//1/1/OPER/add) -> undefined
@@ -513,20 +512,18 @@ TEST_CASE("82118282138703010203040506850101256A74626C2D66696C74657282821181F5821
 // ari:/AC/(/TBL/c=3;(1,2,3)(4,5,6),//1/1/OPER/tbl-filter(/AC/(true),/AC/(1,2,3))) -> undefined -- fails because invalid
 // filter index!!
 TEST_CASE("82118282138703010203040506850101256A74626C2D66696C74657282821181F5821183010203", "F7")
-// ari:/AC/(/TBL/c=2;(0,0)(1,1)(2,2)(3,3),//1/1/OPER/tbl-filter(/AC/(0,/LABEL/0,//1/1/OPER/compare-gt),/AC/(1))) ->
+// ari:/AC/(/TBL/c=2;(0,0)(1,1)(2,2)(3,3),//1/1/OPER/tbl-filter(/AC/(0,/LABEL/0,//1/1/OPER/compare-lt),/AC/(1))) ->
 // /TBL/c=1;(1)(2)(3)
-TEST_CASE("821182821389020000010102020303850101256A74626C2D66696C7465728282118300820E00840101256A636F6D706172652D677482"
+TEST_CASE("821182821389020000010102020303850101256A74626C2D66696C7465728282118300820E00840101256A636F6D706172652D6C7482"
           "118101",
           "82138401010203")
-// ari:/AC/(/TBL/c=3;(0,0,a)(1,1,b)(2,2,c)(3,3,d),//1/1/OPER/tbl-filter(/AC/(0,/LABEL/0,//1/1/OPER/compare-gt),/AC/(1,2)))
+// ari:/AC/(/TBL/c=3;(0,0,a)(1,1,b)(2,2,c)(3,3,d),//1/1/OPER/tbl-filter(/AC/(0,/LABEL/0,//1/1/OPER/compare-lt),/AC/(1,2)))
 // -> /TBL/c=2;(1,b)(2,c)(3,d)
 TEST_CASE("82118282138D0300006161010161620202616303036164850101256A74626C2D66696C7465728282118300820E00840101256A636F6D"
-          "706172652D67748211820102",
+          "706172652D6C748211820102",
           "82138702016162026163036164")
 void test_refda_eval_target_check(const char *targethex, const char *expectloghex)
 {
-    // TODO: Later, post version 2.0 release, consider passing ARI text instead of ARI hex
-
     cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&target, targethex));
 
@@ -540,9 +537,7 @@ void test_refda_eval_target_check(const char *targethex, const char *expectloghe
     int        res    = refda_eval_target(&runctx, &result, &target);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "refda_eval_target() disagrees");
 
-    // verify result value
-    const bool equal = cace_ari_equal(&expect_result, &result);
-    TEST_ASSERT_TRUE_MESSAGE(equal, "result ARI is different");
+    TEST_ASSERT_TRUE_MESSAGE(test_util_ari_equal(&expect_result, &result), "result ARI is different");
 
     cace_ari_deinit(&result);
     refda_runctx_deinit(&runctx);
