@@ -317,7 +317,7 @@ static cace_ari_translate_result_t alarm_list_filter_sub_label(cace_ari_t *out, 
         }
         else if (!cace_ari_get_int(in, &as_int))
         {
-            // nothing else to do here
+            // nothing else to do here, handle as_int below
         }
         else
         {
@@ -352,6 +352,7 @@ static cace_ari_translate_result_t alarm_list_filter_sub_label(cace_ari_t *out, 
                 cace_ari_set_copy(out, &entry->mgr_time);
                 break;
             default:
+                CACE_LOG_ERR("invalid LABEL value %" PRId32, as_int);
                 return CACE_ARI_TRANSLATE_FAILURE;
         }
         return CACE_ARI_TRANSLATE_FINAL;
