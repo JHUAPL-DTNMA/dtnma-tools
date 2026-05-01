@@ -81,8 +81,7 @@ void refda_acl_init(refda_acl_t *obj)
 {
     CHKVOID(obj);
     atomic_store(&obj->generation, 0);
-    obj->perm_base    = NULL;
-    obj->perm_produce = NULL;
+    obj->permissions = (refda_acl_permissions_t) { NULL };
     refda_acl_group_list_init(obj->groups);
     refda_acl_access_list_init(obj->access);
     refda_acl_access_by_group_init(obj->access_by_group);
@@ -94,8 +93,7 @@ void refda_acl_deinit(refda_acl_t *obj)
     refda_acl_access_by_group_clear(obj->access_by_group);
     refda_acl_access_list_clear(obj->access);
     refda_acl_group_list_clear(obj->groups);
-    obj->perm_produce = NULL;
-    obj->perm_base    = NULL;
+    obj->permissions = (refda_acl_permissions_t) { NULL };
 }
 
 /**
@@ -119,7 +117,7 @@ static cace_ari_translate_result_t acl_endpoint_filter_sub_label(cace_ari_t *out
             }
             else
             {
-                CACE_LOG_ERR("invalid LABEL value %d", as_int);
+                CACE_LOG_ERR("invalid LABEL value %" PRId32, as_int);
                 return CACE_ARI_TRANSLATE_FAILURE;
             }
         }
@@ -231,6 +229,9 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
                                  const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_ptr_set_t perm_objs,
                                  refda_amm_ident_base_ptr_set_t match)
 {
+    CHKFALSE(agent);
+    CHKFALSE(acc_obj);
+
     bool found = false;
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
@@ -250,6 +251,13 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
     for (refda_acl_id_tree_it(grp_it, groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
     {
         const refda_acl_id_t *grp_id = refda_acl_id_tree_cref(grp_it);
+        if (*grp_id == 0)
+        {
+            // Agent group 0 has all-access
+            CACE_LOG_DEBUG("matched as Agent group 0, short circuit");
+            found = true;
+            break;
+        }
 
         const refda_acl_access_ptr_set_t *accesses =
             refda_acl_access_by_group_cget(agent->acl.access_by_group, *grp_id);
@@ -270,7 +278,6 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
         {
             continue;
         }
-        CACE_LOG_DEBUG("", refda_acl_access_ptr_set_size(*accesses));
 
         refda_acl_access_ptr_set_it_t acc_it;
         for (refda_acl_access_ptr_set_it(acc_it, *accesses); !refda_acl_access_ptr_set_end_p(acc_it);
@@ -323,6 +330,8 @@ bool refda_acl_search_one_permission(refda_agent_t *agent, const refda_acl_id_tr
                                      const cace_amm_lookup_t *acc_obj, const cace_amm_obj_desc_t *perm_obj,
                                      refda_amm_ident_base_ptr_set_t match)
 {
+    CHKFALSE(perm_obj);
+
     cace_amm_obj_desc_ptr_set_t perm_objs;
     cace_amm_obj_desc_ptr_set_init(perm_objs);
     cace_amm_obj_desc_ptr_set_push(perm_objs, (cace_amm_obj_desc_t *)perm_obj);

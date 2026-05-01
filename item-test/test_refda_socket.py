@@ -23,6 +23,7 @@ import logging
 import numpy
 import os
 import queue
+import re
 import select
 import signal
 import socket
@@ -106,21 +107,32 @@ class TestRefdaSocket(unittest.TestCase):
         # listen in work thread
         self._mgr_reader = threading.Thread(
             target=self._read_mgr,
-            args=[self._mgr_bind]
+            args=[self._mgr_bind],
+            daemon=True
         )
         self._mgr_reader.start()
 
+        mgr_pat = quote('"' + '|'.join([
+            re.escape('file:' + self._mgr_bind[0].path),
+            re.escape('file:' + self._mgr_bind[1].path)
+        ]) + '"')
         startup_path = os.path.join(self._tmp.name, 'startup.uri')
         with open(startup_path, 'w') as startup_file:
             startup_file.writelines([
-                '//ietf/dtnma-agent-acl/ctrl/ensure-group(1,test-agents)\n',
-                '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(%22file%3A.%2A%22)))\n',
-                # group 0 (agent) and 1 (all test mgrs) have all access
-                '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(0,1),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
-                + '//ietf/dtnma-agent-acl/ident/execute,'
-                + '//ietf/dtnma-agent-acl/ident/produce'
-                + '))\n',
+                '//ietf/dtnma-agent-acl/ctrl/ensure-group(1,manager0-1)\n',
+                '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(1,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(' + mgr_pat + ')))\n',
+                # group 1 (mgr0 and mgr1) have all access
+                '//ietf/dtnma-agent-acl/CTRL/ensure-access(1,/ac/(1),/ac/(/objpat/(*)(*)(*)(*)),/ac/(' + ','.join([
+                    '//ietf/dtnma-agent-acl/ident/execute',
+                    '//ietf/dtnma-agent-acl/ident/produce',
+                    '//ietf/dtnma-agent-acl/ident/modify-var',
+                    '//ietf/dtnma-agent-acl/ident/ensure-object',
+                    '//ietf/dtnma-agent-acl/ident/obsolete-object',
+                ]) + '))\n',
             ])
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            with open(startup_path, 'r') as startup_file:
+                LOGGER.debug('Startup macro:\n%s', startup_file.read())
 
         args = compose_args([
             'refda-socket',
@@ -226,6 +238,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(1, len(rpts))
         rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
+        self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
 
     def _ari_text_to_obj(self, text: str, id_convert: bool=True, nn: bool=True) -> ARI:
         with io.StringIO(text) as buf:
@@ -351,9 +364,11 @@ class TestRefdaSocket(unittest.TestCase):
     def test_exec_report_on_multi_mgr(self):
         self._start()
 
+        # mgr0 and mgr1 has full access, mgr2 has none
         mgr_eids = [
             quote('"file:' + self._mgr_bind[0].path + '"'),
             quote('"file:' + self._mgr_bind[1].path + '"'),
+            quote('"file:' + self._mgr_bind[2].path + '"'),
         ]
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,/ac/(' + ','.join(mgr_eids) + ')))')]
@@ -364,16 +379,17 @@ class TestRefdaSocket(unittest.TestCase):
         # RPTSET for the generated report
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
-        # items of the report
-        self.assertLessEqual(3, len(rpt.items))
+        self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
 
         rpts = self._wait_reports(mgr_ix=1, nonce=ari.LiteralARI(None))
         self.assertEqual(1, len(rpts))
         # RPTSET for the generated report
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
-        # items of the report
-        self.assertLessEqual(3, len(rpt.items))
+        self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
+
+        with self.assertRaises(TimeoutError):
+            self._wait_reports(mgr_ix=2, timeout=0.1)
 
         # RPTSET for the execution itself
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
@@ -395,7 +411,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts[0]
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
         # items of the report
-        self.assertLessEqual(3, len(rpt.items))
+        self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
 
         # RPTSET for the execution itself
         rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
@@ -1033,6 +1049,12 @@ class TestRefdaSocket(unittest.TestCase):
             # produced expression vs eval sub-expression
             ('/ac/(//ietf/!odm/const/true-expr)', self._ari_text_to_obj('/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq)')),
             ('/ac/(//ietf/dtnma-agent/oper/eval(//ietf/!odm/const/true-expr))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/nary-eval(0,//ietf/!odm/const/true-expr))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/nary-eval(0,/ac/(10)))', ari.LiteralARI(10)),
+            ('/ac/(//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0)))', ari.UNDEFINED), # fail from too small stack
+            ('/ac/(10,//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0)))', ari.LiteralARI(10)),
+            ('/ac/(10,2,//ietf/dtnma-agent/oper/nary-eval(2,/ac/(/label/0,/label/1,//ietf/dtnma-agent/oper/sub)))', ari.typed_int(8)),
+            ('/ac/(10,2,//ietf/dtnma-agent/oper/nary-eval(2,/ac/(/label/1,/label/0,//ietf/dtnma-agent/oper/sub)))', ari.typed_int(-8)),
             # direct predicate operators
             ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22ll%22))', ari.TYPED_FALSE),
             ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22.*ll.*%22))', ari.TYPED_TRUE),
@@ -1041,6 +1063,8 @@ class TestRefdaSocket(unittest.TestCase):
             ('/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq)', ari.TYPED_TRUE),
             ('/ac/(2,//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,10,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_FALSE),
             ('/ac/(2,//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,2,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_TRUE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0,10,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0,2,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_TRUE),
             # predicate composing operators
             ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/()))', ari.TYPED_FALSE),
             ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/(//ietf/dtnma-agent/oper/is-not-undefined)))', ari.TYPED_TRUE),
@@ -1409,7 +1433,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
 
-    def test_odm_var(self):
+    def test_odm_var_valid(self):
         self._start()
 
         self._send_msg(
@@ -1521,7 +1545,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual((0, 2), rpt.items[0].value.shape)
         self.assertNotIn(ari.UNDEFINED, list(rpt.items[0].value.flat))
 
-    def test_odm_const(self):
+    def test_odm_const_valid(self):
         self._start()
 
         self._send_msg(
@@ -1572,6 +1596,16 @@ class TestRefdaSocket(unittest.TestCase):
             rpt.items[0].value[0, 1]
         )
 
+        # Verify it produces the value
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/!test-model-1/const/1))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual([int], literal_prim_types(rpt.items))
+        self.assertEqual((ari.LiteralARI(1),), rpt.items)
+
         # Obsolete the CONST
         self._send_msg(
             [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/obsolete-const(//ietf/!test-model-1/CONST/test-const))')]
@@ -1590,6 +1624,15 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((0, 2), rpt.items[0].value.shape)
+
+        # Verify it is absent
+        self._send_msg(
+            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/inspect(//ietf/!test-model-1/const/1))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
+        self.assertEqual(1, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertNotIn((ari.UNDEFINED,), rpt.items)
 
     def test_exec_control_flow_if_then_else(self):
         self._start()
@@ -1709,6 +1752,63 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/another)'), rpt.source)
         self.assertEqual((ari.UNDEFINED,), rpt.items)
 
+    def test_exec_control_flow_exec_deadline(self):
+        self._start()
+
+        # successful finish of target
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/exec-deadline(//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version),/td/PT2S,//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        # target itself
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-version)'), rpt.source)
+        self.assertEqual([str], literal_prim_types(rpt.items))
+        # result after target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))
+        self.assertEqual([bool], literal_prim_types(rpt.items))
+        self.assertIs(True, rpt.items[0].value)
+        
+        # failure finish of target
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/exec-deadline(//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing),/td/PT2S,//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        # target itself
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/!odm/EDD/missing)'), rpt.source)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
+        # result after target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
+
+        # timeout of target (a wait on a trivial falsy condition)
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/exec-deadline(//ietf/dtnma-agent/CTRL/wait-cond(/ac/(false)),/td/PT2S,//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)))')]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=3, timeout=3)
+        self.assertEqual(3, len(rpts))
+        # target itself failed
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/wait-cond(/ac/(false))'), rpt.source)
+        self.assertEqual((ari.UNDEFINED,), rpt.items)
+        # result after target
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/exec-deadline'), self._ari_strip_params(rpt.source))
+        self.assertEqual([bool], literal_prim_types(rpt.items))
+        self.assertIs(False, rpt.items[0].value)
+        # on-timeout
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent/EDD/sw-vendor)'), rpt.source)
+        self.assertEqual([str], literal_prim_types(rpt.items))
+
     def test_odm_const_invalid(self):
         self._start()
 
@@ -1817,7 +1917,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 6), rpt.items[0].value.shape)
-        # FIXME self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         # Add a group with catch-all on the test socket scheme
         pat = quote('"file:.*"')
@@ -1827,10 +1927,11 @@ class TestRefdaSocket(unittest.TestCase):
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'
                 + '//ietf/dtnma-agent-acl/CTRL/ensure-group(10,example),'  # duplicate no-op
                 + '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(10,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(' + pat + '))),'
-                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(10,/ac/(10),/ac/(/objpat/(*)(*)(*)(*)),/ac/('
-                + '//ietf/dtnma-agent-acl/ident/execute,'
-                + '//ietf/dtnma-agent-acl/ident/produce'
-                + ')),'
+                + '//ietf/dtnma-agent-acl/CTRL/ensure-access(10,/ac/(10),/ac/(/objpat/(*)(*)(*)(*)),/ac/(' + ','.join([
+                    '//ietf/dtnma-agent-acl/ident/execute',
+                    '//ietf/dtnma-agent-acl/ident/produce',
+                    '//ietf/dtnma-agent-acl/ident/modify-var',
+                ]) + ')),'
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/current-groups),'  # no effect on this execution
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/group-list),'
                 + '//ietf/dtnma-agent/CTRL/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'

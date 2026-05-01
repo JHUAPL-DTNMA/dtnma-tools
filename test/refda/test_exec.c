@@ -58,7 +58,6 @@ void suiteSetUp(void)
     refda_agent_init(&agent);
     test_util_agent_crit_adms(&agent);
     suite_adms_init(&agent);
-    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 }
 
 int suiteTearDown(int failures)
@@ -288,14 +287,14 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
             // manual sleep
             nanosleep(&remain, NULL);
 
-            TEST_ASSERT_EQUAL_INT(1, refda_timeline_size(agent.exec_timeline));
+            TEST_ASSERT_EQUAL_size_t(1, refda_timeline_size(agent.exec_timeline));
             refda_timeline_it(tl_it, agent.exec_timeline);
             if (!refda_timeline_end_p(tl_it))
             {
                 const refda_timeline_event_t *next = refda_timeline_cref(tl_it);
 
                 refda_ctrl_exec_ctx_t ctx;
-                refda_ctrl_exec_ctx_init(&ctx, next->exec.item);
+                TEST_ASSERT_EQUAL_INT(0, refda_ctrl_exec_ctx_init(&ctx, next->exec.item_ptr));
 
                 (next->exec.callback)(&ctx);
 
@@ -306,6 +305,7 @@ static void check_execute(const cace_ari_t *target, int expect_exp, int wait_lim
                 }
                 refda_ctrl_exec_ctx_deinit(&ctx);
 
+                refda_exec_item_ptr_release(next->exec.item_ptr);
                 refda_timeline_remove(agent.exec_timeline, tl_it);
             }
         }
@@ -497,7 +497,7 @@ void test_refda_exec_wait_cond(int delay_ms)
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/60
 TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D183C", 1, true, 1)
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/1
-// FIXME TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D01", 2, true, 2)
+TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", false, "820D01", 2, true, 2)
 // ari:/AC/(//65535/10/CTRL/1,//65535/10/CTRL/2), ari:/TD/1, ari:/TD/60
 TEST_CASE("8211828419FFFF0A22018419FFFF0A2202", "820D01", true, "820D183C", 1, true, 1)
 void test_refda_exec_time_based_rule(const char *actionhex, const char *starthex, bool convert_start_to_tp,
