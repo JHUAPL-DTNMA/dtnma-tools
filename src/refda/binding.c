@@ -91,7 +91,7 @@ const cace_amm_type_t *refda_binding_type_from_name(const cace_ari_t *name, cons
     else
     {
         cace_ari_type_t aritype;
-        if (!cace_ari_get_aritype_int(&(semtype->name), &aritype))
+        if (!cace_ari_get_aritype_int(name, &aritype))
         {
             found = cace_amm_type_get_builtin(aritype);
         }
