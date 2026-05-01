@@ -19,6 +19,7 @@
  * Test the ari_text_util.h interfaces.
  */
 #include <cace/ari/text_util.h>
+#include <cace/ari/lit.h>
 #include <unity.h>
 #include <string.h>
 
@@ -369,7 +370,10 @@ TEST_CASE(20, 50e6, false, "20000101T000020.05Z")
 TEST_CASE(20, 999999000, false, "20000101T000020.999999Z")
 TEST_CASE(20, 999999999, false, "20000101T000020.999999999Z")
 TEST_CASE(20, 999999999, false, "20000101T000020.999999999Z")
-void test_cace_utctime_encode_valid(time_t in_sec, long in_nsec, bool usesep, const char *expect)
+// domain limits
+TEST_CASE(-9223372036 - 1, CACE_ARI_SUBSEC_SCALE - 854775808, false, "17070922T001243.145224192Z")
+TEST_CASE(9223372036, 854775807, false, "22920410T234716.854775807Z")
+void test_cace_utctime_encode_valid(time_t in_sec, cace_ari_subsec_t in_nsec, bool usesep, const char *expect)
 {
     struct timespec in = { .tv_sec = in_sec, .tv_nsec = in_nsec };
 
@@ -388,7 +392,10 @@ TEST_CASE("20000101T000020.05Z", 20, 50e6)
 TEST_CASE("20000101T000020.000001Z", 20, 1e3)
 TEST_CASE("20000101T010020Z", 3620, 0)
 TEST_CASE("20200101T000000Z", 631152000, 0)
-void test_cace_utctime_decode_valid(const char *text, time_t expect_sec, long expect_nsec)
+// domain limits
+TEST_CASE("17070922T001243.145224192Z", -9223372036 - 1, CACE_ARI_SUBSEC_SCALE - 854775808)
+TEST_CASE("22920410T234716.854775807Z", 9223372036, 854775807)
+void test_cace_utctime_decode_valid(const char *text, time_t expect_sec, cace_ari_subsec_t expect_nsec)
 {
     cace_data_t in_data;
     cace_data_init_view(&in_data, strlen(text) + 1, (cace_data_ptr_t)text);
@@ -428,7 +435,10 @@ TEST_CASE(20, 999999000, "PT20.999999S")
 TEST_CASE(3610, 0, "PT1H10S")
 TEST_CASE(24 * 3600 + 2 * 3600 + 3 * 60 + 4, 500e6, "P1DT2H3M4.5S")
 TEST_CASE(-6102299733, 1000000000 - 600451616, "-P70628DT11H15M32.600451616S")
-void test_cace_timeperiod_encode_valid(time_t in_sec, long in_nsec, const char *expect)
+// domain limits
+TEST_CASE(-9223372036 - 1, CACE_ARI_SUBSEC_SCALE - 854775808, "-P106751DT23H47M16.854775808S")
+TEST_CASE(9223372036, 854775807, "P106751DT23H47M16.854775807S")
+void test_cace_timeperiod_encode_valid(time_t in_sec, cace_ari_subsec_t in_nsec, const char *expect)
 {
     struct timespec in = { .tv_sec = in_sec, .tv_nsec = in_nsec };
 
@@ -453,7 +463,10 @@ TEST_CASE("P1DT", 24 * 3600, 0)
 TEST_CASE("P1DT0.1S", 24 * 3600, 100e6)
 TEST_CASE("P1DT2H3M4.5S", 24 * 3600 + 2 * 3600 + 3 * 60 + 4, 500e6)
 TEST_CASE("-P70628DT11H15M32.600451616S", -6102299733, 1000000000 - 600451616)
-void test_cace_timeperiod_decode_valid(const char *text, time_t expect_sec, long expect_nsec)
+// domain limits
+TEST_CASE("-P106751DT23H47M16.854775808S", -9223372036 - 1, CACE_ARI_SUBSEC_SCALE - 854775808)
+TEST_CASE("P106751DT23H47M16.854775807S", 9223372036, 854775807)
+void test_cace_timeperiod_decode_valid(const char *text, time_t expect_sec, cace_ari_subsec_t expect_nsec)
 {
     cace_data_t in_data;
     cace_data_init_view(&in_data, strlen(text) + 1, (cace_data_ptr_t)text);
@@ -642,7 +655,12 @@ TEST_CASE(20, 1e3, "20.000001")
 TEST_CASE(20, 50e6, "20.05")
 TEST_CASE(20, 999999000, "20.999999")
 TEST_CASE(20, 999999999, "20.999999999")
-void test_cace_decfrac_encode_valid(time_t in_sec, long in_nsec, const char *expect)
+TEST_CASE(-20, 0, "-20")
+TEST_CASE(-21, 50e6, "-20.95")
+// domain limits
+TEST_CASE(-9223372036 - 1, CACE_ARI_SUBSEC_SCALE - 854775808, "-9223372036.854775808")
+TEST_CASE(9223372036, 854775807, "9223372036.854775807")
+void test_cace_decfrac_encode_valid(time_t in_sec, cace_ari_subsec_t in_nsec, const char *expect)
 {
     struct timespec in = { .tv_sec = in_sec, .tv_nsec = in_nsec };
 
@@ -660,7 +678,12 @@ TEST_CASE("20", 20, 0)
 TEST_CASE("20.000001", 20, 1e3)
 TEST_CASE("20.05", 20, 50e6)
 TEST_CASE("20.999999", 20, 999999000)
-void test_cace_decfrac_decode_valid(const char *text, time_t expect_sec, long expect_nsec)
+TEST_CASE("-20", -20, 0)
+TEST_CASE("-20.95", -21, 50e6)
+// domain limits
+TEST_CASE("-9223372036.854775808", -9223372036 - 1, CACE_ARI_SUBSEC_SCALE - 854775808)
+TEST_CASE("9223372036.854775807", 9223372036, 854775807)
+void test_cace_decfrac_decode_valid(const char *text, time_t expect_sec, cace_ari_subsec_t expect_nsec)
 {
     cace_data_t in_data;
     cace_data_init_view(&in_data, strlen(text) + 1, (cace_data_ptr_t)text);

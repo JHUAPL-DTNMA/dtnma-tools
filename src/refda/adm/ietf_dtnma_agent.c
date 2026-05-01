@@ -37,6 +37,7 @@
 /*   START CUSTOM INCLUDES HERE  */
 #include "refda/eval.h"
 #include "refda/exec.h"
+#include "refda/exec_proc.h"
 #include "refda/binding.h"
 #include "refda/reporting.h"
 #include "cace/amm/promote.h"
@@ -101,12 +102,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_finished(refda_ctrl_exec_ctx_t 
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_t *ctx)
 {
-    const cace_ari_t *cond = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
-    if (!cond)
-    {
-        CACE_LOG_ERR("no parameter");
-        return;
-    }
+    const cace_ari_t *cond      = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *min_intvl = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    CHKVOID(cond);
+    CHKVOID(min_intvl);
 
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
 
@@ -138,11 +137,23 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(refda_ctrl_exec_ctx_
         }
         else
         {
-            // check again in 1s
+            struct timespec next_time;
+            if (!cace_ari_get_td(min_intvl, &next_time))
+            {
+                // Adjust from current time
+                next_time = timespec_add(nowtime, next_time);
+            }
+            else
+            {
+                // use default
+                next_time = timespec_add(nowtime, timespec_from_ms(1000));
+            }
+
+            // check again after delay
             refda_timeline_event_t event = {
                 .purpose       = REFDA_TIMELINE_EXEC,
-                .ts            = timespec_add(nowtime, timespec_from_ms(1000)),
-                .exec.item     = ctx->item,
+                .ts            = next_time,
+                .exec.item_ptr = refda_exec_item_ptr_acquire(ctx->item_ptr),
                 .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check,
             };
             refda_ctrl_exec_ctx_set_waiting(ctx, &event);
@@ -193,19 +204,22 @@ static void refda_adm_ietf_dtnma_agent_read_fparams(cace_amm_obj_desc_t *obj, co
     }
 }
 
+/// Exec item user data for catch control
 typedef struct
 {
     /// Execution status future
     refda_exec_status_t status;
     /// Target if status indicates failure
     cace_ari_t on_failure;
-    /// Execution item of catch to mark result on, not part of the try target
-    refda_exec_item_t *item;
+    /** Execution item of catch to mark result on, not part of the try target.
+     * This is not reference counted because it is part of the item itself!
+     */
+    refda_exec_item_ptr_t *item_ptr;
 } refda_try_catch_data_t;
 
 static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(bool failed, void *user_data);
 
-static void refda_try_catch_data_init(refda_try_catch_data_t *obj, refda_exec_item_t *item,
+static void refda_try_catch_data_init(refda_try_catch_data_t *obj, refda_exec_item_ptr_t *item_ptr,
                                       const cace_ari_t *on_failure)
 {
     refda_exec_status_init(&obj->status);
@@ -213,11 +227,11 @@ static void refda_try_catch_data_init(refda_try_catch_data_t *obj, refda_exec_it
     obj->status.on_finished_arg = obj;
 
     cace_ari_init_copy(&obj->on_failure, on_failure);
-    obj->item = item;
+    obj->item_ptr = item_ptr;
 }
 static void refda_try_catch_data_deinit(refda_try_catch_data_t *obj)
 {
-    obj->item = NULL;
+    obj->item_ptr = NULL;
     cace_ari_deinit(&obj->on_failure);
     refda_exec_status_deinit(&obj->status);
 }
@@ -226,25 +240,25 @@ static void refda_try_catch_data_deinit(refda_try_catch_data_t *obj)
  */
 static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(bool failed, void *user_data)
 {
-    refda_try_catch_data_t *trycatch = user_data;
+    refda_try_catch_data_t *state = user_data;
 
-    refda_exec_item_t *item = trycatch->item;
+    refda_exec_item_t *item = refda_exec_item_ptr_ref(state->item_ptr);
 
     // finished already
     CACE_LOG_INFO("Finished executing catch target, failed=%d", failed);
     if (failed)
     {
         // queue the failure target but do not wait on it here
-        int res = refda_exec_next(item->seq, &(trycatch->on_failure));
+        int res = refda_exec_next(item->seq, &(state->on_failure));
         if (res)
         {
-            CACE_LOG_ERR("Failed expanding failure target");
+            CACE_LOG_ERR("Failed expanding on-failure target");
         }
     }
 
     {
         refda_ctrl_exec_ctx_t ctx;
-        refda_ctrl_exec_ctx_init(&ctx, trycatch->item);
+        refda_ctrl_exec_ctx_init(&ctx, state->item_ptr);
         {
             // result value regardless of above error
             cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
@@ -252,6 +266,89 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch_finished(bool failed, void *us
             refda_ctrl_exec_ctx_set_result_move(&ctx, &result);
         }
         refda_ctrl_exec_ctx_deinit(&ctx);
+    }
+}
+
+/// Exec item user data for exec-deadline control
+typedef struct
+{
+    /// Execution status future
+    refda_exec_status_t status;
+    /// Target if status indicates failure
+    cace_ari_t on_timeout;
+    /** Execution item of catch to mark result on, not part of the try target.
+     * This is not reference counted because it is part of the item itself!
+     */
+    refda_exec_item_ptr_t *item_ptr;
+} refda_exec_deadline_data_t;
+
+static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_finished(bool failed, void *user_data);
+
+static void refda_exec_deadline_data_init(refda_exec_deadline_data_t *obj, refda_exec_item_ptr_t *item_ptr,
+                                          const cace_ari_t *on_timeout)
+{
+    refda_exec_status_init(&obj->status);
+    obj->status.on_finished     = refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_finished;
+    obj->status.on_finished_arg = obj;
+
+    cace_ari_init_copy(&obj->on_timeout, on_timeout);
+    obj->item_ptr = item_ptr;
+}
+static void refda_exec_deadline_data_deinit(refda_exec_deadline_data_t *obj)
+{
+    obj->item_ptr = NULL;
+    cace_ari_deinit(&obj->on_timeout);
+    refda_exec_status_deinit(&obj->status);
+}
+
+/** Callback to handle finish of the target for deadline CTRL.
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_finished(bool failed, void *user_data)
+{
+    refda_exec_deadline_data_t *state = user_data;
+    CACE_LOG_DEBUG("exec-deadline target finished with failed=%d", failed);
+
+    {
+        refda_ctrl_exec_ctx_t ctx;
+        refda_ctrl_exec_ctx_init(&ctx, state->item_ptr);
+        {
+            // failure in target yeilds failure in this ctrl
+            cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+            if (!failed)
+            {
+                cace_ari_set_bool(&result, true);
+            }
+            refda_ctrl_exec_ctx_set_result_move(&ctx, &result);
+        }
+        refda_ctrl_exec_ctx_deinit(&ctx);
+    }
+}
+
+/** Callback to handle timeout of the deadline CTRL.
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_timeout(refda_ctrl_exec_ctx_t *ctx)
+{
+    refda_exec_deadline_data_t *state = ctx->item->user_data.ptr;
+    CACE_LOG_DEBUG("exec-deadline target timeout");
+
+    // the target may have already finished, this callback only occurs once
+    if (atomic_load(&ctx->item->execution_stage) == REFDA_EXEC_WAITING)
+    {
+        // terminate the target sequence
+        refda_exec_proc_terminate(state->status.seq);
+
+        // queue the failure target but do not wait on it here
+        CACE_LOG_CRIT("running on-timeout target");
+        int res = refda_exec_next(ctx->item->seq, &(state->on_timeout));
+        if (res)
+        {
+            CACE_LOG_ERR("Failed expanding on-timeout target");
+        }
+
+        // pass-through timeout result
+        cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+        cace_ari_set_bool(&result, false);
+        refda_ctrl_exec_ctx_set_result_move(ctx, &result);
     }
 }
 
@@ -2468,28 +2565,105 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
     const cace_ari_t *ari_try        = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
     const cace_ari_t *ari_on_failure = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
 
-    refda_try_catch_data_t *trycatch = CACE_MALLOC(sizeof(refda_try_catch_data_t));
-    refda_try_catch_data_init(trycatch, ctx->item, ari_on_failure);
-    // free this in when execution item is finished
-    cace_amm_user_data_set_from(&ctx->item->user_data, trycatch, true,
+    refda_try_catch_data_t *state = CACE_MALLOC(sizeof(refda_try_catch_data_t));
+    refda_try_catch_data_init(state, ctx->item_ptr, ari_on_failure);
+    // the deinit will occur when the execution item is finished
+    cace_amm_user_data_set_from(&ctx->item->user_data, state, true,
                                 (cace_amm_user_data_deinit_f)refda_try_catch_data_deinit);
 
     // Run try target as a separate sequence and wait on its finish
     CACE_LOG_DEBUG("Sending try target");
-    if (refda_exec_add_target(ctx->item->seq->runctx, ari_try, &(trycatch->status)))
+    if (refda_exec_add_target(ctx->item->seq->runctx, ari_try, &(state->status)))
     {
-        CACE_LOG_ERR("Failed adding try target");
-        // cleanup from internal failure
-        refda_try_catch_data_deinit(trycatch);
-        CACE_FREE(trycatch);
+        CACE_LOG_ERR("Failed adding target");
+        return;
     }
-    else
-    {
-        refda_ctrl_exec_ctx_set_waiting(ctx, NULL);
-    }
+
+    refda_ctrl_exec_ctx_set_waiting(ctx, NULL);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_catch BODY
+     * +-------------------------------------------------------------------------+
+     */
+}
+
+/* Name: exec-deadline
+ * Description:
+ *   Execute a desired target and wait for it to finish before a relative
+ *   time deadline. If it does not finish, it is terminated and an
+ *   alternative timeout target is executed. If the target experiences a
+ *   failure executing before the deadline, then this control will also
+ *   fail.
+ *
+ * Parameters list:
+ *   - Index 0, name "target", type use of ari://ietf/amm-base/TYPEDEF/exec-tgt
+ *   - Index 1, name "deadline", type use of ari:/ARITYPE/TD
+ *   - Index 2, name "on-timeout", type union of 2 types (use of ari://ietf/amm-base/TYPEDEF/exec-tgt, use of
+ * ari:/ARITYPE/NULL)
+ *
+ * Result name "success", type use of ari:/ARITYPE/BOOL
+ */
+static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline(refda_ctrl_exec_ctx_t *ctx)
+{
+    /*
+     * +-------------------------------------------------------------------------+
+     * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_exec_deadline BODY
+     * +-------------------------------------------------------------------------+
+     */
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
+    const cace_ari_t *target     = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
+    const cace_ari_t *deadline   = refda_ctrl_exec_ctx_get_aparam_index(ctx, 1);
+    const cace_ari_t *on_timeout = refda_ctrl_exec_ctx_get_aparam_index(ctx, 2);
+
+    refda_exec_deadline_data_t *state = CACE_MALLOC(sizeof(refda_exec_deadline_data_t));
+    refda_exec_deadline_data_init(state, ctx->item_ptr, on_timeout);
+    // the deinit will occur when the execution item is finished
+    cace_amm_user_data_set_from(&ctx->item->user_data, state, true,
+                                (cace_amm_user_data_deinit_f)refda_exec_deadline_data_deinit);
+
+    // Run target as a separate sequence and wait on its finish
+    CACE_LOG_DEBUG("Sending deadline target");
+    if (refda_exec_add_target(ctx->item->seq->runctx, target, &(state->status)))
+    {
+        CACE_LOG_ERR("Failed adding target");
+        return;
+    }
+
+    struct timespec nowtime;
+    if (clock_gettime(CLOCK_REALTIME, &nowtime))
+    {
+        // handled as failure
+        CACE_LOG_CRIT("Failed clock_gettime()");
+        return;
+    }
+
+    struct timespec deadline_ts;
+    if (!cace_ari_get_td(deadline, &deadline_ts))
+    {
+        // Adjust from current time
+        deadline_ts = timespec_add(nowtime, deadline_ts);
+    }
+    else
+    {
+        CACE_LOG_ERR("invalid deadline type");
+        return;
+    }
+
+    // status callback handles finish, this event handles timeout
+    refda_timeline_event_t event = {
+        .purpose       = REFDA_TIMELINE_EXEC,
+        .ts            = deadline_ts,
+        .exec.item_ptr = refda_exec_item_ptr_acquire(ctx->item_ptr),
+        .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_exec_deadline_timeout,
+    };
+    refda_ctrl_exec_ctx_set_waiting(ctx, &event);
+    /*
+     * +-------------------------------------------------------------------------+
+     * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_exec_deadline BODY
      * +-------------------------------------------------------------------------+
      */
 }
@@ -2532,7 +2706,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_for(refda_ctrl_exec_ctx_t *ctx)
     refda_timeline_event_t event = {
         .purpose       = REFDA_TIMELINE_EXEC,
         .ts            = timespec_add(nowtime, duration),
-        .exec.item     = ctx->item,
+        .exec.item_ptr = refda_exec_item_ptr_acquire(ctx->item_ptr),
         .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
     refda_ctrl_exec_ctx_set_waiting(ctx, &event);
@@ -2574,7 +2748,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
     refda_timeline_event_t event = {
         .purpose       = REFDA_TIMELINE_EXEC,
         .ts            = abstime,
-        .exec.item     = ctx->item,
+        .exec.item_ptr = refda_exec_item_ptr_acquire(ctx->item_ptr),
         .exec.callback = refda_adm_ietf_dtnma_agent_ctrl_wait_finished,
     };
     refda_ctrl_exec_ctx_set_waiting(ctx, &event);
@@ -2594,6 +2768,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_until(refda_ctrl_exec_ctx_t *ct
  *
  * Parameters list:
  *   - Index 0, name "condition", type use of ari://ietf/amm-base/TYPEDEF/eval-tgt
+ *   - Index 1, name "min-interval", type union of 2 types (use of ari:/ARITYPE/TD, use of ari:/ARITYPE/NULL)
  *
  * Result: none
  */
@@ -2604,6 +2779,11 @@ static void refda_adm_ietf_dtnma_agent_ctrl_wait_cond(refda_ctrl_exec_ctx_t *ctx
      * |START CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_wait_cond BODY
      * +-------------------------------------------------------------------------+
      */
+    if (refda_ctrl_exec_ctx_has_aparam_undefined(ctx))
+    {
+        CACE_LOG_ERR("Invalid parameter, unable to continue");
+        return;
+    }
     // initial check and kickoff timers
     refda_adm_ietf_dtnma_agent_ctrl_wait_cond_check(ctx);
     /*
@@ -7899,6 +8079,69 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                 cace_ari_set_null(&(fparam->defval));
             }
         }
+        { // For ./CTRL/exec-deadline
+            refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
+            refda_amm_ctrl_desc_init(objdata);
+            // result type
+            {
+                cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                // use of ari:/ARITYPE/BOOL
+                cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_BOOL);
+                cace_amm_type_set_use_ref_move(&(objdata->res_type), &typeref);
+            }
+            // callback:
+            objdata->execute = refda_adm_ietf_dtnma_agent_ctrl_exec_deadline;
+
+            obj = refda_register_ctrl(
+                adm,
+                cace_amm_idseg_ref_withenum("exec-deadline", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_EXEC_DEADLINE),
+                objdata);
+            // parameters:
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "target");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                    cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "deadline");
+                {
+                    cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                    // use of ari:/ARITYPE/TD
+                    cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TD);
+                    cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
+                }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "on-timeout");
+                {
+                    // union
+                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(fparam->typeobj), 2);
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // reference to ari://ietf/amm-base/TYPEDEF/exec-tgt
+                            cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 19);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NULL
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                }
+                cace_ari_set_null(&(fparam->defval));
+            }
+        }
         { // For ./CTRL/wait-for
             refda_amm_ctrl_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ctrl_desc_t));
             refda_amm_ctrl_desc_init(objdata);
@@ -7960,6 +8203,32 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                     cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 16);
                     cace_amm_type_set_use_ref_move(&(fparam->typeobj), &typeref);
                 }
+            }
+            {
+                cace_amm_formal_param_t *fparam = refda_register_add_param(obj, "min-interval");
+                {
+                    // union
+                    cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(fparam->typeobj), 2);
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/TD
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_TD);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                    {
+                        cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 1);
+                        {
+                            cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                            // use of ari:/ARITYPE/NULL
+                            cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NULL);
+                            cace_amm_type_set_use_ref_move(choice, &typeref);
+                        }
+                    }
+                }
+                cace_ari_set_null(&(fparam->defval));
             }
         }
         { // For ./CTRL/inspect

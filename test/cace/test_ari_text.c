@@ -857,6 +857,12 @@ TEST_CASE("ari:/TP/20.5", 20, 500e6)
 TEST_CASE("ari:/TP/20.500", 20, 500e6)
 TEST_CASE("ari:/TP/20.000001", 20, 1e3)
 TEST_CASE("ari:/TP/20.000000001", 20, 1)
+// domain limits
+TEST_CASE("ari:/TP/17070922T001243.145224192Z", -9223372036 - 1,
+          CACE_ARI_SUBSEC_SCALE - 854775808) // subsec is offset toward +inf
+TEST_CASE("ari:/TP/22920410T234716.854775807Z", 9223372036, 854775807)
+TEST_CASE("ari:/TP/-9223372036.854775808", -9223372036 - 1, CACE_ARI_SUBSEC_SCALE - 854775808)
+TEST_CASE("ari:/TP/9223372036.854775807", 9223372036, 854775807)
 void test_ari_text_decode_lit_typed_tp(const char *text, time_t expect_sec, long expect_nsec)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
@@ -884,6 +890,11 @@ TEST_CASE("ari:/TD/+PT1M", 60, 0)
 TEST_CASE("ari:/TD/-PT1M", -60, 0)
 TEST_CASE("ari:/TD/-P1DT", -(24 * 60 * 60), 0)
 TEST_CASE("ari:/TD/PT", 0, 0)
+TEST_CASE("ari:/TD/-P106751DT23H47M16.854775808S", -9223372036 - 1,
+          CACE_ARI_SUBSEC_SCALE - 854775808) // subsec is offset toward +inf
+TEST_CASE("ari:/TD/P106751DT23H47M16.854775807S", 9223372036, 854775807)
+TEST_CASE("ari:/TD/-9223372036.854775808", -9223372036 - 1, CACE_ARI_SUBSEC_SCALE - 854775808)
+TEST_CASE("ari:/TD/9223372036.854775807", 9223372036, 854775807)
 void test_ari_text_decode_lit_typed_td(const char *text, time_t expect_sec, long expect_nsec)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;

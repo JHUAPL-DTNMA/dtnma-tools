@@ -227,7 +227,7 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
  * @param[out] match The matching permissions, or null pointer if they
  * are not needed.
  * @return True if either group 0 is present, or if
- * the permission is present and the @c match is non-empty.
+ * the permission is present (and @c match would be non-empty).
  */
 bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t groups, const cace_ari_t *tgt_ref,
                                  const cace_amm_lookup_t *tgt_deref, const cace_amm_obj_desc_ptr_set_t perm_objs,
