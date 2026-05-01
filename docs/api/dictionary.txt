@@ -262,6 +262,7 @@ util
 uuid
 uvast
 UVAST
+variadic
 VerbPhraseFunctionName
 Vigano
 vlsm

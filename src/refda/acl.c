@@ -119,7 +119,7 @@ static cace_ari_translate_result_t acl_endpoint_filter_sub_label(cace_ari_t *out
             }
             else
             {
-                CACE_LOG_ERR("invalid LABEL value %d", as_int);
+                CACE_LOG_ERR("invalid LABEL value %" PRId32, as_int);
                 return CACE_ARI_TRANSLATE_FAILURE;
             }
         }

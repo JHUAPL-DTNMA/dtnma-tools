@@ -1031,6 +1031,12 @@ bool cace_amm_type_is_valid(const cace_amm_type_t *type)
     return type->type_class != CACE_AMM_TYPE_INVALID;
 }
 
+bool cace_amm_type_is_seq(const cace_amm_type_t *type)
+{
+    CHKFALSE(type)
+    return type->type_class == CACE_AMM_TYPE_SEQ;
+}
+
 bool cace_amm_type_get_name(const cace_amm_type_t *type, cace_ari_t *name)
 {
     CHKFALSE(type);

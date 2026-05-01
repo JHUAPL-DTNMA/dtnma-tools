@@ -106,7 +106,8 @@ class TestRefdaSocket(unittest.TestCase):
         # listen in work thread
         self._mgr_reader = threading.Thread(
             target=self._read_mgr,
-            args=[self._mgr_bind]
+            args=[self._mgr_bind],
+            daemon=True
         )
         self._mgr_reader.start()
 
@@ -1033,6 +1034,12 @@ class TestRefdaSocket(unittest.TestCase):
             # produced expression vs eval sub-expression
             ('/ac/(//ietf/!odm/const/true-expr)', self._ari_text_to_obj('/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq)')),
             ('/ac/(//ietf/dtnma-agent/oper/eval(//ietf/!odm/const/true-expr))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/nary-eval(0,//ietf/!odm/const/true-expr))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/nary-eval(0,/ac/(10)))', ari.LiteralARI(10)),
+            ('/ac/(//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0)))', ari.UNDEFINED), # fail from too small stack
+            ('/ac/(10,//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0)))', ari.LiteralARI(10)),
+            ('/ac/(10,2,//ietf/dtnma-agent/oper/nary-eval(2,/ac/(/label/0,/label/1,//ietf/dtnma-agent/oper/sub)))', ari.typed_int(8)),
+            ('/ac/(10,2,//ietf/dtnma-agent/oper/nary-eval(2,/ac/(/label/1,/label/0,//ietf/dtnma-agent/oper/sub)))', ari.typed_int(-8)),
             # direct predicate operators
             ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22ll%22))', ari.TYPED_FALSE),
             ('/ac/(hello,//ietf/dtnma-agent/oper/match-regexp(%22.*ll.*%22))', ari.TYPED_TRUE),
@@ -1041,6 +1048,8 @@ class TestRefdaSocket(unittest.TestCase):
             ('/ac/(2,2,//ietf/dtnma-agent/oper/compare-eq)', ari.TYPED_TRUE),
             ('/ac/(2,//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,10,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_FALSE),
             ('/ac/(2,//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,2,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_TRUE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0,10,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_FALSE),
+            ('/ac/(2,//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0,2,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_TRUE),
             # predicate composing operators
             ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/()))', ari.TYPED_FALSE),
             ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/(//ietf/dtnma-agent/oper/is-not-undefined)))', ari.TYPED_TRUE),
@@ -1817,7 +1826,7 @@ class TestRefdaSocket(unittest.TestCase):
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/inspect(//ietf/dtnma-agent-acl/EDD/access-list)'), rpt.source)
         self.assertEqual([ari.Table], literal_prim_types(rpt.items))
         self.assertEqual((1, 6), rpt.items[0].value.shape)
-        # FIXME self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
+        self.assertNotIn(ari.UNDEFINED, rpt.items[0].value.flat)
 
         # Add a group with catch-all on the test socket scheme
         pat = quote('"file:.*"')
