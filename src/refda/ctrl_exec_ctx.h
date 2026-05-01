@@ -40,7 +40,12 @@ typedef struct refda_ctrl_exec_ctx_s
      */
     refda_runctx_t *runctx;
 
-    /** Internal execution bookkeeping item.
+    /** Reference counted pointer to execution item.
+     * This can be acquired to make more safe copies.
+     */
+    refda_exec_item_ptr_t *item_ptr;
+
+    /** Internal execution item.
      * This will never be null.
      */
     refda_exec_item_t *item;
@@ -52,8 +57,10 @@ typedef struct refda_ctrl_exec_ctx_s
  * @param[out] obj The context to initialize.
  * @param[in] item_ptr The internal execution item.
  * The result must outlive this context.
+ * @return Zero if the item is still valid, or non-zero if the item
+ * has already been terminated.
  */
-void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *item);
+int refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_ptr_t *item_ptr);
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj);
 

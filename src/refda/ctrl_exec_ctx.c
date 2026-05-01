@@ -23,21 +23,33 @@
 #include "cace/ari/text.h"
 #include "cace/util/defs.h"
 
-void refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_t *item)
+int refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_ptr_t *item_ptr)
 {
-    CHKVOID(obj);
-    CHKVOID(item);
+    CHKERR1(obj);
+    CHKERR1(item_ptr);
 
-    obj->item = item;
+    obj->item_ptr = refda_exec_item_ptr_acquire(item_ptr);
+    obj->item     = refda_exec_item_ptr_ref(item_ptr);
 
-    obj->runctx = refda_runctx_ptr_ref(obj->item->seq->runctx);
-    // check ACL cache at last moment
-    refda_runctx_check_acl(obj->runctx);
+    refda_exec_seq_t *seq = obj->item->seq;
+    if (seq)
+    {
+        obj->runctx = refda_runctx_ptr_ref(seq->runctx);
+        // check ACL cache at last moment
+        refda_runctx_check_acl(obj->runctx);
+    }
+    else
+    {
+        CACE_LOG_DEBUG("ignoring item no longer bound to sequence");
+        obj->runctx = NULL;
+    }
+    return seq ? 0 : 2;
 }
 
 void refda_ctrl_exec_ctx_deinit(refda_ctrl_exec_ctx_t *obj)
 {
     CHKVOID(obj);
+    refda_exec_item_ptr_release(obj->item_ptr);
     memset(obj, 0, sizeof(*obj));
 }
 
