@@ -2509,7 +2509,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_catch(refda_ctrl_exec_ctx_t *ctx)
 
     refda_try_catch_data_t *state = CACE_MALLOC(sizeof(refda_try_catch_data_t));
     refda_try_catch_data_init(state, ctx->item_ptr, ari_on_failure);
-    // free this in when execution item is finished
+    // the deinit will occur when the execution item is finished
     cace_amm_user_data_set_from(&ctx->item->user_data, state, true,
                                 (cace_amm_user_data_deinit_f)refda_try_catch_data_deinit);
 
@@ -2563,7 +2563,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_exec_deadline(refda_ctrl_exec_ctx_t 
 
     refda_exec_deadline_data_t *state = CACE_MALLOC(sizeof(refda_exec_deadline_data_t));
     refda_exec_deadline_data_init(state, ctx->item_ptr, on_timeout);
-    // free this in when execution item is finished
+    // the deinit will occur when the execution item is finished
     cace_amm_user_data_set_from(&ctx->item->user_data, state, true,
                                 (cace_amm_user_data_deinit_f)refda_exec_deadline_data_deinit);
 
