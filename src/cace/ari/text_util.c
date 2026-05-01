@@ -487,8 +487,17 @@ int cace_decfrac_encode(m_string_t out, const struct timespec *in)
 {
     CHKERR1(in);
 
-    m_string_cat_printf(out, "%" PRId64, in->tv_sec);
-    cace_subsec_encode(out, in->tv_nsec);
+    time_t            fullsec = in->tv_sec;
+    cace_ari_subsec_t subsec  = in->tv_nsec;
+    if ((fullsec < 0) && (subsec > 0))
+    {
+        // add subsec to negative value, move closer to zero
+        fullsec += 1;
+        subsec = CACE_ARI_SUBSEC_SCALE - subsec;
+    }
+
+    m_string_cat_printf(out, "%" PRId64, fullsec);
+    cace_subsec_encode(out, subsec);
 
     return 0;
 }
@@ -503,7 +512,7 @@ int cace_decfrac_decode(struct timespec *out, const cace_data_t *in)
     const char  *end    = curs + in_len;
     char        *subend;
 
-    time_t sec_num = strtoll(curs, &subend, 10);
+    time_t fullsec = strtoll(curs, &subend, 10);
     if (subend == curs)
     {
         return 2;
@@ -523,7 +532,14 @@ int cace_decfrac_decode(struct timespec *out, const cace_data_t *in)
         return 3;
     }
 
-    out->tv_sec  = sec_num;
+    if ((fullsec < 0) && (subsec > 0))
+    {
+        // subsec is addition toward zero
+        fullsec -= 1;
+        subsec = CACE_ARI_SUBSEC_SCALE - subsec;
+    }
+
+    out->tv_sec  = fullsec;
     out->tv_nsec = subsec;
     return 0;
 }

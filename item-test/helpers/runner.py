@@ -221,8 +221,6 @@ class CmdRunner:
                     'Timed-out after SIGINT, killing process: %s', self._fmt_args())
                 self.proc.kill()
                 self.proc.wait(timeout=timeout)
-                self._finish()
-                raise
 
         return self._finish()
 
