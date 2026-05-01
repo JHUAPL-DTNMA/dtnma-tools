@@ -37,6 +37,8 @@ extern "C" {
 #define REFDA_EXEC_ERR_DEREF_FAILED 4
 /// Error result when value production fails
 #define REFDA_EXEC_ERR_PROD_FAILED 5
+/// Error result when ACL check fails
+#define REFDA_EXEC_ERR_NO_ACCESS 6
 
 /** From outside the exec worker thread, inject a single execution target
  * and allow its sequence to be tracked to its finish.

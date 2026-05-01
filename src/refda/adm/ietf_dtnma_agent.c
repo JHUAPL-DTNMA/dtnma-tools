@@ -1161,6 +1161,8 @@ static cace_ari_translate_result_t tbl_filter_sub_label(cace_ari_t *out, const c
     return CACE_ARI_TRANSLATE_DEFAULT;
 }
 
+/** Helper for building tables of IDENT objects.
+ */
 void refda_adm_ietf_dtnma_agent_append_derived_ident(cace_ari_tbl_t *table, const cace_amm_lookup_t *deref,
                                                      bool include_adm, bool include_abstract)
 {
@@ -1198,6 +1200,37 @@ void refda_adm_ietf_dtnma_agent_append_derived_ident(cace_ari_tbl_t *table, cons
 
         refda_adm_ietf_dtnma_agent_append_derived_ident(table, child, include_adm, include_abstract);
     }
+}
+
+static bool refda_acl_check_ensure_object(refda_runctx_t *runctx, cace_amm_obj_ns_t *odm, cace_ari_type_t obj_type,
+                                          cace_ari_int obj_id)
+{
+    // Permission for hypothetical object
+    cace_amm_obj_desc_t fake;
+    cace_amm_obj_desc_init(&fake);
+    fake.obj_id.has_intenum = true;
+    fake.obj_id.intenum     = obj_id;
+
+    cace_amm_lookup_t deref;
+    cace_amm_lookup_init(&deref);
+    deref.ns       = odm;
+    deref.obj_type = obj_type;
+    deref.obj      = &fake;
+
+    // access check, this permission has no parameters
+    refda_amm_ident_base_ptr_set_t acl_match;
+    refda_amm_ident_base_ptr_set_init(acl_match);
+    bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &deref,
+                                                     runctx->agent->acl.permissions.obsolete_obj, acl_match);
+    refda_amm_ident_base_ptr_set_clear(acl_match);
+    if (!acl_found)
+    {
+        CACE_LOG_ERR("Lack of permission for: create-object");
+    }
+    cace_amm_lookup_deinit(&deref);
+    cace_amm_obj_desc_deinit(&fake);
+
+    return acl_found;
 }
 
 /*   STOP CUSTOM FUNCTIONS HERE  */
@@ -3051,7 +3084,6 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
     int res = cace_amm_lookup_deref(&deref, &(agent->objs), target);
-
     if (res)
     {
         m_string_t buf;
@@ -3063,7 +3095,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
     else
     {
         refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
-        // FIXME need agent access control
+
+        // access check, this permission has no parameters
+        refda_amm_ident_base_ptr_set_t acl_match;
+        refda_amm_ident_base_ptr_set_init(acl_match);
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+                                                         ctx->runctx->agent->acl.permissions.modify_var, acl_match);
+        refda_amm_ident_base_ptr_set_clear(acl_match);
+        if (!acl_found)
+        {
+            CACE_LOG_ERR("Lack of permission for: modify-var");
+            var = NULL;
+        }
 
         if (var && !cace_ari_is_undefined(&(var->init_val)))
         {
@@ -3129,7 +3172,18 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
     else
     {
         refda_amm_var_desc_t *var = deref.obj->app_data.ptr;
-        // FIXME need agent access control
+
+        // access check, this permission has no parameters
+        refda_amm_ident_base_ptr_set_t acl_match;
+        refda_amm_ident_base_ptr_set_init(acl_match);
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+                                                         ctx->runctx->agent->acl.permissions.modify_var, acl_match);
+        refda_amm_ident_base_ptr_set_clear(acl_match);
+        if (!acl_found)
+        {
+            CACE_LOG_ERR("Lack of permission for: modify-var");
+            var = NULL;
+        }
 
         if (var)
         {
@@ -3232,6 +3286,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_IDENT, obj_id);
+    if (!acl_found)
+    {
         REFDA_AGENT_UNLOCK(agent, );
         return;
     }
@@ -3384,10 +3445,22 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_ident(refda_ctrl_exec_ctx_t
     }
     else if (deref.obj_type == CACE_ARI_TYPE_IDENT)
     {
-        // FIXME need agent access control
-        CACE_LOG_DEBUG("Marking CONST as obsolete");
-        deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
-        refda_ctrl_exec_ctx_set_result_null(ctx);
+        // access check, this permission has no parameters
+        refda_amm_ident_base_ptr_set_t acl_match;
+        refda_amm_ident_base_ptr_set_init(acl_match);
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
+        refda_amm_ident_base_ptr_set_clear(acl_match);
+        if (!acl_found)
+        {
+            CACE_LOG_ERR("Lack of permission for: obsolete-object");
+        }
+        else
+        {
+            CACE_LOG_DEBUG("Marking IDENT as obsolete");
+            deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
+            refda_ctrl_exec_ctx_set_result_null(ctx);
+        }
     }
     cace_amm_lookup_deinit(&deref);
 
@@ -3471,6 +3544,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_CONST, obj_id);
+    if (!acl_found)
+    {
         REFDA_AGENT_UNLOCK(agent, );
         return;
     }
@@ -3628,10 +3708,22 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
     }
     else if (deref.obj_type == CACE_ARI_TYPE_CONST)
     {
-        // FIXME need agent access control
-        CACE_LOG_DEBUG("Marking CONST as obsolete");
-        deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
-        refda_ctrl_exec_ctx_set_result_null(ctx);
+        // access check, this permission has no parameters
+        refda_amm_ident_base_ptr_set_t acl_match;
+        refda_amm_ident_base_ptr_set_init(acl_match);
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
+        refda_amm_ident_base_ptr_set_clear(acl_match);
+        if (!acl_found)
+        {
+            CACE_LOG_ERR("Lack of permission for: obsolete-object");
+        }
+        else
+        {
+            CACE_LOG_DEBUG("Marking CONST as obsolete");
+            deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
+            refda_ctrl_exec_ctx_set_result_null(ctx);
+        }
     }
 
     cace_amm_lookup_deinit(&deref);
@@ -3718,6 +3810,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_VAR, obj_id);
+    if (!acl_found)
+    {
         REFDA_AGENT_UNLOCK(agent, );
         return;
     }
@@ -3878,10 +3977,22 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
     }
     else if (deref.obj_type == CACE_ARI_TYPE_VAR)
     {
-        // FIXME need agent access control
-        CACE_LOG_DEBUG("Marking VAR as obsolete");
-        deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
-        refda_ctrl_exec_ctx_set_result_null(ctx);
+        // access check, this permission has no parameters
+        refda_amm_ident_base_ptr_set_t acl_match;
+        refda_amm_ident_base_ptr_set_init(acl_match);
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
+        refda_amm_ident_base_ptr_set_clear(acl_match);
+        if (!acl_found)
+        {
+            CACE_LOG_ERR("Lack of permission for: obsolete-object");
+        }
+        else
+        {
+            CACE_LOG_DEBUG("Marking VAR as obsolete");
+            deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
+            refda_ctrl_exec_ctx_set_result_null(ctx);
+        }
     }
 
     cace_amm_lookup_deinit(&deref);
@@ -3958,6 +4069,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_SBR, obj_id);
+    if (!acl_found)
+    {
         REFDA_AGENT_UNLOCK(agent, );
         return;
     }
@@ -4160,6 +4278,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
+        REFDA_AGENT_UNLOCK(agent, );
+        return;
+    }
+
+    bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_TBR, obj_id);
+    if (!acl_found)
+    {
         REFDA_AGENT_UNLOCK(agent, );
         return;
     }
@@ -4541,9 +4666,23 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
     else if (deref.obj_type == CACE_ARI_TYPE_SBR)
     {
         refda_amm_sbr_desc_t *sbr = deref.obj->app_data.ptr;
-        // FIXME need agent access control
-        CACE_LOG_DEBUG("Marking SBR as obsolete");
-        deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
+
+        // access check, this permission has no parameters
+        refda_amm_ident_base_ptr_set_t acl_match;
+        refda_amm_ident_base_ptr_set_init(acl_match);
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
+        refda_amm_ident_base_ptr_set_clear(acl_match);
+        if (!acl_found)
+        {
+            CACE_LOG_ERR("Lack of permission for: obsolete-object");
+            sbr = NULL;
+        }
+        else
+        {
+            CACE_LOG_DEBUG("Marking SBR as obsolete");
+            deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
+        }
 
         if (sbr && sbr->enabled)
         {
@@ -4555,9 +4694,23 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
     else if (deref.obj_type == CACE_ARI_TYPE_TBR)
     {
         refda_amm_tbr_desc_t *tbr = deref.obj->app_data.ptr;
-        // FIXME need agent access control
-        CACE_LOG_DEBUG("Marking TBR as obsolete");
-        deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
+
+        // access check, this permission has no parameters
+        refda_amm_ident_base_ptr_set_t acl_match;
+        refda_amm_ident_base_ptr_set_init(acl_match);
+        bool acl_found = refda_acl_search_one_permission(ctx->runctx->agent, ctx->runctx->acl_groups, &deref,
+                                                         ctx->runctx->agent->acl.permissions.obsolete_obj, acl_match);
+        refda_amm_ident_base_ptr_set_clear(acl_match);
+        if (!acl_found)
+        {
+            CACE_LOG_ERR("Lack of permission for: obsolete-object");
+            tbr = NULL;
+        }
+        else
+        {
+            CACE_LOG_DEBUG("Marking TBR as obsolete");
+            deref.obj->status = CACE_AMM_STATUS_OBSOLETE;
+        }
 
         if (tbr && tbr->enabled)
         {
@@ -5565,7 +5718,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
             const int         opts = 0;
             // ignore terminating null
             int res = pcre2_match(cfg, (PCRE2_SPTR8)value_text, strlen(value_text), 0, opts, md, NULL);
-            CACE_LOG_DEBUG("Matching pattern %s with value %s, result %d", regexp_text, value, res);
+            CACE_LOG_DEBUG("Matching pattern %s with value %s, result %d", regexp_text, value_text, res);
             if (res > 0)
             {
                 is_match = true;

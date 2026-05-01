@@ -112,8 +112,6 @@ void suiteSetUp(void)
 
     int res = refda_agent_bindrefs(&agent);
     assert(0 == res);
-
-    test_util_agent_permission(&agent, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_PRODUCE);
 }
 
 int suiteTearDown(int failures)

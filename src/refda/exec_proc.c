@@ -362,6 +362,19 @@ static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq
                     cace_ari_set_copy(&(item->ref), target);
                     cace_amm_lookup_set_move(&(item->deref), &deref);
                     cace_amm_lookup_init(&deref);
+
+                    // access check, this permission has no parameters
+                    refda_amm_ident_base_ptr_set_t acl_match;
+                    refda_amm_ident_base_ptr_set_init(acl_match);
+                    bool acl_found = refda_acl_search_one_permission(runctx->agent, runctx->acl_groups, &item->deref,
+                                                                     runctx->agent->acl.permissions.execute, acl_match);
+                    refda_amm_ident_base_ptr_set_clear(acl_match);
+                    if (!acl_found)
+                    {
+                        CACE_LOG_ERR("Lack of permission for: execute");
+                        cace_ari_array_push_back(invalid_items, *target);
+                        retval = REFDA_EXEC_ERR_NO_ACCESS;
+                    }
                 }
                 refda_exec_item_ptr_clear(ptr);
                 break;
@@ -375,6 +388,10 @@ static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq
                 retval = refda_valprod_run(&prodctx);
                 if (retval)
                 {
+                    if (retval == 3)
+                    {
+                        retval = REFDA_EXEC_ERR_NO_ACCESS;
+                    }
                     cace_ari_array_push_back(invalid_items, *target);
                 }
                 else
