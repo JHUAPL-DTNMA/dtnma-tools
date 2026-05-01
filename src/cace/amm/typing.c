@@ -225,12 +225,12 @@ static bool builtin_anyint_constraints(const cace_ari_type_anyint_constraints_t 
         case CACE_ARI_PRIM_FLOAT64:
         {
             feclearexcept(FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW | FE_DIVBYZERO);
-            long long tmp = llroundf(obj->value.as_float64);
+            long long tmp = llround(obj->value.as_float64);
             if (fetestexcept(FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW | FE_DIVBYZERO))
             {
                 return false;
             }
-            return ((tmp >= cnst->int_min) && (tmp <= cnst->int_max));
+            return ((tmp == obj->value.as_float64) && (tmp >= cnst->int_min) && (tmp <= cnst->int_max));
         }
         default:
             return false;
@@ -255,7 +255,7 @@ static bool builtin_anyint_constraints(const cace_ari_type_anyint_constraints_t 
             case CACE_ARI_PRIM_FLOAT64:                                                   \
             {                                                                             \
                 feclearexcept(FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW | FE_DIVBYZERO);    \
-                long long tmp = llroundf(in->as_lit.value.as_float64);                    \
+                long long tmp = llround(in->as_lit.value.as_float64);                     \
                 if (fetestexcept(FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW | FE_DIVBYZERO)) \
                 {                                                                         \
                     return CACE_AMM_ERR_CONVERT_BADVALUE;                                 \

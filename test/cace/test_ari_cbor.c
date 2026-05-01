@@ -748,7 +748,7 @@ TEST_CASE("8201F4")                                           // ari:/BOOL/false
 TEST_CASE("8201F5")                                           // ari:/BOOL/true
 TEST_CASE("82040A")                                           // ari:/INT/10
 TEST_CASE("820429")                                           // ari:/INT/-10
-TEST_CASE("8208F94900")                                       // ari:/REAL32/10
+TEST_CASE("8208F94900")                                       // ari:/REAL32/10.
 TEST_CASE("8208FB4024333333333333")                           // ari:/REAL32/10.1
 TEST_CASE("8208FB3FB999999999999A")                           // ari:/REAL32/0.1
 TEST_CASE("8208F97E00")                                       // ari:/REAL32/NaN

@@ -26,8 +26,14 @@
 extern "C" {
 #endif
 
-/** Context to bind an individual object.
+/** Lookup an existing type object by a qualified name.
  *
+ * @param[in] name The built-in ARITYPE literal or a TYPEDEF object reference.
+ * @return The found type object, or NULL to indicate failure.
+ */
+const cace_amm_type_t *refda_binding_type_from_name(const cace_ari_t *name, const cace_amm_obj_store_t *store);
+
+/** Context to bind an individual object.
  */
 typedef struct
 {
