@@ -169,7 +169,7 @@ struct cace_amm_type_s
     {
         /// Valid when #type_class is ::CACE_AMM_TYPE_BUILTIN
         struct cace_amm_type_builtin_s as_builtin;
-        /** Non-null for all other cace_amm_type_s values.
+        /** Non-null for all other ::cace_amm_type_class_t values.
          * Cast to specific internal configuration struct for each class of
          * semantic type.
          */
@@ -190,9 +190,18 @@ const cace_amm_type_t *cace_amm_type_get_builtin(cace_ari_type_t ari_type);
 
 /** Determine if a type object is valid.
  *
+ * @param[in] type The object to check.
  * @return True if the object is valid.
  */
 bool cace_amm_type_is_valid(const cace_amm_type_t *type);
+
+/** Determine if a type object is a bare sequence.
+ * This is used as a placeholder type for variadic operands.
+ *
+ * @param[in] type The object to check.
+ * @return True if the object represents a bare sequence.
+ */
+bool cace_amm_type_is_seq(const cace_amm_type_t *type);
 
 /** @struct cace_amm_type_array_t
  * An array of type structs.
