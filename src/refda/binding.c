@@ -33,65 +33,57 @@
 #include <cace/util/defs.h>
 #include <cace/util/logging.h>
 
-static int refda_binding_semtype_use(const refda_binding_ctx_t *ctx, cace_amm_semtype_use_t *semtype)
+const cace_amm_type_t *refda_binding_type_from_name(const cace_ari_t *name, const cace_amm_obj_store_t *store)
 {
-    // do not rebind
-    if (semtype->base)
-    {
-        return 0;
-    }
+    CHKNULL(name);
+    CHKNULL(store);
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
         m_string_t buf;
         m_string_init(buf);
-        cace_ari_text_encode(buf, &(semtype->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        cace_ari_text_encode(buf, name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
         CACE_LOG_DEBUG("Binding use of %s", m_string_get_cstr(buf));
         m_string_clear(buf);
     }
 
-    int failcnt = 0;
-    if (semtype->name.is_ref)
+    const cace_amm_type_t *found = NULL;
+    if (name->is_ref)
     {
         cace_amm_lookup_t deref;
         cace_amm_lookup_init(&deref);
 
-        if (!cace_amm_lookup_deref(&deref, ctx->store, &(semtype->name)))
+        if (!cace_amm_lookup_deref(&deref, store, name))
         {
             if (deref.obj_type == CACE_ARI_TYPE_TYPEDEF)
             {
                 refda_amm_typedef_desc_t *desc = deref.obj->app_data.ptr;
                 if (desc)
                 {
-                    semtype->base = &(desc->typeobj);
+                    found = &(desc->typeobj);
                 }
                 else
                 {
                     CACE_LOG_CRIT("Binding failed because object has no TYPEDEF descriptor");
-                    failcnt += 1;
                 }
             }
             else
             {
                 m_string_t buf;
                 m_string_init(buf);
-                cace_ari_text_encode(buf, &(semtype->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+                cace_ari_text_encode(buf, name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
                 CACE_LOG_WARNING("Binding failed because object is not a TYPEDEF, referenced as %s",
                                  m_string_get_cstr(buf));
                 m_string_clear(buf);
-
-                failcnt += 1;
             }
         }
         else
         {
             m_string_t buf;
             m_string_init(buf);
-            cace_ari_text_encode(buf, &(semtype->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            cace_ari_text_encode(buf, name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
             CACE_LOG_WARNING("Binding failed because type use lookup failed, need %s", m_string_get_cstr(buf));
             m_string_clear(buf);
-
-            failcnt += 1;
         }
 
         cace_amm_lookup_deinit(&deref);
@@ -101,22 +93,32 @@ static int refda_binding_semtype_use(const refda_binding_ctx_t *ctx, cace_amm_se
         cace_ari_type_t aritype;
         if (!cace_ari_get_aritype_int(&(semtype->name), &aritype))
         {
-            semtype->base = cace_amm_type_get_builtin((cace_ari_type_t)aritype);
+            found = cace_amm_type_get_builtin(aritype);
         }
         else
         {
             m_string_t buf;
             m_string_init(buf);
-            cace_ari_text_encode(buf, &(semtype->name), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+            cace_ari_text_encode(buf, name, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
             CACE_LOG_WARNING("Binding failed because literal is not an ARITYPE, is %s", m_string_get_cstr(buf));
             m_string_clear(buf);
-
-            failcnt += 1;
         }
     }
 
+    return found;
+}
+
+static int refda_binding_semtype_use(const refda_binding_ctx_t *ctx, cace_amm_semtype_use_t *semtype)
+{
+    // do not rebind
+    if (semtype->base)
+    {
+        return 0;
+    }
+
+    semtype->base = refda_binding_type_from_name(&semtype->name, ctx->store);
     CACE_LOG_DEBUG("bound to %p class %d", semtype->base, (semtype->base ? (int)(semtype->base->type_class) : -1));
-    return failcnt;
+    return (semtype->base ? 0 : 1);
 }
 
 static int refda_binding_semtype_ulist(const refda_binding_ctx_t *ctx, cace_amm_semtype_ulist_t *semtype)

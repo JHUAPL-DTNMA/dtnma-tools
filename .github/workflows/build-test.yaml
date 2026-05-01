@@ -141,6 +141,8 @@ jobs:
     steps:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
+        env:
+          PIP_BREAK_SYSTEM_PACKAGES: 1
         run: |
           apt-get update
           apt-get install -y \
@@ -151,7 +153,7 @@ jobs:
               binutils \
               valgrind xmlstarlet \
               python3-pip python3-wheel python3-venv postgresql-client
-          pip3 install --break-system-packages gcovr
+          pip3 install gcovr
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |

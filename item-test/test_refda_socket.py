@@ -748,7 +748,7 @@ class TestRefdaSocket(unittest.TestCase):
         # substitution
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'), rpt.items[0])
 
-    def test_eval_strict_compare(self):
+    def test_eval_strict_compare_opers(self):
         # cases are organized so that only the same row compares strict equal
         cases = [
             'undefined',
@@ -786,6 +786,7 @@ class TestRefdaSocket(unittest.TestCase):
                         ('/ac/(' + left + ',' + right + ',' + '//ietf/dtnma-agent/oper/strict-eq)'),
                         ('/ac/(' + left + ',' + right + ',' + '//ietf/dtnma-agent/oper/strict-ne)'),
                     ]
+                    # text equality is the same as strict equality (for these inputs)
                     expect_items += [
                         ari.TYPED_TRUE if left == right else ari.TYPED_FALSE,
                         ari.TYPED_FALSE if left == right else ari.TYPED_TRUE,
@@ -817,14 +818,15 @@ class TestRefdaSocket(unittest.TestCase):
 
     def test_eval_loose_compare_opers(self):
         # expected result columns in cases table
-        oper_name_col = {
-            'compare-eq': 2,
-            'compare-ne': 3,
-            'compare-lt': 4,
-            'compare-le': 5,
-            'compare-gt': 6,
-            'compare-ge': 7,
-        }
+        oper_ref_col = [
+            '//ietf/dtnma-agent/oper/compare-eq',
+            '//ietf/dtnma-agent/oper/compare-ne',
+            '//ietf/dtnma-agent/oper/compare-lt',
+            '//ietf/dtnma-agent/oper/compare-le',
+            '//ietf/dtnma-agent/oper/compare-gt',
+            '//ietf/dtnma-agent/oper/compare-ge',
+        ]
+        # First two columns are operands, others are expected outputs
         cases = [
             # not comparable
             ('undefined', '10', *([ari.UNDEFINED] * 6)),
@@ -859,13 +861,13 @@ class TestRefdaSocket(unittest.TestCase):
 
         self._start()
 
-        for oper_name, case_col in oper_name_col.items():
-            with self.subTest(oper_name):
+        for case_ix, oper_ref in enumerate(oper_ref_col):
+            with self.subTest(oper_ref):
                 exprs = [
-                    '/ac/(' + row[0] + ',' + row[1] + ',' + '//ietf/dtnma-agent/oper/' + oper_name + ')'
+                    '/ac/(' + row[0] + ',' + row[1] + ',' + oper_ref + ')'
                     for row in cases
                 ]
-                expect_items = [row[case_col] for row in cases]
+                expect_items = [row[case_ix + 2] for row in cases]
 
                 self._send_msg(
                     [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
@@ -884,37 +886,106 @@ class TestRefdaSocket(unittest.TestCase):
 
     def test_eval_predicate_opers(self):
         # expected result columns in cases table
-        oper_name_col = {
-            'is-undefined': 1,
-            'is-not-undefined': 2,
-            'is-truthy': 3,
-        }
+        oper_ref_col = [
+            '//ietf/dtnma-agent/oper/is-undefined',
+            '//ietf/dtnma-agent/oper/is-not-undefined',
+            '//ietf/dtnma-agent/oper/is-truthy',
+            '//ietf/dtnma-agent/oper/match-type(/aritype/bool)',
+            '//ietf/dtnma-agent/oper/match-type(/aritype/int)',
+            '//ietf/dtnma-agent/oper/match-type(//ietf/amm-base/typedef/integer)',
+        ]
+        # First column is input, others are expected outputs
         cases = [
-            ('undefined', ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
-            ('null', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE),
-            ('false', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE),
-            ('true', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
-            ('0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE),
-            ('10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
-            ('-10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
-            ('10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
-            ('-10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
-            ('/tp/10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
-            ('/tp/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
-            ('/td/10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
-            ('/td/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
-            ('/td/-10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('undefined', ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('null', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('false', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('true', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('-10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('/int/10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('/int/-10', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            # untyped floats will match as int if they lose no precision
+            ('10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('-10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE),
+            ('10.2', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('-10.2', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('/real32/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('/real32/-10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('/tp/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('/tp/-10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('/td/10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            ('/td/-10.0', ari.TYPED_FALSE, ari.TYPED_TRUE, ari.TYPED_TRUE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            # FIXME ref is not available yet
+            # ('//ietf/dtnma-agent/oper/ref(//ietf/-1/ident/3)', ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
+            # ('//ietf/dtnma-agent/oper/ref(//ietf/-1/)', ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE, ari.TYPED_FALSE),
         ]
 
         self._start()
 
-        for oper_name, case_col in oper_name_col.items():
-            with self.subTest(oper_name):
+        for case_ix, oper_ref in enumerate(oper_ref_col):
+            with self.subTest(oper_ref):
                 exprs = [
-                    '/ac/(' + row[0] + ',//ietf/dtnma-agent/oper/' + oper_name + ')'
+                    '/ac/(' + row[0] + ',' + oper_ref + ')'
                     for row in cases
                 ]
-                expect_items = [row[case_col] for row in cases]
+                expect_items = [row[case_ix + 1] for row in cases]
+
+                self._send_msg(
+                    [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
+                )
+
+                rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=1, timeout=5)
+                self.assertEqual(1, len(rpts))
+
+                rpt = rpts.pop(0)
+                self.assertIsInstance(rpt.source, ari.LiteralARI)
+                self.assertEqual(rpt.source.type_id, ari.StructType.AC)
+                # items of the report
+                self.assertEqual(len(expect_items), len(rpt.items))
+                for expr, expect, got in zip(exprs, expect_items, rpt.items):
+                    self.assertEqual(expect, got, msg=f'Failed item for expr {expr}')
+
+    def test_eval_type_convert_oper(self):
+        # expected result columns in cases table
+        oper_ref_col = [
+            '//ietf/dtnma-agent/oper/convert-type(//ietf/amm-base/typedef/any)',
+            '//ietf/dtnma-agent/oper/convert-type(/aritype/bool)',
+            '//ietf/dtnma-agent/oper/convert-type(/aritype/int)',
+            '//ietf/dtnma-agent/oper/convert-type(//ietf/amm-base/typedef/integer)',
+        ]
+        # First column is input, others are expected outputs
+        cases = [
+            ('undefined',) * 5,
+            ('null', 'null', '/bool/false', 'undefined', 'undefined'),
+            ('false', 'false', '/bool/false', 'undefined', 'undefined'),
+            ('true', 'true', '/bool/true', 'undefined', 'undefined'),
+            ('0', '0', '/bool/false', '/int/0', '0'), # FIXME: should these get typed?
+            ('10', '10', '/bool/true', '/int/10', '10'), # FIXME: should these get typed?
+            ('4294967296', '4294967296', '/bool/true', 'undefined', '4294967296'),
+            ('/int/10', '/int/10', '/bool/true', '/int/10', '/int/10'),
+            ('/int/-10', '/int/-10', '/bool/true', '/int/-10', '/int/-10'),
+            # untyped floats will match as int if they lose no precision
+            ('0.0', '0.0', '/bool/false', '/int/0', '0'),
+            ('10.0', '10.0', '/bool/true', '/int/10', '10'), # no loss of precision
+            ('10.2', '10.2', '/bool/true', 'undefined', 'undefined'),
+            ('/real32/10.0', '/real32/10.0', '/bool/true', '/int/10', '/byte/10'), # does not match but can convert
+            ('/tp/10.0', '/tp/10.0', '/bool/true', 'undefined', 'undefined'),
+            ('/td/10.0', '/td/10.0', '/bool/true', 'undefined', 'undefined'),
+            # FIXME ref is not available yet
+            # ('//ietf/dtnma-agent/oper/ref(//ietf/-1/ident/3)', '/bool/false', 'undefined', 'undefined'),
+            # ('//ietf/dtnma-agent/oper/ref(//ietf/-1/)', 'undefined', 'undefined', 'undefined'),
+        ]
+
+        self._start()
+
+        for case_ix, oper_ref in enumerate(oper_ref_col):
+            with self.subTest(oper_ref):
+                exprs = [
+                    '/ac/(' + row[0] + ',' + oper_ref + ')'
+                    for row in cases
+                ]
+                expect_items = [self._ari_text_to_obj(row[case_ix + 1]) for row in cases]
 
                 self._send_msg(
                     [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
