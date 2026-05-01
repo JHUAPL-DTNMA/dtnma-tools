@@ -724,7 +724,7 @@ class TestRefdaSocket(unittest.TestCase):
         # substitution
         self.assertEqual(self._ari_text_to_obj('/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed)'), rpt.items[0])
 
-    def test_eval_strict_compare(self):
+    def test_eval_strict_compare_opers(self):
         # cases are organized so that only the same row compares strict equal
         cases = [
             'undefined',
@@ -762,6 +762,7 @@ class TestRefdaSocket(unittest.TestCase):
                         ('/ac/(' + left + ',' + right + ',' + '//ietf/dtnma-agent/oper/strict-eq)'),
                         ('/ac/(' + left + ',' + right + ',' + '//ietf/dtnma-agent/oper/strict-ne)'),
                     ]
+                    # text equality is the same as strict equality (for these inputs)
                     expect_items += [
                         ari.TYPED_TRUE if left == right else ari.TYPED_FALSE,
                         ari.TYPED_FALSE if left == right else ari.TYPED_TRUE,
@@ -793,14 +794,15 @@ class TestRefdaSocket(unittest.TestCase):
 
     def test_eval_loose_compare_opers(self):
         # expected result columns in cases table
-        oper_name_col = {
-            'compare-eq': 2,
-            'compare-ne': 3,
-            'compare-lt': 4,
-            'compare-le': 5,
-            'compare-gt': 6,
-            'compare-ge': 7,
-        }
+        oper_ref_col = [
+            '//ietf/dtnma-agent/oper/compare-eq',
+            '//ietf/dtnma-agent/oper/compare-ne',
+            '//ietf/dtnma-agent/oper/compare-lt',
+            '//ietf/dtnma-agent/oper/compare-le',
+            '//ietf/dtnma-agent/oper/compare-gt',
+            '//ietf/dtnma-agent/oper/compare-ge',
+        ]
+        # First two columns are operands, others are expected outputs
         cases = [
             # not comparable
             ('undefined', '10', *([ari.UNDEFINED] * 6)),
@@ -835,13 +837,13 @@ class TestRefdaSocket(unittest.TestCase):
 
         self._start()
 
-        for oper_ref, case_col in oper_name_col.items():
+        for case_ix, oper_ref in enumerate(oper_ref_col):
             with self.subTest(oper_ref):
                 exprs = [
-                    '/ac/(' + row[0] + ',' + row[1] + ',' + '//ietf/dtnma-agent/oper/' + oper_ref + ')'
+                    '/ac/(' + row[0] + ',' + row[1] + ',' + oper_ref + ')'
                     for row in cases
                 ]
-                expect_items = [row[case_col] for row in cases]
+                expect_items = [row[case_ix + 2] for row in cases]
 
                 self._send_msg(
                     [self._ari_text_to_obj('ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(' + ','.join(exprs) + ')))')]
