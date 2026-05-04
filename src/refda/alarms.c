@@ -328,28 +328,28 @@ static cace_ari_translate_result_t alarm_list_filter_sub_label(cace_ari_t *out, 
         switch (as_int)
         {
             case ALARM_TABLE_COL_RESOURCE:
-                cace_ari_set_copy(out, &(entry->resource.name));
+                refda_eval_label_subst(out, &(entry->resource.name));
                 break;
             case ALARM_TABLE_COL_CATEGORY:
-                cace_ari_set_copy(out, &(entry->category.name));
+                refda_eval_label_subst(out, &(entry->category.name));
                 break;
             case ALARM_TABLE_COL_SEVERITY:
                 cace_ari_set_int(out, entry->severity);
                 break;
             case ALARM_TABLE_COL_CREATED_AT:
-                cace_ari_set_copy(out, &(entry->created_at));
+                refda_eval_label_subst(out, &(entry->created_at));
                 break;
             case ALARM_TABLE_COL_UPDATED_AT:
-                cace_ari_set_copy(out, &(entry->updated_at));
+                refda_eval_label_subst(out, &(entry->updated_at));
                 break;
             case ALARM_TABLE_COL_MGR_STATE:
                 cace_ari_set_uint(out, entry->mgr_state);
                 break;
             case ALARM_TABLE_COL_MGR_IDENT:
-                cace_ari_set_copy(out, &entry->mgr_ident);
+                refda_eval_label_subst(out, &entry->mgr_ident);
                 break;
             case ALARM_TABLE_COL_MGR_TIME:
-                cace_ari_set_copy(out, &entry->mgr_time);
+                refda_eval_label_subst(out, &entry->mgr_time);
                 break;
             default:
                 CACE_LOG_ERR("invalid LABEL value %" PRId32, as_int);

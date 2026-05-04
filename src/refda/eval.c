@@ -18,6 +18,8 @@
 #include "eval.h"
 #include "oper_eval_ctx.h"
 #include "valprod.h"
+#include "adm/ietf.h"
+#include "adm/ietf_dtnma_agent.h"
 #include "amm/oper.h"
 #include "cace/ari/text.h"
 #include "cace/amm/lookup.h"
@@ -310,9 +312,33 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     return res;
 }
 
+void refda_eval_label_subst(cace_ari_t *out, const cace_ari_t *value)
+{
+    CHKVOID(out);
+    CHKVOID(value);
+
+    if (value->is_ref)
+    {
+        // reference to ari://ietf/dtnma-agent/oper/ref
+        cace_ari_ref_t *ref = cace_ari_set_objref_path_intid(out, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_OPER, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_REF);
+
+        cace_ari_ac_t *params_ac = cace_ari_params_set_ac(&(ref->params), NULL);
+        {
+            cace_ari_t *param = cace_ari_list_push_back_new(params_ac->items);
+            cace_ari_set_copy(param, value);
+        }
+    }
+    else
+    {
+        cace_ari_set_copy(out, value);
+    }
+}
+
 int refda_eval_filter(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target,
                       const cace_ari_translator_t *translator, void *user_data)
 {
+    CHKERR1(runctx);
+
     cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
 
     // substitute the operand value

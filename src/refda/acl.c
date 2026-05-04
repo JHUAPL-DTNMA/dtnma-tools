@@ -112,7 +112,7 @@ static cace_ari_translate_result_t acl_endpoint_filter_sub_label(cace_ari_t *out
         {
             if (as_int == 0)
             {
-                cace_ari_set_copy(out, endpoint);
+                refda_eval_label_subst(out, endpoint);
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else
@@ -215,7 +215,7 @@ static cace_ari_translate_result_t acl_target_filter_sub_label(cace_ari_t *out, 
         {
             if (as_int == 0)
             {
-                cace_ari_set_copy(out, target);
+                refda_eval_label_subst(out, target);
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else

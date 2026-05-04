@@ -81,6 +81,16 @@ int refda_eval_reduce(refda_eval_ctx_t *ctx, cace_ari_t *result);
  */
 int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target);
 
+/** Function to substitute a literal or reference value
+ * within a cace_ari_translator_t::map_ari function.
+ * If the input is a reference, it will be wrapped in
+ * <//ietf/dtnma-agent/oper/ref> to preserve references in an expression.
+ *
+ * @param[out] out The output value to be replaced.
+ * @param[in] value The input value to do the replacing as a copy.
+ */
+void refda_eval_label_subst(cace_ari_t *out, const cace_ari_t *value);
+
 /** A shortcut to substitute LABEL values and then evaluate an expression.
  * This function performs selective @c refda_agent_s::objs_mutex locking.
  *

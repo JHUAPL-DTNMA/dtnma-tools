@@ -976,7 +976,7 @@ static cace_ari_translate_result_t unary_eval_sub_label(cace_ari_t *out, const c
         {
             if (as_int == 0)
             {
-                cace_ari_set_copy(out, operand);
+                refda_eval_label_subst(out, operand);
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else
@@ -1155,7 +1155,7 @@ static cace_ari_translate_result_t tbl_filter_sub_label(cace_ari_t *out, const c
         const cace_ari_t *tbl_data_item = cace_ari_array_cget(tbl_data->items, array_index);
 
         // Replace label with table data
-        cace_ari_set_copy(out, tbl_data_item);
+        refda_eval_label_subst(out, tbl_data_item);
         return CACE_ARI_TRANSLATE_FINAL;
     }
 
