@@ -39,6 +39,13 @@ typedef struct
      */
     const cace_ari_t *parent;
 
+    /** The depth of the current value relative to the original value.
+     * Depth 0 is the top, original value.
+     * Depth 1 is a literal container (e.g. AC) member or a reference parameter.
+     * Increasing recursively.
+     */
+    size_t depth;
+
     /// True if the parent is an AM literal and this is a map key
     bool is_map_key;
 
@@ -86,7 +93,7 @@ int cace_ari_visit(cace_ari_t *ari, const cace_ari_visitor_t *visitor, void *use
 
 /** Context used for cace_ari_translator_t functions.
  */
-typedef struct
+typedef struct cace_ari_translate_ctx_s
 {
     /** The parent value of the one being translated.
      * If this is a literal with a container type, the visited value is a
@@ -94,6 +101,13 @@ typedef struct
      * If this is an object reference, the visited value is a parameter.
      */
     const cace_ari_t *parent;
+
+    /** The depth of the current value relative to the original value.
+     * Depth 0 is the top, original value.
+     * Depth 1 is a literal container (e.g. AC) member or a reference parameter.
+     * Increasing recursively.
+     */
+    size_t depth;
 
     /// True if the parent is an AM literal and this is a map key
     bool is_map_key;

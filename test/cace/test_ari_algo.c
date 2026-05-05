@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * Test the ari_algo.h interfaces.
+ * Test the algo.h interfaces.
  */
 #include <cace/ari/algo.h>
 #include <cace/ari/text_util.h>

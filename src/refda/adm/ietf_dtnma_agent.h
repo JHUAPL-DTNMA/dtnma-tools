@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the header for the implementation of the
  * ADM module "ietf-dtnma-agent" for the C-language reference DA.
@@ -29,7 +30,7 @@
 #include "refda/agent.h"
 #include <cace/util/defs.h>
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 /** Append rows to a table for an IDENT object and any of its derived objects.
  *
  * @param[in,out] table The table to append rows to.
@@ -216,6 +217,24 @@ extern "C" {
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_CONVERT_TYPE 46
 /// For ./OPER/match-regexp
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_REGEXP 23
+/// For ./OPER/is-org-private
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_ORG_PRIVATE 36
+/// For ./OPER/match-org-int-range
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_ORG_INT_RANGE 37
+/// For ./OPER/is-model-odm
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_MODEL_ODM 38
+/// For ./OPER/match-model-int-range
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_MODEL_INT_RANGE 39
+/// For ./OPER/is-same-ns
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_SAME_NS 40
+/// For ./OPER/match-object-type
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_OBJECT_TYPE 42
+/// For ./OPER/match-object-int-range
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_MATCH_OBJECT_INT_RANGE 44
+/// For ./OPER/is-same-object
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_IS_SAME_OBJECT 41
+/// For ./OPER/ref
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_REF 43
 /// For ./OPER/predicate-all
 #define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_PREDICATE_ALL 24
 /// For ./OPER/predicate-any
@@ -245,7 +264,8 @@ extern "C" {
 int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent);
 
 #ifdef __cplusplus
-}
+} /* extern C */
 #endif
 
 #endif /* REFDA_ADM_IETF_DTNMA_AGENT_H_ */
+/*  STOP GENERATED SOURCE HERE */

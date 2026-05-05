@@ -18,6 +18,8 @@
 #include "eval.h"
 #include "oper_eval_ctx.h"
 #include "valprod.h"
+#include "adm/ietf.h"
+#include "adm/ietf_dtnma_agent.h"
 #include "amm/oper.h"
 #include "cace/ari/text.h"
 #include "cace/amm/lookup.h"
@@ -106,8 +108,12 @@ int refda_eval_oper(refda_eval_ctx_t *ctx, const cace_amm_lookup_t *deref)
 
     if (cace_log_is_enabled_for(LOG_DEBUG))
     {
-        CACE_LOG_DEBUG("Evaluating OPER %s with %d operands", m_string_get_cstr(deref->obj->obj_id.name),
-                       cace_ari_array_size(operctx.operands.ordered));
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_array_get_str(buf, operctx.operands.ordered, false);
+        CACE_LOG_DEBUG("evaluation of OPER %s with %zu operands: %s", m_string_get_cstr(deref->obj->obj_id.name),
+                       cace_ari_array_size(operctx.operands.ordered), m_string_get_cstr(buf));
+        m_string_clear(buf);
     }
     (desc->evaluate)(&operctx);
     if (cace_log_is_enabled_for(LOG_DEBUG))
@@ -115,7 +121,8 @@ int refda_eval_oper(refda_eval_ctx_t *ctx, const cace_amm_lookup_t *deref)
         m_string_t buf;
         m_string_init(buf);
         cace_ari_text_encode(buf, &(operctx.result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("evaluation finished with result %s", m_string_get_cstr(buf));
+        CACE_LOG_DEBUG("evaluation of OPER %s finished with result %s", m_string_get_cstr(deref->obj->obj_id.name),
+                       m_string_get_cstr(buf));
         m_string_clear(buf);
     }
 
@@ -150,7 +157,7 @@ int refda_eval_expand_expr(refda_eval_ctx_t *ctx, const cace_ari_t *expr)
         m_string_t buf;
         m_string_init(buf);
         cace_ari_text_encode(buf, expr, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("Evaluation input %s", m_string_get_cstr(buf));
+        CACE_LOG_DEBUG("evaluation input %s", m_string_get_cstr(buf));
         m_string_clear(buf);
     }
 
@@ -179,7 +186,7 @@ int refda_eval_expand_expr(refda_eval_ctx_t *ctx, const cace_ari_t *expr)
             }
         }
     }
-    CACE_LOG_DEBUG("Evaluation expansion results in %zu items", refda_eval_list_size(ctx->input));
+    CACE_LOG_DEBUG("evaluation expansion results in %zu items", refda_eval_list_size(ctx->input));
     return retval;
 }
 
@@ -231,13 +238,13 @@ int refda_eval_reduce(refda_eval_ctx_t *ctx, cace_ari_t *result)
                 m_string_t buf;
                 m_string_init(buf);
                 cace_ari_text_encode(buf, result, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-                CACE_LOG_DEBUG("Evaluation result %s", m_string_get_cstr(buf));
+                CACE_LOG_DEBUG("evaluation result %s", m_string_get_cstr(buf));
                 m_string_clear(buf);
             }
         }
         else
         {
-            CACE_LOG_WARNING("Evaluation ends with %d stack items", cace_ari_list_size(ctx->stack));
+            CACE_LOG_WARNING("evaluation ends with %d stack items", cace_ari_list_size(ctx->stack));
             retval = REFDA_EVAL_ERR_NON_SINGLE;
         }
     }
@@ -290,12 +297,94 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     refda_eval_ctx_t ctx;
     refda_eval_ctx_init(&ctx, runctx);
 
+    REFDA_AGENT_LOCK(runctx->agent, 1);
     int res = refda_eval_expand_target(&ctx, target);
-    if (!res)
+    REFDA_AGENT_UNLOCK(runctx->agent, 1);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to expand target, error %d", res);
+    }
+    else
     {
         res = refda_eval_reduce(&ctx, result);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to reduce target, error %d", res);
+        }
     }
 
     refda_eval_ctx_deinit(&ctx);
+    return res;
+}
+
+void refda_eval_label_subst(cace_ari_t *out, const cace_ari_t *value, const cace_ari_translate_ctx_t *ctx)
+{
+    CHKVOID(out);
+    CHKVOID(value);
+
+    if (value->is_ref && cace_ari_is_lit_typed(ctx->parent, CACE_ARI_TYPE_AC) && (ctx->depth == 1))
+    {
+        // reference to ari://ietf/dtnma-agent/oper/ref
+        cace_ari_ref_t *ref =
+            cace_ari_set_objref_path_intid(out, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                           CACE_ARI_TYPE_OPER, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_OPER_REF);
+
+        cace_ari_ac_t *params_ac = cace_ari_params_set_ac(&(ref->params), NULL);
+        {
+            cace_ari_t *param = cace_ari_list_push_back_new(params_ac->items);
+            cace_ari_set_copy(param, value);
+        }
+    }
+    else
+    {
+        cace_ari_set_copy(out, value);
+    }
+}
+
+int refda_eval_filter(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target,
+                      const cace_ari_translator_t *translator, void *user_data)
+{
+    CHKERR1(runctx);
+    if (cace_log_is_enabled_for(LOG_DEBUG))
+    {
+        m_string_t buf;
+        m_string_init(buf);
+        cace_ari_text_encode(buf, target, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+        CACE_LOG_DEBUG("filter input %s", m_string_get_cstr(buf));
+        m_string_clear(buf);
+    }
+
+    cace_ari_t sub_tgt = CACE_ARI_INIT_UNDEFINED;
+    // substitute the operand value
+    int res = cace_ari_translate(&sub_tgt, target, translator, user_data);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to translate filter, error %d", res);
+        cace_ari_deinit(&sub_tgt); // No longer needed at this point
+        return 2;
+    }
+
+    refda_eval_ctx_t evalctx;
+    refda_eval_ctx_init(&evalctx, runctx);
+
+    // mutex-serialize object store access
+    REFDA_AGENT_LOCK(runctx->agent, 1);
+    res = refda_eval_expand_target(&evalctx, &sub_tgt);
+    REFDA_AGENT_UNLOCK(runctx->agent, 1);
+    if (res)
+    {
+        CACE_LOG_ERR("Unable to expand substituted filter, error %d", res);
+    }
+    cace_ari_deinit(&sub_tgt);
+    if (!res)
+    {
+        res = refda_eval_reduce(&evalctx, result);
+        if (res)
+        {
+            CACE_LOG_ERR("Unable to reduce substituted filter, error %d", res);
+        }
+    }
+    refda_eval_ctx_deinit(&evalctx);
+
     return res;
 }

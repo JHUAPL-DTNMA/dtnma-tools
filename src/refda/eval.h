@@ -69,8 +69,8 @@ int refda_eval_expand_expr(refda_eval_ctx_t *ctx, const cace_ari_t *expr);
 int refda_eval_reduce(refda_eval_ctx_t *ctx, cace_ari_t *result);
 
 /** A shortcut to fully evaluate an expression.
+ * This function performs selective @c refda_agent_s::objs_mutex locking.
  *
- * @pre The @c refda_agent_s::objs_mutex must already be locked.
  * @param[in] runctx The running context for evaluation.
  * @param[out] result The single result value from the evaluation.
  * This ARI must be initialized before the call and will be valid if the
@@ -80,6 +80,33 @@ int refda_eval_reduce(refda_eval_ctx_t *ctx, cace_ari_t *result);
  * @return Zero if successful.
  */
 int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target);
+
+/** Function to substitute a literal or reference value
+ * within a cace_ari_translator_t::map_ari function.
+ * If the input is a reference and it is in an AC list (i.e. an expr), it will
+ * be wrapped in @c //ietf/dtnma-agent/oper/ref to preserve references in an expression.
+ *
+ * @param[out] out The output value to be replaced.
+ * @param[in] value The input value to do the replacing as a copy.
+ * @param[in] ctx The context to know the parent value and depth.
+ */
+void refda_eval_label_subst(cace_ari_t *out, const cace_ari_t *value, const cace_ari_translate_ctx_t *ctx);
+
+/** A shortcut to substitute LABEL values and then evaluate an expression.
+ * This function performs selective @c refda_agent_s::objs_mutex locking.
+ *
+ * @param[in] runctx The running context for evaluation.
+ * @param[out] result The single result value from the evaluation.
+ * This ARI must be initialized before the call and will be valid if the
+ * return code is zero but must be deinitialized regardless.
+ * @param[in] target The literal-value EXPR to evaluate or reference-value
+ * to produce and evaluate.
+ * @param[in] translator The target value substitution translator.
+ * @param[in] user_data Pointer for the @c translator to use.
+ * @return Zero if successful.
+ */
+int refda_eval_filter(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari_t *target,
+                      const cace_ari_translator_t *translator, void *user_data);
 
 /** This is a semi-internal function for evaluating a single operator in
  * an existing evaluation context.

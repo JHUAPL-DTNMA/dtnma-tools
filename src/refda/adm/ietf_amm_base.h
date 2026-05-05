@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the header for the implementation of the
  * ADM module "ietf-amm-base" for the C-language reference DA.
@@ -29,7 +30,7 @@
 #include "refda/agent.h"
 #include <cace/util/defs.h>
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 /*             TODO              */
 /*   STOP CUSTOM INCLUDES HERE  */
 
@@ -122,7 +123,8 @@ extern "C" {
 int refda_adm_ietf_amm_base_init(refda_agent_t *agent);
 
 #ifdef __cplusplus
-}
+} /* extern C */
 #endif
 
 #endif /* REFDA_ADM_IETF_AMM_BASE_H_ */
+/*  STOP GENERATED SOURCE HERE */

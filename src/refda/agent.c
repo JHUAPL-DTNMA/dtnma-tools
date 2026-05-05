@@ -222,6 +222,30 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         ++failcnt;
     }
 
+    agent->acl.permissions.modify_rule_enabled =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_MODIFY_RULE_ENABLED);
+    if (!agent->acl.permissions.modify_rule_enabled)
+    {
+        ++failcnt;
+    }
+
+    agent->acl.permissions.ensure_odm =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_ENSURE_ODM);
+    if (!agent->acl.permissions.ensure_odm)
+    {
+        ++failcnt;
+    }
+
+    agent->acl.permissions.obsolete_odm =
+        refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
+                               REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_OBSOLETE_ODM);
+    if (!agent->acl.permissions.obsolete_odm)
+    {
+        ++failcnt;
+    }
+
     agent->acl.permissions.ensure_obj =
         refda_agent_get_object(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM, CACE_ARI_TYPE_IDENT,
                                REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_OBJID_IDENT_ENSURE_OBJECT);

@@ -51,7 +51,7 @@ ORIG_DB_HOST = os.environ.get('DB_HOST')
 ''' Environment at start of process '''
 
 
-def quote(text: str)->str:
+def quote(text: str) -> str:
     ''' URL-encode all non-unreserved characters. '''
     return urllib.parse.quote(text, safe="")
 
@@ -153,7 +153,8 @@ class BaseRefdm(unittest.TestCase):
         os.environ['DB_NAME'] = self.DB_NAME
         db_uri = 'postgresql+psycopg2:' + f'///{self.DB_NAME}?host={db_host}'
 
-        script_pat = os.path.join(OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
+        script_pat = os.path.join(
+            OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
         # execute in alphabetic order
         for filepath in sorted(glob.glob(script_pat)):
             psql = CmdRunner([
@@ -237,7 +238,7 @@ class BaseRefdm(unittest.TestCase):
             val = ari_cbor.Decoder().decode(buf)
         return val
 
-    def _cbor_items(self, data:bytes) -> list:
+    def _cbor_items(self, data: bytes) -> list:
         items = []
         with io.BytesIO(data) as infile:
             while True:
@@ -351,7 +352,7 @@ class TestRefdmSocket(BaseRefdm):
         bind['sock'].sendto(msg_data, addr)
         return bind['path']
 
-    def _wait_msg(self, agent_ix: int, timeout: float=1) -> List[ARI]:
+    def _wait_msg(self, agent_ix: int, timeout: float = 1) -> List[ARI]:
         ''' Wait for an AMP message with EXECSET values and decode it.
 
         :param agent_ix: The agent index to receive on.
@@ -969,7 +970,7 @@ class TestRefdmProxy(BaseRefdm):
         prox_data = cbor2.dumps(agent_eid) + msg_data
         self._proxy_sock_conn.send(prox_data)
 
-    def _wait_msg(self, agent_eid: str, timeout: float=1) -> List[ARI]:
+    def _wait_msg(self, agent_eid: str, timeout: float = 1) -> List[ARI]:
         ''' Wait for an AMP message with EXECSET values and decode it.
 
         :param agent_eid: The agent EID to proxy for.

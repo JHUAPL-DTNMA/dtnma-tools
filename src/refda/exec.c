@@ -69,7 +69,6 @@ int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target,
         }
         // clean up useless sequence
         refda_exec_seq_list_pop_back(NULL, agent->exec_state);
-        seq = NULL;
     }
 
     if (pthread_mutex_unlock(&(agent->exec_state_mutex)))

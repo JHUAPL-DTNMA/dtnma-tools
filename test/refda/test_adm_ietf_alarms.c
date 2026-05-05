@@ -310,9 +310,9 @@ void test_refda_adm_ietf_alarms_purge_all(void)
                 cace_ari_t    *param   = cace_ari_list_push_back_new(params->items);
                 cace_ari_ac_t *expr_ac = cace_ari_set_ac(param, NULL);
 
-                // purge all rows
+                // purge all rows with valid resource
                 cace_ari_t *expr_item = cace_ari_list_push_back_new(expr_ac->items);
-                cace_ari_set_bool(expr_item, true);
+                cace_ari_set_label_int(expr_item, 0);
             }
         }
 
