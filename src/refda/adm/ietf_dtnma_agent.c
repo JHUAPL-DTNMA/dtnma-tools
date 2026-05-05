@@ -1010,7 +1010,7 @@ static cace_ari_translate_result_t nary_eval_sub_label(cace_ari_t *out, const ca
         {
             if ((as_int >= 0) && (as_int < (cace_ari_int)cace_ari_array_size(*operands)))
             {
-                cace_ari_set_copy(out, cace_ari_array_get(*operands, as_int));
+                refda_eval_label_subst(out, cace_ari_array_get(*operands, as_int));
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else
