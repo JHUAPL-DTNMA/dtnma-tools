@@ -149,7 +149,7 @@ jobs:
               git rsync \
               cmake ninja-build \
               ruby pkg-config gcc g++ ccache patch autoconf libtool \
-              flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev \
+              flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev libpcre2-dev \
               binutils \
               valgrind xmlstarlet \
               python3-pip python3-wheel python3-venv postgresql-client

@@ -38,6 +38,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     container: ubuntu:24.04
     env:
@@ -49,20 +51,30 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
-              git cmake ninja-build \
+              git rsync \
+              cmake ninja-build \
               ruby pkg-config gcc g++ ccache patch autoconf libtool \
               flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev libpcre2-dev \
-              xmlstarlet \
-              python3 python3-pip python3-wheel
+              binutils \
+              valgrind xmlstarlet \
+              python3-pip python3-wheel python3-venv postgresql-client
           pip3 install gcovr
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
           submodules: recursive
+      - name: Dependencies
+        env:
+          DEPS_BUILD_ION: '0'
+        run: ./deps.sh
       - name: Prep
-        run: |
-          ./deps.sh
-          ./prep.sh -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+        run: >
+          ./prep.sh
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+          -DBUILD_UNITTEST=ON
+          -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON
+          -DBUILD_ION_PROXY=OFF
+          -DTRANSPORT_ION_BP=OFF
       - name: Install Build Wrapper
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7.2.1
       - name: Run Build Wrapper
@@ -72,14 +84,15 @@ jobs:
         run: ./build.sh install
       - name: System Path
         run: echo "/usr/lib/postgresql/16/bin" >>$GITHUB_PATH
-      - name: Test
+      - name: Unit Test
+        run: ./build.sh check
+      - name: Item Test
         env:
           TEST_LOG_LEVEL: 'info'
           DB_HOST: 'postgres'
           DB_USER: 'tester'
           DB_PASSWORD: 'tester'
         run: |
-          ./build.sh check
           ./item-test/run.sh prep
           ./item-test/run.sh test
       - name: Collect coverage
