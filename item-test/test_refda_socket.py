@@ -1155,6 +1155,8 @@ class TestRefdaSocket(unittest.TestCase):
             ('/ac/(2,//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0,2,//ietf/dtnma-agent/oper/compare-eq)))', ari.TYPED_TRUE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/dtnma-agent/),//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,//ietf/dtnma-agent/oper/is-model-odm)))', ari.TYPED_FALSE),
             ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/-10/),//ietf/dtnma-agent/oper/unary-eval(/ac/(/label/0,//ietf/dtnma-agent/oper/is-model-odm)))', ari.TYPED_TRUE),
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/dtnma-agent/),//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0,//ietf/dtnma-agent/oper/is-model-odm)))', ari.TYPED_FALSE),
+            ('/ac/(//ietf/dtnma-agent/oper/ref(//ietf/-10/),//ietf/dtnma-agent/oper/nary-eval(1,/ac/(/label/0,//ietf/dtnma-agent/oper/is-model-odm)))', ari.TYPED_TRUE),
             # predicate composing operators
             ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/()))', ari.TYPED_FALSE),
             ('/ac/(2,//ietf/dtnma-agent/oper/predicate-all(/ac/(//ietf/dtnma-agent/oper/is-not-undefined)))', ari.TYPED_TRUE),
