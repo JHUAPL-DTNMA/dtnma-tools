@@ -44,6 +44,8 @@ jobs:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
       - name: Set up OS
+        env:
+          PIP_BREAK_SYSTEM_PACKAGES: 1
         run: |
           apt-get update
           apt-get install -y \
