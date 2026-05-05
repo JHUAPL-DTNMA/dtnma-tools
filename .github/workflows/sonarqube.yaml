@@ -39,6 +39,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     runs-on: ubuntu-latest
+    container: ubuntu:24.04
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
@@ -48,8 +49,8 @@ jobs:
           submodules: recursive
       - name: Prep
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y \
               cmake ninja-build \
               ruby pkg-config gcc g++ ccache patch autoconf libtool \
               flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev libpcre2-dev \
