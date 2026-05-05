@@ -84,7 +84,7 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
 /** Function to substitute a literal or reference value
  * within a cace_ari_translator_t::map_ari function.
  * If the input is a reference and it is in an AC list (i.e. an expr), it will
- * be wrapped in <//ietf/dtnma-agent/oper/ref> to preserve references in an expression.
+ * be wrapped in @c //ietf/dtnma-agent/oper/ref to preserve references in an expression.
  *
  * @param[out] out The output value to be replaced.
  * @param[in] value The input value to do the replacing as a copy.
