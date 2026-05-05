@@ -46,7 +46,7 @@ jobs:
           ./build.sh deps
           ./build.sh prep -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
       - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v7
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7.2.1
       - name: Run Build Wrapper
         run: |
           build-wrapper-linux-x86-64 --out-dir ${{env.BUILD_WRAPPER_OUT_DIR}} ./build.sh
@@ -66,7 +66,7 @@ jobs:
         run: |
           ./build.sh --target coverage-sonarqube -v
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7
+        uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7.2.1
         env:
           SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
         with:
