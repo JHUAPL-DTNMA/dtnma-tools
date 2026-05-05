@@ -175,6 +175,12 @@ if(BUILD_COVERAGE)
     EXCLUDE ${REFDA_EXCLUDES}
   )
 
+  setup_target_for_coverage_gcovr_xml(
+    NAME coverage-sonarqube
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    SONARQUBE
+  )
+
   # include ion-app-proxy with refdm
   set(REFDM_EXCLUDES "src/cace" "src/refda" "${CMAKE_BINARY_DIR}/src/cace")
   setup_target_for_coverage_gcovr_xml(
