@@ -328,28 +328,28 @@ static cace_ari_translate_result_t alarm_list_filter_sub_label(cace_ari_t *out, 
         switch (as_int)
         {
             case ALARM_TABLE_COL_RESOURCE:
-                refda_eval_label_subst(out, &(entry->resource.name));
+                refda_eval_label_subst(out, &(entry->resource.name), ctx);
                 break;
             case ALARM_TABLE_COL_CATEGORY:
-                refda_eval_label_subst(out, &(entry->category.name));
+                refda_eval_label_subst(out, &(entry->category.name), ctx);
                 break;
             case ALARM_TABLE_COL_SEVERITY:
                 cace_ari_set_int(out, entry->severity);
                 break;
             case ALARM_TABLE_COL_CREATED_AT:
-                refda_eval_label_subst(out, &(entry->created_at));
+                refda_eval_label_subst(out, &(entry->created_at), ctx);
                 break;
             case ALARM_TABLE_COL_UPDATED_AT:
-                refda_eval_label_subst(out, &(entry->updated_at));
+                refda_eval_label_subst(out, &(entry->updated_at), ctx);
                 break;
             case ALARM_TABLE_COL_MGR_STATE:
                 cace_ari_set_uint(out, entry->mgr_state);
                 break;
             case ALARM_TABLE_COL_MGR_IDENT:
-                refda_eval_label_subst(out, &entry->mgr_ident);
+                refda_eval_label_subst(out, &entry->mgr_ident, ctx);
                 break;
             case ALARM_TABLE_COL_MGR_TIME:
-                refda_eval_label_subst(out, &entry->mgr_time);
+                refda_eval_label_subst(out, &entry->mgr_time, ctx);
                 break;
             default:
                 CACE_LOG_ERR("invalid LABEL value %" PRId32, as_int);
@@ -471,6 +471,7 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
 
         // True result indicates entry is matched
         bool is_match = cace_amm_ari_is_truthy(&eval_result);
+        CACE_LOG_DEBUG("result is truthy %d", is_match);
         cace_ari_deinit(&eval_result);
         if (is_match)
         {
@@ -524,6 +525,7 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
 
         // True result indicates entry is matched
         bool is_match = cace_amm_ari_is_truthy(&eval_result);
+        CACE_LOG_DEBUG("result is truthy %d", is_match);
         cace_ari_deinit(&eval_result);
         if (is_match)
         {
@@ -579,6 +581,7 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
 
         // True result indicates entry is matched
         bool is_match = cace_amm_ari_is_truthy(&eval_result);
+        CACE_LOG_DEBUG("result is truthy %d", is_match);
         cace_ari_deinit(&eval_result);
         if (is_match)
         {

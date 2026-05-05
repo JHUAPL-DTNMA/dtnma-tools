@@ -130,10 +130,10 @@ class TestRefdaSocket(unittest.TestCase):
                     '//ietf/dtnma-agent-acl/ident/ensure-object',
                     '//ietf/dtnma-agent-acl/ident/obsolete-object',
                 ]) + '))\n',
-                # group 2 (mgr1) has exec and produce, but no modify
+                # group 2 (mgr1) has exec and produce on ADM, but no modify
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group(2,mgr1)\n',
                 '//ietf/dtnma-agent-acl/ctrl/ensure-group-members(2,/ac/(/label/0,//ietf/dtnma-agent/oper/match-regexp(' + mgr1_pat + ')))\n',
-                '//ietf/dtnma-agent-acl/CTRL/ensure-access(2,/ac/(2),/ac/(true),/ac/(' + ','.join([
+                '//ietf/dtnma-agent-acl/CTRL/ensure-access(2,/ac/(2),/ac/(/label/0,//ietf/dtnma-agent/oper/is-model-odm,//ietf/dtnma-agent/oper/bool-not),/ac/(' + ','.join([
                     '//ietf/dtnma-agent-acl/ident/execute',
                     '//ietf/dtnma-agent-acl/ident/produce',
                 ]) + '))\n',
@@ -372,37 +372,64 @@ class TestRefdaSocket(unittest.TestCase):
     def test_exec_report_on_multi_mgr(self):
         self._start()
 
-        # mgr0 and mgr1 has full access, mgr2 has none
+        self._send_msg(
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;(/ac/('
+                + '//ietf/dtnma-agent/CTRL/ensure-odm(ietf,1,!odm,-1),'
+                + '//ietf/dtnma-agent/CTRL/ensure-const(//ietf/!odm,rptt-two,1,//ietf/amm-semtype/IDENT/type-use(//ietf/amm-base/typedef/rptt),/ac/(//ietf/dtnma-agent/EDD/num-msg-rx,//ietf/dtnma-agent/EDD/num-msg-rx-failed))'
+                + '))'
+            )]
+        )
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        for rpt in rpts:
+            self.assertNotIn(ari.UNDEFINED, rpt.items)
+
+        # mgr0 has full access
+        # mgr1 has ADM-only access
+        # mgr2 has none to even produce the RPTT
         mgr_eids = [
             quote('"file:' + self._mgr_bind[0].path + '"'),
             quote('"file:' + self._mgr_bind[1].path + '"'),
             quote('"file:' + self._mgr_bind[2].path + '"'),
         ]
         self._send_msg(
-            [self._ari_text_to_obj('ari:/EXECSET/n=123;(//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,/ac/(' + ','.join(mgr_eids) + ')))')]
+            [self._ari_text_to_obj(
+                'ari:/EXECSET/n=123;('
+                + '//ietf/dtnma-agent/CTRL/report-on(//ietf/dtnma-agent/CONST/hello,/ac/(' + ','.join(mgr_eids) + ')),'
+                + '//ietf/dtnma-agent/CTRL/report-on(//ietf/-1/const/1,/ac/(' + ','.join(mgr_eids) + '))'
+                + ')'
+            )]
         )
 
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None))
-        self.assertEqual(1, len(rpts))
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(None), stop_count=2)
+        self.assertEqual(2, len(rpts))
         # RPTSET for the generated report
-        rpt = rpts[0]
+        rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
         self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
 
         rpts = self._wait_reports(mgr_ix=1, nonce=ari.LiteralARI(None))
         self.assertEqual(1, len(rpts))
         # RPTSET for the generated report
-        rpt = rpts[0]
+        rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/const/hello'), rpt.source)
         self.assertEqual([str, str, ari.Table], literal_prim_types(rpt.items))
+        # only one here
+        with self.assertRaises(TimeoutError):
+            self._wait_reports(mgr_ix=2, timeout=0.1)
 
+        # mgr2 sees nothing
         with self.assertRaises(TimeoutError):
             self._wait_reports(mgr_ix=2, timeout=0.1)
 
         # RPTSET for the execution itself
-        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123))
-        self.assertEqual(1, len(rpts))
-        rpt = rpts[0]
+        rpts = self._wait_reports(mgr_ix=0, nonce=ari.LiteralARI(123), stop_count=2)
+        self.assertEqual(2, len(rpts))
+        rpt = rpts.pop(0)
+        self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on'), self._ari_strip_params(rpt.source))
+        self.assertEqual((ari.LiteralARI(None),), rpt.items)
+        rpt = rpts.pop(0)
         self.assertEqual(self._ari_text_to_obj('//ietf/dtnma-agent/ctrl/report-on'), self._ari_strip_params(rpt.source))
         self.assertEqual((ari.LiteralARI(None),), rpt.items)
 
@@ -1928,7 +1955,7 @@ class TestRefdaSocket(unittest.TestCase):
         rpt = rpts.pop(0)
         self.assertNotIn(ari.UNDEFINED, rpt.items)
 
-    def test_acl(self):
+    def test_acl_modify(self):
         self._start()
 
         # Initial default state

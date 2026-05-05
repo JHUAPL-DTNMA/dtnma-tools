@@ -150,6 +150,7 @@ static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor
 
     cace_ari_visit_ctx_t sub_ctx = {
         .parent    = ari,
+        .depth     = (ctx->depth + 1),
         .user_data = ctx->user_data,
     };
 
@@ -240,6 +241,7 @@ int cace_ari_visit(cace_ari_t *ari, const cace_ari_visitor_t *visitor, void *use
 
     cace_ari_visit_ctx_t sub_ctx = {
         .parent    = NULL,
+        .depth     = 0,
         .user_data = user_data,
     };
     return cace_ari_visit_ari(ari, visitor, &sub_ctx);
@@ -331,6 +333,7 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
 
     cace_ari_translate_ctx_t sub_ctx = {
         .parent     = in,
+        .depth      = (ctx->depth + 1),
         .is_map_key = ctx->is_map_key,
         .user_data  = ctx->user_data,
     };
@@ -412,6 +415,11 @@ static int cace_ari_translate_ari(cace_ari_t *out, const cace_ari_t *in, const c
                     CHKERRVAL(retval);
                     break;
                 }
+                case CACE_ARI_TYPE_EXECSET:
+                case CACE_ARI_TYPE_RPTSET:
+                    CACE_LOG_CRIT("no recursive translation for EXECSET or RPTSET");
+                    cace_ari_lit_copy(&(out->as_lit), &(in->as_lit));
+                    break;
                 default:
                     if (translator->map_lit)
                     {
@@ -450,6 +458,7 @@ int cace_ari_translate(cace_ari_t *out, const cace_ari_t *in, const cace_ari_tra
 
     cace_ari_translate_ctx_t sub_ctx = {
         .parent    = NULL,
+        .depth     = 0,
         .user_data = user_data,
     };
     return cace_ari_translate_ari(out, in, translator, &sub_ctx);

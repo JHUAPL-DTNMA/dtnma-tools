@@ -112,7 +112,7 @@ static cace_ari_translate_result_t acl_endpoint_filter_sub_label(cace_ari_t *out
         {
             if (as_int == 0)
             {
-                refda_eval_label_subst(out, endpoint);
+                refda_eval_label_subst(out, endpoint, ctx);
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else
@@ -172,7 +172,8 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
         }
 
         // True result indicates entry is purged
-        bool is_match = cace_amm_ari_is_truthy(&eval_result);
+        const bool is_match = cace_amm_ari_is_truthy(&eval_result);
+        CACE_LOG_DEBUG("result is truthy %d", is_match);
         cace_ari_deinit(&eval_result);
         if (is_match)
         {
@@ -215,7 +216,7 @@ static cace_ari_translate_result_t acl_target_filter_sub_label(cace_ari_t *out, 
         {
             if (as_int == 0)
             {
-                refda_eval_label_subst(out, target);
+                refda_eval_label_subst(out, target, ctx);
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else
@@ -336,7 +337,8 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
                 continue;
             }
 
-            bool is_match = cace_amm_ari_is_truthy(&eval_result);
+            const bool is_match = cace_amm_ari_is_truthy(&eval_result);
+            CACE_LOG_DEBUG("result is truthy %d", is_match);
             cace_ari_deinit(&eval_result);
             if (!is_match)
             {
