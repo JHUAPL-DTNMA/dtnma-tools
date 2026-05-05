@@ -111,7 +111,7 @@ int refda_eval_oper(refda_eval_ctx_t *ctx, const cace_amm_lookup_t *deref)
         m_string_t buf;
         m_string_init(buf);
         cace_ari_array_get_str(buf, operctx.operands.ordered, false);
-        CACE_LOG_DEBUG("evaluating OPER %s with %zu operands: %s", m_string_get_cstr(deref->obj->obj_id.name),
+        CACE_LOG_DEBUG("evaluation of OPER %s with %zu operands: %s", m_string_get_cstr(deref->obj->obj_id.name),
                        cace_ari_array_size(operctx.operands.ordered), m_string_get_cstr(buf));
         m_string_clear(buf);
     }
@@ -121,7 +121,8 @@ int refda_eval_oper(refda_eval_ctx_t *ctx, const cace_amm_lookup_t *deref)
         m_string_t buf;
         m_string_init(buf);
         cace_ari_text_encode(buf, &(operctx.result), CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
-        CACE_LOG_DEBUG("evaluation finished with result %s", m_string_get_cstr(buf));
+        CACE_LOG_DEBUG("evaluation of OPER %s finished with result %s", m_string_get_cstr(deref->obj->obj_id.name),
+                       m_string_get_cstr(buf));
         m_string_clear(buf);
     }
 

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the compilation unit for the implementation of the
  * ADM module "ietf-amm-base" for the C-language reference DA.
@@ -34,13 +35,17 @@
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 /*             TODO              */
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
 /*             TODO              */
 /*   STOP CUSTOM FUNCTIONS HERE  */
+
+/*   START CALLBACK FUNCTIONS HERE */
+
+/*   STOP CALLBACK FUNCTIONS HERE  */
 
 int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
 {
@@ -49,9 +54,12 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                    "ietf-amm-base");
     REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
+    /*   START CUSTOM PRE-INIT HERE */
+    /*   STOP CUSTOM PRE-INIT HERE  */
+
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
         &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("amm-base", REFDA_ADM_IETF_AMM_BASE_ENUM_ADM), "2025-07-03");
+        cace_amm_idseg_ref_withenum("amm-base", REFDA_ADM_IETF_AMM_BASE_ENUM_ADM), "2026-05-01");
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -502,7 +510,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             // named semantic type:
             {
                 // union
-                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 2);
+                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 3);
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                     {
@@ -518,6 +526,15 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/OBJECT
                         cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_OBJECT);
+                        cace_amm_type_set_use_ref_move(choice, &typeref);
+                    }
+                }
+                {
+                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 2);
+                    {
+                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
+                        // use of ari:/ARITYPE/NAMESPACE
+                        cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_NAMESPACE);
                         cace_amm_type_set_use_ref_move(choice, &typeref);
                     }
                 }
@@ -765,7 +782,7 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             // named semantic type:
             {
                 // union
-                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 4);
+                cace_amm_semtype_union_t *semtype = cace_amm_type_set_union_size(&(objdata->typeobj), 3);
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 0);
                     {
@@ -786,15 +803,6 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
                 }
                 {
                     cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 2);
-                    {
-                        cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
-                        // reference to ari://ietf/amm-base/TYPEDEF/type-ref
-                        cace_ari_set_objref_path_intid(&typeref, 1, 25, CACE_ARI_TYPE_TYPEDEF, 0);
-                        cace_amm_type_set_use_ref_move(choice, &typeref);
-                    }
-                }
-                {
-                    cace_amm_type_t *choice = cace_amm_type_array_get(semtype->choices, 3);
                     {
                         cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                         // use of ari:/ARITYPE/OPER
@@ -995,6 +1003,11 @@ int refda_adm_ietf_amm_base_init(refda_agent_t *agent)
             // no parameters possible
         }
     }
+
+    /*   START CUSTOM POST-INIT HERE */
+    /*   STOP CUSTOM POST-INIT HERE  */
+
     REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     return 0;
 }
+/*  STOP GENERATED SOURCE HERE */

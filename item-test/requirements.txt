@@ -5,3 +5,4 @@ sqlalchemy ~= 2.0
 psycopg2 ~= 2.9
 setuptools
 pytest
+pytest-subtests

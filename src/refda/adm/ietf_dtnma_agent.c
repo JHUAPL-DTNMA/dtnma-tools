@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the compilation unit for the implementation of the
  * ADM module "ietf-dtnma-agent" for the C-language reference DA.
@@ -34,7 +35,7 @@
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 #include "refda/eval.h"
 #include "refda/exec.h"
 #include "refda/exec_proc.h"
@@ -1010,7 +1011,7 @@ static cace_ari_translate_result_t nary_eval_sub_label(cace_ari_t *out, const ca
         {
             if ((as_int >= 0) && (as_int < (cace_ari_int)cace_ari_array_size(*operands)))
             {
-                refda_eval_label_subst(out, cace_ari_array_get(*operands, as_int));
+                refda_eval_label_subst(out, cace_ari_array_get(*operands, as_int), ctx);
                 return CACE_ARI_TRANSLATE_FINAL;
             }
             else
@@ -1262,6 +1263,8 @@ static int refda_odm_object_exists(cace_amm_obj_desc_t **obj, cace_amm_obj_ns_t 
 }
 
 /*   STOP CUSTOM FUNCTIONS HERE  */
+
+/*   START CALLBACK FUNCTIONS HERE */
 
 /* Name: sw-vendor
  * Description:
@@ -7139,6 +7142,8 @@ static void refda_adm_ietf_dtnma_agent_oper_map_get(refda_oper_eval_ctx_t *ctx)
      */
 }
 
+/*   STOP CALLBACK FUNCTIONS HERE  */
+
 int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
 {
     CHKERR1(agent);
@@ -7146,9 +7151,12 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
                    "ietf-dtnma-agent");
     REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
 
+    /*   START CUSTOM PRE-INIT HERE */
+    /*   STOP CUSTOM PRE-INIT HERE  */
+
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
         &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("dtnma-agent", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM), "2025-07-03");
+        cace_amm_idseg_ref_withenum("dtnma-agent", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM), "2026-05-01");
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -11146,6 +11154,11 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
             }
         }
     }
+
+    /*   START CUSTOM POST-INIT HERE */
+    /*   STOP CUSTOM POST-INIT HERE  */
+
     REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
     return 0;
 }
+/*  STOP GENERATED SOURCE HERE */
