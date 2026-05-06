@@ -141,7 +141,7 @@ int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out)
             }
             if (out)
             {
-                *out = *val;
+                *out = (cace_ari_int)*val;
             }
             break;
         }
@@ -154,7 +154,7 @@ int cace_ari_get_int(const cace_ari_t *ari, cace_ari_int *out)
             }
             if (out)
             {
-                *out = *val;
+                *out = (cace_ari_int)*val;
             }
             break;
         }
@@ -182,7 +182,7 @@ int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out)
             }
             if (out)
             {
-                *out = *val;
+                *out = (cace_ari_uint)*val;
             }
             break;
         }
@@ -195,7 +195,7 @@ int cace_ari_get_uint(const cace_ari_t *ari, cace_ari_uint *out)
             }
             if (out)
             {
-                *out = *val;
+                *out = (cace_ari_uint)*val;
             }
             break;
         }
@@ -223,7 +223,7 @@ int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out)
             }
             if (out)
             {
-                *out = *val;
+                *out = (cace_ari_byte)*val;
             }
             break;
         }
@@ -236,7 +236,7 @@ int cace_ari_get_byte(const cace_ari_t *ari, cace_ari_byte *out)
             }
             if (out)
             {
-                *out = *val;
+                *out = (cace_ari_byte)*val;
             }
             break;
         }
@@ -611,7 +611,6 @@ bool cace_ari_is_lit_typed(const cace_ari_t *ari, cace_ari_type_t typ)
 int cace_ari_get_aritype_int(const cace_ari_t *ari, cace_ari_type_t *out)
 {
     CHKERR1(ari);
-    CHKERR1(out);
     if (!cace_ari_is_lit_typed(ari, CACE_ARI_TYPE_ARITYPE))
     {
         return 1;
@@ -620,7 +619,15 @@ int cace_ari_get_aritype_int(const cace_ari_t *ari, cace_ari_type_t *out)
     const char *name;
     if (ari->as_lit.prim_type == CACE_ARI_PRIM_INT64)
     {
-        *out = ari->as_lit.value.as_int64;
+        const int64_t *val = &(ari->as_lit.value.as_int64);
+        if ((*val < INT_MIN) || (*val > INT_MAX))
+        {
+            return 3;
+        }
+        if (out)
+        {
+            *out = (cace_ari_type_t)*val;
+        }
         return 0;
     }
     else if ((name = cace_ari_cget_tstr_cstr(ari)))
