@@ -730,8 +730,7 @@ static int numeric_div_timespec(cace_ari_t *result, const cace_ari_t *valueA, co
             {
                 result_TS.tv_nsec +=
                     (cace_ari_subsec_t)(((double)valueA_sec - ((double)result_TS.tv_sec * scalar_double))
-                                        * NANOS_IN_SEC)
-                    / scalar_double;
+                                        * (double)NANOS_IN_SEC / scalar_double);
             }
             break;
         }
