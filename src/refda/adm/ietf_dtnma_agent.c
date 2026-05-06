@@ -5760,11 +5760,13 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
         CACE_LOG_ERR("Invalid parameter, unable to continue");
         return;
     }
-    const cace_ari_t *regexp      = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
-    const char       *regexp_text = cace_ari_cget_tstr_cstr(regexp);
+    const cace_ari_t *regexp        = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const char       *regexp_text   = cace_ari_cget_tstr_cstr(regexp);
+    const size_t      regexp_strlen = cace_ari_cget_tstr_strlen(regexp);
 
-    const cace_ari_t *value      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    const char       *value_text = cace_ari_cget_tstr_cstr(value);
+    const cace_ari_t *value        = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const char       *value_text   = cace_ari_cget_tstr_cstr(value);
+    const size_t      value_strlen = cace_ari_cget_tstr_strlen(value);
 
     bool is_match = false;
     // match only text string values
@@ -5774,8 +5776,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
         const int   opts        = PCRE2_ANCHORED | PCRE2_ENDANCHORED;
         int         errorcode   = 0;
         PCRE2_SIZE  erroroffset = 0;
-        pcre2_code *cfg =
-            pcre2_compile((PCRE2_SPTR8)regexp_text, strlen(regexp_text), opts, &errorcode, &erroroffset, NULL);
+        pcre2_code *cfg = pcre2_compile((PCRE2_SPTR8)regexp_text, regexp_strlen, opts, &errorcode, &erroroffset, NULL);
         if (!cfg)
         {
             CACE_LOG_ERR("Failed to compile regex pattern (error %d at %z): %s", errorcode, erroroffset, regexp_text);
@@ -5785,7 +5786,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
             pcre2_match_data *md   = pcre2_match_data_create_from_pattern(cfg, NULL);
             const int         opts = 0;
             // ignore terminating null
-            int res = pcre2_match(cfg, (PCRE2_SPTR8)value_text, strlen(value_text), 0, opts, md, NULL);
+            int res = pcre2_match(cfg, (PCRE2_SPTR8)value_text, value_strlen, 0, opts, md, NULL);
             CACE_LOG_DEBUG("Matching pattern %s with value %s, result %d", regexp_text, value_text, res);
             if (res > 0)
             {

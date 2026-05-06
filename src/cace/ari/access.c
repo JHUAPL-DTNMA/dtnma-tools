@@ -411,6 +411,16 @@ const char *cace_ari_get_tstr_cstr(cace_ari_t *ari)
     return (char *)cace_ari_cget_tstr_cstr(ari);
 }
 
+size_t cace_ari_cget_tstr_strlen(const cace_ari_t *ari)
+{
+    if (!ari || ari->is_ref || (ari->as_lit.prim_type != CACE_ARI_PRIM_TSTR))
+    {
+        return 0;
+    }
+    const size_t len = ari->as_lit.value.as_data.len;
+    return (len > 0 ? len - 1 : 0);
+}
+
 void cace_ari_set_tstr(cace_ari_t *ari, const char *buf, bool copy)
 {
     CHKVOID(ari);
