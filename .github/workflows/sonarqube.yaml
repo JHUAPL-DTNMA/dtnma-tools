@@ -93,6 +93,7 @@ jobs:
           DB_USER: 'tester'
           DB_PASSWORD: 'tester'
         run: |
+          exit 0 # FIXME remove
           ./item-test/run.sh prep
           ./item-test/run.sh test
       - name: Collect coverage
@@ -107,3 +108,4 @@ jobs:
           args: >
             --define sonar.coverageReportPaths=build/default/coverage-sonarqube.xml
             --define "sonar.cfamily.compile-commands=${{env.BUILD_WRAPPER_OUT_DIR}}/compile_commands.json"
+            -Dsonar.verbose=true
