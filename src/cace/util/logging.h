@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 /** @file
+ * @ingroup group_cace_util
  * Abstract interface for event logging.
  */
 /** @page logging Logging

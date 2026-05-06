@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup refdm
+ * @ingroup group_refdm
  * Agent Instrumentation definitions.
  */
 #include "instr.h"

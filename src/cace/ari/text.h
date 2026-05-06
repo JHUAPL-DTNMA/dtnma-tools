@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains definitions for ARI text CODEC functions.
  */
 #ifndef CACE_ARI_TEXT_H_
@@ -131,7 +131,7 @@ typedef struct
  */
 int cace_ari_text_encode(m_string_t text, const cace_ari_t *ari, cace_ari_text_enc_opts_t opts);
 
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
 
 /** Decode an ARI from text form.
  *

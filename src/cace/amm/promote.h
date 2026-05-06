@@ -15,6 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup group_amm
+ * Declarations for type-promotion logic.
+ */
 #ifndef CACE_AMM_PROMOTE_H_
 #define CACE_AMM_PROMOTE_H_
 

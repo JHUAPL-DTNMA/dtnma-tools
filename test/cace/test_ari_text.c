@@ -402,7 +402,7 @@ void test_ari_text_encode_ariref(cace_ari_type_t type_id, const char *obj_id, co
     cace_ari_deinit(&ari);
 }
 
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
 
 /** Check a single call to cace_ari_text_decode().
  */

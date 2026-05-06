@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup amm
+ * @ingroup group_amm
  * An object pattern set is really just an AC limited to contain only
  * OBJPAT type literals and used to match dereferenced objects.
  */

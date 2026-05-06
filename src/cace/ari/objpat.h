@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains the declarations, prototypes, constants necessary
  * to store reference patterns and match them with objects.
  */

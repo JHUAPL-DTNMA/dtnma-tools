@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup amm
+ * @ingroup group_amm
  * Object and namespace reference lookup algorithms.
  */
 #ifndef CACE_AMM_LOOKUP_H_

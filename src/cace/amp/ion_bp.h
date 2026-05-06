@@ -17,7 +17,7 @@
  */
 
 /** @file
- * @ingroup amp
+ * @ingroup group_amp
  * Provide an ION Bundle Protocol (BP) adapter for AMP messaging.
  */
 #ifndef CACE_AMP_ION_BP_H_
@@ -26,7 +26,7 @@
 #include "cace/amm/msg_if.h"
 #include "cace/ari.h"
 
-#if defined(ION_FOUND)
+#if ION_FOUND
 #include <bp.h>
 #endif /* ION_FOUND */
 
@@ -34,7 +34,7 @@
 extern "C" {
 #endif
 
-#if defined(ION_FOUND)
+#if ION_FOUND
 
 /** State for the ION BP transport.
  */

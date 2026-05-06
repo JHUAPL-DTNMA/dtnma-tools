@@ -5770,7 +5770,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
     // match only text string values
     if (regexp_text && value_text)
     {
-#if defined(PCRE_FOUND)
+#if PCRE_FOUND
         const int   opts        = PCRE2_ANCHORED | PCRE2_ENDANCHORED;
         int         errorcode   = 0;
         PCRE2_SIZE  erroroffset = 0;

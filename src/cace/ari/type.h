@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains ARI type definitions and basic lookup functions.
  */
 #ifndef CACE_ARI_TYPE_H_

@@ -139,3 +139,32 @@ The following are used for **testing**:
 [dtnma-ace](https://github.com/JHUAPL-DTNMA/dtnma-ace)
 : A Python library for processing ARIs and ADMs for built-item testing.
 Also available directly from PIP with the package [`dtnma-ace`](https://pypi.org/project/dtnma-ace/).
+
+
+@defgroup group_cace The CACE Library
+@brief Implementation of Agent-independent ARI and AMM processing such as the value type system.
+
+@defgroup group_cace_util Common Utilities
+@ingroup group_cace
+@brief These are shared utilities among CACE, REFDA, and REFDM definitions.
+
+@defgroup group_ari CACE ARI Processing
+@ingroup group_cace
+@brief The internal logic and storage for ARI values, access APIs for them, and encoder/decoder for URI text and CBOR binary forms.
+
+@defgroup group_amm CACE AMM Processing
+@ingroup group_cace
+@brief The internal logic and storage for AMM built-in and semantic (augmented) types.
+
+@defgroup group_amp CACE AMP Processing
+@ingroup group_cace
+@brief The internal logic and storage for AMP message structures and encoder/decoder functions.
+
+@defgroup group_refda The REFDA Library
+@brief Implementation of the Reference DTNMA Agent as a shared library and example transport bindings.
+
+The REFDA library includes ADM implementations which are available for linking into any concrete Agent and initializing at its startup.
+
+@defgroup group_refdm The REFDM Library
+@brief Implementation of the Reference DTNMA Manager as a shared library and example transport bindings.
+

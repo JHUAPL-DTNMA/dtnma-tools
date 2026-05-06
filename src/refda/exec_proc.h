@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup refda
+ * @ingroup group_refda
  * Execution sequence and item processing internal APIs.
  * Use the functions in @ref exec.h as a public API.
  */

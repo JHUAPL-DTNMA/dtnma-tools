@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains definitions for ARI text file functions.
  */
 #ifndef CACE_ARI_MACROFILE_H_
@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
 
 /** Read lines from a file as text ARIs into a list.
  * The file must be encoded as text/uri-list media type according to RFC 2483.

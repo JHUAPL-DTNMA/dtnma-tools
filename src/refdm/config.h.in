@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup refdm
+ * @ingroup group_refdm
  * Configuration items driven by CMake options and user tailoring.
  */
 #ifndef REFDM_CONFIG_H_
@@ -26,14 +26,22 @@
 extern "C" {
 #endif
 
-/* Enable text-UI for manager interaction. */
-#cmakedefine REFDM_UI_CLI
+/** Enable text-UI for manager interaction. */
+#cmakedefine01 REFDM_UI_CLI
 
-/* Use ncurses text UI library. */
-#cmakedefine USE_NCURSES
+/** Use ncurses text UI library. */
+#cmakedefine01 USE_NCURSES
 
-/* Use the civetweb HTTP server library. */
-#cmakedefine CIVETWEB_FOUND
+/** Use the civetweb HTTP server library. */
+#cmakedefine01 CIVETWEB_FOUND
+/** Never configure with SSL/TLS */
+#define CIVETWEB_USE_SSL 0
+
+/** Use cJSON for encoding. */
+#cmakedefine01 cJSON_FOUND
+
+/**Use pgsql for persistent storage. */
+#cmakedefine01 POSTGRESQL_FOUND
 
 #ifdef __cplusplus
 } // extern C

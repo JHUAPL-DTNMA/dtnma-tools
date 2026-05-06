@@ -15,6 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup group_amm
+ * Enumerations of object status lifecycle states.
+ */
 #ifndef CACE_AMM_STATUS_H_
 #define CACE_AMM_STATUS_H_
 
