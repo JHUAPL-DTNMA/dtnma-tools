@@ -249,6 +249,13 @@ const char *cace_ari_cget_tstr_cstr(const cace_ari_t *ari);
  */
 const char *cace_ari_get_tstr_cstr(cace_ari_t *ari);
 
+/** Get the @c strlen (excluding terminating null) for a TEXTSTR value.
+ *
+ * @param[in] ari The ARI to read.
+ * @return The length to terminating null, if valid, otherwise 0.
+ */
+size_t cace_ari_cget_tstr_strlen(const cace_ari_t *ari);
+
 /** Require a BYTESTR value and get the pointer to its storage.
  *
  * @param[in] ari The ARI to read.
