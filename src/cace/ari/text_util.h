@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains definitions for ARI text CODEC functions.
  */
 #ifndef CACE_ARI_TEXT_UTIL_H_

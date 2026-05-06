@@ -67,7 +67,6 @@ target_link_libraries(refdm PUBLIC cace)
 # Prefer Postgres when both are available
 if(PostgreSQL_FOUND)
   message(STATUS "Manager using POSTGRES client")
-  target_compile_definitions(refdm PUBLIC HAVE_POSTGRESQL)
   target_link_libraries(refdm PUBLIC PostgreSQL::PostgreSQL)
 else()
   message(WARNING "Manager not using any database client")
@@ -75,13 +74,11 @@ endif()
 
 if(cJSON_FOUND)
   message(STATUS "Manager using cJSON")
-  target_compile_definitions(refdm PUBLIC USE_JSON)
   target_link_libraries(refdm PUBLIC cjson)
 endif(cJSON_FOUND)
 
 if(civetweb_FOUND)
   message(STATUS "Manager using civetweb")
-  target_compile_definitions(refdm PUBLIC USE_CIVETWEB NO_SSL)
   target_link_libraries(refdm PUBLIC civetweb)
 endif(civetweb_FOUND)
 

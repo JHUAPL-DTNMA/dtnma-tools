@@ -18,6 +18,7 @@ limitations under the License.
 -->
 
 This library is subdivided into the following subsystems, each with a corresponding directory in the source tree and include tree.
+The library files are all under the @ref group_cace topic.
 
 # Common Utilities
 
@@ -26,7 +27,7 @@ The specific header @ref cace/util/logging.h deals with @ref logging which is us
 
 # ARI Handling
 
-The `cace/ari` directory deals with the ARI data model and encoding / decoding (CODEC) functions related to processing ARI values.
+The `cace/ari` directory and @ref group_ari topic deals with the ARI data model and encoding / decoding (CODEC) functions related to processing ARI values.
 There is also a top-level include @ref cace/ari.h which includes all other headers dealing with ARI handling.
 
 The type ::cace_ari_t is the API focal point for this library.
@@ -34,7 +35,7 @@ There are related algorithmic types and functions like cace_ari_visit() and cace
 
 # AMM Definitions
 
-The `cace/amm` directory deals with aspects of the AMM such as the abstract object structure and value typing subsystem.
+The `cace/amm` directory and @ref group_amm topic deals with aspects of the AMM such as the abstract object structure and value typing subsystem.
 Types within the AMM extend beyond the built-in types of ARI values into "semantic types" as defined in Section 3.3 of the AMM @cite ietf-dtn-amm-05.
 
 The type ::cace_amm_obj_store_t is used to register and lookup abstract AMM object handles, which used within the @ref refda for state keeping.
@@ -45,5 +46,5 @@ There are related algorithmic functions like cace_amm_type_match() and cace_amm_
 
 # AMP Message Handling
 
-The `cace/amp` directory deals with ARI values encoded in binary form into AMP messages
+The `cace/amp` directory and @ref group_amp topic deals with ARI values encoded in binary form into AMP messages
 This includes POSIX socket utilities used by the `refda-socket` and `refdm-socket` daemons as a reference to what an AMP transport binding should look like and how it should behave.

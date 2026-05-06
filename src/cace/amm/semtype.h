@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_amm
  * This file contains definitions for AMM semantic typing of ARI values.
  */
 #ifndef CACE_AMM_SEMTYPE_H_

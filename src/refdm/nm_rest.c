@@ -30,7 +30,7 @@
 #include <string.h>
 #include <strings.h>
 
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
 #include "nm_sql.h"
 #endif
 
@@ -181,7 +181,7 @@ static int agentsGetHandler(struct mg_connection *conn)
         cJSON *agentObj = cJSON_CreateObject();
         cJSON_AddStringToObject(agentObj, "name", m_string_get_cstr(agent->eid));
         {
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
             int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
 
             size_t count;
@@ -474,7 +474,7 @@ static int agentParseText(struct mg_connection *conn, cace_ari_list_t tosend)
 
             cace_ari_t *eset = cace_ari_list_push_back_new(tosend);
 
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
             res = cace_ari_text_decode(eset, linebuf, &errm);
             if (res)
             {
@@ -532,7 +532,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
     if (!retval)
     {
         // add EXECSETs to Database after successful send
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
         /* Copy the message group to the database tables */
         CACE_LOG_INFO("logging EXECSETs in db started");
         // add all execset
@@ -543,7 +543,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
             refdm_db_insert_execset(curr_set, agent);
         }
         CACE_LOG_INFO("logging EXECSETs in db finished");
-#endif // defined(HAVE_POSTGRESQL)
+#endif // POSTGRESQL_FOUND
 
         CACE_LOG_INFO("Successfully sent EXECSETs");
 
@@ -569,7 +569,7 @@ static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *age
     bool             is_remote_rptsets = false;
     cace_ari_list_t *ptr_rptsets       = NULL;
 
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
     // Synthesize the rptsets (on the stack)
     cace_ari_list_t rptsets;
     cace_ari_list_init(rptsets);
@@ -588,12 +588,12 @@ static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *age
     // Set the prt_rptsets to point to the stack
     ptr_rptsets       = &rptsets;
     is_remote_rptsets = true;
-#else  // defined(HAVE_POSTGRESQL)
+#else  // POSTGRESQL_FOUND
     // Set the prt_rptsets to point to the local copy on the agent
     ptr_rptsets = &agent->rptsets;
     gmtime_r(&agent->mgr_time, &mgr_time);
     is_remote_rptsets = false;
-#endif // defined(HAVE_POSTGRESQL)
+#endif // POSTGRESQL_FOUND
 
     // Return no content if there are no reports
     if (cace_ari_list_empty_p(*ptr_rptsets))
@@ -1093,7 +1093,7 @@ int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
                               "10000",
                               "error_log_file",
                               "error.log",
-#ifndef NO_SSL
+#if CIVETWEB_USE_SSL
                               "ssl_certificate",
                               "../../resources/cert/server.pem",
                               "ssl_protocol_version",
@@ -1112,7 +1112,7 @@ int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
     int                 err      = 0;
 
 /* Check if libcivetweb has been built with all required features. */
-#ifndef NO_SSL
+#if CIVETWEB_USE_SSL
     if (!mg_check_feature(MG_FEATURES_SSL))
     {
         CACE_LOG_ERR("Embedded example built with SSL support, "

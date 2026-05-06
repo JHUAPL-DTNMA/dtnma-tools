@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * This file is only included in the build when ::HAVE_POSTGRESQL is defined.
+ * This file is only included in the build when ::POSTGRESQL_FOUND is defined.
  */
 #ifndef REFDM_NM_SQL_H_
 #define REFDM_NM_SQL_H_
@@ -25,9 +25,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#ifdef HAVE_POSTGRESQL
+#ifdef POSTGRESQL_FOUND
 #include <libpq-fe.h>
-#endif // HAVE_POSTGRESQL
+#endif // POSTGRESQL_FOUND
 
 #include <cace/util/defs.h>
 #include <cace/ari.h>
@@ -104,9 +104,9 @@ uint32_t refdm_db_mgt_init(const refdm_db_t *parms, uint32_t clear, uint32_t log
 void refdm_db_mgt_close(void);
 void refdm__db_mgt_close_conn(size_t i);
 int  refdm_db_mgt_connected(size_t i);
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
 int32_t refdm_db_mgt_query_fetch(int db_idx, PGresult **res, char *format, ...);
-#endif // defined(HAVE_POSTGRESQL)
+#endif // POSTGRESQL_FOUND
 int32_t refdm_db_mgt_query_insert(int db_idx, uint32_t *idx, char *format, ...);
 
 /* Functions to process outgoing EXECSET and incoming RPTSET. */

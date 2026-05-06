@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains the definitions for ARI object reference paths
  * and their segments.
  */

@@ -72,7 +72,7 @@ static _ari_type_name_pair_t _ari_type_names[] = {
 };
 // clang-format on
 
-#ifdef ENABLE_LUT_CACHE
+#if ENABLE_LUT_CACHE
 
 M_DICT_DEF2(_ari_type_by_id, cace_ari_type_t, M_BASIC_OPLIST, const char *, M_CSTR_NOCASE_OPLIST)
 M_DICT_DEF2(_ari_type_by_name, const char *, M_CSTR_NOCASE_OPLIST, cace_ari_type_t, M_BASIC_OPLIST)

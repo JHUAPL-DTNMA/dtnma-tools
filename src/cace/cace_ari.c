@@ -93,7 +93,7 @@ static FILE *get_file(const char *name, const char *mode)
     return file;
 }
 
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
 /** Read a single value and indicate whether to continue reading.
  *
  * @return Zero upon success.
@@ -213,7 +213,7 @@ static int read_cborhex(cace_ari_t *inval, FILE *source)
     return 0;
 }
 
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
 static int read_auto(cace_ari_form_t *inform, cace_ari_form_t *outform, cace_ari_t *inval, FILE *source)
 {
     // check only the first line
@@ -343,7 +343,7 @@ static void show_usage(const char *argv0)
     fprintf(stderr,
             "Usage: %s {--log-level,-l <log-level>} "
             "[--source,-s {filename or -}] "
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
             "[--inform,-i {auto,text,cbor,cborhex}] "
 #else
             "[--inform,-i {cbor,cborhex}] "
@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
 
     cace_openlog();
 
-#ifdef HAVE_GETOPT_LONG
+#if HAVE_GETOPT_LONG
     static const struct option longopts[] = {
         { "help", no_argument, NULL, 'h' },
         { "log-level", required_argument, NULL, 'l' },
@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
     int  retval = 0;
     while (cont)
     {
-#ifdef HAVE_GETOPT_LONG
+#if HAVE_GETOPT_LONG
         int option_index = 0;
         int res          = getopt_long(argc, argv, ":hl:s:i:d:o:", longopts, &option_index);
 #else
@@ -419,7 +419,7 @@ int main(int argc, char *argv[])
                 break;
             case 'i':
                 inform = get_form(optarg);
-#if !defined(ARI_TEXT_PARSE)
+#if !ARI_TEXT_PARSE
                 if (inform == CACE_ARI_FORM_INVALID || inform == CACE_ARI_FORM_URI || inform == CACE_ARI_FORM_AUTO)
                 {
                     retval = 1;
@@ -470,12 +470,12 @@ int main(int argc, char *argv[])
         switch (inform)
         {
             case CACE_ARI_FORM_AUTO:
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
                 res = read_auto(&inform, &outform, &inval, source);
 #endif /* ARI_TEXT_PARSE */
                 break;
             case CACE_ARI_FORM_URI:
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
                 res = read_text(&inval, source);
 #endif /* ARI_TEXT_PARSE */
                 break;

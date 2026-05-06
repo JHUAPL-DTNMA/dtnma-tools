@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * This file is only included in the build when ::HAVE_POSTGRESQL is defined.
+ * This file is only included in the build when ::POSTGRESQL_FOUND is defined.
  */
 #include "nm_sql.h"
 
@@ -624,7 +624,7 @@ static int transform_cbor_str_to_cace_data(cace_ari_t *ari_item, char *cbor_str,
     return RET_PASS;
 }
 
-#if FALSE && defined(HAVE_POSTGRESQL)
+#if FALSE && POSTGRESQL_FOUND
 
 /**
  * Diagnostic method to aide with debugging the contents of the PostgreSQL result.

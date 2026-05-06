@@ -18,6 +18,7 @@ limitations under the License.
 -->
 
 The Reference DTNMA Agent (REFDA) is implemented as two portions: a reusable library (`refda`) and a set of daemons which bind the REFDA to a specific transport.
+The library files are all under the @ref group_refda topic.
 
 # REFDA Library
 

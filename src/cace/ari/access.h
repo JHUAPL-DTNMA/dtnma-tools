@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains functions for internal API to access ARI values
  * in a consistent way.
  */
