@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-/**Enable text-form parsing based on lex+yacc configuration. */
+/**Enable text-form parsing based on Flex+Bison (lex+yacc) configuration. */
 #cmakedefine01 ARI_TEXT_PARSE
 
 /** Enable look-up table (LUT) caching at runtime. */

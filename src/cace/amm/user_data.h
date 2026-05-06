@@ -17,7 +17,7 @@
  */
 /** @file
  * @ingroup group_amm
- * A utility structure for managing the lifecyle of user-supplied, opaque "data".
+ * A utility structure for managing the lifecycle of user-supplied, opaque "data".
  */
 #ifndef CACE_AMM_USER_DATA_H_
 #define CACE_AMM_USER_DATA_H_

@@ -16,6 +16,7 @@ ARITYPE
 Berners
 Birkholz
 Birrane
+Bison
 bitwise
 BLS
 bool
@@ -90,6 +91,7 @@ EDD
 EDDs
 eid
 encodeable
+encodings
 Encodings
 entrypoint
 enum
@@ -105,8 +107,10 @@ expr
 EXPR
 fd
 filesystem
+Flex
 frontend
 ge
+Getopt
 Heiner
 Helvetica
 Henk
@@ -132,8 +136,11 @@ JPL
 JSON
 Klyne
 le
+lex
+lifecycle
 LLC
 lt
+LUT
 malloc
 MALLOC
 Masinter
@@ -271,4 +278,5 @@ Whitespace
 xxd
 XXXX
 XYZ
+yacc
 zeroize
