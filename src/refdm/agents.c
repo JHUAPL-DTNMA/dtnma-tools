@@ -37,8 +37,9 @@
 
 #include "agents.h"
 #include <cace/ari/text_util.h>
-#include <cace/util/defs.h>
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
+#include <cace/util/defs.h>
 #include <sys/stat.h>
 
 void refdm_agent_init(refdm_agent_t *obj)
@@ -78,7 +79,7 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
     static char agent_autologging_sep = '_';
     char        filepath[1024];
 
-    pthread_mutex_lock(&agent->log_mutex);
+    CACE_MUTEX_LOCK(&agent->log_mutex);
 
     if (cfg->enabled)
     {
@@ -158,5 +159,5 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
         fclose(agent->log_fd);
         agent->log_fd = NULL;
     }
-    pthread_mutex_unlock(&agent->log_mutex);
+    CACE_MUTEX_UNLOCK(&agent->log_mutex);
 }

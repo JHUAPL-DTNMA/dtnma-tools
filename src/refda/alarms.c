@@ -20,6 +20,7 @@
 #include "eval.h"
 #include "cace/ari/time_util.h"
 #include "cace/util/logging.h"
+#include "cace/util/mutex.h"
 #include "cace/util/defs.h"
 
 void refda_alarms_history_item_init(refda_alarms_history_item_t *obj)
@@ -141,7 +142,7 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
     refda_amm_ident_base_init(&cat_ref);
 
     // validate lookup fields only
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     refda_amm_ident_base_populate(&res_ref, resource, &agent->objs);
     if (!cace_ari_is_null(category))
     {
@@ -151,7 +152,7 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
     {
         cace_ari_set_null(&cat_ref.name);
     }
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     if (!res_ref.ident)
     {
@@ -172,11 +173,7 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
     {
         bool any_match = false;
 
-        if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
-        {
-            CACE_LOG_CRIT("failed to lock shelf_mutex");
-            return;
-        }
+        CACE_MUTEX_LOCK(&(agent->alarms.shelf_mutex));
         refda_alarms_shelf_entry_set_it_t shelf_it;
         for (refda_alarms_shelf_entry_set_it(shelf_it, agent->alarms.shelf_list);
              !refda_alarms_shelf_entry_set_end_p(shelf_it); refda_alarms_shelf_entry_set_next(shelf_it))
@@ -189,11 +186,7 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
                 break;
             }
         }
-        if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
-        {
-            CACE_LOG_CRIT("failed to unlock shelf_mutex");
-            return;
-        }
+        CACE_MUTEX_UNLOCK(&(agent->alarms.shelf_mutex));
 
         if (any_match)
         {
@@ -204,11 +197,7 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
         }
     }
 
-    if (pthread_mutex_lock(&(agent->alarms.alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock alarm_mutex");
-        return;
-    }
+    CACE_MUTEX_LOCK(&(agent->alarms.alarm_mutex));
 
     refda_alarms_entry_key_t entry_key = {
         .resource = res_ref.ident,
@@ -252,10 +241,7 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
         cace_ari_set_copy(&hist_item->timestamp, &entry->updated_at);
     }
 
-    if (pthread_mutex_unlock(&(agent->alarms.alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-    }
+    CACE_MUTEX_UNLOCK(&(agent->alarms.alarm_mutex));
 }
 
 /// Table column index
@@ -363,11 +349,7 @@ static cace_ari_translate_result_t alarm_list_filter_sub_label(cace_ari_t *out, 
 int refda_alarms_get_table(refda_runctx_t *runctx, cace_ari_t *out)
 {
     refda_agent_t *agent = runctx->agent;
-    if (pthread_mutex_lock(&(agent->alarms.alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock alarm_mutex");
-        return 2;
-    }
+    CACE_MUTEX_LOCK(&(agent->alarms.alarm_mutex));
 
     cace_ari_tbl_t *table = cace_ari_set_tbl(out, NULL);
     cace_ari_tbl_reset(table, 9, 0);
@@ -416,11 +398,7 @@ int refda_alarms_get_table(refda_runctx_t *runctx, cace_ari_t *out)
         cace_ari_tbl_move_row_array(table, row);
     }
 
-    if (pthread_mutex_unlock(&(agent->alarms.alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-        return 2;
-    }
+    CACE_MUTEX_UNLOCK(&(agent->alarms.alarm_mutex));
     return 0;
 }
 
@@ -444,11 +422,7 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
     CHKRET(filter, 0);
 
     refda_alarms_t *alarms = &(runctx->agent->alarms);
-    if (pthread_mutex_lock(&(alarms->alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock alarm_mutex");
-        return 0;
-    }
+    CACE_MUTEX_LOCK(&(alarms->alarm_mutex));
 
     size_t affected = 0;
 
@@ -485,10 +459,7 @@ size_t refda_alarms_purge(refda_runctx_t *runctx, const cace_ari_t *filter)
         }
     }
 
-    if (pthread_mutex_unlock(&(alarms->alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-    }
+    CACE_MUTEX_UNLOCK(&(alarms->alarm_mutex));
     return affected;
 }
 
@@ -498,11 +469,7 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
     CHKRET(filter, 0);
 
     refda_alarms_t *alarms = &(runctx->agent->alarms);
-    if (pthread_mutex_lock(&(alarms->alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock alarm_mutex");
-        return 0;
-    }
+    CACE_MUTEX_LOCK(&(alarms->alarm_mutex));
 
     size_t affected = 0;
 
@@ -541,10 +508,7 @@ size_t refda_alarms_compress(refda_runctx_t *runctx, const cace_ari_t *filter)
         }
     }
 
-    if (pthread_mutex_unlock(&(alarms->alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-    }
+    CACE_MUTEX_UNLOCK(&(alarms->alarm_mutex));
     return affected;
 }
 
@@ -554,11 +518,7 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
     CHKRET(filter, 0);
 
     refda_alarms_t *alarms = &(runctx->agent->alarms);
-    if (pthread_mutex_lock(&(alarms->alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock alarm_mutex");
-        return 0;
-    }
+    CACE_MUTEX_LOCK(&(alarms->alarm_mutex));
 
     size_t affected = 0;
 
@@ -600,20 +560,13 @@ size_t refda_alarms_mgr_state(refda_runctx_t *runctx, const cace_ari_t *filter, 
         }
     }
 
-    if (pthread_mutex_unlock(&(alarms->alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-    }
+    CACE_MUTEX_UNLOCK(&(alarms->alarm_mutex));
     return affected;
 }
 
 size_t refda_alarms_apply_shelf(refda_alarms_t *alarms, const refda_alarms_shelf_entry_t *shelf)
 {
-    if (pthread_mutex_lock(&(alarms->alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock alarm_mutex");
-        return 0;
-    }
+    CACE_MUTEX_LOCK(&(alarms->alarm_mutex));
 
     size_t affected = 0;
 
@@ -634,9 +587,6 @@ size_t refda_alarms_apply_shelf(refda_alarms_t *alarms, const refda_alarms_shelf
         }
     }
 
-    if (pthread_mutex_unlock(&(alarms->alarm_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-    }
+    CACE_MUTEX_UNLOCK(&(alarms->alarm_mutex));
     return affected;
 }

@@ -27,10 +27,6 @@
 #include <pthread.h>
 #include <cace/ari.h>
 
-// Error messages
-#define REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE "Failed to acquire mutex."
-#define REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE "Failed to release mutex."
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -30,6 +30,7 @@
 #include "cace/amm/lookup.h"
 #include "cace/util/threadset.h"
 #include "cace/util/logging.h"
+#include "cace/util/mutex.h"
 #include "cace/util/defs.h"
 #include <errno.h>
 
@@ -166,7 +167,7 @@ cace_amm_type_t *refda_agent_get_typedef(refda_agent_t *agent, cace_ari_int_id_t
 
 int refda_agent_bindrefs(refda_agent_t *agent)
 {
-    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     int failcnt = 0;
 
     agent->mac_type = refda_agent_get_typedef(agent, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_AMM_BASE_ENUM_ADM,
@@ -308,7 +309,7 @@ int refda_agent_bindrefs(refda_agent_t *agent)
         }
     }
 
-    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     CACE_LOG_INFO("binding finished with %d failures", failcnt);
     return failcnt;
@@ -374,7 +375,7 @@ int refda_agent_init_tbr(refda_agent_t *agent, const cace_amm_obj_ns_t *ns)
 
 int refda_agent_init_objs(refda_agent_t *agent)
 {
-    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     cace_amm_obj_ns_list_it_t ns_it;
 
     for (cace_amm_obj_ns_list_it(ns_it, agent->objs.ns_list); !cace_amm_obj_ns_list_end_p(ns_it);
@@ -391,7 +392,7 @@ int refda_agent_init_objs(refda_agent_t *agent)
         refda_agent_init_tbr(agent, ns);
     }
 
-    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     return 0;
 }
 

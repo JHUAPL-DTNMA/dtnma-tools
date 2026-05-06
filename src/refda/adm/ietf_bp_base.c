@@ -32,6 +32,7 @@
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
@@ -77,7 +78,7 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
     CHKERR1(agent);
     CACE_LOG_DEBUG("Registering ADM: "
                    "ietf-bp-base");
-    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
         &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
