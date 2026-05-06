@@ -21,6 +21,7 @@
 #include "cace/ari/text.h"
 #include "cace/ari/time_util.h"
 #include "cace/util/logging.h"
+#include "cace/util/mutex.h"
 #include "cace/util/defs.h"
 #include <timespec.h>
 #include <qcbor/qcbor.h>
@@ -143,30 +144,30 @@ int cace_amp_proxy_cli_state_connect(cace_amp_proxy_cli_state_t *state, const m_
                                      const struct timespec *timeout)
 {
     CHKERR1(state);
-    pthread_mutex_lock(&state->sock_mutex);
+    CACE_MUTEX_LOCK(&state->sock_mutex);
     m_string_set(state->path, sock_path);
 
     // just try the connection
     int sock_fd = cace_amp_proxy_cli_real_connect(state, timeout ? timeout : &default_timeout);
-    pthread_mutex_unlock(&state->sock_mutex);
+    CACE_MUTEX_UNLOCK(&state->sock_mutex);
     return (sock_fd < 0 ? 1 : 0);
 }
 
 void cace_amp_proxy_cli_state_disconnect(cace_amp_proxy_cli_state_t *state)
 {
     CHKVOID(state);
-    pthread_mutex_lock(&state->sock_mutex);
+    CACE_MUTEX_LOCK(&state->sock_mutex);
     cace_amp_proxy_cli_real_disconnect(state);
     m_string_reset(state->path);
-    pthread_mutex_unlock(&state->sock_mutex);
+    CACE_MUTEX_UNLOCK(&state->sock_mutex);
 }
 
 int cace_amp_proxy_cli_state_getfd(cace_amp_proxy_cli_state_t *state)
 {
     int res;
-    pthread_mutex_lock(&state->sock_mutex);
+    CACE_MUTEX_LOCK(&state->sock_mutex);
     res = state->sock_fd;
-    pthread_mutex_unlock(&state->sock_mutex);
+    CACE_MUTEX_UNLOCK(&state->sock_mutex);
     return res;
 }
 
@@ -199,7 +200,7 @@ int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_me
     struct timespec remain = timespec_sub(cutoff, current);
 
     int sock_fd = cace_amp_proxy_cli_real_connect(state, &remain);
-    pthread_mutex_unlock(&state->sock_mutex);
+    CACE_MUTEX_UNLOCK(&state->sock_mutex);
     if (sock_fd < 0)
     {
         // timed out, failure
@@ -253,9 +254,9 @@ int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_me
         if (got != (ssize_t)msg_size)
         {
             CACE_LOG_ERR("failed send()");
-            pthread_mutex_lock(&state->sock_mutex);
+            CACE_MUTEX_LOCK(&state->sock_mutex);
             cace_amp_proxy_cli_real_disconnect(state);
-            pthread_mutex_unlock(&state->sock_mutex);
+            CACE_MUTEX_UNLOCK(&state->sock_mutex);
             result = 4;
         }
     }
@@ -296,7 +297,7 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
             continue;
         }
         int sock_fd = cace_amp_proxy_cli_real_connect(state, &default_timeout);
-        pthread_mutex_unlock(&state->sock_mutex);
+        CACE_MUTEX_UNLOCK(&state->sock_mutex);
         if (sock_fd < 0)
         {
             // timed out, try again
@@ -308,17 +309,17 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
         ssize_t got   = recv(sock_fd, NULL, 0, flags);
         if (got == 0)
         {
-            pthread_mutex_lock(&state->sock_mutex);
+            CACE_MUTEX_LOCK(&state->sock_mutex);
             cace_amp_proxy_cli_real_disconnect(state);
-            pthread_mutex_unlock(&state->sock_mutex);
+            CACE_MUTEX_UNLOCK(&state->sock_mutex);
             continue;
         }
         else if (got < 0)
         {
             CACE_LOG_WARNING("ignoring failed recv() with errno %d", errno);
-            pthread_mutex_lock(&state->sock_mutex);
+            CACE_MUTEX_LOCK(&state->sock_mutex);
             cace_amp_proxy_cli_real_disconnect(state);
-            pthread_mutex_unlock(&state->sock_mutex);
+            CACE_MUTEX_UNLOCK(&state->sock_mutex);
             result = CACE_AMM_MSG_IF_RECV_END;
             break;
         }

@@ -17,6 +17,7 @@
  */
 #include "exec_seq.h"
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 #include <cace/util/defs.h>
 
 void refda_exec_seq_init(refda_exec_seq_t *obj)
@@ -60,11 +61,7 @@ int refda_exec_seq_front_status(refda_exec_item_status_t *status, refda_exec_seq
     CHKERR1(seq);
 
     int retval = 0;
-    if (pthread_mutex_lock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return 2;
-    }
+    CACE_MUTEX_LOCK(&seq->items_mutex);
     if (!refda_exec_item_list_empty_p(seq->items))
     {
         refda_exec_item_ptr_t **front_ptr = refda_exec_item_list_front(seq->items);
@@ -77,11 +74,7 @@ int refda_exec_seq_front_status(refda_exec_item_status_t *status, refda_exec_seq
     {
         retval = 2;
     }
-    if (pthread_mutex_unlock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to unlock mutex");
-        return 2;
-    }
+    CACE_MUTEX_UNLOCK(&seq->items_mutex);
     return retval;
 }
 
@@ -89,11 +82,7 @@ void refda_exec_seq_pop_front(refda_exec_seq_t *seq)
 {
     CHKVOID(seq);
 
-    if (pthread_mutex_lock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return;
-    }
+    CACE_MUTEX_LOCK(&seq->items_mutex);
     // decouple front item from the sequence
     refda_exec_item_ptr_t *item_ptr;
     refda_exec_item_list_pop_at(&item_ptr, seq->items, 0);
@@ -104,10 +93,7 @@ void refda_exec_seq_pop_front(refda_exec_seq_t *seq)
     refda_exec_item_ptr_release(item_ptr);
 
     bool is_empty = refda_exec_item_list_empty_p(seq->items);
-    if (pthread_mutex_unlock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to unlock mutex");
-    }
+    CACE_MUTEX_UNLOCK(&seq->items_mutex);
 
     // report after the entire sequence is finished
     if (seq->status && is_empty)
@@ -121,11 +107,7 @@ void refda_exec_seq_terminate(refda_exec_seq_t *seq)
     CHKVOID(seq);
     CACE_LOG_DEBUG("execution of sequence PID %" PRIu64 " (at %p) terminating", seq->pid, seq);
 
-    if (pthread_mutex_lock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return;
-    }
+    CACE_MUTEX_LOCK(&seq->items_mutex);
     // decouple and release all items from the sequence
     refda_exec_item_list_it_t item_it;
     for (refda_exec_item_list_it(item_it, seq->items); !refda_exec_item_list_end_p(item_it);)
@@ -136,10 +118,7 @@ void refda_exec_seq_terminate(refda_exec_seq_t *seq)
 
         refda_exec_item_list_remove(seq->items, item_it);
     }
-    if (pthread_mutex_unlock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to unlock mutex");
-    }
+    CACE_MUTEX_UNLOCK(&seq->items_mutex);
 
     if (seq->status)
     {

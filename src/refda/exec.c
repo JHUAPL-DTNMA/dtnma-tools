@@ -25,6 +25,7 @@
 #include <cace/ari/text_util.h>
 #include <cace/amm/lookup.h>
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 #include <cace/util/defs.h>
 #include <timespec.h>
 
@@ -38,11 +39,7 @@ int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target,
     refda_agent_t *agent = runctx->agent;
     CHKERR1(agent);
 
-    if (pthread_mutex_lock(&(agent->exec_state_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock exec_state_mutex");
-        return 2;
-    }
+    CACE_MUTEX_LOCK(&(agent->exec_state_mutex));
 
     refda_exec_seq_ptr_t **seq_ptr = refda_exec_seq_list_push_back_new(agent->exec_state);
 
@@ -71,11 +68,7 @@ int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target,
         refda_exec_seq_list_pop_back(NULL, agent->exec_state);
     }
 
-    if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock exec_state_mutex");
-        return 2;
-    }
+    CACE_MUTEX_UNLOCK(&(agent->exec_state_mutex));
 
     // wake up exec worker
     sem_post(&(agent->execs_sem));
@@ -115,11 +108,7 @@ int refda_exec_waiting(refda_agent_t *agent)
 
     // lock only to collect the ready sequences
     // the sequences themselves will not be touched outside of this worker
-    if (pthread_mutex_lock(&(agent->exec_state_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock exec_state_mutex");
-        return 2;
-    }
+    CACE_MUTEX_LOCK(&(agent->exec_state_mutex));
 
     // Safely clear any completed sequences and find which ones are ready to execute
     refda_exec_seq_list_it_t seq_it;
@@ -148,11 +137,7 @@ int refda_exec_waiting(refda_agent_t *agent)
         }
     }
 
-    if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
-    {
-        CACE_LOG_ERR("failed to unlock exec_state_mutex");
-        return 2;
-    }
+    CACE_MUTEX_UNLOCK(&(agent->exec_state_mutex));
 
     refda_exec_seq_list_it_t ready_it;
     for (refda_exec_seq_list_it(ready_it, ready); !refda_exec_seq_list_end_p(ready_it);)
@@ -484,9 +469,9 @@ static int refda_exec_check_sbr_condition(refda_agent_t *agent, const refda_amm_
     refda_eval_ctx_t evalctx;
     refda_eval_ctx_init(&evalctx, &runctx);
 
-    REFDA_AGENT_LOCK(agent, 2);
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     int res = refda_eval_expand_expr(&evalctx, &(sbr->condition));
-    REFDA_AGENT_UNLOCK(agent, 2);
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     if (!res)
     {
         res = refda_eval_reduce(&evalctx, result);
