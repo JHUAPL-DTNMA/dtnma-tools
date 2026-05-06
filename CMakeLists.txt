@@ -155,7 +155,6 @@ if(BUILD_COVERAGE)
   set(GCOVR_ADDITIONAL_ARGS
   )
 
-  set(COVERAGE_TARGETS "")
   set(CACE_EXCLUDES "src/refda" "src/refdm" "src/ion-app-proxy")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-cace-xml
@@ -165,7 +164,7 @@ if(BUILD_COVERAGE)
     NAME coverage-cace-html
     EXCLUDE ${CACE_EXCLUDES}
   )
-  list(APPEND COVERAGE_TARGETS coverage-cace-xml coverage-cace-html)
+  add_custom_target(coverage DEPENDS coverage-cace-xml coverage-cace-html)
 
   if(BUILD_AGENT)
     set(REFDA_EXCLUDES "src/cace" "src/refdm" "src/ion-app-proxy" "${CMAKE_BINARY_DIR}/src/cace")
@@ -177,7 +176,7 @@ if(BUILD_COVERAGE)
       NAME coverage-refda-html
       EXCLUDE ${REFDA_EXCLUDES}
     )
-    list(APPEND COVERAGE_TARGETS coverage-refda-xml coverage-refda-html)
+    add_dependencies(coverage coverage-refda-xml coverage-refda-html)
   endif(BUILD_AGENT)
 
   if(BUILD_MANAGER)
@@ -191,10 +190,8 @@ if(BUILD_COVERAGE)
       NAME coverage-refdm-html
       EXCLUDE ${REFDM_EXCLUDES}
     )
-    list(APPEND COVERAGE_TARGETS coverage-refdm-xml coverage-refdm-html)
+    add_dependencies(coverage coverage-refdm-xml coverage-refdm-html)
   endif(BUILD_MANAGER)
-
-  add_custom_target(coverage DEPENDS ${COVERAGE_TARGETS})
 endif(BUILD_COVERAGE)
 
 include(CTest)
