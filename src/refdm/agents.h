@@ -37,6 +37,7 @@
 #ifndef REFDM_AGENTS_H_
 #define REFDM_AGENTS_H_
 
+#include "refdm/config.h"
 #include <cace/cace_data.h>
 #include <cace/ari.h>
 #include <m-string.h>

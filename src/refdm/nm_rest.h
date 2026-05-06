@@ -23,6 +23,7 @@
 #define __NM_REST_H__
 
 #include "mgr.h"
+#include "refdm/config.h"
 
 #ifdef __cplusplus
 extern "C" {

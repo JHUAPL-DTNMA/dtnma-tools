@@ -21,19 +21,19 @@
 #ifndef REFDM_NM_SQL_H_
 #define REFDM_NM_SQL_H_
 
+#include "agents.h"
+#include "mgr.h"
+#include "refdm/config.h"
+#include <cace/amm/msg_if.h>
+#include <cace/util/defs.h>
+#include <cace/ari.h>
 /* System Headers */
 #include <stdio.h>
 #include <unistd.h>
 
-#ifdef POSTGRESQL_FOUND
+#if POSTGRESQL_FOUND
 #include <libpq-fe.h>
 #endif // POSTGRESQL_FOUND
-
-#include <cace/util/defs.h>
-#include <cace/ari.h>
-#include <cace/amm/msg_if.h>
-#include "agents.h"
-#include "mgr.h"
 
 #ifdef __cplusplus
 extern "C" {

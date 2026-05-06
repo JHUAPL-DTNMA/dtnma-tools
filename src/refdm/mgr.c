@@ -40,11 +40,10 @@
  *****************************************************************************/
 
 #include "mgr.h"
-
 #include "ingress.h"
 #if CIVETWEB_FOUND
 #include "nm_rest.h"
-#endif
+#endif // CIVETWEB_FOUND
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
@@ -63,7 +62,7 @@ static char *refdm_envdup(const char *name)
     return cpy;
 }
 
-#endif
+#endif // POSTGRESQL_FOUND
 
 void refdm_mgr_init(refdm_mgr_t *mgr)
 {
@@ -90,7 +89,7 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
 #if CIVETWEB_FOUND
     mgr->rest_listen_port = 8089;
     mgr->rest             = NULL;
-#endif
+#endif // CIVETWEB_FOUND
 #if POSTGRESQL_FOUND
 
     // setting sql info
@@ -106,7 +105,7 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
         CACE_LOG_INFO("Initializing agents from DB");
         refdm_db_load_agents(mgr);
     }
-#endif
+#endif // POSTGRESQL_FOUND
 }
 
 void refdm_mgr_deinit(refdm_mgr_t *mgr)
@@ -120,7 +119,7 @@ void refdm_mgr_deinit(refdm_mgr_t *mgr)
     free(mgr->sql_info.password);
     free(mgr->sql_info.database);
     pthread_mutex_destroy(&(mgr->sql_lock));
-#endif
+#endif // POSTGRESQL_FOUND
 
     pthread_mutex_destroy(&(mgr->agent_mutex));
     refdm_agent_dict_clear(mgr->agent_dict);
@@ -156,7 +155,7 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
     {
         return 3;
     }
-#endif
+#endif // CIVETWEB_FOUND
 
     return 0;
 }
@@ -169,7 +168,7 @@ int refdm_mgr_stop(refdm_mgr_t *mgr)
 #if CIVETWEB_FOUND
     refdm_nm_rest_stop(mgr->rest);
     mgr->rest = NULL;
-#endif
+#endif // CIVETWEB_FOUND
 
     cace_threadset_join(mgr->threads);
 
@@ -221,7 +220,7 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
     refdm_db_insert_agent(eid);
     m_string_clear(eid);
     CACE_LOG_INFO("logging agent in db finished");
-#endif
+#endif // POSTGRESQL_FOUND
 
     return agent;
 }
@@ -278,5 +277,5 @@ void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
 #else
     cace_ari_list_reset(agent->rptsets);
     agent->mgr_time = 0;
-#endif
+#endif // POSTGRESQL_FOUND
 }
