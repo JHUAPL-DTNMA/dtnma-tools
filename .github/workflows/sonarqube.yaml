@@ -93,13 +93,11 @@ jobs:
           DB_USER: 'tester'
           DB_PASSWORD: 'tester'
         run: |
-          exit 0 # FIXME remove
           ./item-test/run.sh prep
           ./item-test/run.sh test
       - name: Collect coverage
         run: |
           ./build.sh --target coverage-sonarqube -v
-          xmlstarlet fo build/default/coverage-sonarqube.xml
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7.2.1
         env:
@@ -108,4 +106,3 @@ jobs:
           args: >
             --define sonar.coverageReportPaths=build/default/coverage-sonarqube.xml
             --define "sonar.cfamily.compile-commands=${{env.BUILD_WRAPPER_OUT_DIR}}/compile_commands.json"
-            -Dsonar.verbose=true
