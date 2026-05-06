@@ -54,6 +54,10 @@ add_custom_target(
     COMMENT "Generating API documentation with Doxygen"
     USES_TERMINAL
 )
+add_custom_target(
+    docs-api
+    DEPENDS docs-api-html
+)
 install(
     FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/index.html
@@ -104,6 +108,10 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
         docs-api-misspelling
         DEPENDS "misspelling.txt" "misspelling-ctx.txt"
     )
+    add_dependencies(
+        docs-api
+        docs-api-misspelling
+    )
 endif(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
 
 if(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
@@ -117,6 +125,10 @@ if(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
         COMMAND ${MAKE_EXECUTABLE}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/latex
         COMMENT "Generating API documentation PDF"
+    )
+    add_dependencies(
+        docs-api
+        docs-api-pdf
     )
     install(
         FILES

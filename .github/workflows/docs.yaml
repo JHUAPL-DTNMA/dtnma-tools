@@ -57,7 +57,7 @@ jobs:
           -DBUILD_TESTING=OFF -DBUILD_UNITTEST=OFF -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=OFF
           -DBUILD_DOCS_API=ON
       - name: Build
-        run: ./build.sh --target docs-api-html  ${{github.event_name != 'pull_request' && 'docs-api-pdf' || ''}} docs-api-misspelling
+        run: ./build.sh --target docs-api
       - name: Misspelling
         env:
           MISSPELLING_TXT: 'build/default/docs/api/misspelling.txt'
