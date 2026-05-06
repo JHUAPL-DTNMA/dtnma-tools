@@ -164,27 +164,34 @@ if(BUILD_COVERAGE)
     NAME coverage-cace-html
     EXCLUDE ${CACE_EXCLUDES}
   )
+  add_custom_target(coverage DEPENDS coverage-cace-xml coverage-cace-html)
 
-  set(REFDA_EXCLUDES "src/cace" "src/refdm" "src/ion-app-proxy" "${CMAKE_BINARY_DIR}/src/cace")
-  setup_target_for_coverage_gcovr_xml(
-    NAME coverage-refda-xml
-    EXCLUDE ${REFDA_EXCLUDES}
-  )
-  setup_target_for_coverage_gcovr_html(
-    NAME coverage-refda-html
-    EXCLUDE ${REFDA_EXCLUDES}
-  )
+  if(BUILD_AGENT)
+    set(REFDA_EXCLUDES "src/cace" "src/refdm" "src/ion-app-proxy" "${CMAKE_BINARY_DIR}/src/cace")
+    setup_target_for_coverage_gcovr_xml(
+      NAME coverage-refda-xml
+      EXCLUDE ${REFDA_EXCLUDES}
+    )
+    setup_target_for_coverage_gcovr_html(
+      NAME coverage-refda-html
+      EXCLUDE ${REFDA_EXCLUDES}
+    )
+    add_dependencies(coverage coverage-refda-xml coverage-refda-html)
+  endif(BUILD_AGENT)
 
-  # include ion-app-proxy with refdm
-  set(REFDM_EXCLUDES "src/cace" "src/refda" "${CMAKE_BINARY_DIR}/src/cace")
-  setup_target_for_coverage_gcovr_xml(
-    NAME coverage-refdm-xml
-    EXCLUDE ${REFDM_EXCLUDES}
-  )
-  setup_target_for_coverage_gcovr_html(
-    NAME coverage-refdm-html
-    EXCLUDE ${REFDM_EXCLUDES}
-  )
+  if(BUILD_MANAGER)
+    # include ion-app-proxy with refdm
+    set(REFDM_EXCLUDES "src/cace" "src/refda" "${CMAKE_BINARY_DIR}/src/cace")
+    setup_target_for_coverage_gcovr_xml(
+      NAME coverage-refdm-xml
+      EXCLUDE ${REFDM_EXCLUDES}
+    )
+    setup_target_for_coverage_gcovr_html(
+      NAME coverage-refdm-html
+      EXCLUDE ${REFDM_EXCLUDES}
+    )
+    add_dependencies(coverage coverage-refdm-xml coverage-refdm-html)
+  endif(BUILD_MANAGER)
 endif(BUILD_COVERAGE)
 
 include(CTest)
