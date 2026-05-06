@@ -42,8 +42,6 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     container: ubuntu:24.04
-    env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
       - name: Set up OS
         env:
@@ -75,11 +73,9 @@ jobs:
           -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON
           -DBUILD_ION_PROXY=OFF
           -DTRANSPORT_ION_BP=OFF
-      - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7.2.1
-      - name: Run Build Wrapper
-        run: |
-          build-wrapper-linux-x86-64 --out-dir ${{env.BUILD_WRAPPER_OUT_DIR}} ./build.sh
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Build
+        run: ./build.sh
       - name: Install
         run: ./build.sh install
       - name: System Path
@@ -104,5 +100,5 @@ jobs:
           SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
         with:
           args: >
+            --define sonar.cfamily.compile-commands=build/default/compile_commands.json
             --define sonar.coverageReportPaths=build/default/coverage-sonarqube.xml
-            --define "sonar.cfamily.compile-commands=${{env.BUILD_WRAPPER_OUT_DIR}}/compile_commands.json"
