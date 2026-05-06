@@ -23,6 +23,7 @@
 #ifndef CACE_MUTEX_H_
 #define CACE_MUTEX_H_
 
+#include "logging.h"
 #include "defs.h"
 
 #ifdef __cplusplus

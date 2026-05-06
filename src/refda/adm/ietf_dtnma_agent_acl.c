@@ -40,7 +40,7 @@
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
-#define AGENT_ACL_LOCK(agent) CACE_MUTEX_LOCK(&((agent)->acl_mutex))
+#define AGENT_ACL_LOCK(agent)   CACE_MUTEX_LOCK(&((agent)->acl_mutex))
 #define AGENT_ACL_UNLOCK(agent) CACE_MUTEX_UNLOCK(&((agent)->acl_mutex))
 
 static void refda_acl_pre_remove_access(refda_acl_t *acl, refda_acl_access_t *access)
