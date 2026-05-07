@@ -31,7 +31,7 @@ typedef struct
 // clang-format off
 /** Map from non-negative literal type enumerations to names.
  * These are from the IANA sub-registries "Literal Types" and
- * "Managed Object Types" from @cite IANA:DTNMA.
+ * "Managed Object Types" from @cite iana:dtnma.
  */
 static _ari_type_name_pair_t _ari_type_names[] = {
     {CACE_ARI_TYPE_LITERAL, "LITERAL"},

@@ -40,7 +40,7 @@ extern "C" {
 /** Use cJSON for encoding. */
 #cmakedefine01 cJSON_FOUND
 
-/**Use pgsql for persistent storage. */
+/**Use PostgreSQL for persistent storage. */
 #cmakedefine01 POSTGRESQL_FOUND
 
 #ifdef __cplusplus

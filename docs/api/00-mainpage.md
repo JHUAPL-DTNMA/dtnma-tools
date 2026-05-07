@@ -18,7 +18,7 @@ limitations under the License.
 -->
 
 This documentation is for the DTNMA reference tools application programming interface (API) in the C language and technical discussion of its command line tools and daemons.
-This is an implementation of DTNMA @cite rfc9675, its Application Management Model (AMM) @cite ietf-dtn-amm-05 objects, values, and typing system, Application Resource Identifier (ARI) encoding @cite ietf-dtn-ari-06, and Asynchronous Management Protocol (AMP) daemons @cite ietf-dtn-amp-02.
+This is an implementation of DTNMA @cite rfc9675, its Application Management Model (AMM) @cite draft-ietf-dtn-amm objects, values, and typing system, Application Resource Identifier (ARI) encoding @cite draft-ietf-dtn-ari, and Asynchronous Management Protocol (AMP) daemons @cite draft-ietf-dtn-amp.
 
 The breakdown of this project source and built artifacts are shown below.
 

@@ -36,7 +36,7 @@ There are related algorithmic types and functions like cace_ari_visit() and cace
 # AMM Definitions
 
 The `cace/amm` directory and @ref group_amm topic deals with aspects of the AMM such as the abstract object structure and value typing subsystem.
-Types within the AMM extend beyond the built-in types of ARI values into "semantic types" as defined in Section 3.3 of the AMM @cite ietf-dtn-amm-05.
+Types within the AMM extend beyond the built-in types of ARI values into "semantic types" as defined in Section 3.3 of the AMM @cite draft-ietf-dtn-amm.
 
 The type ::cace_amm_obj_store_t is used to register and lookup abstract AMM object handles, which used within the @ref refda for state keeping.
 There are related algorithmic types and functions like cace_amm_lookup_deref() for object dereferencing and cace_amm_actual_param_set_populate() for parameter handling.

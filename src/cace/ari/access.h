@@ -237,7 +237,7 @@ struct cace_ari_tbl_s *cace_ari_set_tbl(cace_ari_t *ari, struct cace_ari_tbl_s *
  *
  * @param[in] ari The ARI to read.
  * @return Pointer to the contained data, if present, otherwise NULL.
- * @notice This data will always have a terminating null byte.
+ * @note This data will always have a terminating null byte.
  */
 const cace_data_t *cace_ari_cget_tstr(const cace_ari_t *ari);
 /** @overload

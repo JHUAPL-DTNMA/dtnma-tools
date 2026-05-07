@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-/** Implement the expansion procedure from Section TBD of @cite ietf-dtn-amm-01.
+/** Implement the expansion procedure from Section TBD of @cite draft-ietf-dtn-amm.
  *
  * @param[in,out] seq A freshly initialized sequence to expand into
  * with its @c runctx already set.
@@ -44,7 +44,7 @@ extern "C" {
  */
 int refda_exec_proc_expand(refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari_t *target);
 
-/** Implement the running procedure from Section TBD of @cite ietf-dtn-amm-01.
+/** Implement the running procedure from Section TBD of @cite draft-ietf-dtn-amm.
  * This executes items in a sequence until the first deferred completion
  * or execution failure.
  *

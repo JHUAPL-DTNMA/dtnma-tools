@@ -145,7 +145,7 @@ union cace_ari_prim_val_u
     struct cace_ari_rptset_s *as_rptset;
 };
 
-/** Represent a literal-value ARI in accordance with ARI @cite ietf-dtn-ari-06.
+/** Represent a literal-value ARI in accordance with ARI @cite draft-ietf-dtn-ari.
  *
  * A literal ARI is self-contained and fully identifies its own value.
  * Literal values have an optional type part and a mandatory value part.

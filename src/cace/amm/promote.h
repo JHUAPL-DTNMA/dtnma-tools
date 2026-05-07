@@ -77,7 +77,7 @@ void cace_amm_promote_init(cace_amm_promote_state_t *obj);
 void cace_amm_promote_deinit(cace_amm_promote_state_t *obj);
 
 /** Determine the numeric type which is the least common promotion type.
- * This is done in accordance with Section 6.11.2.1 of @cite amm.
+ * This is done in accordance with Section 6.11.2.1 of AMM @cite draft-ietf-dtn-amm.
  *
  * @param[out] result The promotion type if the return is zero.
  * @param[in] lt_val The left input value.
