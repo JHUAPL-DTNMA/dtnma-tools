@@ -44,7 +44,7 @@ jobs:
               ruby build-essential autoconf libtool \
               flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev \
               doxygen graphviz plantuml \
-              ${{github.event_name != 'pull_request' && 'dblatex texlive texlive-latex-extra texlive-font-utils' || ''}} \
+              ${{github.event_name != 'pull_request' && 'dblatex texlive texlive-latex-extra texlive-font-utils' || 'texlive-binaries'}} \
               xmlstarlet aspell
       - name: Dependency build
         env:
