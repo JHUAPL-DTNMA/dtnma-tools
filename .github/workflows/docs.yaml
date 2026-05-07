@@ -53,6 +53,7 @@ jobs:
       - name: Prep
         run: >
           ./prep.sh
+          -DBUILD_ION_PROXY=OFF -DTRANSPORT_ION_BP=OFF
           -DBUILD_TESTING=OFF -DBUILD_UNITTEST=OFF -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=OFF
           -DBUILD_DOCS_API=ON
       - name: Build
