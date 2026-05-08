@@ -120,12 +120,8 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
                 }
                 else
                 {
-#if (defined(VXWORKS) || defined(mingw))
-                    mkdir(filepath);
-#else
                     // This will fail if directory already exists, which is acceptable
-                    mkdir(filepath, 0777);
-#endif
+                    mkdir(filepath, 0770);
                 }
             }
         }

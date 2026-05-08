@@ -77,7 +77,7 @@ static void timespec_normalize(struct timespec *target)
     // return;
 
     // Adjust the seconds and nanos such that the absolute value of the nanos field is < 1 billion
-    long adj_sec = target->tv_nsec / NANOS_IN_SEC;
+    cace_ari_subsec_t adj_sec = target->tv_nsec / NANOS_IN_SEC;
     target->tv_sec += adj_sec;
 
     target->tv_nsec -= (adj_sec * NANOS_IN_SEC);
@@ -574,8 +574,8 @@ static int numeric_mul_timespec(cace_ari_t *result, const cace_ari_t *valueA, co
         return RET_FAIL_UNDEFINED;
     }
 
-    time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
-    long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
+    time_t            valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
+    cace_ari_subsec_t valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
 
     struct timespec result_TS;
     switch (valueB->as_lit.prim_type)
@@ -607,14 +607,14 @@ static int numeric_mul_timespec(cace_ari_t *result, const cace_ari_t *valueA, co
             // Calculate the seconds (as a double) and extract the integral and the fraction parts out.
             // Note we assign the integral part to result_TS.tv_sec, and the fractional part is sent to
             // result_TS.tv_nsec
-            double sec_double = valueA_sec * scalar_double;
+            double sec_double = (double)valueA_sec * scalar_double;
             double sec_int;
             double sec_frac  = modf(sec_double, &sec_int);
-            result_TS.tv_sec = sec_int;
+            result_TS.tv_sec = (time_t)sec_int;
 
-            result_TS.tv_nsec = valueA_nano * scalar_double;
+            result_TS.tv_nsec = (cace_ari_subsec_t)((double)valueA_nano * scalar_double);
             // Adjust nanos to take into account the factional second component
-            result_TS.tv_nsec += (sec_frac * NANOS_IN_SEC);
+            result_TS.tv_nsec += (cace_ari_subsec_t)(sec_frac * NANOS_IN_SEC);
             break;
         }
         default:
@@ -676,8 +676,8 @@ static int numeric_div_timespec(cace_ari_t *result, const cace_ari_t *valueA, co
         return RET_FAIL_UNDEFINED;
     }
 
-    time_t valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
-    long   valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
+    time_t            valueA_sec  = valueA->as_lit.value.as_timespec.tv_sec;
+    cace_ari_subsec_t valueA_nano = valueA->as_lit.value.as_timespec.tv_nsec;
 
     struct timespec result_TS;
     switch (valueB->as_lit.prim_type)
@@ -722,13 +722,15 @@ static int numeric_div_timespec(cace_ari_t *result, const cace_ari_t *valueA, co
                 return RET_FAIL_UNDEFINED;
             }
 
-            result_TS.tv_sec  = valueA_sec / scalar_double;
-            result_TS.tv_nsec = valueA_nano / scalar_double;
+            result_TS.tv_sec  = (time_t)((double)valueA_sec / scalar_double);
+            result_TS.tv_nsec = (cace_ari_subsec_t)((double)valueA_nano / scalar_double);
             // Adjust nanos to take into account the factional second component. Note do not adjust if the
             // scalar is infinite (since the above 2 lines will resolve to 0) but the line below may not.
             if (scalar_class != FP_INFINITE)
             {
-                result_TS.tv_nsec += ((valueA_sec - (result_TS.tv_sec * scalar_double)) * NANOS_IN_SEC) / scalar_double;
+                result_TS.tv_nsec +=
+                    (cace_ari_subsec_t)(((double)valueA_sec - ((double)result_TS.tv_sec * scalar_double))
+                                        * (double)NANOS_IN_SEC / scalar_double);
             }
             break;
         }
@@ -1722,7 +1724,7 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
             {
                 state = REFDA_EXEC_RUNNING;
             }
-            cace_ari_set_byte(cace_ari_array_get(row, 2), state);
+            cace_ari_set_prim_int64(cace_ari_array_get(row, 2), state);
         }
 
         // append the row
@@ -1805,9 +1807,9 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
         cace_ari_array_resize(row, table->ncols);
 
         cace_ari_set_tstr(cace_ari_array_get(row, 0), m_string_get_cstr(ns->org_id.name), true);
-        cace_ari_set_int(cace_ari_array_get(row, 1), ns->org_id.intenum);
+        cace_ari_set_prim_int64(cace_ari_array_get(row, 1), ns->org_id.intenum);
         cace_ari_set_tstr(cace_ari_array_get(row, 2), m_string_get_cstr(ns->model_id.name), true);
-        cace_ari_set_int(cace_ari_array_get(row, 3), ns->model_id.intenum);
+        cace_ari_set_prim_int64(cace_ari_array_get(row, 3), ns->model_id.intenum);
         {
             m_string_t buf;
             m_string_init(buf);
@@ -5760,11 +5762,13 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
         CACE_LOG_ERR("Invalid parameter, unable to continue");
         return;
     }
-    const cace_ari_t *regexp      = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
-    const char       *regexp_text = cace_ari_cget_tstr_cstr(regexp);
+    const cace_ari_t *regexp        = refda_oper_eval_ctx_get_aparam_index(ctx, 0);
+    const char       *regexp_text   = cace_ari_cget_tstr_cstr(regexp);
+    const size_t      regexp_strlen = cace_ari_cget_tstr_strlen(regexp);
 
-    const cace_ari_t *value      = refda_oper_eval_ctx_get_operand_index(ctx, 0);
-    const char       *value_text = cace_ari_cget_tstr_cstr(value);
+    const cace_ari_t *value        = refda_oper_eval_ctx_get_operand_index(ctx, 0);
+    const char       *value_text   = cace_ari_cget_tstr_cstr(value);
+    const size_t      value_strlen = cace_ari_cget_tstr_strlen(value);
 
     bool is_match = false;
     // match only text string values
@@ -5774,8 +5778,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
         const int   opts        = PCRE2_ANCHORED | PCRE2_ENDANCHORED;
         int         errorcode   = 0;
         PCRE2_SIZE  erroroffset = 0;
-        pcre2_code *cfg =
-            pcre2_compile((PCRE2_SPTR8)regexp_text, strlen(regexp_text), opts, &errorcode, &erroroffset, NULL);
+        pcre2_code *cfg = pcre2_compile((PCRE2_SPTR8)regexp_text, regexp_strlen, opts, &errorcode, &erroroffset, NULL);
         if (!cfg)
         {
             CACE_LOG_ERR("Failed to compile regex pattern (error %d at %z): %s", errorcode, erroroffset, regexp_text);
@@ -5785,7 +5788,7 @@ static void refda_adm_ietf_dtnma_agent_oper_match_regexp(refda_oper_eval_ctx_t *
             pcre2_match_data *md   = pcre2_match_data_create_from_pattern(cfg, NULL);
             const int         opts = 0;
             // ignore terminating null
-            int res = pcre2_match(cfg, (PCRE2_SPTR8)value_text, strlen(value_text), 0, opts, md, NULL);
+            int res = pcre2_match(cfg, (PCRE2_SPTR8)value_text, value_strlen, 0, opts, md, NULL);
             CACE_LOG_DEBUG("Matching pattern %s with value %s, result %d", regexp_text, value_text, res);
             if (res > 0)
             {
