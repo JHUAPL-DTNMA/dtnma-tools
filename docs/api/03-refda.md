@@ -18,10 +18,11 @@ limitations under the License.
 -->
 
 The Reference DTNMA Agent (REFDA) is implemented as two portions: a reusable library (`refda`) and a set of daemons which bind the REFDA to a specific transport.
+The library files are all under the @ref group_refda topic.
 
 # REFDA Library
 
-This library is meant to implement all of the Agent behaviors defined in Section 3 and Section 6 of the AMM @cite ietf-dtn-amm-05 in a way which is independent of the exact context in which the Agent is being deployed and independent of the specific transport used for ARI/AMP messaging.
+This library is meant to implement all of the Agent behaviors defined in Section 3 and Section 6 of the AMM @cite draft-ietf-dtn-amm in a way which is independent of the exact context in which the Agent is being deployed and independent of the specific transport used for ARI/AMP messaging.
 
 # Application Interface
 

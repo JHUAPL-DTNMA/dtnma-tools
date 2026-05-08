@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains the definitions, prototypes, constants, and
  * other information necessary for the identification and
  * processing of AMM Resource Identifiers (ARIs). Every object in

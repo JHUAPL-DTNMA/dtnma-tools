@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains definitions for ARI text CODEC functions.
  */
 #ifndef CACE_ARI_TEXT_UTIL_H_
@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 /** Determine if a text string conforms to the "id-text" rule from
- * Section 4.1 of @cite ietf-dtn-ari-00.
+ * Section 4.1 of @cite draft-ietf-dtn-ari.
  *
  * @param[in] text The null-terminated text string.
  * @return True if the text matches the identifier rule.

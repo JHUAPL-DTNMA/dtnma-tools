@@ -58,7 +58,7 @@ extern "C" {
 // Forward declarations
 struct mg_context;
 
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
 #define UI_SQL_SERVERLEN (80)
 #define UI_SQL_ACCTLEN   (20)
 #define UI_SQL_DBLEN     (20)
@@ -120,13 +120,13 @@ typedef struct refdm_mgr_s
     /// Access control for #agent_list and #agent_dict
     pthread_mutex_t agent_mutex;
 
-#if defined(CIVETWEB_FOUND)
+#if CIVETWEB_FOUND
     /// The port number to listen on
     uint16_t rest_listen_port;
     /// HTTP server state, managed by a background thread
     struct mg_context *rest;
 #endif
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
     /// SQL client state, managed by a background thread
     refdm_db_t      sql_info;
     pthread_mutex_t sql_lock;

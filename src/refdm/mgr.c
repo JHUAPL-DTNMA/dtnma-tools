@@ -40,15 +40,14 @@
  *****************************************************************************/
 
 #include "mgr.h"
-
 #include "ingress.h"
-#ifdef USE_CIVETWEB
+#if CIVETWEB_FOUND
 #include "nm_rest.h"
-#endif
+#endif // CIVETWEB_FOUND
 #include <cace/util/logging.h>
 #include <cace/util/defs.h>
 
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
 #include "nm_sql.h"
 
 /** Get a copy of a specific environment variable, if defined.
@@ -63,7 +62,7 @@ static char *refdm_envdup(const char *name)
     return cpy;
 }
 
-#endif
+#endif // POSTGRESQL_FOUND
 
 void refdm_mgr_init(refdm_mgr_t *mgr)
 {
@@ -87,11 +86,11 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     refdm_agent_dict_init(mgr->agent_dict);
     pthread_mutex_init(&(mgr->agent_mutex), NULL);
 
-#if defined(CIVETWEB_FOUND)
+#if CIVETWEB_FOUND
     mgr->rest_listen_port = 8089;
     mgr->rest             = NULL;
-#endif
-#if defined(HAVE_POSTGRESQL)
+#endif // CIVETWEB_FOUND
+#if POSTGRESQL_FOUND
 
     // setting sql info
     mgr->sql_info.server   = refdm_envdup("DB_HOST");
@@ -106,21 +105,21 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
         CACE_LOG_INFO("Initializing agents from DB");
         refdm_db_load_agents(mgr);
     }
-#endif
+#endif // POSTGRESQL_FOUND
 }
 
 void refdm_mgr_deinit(refdm_mgr_t *mgr)
 {
     CHKVOID(mgr);
 
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
     refdm_db_mgt_close();
     free(mgr->sql_info.server);
     free(mgr->sql_info.username);
     free(mgr->sql_info.password);
     free(mgr->sql_info.database);
     pthread_mutex_destroy(&(mgr->sql_lock));
-#endif
+#endif // POSTGRESQL_FOUND
 
     pthread_mutex_destroy(&(mgr->agent_mutex));
     refdm_agent_dict_clear(mgr->agent_dict);
@@ -151,12 +150,12 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
         return 2;
     }
 
-#ifdef USE_CIVETWEB
+#if CIVETWEB_FOUND
     if (refdm_nm_rest_start(&(mgr->rest), mgr))
     {
         return 3;
     }
-#endif
+#endif // CIVETWEB_FOUND
 
     return 0;
 }
@@ -166,10 +165,10 @@ int refdm_mgr_stop(refdm_mgr_t *mgr)
     /* Notify threads */
     cace_daemon_run_stop(&mgr->running);
 
-#ifdef USE_CIVETWEB
+#if CIVETWEB_FOUND
     refdm_nm_rest_stop(mgr->rest);
     mgr->rest = NULL;
-#endif
+#endif // CIVETWEB_FOUND
 
     cace_threadset_join(mgr->threads);
 
@@ -211,7 +210,7 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
         refdm_agent_rotate_log(agent, &mgr->agent_log_cfg, true);
     }
 
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
     /* Copy the message group to the database tables */
     CACE_LOG_INFO("logging agent in db started");
 
@@ -221,7 +220,7 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
     refdm_db_insert_agent(eid);
     m_string_clear(eid);
     CACE_LOG_INFO("logging agent in db finished");
-#endif
+#endif // POSTGRESQL_FOUND
 
     return agent;
 }
@@ -269,7 +268,7 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
 void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
 {
-#if defined(HAVE_POSTGRESQL)
+#if POSTGRESQL_FOUND
     int32_t idx = refdm_db_fetch_agent_idx(m_string_get_cstr(agent->eid));
     if (idx > 0)
     {
@@ -278,5 +277,5 @@ void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)
 #else
     cace_ari_list_reset(agent->rptsets);
     agent->mgr_time = 0;
-#endif
+#endif // POSTGRESQL_FOUND
 }

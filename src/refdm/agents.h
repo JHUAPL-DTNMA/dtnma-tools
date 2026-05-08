@@ -37,6 +37,7 @@
 #ifndef REFDM_AGENTS_H_
 #define REFDM_AGENTS_H_
 
+#include "refdm/config.h"
 #include <cace/cace_data.h>
 #include <cace/ari.h>
 #include <m-string.h>
@@ -54,7 +55,7 @@ typedef struct
     /// Endpoint ID (opaque URI) for this agent
     m_string_t eid;
 
-#if !(defined(HAVE_POSTGRESQL))
+#if !POSTGRESQL_FOUND
     /// Received RPTSET values
     cace_ari_list_t rptsets;
     /// Local time of last #rptsets

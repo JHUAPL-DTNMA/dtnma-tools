@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup amp
+ * @ingroup group_amp
  * Handle AMP binary message encoding and decoding.
  */
 #ifndef CACE_AMP_MSG_H_

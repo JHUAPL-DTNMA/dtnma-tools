@@ -15,6 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup group_cace_util
+ * Definitions for managing the runtime state of a daemon in a thread-safe way.
+ */
 #ifndef CACE_UTIL_DAEMON_RUN_H_
 #define CACE_UTIL_DAEMON_RUN_H_
 

@@ -17,7 +17,7 @@
  */
 
 /** @file
- * @ingroup amp
+ * @ingroup group_amp
  * Provide an ION BP adapter for AMP messaging.
  */
 #include "ion_bp.h"
@@ -27,7 +27,7 @@
 #include "cace/util/logging.h"
 #include "cace/util/defs.h"
 
-#if defined(ION_FOUND)
+#if ION_FOUND
 #include <bp.h>
 
 void cace_amp_ion_bp_state_init(cace_amp_ion_bp_state_t *state)

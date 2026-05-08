@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains the definitions for ARI object reference paths
  * and their segments.
  */
@@ -191,7 +191,7 @@ struct cace_ari_ac_s *cace_ari_params_set_ac(cace_ari_params_t *obj, struct cace
 struct cace_ari_am_s *cace_ari_params_set_am(cace_ari_params_t *obj, struct cace_ari_tree_s *src);
 
 /** Represent an object reference or namespace reference ARI in accordance with
- * @cite ietf-dtn-ari-06.
+ * @cite draft-ietf-dtn-ari.
  *
  * A object reference ARI identifies an object whose state is not itself captured in the identifier.
  * Put another way, a reference ARI is one what identifies anything other than a literal value.

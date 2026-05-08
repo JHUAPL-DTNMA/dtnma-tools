@@ -249,7 +249,7 @@ void test_amm_semtype_cnst_textpat(const char *pat, const char *inhex, bool expe
     cace_amm_semtype_cnst_t cnst;
     cace_amm_semtype_cnst_init(&cnst);
     int res = cace_amm_semtype_cnst_set_textpat(&cnst, pat);
-#if defined(PCRE_FOUND)
+#if PCRE_FOUND
     TEST_ASSERT_EQUAL_INT(0, res);
     check_cnst(&cnst, inhex, expect);
 #else  /* PCRE_FOUND */

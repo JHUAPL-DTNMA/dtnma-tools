@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains the definitions, prototypes, constants, and
  * other information necessary for the identification and
  * processing of AMM Resource Identifiers (ARIs). Every object in
@@ -1202,7 +1202,7 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *enc, const cace_ari_t *ari)
         if (!(obj->has_ari_type))
         {
             // no enclosing array, and only a subset of types allowed
-            // per `lit-notype` rule in Section 5.2 of @ref ietf-dtn-ari-00
+            // per `lit-notype` rule in Section 5.2 of ARI @cite draft-ietf-dtn-ari
             if (cace_ari_cbor_encode_primval(enc, obj))
             {
                 return 2;

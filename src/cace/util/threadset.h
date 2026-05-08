@@ -15,7 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/** @file
+ * @ingroup group_cace_util
+ * Definitions for managing POSIX worker threads within a process.
+ */
 #ifndef CACE_UTIL_THREADSET_H_
 #define CACE_UTIL_THREADSET_H_
 

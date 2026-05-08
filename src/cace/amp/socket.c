@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup amp
+ * @ingroup group_amp
  * Provide a POSIX datagram socket (AF_UNIX) adapter for AMP messaging.
  */
 #include "socket.h"
