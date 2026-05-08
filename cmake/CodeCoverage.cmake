@@ -420,8 +420,8 @@ endfunction() # setup_target_for_coverage_lcov
 # GCVOR command.
 function(setup_target_for_coverage_gcovr_xml)
 
-    set(options NONE)
-    set(oneValueArgs BASE_DIRECTORY BINARY_DIRECTORY NAME)
+    set(options SONARQUBE)
+    set(oneValueArgs BASE_DIRECTORY NAME)
     set(multiValueArgs EXCLUDE EXECUTABLE EXECUTABLE_ARGS DEPENDENCIES)
     cmake_parse_arguments(Coverage "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -434,11 +434,6 @@ function(setup_target_for_coverage_gcovr_xml)
         get_filename_component(BASEDIR ${Coverage_BASE_DIRECTORY} ABSOLUTE)
     else()
         set(BASEDIR ${PROJECT_SOURCE_DIR})
-    endif()
-    if(DEFINED Coverage_BINARY_DIRECTORY)
-        get_filename_component(BINARYDIR ${Coverage_BINARY_DIRECTORY} ABSOLUTE)
-    else()
-        set(BINARYDIR ${PROJECT_BINARY_DIR})
     endif()
 
     # Collect excludes (CMake 3.4+: Also compute absolute paths)
@@ -463,10 +458,15 @@ function(setup_target_for_coverage_gcovr_xml)
     set(GCOVR_XML_EXEC_TESTS_CMD
         ${Coverage_EXECUTABLE} ${Coverage_EXECUTABLE_ARGS}
     )
+    if(Coverage_SONARQUBE)
+        set(GCOVR_FORM --sonarqube)
+    else()
+        set(GCOVR_FORM --xml)
+    endif()
     # Running gcovr
     set(GCOVR_XML_CMD
-        ${GCOVR_PATH} ${GCOV_EXEC} --xml ${Coverage_NAME}.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
-        ${GCOVR_EXCLUDE_ARGS} --object-directory=${BINARYDIR}
+        ${GCOVR_PATH} ${GCOV_EXEC} ${GCOVR_FORM} ${Coverage_NAME}.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
+        ${GCOVR_EXCLUDE_ARGS} --object-directory=${PROJECT_BINARY_DIR}
     )
 
     if(CODE_COVERAGE_VERBOSE)
@@ -518,7 +518,7 @@ endfunction() # setup_target_for_coverage_gcovr_xml
 function(setup_target_for_coverage_gcovr_html)
 
     set(options NONE)
-    set(oneValueArgs BASE_DIRECTORY BINARY_DIRECTORY NAME)
+    set(oneValueArgs BASE_DIRECTORY NAME)
     set(multiValueArgs EXCLUDE EXECUTABLE EXECUTABLE_ARGS DEPENDENCIES)
     cmake_parse_arguments(Coverage "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -531,11 +531,6 @@ function(setup_target_for_coverage_gcovr_html)
         get_filename_component(BASEDIR ${Coverage_BASE_DIRECTORY} ABSOLUTE)
     else()
         set(BASEDIR ${PROJECT_SOURCE_DIR})
-    endif()
-    if(DEFINED Coverage_BINARY_DIRECTORY)
-        get_filename_component(BINARYDIR ${Coverage_BINARY_DIRECTORY} ABSOLUTE)
-    else()
-        set(BINARYDIR ${PROJECT_BINARY_DIR})
     endif()
 
     # Collect excludes (CMake 3.4+: Also compute absolute paths)
@@ -562,12 +557,12 @@ function(setup_target_for_coverage_gcovr_html)
     )
     # Create folder
     set(GCOVR_HTML_FOLDER_CMD
-        ${CMAKE_COMMAND} -E make_directory ${BINARYDIR}/${Coverage_NAME}
+        ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/${Coverage_NAME}
     )
     # Running gcovr
     set(GCOVR_HTML_CMD
         ${GCOVR_PATH} ${GCOV_EXEC} --html ${Coverage_NAME}/index.html --html-details -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
-        ${GCOVR_EXCLUDE_ARGS} --object-directory=${BINARYDIR}
+        ${GCOVR_EXCLUDE_ARGS} --object-directory=${PROJECT_BINARY_DIR}
     )
 
     if(CODE_COVERAGE_VERBOSE)
