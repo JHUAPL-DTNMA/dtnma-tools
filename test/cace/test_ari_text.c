@@ -664,7 +664,7 @@ void test_ari_text_decode_lit_prim_tstr(const char *text, const char *expect)
     if (expect)
     {
         cace_data_t expect_data;
-        cace_data_init_view(&expect_data, strlen(expect) + 1, (cace_data_ptr_t)expect);
+        cace_data_init_view_cstr(&expect_data, expect);
         TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
         TEST_ASSERT_EQUAL_INT(expect_data.len, ari.as_lit.value.as_data.len);
         TEST_ASSERT_EQUAL_STRING(expect_data.ptr, ari.as_lit.value.as_data.ptr);
@@ -701,7 +701,7 @@ void test_ari_text_decode_lit_typed_tstr(const char *text, const char *expect, i
     if (expect)
     {
         cace_data_t expect_data;
-        cace_data_init_view(&expect_data, strlen(expect) + 1, (cace_data_ptr_t)expect);
+        cace_data_init_view_cstr(&expect_data, expect);
         TEST_ASSERT_TRUE(ari.as_lit.value.as_data.owned);
         TEST_ASSERT_EQUAL_INT(expect_data.len, ari.as_lit.value.as_data.len);
         TEST_ASSERT_EQUAL_INT(expect_len, ari.as_lit.value.as_data.len);
@@ -837,7 +837,7 @@ void test_ari_text_decode_lit_typed_label(const char *text, const char *expect_t
     if (expect_text)
     {
         cace_data_t expect_data;
-        cace_data_init_view(&expect_data, strlen(expect_text) + 1, (cace_data_ptr_t)expect_text);
+        cace_data_init_view_cstr(&expect_data, expect_text);
         TEST_ASSERT_EQUAL_INT(CACE_ARI_PRIM_TSTR, ari.as_lit.prim_type);
         TEST_ASSERT_EQUAL_STRING(expect_data.ptr, ari.as_lit.value.as_data.ptr);
         cace_data_deinit(&expect_data);
