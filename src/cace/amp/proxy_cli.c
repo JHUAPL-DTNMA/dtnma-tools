@@ -63,9 +63,9 @@ static int cace_amp_proxy_cli_real_connect(cace_amp_proxy_cli_state_t *state, co
     }
     else
     {
-        struct timespec current, cutoff;
+        struct timespec current;
         clock_gettime(CLOCK_REALTIME, &current);
-        cutoff = timespec_add(current, *timeout);
+        struct timespec cutoff = timespec_add(current, *timeout);
 
         // exponential backoff difference starting at 10ms
         long              delta_ms    = 10;
@@ -182,9 +182,9 @@ int cace_amp_proxy_cli_send(const cace_ari_list_t data, const cace_amm_msg_if_me
         timeout = &default_timeout;
     }
 
-    struct timespec current, cutoff;
+    struct timespec current;
     clock_gettime(CLOCK_REALTIME, &current);
-    cutoff = timespec_add(current, *timeout);
+    struct timespec cutoff = timespec_add(current, *timeout);
 
     CACE_LOG_DEBUG("getting FD");
     int res = pthread_mutex_timedlock(&state->sock_mutex, &cutoff);
@@ -286,9 +286,9 @@ int cace_amp_proxy_cli_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *me
             break;
         }
 
-        struct timespec current, cutoff;
+        struct timespec current;
         clock_gettime(CLOCK_REALTIME, &current);
-        cutoff = timespec_add(current, default_timeout);
+        struct timespec cutoff = timespec_add(current, default_timeout);
 
         // try connection each iteration
         CACE_LOG_DEBUG("getting FD");
