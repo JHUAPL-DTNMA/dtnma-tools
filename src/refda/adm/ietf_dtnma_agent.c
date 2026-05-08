@@ -33,6 +33,7 @@
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE */
@@ -1057,7 +1058,7 @@ static bool predicate_compose(refda_runctx_t *runctx, const cace_ari_ac_t *opera
     cace_amm_lookup_list_reserve(deref_list, cace_ari_list_size(operators_ac->items));
 
     refda_agent_t *agent = runctx->agent;
-    REFDA_AGENT_LOCK(agent, 2);
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_ari_list_it_t oper_it;
     for (cace_ari_list_it(oper_it, operators_ac->items); !cace_ari_list_end_p(oper_it); cace_ari_list_next(oper_it))
@@ -1074,7 +1075,7 @@ static bool predicate_compose(refda_runctx_t *runctx, const cace_ari_ac_t *opera
         cace_amm_lookup_list_push_move(deref_list, &deref);
     }
 
-    REFDA_AGENT_UNLOCK(agent, 2);
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     // actually evaluate and accumulate
     cace_amm_lookup_list_it_t deref_it;
@@ -1340,7 +1341,7 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
      * +-------------------------------------------------------------------------+
      */
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -1401,7 +1402,7 @@ static void refda_adm_ietf_dtnma_agent_edd_capability(refda_edd_prod_ctx_t *ctx)
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_capability BODY
@@ -1538,18 +1539,10 @@ static void refda_adm_ietf_dtnma_agent_edd_last_msg_rx_time(refda_edd_prod_ctx_t
      */
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
 
-    if (pthread_mutex_lock(&agent->instr.mutex) != 0)
-    {
-        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE);
-        return;
-    }
     cace_ari_t result = CACE_ARI_INIT_UNDEFINED;
+    CACE_MUTEX_LOCK(&(agent->instr.mutex));
     cace_ari_set_copy(&result, &agent->instr.last_time_recv);
-    if (pthread_mutex_unlock(&agent->instr.mutex) != 0)
-    {
-        CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE);
-        return;
-    }
+    CACE_MUTEX_UNLOCK(&(agent->instr.mutex));
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
@@ -1668,11 +1661,6 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
      */
 
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    if (pthread_mutex_lock(&(agent->exec_state_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock exec_state_mutex");
-        return;
-    }
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -1680,6 +1668,8 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
 
     refda_exec_seq_ptr_tree_t seq_sort;
     refda_exec_seq_ptr_tree_init(seq_sort);
+
+    CACE_MUTEX_LOCK(&(agent->exec_state_mutex));
 
     refda_exec_seq_list_it_t seq_it;
     for (refda_exec_seq_list_it(seq_it, agent->exec_state); !refda_exec_seq_list_end_p(seq_it);
@@ -1732,13 +1722,8 @@ static void refda_adm_ietf_dtnma_agent_edd_exec_running(refda_edd_prod_ctx_t *ct
     }
     refda_exec_seq_ptr_tree_clear(seq_sort);
 
+    CACE_MUTEX_UNLOCK(&(agent->exec_state_mutex));
     refda_edd_prod_ctx_set_result_move(ctx, &result);
-
-    if (pthread_mutex_unlock(&(agent->exec_state_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock exec_state_mutex");
-        return;
-    }
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_exec_running BODY
@@ -1767,7 +1752,7 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
      * +-------------------------------------------------------------------------+
      */
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -1824,7 +1809,7 @@ static void refda_adm_ietf_dtnma_agent_edd_odm_list(refda_edd_prod_ctx_t *ctx)
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_odm_list BODY
@@ -1872,7 +1857,7 @@ static void refda_adm_ietf_dtnma_agent_edd_ident_list(refda_edd_prod_ctx_t *ctx)
     const cace_ari_t *ari_base = refda_edd_prod_ctx_get_aparam_index(ctx, 2);
 
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -1958,7 +1943,7 @@ static void refda_adm_ietf_dtnma_agent_edd_ident_list(refda_edd_prod_ctx_t *ctx)
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_ident_list BODY
@@ -1991,7 +1976,7 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
     }
 
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -2045,7 +2030,7 @@ static void refda_adm_ietf_dtnma_agent_edd_typedef_list(refda_edd_prod_ctx_t *ct
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_typedef_list BODY
@@ -2079,7 +2064,7 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
     }
 
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -2146,7 +2131,7 @@ static void refda_adm_ietf_dtnma_agent_edd_const_list(refda_edd_prod_ctx_t *ctx)
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_const_list BODY
@@ -2180,7 +2165,7 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
     }
 
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -2247,7 +2232,7 @@ static void refda_adm_ietf_dtnma_agent_edd_var_list(refda_edd_prod_ctx_t *ctx)
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_var_list BODY
@@ -2286,7 +2271,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
     }
 
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -2357,7 +2342,7 @@ static void refda_adm_ietf_dtnma_agent_edd_sbr_list(refda_edd_prod_ctx_t *ctx)
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_edd_sbr_list BODY
@@ -2396,7 +2381,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
     }
 
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -2467,7 +2452,7 @@ static void refda_adm_ietf_dtnma_agent_edd_tbr_list(refda_edd_prod_ctx_t *ctx)
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     /*
      * +-------------------------------------------------------------------------+
@@ -2819,13 +2804,13 @@ static void refda_adm_ietf_dtnma_agent_ctrl_inspect(refda_ctrl_exec_ctx_t *ctx)
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
     int res = cace_amm_lookup_deref(&deref, &(ctx->runctx->agent->objs), ref);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     if (res)
     {
@@ -3029,7 +3014,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         }
     }
 
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     m_string_t *rev_date = string_list_push_new(agent->odm_names);
     {
@@ -3062,7 +3047,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
 
     refda_ctrl_exec_ctx_set_result_null(ctx);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_odm BODY
@@ -3094,7 +3079,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
     const cace_ari_t *odm_ns = refda_ctrl_exec_ctx_get_aparam_index(ctx, 0);
 
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
 
     if (odm)
@@ -3129,7 +3114,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm(refda_ctrl_exec_ctx_t *
         CACE_LOG_ERR("ODM not found or no access");
     }
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_odm BODY
@@ -3157,7 +3142,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -3199,7 +3184,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_reset(refda_ctrl_exec_ctx_t *ctx
     }
     cace_amm_lookup_deinit(&deref);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_reset BODY
@@ -3229,7 +3214,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -3272,7 +3257,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_var_store(refda_ctrl_exec_ctx_t *ctx
     }
     cace_amm_lookup_deinit(&deref);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_var_store BODY
@@ -3327,20 +3312,20 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     if (!cace_amm_obj_ns_is_odm(odm))
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3348,7 +3333,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
     if (obj_name == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3356,14 +3341,14 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_IDENT, obj_id);
     if (!acl_found)
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3371,7 +3356,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
     refda_amm_ident_desc_t *objdata = NULL;
     if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_IDENT, obj_name, obj_id))
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3437,7 +3422,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
         }
     }
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     if (is_valid)
     {
@@ -3471,7 +3456,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_ident(refda_ctrl_exec_ctx_t
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -3502,7 +3487,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_ident(refda_ctrl_exec_ctx_t
     }
     cace_amm_lookup_deinit(&deref);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_ident BODY
@@ -3553,20 +3538,20 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     if (!cace_amm_obj_ns_is_odm(odm))
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3574,7 +3559,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
     if (obj_name == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3582,14 +3567,14 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_CONST, obj_id);
     if (!acl_found)
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3597,7 +3582,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
     refda_amm_const_desc_t *objdata = NULL;
     if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_CONST, obj_name, obj_id))
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3678,7 +3663,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
         }
     }
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     if (is_valid)
     {
@@ -3711,7 +3696,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -3743,7 +3728,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_const(refda_ctrl_exec_ctx_t
 
     cace_amm_lookup_deinit(&deref);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_const BODY
@@ -3796,20 +3781,20 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
         return;
     }
 
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), ari_namespace);
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     if (!cace_amm_obj_ns_is_odm(odm))
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3817,7 +3802,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
     if (obj_name == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3825,14 +3810,14 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_VAR, obj_id);
     if (!acl_found)
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3840,7 +3825,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
     refda_amm_var_desc_t *objdata = NULL;
     if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_VAR, obj_name, obj_id))
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -3922,7 +3907,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
         }
     }
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     if (is_valid)
     {
@@ -3955,7 +3940,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -3988,7 +3973,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_var(refda_ctrl_exec_ctx_t *
 
     cace_amm_lookup_deinit(&deref);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_var BODY
@@ -4031,20 +4016,20 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
 
     refda_agent_t *agent = ctx->runctx->agent;
 
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     if (odm->model_id.intenum >= 0)
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -4052,7 +4037,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     if (obj_name == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -4060,14 +4045,14 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_SBR, obj_id);
     if (!acl_found)
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -4075,7 +4060,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
     refda_amm_sbr_desc_t *objdata = NULL;
     if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_SBR, obj_name, obj_id))
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -4171,7 +4156,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
         refda_exec_sbr_enable(agent, objdata);
     }
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     if (valid)
     {
@@ -4219,20 +4204,20 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
 
     refda_agent_t *agent = ctx->runctx->agent;
 
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_find_ns(&(agent->objs), odm_ns);
 
     if (!odm)
     {
         CACE_LOG_INFO("ODM not found");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     if (!cace_amm_obj_ns_is_odm(odm))
     {
         CACE_LOG_ERR("Invalid model ID, cannot modify an ADM");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -4240,7 +4225,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     if (obj_name == NULL)
     {
         CACE_LOG_ERR("Unable to retrieve obj name");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -4248,14 +4233,14 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     if (cace_ari_get_int(ari_obj_enum, &obj_id))
     {
         CACE_LOG_ERR("Unable to retrieve object ID");
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
     bool acl_found = refda_acl_check_ensure_object(ctx->runctx, odm, CACE_ARI_TYPE_TBR, obj_id);
     if (!acl_found)
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -4263,7 +4248,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
     refda_amm_tbr_desc_t *objdata = NULL;
     if (refda_odm_object_exists(&obj, odm, CACE_ARI_TYPE_TBR, obj_name, obj_id))
     {
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         return;
     }
 
@@ -4370,7 +4355,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         refda_exec_tbr_enable(agent, objdata);
     }
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
     if (valid)
     {
@@ -4418,7 +4403,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -4483,7 +4468,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled(refda_ctrl_exec_
     }
     cace_amm_lookup_deinit(&deref);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_ensure_rule_enabled BODY
@@ -4511,7 +4496,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -4577,7 +4562,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled(refda_ctrl_exec_c
 
     cace_amm_lookup_deinit(&deref);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_reset_rule_enabled BODY
@@ -4609,7 +4594,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t deref;
     cace_amm_lookup_init(&deref);
@@ -4678,7 +4663,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule(refda_ctrl_exec_ctx_t 
 
     cace_amm_lookup_deinit(&deref);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_ctrl_obsolete_rule BODY
@@ -5652,9 +5637,9 @@ static void refda_adm_ietf_dtnma_agent_oper_match_type(refda_oper_eval_ctx_t *ct
 
     // must be an existing type
     refda_agent_t *agent = ctx->evalctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     const cace_amm_type_t *typeobj = refda_binding_type_from_name(desired, &agent->objs);
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     if (!typeobj)
     {
         CACE_LOG_ERR("Unknown desired type");
@@ -5714,9 +5699,9 @@ static void refda_adm_ietf_dtnma_agent_oper_convert_type(refda_oper_eval_ctx_t *
 
     // must be an existing type
     refda_agent_t *agent = ctx->evalctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     const cace_amm_type_t *typeobj = refda_binding_type_from_name(desired, &agent->objs);
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     if (!typeobj)
     {
         CACE_LOG_ERR("Unknown desired type");
@@ -5929,9 +5914,9 @@ static void refda_adm_ietf_dtnma_agent_oper_match_org_int_range(refda_oper_eval_
         case CACE_ARI_IDSEG_TEXT:
         {
             refda_agent_t *agent = ctx->evalctx->runctx->agent;
-            REFDA_AGENT_LOCK(agent, );
+            CACE_MUTEX_LOCK(&agent->objs_mutex);
             const cace_amm_obj_ns_t *ns = cace_amm_obj_store_find_ns(&agent->objs, value);
-            REFDA_AGENT_UNLOCK(agent, );
+            CACE_MUTEX_UNLOCK(&agent->objs_mutex);
             if (ns && ns->org_id.has_intenum)
             {
                 org_int = ns->org_id.intenum;
@@ -6072,9 +6057,9 @@ static void refda_adm_ietf_dtnma_agent_oper_match_model_int_range(refda_oper_eva
         case CACE_ARI_IDSEG_TEXT:
         {
             refda_agent_t *agent = ctx->evalctx->runctx->agent;
-            REFDA_AGENT_LOCK(agent, );
+            CACE_MUTEX_LOCK(&agent->objs_mutex);
             const cace_amm_obj_ns_t *ns = cace_amm_obj_store_find_ns(&agent->objs, value);
-            REFDA_AGENT_UNLOCK(agent, );
+            CACE_MUTEX_UNLOCK(&agent->objs_mutex);
 
             if (ns && ns->model_id.has_intenum)
             {
@@ -6136,7 +6121,7 @@ static void refda_adm_ietf_dtnma_agent_oper_is_same_ns(refda_oper_eval_ctx_t *ct
     const cace_ari_t *value   = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     refda_agent_t *agent = ctx->evalctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     cace_amm_obj_ns_t *desired_ns = cace_amm_obj_store_find_ns(&(agent->objs), desired);
     if (!desired_ns)
     {
@@ -6165,7 +6150,7 @@ static void refda_adm_ietf_dtnma_agent_oper_is_same_ns(refda_oper_eval_ctx_t *ct
             cace_amm_lookup_deinit(&deref);
         }
     }
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_same_ns BODY
@@ -6294,9 +6279,9 @@ static void refda_adm_ietf_dtnma_agent_oper_match_object_int_range(refda_oper_ev
             cace_amm_lookup_init(&deref);
             {
                 refda_agent_t *agent = ctx->evalctx->runctx->agent;
-                REFDA_AGENT_LOCK(agent, );
+                CACE_MUTEX_LOCK(&agent->objs_mutex);
                 cace_amm_lookup_deref(&deref, &(agent->objs), value);
-                REFDA_AGENT_UNLOCK(agent, );
+                CACE_MUTEX_UNLOCK(&agent->objs_mutex);
             }
 
             bool valid;
@@ -6366,7 +6351,7 @@ static void refda_adm_ietf_dtnma_agent_oper_is_same_object(refda_oper_eval_ctx_t
     const cace_ari_t *value   = refda_oper_eval_ctx_get_operand_index(ctx, 0);
 
     refda_agent_t *agent = ctx->evalctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_lookup_t desired_obj;
     cace_amm_lookup_init(&desired_obj);
@@ -6389,7 +6374,7 @@ static void refda_adm_ietf_dtnma_agent_oper_is_same_object(refda_oper_eval_ctx_t
     }
     cace_amm_lookup_deinit(&desired_obj);
 
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_dtnma_agent_oper_is_same_object BODY
@@ -6794,9 +6779,9 @@ static void refda_adm_ietf_dtnma_agent_oper_nary_eval(refda_oper_eval_ctx_t *ctx
 
     // mutex-serialize object store access
     refda_agent_t *agent = ctx->evalctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     res = refda_eval_expand_target(&evalctx, &sub_tgt);
-    REFDA_AGENT_UNLOCK(agent, );
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     cace_ari_deinit(&sub_tgt);
     if (!res)
     {
@@ -7152,7 +7137,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
     CHKERR1(agent);
     CACE_LOG_DEBUG("Registering ADM: "
                    "ietf-dtnma-agent");
-    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     /*   START CUSTOM PRE-INIT HERE */
     /*   STOP CUSTOM PRE-INIT HERE  */
@@ -11161,7 +11146,7 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
     /*   START CUSTOM POST-INIT HERE */
     /*   STOP CUSTOM POST-INIT HERE  */
 
-    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     return 0;
 }
 /*  STOP GENERATED SOURCE HERE */

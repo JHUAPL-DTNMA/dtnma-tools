@@ -21,6 +21,7 @@
 #include <cace/ari/cbor.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 #include <cace/util/defs.h>
 #include <m-bstring.h>
 // CivetWeb includes
@@ -167,11 +168,7 @@ static int agentsGetHandler(struct mg_connection *conn)
         return HTTP_INTERNAL_ERROR;
     }
 
-    if (pthread_mutex_lock(&mgr->agent_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return HTTP_INTERNAL_ERROR;
-    }
+    CACE_MUTEX_LOCK(&mgr->agent_mutex);
     refdm_agent_list_it_t agent_it;
     for (refdm_agent_list_it(agent_it, mgr->agent_list); !refdm_agent_list_end_p(agent_it);
          refdm_agent_list_next(agent_it))
@@ -201,7 +198,7 @@ static int agentsGetHandler(struct mg_connection *conn)
         }
         cJSON_AddItemToArray(agentList, agentObj);
     }
-    pthread_mutex_unlock(&mgr->agent_mutex);
+    CACE_MUTEX_UNLOCK(&mgr->agent_mutex);
 
     SendJSON(conn, obj);
     cJSON_Delete(obj);

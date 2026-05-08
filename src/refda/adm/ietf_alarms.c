@@ -32,6 +32,7 @@
 #include <cace/amm/semtype.h>
 #include <cace/ari/text.h>
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 #include <cace/util/defs.h>
 
 /*   START CUSTOM INCLUDES HERE  */
@@ -102,7 +103,6 @@ static void refda_adm_ietf_alarms_edd_resource_inventory(refda_edd_prod_ctx_t *c
      * +-------------------------------------------------------------------------+
      */
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -113,7 +113,9 @@ static void refda_adm_ietf_alarms_edd_resource_inventory(refda_edd_prod_ctx_t *c
                                    REFDA_ADM_IETF_ALARMS_ENUM_OBJID_IDENT_RESOURCE);
     refda_amm_ident_base_t root_deref;
     refda_amm_ident_base_init(&root_deref);
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     int res = refda_amm_ident_base_populate(&root_deref, &root_ref, &(agent->objs));
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     cace_ari_deinit(&root_ref);
     if (res)
     {
@@ -126,8 +128,6 @@ static void refda_adm_ietf_alarms_edd_resource_inventory(refda_edd_prod_ctx_t *c
     refda_amm_ident_base_deinit(&root_deref);
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
-
-    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_edd_resource_inventory BODY
@@ -152,7 +152,6 @@ static void refda_adm_ietf_alarms_edd_category_inventory(refda_edd_prod_ctx_t *c
      * +-------------------------------------------------------------------------+
      */
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    REFDA_AGENT_LOCK(agent, );
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -163,7 +162,9 @@ static void refda_adm_ietf_alarms_edd_category_inventory(refda_edd_prod_ctx_t *c
                                    REFDA_ADM_IETF_ALARMS_ENUM_OBJID_IDENT_CATEGORY);
     refda_amm_ident_base_t root_deref;
     refda_amm_ident_base_init(&root_deref);
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
     int res = refda_amm_ident_base_populate(&root_deref, &root_ref, &(agent->objs));
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     cace_ari_deinit(&root_ref);
     if (res)
     {
@@ -176,8 +177,6 @@ static void refda_adm_ietf_alarms_edd_category_inventory(refda_edd_prod_ctx_t *c
     refda_amm_ident_base_deinit(&root_deref);
 
     refda_edd_prod_ctx_set_result_move(ctx, &result);
-
-    REFDA_AGENT_UNLOCK(agent, );
     /*
      * +-------------------------------------------------------------------------+
      * |STOP CUSTOM FUNCTION refda_adm_ietf_alarms_edd_category_inventory BODY
@@ -203,11 +202,7 @@ static void refda_adm_ietf_alarms_edd_shelf_list(refda_edd_prod_ctx_t *ctx)
      */
 
     refda_agent_t *agent = ctx->prodctx->runctx->agent;
-    if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock shelf_mutex");
-        return;
-    }
+    CACE_MUTEX_LOCK(&agent->alarms.shelf_mutex);
 
     cace_ari_t      result = CACE_ARI_INIT_UNDEFINED;
     cace_ari_tbl_t *table  = cace_ari_set_tbl(&result, NULL);
@@ -231,10 +226,7 @@ static void refda_adm_ietf_alarms_edd_shelf_list(refda_edd_prod_ctx_t *ctx)
         cace_ari_tbl_move_row_array(table, row);
     }
 
-    if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-    }
+    CACE_MUTEX_UNLOCK(&(agent->alarms.shelf_mutex));
     refda_edd_prod_ctx_set_result_move(ctx, &result);
     /*
      * +-------------------------------------------------------------------------+
@@ -398,11 +390,7 @@ static void refda_adm_ietf_alarms_ctrl_ensure_shelf(refda_ctrl_exec_ctx_t *ctx)
     }
 
     refda_agent_t *agent = ctx->runctx->agent;
-    if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock shelf_mutex");
-        return;
-    }
+    CACE_MUTEX_UNLOCK(&agent->alarms.shelf_mutex);
 
     cace_ari_array_it_t tbl_it;
     cace_ari_array_it(tbl_it, tbl->items);
@@ -434,11 +422,7 @@ static void refda_adm_ietf_alarms_ctrl_ensure_shelf(refda_ctrl_exec_ctx_t *ctx)
     }
     CACE_LOG_DEBUG("Affected %zu shelf rows", affected);
 
-    if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-    }
-
+    CACE_MUTEX_UNLOCK(&(agent->alarms.shelf_mutex));
     refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
@@ -480,11 +464,7 @@ static void refda_adm_ietf_alarms_ctrl_discard_shelf(refda_ctrl_exec_ctx_t *ctx)
     }
 
     refda_agent_t *agent = ctx->runctx->agent;
-    if (pthread_mutex_lock(&(agent->alarms.shelf_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock shelf_mutex");
-        return;
-    }
+    CACE_MUTEX_LOCK(&(agent->alarms.shelf_mutex));
 
     cace_ari_array_it_t tbl_it;
     cace_ari_array_it(tbl_it, tbl->items);
@@ -508,11 +488,7 @@ static void refda_adm_ietf_alarms_ctrl_discard_shelf(refda_ctrl_exec_ctx_t *ctx)
     }
     CACE_LOG_DEBUG("Affected %zu shelf rows", affected);
 
-    if (pthread_mutex_unlock(&(agent->alarms.shelf_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock alarm_mutex");
-    }
-
+    CACE_MUTEX_UNLOCK(&(agent->alarms.shelf_mutex));
     refda_ctrl_exec_ctx_set_result_null(ctx);
     /*
      * +-------------------------------------------------------------------------+
@@ -526,7 +502,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
     CHKERR1(agent);
     CACE_LOG_DEBUG("Registering ADM: "
                    "ietf-alarms");
-    REFDA_AGENT_LOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_LOCK(&agent->objs_mutex);
 
     cace_amm_obj_ns_t *adm =
         cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
@@ -1122,6 +1098,6 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
             }
         }
     }
-    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     return 0;
 }

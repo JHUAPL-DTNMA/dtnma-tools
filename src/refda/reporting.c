@@ -19,9 +19,10 @@
 #include "reporting_ctx.h"
 #include "valprod.h"
 #include "eval.h"
-#include "cace/ari/text.h"
-#include "cace/util/defs.h"
-#include "cace/util/logging.h"
+#include <cace/ari/text.h>
+#include <cace/util/mutex.h>
+#include <cace/util/defs.h>
+#include <cace/util/logging.h>
 
 int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_ari_t *result)
 {
@@ -110,9 +111,9 @@ static void refda_reporting_item_lit(refda_runctx_t *runctx, cace_ari_t *rpt_ite
         refda_eval_ctx_init(&ctx, runctx);
 
         refda_agent_t *agent = runctx->agent;
-        REFDA_AGENT_LOCK(agent, );
+        CACE_MUTEX_LOCK(&agent->objs_mutex);
         int res = refda_eval_expand_expr(&ctx, rptt_item);
-        REFDA_AGENT_UNLOCK(agent, );
+        CACE_MUTEX_UNLOCK(&agent->objs_mutex);
         if (!res)
         {
             res = refda_eval_reduce(&ctx, rpt_item);

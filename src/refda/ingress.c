@@ -19,6 +19,7 @@
 #include "agent.h"
 #include <cace/util/daemon_run.h>
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 
 void *refda_ingress_worker(void *arg)
 {
@@ -74,17 +75,9 @@ void *refda_ingress_worker(void *arg)
             }
 
             // Update the (mutex proctected) agent.instr.last_time_recv with the message's meta timestamp
-            if (pthread_mutex_lock(&agent->instr.mutex) != 0)
-            {
-                CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_ACQUIRE);
-                continue;
-            }
+            CACE_MUTEX_LOCK(&(agent->instr.mutex));
             cace_ari_set_copy(&agent->instr.last_time_recv, &meta.timestamp);
-            if (pthread_mutex_unlock(&agent->instr.mutex) != 0)
-            {
-                CACE_LOG_CRIT(REFDA_INSTR_MSG_FAIL_MUTEX_RELEASE);
-                continue;
-            }
+            CACE_MUTEX_UNLOCK(&(agent->instr.mutex));
         }
 
         if (recv_res)

@@ -50,6 +50,7 @@
 #include <cace/ari/text.h>
 #include <cace/util/daemon_run.h>
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 
 /** Handle a received RPTSET value.
  *
@@ -70,7 +71,7 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
 
     {
         bool wrote = false;
-        pthread_mutex_lock(&agent->log_mutex);
+        CACE_MUTEX_LOCK(&agent->log_mutex);
         if (agent->log_fd && mgr->agent_log_cfg.rx_rpt)
         {
             m_string_t buf;
@@ -89,7 +90,7 @@ static void handle_recv(refdm_mgr_t *mgr, refdm_agent_t *agent, cace_ari_t *val)
             // Flush file after we've written set
             fflush(agent->log_fd);
         }
-        pthread_mutex_unlock(&agent->log_mutex);
+        CACE_MUTEX_UNLOCK(&agent->log_mutex);
     }
 
     // And check for file rotation (we won't break up a set between files)

@@ -17,9 +17,10 @@
  */
 #include "acl.h"
 #include "eval.h"
-#include "cace/ari/text.h"
-#include "cace/util/logging.h"
-#include "cace/util/defs.h"
+#include <cace/ari/text.h>
+#include <cace/util/logging.h>
+#include <cace/util/mutex.h>
+#include <cace/util/defs.h>
 
 void refda_acl_group_init(refda_acl_group_t *obj)
 {
@@ -150,11 +151,7 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
 
     const cace_ari_translator_t translator = { .map_ari = acl_endpoint_filter_sub_label };
 
-    if (pthread_mutex_lock(&(agent->acl_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock agent ACL");
-        return 2;
-    }
+    CACE_MUTEX_LOCK(&(agent->acl_mutex));
 
     refda_acl_group_list_it_t grp_it;
     for (refda_acl_group_list_it(grp_it, agent->acl.groups); !refda_acl_group_list_end_p(grp_it);
@@ -181,11 +178,7 @@ int refda_acl_search_endpoint(refda_agent_t *agent, const cace_ari_t *endpoint, 
         }
     }
 
-    if (pthread_mutex_unlock(&(agent->acl_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock agent ACL");
-        return 2;
-    }
+    CACE_MUTEX_UNLOCK(&(agent->acl_mutex));
 
     refda_runctx_deinit(&runctx);
 
@@ -283,11 +276,7 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
     refda_runctx_init(&runctx);
     refda_runctx_from(&runctx, agent, NULL);
 
-    if (pthread_mutex_lock(&(agent->acl_mutex)))
-    {
-        CACE_LOG_CRIT("failed to lock agent ACL");
-        return false;
-    }
+    CACE_MUTEX_LOCK(&(agent->acl_mutex));
 
     refda_acl_id_tree_it_t grp_it;
     for (refda_acl_id_tree_it(grp_it, groups); !refda_acl_id_tree_end_p(grp_it); refda_acl_id_tree_next(grp_it))
@@ -364,11 +353,7 @@ bool refda_acl_search_permission(refda_agent_t *agent, const refda_acl_id_tree_t
         }
     }
 
-    if (pthread_mutex_unlock(&(agent->acl_mutex)))
-    {
-        CACE_LOG_CRIT("failed to unlock agent ACL");
-        return false;
-    }
+    CACE_MUTEX_UNLOCK(&(agent->acl_mutex));
 
     refda_runctx_deinit(&runctx);
     cace_ari_deinit(&from_deref);
