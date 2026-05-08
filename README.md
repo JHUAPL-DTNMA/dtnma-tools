@@ -21,7 +21,7 @@ This software package contains tools related to the Delay-Tolerant Networking Ma
 
 The current tools are based on the following specifications:
 
-* [draft-ietf-dtn-amm](https://datatracker.ietf.org/doc/html/draft-draft-ietf-dtn-amm) for behavioral models
+* [draft-ietf-dtn-amm](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-amm) for behavioral models
 * [draft-ietf-dtn-ari](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-ari) for value encoding and typing
 * [draft-ietf-dtn-adm-yang](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-adm-yang) for ADM definitions
 * [draft-ietf-dtn-amp](https://datatracker.ietf.org/doc/html/draft-ietf-dtn-amp) for messaging
