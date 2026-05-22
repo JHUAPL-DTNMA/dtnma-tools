@@ -147,21 +147,31 @@ if(BUILD_COVERAGE)
   append_coverage_compiler_flags()
 
   set(COVERAGE_EXCLUDES
-    "${CMAKE_SOURCE_DIR}/deps/"
-    "${CMAKE_SOURCE_DIR}/testroot/"
-    "${CMAKE_SOURCE_DIR}/test/"
-    "${CMAKE_BINARY_DIR}/test/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/deps/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/testroot/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test/"
+    "${CMAKE_CURRENT_BINARY_DIR}/test/"
   )
   set(GCOVR_ADDITIONAL_ARGS
+    --gcov-ignore-parse-errors=negative_hits.warn_once_per_file
+    --gcov-keep
+  )
+
+  setup_target_for_coverage_gcovr_xml(
+    NAME coverage-sonarqube
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    SONARQUBE
   )
 
   set(CACE_EXCLUDES "src/refda" "src/refdm" "src/ion-app-proxy")
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-cace-xml
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
     EXCLUDE ${CACE_EXCLUDES}
   )
   setup_target_for_coverage_gcovr_html(
     NAME coverage-cace-html
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
     EXCLUDE ${CACE_EXCLUDES}
   )
   add_custom_target(coverage DEPENDS coverage-cace-xml coverage-cace-html)
@@ -170,10 +180,12 @@ if(BUILD_COVERAGE)
     set(REFDA_EXCLUDES "src/cace" "src/refdm" "src/ion-app-proxy" "${CMAKE_BINARY_DIR}/src/cace")
     setup_target_for_coverage_gcovr_xml(
       NAME coverage-refda-xml
+      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
       EXCLUDE ${REFDA_EXCLUDES}
     )
     setup_target_for_coverage_gcovr_html(
       NAME coverage-refda-html
+      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
       EXCLUDE ${REFDA_EXCLUDES}
     )
     add_dependencies(coverage coverage-refda-xml coverage-refda-html)
@@ -184,10 +196,12 @@ if(BUILD_COVERAGE)
     set(REFDM_EXCLUDES "src/cace" "src/refda" "${CMAKE_BINARY_DIR}/src/cace")
     setup_target_for_coverage_gcovr_xml(
       NAME coverage-refdm-xml
+      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
       EXCLUDE ${REFDM_EXCLUDES}
     )
     setup_target_for_coverage_gcovr_html(
       NAME coverage-refdm-html
+      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
       EXCLUDE ${REFDM_EXCLUDES}
     )
     add_dependencies(coverage coverage-refdm-xml coverage-refdm-html)
@@ -200,6 +214,8 @@ set(CMAKE_CTEST_ARGUMENTS
   --output-on-failure
 )
 
+# Install config used by tall targets
+include(GNUInstallDirs)
 include(FindPkgConfig)
 
 # Libaries in deps but built separately
@@ -231,8 +247,6 @@ if(BUILD_MANAGER)
     message(STATUS "Found civetweb version ${civetweb_VERSION}")
     find_package(cJSON)
 endif(BUILD_MANAGER)
-
-include(GNUInstallDirs)
 
 add_subdirectory(src)
 if(BUILD_UNITTEST OR BUILD_FUZZING)
