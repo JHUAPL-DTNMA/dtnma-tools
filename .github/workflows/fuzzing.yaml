@@ -88,6 +88,7 @@ jobs:
           ./prep.sh
           -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
           -DBUILD_FUZZING=ON -DBUILD_COVERAGE=ON
+          -DBUILD_AGENT=OFF -DBUILD_MANAGER=OFF
       - name: Build
         run: ./build.sh
       - name: Install
