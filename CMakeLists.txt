@@ -174,31 +174,38 @@ if(BUILD_COVERAGE)
     BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
     EXCLUDE ${CACE_EXCLUDES}
   )
+  add_custom_target(coverage DEPENDS coverage-cace-xml coverage-cace-html)
 
-  set(REFDA_EXCLUDES "src/cace" "src/refdm" "src/ion-app-proxy" "${CMAKE_BINARY_DIR}/src/cace")
-  setup_target_for_coverage_gcovr_xml(
-    NAME coverage-refda-xml
-    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    EXCLUDE ${REFDA_EXCLUDES}
-  )
-  setup_target_for_coverage_gcovr_html(
-    NAME coverage-refda-html
-    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    EXCLUDE ${REFDA_EXCLUDES}
-  )
+  if(BUILD_AGENT)
+    set(REFDA_EXCLUDES "src/cace" "src/refdm" "src/ion-app-proxy" "${CMAKE_BINARY_DIR}/src/cace")
+    setup_target_for_coverage_gcovr_xml(
+      NAME coverage-refda-xml
+      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+      EXCLUDE ${REFDA_EXCLUDES}
+    )
+    setup_target_for_coverage_gcovr_html(
+      NAME coverage-refda-html
+      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+      EXCLUDE ${REFDA_EXCLUDES}
+    )
+    add_dependencies(coverage coverage-refda-xml coverage-refda-html)
+  endif(BUILD_AGENT)
 
-  # include ion-app-proxy with refdm
-  set(REFDM_EXCLUDES "src/cace" "src/refda" "${CMAKE_BINARY_DIR}/src/cace")
-  setup_target_for_coverage_gcovr_xml(
-    NAME coverage-refdm-xml
-    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    EXCLUDE ${REFDM_EXCLUDES}
-  )
-  setup_target_for_coverage_gcovr_html(
-    NAME coverage-refdm-html
-    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    EXCLUDE ${REFDM_EXCLUDES}
-  )
+  if(BUILD_MANAGER)
+    # include ion-app-proxy with refdm
+    set(REFDM_EXCLUDES "src/cace" "src/refda" "${CMAKE_BINARY_DIR}/src/cace")
+    setup_target_for_coverage_gcovr_xml(
+      NAME coverage-refdm-xml
+      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+      EXCLUDE ${REFDM_EXCLUDES}
+    )
+    setup_target_for_coverage_gcovr_html(
+      NAME coverage-refdm-html
+      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+      EXCLUDE ${REFDM_EXCLUDES}
+    )
+    add_dependencies(coverage coverage-refdm-xml coverage-refdm-html)
+  endif(BUILD_MANAGER)
 endif(BUILD_COVERAGE)
 
 include(CTest)
