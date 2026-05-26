@@ -44,7 +44,7 @@ then
   export CFLAGS="-std=gnu99 -Wno-error=pedantic"
   ./configure \
       --prefix=/usr \
-      --disable-dgr --disable-bssp --disable-dtpc  --disable-tc
+      --disable-dtpc --disable-tc
   make -j$(nproc)
   export -n CC CXX CFLAGS
   export LIBTOOLFLAGS="-Wnone"
