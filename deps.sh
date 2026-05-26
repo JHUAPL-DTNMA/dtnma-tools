@@ -38,16 +38,19 @@ then
   rsync --recursive ${DEPSDIR}/ion/ ${BUILDDIR}/ion/
   pushd ${BUILDDIR}/ion
 
-  patch -p1 <${SELFDIR}/deps/ion-4.1.2-remove-nm.patch
-  patch -p1 <${SELFDIR}/deps/ion-4.1.2-local-deliver.patch
-  patch -p1 <${SELFDIR}/deps/ion-4.1.2-private-headers.patch
+  patch -p1 <${SELFDIR}/deps/ion-4.1.4-remove-nm.patch
+#  patch -p1 <${SELFDIR}/deps/ion-4.1.2-private-headers.patch
   autoreconf -vif
   export CC="gcc" CXX="g++"
-  export CFLAGS="-std=gnu99"
-  ./configure --prefix=/usr
+  export CFLAGS="-std=gnu99 -Wno-error=pedantic"
+  ./configure \
+      --prefix=/usr \
+      --disable-dtpc  --disable-tc
   make -j$(nproc)
   export -n CC CXX CFLAGS
+  export LIBTOOLFLAGS="-Wnone"
   make install DESTDIR=${DESTDIR}
+  export -n LIBTOOLFLAGS
   make -j$(nproc) clean
   popd
 fi

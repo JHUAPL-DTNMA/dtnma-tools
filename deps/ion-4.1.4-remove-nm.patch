@@ -1,0 +1,310 @@
+diff --git a/Makefile.am b/Makefile.am
+index 57e98f598..2d02dc2ad 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -84,7 +84,6 @@ EXTRA_DIST =	\
+ 	$(bsspextra) \
+ 	$(amsextra) \
+ 	$(cfdpextra) \
+-	$(nmextra) \
+ 	$(restartextra)
+ #	$(twonodestcp_DATA) \
+ #	$(threenodestcpltp_DATA)
+@@ -220,7 +219,6 @@ bin_PROGRAMS = \
+ 	$(dtpcbin) \
+ 	$(bsspbin) \
+ 	$(restartbin) \
+-	$(nmbin) \
+ 	$(amsbin) \
+ 	$(cfdpbin)
+ 
+@@ -236,7 +234,6 @@ lib_LTLIBRARIES = \
+ 	$(bssplib) \
+ 	$(amslib) \
+ 	$(cfdplib) \
+-	$(nmlib) \
+ 	$(secryptlib) \
+ 	$(metadatalib)
+ 
+@@ -289,7 +286,6 @@ man_MANS = \
+ 	$(bsspmans) \
+ 	$(amsmans) \
+ 	$(cfdpmans) \
+-	$(nmmans) \
+ 	$(restartmans)
+ endif # end ENABLE_MANPAGES
+ 
+@@ -1942,142 +1938,6 @@ tccadmin_SOURCES = tc/client/tccadmin.c
+ tccadmin_LDADD = libici.la $(tclib) $(bplib) -lm
+ tccadmin_CFLAGS = $(tccflags) $(AM_CFLAGS)
+ 
+-############################
+-#
+-# NETWORK MANAGEMENT SECTION
+-#
+-############################
+-
+-# AMP version set at top
+-
+-nmbin= nm_agent nm_mgr
+-nmlib= libamp.la libampAgentADM.la
+-
+-nmPODM1 = pod2man -s 1 -c "NM executables"
+-nmPODM3 = pod2man -s 1 -c "NM libraries"
+-
+-# CBOR Library Sources
+-nm_cbor_src = \
+-	nm/contrib/QCBOR/src/UsefulBuf.c \
+-	nm/contrib/QCBOR/src/qcbor_encode.c \
+-	nm/contrib/QCBOR/src/qcbor_decode.c \
+-	nm/contrib/QCBOR/src/ieee754.c
+-
+-NM_CBOR_CFLAGS = -I $(srcdir)/nm/contrib/QCBOR/inc -DAMP_VERSION=${AMP_VERSION}
+-
+-# NM Shared library
+-#  This library is standalone (no dependencies on other ION components)
+-nm_shared_src = \
+-	nm/shared/adm/adm.c \
+-	nm/shared/msg/msg.c \
+-	nm/shared/primitives/ari.c \
+-	nm/shared/primitives/blob.c \
+-	nm/shared/primitives/ctrl.c \
+-	nm/shared/primitives/edd_var.c \
+-	nm/shared/primitives/expr.c \
+-	nm/shared/primitives/report.c \
+-	nm/shared/primitives/rules.c \
+-	nm/shared/primitives/table.c \
+-	nm/shared/primitives/tnv.c \
+-	nm/shared/utils/cbor_utils.c \
+-	nm/shared/utils/db.c \
+-	nm/shared/utils/nm_types.c \
+-	nm/shared/utils/rhht.c \
+-	nm/shared/utils/utils.c \
+-	nm/shared/utils/vector.c \
+-	$(nm_cbor_src)
+-
+-libamp_la_SOURCES = $(nm_shared_src)
+-libamp_la_CFLAGS = -I$(srcdir)/ici/library -I$(srcdir)/bpv7/library -I$(srcdir)/bpv7/bpsec/utils -I$(srcdir)/bpv7/sci -I$(srcdir)/ltp/library -I$(srcdir)/nm \
+-                  -I$(srcdir)/nm/agent $(AM_CFLAGS) $(NO_UNUSED_VARIABLE) \
+-                  $(NM_CBOR_CFLAGS)
+-# Note: ici reference is used here only for memory management.  If -DUSE_MALLOC is used for NM (not recommended), this dependency would be unneeded.
+-libamp_la_LIBADD = libici.la
+-
+-# Note: AMP Agent ADM must be built directly with the agent, whereas all other ADMs can be modularized as needed.
+-nm_agent_SOURCES = \
+-	nm/agent/ingest.c \
+-	nm/agent/instr.c \
+-	nm/agent/lcc.c \
+-	nm/agent/nmagent.c \
+-	nm/agent/ldc.c \
+-	nm/agent/rda.c \
+-	nm/shared/msg/ion_if.c \
+-	nm/agent/adm_amp_agent_impl.c \
+-	nm/agent/adm_amp_agent_agent.c \
+-	nm/shared/adm/adm_init.c
+-
+-NM_ADM_INCLUDES = -I$(srcdir)/nm/shared/adm -I$(BP_SRC_DIR)/adm -I$(BP_SRC_DIR) -I$(srcdir)/bpv7/bpsec/utils -I$(srcdir)/bpv7/sci
+-
+-nm_agent_ADM_SOURCES = \
+-	bpv7/adm/adm_bp_agent_impl.c \
+-	bpv7/adm/adm_bp_agent_agent.c \
+-	bpv7/adm/adm_bpsec_impl.c \
+-	bpv7/adm/adm_bpsec_agent.c \
+-	bpv7/adm/adm_ion_bp_admin_impl.c \
+-	bpv7/adm/adm_ion_bp_admin_agent.c \
+-	nm/agent/adm_ion_admin_agent.c \
+-	nm/agent/adm_ion_admin_impl.c \
+-	nm/agent/adm_ionsec_admin_impl.c \
+-	nm/agent/adm_ionsec_admin_agent.c \
+-	nm/agent/adm_ion_ipn_admin_impl.c \
+-	nm/agent/adm_ion_ipn_admin_agent.c \
+-	nm/agent/adm_ion_ltp_admin_impl.c \
+-	nm/agent/adm_ion_ltp_admin_agent.c \
+-	nm/agent/adm_ltp_agent_impl.c \
+-	nm/agent/adm_ltp_agent_agent.c
+-
+-nm_mgr_ADM_SOURCES = \
+-	bpv7/adm/adm_bp_agent_mgr.c \
+-	bpv7/adm/adm_bpsec_mgr.c \
+-	bpv7/adm/adm_ion_bp_admin_mgr.c \
+-	nm/mgr/adm_amp_agent_mgr.c \
+-	nm/mgr/adm_ion_admin_mgr.c \
+-	nm/mgr/adm_ionsec_admin_mgr.c \
+-	nm/mgr/adm_ion_ipn_admin_mgr.c \
+-	nm/mgr/adm_ion_ltp_admin_mgr.c \
+-	nm/mgr/adm_ltp_agent_mgr.c
+-
+-nmextra = \
+-	nm/doc/pod1/nm_agent.pod \
+-	nm/doc/pod1/nm_mgr.pod
+-
+-nmmans = \
+-	nm/doc/nm_agent.1 \
+-	nm/doc/nm_mgr.1
+-
+-libampAgentADM_la_SOURCES = $(nm_agent_ADM_SOURCES)
+-libampAgentADM_la_CFLAGS = -I$(srcdir)/nm -I$(srcdir)/nm/shared/adm -I$(BP_SRC_DIR) -I$(BP_SRC_DIR)/library/ext/bpsec -I$(BP_SRC_DIR)/library -I$(srcdir)/ltp/library $(NM_CBOR_CFLAGS) $(AM_CFLAGS) $(NO_UNUSED_VARIABLE)
+-libampAgentADM_la_LIBADD = libamp.la libici.la $(bplib) libltp.la
+-
+-
+-nm_agent_LDADD = libici.la $(bplib) libltp.la libamp.la libampAgentADM.la $(PTHREAD_LIBS)
+-nm_agent_LDFLAGS = -L/usr/local/lib -lm -lpthread
+-
+-nm_agent_CFLAGS = -I$(srcdir)/ici/library -I$(srcdir)/bpv7/library -I$(srcdir)/nm \
+-                  -I$(srcdir)/nm/agent -I$(srcdir)/nm/shared/adm $(AM_CFLAGS) $(NO_UNUSED_VARIABLE) \
+-                  -DAGENT_ROLE $(NM_CBOR_CFLAGS) $(NM_ADM_INCLUDES)
+-
+-
+-nm_mgr_SOURCES = \
+-	nm/mgr/agents.c \
+-	nm/mgr/metadata.c \
+-	nm/mgr/nm_mgr_print.c \
+-	nm/mgr/nm_mgr_rx.c \
+-	nm/mgr/nm_mgr_sql.c \
+-	nm/mgr/nm_mgr_ui.c \
+-	nm/mgr/nm_mgr.c \
+-	nm/mgr/ui_input.c \
+-	$(nm_mgr_ADM_SOURCES) \
+-	nm/shared/msg/ion_if.c \
+-	nm/shared/adm/adm_init.c
+-
+-nm_mgr_LDADD = libamp.la libici.la $(bplib) libltp.la $(PTHREAD_LIBS)
+-
+-# Note: NCURSES and MySql support are optional and controlled at configure time with --with-mysql or --with-ncurses
+-nm_mgr_LDFLAGS = -lpthread
+-nm_mgr_CFLAGS = -I$(srcdir)/ici/library -I$(srcdir)/bpv7/library -I$(srcdir)/ltp/library -I$(srcdir)/nm -I$(srcdir)/nm/mgr $(AM_CFLAGS) $(NO_UNUSED_VARIABLE) $(NM_CBOR_CFLAGS) $(NM_ADM_INCLUDES)
+-
+ ##########################
+ #
+ # AMS SECTION
+@@ -2755,12 +2615,6 @@ check_PROGRAMS = tests/1000.loopback/dotest \
+ 	tests/bug-0015-tcpclo-bpcp-sig-handling/test \
+ 	tests/issue-330-cfdpclock-FDU-removal/cfdplisten \
+ 	tests/issue-334-cfdp-transaction-id/dotest \
+-	tests/nm-unit/dotest \
+-	tests/nm-unit/utils/vector/dotest \
+-	tests/nm-unit/utils/rhht/dotest \
+-	tests/nm-unit/utils/radix_pt/dotest \
+-	tests/nm-unit/utils/radix_ut/dotest \
+-	tests/nm-unit-ipn2/dotest \
+ 	tests/sm_subsystem/dotest \
+ 	tests/admin_public_api/ltp_loopback/dotest \
+ 	tests/admin_public_api/ltp_span_management/dotest \
+@@ -2768,7 +2622,6 @@ check_PROGRAMS = tests/1000.loopback/dotest \
+ 	tests/admin_public_api/ltp_span_crash_recovery/dotest \
+ 	tests/admin_public_api/tcp_2nodes/dotest \
+ 	tests/admin_public_api/bulk_removal/dotest
+-#	tests/nm-unit/primitives/ari/dotest
+ # Note: SPP/EPP loopback tests use shell scripts, not C programs
+ 
+ # Only build semaphore deferred deletion test if using POSIX Named Semaphores
+@@ -2776,37 +2629,6 @@ if USING_POSIX_NAMED_SEMAPHORES
+ check_PROGRAMS += tests/semaphore-deferred-deletion/dotest
+ endif
+ 
+-# Note: Built without shared nm libraries to allow compilation with USE_MALLOC flag.
+-tests_nm_unit_dotest_SOURCES = tests/nm-unit/dotest.c $(nm_agent_SOURCES) $(nm_shared_src) $(nm_agent_ADM_SOURCES)
+-tests_nm_unit_dotest_LDADD = libici.la $(bplib) libltp.la -lm $(TESTUTILOBJS) $(TESTUNITYOBJS)
+-tests_nm_unit_dotest_CFLAGS = $(nm_agent_CFLAGS) $(TESTUTILCFLAGS) $(TESTUNITYCFLAGS) -DTEST_MAIN -DUSE_MALLOC \
+-	 -I$(srcdir)/nm -I$(BP_SRC_DIR) -I$(srcdir)/$(BP_DIR)/library/ext/bpsec -I$(srcdir)/$(BP_DIR)/library -I$(srcdir)/ltp/library -I$(srcdir)/nm/shared
+-
+-tests_nm_unit_ipn2_dotest_SOURCES = tests/nm-unit-ipn2/dotest.c $(nm_agent_SOURCES) $(nm_shared_src) $(nm_agent_ADM_SOURCES)
+-tests_nm_unit_ipn2_dotest_LDADD = libici.la $(bplib) libltp.la -lm $(TESTUTILOBJS) $(TESTUNITYOBJS)
+-tests_nm_unit_ipn2_dotest_CFLAGS = $(nm_agent_CFLAGS) $(TESTUTILCFLAGS) $(TESTUNITYCFLAGS) -DTEST_MAIN -DUSE_MALLOC \
+-	 -I$(srcdir)/nm -I$(BP_SRC_DIR) -I$(srcdir)/$(BP_DIR)/library/ext/bpsec -I$(srcdir)/$(BP_DIR)/library -I$(srcdir)/ltp/library -I$(srcdir)/nm/shared
+-
+-tests_nm_unit_utils_vector_dotest_SOURCES = tests/nm-unit/utils/vector.c $(nm_shared_src)
+-tests_nm_unit_utils_vector_dotest_LDADD = -lm $(TESTUNITYOBJS) libici.la
+-tests_nm_unit_utils_vector_dotest_CFLAGS = $(libamp_la_CFLAGS) $(TESTUNITYCFLAGS) -DUSE_MALLOC
+-
+-tests_nm_unit_utils_rhht_dotest_SOURCES = tests/nm-unit/utils/rhht.c $(nm_shared_src)
+-tests_nm_unit_utils_rhht_dotest_LDADD = -lm $(TESTUNITYOBJS) libici.la
+-tests_nm_unit_utils_rhht_dotest_CFLAGS = $(libamp_la_CFLAGS) $(TESTUNITYCFLAGS) -DUSE_MALLOC -I$(srcdir)/nm/shared
+-
+-tests_nm_unit_utils_radix_pt_dotest_SOURCES = tests/nm-unit/utils/radix_pt.c tests/nm-unit/utils/radix_gen.c ici/library/radix.c
+-tests_nm_unit_utils_radix_pt_dotest_LDADD = -lm $(TESTUNITYOBJS) libici.la
+-tests_nm_unit_utils_radix_pt_dotest_CFLAGS = $(libamp_la_CFLAGS) $(TESTUNITYCFLAGS) -DUSE_MALLOC -I$(srcdir)/nm/shared -I$(srcdir)/ici/include
+-
+-tests_nm_unit_utils_radix_ut_dotest_SOURCES = tests/nm-unit/utils/radix_ut.c tests/nm-unit/utils/radix_gen.c ici/library/radix.c
+-tests_nm_unit_utils_radix_ut_dotest_LDADD = -lm $(TESTUNITYOBJS) libici.la
+-tests_nm_unit_utils_radix_ut_dotest_CFLAGS = $(libamp_la_CFLAGS) $(TESTUNITYCFLAGS) -DUSE_MALLOC -I$(srcdir)/nm/shared -I$(srcdir)/ici/include
+-
+-#tests_nm_unit_primitives_ari_dotest_SOURCES = tests/nm-unit/primitives/ari.c $(nm_agent_SOURCES)
+-#tests_nm_unit_primitives_ari_dotest_LDADD = $(nm_agent_LDADD) -lm $(TESTUTILOBJS) $(TESTUNITYOBJS)
+-#tests_nm_unit_primitives_ari_dotest_CFLAGS = $(nm_agent_CFLAGS) $(TESTUTILCFLAGS) $(TESTUNITYCFLAGS)
+-
+ tests_1000_loopback_dotest_SOURCES = tests/1000.loopback/dotest.c
+ tests_1000_loopback_dotest_LDADD = libici.la -lm $(bplib) $(ltplib) $(TESTUTILOBJS)
+ tests_1000_loopback_dotest_CFLAGS = $(bpcflags) $(AM_CFLAGS) $(TESTUTILCFLAGS)
+@@ -2906,7 +2728,6 @@ include $(top_builddir)/man-lists.mk   # am--include-marker
+ include $(top_builddir)/ici/doc/podman.mk      # am--include-marker
+ include $(top_builddir)/ltp/doc/podman.mk      # am--include-marker
+ include $(top_builddir)/dgr/doc/podman.mk      # am--include-marker
+-include $(top_builddir)/nm/doc/podman.mk       # am--include-marker
+ include $(top_builddir)/bpv7/doc/podman.mk     # am--include-marker
+ include $(top_builddir)/tc/doc/podman.mk       # am--include-marker
+ include $(top_builddir)/ams/doc/podman.mk      # am--include-marker
+diff --git a/configure.ac b/configure.ac
+index f5098105e..804a91b9a 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -685,38 +685,6 @@ if test "x$enable_sysctl_check" = xyes; then
+   fi
+ fi
+ 
+-# AMP default (user can specify version N using this command: "AMP_VERSION=N ./configure")
+-# This addition resolves the prior GNU "AMP_VERSION ?= 8" lines in Makefile.am
+-AC_ARG_VAR([AMP_VERSION], [AMP version number])
+-test -z "$AMP_VERSION" && AMP_VERSION=8
+-AC_SUBST([AMP_VERSION])
+-
+-AC_ARG_WITH([mysql],
+-  [AS_HELP_STRING([--with-mysql], [Enable MYSQL support for NM MGR])],
+-  [mysql=yes;],
+-  [])
+-if test "x$mysql" = "xyes" ; then
+-  echo "Build against libmysql... yes"
+-  CFLAGS="$CFLAGS -DHAVE_MYSQL"
+-else
+-  echo "Build against libmysql... no"
+-fi
+-AM_CONDITIONAL([ENABLE_MYSQL], [test "x$mysql" = "xyes"])
+-
+-
+-AC_ARG_WITH([ncurses],
+-  [AS_HELP_STRING([--with-ncurses], [Enable NCURSES support for NM MGR])],
+-  [ncurses=yes;],
+-  [])
+-if test "x$ncurses" = "xyes" ; then
+-  echo "Build against libncurses... yes"
+-  CFLAGS="$CFLAGS -DUSE_NCURSES"
+-  PKG_CONFIG_CFLAGS="$PKG_CONFIG_CFLAGS -DUSE_NCURSES"
+-else
+-  echo "Build against libncurses... no"
+-fi
+-AM_CONDITIONAL([ENABLE_NCURSES], [test "x$ncurses" = "xyes"])
+-
+ #
+ # allow the user running configure to choose the TCPCL_LOW_CYCLE option
+ #
+@@ -762,20 +730,6 @@ AC_SEARCH_LIBS([dlopen], [dl], [], [
+ 
+ CFLAGS="$ORIGCFLAGS"
+ 
+-AC_CHECK_LIB(
+-  [mysqlclient],
+-  [mysql_real_connect],
+-  [AC_SUBST([MYSQL_LIBS], ["-lmysqlclient"])],
+-  [AM_COND_IF([ENABLE_MYSQL], AC_MSG_ERROR([You need to install the mysqlclient library to build with MySQL.  Run configure with --with-mysql to turn on this feature.]), AC_MSG_WARN([If you wish to use MySQL for NM you will need to install the libmysqlclient.]))]
+-)
+-
+-AC_CHECK_LIB(
+-  [ncurses],
+-  [initscr],
+-  [AC_SUBST([NCURSES_LIBS], ["-lncurses -lform -lmenu -lpanel"])],
+-  [AM_COND_IF([ENABLE_NCURSES], AC_MSG_ERROR([You need to install the NCURSES library to build with NCURSES TUI support.  Run configure with --with-ncurses to turn on this feature.]), AC_MSG_WARN([If you wish to use the NCURSES TUI for NM you will need to install the NCURSES library.]))]
+-)
+-
+ # Check for programs to build documentation
+ AC_CHECK_PROGS([POD_DOCUMENTATION], [pod2man pod2html], [1] )
+ if test "$POD_DOCUMENTATION" = 1; then
