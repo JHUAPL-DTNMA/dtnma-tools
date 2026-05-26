@@ -69,9 +69,10 @@ COPY deps/ion*.patch /usr/local/src/nm/deps/
 RUN cd /usr/local/src/nm/deps/ion && \
     patch -p1 <../ion-4.1.4-remove-nm.patch && \
     autoreconf -vif && \
-    export CFLAGS="-std=gnu99" && \
+    export CFLAGS="-std=gnu99 -Wno-error=pedantic" && \
     ./configure && \
     make -j$(nproc) && \
+    export LIBTOOLFLAGS="-Wnone" && \
     make install && \
     make -j$(nproc) clean
 
