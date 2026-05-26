@@ -32,20 +32,19 @@ BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"
 echo "Installing to ${DESTDIR}"
 
-if [ "${DEPS_BUILD_ION:-1}" -ne 0 -a ! -e ${DESTDIR}/usr/include/ion.h ]
+if [[ "${DEPS_BUILD_ION:-1}" -ne 0 && ! -e ${DESTDIR}/usr/include/ion.h ]]
 then
   mkdir -p ${BUILDDIR}
   rsync --recursive ${DEPSDIR}/ion/ ${BUILDDIR}/ion/
   pushd ${BUILDDIR}/ion
 
   patch -p1 <${SELFDIR}/deps/ion-4.1.4-remove-nm.patch
-#  patch -p1 <${SELFDIR}/deps/ion-4.1.2-private-headers.patch
   autoreconf -vif
   export CC="gcc" CXX="g++"
   export CFLAGS="-std=gnu99 -Wno-error=pedantic"
   ./configure \
       --prefix=/usr \
-      --disable-dtpc  --disable-tc
+      --disable-dgr --disable-bssp --disable-dtpc  --disable-tc
   make -j$(nproc)
   export -n CC CXX CFLAGS
   export LIBTOOLFLAGS="-Wnone"
@@ -55,7 +54,7 @@ then
   popd
 fi
 
-if [ ! -e ${DESTDIR}/usr/include/qcbor/qcbor.h ]
+if [[ ! -e ${DESTDIR}/usr/include/qcbor/qcbor.h ]]
 then
   echo "Building QCBOR..."
   pushd ${DEPSDIR}/QCBOR
@@ -71,7 +70,7 @@ then
   popd
 fi
 
-if [ ! -e ${DESTDIR}/usr/include/m-lib ]
+if [[ ! -e ${DESTDIR}/usr/include/m-lib ]]
 then
   echo "Building MLIB..."
   mkdir -p ${BUILDDIR}/mlib/
@@ -84,7 +83,7 @@ then
   popd
 fi
 
-if [ ! -e ${DESTDIR}/usr/include/unity ]
+if [[ ! -e ${DESTDIR}/usr/include/unity ]]
 then
   echo "Building Unity..."
   pushd ${DEPSDIR}/unity
@@ -99,7 +98,7 @@ then
   popd
 fi
 
-if [ ! -e ${DESTDIR}/usr/include/timespec.h ]
+if [[ ! -e ${DESTDIR}/usr/include/timespec.h ]]
 then
   echo "Building timespec..."
   rsync --recursive ${DEPSDIR}/timespec/ ${BUILDDIR}/timespec/
