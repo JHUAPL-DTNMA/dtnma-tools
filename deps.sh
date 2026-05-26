@@ -52,6 +52,7 @@ then
   export -n LIBTOOLFLAGS
   make -j$(nproc) clean
   popd
+  find ${DESTDIR}/usr/include -type f
 fi
 
 if [[ ! -e ${DESTDIR}/usr/include/qcbor/qcbor.h ]]
