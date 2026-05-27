@@ -116,11 +116,9 @@ RUN --mount=type=cache,target=/var/lib/apt/lists \
     apt-get update && apt-get install -y \
     cmake ninja-build ruby pkg-config \
     flex libfl-dev bison libpcre2-dev libpq-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev
-COPY deps /usr/local/src/nm/deps
 COPY cmake /usr/local/src/nm/cmake
 COPY src /usr/local/src/nm/src
 COPY CMakeLists.txt /usr/local/src/nm/
-RUN ls -lt /usr/local/src/nm/
 RUN cd /usr/local/src/nm && \
     cmake -S . -B build/default \
       -DCMAKE_BUILD_TYPE=Debug \
