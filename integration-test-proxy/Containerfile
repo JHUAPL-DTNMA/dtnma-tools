@@ -67,13 +67,12 @@ RUN --mount=type=cache,target=/var/lib/apt/lists \
 COPY deps/ion /usr/local/src/nm/deps/ion
 COPY deps/ion*.patch /usr/local/src/nm/deps/
 RUN cd /usr/local/src/nm/deps/ion && \
-    patch -p1 <../ion-4.1.2-remove-nm.patch && \
-    patch -p1 <../ion-4.1.2-local-deliver.patch && \
-    patch -p1 <../ion-4.1.2-private-headers.patch && \
+    patch -p1 <../ion-4.1.4-remove-nm.patch && \
     autoreconf -vif && \
-    export CFLAGS="-std=gnu99" && \
+    export CFLAGS="-std=gnu99 -Wno-error=pedantic" && \
     ./configure && \
     make -j$(nproc) && \
+    export LIBTOOLFLAGS="-Wnone" && \
     make install && \
     make -j$(nproc) clean
 
@@ -129,11 +128,9 @@ RUN --mount=type=cache,target=/var/lib/apt/lists \
     apt-get update && apt-get install -y \
     cmake ninja-build ruby pkg-config \
     flex libfl-dev bison libpcre2-dev libpq-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev
-COPY deps /usr/local/src/nm/deps
 COPY cmake /usr/local/src/nm/cmake
 COPY src /usr/local/src/nm/src
 COPY CMakeLists.txt /usr/local/src/nm/
-RUN ls -lt /usr/local/src/nm/
 RUN cd /usr/local/src/nm && \
     cmake -S . -B build/default \
       -DCMAKE_BUILD_TYPE=Debug \
