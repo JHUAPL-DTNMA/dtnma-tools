@@ -17,7 +17,7 @@
  */
 
 /** @file
- * @ingroup amp
+ * @ingroup group_amp
  * Provide a POSIX datagram socket (AF_UNIX) adapter for AMP messaging.
  */
 #ifndef CACE_AMP_SOCKET_H_

@@ -21,7 +21,7 @@ The Reference DTNMA Manager (REFDM) is implemented as two portions: a reusable l
 
 # REFDM Library
 
-This library is meant to implement logical behaviors defined in Section 2.3 and Section 6.9 of the AMM @cite ietf-dtn-amm-05 in a way which is independent of the exact context in which the Manager is being deployed and independent of the specific transport used for ARI/AMP messaging.
+This library is meant to implement logical behaviors defined in Section 2.3 and Section 6.9 of the AMM @cite draft-ietf-dtn-amm in a way which is independent of the exact context in which the Manager is being deployed and independent of the specific transport used for ARI/AMP messaging.
 
 # Application Interface
 
@@ -37,9 +37,9 @@ The URI template parameter `{/TYPE,ID}` below refers to a unique identifier for 
    This index is dependent upon the order in which the agents are seen by a specific manager instance.
 
 The template parameter `{?form}` below refers to a choice of encoded form for ARIs to be sent or retrieved, as one of either:
- * The form "uri" meaning a newline-separated, URI-encoded form of ARIs consistent with the "application/uri-list" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
- * The form "cbor" meaning a sequence of CBOR-encoded form of ARIs consistent with the "application/cbor-seq" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
- * The form "cborhex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite ietf-dtn-ari-06.
+ * The form "uri" meaning a newline-separated, URI-encoded form of ARIs consistent with the "application/uri-list" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
+ * The form "cbor" meaning a sequence of CBOR-encoded form of ARIs consistent with the "application/cbor-seq" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
+ * The form "cborhex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
 
  | Method | Path                              | Description                                  |
  |--------|-----------------------------------|----------------------------------------------|
@@ -91,7 +91,7 @@ The daemon for this binding has the following additional command-line options.
 
 ## AMP Proxy Reliable Datagram Sockets {#refdm-proxy}
 
-This binding uses the Unix reliable datagram sockets (`AF_UNIX` with `SOCK_SEQPACKET`) to connect to a local AMP proxy server and communicate in accordance with Section 4.2 of AMP @cite ietf-dtn-amp-02.
+This binding uses the Unix reliable datagram sockets (`AF_UNIX` with `SOCK_SEQPACKET`) to connect to a local AMP proxy server and communicate in accordance with Section 4.2 of AMP @cite draft-ietf-dtn-amp.
 The daemon executable is named `refdm-proxy`.
 
 The daemon will attempt to connect to the proxy server at start up, with exponential back-off if the server is not responsive.

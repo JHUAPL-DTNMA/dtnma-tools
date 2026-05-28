@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_cace
  * Configuration items driven by CMake options and user tailoring.
  */
 #ifndef CACE_CONFIG_H_
@@ -27,23 +27,23 @@
 extern "C" {
 #endif
 
-/* Enable text-form parsing based on lex+yacc configuration. */
-#cmakedefine ARI_TEXT_PARSE
+/**Enable text-form parsing based on Flex+Bison (lex+yacc) configuration. */
+#cmakedefine01 ARI_TEXT_PARSE
 
-/* Enable look-up table (LUT) caching at runtime. */
-#cmakedefine ENABLE_LUT_CACHE
+/** Enable look-up table (LUT) caching at runtime. */
+#cmakedefine01 ENABLE_LUT_CACHE
 
-/* Use the PCRE2 library. */
-#cmakedefine PCRE_FOUND
+/** Use the PCRE2 library. */
+#cmakedefine01 PCRE_FOUND
 
-/* Use the ION BP library. */
-#cmakedefine ION_FOUND
+/** Use the ION BP library. */
+#cmakedefine01 ION_FOUND
 
-/* Always use UTF-8 encodings */
+/** Always use UTF-8 encodings */
 #define PCRE2_CODE_UNIT_WIDTH 8
 
-/* Able to use GNU Getopt extensions. */
-#cmakedefine HAVE_GETOPT_LONG
+/** Able to use GNU Getopt extensions. */
+#cmakedefine01 HAVE_GETOPT_LONG
 
 #ifndef CACE_MALLOC
 /** Uses the same function signature as C99 malloc().

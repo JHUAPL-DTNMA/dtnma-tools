@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  */
 #include "containers.h"
 #include "cace/util/logging.h"

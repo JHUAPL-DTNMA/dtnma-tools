@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup refda
+ * @ingroup group_refda
  * Agent Instrumentation declarations.
  */
 #ifndef REFDA_INSTR_H_

@@ -39,7 +39,7 @@ void cace_amm_semtype_cnst_deinit(cace_amm_semtype_cnst_t *obj)
         case AMM_SEMTYPE_CNST_STRLEN:
             cace_util_range_size_clear(obj->as_strlen);
             break;
-#if defined(PCRE_FOUND)
+#if PCRE_FOUND
         case AMM_SEMTYPE_CNST_TEXTPAT:
             pcre2_code_free(obj->as_textpat);
             obj->as_textpat = NULL;
@@ -89,7 +89,7 @@ int cace_amm_semtype_cnst_set_textpat(cace_amm_semtype_cnst_t *obj, const char *
 {
     CHKERR1(obj);
     CHKERR1(pat);
-#if defined(PCRE_FOUND)
+#if PCRE_FOUND
     cace_amm_semtype_cnst_deinit(obj);
 
     const int   opts        = PCRE2_ANCHORED | PCRE2_ENDANCHORED;
@@ -172,7 +172,7 @@ bool cace_amm_semtype_cnst_is_valid(const cace_amm_semtype_cnst_t *obj, const ca
             retval = cace_util_range_size_contains(*cfg, len);
             break;
         }
-#if defined(PCRE_FOUND)
+#if PCRE_FOUND
         case AMM_SEMTYPE_CNST_TEXTPAT:
         {
             const cace_data_t *data = cace_ari_cget_tstr(val);

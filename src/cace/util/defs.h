@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_cace_util
  * This file contains preprocessor utility definitions shared among the
  * ARI library.
  */

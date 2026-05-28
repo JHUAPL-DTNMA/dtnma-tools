@@ -1,4 +1,4 @@
-@techreport{ietf-dtn-amm-05,
+@techreport{draft-ietf-dtn-amm,
     number =    {draft-ietf-dtn-amm-05},
     type =      {Internet-Draft},
     institution =   {Internet Engineering Task Force},
@@ -13,7 +13,7 @@
     day =       3,
     abstract =  {This document defines a model that captures the information necessary to asynchronously manage applications within the Delay-Tolerant Networking Management Architecture (DTNMA). This model provides a set of common managed object types, data types and structures, and a template for information needed within each application data model. The built-in definitions are made to be extensible by applications without needing to modify core Agent or Manager behavior.},
 }
-@techreport{ietf-dtn-ari-06,
+@techreport{draft-ietf-dtn-ari,
     number =    {draft-ietf-dtn-ari-06},
     type =      {Internet-Draft},
     institution =   {Internet Engineering Task Force},
@@ -28,7 +28,7 @@
     day =       3,
     abstract =  {This document defines the structure, format, and features of the naming scheme for the objects defined in the Delay-Tolerant Networking Management Architecture (DTNMA) Application Management Model (AMM), in support of challenged network management solutions described in the DTNMA document. This document defines the DTNMA Application Resource Identifier (ARI), using a text-form based on the common Uniform Resource Identifier (URI) and a binary-form based on Concise Binary Object Representation (CBOR). These meet the needs for a concise, typed, parameterized, and hierarchically organized set of managed data elements.},
 }
-@techreport{ietf-dtn-adm-00,
+@techreport{draft-ietf-dtn-adm,
     number =    {draft-ietf-dtn-adm-00},
     type =      {Internet-Draft},
     institution =   {Internet Engineering Task Force},
@@ -43,7 +43,7 @@
     day =       22,
     abstract =  {This document defines a data model that captures the information necessary to asynchronously manage applications within the Delay- Tolerant Networking Management Architecture (DTNMA). This model provides a set of common type definitions, data structures, and a template for publishing standardized representations of model elements.},
 }
-@techreport{ietf-dtn-amp-02,
+@techreport{draft-ietf-dtn-amp,
     number =    {draft-ietf-dtn-amp-02},
     type =      {Internet-Draft},
     institution =   {Internet Engineering Task Force},
@@ -170,6 +170,20 @@
     month =     jan,
     abstract =  {This document presents a specification for the Bundle Protocol, adapted from the experimental Bundle Protocol specification developed by the Delay-Tolerant Networking Research Group of the Internet Research Task Force and documented in RFC 5050.},
 }
+@misc{rfc9485,
+    series =    {Request for Comments},
+    number =    9485,
+    howpublished =  {RFC 9485},
+    publisher = {RFC Editor},
+    doi =       {10.17487/RFC9485},
+    url =       {https://www.rfc-editor.org/info/rfc9485},
+    author =    {Carsten Bormann and Tim Bray},
+    title =     {{I-Regexp: An Interoperable Regular Expression Format}},
+    pagetotal = 10,
+    year =      2023,
+    month =     oct,
+    abstract =  {This document specifies I-Regexp, a flavor of regular expression that is limited in scope with the goal of interoperation across many different regular expression libraries.},
+}
 @misc{rfc9675,
     series =    {Request for Comments},
     number =    9675,
@@ -183,4 +197,8 @@
     year =      2024,
     month =     nov,
     abstract =  {The Delay-Tolerant Networking (DTN) architecture describes a type of challenged network in which communications may be significantly affected by long signal propagation delays, frequent link disruptions, or both. The unique characteristics of this environment require a unique approach to network management that supports asynchronous transport, autonomous local control, and a small footprint (in both resources and dependencies) so as to deploy on constrained devices. This document describes a DTN Management Architecture (DTNMA) suitable for managing devices in any challenged environment but, in particular, those communicating using the DTN Bundle Protocol (BP). Operating over BP requires an architecture that neither presumes synchronized transport behavior nor relies on query-response mechanisms. Implementations compliant with this DTNMA should expect to successfully operate in extremely challenging conditions, such as over unidirectional links and other places where BP is the preferred transport.},
+}
+@misc{iana:dtnma,
+    author = {{IANA}},
+    title = {{DTN Management Architecture}},
 }

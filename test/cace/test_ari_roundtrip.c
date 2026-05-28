@@ -51,7 +51,7 @@ void tearDown(void)
     }
 }
 
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
 
 TEST_CASE("ari:undefined")
 TEST_CASE("ari:null")

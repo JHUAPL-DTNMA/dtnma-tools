@@ -34,7 +34,7 @@ typedef struct
 } cace_ari_text_enc_state_t;
 
 /** Additional safe characters for ARI text and byte strings as defined in
- * Section 4.1 of @cite ietf-dtn-ari-00.
+ * Section 4.1 of @cite draft-ietf-dtn-ari.
  */
 static const char uri_safe[] = "'";
 

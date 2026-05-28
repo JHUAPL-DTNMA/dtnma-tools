@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  */
 #include "ref.h"
 #include "containers.h"

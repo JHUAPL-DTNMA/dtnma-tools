@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup refda
+ * @ingroup group_refda
  * Agent Instrumentation definitions.
  */
 #include "instr.h"
