@@ -43,7 +43,7 @@ extern "C" {
  */
 int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_ari_t *result);
 
-/** Implement the reporting procedure from Section TBD of @cite ietf-dtn-amm-01.
+/** Implement the reporting procedure from Section TBD of @cite draft-ietf-dtn-amm.
  *
  * @param[in] runctx The context for reporting.
  * @param[in] target The ARI to generate a report for.

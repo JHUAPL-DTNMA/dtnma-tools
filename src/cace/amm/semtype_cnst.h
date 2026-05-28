@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_amm
  * This file contains definitions constraints on semantic type use.
  */
 #ifndef CACE_AMM_SEMTYPE_USE_H_
@@ -25,7 +25,7 @@
 #include "cace/util/range.h"
 #include "cace/config.h"
 #include "cace/ari.h"
-#if defined(PCRE_FOUND)
+#if PCRE_FOUND
 #include <pcre2.h>
 #endif /* PCRE_FOUND */
 
@@ -45,7 +45,7 @@ enum cace_amm_semtype_cnst_type_e
     AMM_SEMTYPE_CNST_INT_BITS,
     /// Text- or byte-string length range
     AMM_SEMTYPE_CNST_STRLEN,
-#if defined(PCRE_FOUND)
+#if PCRE_FOUND
     /// Text-string pattern expression
     AMM_SEMTYPE_CNST_TEXTPAT,
 #endif /* PCRE_FOUND */
@@ -66,7 +66,7 @@ typedef struct cace_amm_semtype_cnst_s
         uint64_t as_bit_mask;
         /// Used when #type is ::AMM_SEMTYPE_CNST_STRLEN
         cace_util_range_size_t as_strlen;
-#if defined(PCRE_FOUND)
+#if PCRE_FOUND
         /// Used when #type is ::AMM_SEMTYPE_CNST_TEXTPAT
         pcre2_code *as_textpat;
 #endif /* PCRE_FOUND */

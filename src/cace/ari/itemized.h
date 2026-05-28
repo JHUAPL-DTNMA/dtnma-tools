@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /** @file
- * @ingroup ari
+ * @ingroup group_ari
  * This file contains the definitions, prototypes, constants necessary
  * to store and lookup an itemized set of ARIs.
  * See ::cace_ari_itemized_t.

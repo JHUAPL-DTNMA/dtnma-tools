@@ -360,7 +360,7 @@ int main(int argc, char *argv[])
 
     if (!retval && !m_string_empty_p(startup_exec))
     {
-#if defined(ARI_TEXT_PARSE)
+#if ARI_TEXT_PARSE
         CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(startup_exec));
         FILE *startup_file = fopen(m_string_get_cstr(startup_exec), "r");
         if (!startup_file)
@@ -384,10 +384,10 @@ int main(int argc, char *argv[])
                 retval = 3;
             }
         }
-#else  // defined(ARI_TEXT_PARSE)
+#else  // ARI_TEXT_PARSE
         CACE_LOG_CRIT("This build of REFDA and CACE is not able to parse text ARIs");
         retval = 3;
-#endif // defined(ARI_TEXT_PARSE)
+#endif // ARI_TEXT_PARSE
     }
     m_string_clear(startup_exec);
 

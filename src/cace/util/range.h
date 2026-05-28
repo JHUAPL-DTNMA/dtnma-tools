@@ -15,6 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup group_cace_util
+ * Macros and definitions for numeric ranges.
+ */
 #ifndef CACE_UTIL_RANGE_H_
 #define CACE_UTIL_RANGE_H_
 

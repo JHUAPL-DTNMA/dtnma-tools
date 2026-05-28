@@ -15,7 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/** @file
+ * @ingroup group_cace_util
+ * Definitions of macros and functions for case-insensitive text comparison.
+ */
 #ifndef CACE_NOCASE_H_
 #define CACE_NOCASE_H_
 
