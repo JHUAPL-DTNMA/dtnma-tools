@@ -59,7 +59,7 @@ then
   patch -p1 <${SELFDIR}/deps/qcbor-increase-depth.patch
   cmake -S . -B ${BUILDDIR}/QCBOR \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+    -DCMAKE_INSTALL_PREFIX=${PREFIX} \
     -DBUILD_SHARED_LIBS=YES
   cmake --build ${BUILDDIR}/QCBOR
   cmake --install ${BUILDDIR}/QCBOR
@@ -88,7 +88,7 @@ then
   export CFLAGS="-DUNITY_USE_COMMAND_LINE_ARGS -DUNITY_INCLUDE_PRINT_FORMATTED -DUNITY_INCLUDE_FLOAT -DUNITY_INCLUDE_DOUBLE"
   cmake -S . -B ${BUILDDIR}/unity \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
+    -DCMAKE_INSTALL_PREFIX=${PREFIX}
   cmake --build ${BUILDDIR}/unity -v
   export -n CFLAGS
   cmake --install ${BUILDDIR}/unity
@@ -104,7 +104,7 @@ then
   pushd ${BUILDDIR}/timespec
   cmake -S ${BUILDDIR}/timespec -B ${BUILDDIR}/timespec \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+    -DCMAKE_INSTALL_PREFIX=${PREFIX} \
     -DBUILD_TESTING=ON
   cmake --build ${BUILDDIR}/timespec -v
   cmake --build ${BUILDDIR}/timespec --target test
