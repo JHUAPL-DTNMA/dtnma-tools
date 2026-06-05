@@ -27,7 +27,7 @@ source ${SELFDIR}/setenv.sh
 
 cmake -S ${SELFDIR} -B ${SELFDIR}/build/default \
   -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
-  -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+  -DCMAKE_INSTALL_PREFIX=${PREFIX} \
   -DCMAKE_BUILD_TYPE=Debug \
   -G Ninja \
   $@
