@@ -21,10 +21,11 @@
 #include "adm/ietf.h"
 #include "adm/ietf_dtnma_agent.h"
 #include "amm/oper.h"
-#include "cace/ari/text.h"
-#include "cace/amm/lookup.h"
-#include "cace/util/logging.h"
-#include "cace/util/defs.h"
+#include <cace/ari/text.h>
+#include <cace/amm/lookup.h>
+#include <cace/util/logging.h>
+#include <cace/util/mutex.h>
+#include <cace/util/defs.h>
 
 /** Expand a reference to a literal value matching SIMPLE or EXPR typedef
  */
@@ -297,9 +298,9 @@ int refda_eval_target(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     refda_eval_ctx_t ctx;
     refda_eval_ctx_init(&ctx, runctx);
 
-    REFDA_AGENT_LOCK(runctx->agent, 1);
+    CACE_MUTEX_LOCK(&runctx->agent->objs_mutex);
     int res = refda_eval_expand_target(&ctx, target);
-    REFDA_AGENT_UNLOCK(runctx->agent, 1);
+    CACE_MUTEX_UNLOCK(&runctx->agent->objs_mutex);
     if (res)
     {
         CACE_LOG_ERR("Unable to expand target, error %d", res);
@@ -368,9 +369,9 @@ int refda_eval_filter(refda_runctx_t *runctx, cace_ari_t *result, const cace_ari
     refda_eval_ctx_init(&evalctx, runctx);
 
     // mutex-serialize object store access
-    REFDA_AGENT_LOCK(runctx->agent, 1);
+    CACE_MUTEX_LOCK(&runctx->agent->objs_mutex);
     res = refda_eval_expand_target(&evalctx, &sub_tgt);
-    REFDA_AGENT_UNLOCK(runctx->agent, 1);
+    CACE_MUTEX_UNLOCK(&runctx->agent->objs_mutex);
     if (res)
     {
         CACE_LOG_ERR("Unable to expand substituted filter, error %d", res);

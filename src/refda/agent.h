@@ -38,9 +38,6 @@
 extern "C" {
 #endif
 
-/// Error result when agent locking fails
-#define REFDA_AGENT_ERR_LOCK_FAILED 2
-
 /// Size of agent hand-off queues
 #define AGENT_QUEUE_SIZE 1024
 
@@ -127,25 +124,6 @@ typedef struct refda_agent_s
 void refda_agent_init(refda_agent_t *agent);
 
 void refda_agent_deinit(refda_agent_t *agent);
-
-/** Lock the object mutex on an agent and return if failed.
- */
-#define REFDA_AGENT_LOCK(agent, err)                   \
-    CACE_LOG_DEBUG("locking agent objects");           \
-    if (pthread_mutex_lock(&((agent)->objs_mutex)))    \
-    {                                                  \
-        CACE_LOG_CRIT("failed to lock agent objects"); \
-        return err;                                    \
-    }
-/** Unlock the object mutex on an agent and return if failed.
- */
-#define REFDA_AGENT_UNLOCK(agent, err)                   \
-    CACE_LOG_DEBUG("unlocking agent objects");           \
-    if (pthread_mutex_unlock(&((agent)->objs_mutex)))    \
-    {                                                    \
-        CACE_LOG_CRIT("failed to unlock agent objects"); \
-        return err;                                      \
-    }
 
 /** Store the current timestamp in an ARI.
  *

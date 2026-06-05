@@ -23,9 +23,10 @@
 #include <cace/ari/cbor.h>
 #include <cace/amm/typing.h>
 #include <cace/amm/semtype.h>
-#include <cace/util/logging.h>
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
+#include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 
 #include <string.h>
 #include <arpa/inet.h>
@@ -84,8 +85,8 @@ typedef struct refdm_db_pool_t
 refdm_db_pool_t dbpool[MGR_NUM_SQL_CONNECTIONS];
 
 #define checkConn(idx) (idx < MGR_NUM_SQL_CONNECTIONS && dbpool[idx].conn != NULL)
-#define getConn(idx)   pthread_mutex_lock(&dbpool[idx].lock)
-#define giveConn(idx)  pthread_mutex_unlock(&dbpool[idx].lock)
+#define getConn(idx)   CACE_MUTEX_LOCK(&dbpool[idx].lock)
+#define giveConn(idx)  CACE_MUTEX_UNLOCK(&dbpool[idx].lock)
 
 // Private functions
 static char *db_mgr_sql_prepare(size_t idx, const char *query, char *stmtName, int nParams, const Oid *paramTypes);
@@ -378,7 +379,7 @@ void refdm__db_mgt_close_conn(size_t idx)
         PQfinish(conn->conn);
 
         conn->conn = NULL;
-        pthread_mutex_unlock(&conn->lock); // Mutex must be unlocked to destroy
+        CACE_MUTEX_UNLOCK(&conn->lock); // Mutex must be unlocked to destroy
         pthread_mutex_destroy(&conn->lock);
     }
 }

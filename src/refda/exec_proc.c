@@ -25,6 +25,7 @@
 #include <cace/ari/text_util.h>
 #include <cace/amm/lookup.h>
 #include <cace/util/logging.h>
+#include <cace/util/mutex.h>
 #include <cace/util/defs.h>
 #include <timespec.h>
 
@@ -38,11 +39,7 @@ static void refda_exec_proc_pop_front(refda_exec_seq_t *seq)
 {
     CHKVOID(seq);
 
-    if (pthread_mutex_lock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return;
-    }
+    CACE_MUTEX_LOCK(&seq->items_mutex);
     // decouple front item from the sequence
     refda_exec_item_ptr_t *item_ptr;
     refda_exec_item_list_pop_at(&item_ptr, seq->items, 0);
@@ -53,10 +50,7 @@ static void refda_exec_proc_pop_front(refda_exec_seq_t *seq)
     refda_exec_item_ptr_release(item_ptr);
 
     bool is_empty = refda_exec_item_list_empty_p(seq->items);
-    if (pthread_mutex_unlock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to unlock mutex");
-    }
+    CACE_MUTEX_UNLOCK(&seq->items_mutex);
 
     // report after the entire sequence is finished
     if (seq->status && is_empty)
@@ -74,11 +68,7 @@ static void refda_exec_proc_clear(refda_exec_seq_t *seq)
 {
     CHKVOID(seq);
 
-    if (pthread_mutex_lock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return;
-    }
+    CACE_MUTEX_LOCK(&seq->items_mutex);
     // decouple and release all items from the sequence
     refda_exec_item_list_it_t item_it;
     for (refda_exec_item_list_it(item_it, seq->items); !refda_exec_item_list_end_p(item_it);)
@@ -90,10 +80,7 @@ static void refda_exec_proc_clear(refda_exec_seq_t *seq)
 
         refda_exec_item_list_remove(seq->items, item_it);
     }
-    if (pthread_mutex_unlock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to unlock mutex");
-    }
+    CACE_MUTEX_UNLOCK(&seq->items_mutex);
 
     if (seq->status)
     {
@@ -169,16 +156,10 @@ int refda_exec_proc_ctrl_finish(refda_exec_item_t *item)
 
 int refda_exec_proc_ctrl_start(refda_exec_seq_t *seq)
 {
-    if (pthread_mutex_lock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-    }
+    CACE_MUTEX_LOCK(&seq->items_mutex);
     refda_exec_item_ptr_t **front_ptr = refda_exec_item_list_front(seq->items);
     refda_exec_item_ptr_t  *item_ptr  = refda_exec_item_ptr_acquire(*front_ptr);
-    if (pthread_mutex_unlock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to unlock mutex");
-    }
+    CACE_MUTEX_UNLOCK(&seq->items_mutex);
 
     refda_exec_item_t *item = refda_exec_item_ptr_ref(item_ptr);
     CHKERR1(item->deref.obj);
@@ -256,11 +237,7 @@ int refda_exec_proc_front_status(refda_exec_item_status_t *status, refda_exec_se
     CHKERR1(seq);
 
     int retval = 0;
-    if (pthread_mutex_lock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return 2;
-    }
+    CACE_MUTEX_LOCK(&seq->items_mutex);
     if (!refda_exec_item_list_empty_p(seq->items))
     {
         refda_exec_item_ptr_t **front_ptr = refda_exec_item_list_front(seq->items);
@@ -273,11 +250,7 @@ int refda_exec_proc_front_status(refda_exec_item_status_t *status, refda_exec_se
     {
         retval = 2;
     }
-    if (pthread_mutex_unlock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to unlock mutex");
-        return 2;
-    }
+    CACE_MUTEX_UNLOCK(&seq->items_mutex);
     return retval;
 }
 
@@ -289,19 +262,12 @@ void refda_exec_proc_terminate(refda_exec_seq_t *seq)
     // mark the front item as failed if already waiting
     refda_exec_item_ptr_t *item_ptr = NULL;
 
-    if (pthread_mutex_lock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return;
-    }
+    CACE_MUTEX_LOCK(&seq->items_mutex);
     if (!refda_exec_item_list_empty_p(seq->items))
     {
         item_ptr = refda_exec_item_ptr_acquire(*refda_exec_item_list_front(seq->items));
     }
-    if (pthread_mutex_unlock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to unlock mutex");
-    }
+    CACE_MUTEX_UNLOCK(&seq->items_mutex);
 
     if (item_ptr)
     {
@@ -490,19 +456,11 @@ int refda_exec_proc_expand(refda_exec_seq_t *seq, size_t *seq_ix, const cace_ari
     cace_ari_array_t invalid_items;
     cace_ari_array_init(invalid_items);
 
-    REFDA_AGENT_LOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
-    if (pthread_mutex_lock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to lock mutex");
-        return REFDA_AGENT_ERR_LOCK_FAILED;
-    }
+    CACE_MUTEX_LOCK(&runctx->agent->objs_mutex);
+    CACE_MUTEX_LOCK(&seq->items_mutex);
     int retval = refda_exec_proc_exp_item(runctx, seq, seq_ix, target, invalid_items);
-    if (pthread_mutex_unlock(&seq->items_mutex))
-    {
-        CACE_LOG_CRIT("failed to unlock mutex");
-        return REFDA_AGENT_ERR_LOCK_FAILED;
-    }
-    REFDA_AGENT_UNLOCK(runctx->agent, REFDA_AGENT_ERR_LOCK_FAILED);
+    CACE_MUTEX_UNLOCK(&seq->items_mutex);
+    CACE_MUTEX_UNLOCK(&runctx->agent->objs_mutex);
 
     if (!cace_ari_array_empty_p(invalid_items))
     {
