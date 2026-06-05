@@ -19,8 +19,8 @@ add_definitions(
 )
 
 add_library(timespec)
-target_sources(timespec PUBLIC timespec.h)
-target_sources(timespec PRIVATE timespec.c)
+target_sources(timespec PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/timespec.h)
+target_sources(timespec PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/timespec.c)
 target_include_directories(
   timespec
   PUBLIC
