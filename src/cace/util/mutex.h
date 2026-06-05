@@ -43,7 +43,7 @@ extern "C" {
         if (UNLIKELY(res != 0))                                             \
         {                                                                   \
             fprintf(stderr, "failed to lock mutex %s got %d", #mutex, res); \
-            assert(res == 0);                                               \
+            abort();                                                        \
         }                                                                   \
     }                                                                       \
     while (false)
@@ -61,7 +61,7 @@ extern "C" {
         if (UNLIKELY(res != 0))                                               \
         {                                                                     \
             fprintf(stderr, "failed to unlock mutex %s got %d", #mutex, res); \
-            assert(res == 0);                                                 \
+            abort();                                                          \
         }                                                                     \
     }                                                                         \
     while (false)
