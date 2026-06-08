@@ -138,21 +138,24 @@ class CmdRunner:
         if do_stdin:
             self._stdin_writer = threading.Thread(
                 target=self._write_stdin,
-                args=[self.proc.stdin]
+                args=[self.proc.stdin],
+                daemon=True
             )
             self._stdin_writer.start()
 
         if do_stdout:
             self._stdout_reader = threading.Thread(
                 target=self._read_stdout,
-                args=[self.proc.stdout]
+                args=[self.proc.stdout],
+                daemon=True
             )
             self._stdout_reader.start()
 
         if do_stderr:
             self._stderr_reader = threading.Thread(
                 target=self._read_stderr,
-                args=[self.proc.stderr]
+                args=[self.proc.stderr],
+                daemon=True
             )
             self._stderr_reader.start()
 
@@ -180,15 +183,24 @@ class CmdRunner:
 
         return ret
 
-    def wait(self, timeout=5) -> Optional[int]:
+    def poll(self) -> Union[None, False, int]:
+        ''' Check if the process is finished.
+
+        :return: The exit code, None if it is still running, or False if not already running.
+        '''
+        if not self.proc:
+            return False
+        return self.proc.poll()
+
+    def wait(self, timeout=5) -> Union[None, False, int]:
         ''' Wait for the process to finish.
 
         :param timeout: The time (in seconds) to wait for the process to exit.
-        :return: The exit code, or None if it not already running.
+        :return: The exit code, or False if not already running.
         :raise subprocess.TimeoutExpired: If the wait has timed out.
         '''
         if not self.proc:
-            return None
+            return False
 
         LOGGER.info('Waiting on process: %s', self._fmt_args())
         if self.proc.returncode is None:
