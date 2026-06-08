@@ -39,6 +39,7 @@ The transport-side interface to and from a REFDA deployment is defined by a ::ca
 This project implements off-the-shelf transport bindings for the REFDA described in the following subsections.
 
 All of the bindings use the following command-line options.
+If the logging level option is supplied multiple times the last use supersedes all others.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
@@ -51,6 +52,8 @@ This binding uses unix datagram sockets (`AF_UNIX` with `SOCK_DGRAM`) to bind to
 The daemon executable is named `refda-socket`.
 
 The daemon for this binding has the following additional command-line options.
+Supplying multiple bind path options is a command error.
+Supplying multiple hello paths sends a report to each of the managers.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
@@ -63,6 +66,8 @@ This binding uses the C API from JPL ION to register a single endpoint in a loca
 The daemon executable is named `refda-ion`.
 
 The daemon for this binding has the following additional command-line options.
+Supplying multiple register endpoint options is a command error.
+Supplying multiple hello paths sends a report to each of the managers.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
@@ -78,6 +83,7 @@ The daemon executable is named `refda-stdio`.
 @warning This binding does not implement AMP! All of its messaging is in text form ARIs.
 
 The daemon for this binding has the following additional command-line options.
+Supplying multiple register options is a command error.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------

@@ -60,6 +60,7 @@ The transport-side interface to and from a REFDM deployment is defined by a ::ca
 This project implements off-the-shelf transport bindings for the REFDM described in the following subsections.
 
 All of the bindings use the following command-line options.
+If the logging level option is supplied multiple times the last use supersedes all others.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
@@ -72,6 +73,7 @@ This binding uses Unix datagram sockets (`AF_UNIX` with `SOCK_DGRAM`) to bind to
 The daemon executable is named `refdm-socket`.
 
 The daemon for this binding has the following additional command-line options.
+Supplying multiple bind path options is a command error.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
@@ -83,6 +85,7 @@ This binding uses the C API from JPL ION to register a single endpoint in a loca
 The daemon executable is named `refdm-ion`.
 
 The daemon for this binding has the following additional command-line options.
+Supplying multiple register options is a command error.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
@@ -98,6 +101,7 @@ The daemon will attempt to connect to the proxy server at start up, with exponen
 If an initial connection cannot be made after the startup timeout the daemon will exit with an error code.
 
 The daemon for this binding has the following additional command-line options.
+Supplying multiple proxy path options is a command error.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------
@@ -113,6 +117,7 @@ The daemon will register its endpoint in the local BP Agent at startup and bind 
 If either of these fail the daemon will exit with an error code.
 
 The server daemon has the following additional command-line options.
+Supplying multiple bind path or register options is a command error.
 
  | Option     | Name                     | Description
  |------------|--------------------------|------------

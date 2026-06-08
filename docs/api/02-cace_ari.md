@@ -20,17 +20,24 @@ limitations under the License.
 This tool converts ARIs between different encoding forms.
 It uses command-line options to control the ARI conversion.
 
-For `text` or `cborhex` forms of input or output, each line is handled as a separate ARI and converted independently until the input stream is ended.
-For `cbor` form of input or output, the stream is treated as a CBOR sequence @cite rfc8742 and each CBOR data item is handled as a separate ARI.
+The options related to input or output forms allow the following values:
+ * The form "uri" meaning a newline-separated, URI-encoded form of ARIs consistent with the "application/uri-list" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari. For backward compatibility, there is a "text" form which is an alias for the "uri" form.
+ * The form "cbor" meaning a sequence of CBOR-encoded form of ARIs consistent with the "application/cbor-seq" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
+ * The form "cborhex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
+
+For "uri" or "cborhex" forms of input, each line is handled as a separate ARI and converted independently until the input stream is ended.
+For "cbor" form of input, the stream is treated as a CBOR sequence @cite rfc8742 and each CBOR data item is converted independently until the input stream is ended.
 
 ```
 usage: cace_ari [--help,-h]
                 [--log-level,-l {debug,info,warning,error,crit}]
-		[--inform,-i {auto,text,cbor,cborhex}] [--source,-s {filename or -}]
-		[--outform,-o {text,cbor,cborhex}] [--dest,-d {filename or -}]
+                [--inform,-i {auto,uri,cbor,cborhex}] [--source,-s {filename or -}]
+                [--outform,-o {uri,cbor,cborhex}] [--dest,-d {filename or -}]
 ```
 
-# Named Arguments
+# Named Options
+
+For all options of this command, if any option is supplied multiple times the last use supersedes all others.
 
 - `--log-level`
 
@@ -42,11 +49,11 @@ usage: cace_ari [--help,-h]
 
 - `--inform`
 
-  Possible choices: auto, text, cbor, cborhex
+  Possible choices: auto, uri, cbor, cborhex
 
   The input encoding.
 
-  The choice of 'auto' uses the initial bytes of the first input to detect the scheme "ari:" to indicate if the input is 'text'.
+  The choice of 'auto' uses the initial bytes of the first input to detect the scheme "ari:" to indicate if the input is 'uri'.
   Otherwise, it is assumed to be 'cborhex' and processed accordingly.
 
   Default: `auto`
@@ -59,11 +66,11 @@ usage: cace_ari [--help,-h]
 
 - `--outform`
 
-  Possible choices: auto, text, cbor, cborhex
+  Possible choices: auto, uri, cbor, cborhex
 
   The output encoding.
 
-  The choice of 'auto' assumes a 'text' output if the input is 'cbor' or 'cborhex' and assumes a 'cborhex' output if the input is 'text'.
+  The choice of 'auto' assumes a 'uri' output if the input is 'cbor' or 'cborhex' and assumes a 'cborhex' output if the input is 'uri'.
 
 - `--dest`
 
