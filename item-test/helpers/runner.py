@@ -183,7 +183,7 @@ class CmdRunner:
 
         return ret
 
-    def poll(self) -> Union[None, False, int]:
+    def poll(self) -> Union[None, Literal[False], int]:
         ''' Check if the process is finished.
 
         :return: The exit code, None if it is still running, or False if not already running.
@@ -192,7 +192,7 @@ class CmdRunner:
             return False
         return self.proc.poll()
 
-    def wait(self, timeout=5) -> Union[None, False, int]:
+    def wait(self, timeout=5) -> Union[None, Literal[False], int]:
         ''' Wait for the process to finish.
 
         :param timeout: The time (in seconds) to wait for the process to exit.
