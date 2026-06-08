@@ -80,21 +80,9 @@ int cace_data_copy_from(cace_data_t *data, size_t len, cace_data_ptr_t src)
 {
     CHKERR1(data);
 
-    if (len)
+    if (cace_data_resize(data, len))
     {
-        if (!data->owned)
-        {
-            data->ptr   = NULL;
-            data->owned = true;
-        }
-        if (cace_data_resize(data, len))
-        {
-            return 2;
-        }
-    }
-    else
-    {
-        cace_data_int_reset(data);
+        return 2;
     }
 
     if (data->ptr && src)
@@ -116,8 +104,6 @@ int cace_data_copy(cace_data_t *data, const cace_data_t *src)
 {
     CHKERR1(data);
     CHKERR1(src);
-
-    cace_data_int_free(data);
     return cace_data_copy_from(data, src->len, src->ptr);
 }
 
