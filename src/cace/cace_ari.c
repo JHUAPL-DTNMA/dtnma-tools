@@ -402,6 +402,10 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 's':
+                if (source && (source != stdin))
+                {
+                    fclose(source);
+                }
                 source = get_file(optarg, "r");
                 if (!source)
                 {
@@ -410,6 +414,10 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 'd':
+                if (dest && (dest != stdout))
+                {
+                    fclose(dest);
+                }
                 dest = get_file(optarg, "w");
                 if (!dest)
                 {
@@ -534,11 +542,11 @@ int main(int argc, char *argv[])
         retval = 2 + failures;
     }
 
-    if (source != stdin)
+    if (source && (source != stdin))
     {
         fclose(source);
     }
-    if (dest != stdout)
+    if (dest && (dest != stdout))
     {
         fclose(dest);
     }

@@ -81,6 +81,12 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
+                        if (!m_string_empty_p(sock_path))
+                        {
+                            fprintf(stderr, "Multiple socket paths are supplied\n");
+                            retval = 1;
+                            break;
+                        }
                         m_string_set_cstr(sock_path, optarg);
                         break;
                     case 't':

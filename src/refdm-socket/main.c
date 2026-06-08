@@ -68,7 +68,15 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        m_string_set_cstr(own_eid, optarg);
+                        if (!m_string_empty_p(own_eid))
+                        {
+                            fprintf(stderr, "Multiple endpoint URIs are supplied\n");
+                            retval = 1;
+                        }
+                        else
+                        {
+                            m_string_set_cstr(own_eid, optarg);
+                        }
                         break;
                     case 'h':
                     default:
@@ -85,7 +93,7 @@ int main(int argc, char *argv[])
     // check arguments
     if (!retval && m_string_empty_p(own_eid))
     {
-        fprintf(stderr, "A socket endpoint URI must be supplied");
+        fprintf(stderr, "A socket endpoint URI must be supplied\n");
         retval = 1;
     }
 

@@ -58,12 +58,12 @@ int main(int argc, char *argv[])
     /* Process Command Line Arguments. */
     int log_limit = LOG_WARNING;
 
-    m_string_t startup_exec;
-    m_string_init(startup_exec);
+    string_list_t startup_execs;
+    string_list_init(startup_execs);
     m_string_t own_eid;
     m_string_init(own_eid);
-    m_string_t hello_eid;
-    m_string_init(hello_eid);
+    string_list_t hello_eids;
+    string_list_init(hello_eids);
     {
         {
             int opt;
@@ -79,14 +79,26 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 's':
-                        m_string_set_cstr(startup_exec, optarg);
+                    {
+                        m_string_t *argstr = string_list_push_back_new(startup_execs);
+                        m_string_set_cstr(*argstr, optarg);
                         break;
+                    }
                     case 'a':
+                        if (!m_string_empty_p(own_eid))
+                        {
+                            fprintf(stderr, "Multiple endpoint URIs are supplied\n");
+                            retval = 1;
+                            break;
+                        }
                         m_string_set_cstr(own_eid, optarg);
                         break;
                     case 'm':
-                        m_string_set_cstr(hello_eid, optarg);
+                    {
+                        m_string_t *argstr = string_list_push_back_new(hello_eids);
+                        m_string_set_cstr(*argstr, optarg);
                         break;
+                    }
                     case 'h':
                     default:
                         show_usage(argv[0]);
@@ -102,7 +114,7 @@ int main(int argc, char *argv[])
     // check arguments
     if (!retval && m_string_empty_p(own_eid))
     {
-        fprintf(stderr, "A BP endpoint URI must be supplied");
+        fprintf(stderr, "A BP endpoint URI must be supplied\n");
         retval = 1;
     }
 
@@ -214,23 +226,30 @@ int main(int argc, char *argv[])
 #endif
     CACE_LOG_INFO("READY");
 
-    if (!retval && !m_string_empty_p(startup_exec))
+    if (!retval && !string_list_empty_p(startup_execs))
     {
 #if ARI_TEXT_PARSE
-        CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(startup_exec));
-        FILE *startup_file = fopen(m_string_get_cstr(startup_exec), "r");
-        if (!startup_file)
+        string_list_it_t startup_it;
+        for (string_list_it(startup_it, startup_execs); !string_list_end_p(startup_it); string_list_next(startup_it))
         {
-            retval = 3;
-        }
-        else
-        {
+            const m_string_t *startup_path = string_list_cref(startup_it);
+            CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(*startup_path));
+            FILE *startup_file = fopen(m_string_get_cstr(*startup_path), "r");
+            if (!startup_file)
+            {
+                CACE_LOG_ERR("Failed to open startup file %s", m_string_get_cstr(*startup_path));
+                retval = 3;
+                // keep trying others
+                continue;
+            }
+
             // synthesize macro
             cace_ari_t     target = CACE_ARI_INIT_UNDEFINED;
             cace_ari_ac_t *tgt_ac = cace_ari_set_ac(&target, NULL);
 
             if (cace_ari_macrofile_read(startup_file, tgt_ac->items))
             {
+                CACE_LOG_ERR("Failed to read startup file %s", m_string_get_cstr(*startup_path));
                 retval = 3;
             }
             fclose(startup_file);
@@ -245,37 +264,45 @@ int main(int argc, char *argv[])
         retval = 3;
 #endif // ARI_TEXT_PARSE
     }
-    m_string_clear(startup_exec);
+    string_list_clear(startup_execs);
 
-    if (!retval && !m_string_empty_p(hello_eid))
+    if (!retval && !string_list_empty_p(hello_eids))
     {
-        cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
-        // reference ari:/ietf/dtnma-agent/CTRL/report-on
-        cace_ari_ref_t *tgt_ref =
-            cace_ari_set_objref_path_intid(&target, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
-                                           CACE_ARI_TYPE_CTRL, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_REPORT_ON);
-        cace_ari_ac_t *param_ac = cace_ari_params_set_ac(&tgt_ref->params, NULL);
+        string_list_it_t hello_it;
+        for (string_list_it(hello_it, hello_eids); !string_list_end_p(hello_it); string_list_next(hello_it))
         {
-            cace_ari_t *item = cace_ari_list_push_back_new(param_ac->items);
-            // reference ari:/ietf/dtnma-agent/CONST/hello
-            cace_ari_set_objref_path_intid(item, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
-                                           CACE_ARI_TYPE_CONST, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
-        }
-        {
-            cace_ari_t    *item    = cace_ari_list_push_back_new(param_ac->items);
-            cace_ari_ac_t *item_ac = cace_ari_set_ac(item, NULL);
+            const m_string_t *hello_eid = string_list_cref(hello_it);
+
+            cace_ari_t target = CACE_ARI_INIT_UNDEFINED;
+            // reference ari:/ietf/dtnma-agent/CTRL/report-on
+            cace_ari_ref_t *tgt_ref = cace_ari_set_objref_path_intid(
+                &target, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM, CACE_ARI_TYPE_CTRL,
+                REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CTRL_REPORT_ON);
+            assert(tgt_ref);
+            cace_ari_ac_t *param_ac = cace_ari_params_set_ac(&tgt_ref->params, NULL);
+            assert(param_ac);
             {
-                cace_ari_t *mgr_ident = cace_ari_list_push_back_new(item_ac->items);
-                cace_ari_set_tstr(mgr_ident, m_string_get_cstr(hello_eid), false);
+                cace_ari_t *item = cace_ari_list_push_back_new(param_ac->items);
+                // reference ari:/ietf/dtnma-agent/CONST/hello
+                cace_ari_set_objref_path_intid(item, REFDA_ADM_IETF_ENUM, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM,
+                                               CACE_ARI_TYPE_CONST, REFDA_ADM_IETF_DTNMA_AGENT_ENUM_OBJID_CONST_HELLO);
+            }
+            {
+                cace_ari_t    *item    = cace_ari_list_push_back_new(param_ac->items);
+                cace_ari_ac_t *item_ac = cace_ari_set_ac(item, NULL);
+                {
+                    cace_ari_t *mgr_ident = cace_ari_list_push_back_new(item_ac->items);
+                    cace_ari_set_tstr(mgr_ident, m_string_get_cstr(*hello_eid), false);
+                }
+            }
+
+            if (refda_agent_startup_exec(&agent, &target))
+            {
+                retval = 3;
             }
         }
-
-        if (refda_agent_startup_exec(&agent, &target))
-        {
-            retval = 3;
-        }
     }
-    m_string_clear(hello_eid);
+    string_list_clear(hello_eids);
 
     refda_agent_enable_exec(&agent);
 
