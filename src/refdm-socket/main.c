@@ -50,7 +50,8 @@ int main(int argc, char *argv[])
     refdm_mgr_init(&mgr);
 
     /* Process Command Line Arguments. */
-    int        log_limit = LOG_WARNING;
+    int log_limit = LOG_WARNING;
+
     m_string_t own_eid;
     m_string_init(own_eid);
     {
@@ -72,11 +73,9 @@ int main(int argc, char *argv[])
                         {
                             fprintf(stderr, "Multiple endpoint URIs are supplied\n");
                             retval = 1;
+                            break;
                         }
-                        else
-                        {
-                            m_string_set_cstr(own_eid, optarg);
-                        }
+                        m_string_set_cstr(own_eid, optarg);
                         break;
                     case 'h':
                     default:
