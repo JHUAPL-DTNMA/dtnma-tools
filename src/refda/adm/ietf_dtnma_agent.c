@@ -3016,7 +3016,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
 
     CACE_MUTEX_LOCK(&agent->objs_mutex);
 
-    m_string_t *rev_date = string_list_push_new(agent->odm_names);
+    m_string_t *rev_date = string_list_push_back_new(agent->odm_names);
     {
         time_t     now         = time(NULL); // Get current time as time_t
         struct tm  parts       = { 0 };
@@ -3024,10 +3024,10 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_odm(refda_ctrl_exec_ctx_t *ct
         cace_date_encode(*rev_date, currentTime, false);
     }
 
-    org_name = string_list_push_new(agent->odm_names);
+    org_name = string_list_push_back_new(agent->odm_names);
     m_string_set_cstr(*org_name, org);
 
-    model_name = string_list_push_new(agent->odm_names);
+    model_name = string_list_push_back_new(agent->odm_names);
     m_string_set_cstr(*model_name, model);
 
     cace_amm_obj_ns_t *odm = cace_amm_obj_store_add_ns(
@@ -3369,7 +3369,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_ident(refda_ctrl_exec_ctx_t *
         objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
         refda_amm_ident_desc_init(objdata);
 
-        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_t *cnst_name = string_list_push_back_new(agent->odm_names);
         m_string_set_cstr(*cnst_name, obj_name);
 
         obj = refda_register_ident(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
@@ -3595,7 +3595,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_const(refda_ctrl_exec_ctx_t *
         objdata = CACE_MALLOC(sizeof(refda_amm_const_desc_t));
         refda_amm_const_desc_init(objdata);
 
-        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_t *cnst_name = string_list_push_back_new(agent->odm_names);
         m_string_set_cstr(*cnst_name, obj_name);
 
         obj = refda_register_const(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
@@ -3838,7 +3838,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_var(refda_ctrl_exec_ctx_t *ct
         objdata = CACE_MALLOC(sizeof(refda_amm_var_desc_t));
         refda_amm_var_desc_init(objdata);
 
-        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_t *cnst_name = string_list_push_back_new(agent->odm_names);
         m_string_set_cstr(*cnst_name, obj_name);
 
         obj = refda_register_var(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
@@ -4073,7 +4073,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_sbr(refda_ctrl_exec_ctx_t *ct
         objdata = CACE_MALLOC(sizeof(refda_amm_sbr_desc_t));
         refda_amm_sbr_desc_init(objdata);
 
-        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_t *cnst_name = string_list_push_back_new(agent->odm_names);
         m_string_set_cstr(*cnst_name, obj_name);
 
         obj = refda_register_sbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);
@@ -4261,7 +4261,7 @@ static void refda_adm_ietf_dtnma_agent_ctrl_ensure_tbr(refda_ctrl_exec_ctx_t *ct
         objdata = CACE_MALLOC(sizeof(refda_amm_tbr_desc_t));
         refda_amm_tbr_desc_init(objdata);
 
-        m_string_t *cnst_name = string_list_push_new(agent->odm_names);
+        m_string_t *cnst_name = string_list_push_back_new(agent->odm_names);
         m_string_set_cstr(*cnst_name, obj_name);
 
         obj = refda_register_tbr(odm, cace_amm_idseg_ref_withenum(m_string_get_cstr(*cnst_name), obj_id), objdata);

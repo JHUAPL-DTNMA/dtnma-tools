@@ -50,7 +50,7 @@ static cace_ari_form_t get_form(const char *text)
     {
         return CACE_ARI_FORM_AUTO;
     }
-    else if (strcasecmp(text, "uri") == 0)
+    else if ((strcasecmp(text, "uri") == 0) || (strcasecmp(text, "text") == 0))
     {
         return CACE_ARI_FORM_URI;
     }
@@ -344,12 +344,12 @@ static void show_usage(const char *argv0)
             "Usage: %s {--log-level,-l <log-level>} "
             "[--source,-s {filename or -}] "
 #if ARI_TEXT_PARSE
-            "[--inform,-i {auto,text,cbor,cborhex}] "
+            "[--inform,-i {auto,uri,cbor,cborhex}] "
 #else
             "[--inform,-i {cbor,cborhex}] "
 #endif /* ARI_TEXT_PARSE */
             "[--dest,-d {filename or -}] "
-            "[--outform,-o {auto,text,cbor,cborhex}]\n",
+            "[--outform,-o {auto,uri,cbor,cborhex}]\n",
             argv0);
 }
 
@@ -402,6 +402,10 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 's':
+                if (source && (source != stdin))
+                {
+                    fclose(source);
+                }
                 source = get_file(optarg, "r");
                 if (!source)
                 {
@@ -410,6 +414,10 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 'd':
+                if (dest && (dest != stdout))
+                {
+                    fclose(dest);
+                }
                 dest = get_file(optarg, "w");
                 if (!dest)
                 {
@@ -534,11 +542,11 @@ int main(int argc, char *argv[])
         retval = 2 + failures;
     }
 
-    if (source != stdin)
+    if (source && (source != stdin))
     {
         fclose(source);
     }
-    if (dest != stdout)
+    if (dest && (dest != stdout))
     {
         fclose(dest);
     }

@@ -17,13 +17,13 @@
  */
 #include "refda/agent.h"
 #include "refda/loader.h"
-#include "cace/util/logging.h"
-#include "cace/util/defs.h"
-#include "cace/ari/text_util.h"
-#include "cace/ari/text.h"
+#include <cace/util/logging.h>
+#include <cace/util/defs.h>
+#include <cace/ari/text_util.h>
+#include <cace/ari/text.h>
 #include <cace/ari/macrofile.h>
-#include "cace/ari/time_util.h"
-#include "cace/ari/cbor.h"
+#include <cace/ari/time_util.h>
+#include <cace/ari/cbor.h>
 #include <sys/poll.h>
 #include <signal.h>
 #include <unistd.h>
@@ -242,7 +242,7 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
 
 static void show_usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} -a <agent EID>\n", argv0);
+    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} {-s <startup-file>} -a <agent EID>\n", argv0);
 }
 
 int main(int argc, char *argv[])
@@ -256,8 +256,8 @@ int main(int argc, char *argv[])
     /* Process Command Line Arguments. */
     int log_limit = LOG_WARNING;
 
-    m_string_t startup_exec;
-    m_string_init(startup_exec);
+    string_list_t startup_execs;
+    string_list_init(startup_execs);
     {
         {
             int opt;
@@ -273,9 +273,18 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 's':
-                        m_string_set_cstr(startup_exec, optarg);
+                    {
+                        m_string_t *argstr = string_list_push_back_new(startup_execs);
+                        m_string_set_cstr(*argstr, optarg);
                         break;
+                    }
                     case 'a':
+                        if (!m_string_empty_p(agent.agent_eid))
+                        {
+                            fprintf(stderr, "Multiple endpoint URIs are supplied\n");
+                            retval = 1;
+                            break;
+                        }
                         m_string_set_cstr(agent.agent_eid, optarg);
                         break;
                     case 'h':
@@ -358,23 +367,30 @@ int main(int argc, char *argv[])
 
     CACE_LOG_INFO("READY");
 
-    if (!retval && !m_string_empty_p(startup_exec))
+    if (!retval && !string_list_empty_p(startup_execs))
     {
 #if ARI_TEXT_PARSE
-        CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(startup_exec));
-        FILE *startup_file = fopen(m_string_get_cstr(startup_exec), "r");
-        if (!startup_file)
+        string_list_it_t startup_it;
+        for (string_list_it(startup_it, startup_execs); !string_list_end_p(startup_it); string_list_next(startup_it))
         {
-            retval = 3;
-        }
-        else
-        {
+            const m_string_t *startup_path = string_list_cref(startup_it);
+            CACE_LOG_INFO("Executing startup targets from %s", m_string_get_cstr(*startup_path));
+            FILE *startup_file = fopen(m_string_get_cstr(*startup_path), "r");
+            if (!startup_file)
+            {
+                CACE_LOG_ERR("Failed to open startup file %s", m_string_get_cstr(*startup_path));
+                retval = 3;
+                // keep trying others
+                continue;
+            }
+
             // synthesize macro
             cace_ari_t     target = CACE_ARI_INIT_UNDEFINED;
             cace_ari_ac_t *tgt_ac = cace_ari_set_ac(&target, NULL);
 
             if (cace_ari_macrofile_read(startup_file, tgt_ac->items))
             {
+                CACE_LOG_ERR("Failed to read startup file %s", m_string_get_cstr(*startup_path));
                 retval = 3;
             }
             fclose(startup_file);
@@ -389,7 +405,9 @@ int main(int argc, char *argv[])
         retval = 3;
 #endif // ARI_TEXT_PARSE
     }
-    m_string_clear(startup_exec);
+    string_list_clear(startup_execs);
+
+    refda_agent_enable_exec(&agent);
 
     if (!retval)
     {

@@ -31,6 +31,7 @@
 #include <cace/amm/obj_ns.h>
 #include <cace/amm/obj_store.h>
 #include <cace/amm/msg_if.h>
+#include <m-deque.h>
 #include <m-buffer.h>
 #include <pthread.h>
 
@@ -42,11 +43,11 @@ extern "C" {
 #define AGENT_QUEUE_SIZE 1024
 
 /** @struct string_list_t
- * Linked list of text strings with ownership semantics.
+ * Ordered list of text strings with ownership semantics.
  * Usable as a simple memory pool for runtime text allocation.
  */
 /// @cond Doxygen_Suppress
-M_LIST_DEF(string_list, m_string_t, M_STRING_OPLIST)
+M_DEQUE_DEF(string_list, m_string_t, M_STRING_OPLIST)
 /// @endcond
 
 /** State of a DTNMA Agent.

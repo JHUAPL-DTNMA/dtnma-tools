@@ -463,6 +463,7 @@ void test_refda_exec_wait_until(int delay_ms)
     cace_ari_deinit(&target);
 }
 
+TEST_CASE(0)
 TEST_CASE(100)
 void test_refda_exec_wait_cond(int delay_ms)
 {
@@ -488,7 +489,7 @@ void test_refda_exec_wait_cond(int delay_ms)
         cace_ari_params_set_ac(&(ref->params), params);
     }
 
-    int wait_ms[] = { 0 };
+    int wait_ms[] = { delay_ms };
     check_execute(&target, 0, 1, wait_ms);
 
     cace_ari_deinit(&target);

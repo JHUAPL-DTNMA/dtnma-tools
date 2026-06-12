@@ -638,9 +638,19 @@ int mgr_parse_args(int argc, char *const argv[])
                 }
                 break;
             case 'e':
+                if (arg_eid)
+                {
+                    fprintf(stderr, "Multiple endpoint URIs are supplied\n");
+                    return 1;
+                }
                 arg_eid = optarg;
                 break;
             case 'b':
+                if (arg_path_listen)
+                {
+                    fprintf(stderr, "Multiple listen paths are supplied\n");
+                    return 1;
+                }
                 arg_path_listen = optarg;
                 break;
             case 'h':

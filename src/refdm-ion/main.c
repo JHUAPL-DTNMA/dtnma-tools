@@ -50,9 +50,10 @@ int main(int argc, char *argv[])
     refdm_mgr_init(&mgr);
 
     /* Process Command Line Arguments. */
-    int        log_limit = LOG_WARNING;
-    m_string_t eid;
-    m_string_init(eid);
+    int log_limit = LOG_WARNING;
+
+    m_string_t own_eid;
+    m_string_init(own_eid);
     {
         {
             int opt;
@@ -68,7 +69,13 @@ int main(int argc, char *argv[])
                         }
                         break;
                     case 'a':
-                        m_string_set_cstr(eid, optarg);
+                        if (!m_string_empty_p(own_eid))
+                        {
+                            fprintf(stderr, "Multiple endpoint URIs are supplied\n");
+                            retval = 1;
+                            break;
+                        }
+                        m_string_set_cstr(own_eid, optarg);
                         break;
                     case 'h':
                     default:
@@ -83,7 +90,7 @@ int main(int argc, char *argv[])
     CACE_LOG_DEBUG("Manager starting up with log limit %d", log_limit);
 
     // check arguments
-    if (!retval && m_string_empty_p(eid))
+    if (!retval && m_string_empty_p(own_eid))
     {
         fprintf(stderr, "An EID URI must be supplied");
         retval = 1;
@@ -102,21 +109,21 @@ int main(int argc, char *argv[])
     cace_amp_ion_bp_state_init(&app);
     if (!retval)
     {
-        if (cace_amp_ion_bp_state_bind(&app, eid))
+        if (cace_amp_ion_bp_state_bind(&app, own_eid))
         {
-            CACE_LOG_ERR("Failed to bind to ION EID %s", m_string_get_cstr(eid));
+            CACE_LOG_ERR("Failed to bind to ION EID %s", m_string_get_cstr(own_eid));
             retval = 4;
         }
     }
 
     if (!retval)
     {
-        CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(eid));
+        CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(own_eid));
         mgr.mif.send = cace_amp_ion_bp_send;
         mgr.mif.recv = cace_amp_ion_bp_recv;
         mgr.mif.ctx  = &app;
     }
-    m_string_clear(eid);
+    m_string_clear(own_eid);
 
     if (!retval)
     {

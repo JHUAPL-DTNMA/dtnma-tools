@@ -57,8 +57,9 @@ class TestCaceAri(unittest.TestCase):
 
     def tearDown(self):
         if self._runner:
-            self._runner.close_stdin()
-            self.assertEqual(0, self._runner.wait())
+            if self._runner.poll() in {None, False}:
+                self._runner.close_stdin()
+                self.assertEqual(0, self._runner.wait())
             self._runner = None
 
     def _start(self, *cmd_args: str) -> CmdRunner:
@@ -100,14 +101,20 @@ class TestCaceAri(unittest.TestCase):
         LOGGER.info('Sending SIGINT')
         runner.proc.send_signal(signal.SIGINT)
         self.assertEqual(-2, self._runner.wait())
-        self._runner = None
 
     def test_start_close(self):
         runner = self._start()
 
         LOGGER.info('Closing stdin')
         runner.proc.stdin.close()
-        self.assertEqual(0, runner.proc.wait(timeout=5))
+        self.assertEqual(0, runner.proc.wait(timeout=1))
+
+    def test_log_level_valid(self):
+        runner = self._start('--log-level=debug')
+
+    def test_log_level_invalid(self):
+        runner = self._start('--log-level=other')
+        self.assertEqual(1, runner.proc.wait(timeout=1))
 
     def test_translate_inform_auto_text(self):
         runner = self._start('--inform=auto', '--outform=cborhex')
@@ -132,6 +139,13 @@ class TestCaceAri(unittest.TestCase):
 
     def test_translate_inform_cborhex(self):
         runner = self._start('--inform=cborhex', '--outform=uri')
+
+        runner.send_stdin('0A\n')
+        got = runner.wait_for_line()
+        self.assertEqual('ari:10\n', got)
+
+    def test_translate_inform_multi_auto(self):
+        runner = self._start('--inform=uri', '--inform=auto', '--outform=cbor', '--outform=auto')
 
         runner.send_stdin('0A\n')
         got = runner.wait_for_line()
