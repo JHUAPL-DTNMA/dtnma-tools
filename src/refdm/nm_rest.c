@@ -128,12 +128,8 @@ static int versionHandler(struct mg_connection *conn, void *cbdata _U_)
         }
 
         cJSON_AddStringToObject(obj, "civetweb_version", CIVETWEB_VERSION);
-#if 0 // FIXME
-        cJSON_AddNumberToObject(obj, "amp_version", AMP_VERSION);
-        cJSON_AddStringToObject(obj, "amp_uri", AMP_PROTOCOL_URL);
-        cJSON_AddStringToObject(obj, "amp_version_str", AMP_VERSION_STR);
-#endif
-
+        cJSON_AddStringToObject(obj, "ari_version", "draft-ietf-dtn-ari-08");
+        cJSON_AddStringToObject(obj, "amp_version", "draft-ietf-dtn-amp-03");
         cJSON_AddStringToObject(obj, "build_date", __DATE__);
         cJSON_AddStringToObject(obj, "build_time", __TIME__);
         SendJSON(conn, obj);
