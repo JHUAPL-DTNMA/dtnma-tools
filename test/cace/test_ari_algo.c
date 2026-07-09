@@ -75,6 +75,16 @@ static const char *different_aris[] = {
     "821383020102",   // ari:/TBL/c=2;(1,2)
     "82138103",       // ari:/TBL/c=3;
     "82138403010203", // ari:/TBL/c=3;(1,2,3)
+    // sort by nonce then targets
+    "821481F6",       // ari:/EXECSET/n=null;()
+    "821481187B",     // ari:/EXECSET/n=123;()
+    "8214821904D284676578616D706C65647465737422626869", // ari:/EXECSET/n=1234;(//example/test/CTRL/hi)
+    "82148342686984676578616D706C6564746573742262686984676578616D706C65647465737422626568", // ari:/EXECSET/n=h'6869';(//example/test/CTRL/hi,//example/test/CTRL/eh)
+    // sort by nonce then reftime, then reports
+    "821582187B1A2B450625", // ari:/RPTSET/n=123;r=/TP/20230102T030405Z;()
+    "8215821904D21A2B450625", // ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;()
+    "8215831904D21A2B450625820084676578616D706C65647465737422626869", // ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/PT0S;s=//example/test/CTRL/hi;())
+    "8215831904D21A2B450625850084676578616D706C65647465737422626869F603426869", // ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(t=/TD/PT0S;s=//example/test/CTRL/hi;(null,3,h'6869'))
     // sort wildcard before int before text
     "82181884F5F5F5F5",                 // ari:/OBJPAT/(*)(*)(*)(*)
     "82181884F5F5F520",                 // ari:/OBJPAT/(*)(*)(*)(-1)
