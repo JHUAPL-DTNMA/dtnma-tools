@@ -337,6 +337,15 @@ void cace_ari_report_set_move(cace_ari_report_t *obj, cace_ari_report_t *src)
     cace_ari_list_move(obj->items, src->items);
 }
 
+size_t cace_ari_report_hash(const cace_ari_report_t *obj)
+{
+    M_HASH_DECL(accum);
+    M_HASH_UP((*&accum), cace_ari_list_hash(obj->items));
+    M_HASH_UP((*&accum), cace_ari_hash((const cace_ari_t *)&obj->reltime));
+    M_HASH_UP((*&accum), cace_ari_hash(&(obj->source)));
+    return M_HASH_FINAL(accum);
+}
+
 int cace_ari_report_cmp(const cace_ari_report_t *left, const cace_ari_report_t *right)
 {
     int part_cmp = cace_ari_cmp(&(left->reltime), &(right->reltime));

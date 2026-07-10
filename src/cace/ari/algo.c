@@ -519,6 +519,15 @@ static int cace_ari_hash_visit_lit(cace_ari_lit_t *obj, const cace_ari_visit_ctx
                 // include metadata
                 M_HASH_UP(*accum, M_HASH_DEFAULT(obj->value.as_tbl->ncols));
                 break;
+            case CACE_ARI_TYPE_EXECSET:
+                M_HASH_UP(*accum, cace_ari_hash(&(obj->value.as_execset->nonce)));
+                M_HASH_UP(*accum, cace_ari_list_hash(obj->value.as_execset->targets));
+                break;
+            case CACE_ARI_TYPE_RPTSET:
+                M_HASH_UP(*accum, cace_ari_hash(&(obj->value.as_rptset->nonce)));
+                M_HASH_UP(*accum, cace_ari_hash(&(obj->value.as_rptset->reftime)));
+                M_HASH_UP(*accum, cace_ari_report_list_hash(obj->value.as_rptset->reports));
+                break;
             case CACE_ARI_TYPE_OBJPAT:
                 // this is not an ARI container
                 M_HASH_UP(*accum, cace_ari_objpat_hash(obj->value.as_objpat));
