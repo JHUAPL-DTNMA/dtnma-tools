@@ -436,8 +436,16 @@ class TestRefdmSocket(BaseRefdm):
         self.assertIsNotNone(resp.headers.get('location'))
         agent1_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
-        resp = self._req.get(agent1_base)
+        self.assertTrue(agent1_base.endswith('/'))
+        resp = self._req.head(agent1_base)
         self.assertTrue(resp.ok)
+        # append separator and redirect
+        resp = self._req.head(agent1_base[:-1])
+        self.assertEqual(308, resp.status_code)
+        self.assertEqual(
+            agent1_base.casefold(),
+            urllib.parse.urljoin(resp.url, resp.headers['location']).casefold()
+        )
 
         resp = self._req.post(
             self._base_url + 'agents',
@@ -449,8 +457,9 @@ class TestRefdmSocket(BaseRefdm):
         self.assertEqual(204, resp.status_code)
         self.assertIsNotNone(resp.headers.get('location'))
         agent2_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
+        self.assertNotEqual(agent1_base.casefold(), agent2_base.casefold())
 
-        resp = self._req.get(agent2_base)
+        resp = self._req.head(agent2_base)
         self.assertTrue(resp.ok)
 
         self.assertSetEqual(set(['file:/tmp/agent1', 'file:/tmp/agent2']), self._get_agent_names())
@@ -586,7 +595,7 @@ class TestRefdmSocket(BaseRefdm):
                 break
 
         agent_base = urllib.parse.urljoin(self._base_url, f'agents/eid/{eid_seg}/')
-        resp = self._req.get(agent_base)
+        resp = self._req.head(agent_base)
         self.assertTrue(resp.ok)
 
         # valid agent but invalid form
@@ -646,7 +655,7 @@ class TestRefdmSocket(BaseRefdm):
         self._wait_for_db_table('ari_rptset', rptset_count)
 
         agent_base = urllib.parse.urljoin(self._base_url, f'agents/eid/{eid_seg}/')
-        resp = self._req.get(agent_base)
+        resp = self._req.head(agent_base)
         self.assertTrue(resp.ok)
 
         resp = self._req.get(urllib.parse.urljoin(agent_base, 'reports?form=cbor'))
