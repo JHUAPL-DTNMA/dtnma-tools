@@ -140,14 +140,13 @@ int refda_exec_waiting(refda_agent_t *agent)
     CACE_MUTEX_UNLOCK(&(agent->exec_state_mutex));
 
     refda_exec_seq_list_it_t ready_it;
-    for (refda_exec_seq_list_it(ready_it, ready); !refda_exec_seq_list_end_p(ready_it);)
+    for (refda_exec_seq_list_it(ready_it, ready); !refda_exec_seq_list_end_p(ready_it);refda_exec_seq_list_next(ready_it))
     {
         refda_exec_seq_ptr_t **seq_ptr = refda_exec_seq_list_ref(ready_it);
 
         refda_exec_seq_t *seq = refda_exec_seq_ptr_ref(*seq_ptr);
+        // synchronous execution
         refda_exec_proc_run(seq);
-
-        refda_exec_seq_list_remove(ready, ready_it);
     }
     refda_exec_seq_list_clear(ready);
 
