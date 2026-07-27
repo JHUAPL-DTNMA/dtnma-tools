@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 #include "refdm/mgr.h"
-#include <cace/amp/socket.h>
-#include <cace/util/logging.h>
-#include <cace/util/defs.h>
+#include "cace/amp/socket.h"
+#include "cace/util/logging.h"
+#include "cace/util/defs.h"
 #include <signal.h>
 #include <unistd.h>
 

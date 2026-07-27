@@ -19,8 +19,8 @@
 #ifndef REFDA_EXEC_ITEM_H_
 #define REFDA_EXEC_ITEM_H_
 
-#include <cace/amm/lookup.h>
-#include <cace/ari.h>
+#include "cace/amm/lookup.h"
+#include "cace/ari.h"
 #include <m-atomic.h>
 #include <semaphore.h>
 

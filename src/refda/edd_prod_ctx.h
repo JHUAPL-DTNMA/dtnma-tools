@@ -22,8 +22,8 @@
 #include "agent.h"
 #include "valprod.h"
 #include "refda/amm/edd.h"
-#include <cace/amm/lookup.h>
-#include <cace/ari.h>
+#include "cace/amm/lookup.h"
+#include "cace/ari.h"
 
 #ifdef __cplusplus
 extern "C" {

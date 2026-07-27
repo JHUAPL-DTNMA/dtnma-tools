@@ -21,12 +21,12 @@
 #include "ctrl_exec_ctx.h"
 #include "valprod.h"
 #include "amm/ctrl.h"
-#include <cace/ari/text.h>
-#include <cace/ari/text_util.h>
-#include <cace/amm/lookup.h>
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
-#include <cace/util/defs.h>
+#include "cace/ari/text.h"
+#include "cace/ari/text_util.h"
+#include "cace/amm/lookup.h"
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
+#include "cace/util/defs.h"
 #include <timespec.h>
 
 int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target, refda_exec_status_t *status)

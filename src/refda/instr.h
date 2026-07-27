@@ -22,10 +22,10 @@
 #ifndef REFDA_INSTR_H_
 #define REFDA_INSTR_H_
 
-#include <cace/config.h>
+#include "cace/config.h"
 #include <m-atomic.h>
 #include <pthread.h>
-#include <cace/ari.h>
+#include "cace/ari.h"
 
 #ifdef __cplusplus
 extern "C" {

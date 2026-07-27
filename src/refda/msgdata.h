@@ -19,7 +19,7 @@
 #ifndef REFDA_MSGDATA_H_
 #define REFDA_MSGDATA_H_
 
-#include <cace/ari.h>
+#include "cace/ari.h"
 #include <m-buffer.h>
 
 #ifdef __cplusplus

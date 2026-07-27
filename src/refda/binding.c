@@ -25,13 +25,13 @@
 #include "amm/oper.h"
 #include "amm/sbr.h"
 #include "amm/tbr.h"
-#include <cace/amm/parameters.h>
-#include <cace/amm/lookup.h>
-#include <cace/amm/semtype.h>
-#include <cace/ari.h>
-#include <cace/ari/text.h>
-#include <cace/util/defs.h>
-#include <cace/util/logging.h>
+#include "cace/amm/parameters.h"
+#include "cace/amm/lookup.h"
+#include "cace/amm/semtype.h"
+#include "cace/ari.h"
+#include "cace/ari/text.h"
+#include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 const cace_amm_type_t *refda_binding_type_from_name(const cace_ari_t *name, const cace_amm_obj_store_t *store)
 {

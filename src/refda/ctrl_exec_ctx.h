@@ -22,8 +22,8 @@
 #include "runctx.h"
 #include "exec_item.h"
 #include "refda/amm/ctrl.h"
-#include <cace/amm/lookup.h>
-#include <cace/ari.h>
+#include "cace/amm/lookup.h"
+#include "cace/ari.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -44,9 +44,9 @@
 #include "agents.h"
 #include "instr.h"
 #include "refdm/config.h"
-#include <cace/amm/msg_if.h>
-#include <cace/util/daemon_run.h>
-#include <cace/util/threadset.h>
+#include "cace/amm/msg_if.h"
+#include "cace/util/daemon_run.h"
+#include "cace/util/threadset.h"
 #include <m-dict.h>
 #include <m-string.h>
 #include <stdio.h>

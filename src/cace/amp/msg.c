@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 #include "msg.h"
-#include <cace/ari/cbor.h>
-#include <cace/ari/text.h>
-#include <cace/util/logging.h>
-#include <cace/util/defs.h>
+#include "cace/ari/cbor.h"
+#include "cace/ari/text.h"
+#include "cace/util/logging.h"
+#include "cace/util/defs.h"
 #include <qcbor/qcbor_spiffy_decode.h>
 
 int cace_amp_msg_encode(m_bstring_t msgbuf, const cace_ari_list_t items)

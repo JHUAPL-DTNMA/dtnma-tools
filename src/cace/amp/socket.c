@@ -23,8 +23,8 @@
 #include "msg.h"
 #include "cace/ari/text.h"
 #include "cace/ari/time_util.h"
-#include <cace/util/logging.h>
-#include <cace/util/defs.h>
+#include "cace/util/logging.h"
+#include "cace/util/defs.h"
 #include <m-bstring.h>
 #include <sys/poll.h>
 #include <sys/socket.h>

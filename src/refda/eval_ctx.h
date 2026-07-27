@@ -20,8 +20,8 @@
 #define REFDA_EVAL_CTX_H_
 
 #include "runctx.h"
-#include <cace/ari.h>
-#include <cace/amm/lookup.h>
+#include "cace/ari.h"
+#include "cace/amm/lookup.h"
 #include <m-variant.h>
 
 #ifdef __cplusplus

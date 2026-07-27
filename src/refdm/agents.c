@@ -36,10 +36,10 @@
  *****************************************************************************/
 
 #include "agents.h"
-#include <cace/ari/text_util.h>
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
-#include <cace/util/defs.h>
+#include "cace/ari/text_util.h"
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
+#include "cace/util/defs.h"
 #include <sys/stat.h>
 
 void refdm_agent_init(refdm_agent_t *obj)

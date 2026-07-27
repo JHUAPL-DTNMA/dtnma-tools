@@ -21,11 +21,11 @@
 #include "adm/ietf.h"
 #include "adm/ietf_dtnma_agent.h"
 #include "amm/oper.h"
-#include <cace/ari/text.h>
-#include <cace/amm/lookup.h>
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
-#include <cace/util/defs.h>
+#include "cace/ari/text.h"
+#include "cace/amm/lookup.h"
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
+#include "cace/util/defs.h"
 
 /** Expand a reference to a literal value matching SIMPLE or EXPR typedef
  */

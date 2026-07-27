@@ -26,11 +26,11 @@
 #include "timeline.h"
 #include "acl.h"
 #include "alarms.h"
-#include <cace/util/daemon_run.h>
-#include <cace/util/threadset.h>
-#include <cace/amm/obj_ns.h>
-#include <cace/amm/obj_store.h>
-#include <cace/amm/msg_if.h>
+#include "cace/util/daemon_run.h"
+#include "cace/util/threadset.h"
+#include "cace/amm/obj_ns.h"
+#include "cace/amm/obj_store.h"
+#include "cace/amm/msg_if.h"
 #include <m-deque.h>
 #include <m-buffer.h>
 #include <pthread.h>

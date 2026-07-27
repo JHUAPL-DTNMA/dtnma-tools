@@ -17,12 +17,12 @@
  */
 
 #include "nm_rest.h"
-#include <cace/ari/text_util.h>
-#include <cace/ari/cbor.h>
-#include <cace/ari/text.h>
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
-#include <cace/util/defs.h>
+#include "cace/ari/text_util.h"
+#include "cace/ari/cbor.h"
+#include "cace/ari/text.h"
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
+#include "cace/util/defs.h"
 #include <m-bstring.h>
 // CivetWeb includes
 #include <cjson/cJSON.h>

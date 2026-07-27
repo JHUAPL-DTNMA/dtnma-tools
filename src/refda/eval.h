@@ -22,7 +22,7 @@
 #include "agent.h"
 #include "runctx.h"
 #include "eval_ctx.h"
-#include <cace/ari.h>
+#include "cace/ari.h"
 
 #ifdef __cplusplus
 extern "C" {

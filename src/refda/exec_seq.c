@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 #include "exec_seq.h"
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
-#include <cace/util/defs.h>
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
+#include "cace/util/defs.h"
 
 void refda_exec_seq_init(refda_exec_seq_t *obj)
 {

@@ -44,9 +44,9 @@
 #if CIVETWEB_FOUND
 #include "nm_rest.h"
 #endif // CIVETWEB_FOUND
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
-#include <cace/util/defs.h>
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
+#include "cace/util/defs.h"
 
 #if POSTGRESQL_FOUND
 #include "nm_sql.h"

@@ -24,7 +24,7 @@
 #include "runctx.h"
 #include "amm/sbr.h"
 #include "amm/tbr.h"
-#include <cace/ari.h>
+#include "cace/ari.h"
 #include <m-atomic.h>
 
 #ifdef __cplusplus
