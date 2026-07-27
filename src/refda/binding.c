@@ -16,17 +16,19 @@
  * limitations under the License.
  */
 #include "binding.h"
-#include "amm/ident.h"
-#include "amm/typedef.h"
+
 #include "amm/const.h"
-#include "amm/var.h"
-#include "amm/edd.h"
 #include "amm/ctrl.h"
+#include "amm/edd.h"
+#include "amm/ident.h"
 #include "amm/oper.h"
 #include "amm/sbr.h"
 #include "amm/tbr.h"
-#include "cace/amm/parameters.h"
+#include "amm/typedef.h"
+#include "amm/var.h"
+
 #include "cace/amm/lookup.h"
+#include "cace/amm/parameters.h"
 #include "cace/amm/semtype.h"
 #include "cace/ari.h"
 #include "cace/ari/text.h"

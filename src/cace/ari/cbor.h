@@ -24,11 +24,14 @@
 
 #include "base.h"
 #include "containers.h"
+
 #include "cace/cace_data.h"
-#include <qcbor/qcbor_encode.h>
+
 #include <qcbor/qcbor_decode.h>
-#include <stdint.h>
+#include <qcbor/qcbor_encode.h>
+
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

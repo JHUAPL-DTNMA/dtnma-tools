@@ -15,12 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cace/config.h"
-#include "logging.h"
 #include "defs.h"
+#include "logging.h"
+
+#include "cace/config.h"
+
+#include <m-atomic.h>
 #include <m-buffer.h>
 #include <m-string.h>
-#include <m-atomic.h>
+
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>

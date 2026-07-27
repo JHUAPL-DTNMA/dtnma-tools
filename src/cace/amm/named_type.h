@@ -19,8 +19,9 @@
 #define CACE_AMM_NAMED_TYPE_H_
 
 #include "typing.h"
-#include <m-string.h>
+
 #include <m-array.h>
+#include <m-string.h>
 
 #ifdef __cplusplus
 extern "C" {

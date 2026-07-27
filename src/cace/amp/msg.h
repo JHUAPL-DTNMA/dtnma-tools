@@ -23,6 +23,7 @@
 #define CACE_AMP_MSG_H_
 
 #include "cace/ari/containers.h"
+
 #include <m-bstring.h>
 
 #ifdef __cplusplus

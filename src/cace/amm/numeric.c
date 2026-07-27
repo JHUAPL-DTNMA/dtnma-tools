@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 #include "numeric.h"
+
 #include "promote.h"
+
 #include "cace/amm/typing.h"
-#include "cace/util/logging.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 bool cace_has_numeric_prim_type(const cace_ari_t *obj)
 {

@@ -16,13 +16,15 @@
  * limitations under the License.
  */
 #include "refdm/mgr.h"
+
 #include "cace/amp/proxy_cli.h"
-#include "cace/util/logging.h"
 #include "cace/util/defs.h"
-#include <sys/socket.h>
-#include <signal.h>
-#include <unistd.h>
+#include "cace/util/logging.h"
+
 #include <errno.h>
+#include <signal.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #if defined(HAVE_LIBSYSTEMD)
 #include <systemd/sd-daemon.h>

@@ -42,8 +42,10 @@
  *****************************************************************************/
 
 #include "ingress.h"
-#include "mgr.h"
+
 #include "agents.h"
+#include "mgr.h"
+
 #include "refdm/config.h"
 #if POSTGRESQL_FOUND
 #include "nm_sql.h"

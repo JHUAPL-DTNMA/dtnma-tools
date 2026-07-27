@@ -25,9 +25,9 @@
 #ifndef CACE_ARI_H_
 #define CACE_ARI_H_
 
-#include "ari/base.h"
-#include "ari/containers.h"
 #include "ari/access.h"
 #include "ari/algo.h"
+#include "ari/base.h"
+#include "ari/containers.h"
 
 #endif /* CACE_ARI_H_ */

@@ -16,18 +16,21 @@
  * limitations under the License.
  */
 #include "agent.h"
+
 #include <refda/agent.h>
 #include <refda/exec_proc.h>
 #include <refda/adm/ietf.h>
+#include <refda/adm/ietf_alarms.h>
 #include <refda/adm/ietf_amm.h>
 #include <refda/adm/ietf_amm_base.h>
 #include <refda/adm/ietf_amm_semtype.h>
-#include <refda/adm/ietf_network_base.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/adm/ietf_dtnma_agent_acl.h>
-#include <refda/adm/ietf_alarms.h>
+#include <refda/adm/ietf_network_base.h>
+
 #include <cace/ari/time_util.h>
 #include <cace/util/logging.h>
+
 #include <assert.h>
 
 void test_util_agent_crit_adms(refda_agent_t *agent)

@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 #include "obj_store.h"
+
 #include "cace/ari/text_util.h"
-#include "cace/util/logging.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 void cace_amm_obj_store_init(cace_amm_obj_store_t *store)
 {

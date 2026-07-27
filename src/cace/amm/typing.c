@@ -16,19 +16,23 @@
  * limitations under the License.
  */
 #include "typing.h"
+
 #include "lookup.h"
 #include "semtype.h"
-#include "cace/ari/type.h"
+
 #include "cace/ari/algo.h"
 #include "cace/ari/text.h"
+#include "cace/ari/type.h"
+#include "cace/config.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
-#include "cace/config.h"
+
 #include <m-dict.h>
-#include <pthread.h>
-#include <math.h>
-#include <float.h>
+
 #include <fenv.h>
+#include <float.h>
+#include <math.h>
+#include <pthread.h>
 
 /// Name any builtin type
 static void builtin_ari_name(const cace_amm_type_t *self, cace_ari_t *name)

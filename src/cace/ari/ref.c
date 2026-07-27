@@ -19,10 +19,13 @@
  * @ingroup group_ari
  */
 #include "ref.h"
+
 #include "containers.h"
 #include "text_util.h"
-#include "cace/util/logging.h"
+
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
+
 #include <inttypes.h>
 
 void cace_ari_date_init(cace_ari_date_t *obj)

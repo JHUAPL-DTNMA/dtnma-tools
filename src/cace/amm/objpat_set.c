@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 #include "objpat_set.h"
-#include "cace/util/logging.h"
+
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 /** Only copy actual OBJPAT values, keep same order from source.
  */

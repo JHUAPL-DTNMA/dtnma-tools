@@ -19,9 +19,11 @@
 #ifndef REFDA_CTRL_EXEC_CTX_H_
 #define REFDA_CTRL_EXEC_CTX_H_
 
-#include "runctx.h"
 #include "exec_item.h"
+#include "runctx.h"
+
 #include "refda/amm/ctrl.h"
+
 #include "cace/amm/lookup.h"
 #include "cace/ari.h"
 

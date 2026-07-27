@@ -23,8 +23,9 @@
 #define CACE_AMM_STATUS_H_
 
 #include "idseg_val.h"
-#include "user_data.h"
 #include "parameters.h"
+#include "user_data.h"
+
 #include "cace/ari.h"
 #include "cace/util/nocase.h"
 

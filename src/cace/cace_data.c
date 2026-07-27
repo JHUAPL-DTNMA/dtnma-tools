@@ -19,9 +19,12 @@
  * @ingroup group_ari
  */
 #include "cace_data.h"
+
 #include "cace/util/defs.h"
+
 #include <m-core.h>
 #include <m-string.h>
+
 #include <string.h>
 
 static void cace_data_int_reset(cace_data_t *data)

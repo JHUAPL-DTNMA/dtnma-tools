@@ -17,8 +17,8 @@
  */
 
 /// Provide a name-mapping thunk between OSAL runtime and Unity test function
-#include <osapi-common.h>
 #include <osapi-bsp.h>
+#include <osapi-common.h>
 
 /// The entrypoint name created by unity
 int unity_main(void);

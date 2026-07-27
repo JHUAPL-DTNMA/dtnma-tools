@@ -25,8 +25,9 @@
 #ifndef CACE_ARI_CONTAINERS_H_
 #define CACE_ARI_CONTAINERS_H_
 
-#include "base.h"
 #include "algo.h"
+#include "base.h"
+
 #include <m-array.h>
 #include <m-bptree.h>
 #include <m-deque.h>

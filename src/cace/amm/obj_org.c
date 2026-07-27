@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 #include "obj_org.h"
-#include "cace/util/logging.h"
+
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 void cace_amm_obj_org_init(cace_amm_obj_org_t *org)
 {

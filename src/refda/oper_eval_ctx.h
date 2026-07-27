@@ -21,7 +21,9 @@
 
 #include "agent.h"
 #include "eval_ctx.h"
+
 #include "refda/amm/oper.h"
+
 #include "cace/ari.h"
 #include "cace/ari/itemized.h"
 

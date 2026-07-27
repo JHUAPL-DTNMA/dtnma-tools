@@ -16,14 +16,15 @@
  * limitations under the License.
  */
 #include "loader.h"
+
 #include "adm/ietf.h"
+#include "adm/ietf_alarms.h"
 #include "adm/ietf_amm.h"
 #include "adm/ietf_amm_base.h"
 #include "adm/ietf_amm_semtype.h"
-#include "adm/ietf_network_base.h"
 #include "adm/ietf_dtnma_agent.h"
 #include "adm/ietf_dtnma_agent_acl.h"
-#include "adm/ietf_alarms.h"
+#include "adm/ietf_network_base.h"
 
 int refda_loader_basemods(refda_agent_t *agent)
 {

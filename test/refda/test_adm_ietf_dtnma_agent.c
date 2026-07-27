@@ -15,23 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "util/ari.h"
 #include "util/agent.h"
+#include "util/ari.h"
 #include "util/runctx.h"
-#include <refda/register.h>
+
+#include <refda/amm/const.h>
+#include <refda/amm/edd.h>
+#include <refda/amm/var.h>
 #include <refda/binding.h>
+#include <refda/register.h>
 #include <refda/valprod.h>
 #include <refda/adm/ietf.h>
 #include <refda/adm/ietf_amm_base.h>
 #include <refda/adm/ietf_amm_semtype.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/adm/ietf_dtnma_agent_acl.h>
-#include <refda/amm/const.h>
-#include <refda/amm/var.h>
-#include <refda/amm/edd.h>
+
 #include <cace/amm/semtype.h>
-#include <cace/util/logging.h>
 #include <cace/util/defs.h>
+#include <cace/util/logging.h>
+
 #include <unity.h>
 
 // Allow this macro

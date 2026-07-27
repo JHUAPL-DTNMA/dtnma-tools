@@ -16,8 +16,11 @@
  * limitations under the License.
  */
 #include "access.h"
+
 #include "objpat.h"
+
 #include "cace/util/defs.h"
+
 #include <timespec.h>
 
 bool cace_ari_is_undefined(const cace_ari_t *ari)

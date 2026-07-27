@@ -18,11 +18,13 @@
 #ifndef CACE_AMM_OBJ_ORG_H_
 #define CACE_AMM_OBJ_ORG_H_
 
-#include "obj_ns.h"
 #include "idseg_val.h"
+#include "obj_ns.h"
+
 #include "cace/util/nocase.h"
-#include <m-shared-ptr.h>
+
 #include <m-rbtree.h>
+#include <m-shared-ptr.h>
 
 #ifdef __cplusplus
 extern "C" {

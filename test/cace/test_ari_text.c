@@ -18,9 +18,10 @@
 /** @file
  * Test the cace_ari_text.h interfaces.
  */
+#include <cace/amm/typing.h>
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
-#include <cace/amm/typing.h>
+
 #include <unity.h>
 
 // Allow this macro

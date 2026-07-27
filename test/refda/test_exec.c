@@ -15,23 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "util/ari.h"
 #include "util/agent.h"
+#include "util/ari.h"
+
+#include <refda/amm/const.h>
+#include <refda/amm/ctrl.h>
+#include <refda/ctrl_exec_ctx.h>
+#include <refda/edd_prod_ctx.h>
 #include <refda/exec.h>
 #include <refda/exec_proc.h>
 #include <refda/register.h>
-#include <refda/edd_prod_ctx.h>
-#include <refda/ctrl_exec_ctx.h>
-#include <refda/amm/const.h>
-#include <refda/amm/ctrl.h>
 #include <refda/adm/ietf.h>
+
 #include <cace/amm/semtype.h>
-#include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
-#include <cace/util/logging.h>
 #include <cace/ari/text.h>
+#include <cace/ari/text_util.h>
 #include <cace/util/defs.h>
+#include <cace/util/logging.h>
+
 #include <timespec.h>
+
 #include <unity.h>
 
 // Allow this macro

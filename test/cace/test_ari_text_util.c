@@ -18,10 +18,11 @@
 /** @file
  * Test the ari_text_util.h interfaces.
  */
-#include <cace/ari/text_util.h>
 #include <cace/ari/lit.h>
-#include <unity.h>
+#include <cace/ari/text_util.h>
+
 #include <string.h>
+#include <unity.h>
 
 #define TEST_CASE(...)
 

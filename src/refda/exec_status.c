@@ -16,8 +16,10 @@
  * limitations under the License.
  */
 #include "exec_status.h"
+
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
+
 #include <stddef.h>
 
 void refda_exec_status_init(refda_exec_status_t *obj)

@@ -23,7 +23,9 @@
 #define CACE_ARI_TEXT_UTIL_H_
 
 #include "cace/cace_data.h"
+
 #include <m-string.h>
+
 #include <stdint.h>
 #include <time.h>
 

@@ -22,9 +22,9 @@
 #ifndef CACE_AMM_SEMTYPE_USE_H_
 #define CACE_AMM_SEMTYPE_USE_H_
 
-#include "cace/util/range.h"
-#include "cace/config.h"
 #include "cace/ari.h"
+#include "cace/config.h"
+#include "cace/util/range.h"
 #if PCRE_FOUND
 #include <pcre2.h>
 #endif /* PCRE_FOUND */

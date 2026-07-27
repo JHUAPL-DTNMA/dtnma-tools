@@ -16,12 +16,14 @@
  * limitations under the License.
  */
 #include "ctrl_exec_ctx.h"
+
+#include "agent.h"
 #include "exec_seq.h"
 #include "timeline.h"
-#include "agent.h"
-#include "cace/util/logging.h"
+
 #include "cace/ari/text.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 int refda_ctrl_exec_ctx_init(refda_ctrl_exec_ctx_t *obj, refda_exec_item_ptr_t *item_ptr)
 {

@@ -16,12 +16,15 @@
  * limitations under the License.
  */
 #include "semtype.h"
+
 #include "lookup.h"
+
 #include "cace/ari/algo.h"
 #include "cace/ari/text.h"
+#include "cace/config.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
-#include "cace/config.h"
+
 #include <m-dict.h>
 
 static bool cace_amm_semtype_use_constraints(const cace_amm_semtype_use_t *semtype, const cace_ari_t *val)

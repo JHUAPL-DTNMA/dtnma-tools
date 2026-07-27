@@ -23,8 +23,10 @@
 #define CACE_UTIL_THREADSET_H_
 
 #include "cace/config.h"
-#include <pthread.h>
+
 #include <m-list.h>
+
+#include <pthread.h>
 
 /// @cond Doxygen_Suppress
 M_LIST_DEF(cace_threadset, pthread_t)

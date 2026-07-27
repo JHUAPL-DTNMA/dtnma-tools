@@ -19,6 +19,7 @@
 #define TEST_CACE_FUZZ_COMMON_H_
 
 #include <cace/util/logging.h>
+
 #include <inttypes.h>
 #include <stddef.h>
 

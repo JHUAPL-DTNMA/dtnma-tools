@@ -22,10 +22,11 @@
 #ifndef CACE_AMM_LOOKUP_H_
 #define CACE_AMM_LOOKUP_H_
 
-#include "obj_ns.h"
 #include "obj_desc.h"
+#include "obj_ns.h"
 #include "obj_store.h"
 #include "parameters.h"
+
 #include "cace/ari.h"
 
 #ifdef __cplusplus

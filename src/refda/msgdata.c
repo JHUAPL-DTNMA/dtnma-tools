@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "msgdata.h"
+
 #include "cace/util/defs.h"
 
 void refda_msgdata_init(refda_msgdata_t *obj)

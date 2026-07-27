@@ -16,13 +16,16 @@
  * limitations under the License.
  */
 #include "algo.h"
+
 #include "containers.h"
 #include "objpat.h"
 #include "text.h"
-#include "cace/util/logging.h"
-#include "cace/util/defs.h"
+
 #include "cace/amm/numeric.h"
 #include "cace/amm/typing.h"
+#include "cace/util/defs.h"
+#include "cace/util/logging.h"
+
 #include <math.h>
 
 static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor, const cace_ari_visit_ctx_t *ctx);

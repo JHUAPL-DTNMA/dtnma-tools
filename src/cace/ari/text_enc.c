@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "text.h"
-#include "text_util.h"
 #include "access.h"
 #include "objpat.h"
+#include "text.h"
+#include "text_util.h"
+
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
+
 #include <inttypes.h>
 
 typedef struct

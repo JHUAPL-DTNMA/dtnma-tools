@@ -19,26 +19,29 @@
  * Test the internal API for alarm bookkeeping, separate from the ADM
  * exposing some of these data and behaviors.
  */
-#include "util/ari.h"
 #include "util/agent.h"
+#include "util/ari.h"
 #include "util/runctx.h"
-#include <refda/register.h>
-#include <refda/binding.h>
-#include <refda/valprod.h>
-#include <refda/exec_proc.h>
-#include <refda/adm/ietf.h>
-#include <refda/adm/ietf_amm_base.h>
-#include <refda/adm/ietf_alarms.h>
-#include <refda/amm/ident.h>
+
 #include <refda/amm/const.h>
-#include <refda/amm/var.h>
 #include <refda/amm/edd.h>
+#include <refda/amm/ident.h>
+#include <refda/amm/var.h>
+#include <refda/binding.h>
+#include <refda/exec_proc.h>
+#include <refda/register.h>
+#include <refda/valprod.h>
+#include <refda/adm/ietf.h>
+#include <refda/adm/ietf_alarms.h>
+#include <refda/adm/ietf_amm_base.h>
+
 #include <cace/amm/semtype.h>
-#include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
 #include <cace/ari/text.h>
-#include <cace/util/logging.h>
+#include <cace/ari/text_util.h>
 #include <cace/util/defs.h>
+#include <cace/util/logging.h>
+
 #include <unity.h>
 
 // Allow this macro

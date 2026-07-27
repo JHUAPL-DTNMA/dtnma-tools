@@ -17,8 +17,10 @@
  */
 
 #include "threadset.h"
-#include "logging.h"
+
 #include "defs.h"
+#include "logging.h"
+
 #include <errno.h>
 
 int cace_threadset_start(cace_threadset_t tset, const cace_threadinfo_t *info, size_t count, void *arg)

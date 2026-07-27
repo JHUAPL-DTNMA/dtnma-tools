@@ -16,11 +16,13 @@
  * limitations under the License.
  */
 #include "exec_item.h"
-#include "exec_seq.h"
-#include "cace/util/defs.h"
-#include "ctrl_exec_ctx.h"
+
 #include "agent.h"
+#include "ctrl_exec_ctx.h"
+#include "exec_seq.h"
 #include "runctx.h"
+
+#include "cace/util/defs.h"
 
 void refda_exec_item_resume(refda_exec_item_t *obj)
 {

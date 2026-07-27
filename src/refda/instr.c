@@ -20,6 +20,7 @@
  * Agent Instrumentation definitions.
  */
 #include "instr.h"
+
 #include "cace/util/defs.h"
 
 void refda_instr_init(refda_instr_t *obj)

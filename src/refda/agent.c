@@ -16,22 +16,25 @@
  * limitations under the License.
  */
 #include "agent.h"
-#include "ingress.h"
-#include "egress.h"
-#include "exec.h"
-#include "reporting.h"
-#include "amm/typedef.h"
+
 #include "adm/ietf.h"
 #include "adm/ietf_amm_base.h"
 #include "adm/ietf_dtnma_agent.h"
 #include "adm/ietf_dtnma_agent_acl.h"
+#include "amm/typedef.h"
 #include "binding.h"
-#include "cace/ari/text.h"
+#include "egress.h"
+#include "exec.h"
+#include "ingress.h"
+#include "reporting.h"
+
 #include "cace/amm/lookup.h"
-#include "cace/util/threadset.h"
+#include "cace/ari/text.h"
+#include "cace/util/defs.h"
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
-#include "cace/util/defs.h"
+#include "cace/util/threadset.h"
+
 #include <errno.h>
 
 void refda_agent_init(refda_agent_t *agent)

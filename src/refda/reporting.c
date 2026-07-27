@@ -16,13 +16,15 @@
  * limitations under the License.
  */
 #include "reporting.h"
+
+#include "eval.h"
 #include "reporting_ctx.h"
 #include "valprod.h"
-#include "eval.h"
+
 #include "cace/ari/text.h"
-#include "cace/util/mutex.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
+#include "cace/util/mutex.h"
 
 int refda_reporting_ctrl(refda_runctx_t *runctx, const cace_ari_t *target, cace_ari_t *result)
 {

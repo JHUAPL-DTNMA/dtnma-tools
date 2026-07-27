@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "semtype_cnst.h"
+
 #include "cace/util/logging.h"
 
 void cace_amm_semtype_cnst_init(cace_amm_semtype_cnst_t *obj)

@@ -21,11 +21,13 @@
  * Provide an ION BP adapter for AMP messaging.
  */
 #include "ion_bp.h"
+
 #include "msg.h"
+
 #include "cace/ari/text.h"
 #include "cace/ari/time_util.h"
-#include "cace/util/logging.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 #if ION_FOUND
 #include <bp.h>

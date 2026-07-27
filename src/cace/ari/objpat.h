@@ -24,10 +24,13 @@
 #define CACE_ARI_OBJPAT_H_
 
 #include "base.h"
-#include "cace/util/range.h"
+
 #include "cace/config.h"
+#include "cace/util/range.h"
+
 #include <m-string.h>
 #include <m-variant.h>
+
 #include <stdbool.h>
 
 #ifdef __cplusplus

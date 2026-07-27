@@ -19,8 +19,11 @@
  * @ingroup group_ari
  */
 #include "idseg.h"
+
 #include "text_util.h"
+
 #include "cace/util/defs.h"
+
 #include <inttypes.h>
 
 void cace_ari_idseg_init(cace_ari_idseg_t *idseg)

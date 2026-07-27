@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "itemized.h"
+
 #include "cace/util/defs.h"
 
 void cace_ari_itemized_init(cace_ari_itemized_t *obj)

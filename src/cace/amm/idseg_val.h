@@ -19,6 +19,7 @@
 #define CACE_AMM_IDSEG_VAL_H_
 
 #include "idseg_ref.h"
+
 #include "cace/util/defs.h"
 
 #ifdef __cplusplus

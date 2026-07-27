@@ -20,19 +20,23 @@
  * Provide a POSIX datagram socket (AF_UNIX) adapter for AMP messaging.
  */
 #include "socket.h"
+
 #include "msg.h"
+
 #include "cace/ari/text.h"
 #include "cace/ari/time_util.h"
-#include "cace/util/logging.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
+
 #include <m-bstring.h>
+
+#include <errno.h>
+#include <signal.h>
+#include <strings.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <signal.h>
-#include <strings.h>
 #include <unistd.h>
-#include <errno.h>
 
 static const char *URI_PREFIX = "file:";
 

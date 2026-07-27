@@ -19,11 +19,13 @@
 #include "refda/loader.h"
 #include "refda/adm/ietf.h"
 #include "refda/adm/ietf_dtnma_agent.h"
+
 #include "cace/amp/ion_bp.h"
-#include "cace/ari/text.h"
 #include "cace/ari/macrofile.h"
-#include "cace/util/logging.h"
+#include "cace/ari/text.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
+
 #include <bp.h>
 #include <signal.h>
 #include <unistd.h>

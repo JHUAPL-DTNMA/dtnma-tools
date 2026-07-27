@@ -19,20 +19,23 @@
 #ifndef REFDA_AGENT_H_
 #define REFDA_AGENT_H_
 
-#include "instr.h"
-#include "msgdata.h"
-#include "exec_seq.h"
-#include "rpt_agg.h"
-#include "timeline.h"
 #include "acl.h"
 #include "alarms.h"
-#include "cace/util/daemon_run.h"
-#include "cace/util/threadset.h"
+#include "exec_seq.h"
+#include "instr.h"
+#include "msgdata.h"
+#include "rpt_agg.h"
+#include "timeline.h"
+
+#include "cace/amm/msg_if.h"
 #include "cace/amm/obj_ns.h"
 #include "cace/amm/obj_store.h"
-#include "cace/amm/msg_if.h"
-#include <m-deque.h>
+#include "cace/util/daemon_run.h"
+#include "cace/util/threadset.h"
+
 #include <m-buffer.h>
+#include <m-deque.h>
+
 #include <pthread.h>
 
 #ifdef __cplusplus

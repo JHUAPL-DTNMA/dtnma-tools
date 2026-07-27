@@ -25,27 +25,32 @@
  */
 
 #include "ietf_dtnma_agent.h"
+
 #include "refda/agent.h"
-#include "refda/register.h"
-#include "refda/edd_prod_ctx.h"
 #include "refda/ctrl_exec_ctx.h"
+#include "refda/edd_prod_ctx.h"
 #include "refda/oper_eval_ctx.h"
+#include "refda/register.h"
+
 #include "cace/amm/semtype.h"
 #include "cace/ari/text.h"
+#include "cace/util/defs.h"
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
-#include "cace/util/defs.h"
 
 /*   START CUSTOM INCLUDES HERE */
+#include "refda/binding.h"
 #include "refda/eval.h"
 #include "refda/exec.h"
 #include "refda/exec_proc.h"
-#include "refda/binding.h"
 #include "refda/reporting.h"
-#include "cace/amm/promote.h"
+
 #include "cace/amm/numeric.h"
+#include "cace/amm/promote.h"
 #include "cace/ari/text_util.h"
+
 #include <timespec.h>
+
 #include <math.h>
 /*   STOP CUSTOM INCLUDES HERE  */
 

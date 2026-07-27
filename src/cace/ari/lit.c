@@ -19,9 +19,12 @@
  * @ingroup group_ari
  */
 #include "lit.h"
+
 #include "containers.h"
 #include "objpat.h"
+
 #include "cace/util/defs.h"
+
 #include <inttypes.h>
 
 const time_t cace_ari_dtn_epoch = CACE_ARI_DTN_EPOCH;

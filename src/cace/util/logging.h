@@ -40,8 +40,8 @@
 #ifndef CACE_LOGGING_H_
 #define CACE_LOGGING_H_
 
-#include <syslog.h>
 #include <stdbool.h>
+#include <syslog.h>
 
 #ifdef __cplusplus
 extern "C" {

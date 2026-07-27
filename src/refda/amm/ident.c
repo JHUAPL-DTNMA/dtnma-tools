@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "ident.h"
+
 #include "cace/ari/text.h"
 #include "cace/util/logging.h"
 

@@ -19,6 +19,7 @@
 #define CACE_AMM_PARAMETERS_H_
 
 #include "typing.h"
+
 #include "cace/ari.h"
 #include "cace/ari/itemized.h"
 #include "cace/config.h"

@@ -23,11 +23,14 @@
  * the AMM can be uniquely identified using an ARI.
  */
 #include "cbor.h"
+
 #include "access.h"
 #include "objpat.h"
 #include "text_util.h"
+
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
+
 #include <qcbor/qcbor_spiffy_decode.h>
 
 int cace_ari_cbor_encode(cace_data_t *buf, const cace_ari_t *ari)
