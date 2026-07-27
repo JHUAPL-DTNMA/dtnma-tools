@@ -895,7 +895,7 @@ static int agentAnyInfoHandler(struct mg_connection *conn, refdm_agent_t *agent)
         char suffix_eid[uri_len + 2];
         snprintf(suffix_eid, sizeof(suffix_eid), "%s/", ri->local_uri);
         mg_send_http_redirect(conn, suffix_eid, HTTP_PERM_REDIRECT);
-        return HTTP_PERM_REDIRECT;;
+        return HTTP_PERM_REDIRECT;
     }
 
     mg_response_header_start(conn, HTTP_NO_CONTENT);
