@@ -84,21 +84,25 @@ class BaseRefdm(unittest.TestCase):
         sql_sock = os.path.join(cls._sqldir.name, 'run')
         os.makedirs(sql_sock)
 
+        #fmt: off
         initdb = CmdRunner([
             'initdb',
             '-D', sql_data,
             '--auth-local=trust',
         ])
+        #fmt: on
         initdb.start()
         if initdb.wait(timeout=10) != 0:
             raise RuntimeError('Failed to run initdb')
 
+        #fmt: off
         args = [
             'postgres',
             '-D', sql_data,
             '-h', '',
             '-k', sql_sock
         ]
+        #fmt: on
         cls._sqldb = CmdRunner(args)
         cls._sqldb.start()
 
@@ -111,10 +115,12 @@ class BaseRefdm(unittest.TestCase):
         os.environ['PGUSER'] = ''
         os.environ.pop('PGPASSWORD', None)
 
+        #fmt: off
         isready = CmdRunner([
             'pg_isready',
             '-d', 'postgres',
         ])
+        #fmt: on
         timer = Timer(10)
         while timer:
             timer.sleep(0.1)
@@ -139,12 +145,14 @@ class BaseRefdm(unittest.TestCase):
         ''' Create a test database in a running postgres server '''
         self._database_drop()
 
+        #fmt: off
         psql = CmdRunner([
             'psql',
             '-w',
             '-d', 'postgres',
             '-c', f'CREATE DATABASE {self.DB_NAME}',
         ])
+        #fmt: on
         psql.start()
         if psql.wait() != 0:
             raise RuntimeError('Failed to run create database')
@@ -157,12 +165,15 @@ class BaseRefdm(unittest.TestCase):
             OWNPATH, '..', 'refdb-sql', 'postgres', 'Database_Scripts', '*.sql')
         # execute in alphabetic order
         for filepath in sorted(glob.glob(script_pat)):
-            psql = CmdRunner([
+            #fmt: off
+            args = [
                 'psql',
                 '-w',
                 '-d', self.DB_NAME,
                 '-f', filepath,
-            ], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            ]
+            #fmt: on
+            psql = CmdRunner(args, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
             psql.start()
             if psql.wait() != 0:
                 raise RuntimeError('Failed to run psql')
@@ -171,6 +182,7 @@ class BaseRefdm(unittest.TestCase):
 
     def _database_drop(self):
         ''' Drop the test database if necessary '''
+        #fmt: off
         psql = CmdRunner([
             'psql',
             '-w',
@@ -276,6 +288,7 @@ class TestRefdmSocket(BaseRefdm):
             for index in range(3)
         ]
 
+        #fmt: off
         args = compose_args([
             'refdm-socket',
             '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
@@ -882,6 +895,7 @@ class TestRefdmProxy(BaseRefdm):
         # Name for accepted connection
         self._proxy_sock_conn = None
 
+        #fmt: off
         args = compose_args([
             'refdm-proxy',
             '-l', 'debug',

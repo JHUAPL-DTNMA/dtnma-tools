@@ -154,6 +154,7 @@ class TestRefdaSocket(unittest.TestCase):
             with open(startup_path, 'r') as startup_file:
                 LOGGER.debug('Startup macro:\n%s', startup_file.read())
 
+        #fmt: off
         args = compose_args([
             'refda-socket',
             '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
@@ -161,6 +162,7 @@ class TestRefdaSocket(unittest.TestCase):
             '-a', ('file:' + self._agent_sock_path),
             '-m', ('file:' + self._mgr_bind[0].path),
         ])
+        #fmt: on
         self._agent = CmdRunner(args)
 
     def tearDown(self) -> None:

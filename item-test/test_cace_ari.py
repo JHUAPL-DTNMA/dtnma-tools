@@ -64,10 +64,12 @@ class TestCaceAri(unittest.TestCase):
 
     def _start(self, *cmd_args: str) -> CmdRunner:
         ''' Spawn the process. '''
+        #fmt: off
         base_args = (
             'cace_ari',
             '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
         )
+        #fmt: on
         args = compose_args(list(base_args + cmd_args))
         self._runner = CmdRunner(args)
         self._runner.start()
