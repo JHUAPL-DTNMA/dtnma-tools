@@ -247,14 +247,17 @@ static int agentsPostHandler(struct mg_connection *conn)
 
     if (!retval)
     {
-        m_string_t resp;
-        m_string_init_printf(resp, "Successfully created agent %s", m_string_get_cstr(eid));
+        int  perc_eid_len = 3 * m_string_size(eid);
+        char perc_eid[perc_eid_len];
+        memset(perc_eid, 0, perc_eid_len);
+        perc_eid_len = mg_url_encode(m_string_get_cstr(eid), perc_eid, perc_eid_len);
+        m_string_t loc;
+        m_string_init_printf(loc, "./agents/eid/%s/", perc_eid);
 
-        // FIXME should really be a 207
-        mg_send_http_ok(conn, "text/plain", m_string_size(resp));
-        mg_printf(conn, "%s", m_string_get_cstr(resp));
-        m_string_clear(resp);
-        retval = HTTP_OK;
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_add(conn, "Location", m_string_get_cstr(loc), m_string_size(loc));
+        mg_response_header_send(conn);
+        return HTTP_NO_CONTENT;
     }
 
     m_string_clear(eid);
@@ -540,11 +543,9 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
 
         CACE_LOG_INFO("Successfully sent EXECSETs");
 
-        const char *resp = "Successfully sent EXECSETs";
-        mg_send_http_ok(conn, "text/plain", strlen(resp));
-        mg_printf(conn, "%s", resp);
-
-        retval = HTTP_OK;
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
+        retval = HTTP_NO_CONTENT;
     }
 
     cace_ari_list_clear(tosend);
@@ -882,6 +883,42 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
     }
 }
 
+static int agentAnyInfoHandler(struct mg_connection *conn, refdm_agent_t *agent)
+{
+
+    const struct mg_request_info *ri = mg_get_request_info(conn);
+
+    size_t uri_len = strlen(ri->local_uri);
+    if ((uri_len > 1) && (ri->local_uri[uri_len - 1] != '/'))
+    {
+        // append the canonical slash
+        char suffix_eid[uri_len + 2];
+        snprintf(suffix_eid, sizeof(suffix_eid), "%s/", ri->local_uri);
+        mg_send_http_redirect(conn, suffix_eid, HTTP_PERM_REDIRECT);
+        return HTTP_PERM_REDIRECT;;
+    }
+
+    mg_response_header_start(conn, HTTP_NO_CONTENT);
+    mg_response_header_send(conn);
+    return HTTP_NO_CONTENT;
+}
+
+/** Handler /agents/eid/$eid/ - Determine if agent is registered
+ */
+static int agentEidInfoHandler(struct mg_connection *conn, void *cbdata _U_)
+{
+    const struct mg_request_info *ri = mg_get_request_info(conn);
+    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    refdm_agent_t *agent = NULL;
+
+    int retval = getAgentFromEid(conn, AGENTS_EID_PREFIX, &agent);
+    if (retval)
+    {
+        return retval;
+    }
+    return agentAnyInfoHandler(conn, agent);
+}
+
 /** Handler /agents/eid/$eid/send - Send EXECSET encoded according to query key "form"
  */
 static int agentEidSendHandler(struct mg_connection *conn, void *cbdata _U_)
@@ -1024,6 +1061,22 @@ static int agentIdxSendHandler(struct mg_connection *conn, void *cbdata _U_)
     return agentAnySendHandler(conn, agent);
 }
 
+/** Handler /agents/idx/$idx/ - Determine if agent is registered
+ */
+static int agentIdxInfoHandler(struct mg_connection *conn, void *cbdata _U_)
+{
+    const struct mg_request_info *ri = mg_get_request_info(conn);
+    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    refdm_agent_t *agent = NULL;
+
+    int res = getAgentFromIdx(conn, AGENTS_IDX_PREFIX, &agent);
+    if (res)
+    {
+        return res;
+    }
+    return agentAnyInfoHandler(conn, agent);
+}
+
 /** Handler /agents/idx/$idx/clear_reports - Clear all received reports for this agent.
  */
 static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata _U_)
@@ -1043,10 +1096,9 @@ static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata 
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
 
-        const char *resp = "Successfully cleared reports";
-        mg_send_http_ok(conn, "text/plain", strlen(resp));
-        mg_printf(conn, "%s", resp);
-        return HTTP_OK;
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_send(conn);
+        return HTTP_NO_CONTENT;
     }
     else
     {
@@ -1145,10 +1197,14 @@ int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
     mg_set_request_handler(*ctx, VERSION_URI, versionHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_URI, agentsHandler, 0);
 
+    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*$", agentEidInfoHandler, 0);
+    mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/$", agentEidInfoHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/clear_reports$", agentEidClearReportsHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/send$", agentEidSendHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/reports$", agentEidReportsHandler, 0);
 
+    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*$", agentIdxInfoHandler, 0);
+    mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/$", agentIdxInfoHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/clear_reports$", agentIdxClearReportsHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/send$", agentIdxSendHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_IDX_PREFIX "*/reports$", agentIdxReportsHandler, 0);
