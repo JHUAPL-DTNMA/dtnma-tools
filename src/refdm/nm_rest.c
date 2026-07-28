@@ -260,7 +260,7 @@ static int agentsPostHandler(struct mg_connection *conn)
             m_string_clear(url);
         }
         mg_response_header_send(conn);
-        return HTTP_CREATED;
+        retval = HTTP_CREATED;
     }
 
     m_string_clear(eid);
