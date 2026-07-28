@@ -100,7 +100,7 @@ then
 
     CURLOPTS="-svf --variable '%REFDA_EID'"
     # All manager actions operate with this base
-    URIBASE="http://amp-manager:8089/nm/api"
+    URIBASE="http://amp-manager:8089/api"
 
     CMD="curl ${CURLOPTS} -XPOST ${URIBASE}/agents -H 'Content-Type: text/plain' --expand-data '{{REFDA_EID}}'"
     echo $CMD | ${DEXEC} bash || true
