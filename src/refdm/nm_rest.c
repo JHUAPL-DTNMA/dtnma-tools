@@ -249,8 +249,8 @@ static int agentsPostHandler(struct mg_connection *conn)
     {
         mg_response_header_start(conn, HTTP_CREATED);
         {
-            int  perc_eid_len = 3 * m_string_size(eid) + 1;
-            char perc_eid[perc_eid_len];
+            size_t perc_eid_len = 3 * m_string_size(eid) + 1;
+            char   perc_eid[perc_eid_len];
             memset(perc_eid, 0, perc_eid_len);
             mg_url_encode(m_string_get_cstr(eid), perc_eid, perc_eid_len);
 
