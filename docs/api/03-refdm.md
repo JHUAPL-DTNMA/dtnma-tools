@@ -28,7 +28,7 @@ This library is meant to implement logical behaviors defined in Section 2.3 and 
 The application-side interface of the REFDM is provided by a RESTful API operating over HTTP 1.1, with the REFDM acting as the HTTP server.
 
 
-The following APIs are available from the base URI of `http://localhost:8089/nm/api/` (_i.e._ the first endpoint `http://localhost:8089/nm/api/version`).
+The following APIs are available from the base URI of `http://localhost:8089/api/` (_i.e._ the first endpoint `http://localhost:8089/api/version`).
 
 The URI template parameter `{/TYPE,ID}` below refers to a unique identifier for an Agent as one of either:
 
