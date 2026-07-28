@@ -41,12 +41,12 @@ The template parameter `{?form}` below refers to a choice of encoded form for AR
  * The form "cbor" meaning a sequence of CBOR-encoded form of ARIs consistent with the "application/cbor-seq" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
  * The form "cborhex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
 
- | Method | Path                              | Description                                  |
- |--------|-----------------------------------|----------------------------------------------|
- | GET    | `/version`                        | Return version information as a JSON object. |
- | GET    | `/agents`                         | Get a listing of registered agents as a JSON object. |
- | POST   | `/agents`                         | Register a new Agent at specified EID. The EID is encoded as a URI in request body. |
- | GET    | `/agents/{/TYPE,ID}`               | Retrieve node information, including index order, name, and number of reports available. |
+ | Method | Path                               | Description                                  |
+ |--------|------------------------------------|----------------------------------------------|
+ | GET    | `/version`                         | Return version information as a JSON object. |
+ | GET    | `/agents`                          | Get a listing of registered agents as a JSON object. |
+ | POST   | `/agents`                          | Register a new Agent at specified EID. The EID is encoded as a URI in request body. |
+ | HEAD   | `/agents/{/TYPE,ID}/`              | Determine if an Agent is registered by status code 204 or 404. |
  | PUT    | `/agents/{/TYPE,ID}/clear_reports` | Clear all available reports for given Agent. |
  | PUT    | `/agents/{/TYPE,ID}/send{?form}`   | Send one or more EXECSET to the specific Agent. The encoded form is in the request body. |
  | GET    | `/agents/{/TYPE,ID}/reports{?form}`| Retrieve list of RPTSET for a specific Agent. The encoded form is in the response body. |
