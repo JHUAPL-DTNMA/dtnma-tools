@@ -254,7 +254,7 @@ class TestRefdmSocket(BaseRefdm):
 
     def setUp(self) -> None:
         self._req = requests.Session()
-        self._base_url = 'http://localhost:8089/nm/api/'
+        self._base_url = 'http://localhost:8089/api/'
 
         db_uri = self._database_create()
         self._db_eng = sqlalchemy.create_engine(db_uri)
@@ -900,7 +900,7 @@ class TestRefdmProxy(BaseRefdm):
 
     def setUp(self) -> None:
         self._req = requests.Session()
-        self._base_url = 'http://localhost:8089/nm/api/'
+        self._base_url = 'http://localhost:8089/api/'
 
         db_uri = self._database_create()
         self._db_eng = sqlalchemy.create_engine(db_uri)

@@ -38,7 +38,7 @@
 /// Chunking size for receiving request bodies
 #define REQUEST_BODY_CHUNK 4096
 
-#define BASE_API_URI      "/nm/api"
+#define BASE_API_URI      "/api"
 #define VERSION_URI       BASE_API_URI "/version$"
 #define AGENTS_URI        BASE_API_URI "/agents$"
 #define AGENTS_IDX_PREFIX BASE_API_URI "/agents/idx/"
