@@ -432,7 +432,7 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(204, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(resp.headers.get('location'))
         agent1_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
@@ -454,7 +454,7 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(204, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(resp.headers.get('location'))
         agent2_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
         self.assertNotEqual(agent1_base.casefold(), agent2_base.casefold())
@@ -507,7 +507,7 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(204, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         resp = self._req.post(
@@ -755,7 +755,7 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(204, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
@@ -792,7 +792,7 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(204, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
@@ -829,7 +829,7 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(204, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
@@ -866,7 +866,7 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(204, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         # each primitive type of nonce
@@ -1113,7 +1113,7 @@ class TestRefdmProxy(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(204, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
@@ -1154,7 +1154,7 @@ class TestRefdmProxy(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(204, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"

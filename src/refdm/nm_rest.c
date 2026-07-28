@@ -247,17 +247,20 @@ static int agentsPostHandler(struct mg_connection *conn)
 
     if (!retval)
     {
-        int  perc_eid_len = 3 * m_string_size(eid);
-        char perc_eid[perc_eid_len];
-        memset(perc_eid, 0, perc_eid_len);
-        perc_eid_len = mg_url_encode(m_string_get_cstr(eid), perc_eid, perc_eid_len);
-        m_string_t loc;
-        m_string_init_printf(loc, "./agents/eid/%s/", perc_eid);
+        mg_response_header_start(conn, HTTP_CREATED);
+        {
+            int  perc_eid_len = 3 * m_string_size(eid) + 1;
+            char perc_eid[perc_eid_len];
+            memset(perc_eid, 0, perc_eid_len);
+            mg_url_encode(m_string_get_cstr(eid), perc_eid, perc_eid_len);
 
-        mg_response_header_start(conn, HTTP_NO_CONTENT);
-        mg_response_header_add(conn, "Location", m_string_get_cstr(loc), m_string_size(loc));
+            m_string_t url;
+            m_string_init_printf(url, "./agents/eid/%s/", perc_eid);
+            mg_response_header_add(conn, "Location", m_string_get_cstr(url), (int)m_string_size(url));
+            m_string_clear(url);
+        }
         mg_response_header_send(conn);
-        return HTTP_NO_CONTENT;
+        return HTTP_CREATED;
     }
 
     m_string_clear(eid);
@@ -705,10 +708,10 @@ static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *age
 
         char   buf[64];
         size_t buf_used = snprintf(buf, sizeof(buf), "%zu", clen);
-        mg_response_header_add(conn, "Content-Length", buf, buf_used);
+        mg_response_header_add(conn, "Content-Length", buf, (int)buf_used);
 
         buf_used = strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &mgr_time);
-        mg_response_header_add(conn, "Last-Modified", buf, buf_used);
+        mg_response_header_add(conn, "Last-Modified", buf, (int)buf_used);
 
         mg_response_header_send(conn);
         if (!m_string_empty_p(body_text))
@@ -883,7 +886,7 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
     }
 }
 
-static int agentAnyInfoHandler(struct mg_connection *conn, refdm_agent_t *agent)
+static int agentAnyInfoHandler(struct mg_connection *conn, refdm_agent_t *agent _U_)
 {
 
     const struct mg_request_info *ri = mg_get_request_info(conn);
