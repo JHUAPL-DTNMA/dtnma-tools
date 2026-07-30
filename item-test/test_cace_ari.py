@@ -16,42 +16,40 @@
 # limitations under the License.
 #
 
-import binascii
 import io
 import logging
 import os
 import signal
-import subprocess
-import time
-from typing import Optional, List, Tuple
 import unittest
-import cbor2
-from ace import (AdmSet, ARI, ari, ari_text, ari_cbor, nickname)
+from typing import Optional
+
+from ace import ARI, AdmSet, ari_cbor, ari_text, nickname
+
 from helpers.runner import CmdRunner, compose_args
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
 
-HEXPAT = r'^[0-9a-fA-F]+'
-''' Generic hexadecimal regex pattern. '''
-URIPAT = r'^ari:.+'
-''' Text form of ARI regex pattern. '''
+HEXPAT = r"^[0-9a-fA-F]+"
+""" Generic hexadecimal regex pattern. """
+URIPAT = r"^ari:.+"
+""" Text form of ARI regex pattern. """
 
 # ADM handling outside of tests
 ADMS = AdmSet(cache_dir=False)
-logging.getLogger('ace.adm_yang').setLevel(logging.ERROR)
-ADMS.load_from_dirs([os.path.join(OWNPATH, 'deps', 'adms')])
+logging.getLogger("ace.adm_yang").setLevel(logging.ERROR)
+ADMS.load_from_dirs([os.path.join(OWNPATH, "deps", "adms")])
 
 
 class TestCaceAri(unittest.TestCase):
-    ''' Verify behavior of the cace_ari utility '''
+    """Verify behavior of the cace_ari utility"""
 
     def setUp(self):
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+        logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
-        path = os.path.abspath(os.path.join(OWNPATH, '..'))
+        path = os.path.abspath(os.path.join(OWNPATH, ".."))
         os.chdir(path)
-        LOGGER.info('Working in %s', path)
+        LOGGER.info("Working in %s", path)
 
         self._runner: Optional[CmdRunner] = None
 
@@ -63,11 +61,13 @@ class TestCaceAri(unittest.TestCase):
             self._runner = None
 
     def _start(self, *cmd_args: str) -> CmdRunner:
-        ''' Spawn the process. '''
+        """Spawn the process."""
+        # fmt: off
         base_args = (
             'cace_ari',
             '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
         )
+        # fmt: on
         args = compose_args(list(base_args + cmd_args))
         self._runner = CmdRunner(args)
         self._runner.start()
@@ -92,61 +92,61 @@ class TestCaceAri(unittest.TestCase):
         return ari
 
     def test_get_help(self):
-        runner = self._start('-h')
+        runner = self._start("-h")
         self.assertEqual(0, runner.proc.wait(timeout=1))
 
     def test_start_sigint(self):
         runner = self._start()
 
-        LOGGER.info('Sending SIGINT')
+        LOGGER.info("Sending SIGINT")
         runner.proc.send_signal(signal.SIGINT)
         self.assertEqual(-2, self._runner.wait())
 
     def test_start_close(self):
         runner = self._start()
 
-        LOGGER.info('Closing stdin')
+        LOGGER.info("Closing stdin")
         runner.proc.stdin.close()
         self.assertEqual(0, runner.proc.wait(timeout=1))
 
     def test_log_level_valid(self):
-        runner = self._start('--log-level=debug')
+        self._start("--log-level=debug")
 
     def test_log_level_invalid(self):
-        runner = self._start('--log-level=other')
+        runner = self._start("--log-level=other")
         self.assertEqual(1, runner.proc.wait(timeout=1))
 
     def test_translate_inform_auto_text(self):
-        runner = self._start('--inform=auto', '--outform=cborhex')
+        runner = self._start("--inform=auto", "--outform=cborhex")
 
-        runner.send_stdin('ari:10\n')
+        runner.send_stdin("ari:10\n")
         got = runner.wait_for_line()
-        self.assertEqual('0A\n', got)
+        self.assertEqual("0A\n", got)
 
     def test_translate_inform_auto_cborhex(self):
-        runner = self._start('--inform=auto')
+        runner = self._start("--inform=auto")
 
-        runner.send_stdin('0A\n')
+        runner.send_stdin("0A\n")
         got = runner.wait_for_line()
-        self.assertEqual('ari:10\n', got)
+        self.assertEqual("ari:10\n", got)
 
     def test_translate_inform_uri(self):
-        runner = self._start('--inform=uri', '--outform=cborhex')
+        runner = self._start("--inform=uri", "--outform=cborhex")
 
-        runner.send_stdin('ari:10\n')
+        runner.send_stdin("ari:10\n")
         got = runner.wait_for_line()
-        self.assertEqual('0A\n', got)
+        self.assertEqual("0A\n", got)
 
     def test_translate_inform_cborhex(self):
-        runner = self._start('--inform=cborhex', '--outform=uri')
+        runner = self._start("--inform=cborhex", "--outform=uri")
 
-        runner.send_stdin('0A\n')
+        runner.send_stdin("0A\n")
         got = runner.wait_for_line()
-        self.assertEqual('ari:10\n', got)
+        self.assertEqual("ari:10\n", got)
 
     def test_translate_inform_multi_auto(self):
-        runner = self._start('--inform=uri', '--inform=auto', '--outform=cbor', '--outform=auto')
+        runner = self._start("--inform=uri", "--inform=auto", "--outform=cbor", "--outform=auto")
 
-        runner.send_stdin('0A\n')
+        runner.send_stdin("0A\n")
         got = runner.wait_for_line()
-        self.assertEqual('ari:10\n', got)
+        self.assertEqual("ari:10\n", got)
