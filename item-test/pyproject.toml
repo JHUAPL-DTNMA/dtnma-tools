@@ -18,7 +18,7 @@ classifiers = [
 ]
 
 dependencies = [
-  "dtnma-ace ~= 2.0.0",
+  "dtnma-ace", # installed through script
   "cbor2 ~= 5.6.0",
   "requests ~= 2.32",
   "sqlalchemy ~= 2.0",
