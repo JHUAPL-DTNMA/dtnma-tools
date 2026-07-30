@@ -22,8 +22,8 @@
 #ifndef CACE_UTIL_DAEMON_RUN_H_
 #define CACE_UTIL_DAEMON_RUN_H_
 
-#include <stdbool.h>
 #include <semaphore.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {

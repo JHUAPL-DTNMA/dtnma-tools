@@ -19,7 +19,7 @@
 #ifndef REFDA_EGRESS_H_
 #define REFDA_EGRESS_H_
 
-#include <cace/util/daemon_run.h>
+#include "cace/util/daemon_run.h"
 
 #ifdef __cplusplus
 extern "C" {

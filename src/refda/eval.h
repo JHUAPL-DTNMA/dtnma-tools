@@ -20,9 +20,10 @@
 #define REFDA_EVAL_H_
 
 #include "agent.h"
-#include "runctx.h"
 #include "eval_ctx.h"
-#include <cace/ari.h>
+#include "runctx.h"
+
+#include "cace/ari.h"
 
 #ifdef __cplusplus
 extern "C" {

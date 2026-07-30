@@ -26,11 +26,13 @@
 #define CACE_CACE_DATA_H_
 
 #include "cace/config.h"
-#include <sys/types.h>
+
 #include <m-core.h>
+
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {

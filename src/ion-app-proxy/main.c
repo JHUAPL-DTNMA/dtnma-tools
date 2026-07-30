@@ -15,22 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cace/amp/proxy_msg.h"
 #include "cace/amp/ion_bp.h"
+#include "cace/amp/proxy_msg.h"
 #include "cace/ari/text.h"
-#include "cace/util/threadset.h"
-#include "cace/util/logging.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
+#include "cace/util/threadset.h"
+
 #include <m-bstring.h>
-#include <m-shared-ptr.h>
 #include <m-buffer.h>
-#include <signal.h>
-#include <getopt.h>
+#include <m-shared-ptr.h>
+
+#include <bp.h>
 #include <errno.h>
+#include <getopt.h>
+#include <signal.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <bp.h>
 #if defined(HAVE_LIBSYSTEMD)
 #include <systemd/sd-daemon.h>
 #endif

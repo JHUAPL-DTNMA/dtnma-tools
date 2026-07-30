@@ -19,8 +19,10 @@
 #define REFDA_RUNCTX_H_
 
 #include "acl.h"
-#include "cace/ari/base.h"
+
 #include "cace/amm/lookup.h"
+#include "cace/ari/base.h"
+
 #include <m-shared-ptr.h>
 
 #ifdef __cplusplus

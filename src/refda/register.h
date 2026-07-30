@@ -18,15 +18,16 @@
 #ifndef REFDA_REGISTER_H_
 #define REFDA_REGISTER_H_
 
-#include "amm/ident.h"
-#include "amm/typedef.h"
 #include "amm/const.h"
-#include "amm/var.h"
-#include "amm/edd.h"
 #include "amm/ctrl.h"
+#include "amm/edd.h"
+#include "amm/ident.h"
 #include "amm/oper.h"
 #include "amm/sbr.h"
 #include "amm/tbr.h"
+#include "amm/typedef.h"
+#include "amm/var.h"
+
 #include "cace/amm/idseg_ref.h"
 #include "cace/amm/obj_ns.h"
 

@@ -25,10 +25,13 @@
 
 #include "idseg.h"
 #include "type.h"
+
 #include "cace/config.h"
+
 #include <m-string.h>
-#include <stdint.h>
+
 #include <stdbool.h>
+#include <stdint.h>
 #include <time.h>
 
 #ifdef __cplusplus

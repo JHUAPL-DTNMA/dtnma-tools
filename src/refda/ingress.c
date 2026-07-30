@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 #include "ingress.h"
+
 #include "agent.h"
-#include <cace/util/daemon_run.h>
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
+
+#include "cace/util/daemon_run.h"
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
 
 void *refda_ingress_worker(void *arg)
 {

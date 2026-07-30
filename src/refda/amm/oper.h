@@ -18,9 +18,9 @@
 #ifndef REFDA_AMM_OPER_H_
 #define REFDA_AMM_OPER_H_
 
-#include <cace/amm/typing.h>
-#include <cace/amm/named_type.h>
-#include <cace/ari.h>
+#include "cace/amm/named_type.h"
+#include "cace/amm/typing.h"
+#include "cace/ari.h"
 
 #ifdef __cplusplus
 extern "C" {

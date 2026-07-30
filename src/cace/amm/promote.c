@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 #include "promote.h"
+
 #include "typing.h"
-#include "cace/util/logging.h"
+
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 cace_ari_type_t cace_amm_promote_eqiv_lit_type(const cace_ari_lit_t *lit)
 {

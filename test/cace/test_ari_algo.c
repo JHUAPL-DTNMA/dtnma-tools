@@ -19,11 +19,13 @@
  * Test the algo.h interfaces.
  */
 #include <cace/ari/algo.h>
-#include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
-#include <cace/util/logging.h>
+#include <cace/ari/text_util.h>
 #include <cace/util/defs.h>
+#include <cace/util/logging.h>
+
 #include <m-dict.h>
+
 #include <unity.h>
 
 // Allow this macro

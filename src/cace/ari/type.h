@@ -23,6 +23,7 @@
 #define CACE_ARI_TYPE_H_
 
 #include "cace/config.h"
+
 #include <inttypes.h>
 
 #ifdef __cplusplus

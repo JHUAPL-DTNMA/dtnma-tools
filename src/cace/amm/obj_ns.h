@@ -18,12 +18,14 @@
 #ifndef CACE_AMM_OBJ_NS_H_
 #define CACE_AMM_OBJ_NS_H_
 
-#include "obj_desc.h"
-#include "idseg_val.h"
 #include "idseg_ref.h"
+#include "idseg_val.h"
+#include "obj_desc.h"
+
 #include "cace/ari/ref.h"
 #include "cace/util/defs.h"
 #include "cace/util/nocase.h"
+
 #include <m-rbtree.h>
 #include <m-shared-ptr.h>
 

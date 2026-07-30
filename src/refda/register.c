@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "register.h"
+
 #include "cace/util/defs.h"
 
 cace_amm_obj_desc_t *refda_register_ident(cace_amm_obj_ns_t *ns, const cace_amm_idseg_ref_t obj_id,

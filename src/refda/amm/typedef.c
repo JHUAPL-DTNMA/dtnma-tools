@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 #include "typedef.h"
-#include "cace/util/logging.h"
+
 #include "cace/ari/text.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 void refda_amm_typedef_desc_init(refda_amm_typedef_desc_t *obj)
 {

@@ -16,12 +16,14 @@
  * limitations under the License.
  */
 #include "alarms.h"
+
 #include "agent.h"
 #include "eval.h"
+
 #include "cace/ari/time_util.h"
+#include "cace/util/defs.h"
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
-#include "cace/util/defs.h"
 
 void refda_alarms_history_item_init(refda_alarms_history_item_t *obj)
 {

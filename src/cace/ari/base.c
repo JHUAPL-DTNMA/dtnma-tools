@@ -19,10 +19,13 @@
  * @ingroup group_ari
  */
 #include "base.h"
+
+#include "containers.h"
 #include "lit.h"
 #include "ref.h"
-#include "containers.h"
+
 #include "cace/util/defs.h"
+
 #include <inttypes.h>
 
 /** Reset the state of a value struct.

@@ -16,14 +16,17 @@
  * limitations under the License.
  */
 #include "text_util.h"
+
 #include "lit.h"
+
 #include "cace/util/defs.h"
+
+#include <errno.h>
+#include <inttypes.h>
+#include <math.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <inttypes.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <math.h>
 
 /** Get the size of text ignoring a terminating null.
  */

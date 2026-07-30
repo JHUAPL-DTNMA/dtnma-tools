@@ -38,9 +38,12 @@
 #define REFDM_AGENTS_H_
 
 #include "refdm/config.h"
-#include <cace/cace_data.h>
-#include <cace/ari.h>
+
+#include "cace/ari.h"
+#include "cace/cace_data.h"
+
 #include <m-string.h>
+
 #include <pthread.h>
 
 #ifdef __cplusplus

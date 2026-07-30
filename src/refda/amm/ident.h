@@ -21,6 +21,7 @@
 #include "cace/amm/lookup.h"
 #include "cace/amm/obj_store.h"
 #include "cace/amm/user_data.h"
+
 #include <m-deque.h>
 
 #ifdef __cplusplus

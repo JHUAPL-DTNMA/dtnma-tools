@@ -21,9 +21,11 @@
 
 #include "agent.h"
 #include "eval_ctx.h"
+
 #include "refda/amm/oper.h"
-#include <cace/ari.h>
-#include <cace/ari/itemized.h>
+
+#include "cace/ari.h"
+#include "cace/ari/itemized.h"
 
 #ifdef __cplusplus
 extern "C" {

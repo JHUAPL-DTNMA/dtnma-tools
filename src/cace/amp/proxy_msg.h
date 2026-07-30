@@ -24,6 +24,7 @@
 #define CACE_AMP_PROXY_MSG_H_
 
 #include "cace/ari.h"
+
 #include <m-bstring.h>
 
 #ifdef __cplusplus

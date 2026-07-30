@@ -20,18 +20,19 @@
  */
 #include "nm_sql.h"
 
-#include <cace/ari/cbor.h>
-#include <cace/amm/typing.h>
-#include <cace/amm/semtype.h>
-#include <cace/ari/text.h>
-#include <cace/ari/text_util.h>
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
+#include "cace/amm/semtype.h"
+#include "cace/amm/typing.h"
+#include "cace/ari/cbor.h"
+#include "cace/ari/text.h"
+#include "cace/ari/text_util.h"
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
 
-#include <string.h>
-#include <arpa/inet.h>
 #include <m-bstring.h>
 #include <timespec.h>
+
+#include <arpa/inet.h>
+#include <string.h>
 
 // Constants: Database table names
 const char *TBL_NAME_RPTSET = "ari_rptset";

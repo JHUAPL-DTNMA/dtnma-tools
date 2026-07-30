@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 #include "reporting_ctx.h"
+
 #include "acl.h"
+
 #include "cace/util/defs.h"
 
 void refda_reporting_ctx_init(refda_reporting_ctx_t *obj, const refda_runctx_t *runctx, const cace_ari_t *mgr_ident)

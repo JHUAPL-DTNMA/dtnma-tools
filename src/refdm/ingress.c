@@ -42,16 +42,18 @@
  *****************************************************************************/
 
 #include "ingress.h"
-#include "mgr.h"
+
 #include "agents.h"
+#include "mgr.h"
+
 #include "refdm/config.h"
 #if POSTGRESQL_FOUND
 #include "nm_sql.h"
 #endif
-#include <cace/ari/text.h>
-#include <cace/util/daemon_run.h>
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
+#include "cace/ari/text.h"
+#include "cace/util/daemon_run.h"
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
 
 /** Handle a received RPTSET value.
  *

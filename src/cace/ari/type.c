@@ -16,9 +16,12 @@
  * limitations under the License.
  */
 #include "type.h"
+
 #include "cace/util/defs.h"
 #include "cace/util/nocase.h"
+
 #include <m-dict.h>
+
 #include <pthread.h>
 #include <stddef.h>
 

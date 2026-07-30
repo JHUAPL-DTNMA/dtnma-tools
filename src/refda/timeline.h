@@ -19,10 +19,12 @@
 #ifndef REFDA_TIMELINE_H_
 #define REFDA_TIMELINE_H_
 
-#include "exec_item.h"
 #include "ctrl_exec_ctx.h"
+#include "exec_item.h"
 #include "register.h"
+
 #include <m-rbtree.h>
+
 #include <sys/time.h>
 
 #ifdef __cplusplus

@@ -17,15 +17,17 @@
  */
 #include "refda/agent.h"
 #include "refda/loader.h"
-#include <cace/util/logging.h>
-#include <cace/util/defs.h>
-#include <cace/ari/text_util.h>
-#include <cace/ari/text.h>
-#include <cace/ari/macrofile.h>
-#include <cace/ari/time_util.h>
-#include <cace/ari/cbor.h>
-#include <sys/poll.h>
+
+#include "cace/ari/cbor.h"
+#include "cace/ari/macrofile.h"
+#include "cace/ari/text.h"
+#include "cace/ari/text_util.h"
+#include "cace/ari/time_util.h"
+#include "cace/util/defs.h"
+#include "cace/util/logging.h"
+
 #include <signal.h>
+#include <sys/poll.h>
 #include <unistd.h>
 
 /// Per-process state

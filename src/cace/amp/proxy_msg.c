@@ -16,13 +16,16 @@
  * limitations under the License.
  */
 #include "proxy_msg.h"
+
 #include "cace/ari/cbor.h"
 #include "cace/ari/text.h"
-#include "cace/util/logging.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
+
 #include <qcbor/qcbor.h>
-#include <sys/socket.h>
+
 #include <errno.h>
+#include <sys/socket.h>
 
 int cace_amp_proxy_msg_send(int sock_fd, const cace_ari_t *dst, const uint8_t *data_ptr, size_t data_len)
 {

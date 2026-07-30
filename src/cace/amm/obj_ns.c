@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 #include "obj_ns.h"
+
 #include "obj_org.h"
+
 #include "cace/ari/text.h"
 #include "cace/util/logging.h"
 

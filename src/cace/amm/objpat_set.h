@@ -24,7 +24,9 @@
 #define CACE_AMM_OBJPAT_SET_H_
 
 #include "lookup.h"
+
 #include "cace/ari/objpat.h"
+
 #include <m-dict.h>
 
 #ifdef __cplusplus

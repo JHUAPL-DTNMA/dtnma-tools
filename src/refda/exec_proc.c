@@ -16,17 +16,20 @@
  * limitations under the License.
  */
 #include "exec_proc.h"
-#include "exec.h"
-#include "ctrl_exec_ctx.h"
-#include "valprod.h"
-#include "reporting.h"
+
 #include "amm/ctrl.h"
-#include <cace/ari/text.h>
-#include <cace/ari/text_util.h>
-#include <cace/amm/lookup.h>
-#include <cace/util/logging.h>
-#include <cace/util/mutex.h>
-#include <cace/util/defs.h>
+#include "ctrl_exec_ctx.h"
+#include "exec.h"
+#include "reporting.h"
+#include "valprod.h"
+
+#include "cace/amm/lookup.h"
+#include "cace/ari/text.h"
+#include "cace/ari/text_util.h"
+#include "cace/util/defs.h"
+#include "cace/util/logging.h"
+#include "cace/util/mutex.h"
+
 #include <timespec.h>
 
 /** Pop the front execution item after it has finished successfully.

@@ -19,8 +19,10 @@
  * @ingroup group_ari
  */
 #include "containers.h"
-#include "cace/util/logging.h"
+
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
+
 #include <inttypes.h>
 
 /// CMP operation not defined by M*LIB

@@ -46,8 +46,22 @@ DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
 ForEachMacros: []
-IncludeBlocks:   Preserve
-IncludeCategories:  []
+IncludeBlocks: Regroup
+IncludeCategories:
+ - Regex: '^["<]refda/adm/'
+   Priority: 20
+   SortPriority: 22
+ - Regex: '^["<](refda|refdm)/'
+   Priority: 20
+   SortPriority: 20
+ - Regex: '^["<]cace/'
+   Priority: 30
+ - Regex: '^".*'
+   Priority: 10
+ - Regex: '^<(m-|qcbor|timespec.h)'
+   Priority: 40
+ - Regex: '^<'
+   Priority: 50
 IncludeIsMainRegex: '$'
 IndentCaseLabels: true
 IndentExternBlock: NoIndent
@@ -68,7 +82,7 @@ PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 60
 PointerAlignment: Right
 ReflowComments:  true
-SortIncludes:    false # more strict than cFS
+SortIncludes: CaseInsensitive
 SpaceAfterCStyleCast: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements

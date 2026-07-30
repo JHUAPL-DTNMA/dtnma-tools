@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "timeline.h"
+
 #include <timespec.h>
 
 int refda_timeline_event_cmp(const refda_timeline_event_t *lt, const refda_timeline_event_t *rt)

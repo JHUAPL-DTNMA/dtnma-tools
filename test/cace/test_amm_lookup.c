@@ -17,9 +17,10 @@
  */
 #include <cace/amm/lookup.h>
 #include <cace/amm/semtype.h>
-#include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
+#include <cace/ari/text_util.h>
 #include <cace/util/logging.h>
+
 #include <unity.h>
 
 // Allow this macro

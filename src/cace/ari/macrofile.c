@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 #include "macrofile.h"
+
 #include "text.h"
-#include "cace/util/logging.h"
+
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 #if ARI_TEXT_PARSE
 

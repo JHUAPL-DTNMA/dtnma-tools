@@ -19,9 +19,10 @@
 #define CACE_AMM_OBJ_DESC_H_
 
 #include "idseg_val.h"
-#include "user_data.h"
 #include "parameters.h"
 #include "status.h"
+#include "user_data.h"
+
 #include "cace/ari.h"
 #include "cace/util/nocase.h"
 

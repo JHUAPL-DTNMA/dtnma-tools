@@ -15,15 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cace/config.h>
-#include <cace/ari.h>
-#include <cace/ari/text.h>
-#include <cace/ari/cbor.h>
-#include <cace/ari/text_util.h>
-#include <cace/util/logging.h>
+#include "cace/ari.h"
+#include "cace/ari/cbor.h"
+#include "cace/ari/text.h"
+#include "cace/ari/text_util.h"
+#include "cace/config.h"
+#include "cace/util/logging.h"
+
 #include <qcbor/qcbor_decode.h>
-#include <getopt.h>
+
 #include <errno.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>

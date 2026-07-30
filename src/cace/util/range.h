@@ -24,6 +24,7 @@
 
 #include "cace/config.h"
 #include "cace/util/defs.h"
+
 #include <m-rbtree.h>
 
 #ifdef __cplusplus

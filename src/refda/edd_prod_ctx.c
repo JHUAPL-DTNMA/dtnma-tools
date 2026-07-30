@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 #include "edd_prod_ctx.h"
-#include "cace/util/logging.h"
+
 #include "cace/ari/text.h"
 #include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 void refda_edd_prod_ctx_init(refda_edd_prod_ctx_t *obj, const refda_amm_edd_desc_t *edd, refda_valprod_ctx_t *prodctx)
 {

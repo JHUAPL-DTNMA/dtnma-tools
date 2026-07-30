@@ -15,17 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "util/ari.h"
 #include "util/agent.h"
+#include "util/ari.h"
 #include "util/runctx.h"
+
 #include <refda/ctrl_exec_ctx.h>
 #include <refda/exec_proc.h>
+
 #include <cace/amm/semtype.h>
-#include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
-#include <cace/util/logging.h>
 #include <cace/ari/text.h>
+#include <cace/ari/text_util.h>
 #include <cace/util/defs.h>
+#include <cace/util/logging.h>
+
 #include <unity.h>
 
 // Allow this macro

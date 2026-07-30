@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 #include "oper_eval_ctx.h"
-#include <cace/ari/text.h>
-#include <cace/util/logging.h>
-#include <cace/util/defs.h>
+
+#include "cace/ari/text.h"
+#include "cace/util/defs.h"
+#include "cace/util/logging.h"
 
 void refda_oper_eval_ctx_init(refda_oper_eval_ctx_t *obj)
 {

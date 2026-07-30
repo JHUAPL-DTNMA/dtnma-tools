@@ -23,6 +23,7 @@
 #define CACE_NOCASE_H_
 
 #include <m-string.h>
+
 #include <strings.h>
 
 /* HASH function for a C-string (to be used within oplist)

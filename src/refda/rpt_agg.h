@@ -19,7 +19,7 @@
 #ifndef REFDA_RPT_AGG_H_
 #define REFDA_RPT_AGG_H_
 
-#include <cace/ari.h>
+#include "cace/ari.h"
 
 #ifdef __cplusplus
 extern "C" {

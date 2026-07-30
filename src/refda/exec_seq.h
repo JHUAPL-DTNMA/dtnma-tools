@@ -22,8 +22,10 @@
 #include "exec_item.h"
 #include "exec_status.h"
 #include "runctx.h"
-#include <m-shared-ptr.h>
+
 #include <m-deque.h>
+#include <m-shared-ptr.h>
+
 #include <pthread.h>
 
 #ifdef __cplusplus

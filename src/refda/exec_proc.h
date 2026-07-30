@@ -23,9 +23,10 @@
 #ifndef REFDA_EXEC_PROC_H_
 #define REFDA_EXEC_PROC_H_
 
-#include "exec_seq.h"
 #include "exec_item.h"
+#include "exec_seq.h"
 #include "runctx.h"
+
 #include <m-deque.h>
 
 #ifdef __cplusplus

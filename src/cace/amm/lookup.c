@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "lookup.h"
+
 #include "cace/util/defs.h"
 
 void cace_amm_lookup_init(cace_amm_lookup_t *res)

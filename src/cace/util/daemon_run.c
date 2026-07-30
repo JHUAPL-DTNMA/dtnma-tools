@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 #include "daemon_run.h"
+
 #include "logging.h"
+
 #include <errno.h>
 
 /**

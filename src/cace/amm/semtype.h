@@ -22,10 +22,12 @@
 #ifndef CACE_AMM_SEMTYPE_H_
 #define CACE_AMM_SEMTYPE_H_
 
-#include "typing.h"
 #include "named_type.h"
 #include "semtype_cnst.h"
+#include "typing.h"
+
 #include "cace/util/range.h"
+
 #include <m-array.h>
 
 #ifdef __cplusplus

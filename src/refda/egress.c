@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 #include "egress.h"
+
 #include "agent.h"
+
 #include "cace/util/logging.h"
 
 void *refda_egress_worker(void *arg)

@@ -24,10 +24,13 @@
 
 #include "base.h"
 #include "containers.h"
+
 #include "cace/config.h"
+
 #include <m-string.h>
-#include <stdint.h>
+
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

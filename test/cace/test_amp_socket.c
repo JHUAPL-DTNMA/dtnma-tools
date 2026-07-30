@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 #include <cace/amp/socket.h>
-#include <cace/ari/text_util.h>
 #include <cace/ari/cbor.h>
+#include <cace/ari/text_util.h>
 #include <cace/util/logging.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <unistd.h>
+
 #include <dirent.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <unity.h>
 
 // Allow this macro

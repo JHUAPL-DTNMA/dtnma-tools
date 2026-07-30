@@ -16,20 +16,24 @@
  * limitations under the License.
  */
 #include "proxy_cli.h"
+
 #include "msg.h"
+
 #include "cace/ari/cbor.h"
 #include "cace/ari/text.h"
 #include "cace/ari/time_util.h"
+#include "cace/util/defs.h"
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
-#include "cace/util/defs.h"
-#include <timespec.h>
-#include <qcbor/qcbor.h>
+
 #include <m-bstring.h>
+#include <qcbor/qcbor.h>
+#include <timespec.h>
+
+#include <errno.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <errno.h>
 
 void cace_amp_proxy_cli_state_init(cace_amp_proxy_cli_state_t *state)
 {

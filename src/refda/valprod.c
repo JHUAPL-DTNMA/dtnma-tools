@@ -16,13 +16,15 @@
  * limitations under the License.
  */
 #include "valprod.h"
-#include "edd_prod_ctx.h"
+
 #include "amm/const.h"
-#include "amm/var.h"
 #include "amm/edd.h"
-#include "cace/ari/type.h"
+#include "amm/var.h"
+#include "edd_prod_ctx.h"
+
 #include "cace/ari/algo.h"
 #include "cace/ari/text.h"
+#include "cace/ari/type.h"
 #include "cace/util/defs.h"
 #include "cace/util/logging.h"
 

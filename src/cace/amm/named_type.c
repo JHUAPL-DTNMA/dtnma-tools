@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "named_type.h"
+
 #include "cace/util/defs.h"
 
 void cace_amm_named_type_init(cace_amm_named_type_t *obj)

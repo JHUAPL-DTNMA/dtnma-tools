@@ -19,26 +19,29 @@
  * Test the external ADM for alarm bookkeeping.
  * This requires some internal API access to manipulate the Agent state.
  */
-#include "util/ari.h"
 #include "util/agent.h"
+#include "util/ari.h"
 #include "util/runctx.h"
-#include <refda/register.h>
+
+#include <refda/amm/const.h>
+#include <refda/amm/edd.h>
+#include <refda/amm/ident.h>
+#include <refda/amm/var.h>
 #include <refda/binding.h>
-#include <refda/valprod.h>
 #include <refda/exec_proc.h>
+#include <refda/register.h>
+#include <refda/valprod.h>
 #include <refda/adm/ietf.h>
+#include <refda/adm/ietf_alarms.h>
 #include <refda/adm/ietf_amm_base.h>
 #include <refda/adm/ietf_amm_semtype.h>
 #include <refda/adm/ietf_dtnma_agent.h>
 #include <refda/adm/ietf_dtnma_agent_acl.h>
-#include <refda/adm/ietf_alarms.h>
-#include <refda/amm/ident.h>
-#include <refda/amm/const.h>
-#include <refda/amm/var.h>
-#include <refda/amm/edd.h>
+
 #include <cace/amm/semtype.h>
-#include <cace/util/logging.h>
 #include <cace/util/defs.h>
+#include <cace/util/logging.h>
+
 #include <unity.h>
 
 // Allow this macro
