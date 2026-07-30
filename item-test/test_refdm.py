@@ -86,19 +86,26 @@ class BaseRefdm(unittest.TestCase):
         sql_sock = os.path.join(cls._sqldir.name, "run")
         os.makedirs(sql_sock)
 
-        initdb = CmdRunner(
-            [
-                "initdb",
-                "-D",
-                sql_data,
-                "--auth-local=trust",
-            ]
-        )
+        # fmt: off
+        args = [
+            "initdb",
+            "-D", sql_data,
+            "--auth-local=trust",
+        ]
+        # fmt: on
+        initdb = CmdRunner(args)
         initdb.start()
         if initdb.wait(timeout=10) != 0:
             raise RuntimeError("Failed to run initdb")
 
-        args = ["postgres", "-D", sql_data, "-h", "", "-k", sql_sock]
+        # fmt: off
+        args = [
+            "postgres",
+            "-D", sql_data,
+            "-h", "",
+            "-k", sql_sock
+        ]
+        # fmt: on
         cls._sqldb = CmdRunner(args)
         cls._sqldb.start()
 
@@ -111,13 +118,13 @@ class BaseRefdm(unittest.TestCase):
         os.environ["PGUSER"] = ""
         os.environ.pop("PGPASSWORD", None)
 
-        isready = CmdRunner(
-            [
-                "pg_isready",
-                "-d",
-                "postgres",
-            ]
-        )
+        # fmt: off
+        args = [
+            "pg_isready",
+            "-d", "postgres",
+        ]
+        # fmt: on
+        isready = CmdRunner(args)
         timer = Timer(10)
         while timer:
             timer.sleep(0.1)
@@ -142,16 +149,15 @@ class BaseRefdm(unittest.TestCase):
         """Create a test database in a running postgres server"""
         self._database_drop()
 
-        psql = CmdRunner(
-            [
-                "psql",
-                "-w",
-                "-d",
-                "postgres",
-                "-c",
-                f"CREATE DATABASE {self.DB_NAME}",
-            ]
-        )
+        # fmt: off
+        args = [
+            "psql",
+            "-w",
+            "-d", "postgres",
+            "-c", f"CREATE DATABASE {self.DB_NAME}",
+        ]
+        # fmt: on
+        psql = CmdRunner(args)
         psql.start()
         if psql.wait() != 0:
             raise RuntimeError("Failed to run create database")
@@ -165,15 +171,16 @@ class BaseRefdm(unittest.TestCase):
         )
         # execute in alphabetic order
         for filepath in sorted(glob.glob(script_pat)):
+            # fmt: off
+            args = [
+                "psql",
+                "-w",
+                "-d", self.DB_NAME,
+                "-f", filepath,
+            ]
+            # fmt: on
             psql = CmdRunner(
-                [
-                    "psql",
-                    "-w",
-                    "-d",
-                    self.DB_NAME,
-                    "-f",
-                    filepath,
-                ],
+                args,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
             )
@@ -185,16 +192,15 @@ class BaseRefdm(unittest.TestCase):
 
     def _database_drop(self):
         """Drop the test database if necessary"""
-        psql = CmdRunner(
-            [
-                "psql",
-                "-w",
-                "-d",
-                "postgres",
-                "-c",
-                f"DROP DATABASE IF EXISTS {self.DB_NAME} WITH (FORCE)",
-            ]
-        )
+        # fmt: off
+        args = [
+            "psql",
+            "-w",
+            "-d", "postgres",
+            "-c", f"DROP DATABASE IF EXISTS {self.DB_NAME} WITH (FORCE)",
+        ]
+        # fmt: on
+        psql = CmdRunner(args)
         psql.start()
         if psql.wait(timeout=10) != 0:
             raise RuntimeError("Failed to run drop database")
