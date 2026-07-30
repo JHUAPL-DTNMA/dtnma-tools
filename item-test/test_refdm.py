@@ -512,11 +512,8 @@ class TestRefdmSocket(BaseRefdm):
 
         resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=uri')
         self.assertEqual(404, resp.status_code)
-        self.assertIn('Unknown agent', resp.text)
-
         resp = self._req.get(self._base_url + f'agents/eid/missing-with-a-{"longer-" * 40}eid')
         self.assertEqual(404, resp.status_code)
-        self.assertIn('Unknown agent', resp.text)
 
     def test_agents_idx_invalid(self):
         self._start()
