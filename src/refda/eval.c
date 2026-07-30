@@ -72,7 +72,6 @@ static int refda_eval_expand_item(refda_runctx_t *runctx, refda_eval_item_t out,
                     break;
                 }
                 case CACE_ARI_TYPE_OPER:
-                case CACE_ARI_TYPE_TYPEDEF:
                     // leave these references in place
                     refda_eval_item_move_deref(out, deref);
                     break;
