@@ -31,5 +31,20 @@ then
 else
     ARGS=$(find src test -iname '*.h' -o -iname '*.c')
 fi
-
 clang-format --style=file -i $ARGS
+
+
+# Python test fixtures
+pushd item-test/
+ANYERR=0
+ruff format || ANYERR=$((ANYERR + 1))
+ruff check --fix || ANYERR=$((ANYERR + 1))
+if which ty
+then
+    ty check --fix || ANYERR=$((ANYERR + 1))
+fi
+popd
+if [[ "${ANYERR}" -ne 0 ]]
+then
+    exit ${ANYERR}
+fi
