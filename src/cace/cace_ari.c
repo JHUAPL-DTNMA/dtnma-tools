@@ -135,41 +135,54 @@ static int read_text(cace_ari_t *inval, FILE *source)
 
 static int read_cbor(cace_ari_t *inval, FILE *source)
 {
-    // skip over a single item
+    // skip over a single item each time
     static cace_data_t store = CACE_DATA_INIT_NULL;
 
     while (true)
     {
-        if (store.len < CBOR_STORE_WANT)
+        int res = -1;
+        if (store.len > 0)
         {
-            uint8_t buf[CBOR_STORE_WANT];
-            size_t  got = fread(buf, 1, sizeof(buf), source);
-            if ((got == 0) && (store.len == 0))
+            size_t used;
+            char  *errm = NULL;
+            // try for one item
+            res = cace_ari_cbor_decode(inval, &store, &used, &errm);
+            if (res)
             {
-                return -1;
+                // ignore during streaming
+                CACE_LOG_DEBUG("decode failed: %s", errm);
+                CACE_FREE(errm);
             }
-            cace_data_append_from(&store, got, buf);
-        }
-
-        int    res;
-        size_t used;
-        char  *errm = NULL;
-        res         = cace_ari_cbor_decode(inval, &store, &used, &errm);
-        if (used)
-        {
-            // chop off used data
-            cace_data_extend_front(&store, -used);
+            else if (used)
+            {
+                CACE_LOG_DEBUG("decode used %zu bytes", used);
+                // chop off used data
+                cace_data_extend_front(&store, -(ssize_t)used);
+            }
         }
 
         if (res)
         {
-            fprintf(stderr, "Failed to decode CBOR ARI (err %d): %s\n", res, errm);
-            CACE_FREE(errm);
-            return 3;
+            // assume not enough input has been read for the item and try again
+            uint8_t buf[CBOR_STORE_WANT];
+            size_t  got = fread(buf, 1, sizeof(buf), source);
+            CACE_LOG_DEBUG("fread() got %zu bytes, appending to %zu", got, store.len);
+            if (got == 0)
+            {
+                if (store.len > 0)
+                {
+                    // got some but not enough for a full item
+                    fprintf(stderr, "Ran out of data to decode CBOR ARI\n");
+                }
+                return -1;
+            }
+            cace_data_append_from(&store, got, buf);
         }
-
-        // got the data and decoded the inval
-        break;
+        else
+        {
+            // got the data and decoded the inval
+            break;
+        }
     }
 
     return 0;

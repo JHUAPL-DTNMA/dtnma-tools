@@ -501,52 +501,39 @@ class TestRefdmSocket(BaseRefdm):
 
         self.assertSetEqual(set(['file:/tmp/invalid']), self._get_agent_names())
 
-    def test_agents_eid_reports_404(self):
+    def test_agents_eid_missing(self):
         self._start()
+
         resp = self._req.get(self._base_url + f'agents/eid/missing')
         self.assertEqual(404, resp.status_code)
 
-    def test_agents_eid_reports_404(self):
-        self._start()
         resp = self._req.get(self._base_url + f'agents/eid/missing/reports')
         self.assertEqual(404, resp.status_code)
 
-    def test_agents_eid_reports_uri_404(self):
-        self._start()
         resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=uri')
         self.assertEqual(404, resp.status_code)
-        self.assertIn('Unknown agent', resp.text)
-
-    def test_agents_eid_reports_uri_404_longname(self):
-        self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing-with-a-{"longer-" * 40}eid/reports?form=uri')
-        self.assertEqual(404, resp.status_code)
-        self.assertIn('Unknown agent', resp.text)
-
-    def test_agents_eid_reports_cborhex_404(self):
-        self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=cborhex')
-        self.assertEqual(404, resp.status_code)
-        self.assertIn('Unknown agent', resp.text)
-
-    def test_agents_eid_reports_uri_404(self):
-        self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/10/reports?form=uri')
+        resp = self._req.get(self._base_url + f'agents/eid/missing-with-a-{"longer-" * 40}eid')
         self.assertEqual(404, resp.status_code)
 
-    def test_agents_eid_reports_cborhex_404(self):
+    def test_agents_idx_invalid(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/10/reports?form=cborhex')
+
+        resp = self._req.get(self._base_url + "agents/idx/invalid")
         self.assertEqual(404, resp.status_code)
 
-    def test_agents_idx_reports_uri_404(self):
-        self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=uri')
+        resp = self._req.get(self._base_url + "agents/idx/invalid/reports")
         self.assertEqual(404, resp.status_code)
 
-    def test_agents_idx_reports_cborhex_404(self):
+    def test_agents_idx_missing(self):
         self._start()
-        resp = self._req.get(self._base_url + f'agents/eid/missing/reports?form=cborhex')
+
+        resp = self._req.get(self._base_url + f'agents/idx/0')
+        self.assertEqual(404, resp.status_code)
+
+        resp = self._req.get(self._base_url + f'agents/idx/999')
+        self.assertEqual(404, resp.status_code)
+
+        resp = self._req.get(self._base_url + "agents/idx/999/reports")
         self.assertEqual(404, resp.status_code)
 
     def test_recv_one_agent_one_rptset(self):

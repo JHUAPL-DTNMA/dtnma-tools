@@ -270,7 +270,10 @@ int cace_data_append_from(cace_data_t *data, size_t len, cace_data_ptr_t src)
     {
         return 2;
     }
-    memcpy(data->ptr + data->len - len, src, len);
+    if (data->ptr && src)
+    {
+        memcpy(data->ptr + data->len - len, src, len);
+    }
     return 0;
 }
 
@@ -281,7 +284,10 @@ int cace_data_append_byte(cace_data_t *data, uint8_t val)
     {
         return 2;
     }
-    *(data->ptr + data->len - 1) = val;
+    if (data->ptr) // GCOV_EXCL_BR_LINE
+    {
+        *(data->ptr + data->len - 1) = val;
+    }
     return 0;
 }
 
