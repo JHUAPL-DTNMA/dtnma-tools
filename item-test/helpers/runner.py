@@ -23,7 +23,7 @@ import re
 import signal
 import subprocess
 import threading
-from typing import List, Literal, Optional, Union
+from typing import BinaryIO, List, Literal, Optional, Union
 
 from .timer import Timer
 
@@ -128,7 +128,7 @@ class CmdRunner:
         do_stderr = self._kwargs.setdefault("stderr", subprocess.PIPE) == subprocess.PIPE
 
         LOGGER.info("Starting process: %s", self._fmt_args())
-        self.proc = subprocess.Popen(self._args, text=True, **self._kwargs)
+        self.proc = subprocess.Popen(self._args, text=False, **self._kwargs)
         LOGGER.debug("Started with PID %d", self.proc.pid)
 
         if do_stdin:
@@ -224,30 +224,30 @@ class CmdRunner:
 
         return self._finish()
 
-    def _read_stdout(self, stream):
+    def _read_stdout(self, stream: BinaryIO):
         LOGGER.debug("Starting stdout thread")
-        for line in iter(stream.readline, ""):
-            LOGGER.debug("Got stdout: %s", line.strip())
+        for line in iter(stream.readline, b""):
+            LOGGER.debug("Got stdout: %s", line)
             self._stdout_lines.put(line)
         LOGGER.debug("Stopping stdout thread")
         stream.close()
 
-    def _read_stderr(self, stream):
+    def _read_stderr(self, stream: BinaryIO):
         LOGGER.debug("Starting stderr thread")
-        for line in iter(stream.readline, ""):
-            LOGGER.debug("Got stderr: %s", line.strip())
+        for line in iter(stream.readline, b""):
+            LOGGER.debug("Got stderr: %s", line)
             self._stderr_lines.put(line)
         LOGGER.debug("Stopping stderr thread")
         stream.close()
 
-    def _write_stdin(self, stream):
+    def _write_stdin(self, stream: BinaryIO):
         LOGGER.debug("Starting stdin thread")
         while True:
-            text = self._stdin_lines.get()
-            if text is None:
+            line = self._stdin_lines.get()
+            if line is None:
                 break
-            LOGGER.debug("Sending stdin: %s", text.strip())
-            stream.write(text)
+            LOGGER.debug("Sending stdin: %s", line)
+            stream.write(line)
             stream.flush()
         LOGGER.debug("Stopping stdin thread")
         stream.close()
@@ -261,10 +261,10 @@ class CmdRunner:
         """
         source = self._stdout_lines if stream == "stdout" else self._stderr_lines
         try:
-            text = source.get(timeout=timeout)
+            line = source.get(timeout=timeout).decode()
         except queue.Empty:
             raise TimeoutError("no lines received before timeout")
-        return text
+        return line
 
     def wait_for_text(self, pattern: str, stream: WaitStream = "stdout", timeout: float = 5) -> str:
         """Iterate through the received stdout lines until a specific
@@ -287,22 +287,24 @@ class CmdRunner:
                 break
 
             try:
-                text = source.get(timeout=remain_time)
+                line = source.get(timeout=remain_time).decode()
             except queue.Empty:
                 break
 
-            if expr.match(text) is not None:
-                return text
+            if expr.match(line) is not None:
+                return line
 
         raise TimeoutError("text not received before timeout")
 
-    def send_stdin(self, text: str):
-        """Send an exact line of text to the process stdin.
+    def send_stdin(self, line: Union[str, bytes]):
+        """Send an exact line of text or data to the process stdin.
 
-        :param text: The line to send, which should include a newline
-            at the endd.
+        :param line: The line to send, which should include a newline
+            at the end if it is text.
         """
-        self._stdin_lines.put(text)
+        if isinstance(line, str):
+            line = line.encode()
+        self._stdin_lines.put(line)
 
     def close_stdin(self):
         """Flush and close the stdin stream."""

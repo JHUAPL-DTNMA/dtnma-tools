@@ -1008,7 +1008,8 @@ static int cace_amm_semtype_tblt_convert(const cace_amm_type_t *self, cace_ari_t
         return CACE_AMM_ERR_CONVERT_BADVALUE;
     }
 
-    const size_t nrows = cace_ari_array_size(inval->items) / inval->ncols;
+    // special case for needs-to-be-empty
+    const size_t nrows = (inval->ncols == 0) ? 0 : (cace_ari_array_size(inval->items) / inval->ncols);
 
     cace_ari_tbl_t *outval = cace_ari_set_tbl(out, NULL);
     cace_ari_tbl_reset(outval, inval->ncols, nrows);
