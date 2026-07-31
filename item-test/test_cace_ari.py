@@ -130,19 +130,66 @@ class TestCaceAri(unittest.TestCase):
         got = runner.wait_for_line()
         self.assertEqual('ari:10\n', got)
 
-    def test_translate_inform_uri(self):
+    def test_translate_inform_uri_empty(self):
+        runner = self._start('--inform=uri', '--outform=cborhex')
+        # should have no bad effects
+        runner.close_stdin()
+
+    def test_translate_inform_uri_one(self):
         runner = self._start('--inform=uri', '--outform=cborhex')
 
         runner.send_stdin('ari:10\n')
         got = runner.wait_for_line()
         self.assertEqual('0A\n', got)
 
-    def test_translate_inform_cborhex(self):
+    def test_translate_inform_cborhex_empty(self):
+        runner = self._start('--inform=cborhex', '--outform=uri')
+        # should have no bad effects
+        runner.close_stdin()
+
+    def test_translate_inform_cborhex_one(self):
         runner = self._start('--inform=cborhex', '--outform=uri')
 
         runner.send_stdin('0A\n')
         got = runner.wait_for_line()
         self.assertEqual('ari:10\n', got)
+
+    def test_translate_inform_cbor_empty(self):
+        runner = self._start('--inform=cbor', '--outform=uri')
+        # should have no bad effects
+        runner.close_stdin()
+
+    def test_translate_inform_cbor_valid_one(self):
+        runner = self._start('--inform=cbor', '--outform=uri')
+
+        runner.send_stdin(bytes.fromhex('03'))
+        runner.close_stdin()
+        got = runner.wait_for_line()
+        self.assertEqual('ari:3\n', got)
+
+    def test_translate_inform_cbor_valid_many(self):
+        runner = self._start('--inform=cbor', '--outform=uri')
+
+        runner.send_stdin(bytes.fromhex('030405'))
+        runner.close_stdin()
+        got = runner.wait_for_line()
+        self.assertEqual('ari:3\n', got)
+        got = runner.wait_for_line()
+        self.assertEqual('ari:4\n', got)
+        got = runner.wait_for_line()
+        self.assertEqual('ari:5\n', got)
+
+    def test_translate_inform_cbor_invalid(self):
+        runner = self._start('--inform=cbor', '--outform=uri')
+
+        runner.send_stdin(bytes.fromhex('03'))
+        # unterminated bytes
+        runner.send_stdin(bytes.fromhex('436869'))
+        runner.close_stdin()
+        got = runner.wait_for_line()
+        self.assertEqual('ari:3\n', got)
+        # error after success
+        runner.wait_for_text(r'.*Ran out of data to decode', stream='stderr')
 
     def test_translate_inform_multi_auto(self):
         runner = self._start('--inform=uri', '--inform=auto', '--outform=cbor', '--outform=auto')

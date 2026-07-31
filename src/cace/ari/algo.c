@@ -234,7 +234,7 @@ static int cace_ari_visit_ari(cace_ari_t *ari, const cace_ari_visitor_t *visitor
         }
     }
 
-    return retval;
+    return 0;
 }
 
 int cace_ari_visit(cace_ari_t *ari, const cace_ari_visitor_t *visitor, void *user_data)
