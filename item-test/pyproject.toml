@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dtnma-item-test"
+version = "0.0.0"
+authors = [
+  { name="JHU/APL", email="dtnma-support@jhuapl.edu" },
+]
+description = "REFDM and REFDA test fixtures"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+
+dependencies = [
+  "dtnma-ace", # installed through script
+  "cbor2 ~= 5.6.0",
+  "requests ~= 2.32",
+  "sqlalchemy ~= 2.0",
+  "psycopg2 ~= 2.9",
+  "pytest",
+  "pytest-subtests",
+  "pyyaml",
+]
+
+[project.optional-dependencies]
+format = [
+  "ruff ==0.16.0",
+#  "ty == 0.0.65",
+  "licenseheaders ==0.8.8",
+]
+
+
+[tool.setuptools.packages.find]
+exclude = ["test*", "helpers", "deps"]
+
+[tool.pytest.ini_options]
+norecursedirs = ["helpers", "deps"]
+log_level = "DEBUG"
+log_cli = true
+log_cli_level = "WARNING"
+
+[tool.ruff]
+line-length=100
+[tool.ruff.lint]
+ignore = ["FA", "FLY", "UP"]

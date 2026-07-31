@@ -46,10 +46,10 @@ def check_lib(libname: str, prefix_list: List[str]):
     if not file_path:
         raise ValueError(f'Missing library for {libname}')
 
-    prefix_list = list(prefix_list)
-    prefix_list.append(f'{libname}_')
-    prefix_list = set([prefix.casefold() for prefix in prefix_list])
-    LOGGER.info('Checking prefix list %s', prefix_list)
+    prefix_set = set(prefix_list)
+    prefix_set.add(f'{libname}_')
+    prefix_set = set(prefix.casefold() for prefix in prefix_set)
+    LOGGER.info('Checking prefix list %s', prefix_set)
 
     src_path = os.path.join(SELFDIR, 'src')
 
@@ -71,10 +71,10 @@ def check_lib(libname: str, prefix_list: List[str]):
         if not src_name.startswith(src_path):
             continue
 
-        valid = [
+        valid = (
             sym.casefold().startswith(prefix)
-            for prefix in prefix_list
-        ]
+            for prefix in prefix_set
+        )
         if not any(valid):
             LOGGER.warning('Bad symbol %s', sym)
             bad_syms.add(sym)

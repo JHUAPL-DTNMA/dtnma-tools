@@ -5,6 +5,7 @@
 
 # Build files
 __pycache__
+*.egg-info/
 deps/build
 build
 testroot

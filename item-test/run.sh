@@ -45,7 +45,7 @@ do_prep() {
     fi
 
     ${PYTHON} -m pip install -e ./deps/dtnma-ace
-    ${PYTHON} -m pip install -r requirements.txt
+    ${PYTHON} -m pip install -e .
 }
 
 # Execute the tests, passing through command arguments
