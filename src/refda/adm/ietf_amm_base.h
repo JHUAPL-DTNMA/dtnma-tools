@@ -39,8 +39,21 @@
 extern "C" {
 #endif
 
-/// Enumeration of the ADM itself
-#define REFDA_ADM_IETF_AMM_BASE_ENUM_ADM 25
+/*
+ * Defines for the ADM itself
+ */
+/// Text name of the organization
+#define REFDA_ADM_IETF_AMM_BASE_ORG_NAME "ietf"
+/// Enumeration of the organization
+#define REFDA_ADM_IETF_AMM_BASE_ORG_ENUM 1
+/// Text name of the model
+#define REFDA_ADM_IETF_AMM_BASE_MODEL_NAME "amm-base"
+/// Enumeration of the model
+#define REFDA_ADM_IETF_AMM_BASE_MODEL_ENUM 25
+/// Revision date for the model
+#define REFDA_ADM_IETF_AMM_BASE_MODEL_REVISION "2026-05-01"
+/// @deprecated use REFDA_ADM_IETF_AMM_BASE_MODEL_ENUM directly
+#define REFDA_ADM_IETF_AMM_BASE_ENUM_ADM REFDA_ADM_IETF_AMM_BASE_MODEL_ENUM
 
 /*
  * Enumerations for IDENT objects

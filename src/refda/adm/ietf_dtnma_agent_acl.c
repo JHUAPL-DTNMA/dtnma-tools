@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the compilation unit for the implementation of the
  * ADM module "ietf-dtnma-agent-acl" for the C-language reference DA.
@@ -37,7 +38,7 @@
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 #include "cace/ari/time_util.h"
 /*   STOP CUSTOM INCLUDES HERE  */
 
@@ -70,6 +71,8 @@ static void refda_acl_post_add_access(refda_acl_t *acl, refda_acl_access_t *acce
     }
 }
 /*   STOP CUSTOM FUNCTIONS HERE  */
+
+/*   START CALLBACK FUNCTIONS HERE */
 
 /* Name: access-list
  * Description:
@@ -679,6 +682,8 @@ static void refda_adm_ietf_dtnma_agent_acl_ctrl_discard_group(refda_ctrl_exec_ct
      */
 }
 
+/*   STOP CALLBACK FUNCTIONS HERE  */
+
 int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
 {
     CHKERR1(agent);
@@ -686,9 +691,15 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                    "ietf-dtnma-agent-acl");
     CACE_MUTEX_LOCK(&agent->objs_mutex);
 
+    /*   START CUSTOM PRE-INIT HERE */
+    /*   STOP CUSTOM PRE-INIT HERE  */
+
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
-        &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("dtnma-agent-acl", REFDA_ADM_IETF_DTNMA_AGENT_ACL_ENUM_ADM), "2025-07-03");
+        &(agent->objs),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_DTNMA_AGENT_ACL_ORG_NAME, REFDA_ADM_IETF_DTNMA_AGENT_ACL_ORG_ENUM),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_DTNMA_AGENT_ACL_MODEL_NAME,
+                                    REFDA_ADM_IETF_DTNMA_AGENT_ACL_MODEL_ENUM),
+        REFDA_ADM_IETF_DTNMA_AGENT_ACL_MODEL_REVISION);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -923,7 +934,6 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
                         // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='permission'), params=None),
                         // base_ident=None)
                         cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
-
                         // FIXME unhandled constraint IdentRefBase(base_text='./ident/permission',
                         // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='dtnma-agent-acl',
                         // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='permission'), params=None),
@@ -1342,6 +1352,11 @@ int refda_adm_ietf_dtnma_agent_acl_init(refda_agent_t *agent)
             }
         }
     }
+
+    /*   START CUSTOM POST-INIT HERE */
+    /*   STOP CUSTOM POST-INIT HERE  */
+
     CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     return 0;
 }
+/*  STOP GENERATED SOURCE HERE */

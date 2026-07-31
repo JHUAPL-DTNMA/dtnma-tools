@@ -50,8 +50,21 @@ void refda_adm_ietf_dtnma_agent_append_derived_ident(cace_ari_tbl_t *table, cons
 extern "C" {
 #endif
 
-/// Enumeration of the ADM itself
-#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM 1
+/*
+ * Defines for the ADM itself
+ */
+/// Text name of the organization
+#define REFDA_ADM_IETF_DTNMA_AGENT_ORG_NAME "ietf"
+/// Enumeration of the organization
+#define REFDA_ADM_IETF_DTNMA_AGENT_ORG_ENUM 1
+/// Text name of the model
+#define REFDA_ADM_IETF_DTNMA_AGENT_MODEL_NAME "dtnma-agent"
+/// Enumeration of the model
+#define REFDA_ADM_IETF_DTNMA_AGENT_MODEL_ENUM 1
+/// Revision date for the model
+#define REFDA_ADM_IETF_DTNMA_AGENT_MODEL_REVISION "2026-05-01"
+/// @deprecated use REFDA_ADM_IETF_DTNMA_AGENT_MODEL_ENUM directly
+#define REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM REFDA_ADM_IETF_DTNMA_AGENT_MODEL_ENUM
 
 /*
  * Enumerations for TYPEDEF objects

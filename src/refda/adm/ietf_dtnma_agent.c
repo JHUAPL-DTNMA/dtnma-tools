@@ -7148,8 +7148,10 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
     /*   STOP CUSTOM PRE-INIT HERE  */
 
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
-        &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("dtnma-agent", REFDA_ADM_IETF_DTNMA_AGENT_ENUM_ADM), "2026-05-01");
+        &(agent->objs),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_DTNMA_AGENT_ORG_NAME, REFDA_ADM_IETF_DTNMA_AGENT_ORG_ENUM),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_DTNMA_AGENT_MODEL_NAME, REFDA_ADM_IETF_DTNMA_AGENT_MODEL_ENUM),
+        REFDA_ADM_IETF_DTNMA_AGENT_MODEL_REVISION);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;

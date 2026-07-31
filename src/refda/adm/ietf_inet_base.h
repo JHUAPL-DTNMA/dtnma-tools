@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the header for the implementation of the
  * ADM module "ietf-inet-base" for the C-language reference DA.
@@ -30,7 +31,7 @@
 
 #include "cace/util/defs.h"
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 /*             TODO              */
 /*   STOP CUSTOM INCLUDES HERE  */
 
@@ -38,8 +39,21 @@
 extern "C" {
 #endif
 
-/// Enumeration of the ADM itself
-#define REFDA_ADM_IETF_INET_BASE_ENUM_ADM 4
+/*
+ * Defines for the ADM itself
+ */
+/// Text name of the organization
+#define REFDA_ADM_IETF_INET_BASE_ORG_NAME "ietf"
+/// Enumeration of the organization
+#define REFDA_ADM_IETF_INET_BASE_ORG_ENUM 1
+/// Text name of the model
+#define REFDA_ADM_IETF_INET_BASE_MODEL_NAME "inet-base"
+/// Enumeration of the model
+#define REFDA_ADM_IETF_INET_BASE_MODEL_ENUM 4
+/// Revision date for the model
+#define REFDA_ADM_IETF_INET_BASE_MODEL_REVISION "2026-04-02"
+/// @deprecated use REFDA_ADM_IETF_INET_BASE_MODEL_ENUM directly
+#define REFDA_ADM_IETF_INET_BASE_ENUM_ADM REFDA_ADM_IETF_INET_BASE_MODEL_ENUM
 
 /*
  * Enumerations for IDENT objects
@@ -81,7 +95,8 @@ extern "C" {
 int refda_adm_ietf_inet_base_init(refda_agent_t *agent);
 
 #ifdef __cplusplus
-}
+} /* extern C */
 #endif
 
 #endif /* REFDA_ADM_IETF_INET_BASE_H_ */
+/*  STOP GENERATED SOURCE HERE */

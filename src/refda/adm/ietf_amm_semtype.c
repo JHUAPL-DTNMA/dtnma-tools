@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the compilation unit for the implementation of the
  * ADM module "ietf-amm-semtype" for the C-language reference DA.
@@ -37,13 +38,17 @@
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 /*             TODO              */
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
 /*             TODO              */
 /*   STOP CUSTOM FUNCTIONS HERE  */
+
+/*   START CALLBACK FUNCTIONS HERE */
+
+/*   STOP CALLBACK FUNCTIONS HERE  */
 
 int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
 {
@@ -52,9 +57,14 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
                    "ietf-amm-semtype");
     CACE_MUTEX_LOCK(&agent->objs_mutex);
 
+    /*   START CUSTOM PRE-INIT HERE */
+    /*   STOP CUSTOM PRE-INIT HERE  */
+
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
-        &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("amm-semtype", REFDA_ADM_IETF_AMM_SEMTYPE_ENUM_ADM), "2025-07-03");
+        &(agent->objs),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_AMM_SEMTYPE_ORG_NAME, REFDA_ADM_IETF_AMM_SEMTYPE_ORG_ENUM),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_AMM_SEMTYPE_MODEL_NAME, REFDA_ADM_IETF_AMM_SEMTYPE_MODEL_ENUM),
+        REFDA_ADM_IETF_AMM_SEMTYPE_MODEL_REVISION);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -66,7 +76,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
         { // For ./IDENT/semtype
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
-            objdata->abstract = false;
+            objdata->abstract = true;
             // no IDENT bases
 
             obj = refda_register_ident(
@@ -368,9 +378,9 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
                     }
                 }
                 {
-                    cace_ari_ac_t acinit;
-                    cace_ari_ac_init(&acinit);
-                    cace_ari_set_ac(&(fparam->defval), &acinit);
+                    cace_ari_ac_t *acinit = cace_ari_set_ac(&(fparam->defval), NULL);
+                    // AC is empty
+                    (void)acinit;
                 }
             }
         }
@@ -490,7 +500,18 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
                 cace_ari_t typeref = CACE_ARI_INIT_UNDEFINED;
                 // use of ari:/ARITYPE/IDENT
                 cace_ari_set_aritype(&typeref, CACE_ARI_TYPE_IDENT);
-                cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+                cace_amm_semtype_use_t *semtype = cace_amm_type_set_use_ref_move(&(objdata->typeobj), &typeref);
+
+                cace_amm_semtype_cnst_t *cnst;
+                {
+                    // Constraint: IdentRefBase(base_text='./IDENT/semtype',
+                    // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='amm-semtype', model_rev=None,
+                    // type_id=<StructType.IDENT: -1>, obj_id='semtype'), params=None), base_ident=None)
+                    cnst = cace_amm_semtype_cnst_array_push_new(semtype->constraints);
+                    // FIXME unhandled constraint IdentRefBase(base_text='./IDENT/semtype',
+                    // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='amm-semtype', model_rev=None,
+                    // type_id=<StructType.IDENT: -1>, obj_id='semtype'), params=None), base_ident=None)
+                }
             }
 
             obj = refda_register_typedef(
@@ -499,6 +520,11 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
             // no parameters possible
         }
     }
+
+    /*   START CUSTOM POST-INIT HERE */
+    /*   STOP CUSTOM POST-INIT HERE  */
+
     CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     return 0;
 }
+/*  STOP GENERATED SOURCE HERE */
