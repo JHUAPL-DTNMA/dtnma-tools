@@ -135,8 +135,8 @@ static int versionHandler(struct mg_connection *conn, void *cbdata _U_)
         }
 
         cJSON_AddStringToObject(obj, "civetweb_version", CIVETWEB_VERSION);
-        cJSON_AddStringToObject(obj, "ari_version", "draft-ietf-dtn-ari-08");
-        cJSON_AddStringToObject(obj, "amp_version", "draft-ietf-dtn-amp-03");
+        cJSON_AddStringToObject(obj, "ari_version", "draft-ietf-dtn-ari-09");
+        cJSON_AddStringToObject(obj, "amp_version", "draft-ietf-dtn-amp-04");
         cJSON_AddStringToObject(obj, "build_date", __DATE__);
         cJSON_AddStringToObject(obj, "build_time", __TIME__);
         SendJSON(conn, obj);
