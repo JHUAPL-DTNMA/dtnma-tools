@@ -140,7 +140,7 @@ void *refdm_ingress_worker(void *arg)
             refdm_agent_t *agent = refdm_mgr_agent_get_eid(mgr, eid);
             if (!agent)
             {
-                agent = refdm_mgr_agent_add(mgr, eid);
+                agent = refdm_mgr_agent_add(mgr, eid, NULL);
             }
 
             cace_ari_list_it_t val_it;
