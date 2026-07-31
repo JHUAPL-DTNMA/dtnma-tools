@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the compilation unit for the implementation of the
  * ADM module "iana-display-hints" for the C-language reference DA.
@@ -30,7 +31,6 @@
 #include "refda/edd_prod_ctx.h"
 #include "refda/oper_eval_ctx.h"
 #include "refda/register.h"
-#include "refda/reporting.h"
 
 #include "cace/amm/semtype.h"
 #include "cace/ari/text.h"
@@ -38,13 +38,17 @@
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 /*             TODO              */
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
 /*             TODO              */
 /*   STOP CUSTOM FUNCTIONS HERE  */
+
+/*   START CALLBACK FUNCTIONS HERE */
+
+/*   STOP CALLBACK FUNCTIONS HERE  */
 
 int refda_adm_iana_display_hints_init(refda_agent_t *agent)
 {
@@ -53,12 +57,18 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
                    "iana-display-hints");
     CACE_MUTEX_LOCK(&agent->objs_mutex);
 
+    /*   START CUSTOM PRE-INIT HERE */
+    /*   STOP CUSTOM PRE-INIT HERE  */
+
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
-        &(agent->objs), cace_amm_idseg_ref_withenum("iana", 2),
-        cace_amm_idseg_ref_withenum("display-hints", REFDA_ADM_IANA_DISPLAY_HINTS_ENUM_ADM), "2025-07-03");
+        &(agent->objs),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IANA_DISPLAY_HINTS_ORG_NAME, REFDA_ADM_IANA_DISPLAY_HINTS_ORG_ENUM),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IANA_DISPLAY_HINTS_MODEL_NAME, REFDA_ADM_IANA_DISPLAY_HINTS_MODEL_ENUM),
+        REFDA_ADM_IANA_DISPLAY_HINTS_MODEL_REVISION);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
+        (void)obj;
 
         /**
          * Register IDENT objects
@@ -66,10 +76,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-int-dec
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-integer
+                // reference to ari://ietf/amm-base/IDENT/display-hint-integer
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 1);
             }
 
@@ -83,10 +94,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-int-bin
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-integer
+                // reference to ari://ietf/amm-base/IDENT/display-hint-integer
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 1);
             }
 
@@ -100,10 +112,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-int-hex
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-integer
+                // reference to ari://ietf/amm-base/IDENT/display-hint-integer
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 1);
             }
 
@@ -117,10 +130,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-float-dec
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-float
+                // reference to ari://ietf/amm-base/IDENT/display-hint-float
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 2);
             }
 
@@ -134,10 +148,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-float-exp
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-float
+                // reference to ari://ietf/amm-base/IDENT/display-hint-float
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 2);
             }
 
@@ -151,10 +166,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-float-hex
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-float
+                // reference to ari://ietf/amm-base/IDENT/display-hint-float
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 2);
             }
 
@@ -168,10 +184,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-bstr-text
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                // reference to ari://ietf/amm-base/IDENT/display-hint-bstr
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
@@ -185,10 +202,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-bstr-base16
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                // reference to ari://ietf/amm-base/IDENT/display-hint-bstr
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
@@ -202,10 +220,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-bstr-base64
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-bstr
+                // reference to ari://ietf/amm-base/IDENT/display-hint-bstr
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 3);
             }
 
@@ -219,10 +238,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-time-text
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-time
+                // reference to ari://ietf/amm-base/IDENT/display-hint-time
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 4);
             }
 
@@ -236,10 +256,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
         { // For ./IDENT/display-time-dec
             refda_amm_ident_desc_t *objdata = CACE_MALLOC(sizeof(refda_amm_ident_desc_t));
             refda_amm_ident_desc_init(objdata);
+            objdata->abstract = false;
             // IDENT bases:
             {
                 refda_amm_ident_base_t *base = refda_amm_ident_base_list_push_new(objdata->bases);
-                // ari://ietf/amm-base/IDENT/display-hint-time
+                // reference to ari://ietf/amm-base/IDENT/display-hint-time
                 cace_ari_set_objref_path_intid(&(base->name), 1, 25, CACE_ARI_TYPE_IDENT, 4);
             }
 
@@ -251,6 +272,11 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
             // no parameters
         }
     }
-    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+
+    /*   START CUSTOM POST-INIT HERE */
+    /*   STOP CUSTOM POST-INIT HERE  */
+
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     return 0;
 }
+/*  STOP GENERATED SOURCE HERE */

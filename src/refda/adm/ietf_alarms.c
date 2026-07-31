@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the compilation unit for the implementation of the
  * ADM module "ietf-alarms" for the C-language reference DA.
@@ -37,7 +38,7 @@
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 #include "ietf.h"
 #include "ietf_dtnma_agent.h"
 /*   STOP CUSTOM INCLUDES HERE  */
@@ -45,6 +46,8 @@
 /*   START CUSTOM FUNCTIONS HERE */
 
 /*   STOP CUSTOM FUNCTIONS HERE  */
+
+/*   START CALLBACK FUNCTIONS HERE */
 
 /* Name: alarm-list
  * Description:
@@ -499,6 +502,8 @@ static void refda_adm_ietf_alarms_ctrl_discard_shelf(refda_ctrl_exec_ctx_t *ctx)
      */
 }
 
+/*   STOP CALLBACK FUNCTIONS HERE  */
+
 int refda_adm_ietf_alarms_init(refda_agent_t *agent)
 {
     CHKERR1(agent);
@@ -506,9 +511,13 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                    "ietf-alarms");
     CACE_MUTEX_LOCK(&agent->objs_mutex);
 
-    cace_amm_obj_ns_t *adm =
-        cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-                                  cace_amm_idseg_ref_withenum("alarms", REFDA_ADM_IETF_ALARMS_ENUM_ADM), "2025-04-11");
+    /*   START CUSTOM PRE-INIT HERE */
+    /*   STOP CUSTOM PRE-INIT HERE  */
+
+    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
+        &(agent->objs), cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_ALARMS_ORG_NAME, REFDA_ADM_IETF_ALARMS_ORG_ENUM),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_ALARMS_MODEL_NAME, REFDA_ADM_IETF_ALARMS_MODEL_ENUM),
+        REFDA_ADM_IETF_ALARMS_MODEL_REVISION);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -687,7 +696,6 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                             // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
                             // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
                             cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
-
                             // FIXME unhandled constraint IdentRefBase(base_text='./ident/resource',
                             // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
                             // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
@@ -725,7 +733,6 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                                     // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='category'), params=None),
                                     // base_ident=None)
                                     cnst = cace_amm_semtype_cnst_array_push_new(semtype_d2->constraints);
-
                                     // FIXME unhandled constraint IdentRefBase(base_text='./ident/category',
                                     // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms',
                                     // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='category'), params=None),
@@ -886,7 +893,6 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                             // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
                             // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
                             cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
-
                             // FIXME unhandled constraint IdentRefBase(base_text='./ident/resource',
                             // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
                             // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
@@ -925,7 +931,6 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                             // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
                             // type_id=<StructType.IDENT: -1>, obj_id='category'), params=None), base_ident=None)
                             cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
-
                             // FIXME unhandled constraint IdentRefBase(base_text='./ident/category',
                             // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
                             // type_id=<StructType.IDENT: -1>, obj_id='category'), params=None), base_ident=None)
@@ -1100,6 +1105,11 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
             }
         }
     }
+
+    /*   START CUSTOM POST-INIT HERE */
+    /*   STOP CUSTOM POST-INIT HERE  */
+
     CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     return 0;
 }
+/*  STOP GENERATED SOURCE HERE */

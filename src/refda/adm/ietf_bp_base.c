@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the compilation unit for the implementation of the
  * ADM module "ietf-bp-base" for the C-language reference DA.
@@ -37,13 +38,15 @@
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 /*             TODO              */
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
 /*             TODO              */
 /*   STOP CUSTOM FUNCTIONS HERE  */
+
+/*   START CALLBACK FUNCTIONS HERE */
 
 /* Name: match-eid-pattern
  * Description:
@@ -75,6 +78,8 @@ static void refda_adm_ietf_bp_base_oper_match_eid_pattern(refda_oper_eval_ctx_t 
      */
 }
 
+/*   STOP CALLBACK FUNCTIONS HERE  */
+
 int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
 {
     CHKERR1(agent);
@@ -82,9 +87,13 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
                    "ietf-bp-base");
     CACE_MUTEX_LOCK(&agent->objs_mutex);
 
+    /*   START CUSTOM PRE-INIT HERE */
+    /*   STOP CUSTOM PRE-INIT HERE  */
+
     cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
-        &(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-        cace_amm_idseg_ref_withenum("bp-base", REFDA_ADM_IETF_BP_BASE_ENUM_ADM), "2025-07-03");
+        &(agent->objs), cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_BP_BASE_ORG_NAME, REFDA_ADM_IETF_BP_BASE_ORG_ENUM),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_BP_BASE_MODEL_NAME, REFDA_ADM_IETF_BP_BASE_MODEL_ENUM),
+        REFDA_ADM_IETF_BP_BASE_MODEL_REVISION);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
@@ -247,7 +256,6 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
                                 // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='bp-endpoint'), params=None),
                                 // base_ident=None)
                                 cnst = cace_amm_semtype_cnst_array_push_new(semtype_d1->constraints);
-
                                 // FIXME unhandled constraint IdentRefBase(base_text='./ident/bp-endpoint',
                                 // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='bp-base',
                                 // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='bp-endpoint'), params=None),
@@ -284,6 +292,11 @@ int refda_adm_ietf_bp_base_init(refda_agent_t *agent)
             }
         }
     }
-    REFDA_AGENT_UNLOCK(agent, REFDA_AGENT_ERR_LOCK_FAILED);
+
+    /*   START CUSTOM POST-INIT HERE */
+    /*   STOP CUSTOM POST-INIT HERE  */
+
+    CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     return 0;
 }
+/*  STOP GENERATED SOURCE HERE */

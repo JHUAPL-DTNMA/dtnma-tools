@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the header for the implementation of the
  * ADM module "ietf-amm" for the C-language reference DA.
@@ -30,7 +31,7 @@
 
 #include "cace/util/defs.h"
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 /*             TODO              */
 /*   STOP CUSTOM INCLUDES HERE  */
 
@@ -38,8 +39,21 @@
 extern "C" {
 #endif
 
-/// Enumeration of the ADM itself
-#define REFDA_ADM_IETF_AMM_ENUM_ADM 0
+/*
+ * Defines for the ADM itself
+ */
+/// Text name of the organization
+#define REFDA_ADM_IETF_AMM_ORG_NAME "ietf"
+/// Enumeration of the organization
+#define REFDA_ADM_IETF_AMM_ORG_ENUM 1
+/// Text name of the model
+#define REFDA_ADM_IETF_AMM_MODEL_NAME "amm"
+/// Enumeration of the model
+#define REFDA_ADM_IETF_AMM_MODEL_ENUM 0
+/// Revision date for the model
+#define REFDA_ADM_IETF_AMM_MODEL_REVISION "2025-07-03"
+/// @deprecated use REFDA_ADM_IETF_AMM_MODEL_ENUM directly
+#define REFDA_ADM_IETF_AMM_ENUM_ADM REFDA_ADM_IETF_AMM_MODEL_ENUM
 
 /** Initializer for the ADM module ietf-amm.
  * @param[in,out] agent The agent to register this namespace and its
@@ -49,7 +63,8 @@ extern "C" {
 int refda_adm_ietf_amm_init(refda_agent_t *agent);
 
 #ifdef __cplusplus
-}
+} /* extern C */
 #endif
 
 #endif /* REFDA_ADM_IETF_AMM_H_ */
+/*  STOP GENERATED SOURCE HERE */

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+/*  START GENERATED SOURCE HERE */
 /** @file
  * This is the compilation unit for the implementation of the
  * ADM module "ietf-amm" for the C-language reference DA.
@@ -37,11 +38,15 @@
 #include "cace/util/logging.h"
 #include "cace/util/mutex.h"
 
-/*   START CUSTOM INCLUDES HERE  */
+/*   START CUSTOM INCLUDES HERE */
 /*   STOP CUSTOM INCLUDES HERE  */
 
 /*   START CUSTOM FUNCTIONS HERE */
 /*   STOP CUSTOM FUNCTIONS HERE  */
+
+/*   START CALLBACK FUNCTIONS HERE */
+
+/*   STOP CALLBACK FUNCTIONS HERE  */
 
 int refda_adm_ietf_amm_init(refda_agent_t *agent)
 {
@@ -50,14 +55,23 @@ int refda_adm_ietf_amm_init(refda_agent_t *agent)
                    "ietf-amm");
     CACE_MUTEX_LOCK(&agent->objs_mutex);
 
-    cace_amm_obj_ns_t *adm =
-        cace_amm_obj_store_add_ns(&(agent->objs), cace_amm_idseg_ref_withenum("ietf", 1),
-                                  cace_amm_idseg_ref_withenum("amm", REFDA_ADM_IETF_AMM_ENUM_ADM), "2025-07-03");
+    /*   START CUSTOM PRE-INIT HERE */
+    /*   STOP CUSTOM PRE-INIT HERE  */
+
+    cace_amm_obj_ns_t *adm = cace_amm_obj_store_add_ns(
+        &(agent->objs), cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_AMM_ORG_NAME, REFDA_ADM_IETF_AMM_ORG_ENUM),
+        cace_amm_idseg_ref_withenum(REFDA_ADM_IETF_AMM_MODEL_NAME, REFDA_ADM_IETF_AMM_MODEL_ENUM),
+        REFDA_ADM_IETF_AMM_MODEL_REVISION);
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
         (void)obj;
     }
+
+    /*   START CUSTOM POST-INIT HERE */
+    /*   STOP CUSTOM POST-INIT HERE  */
+
     CACE_MUTEX_UNLOCK(&agent->objs_mutex);
     return 0;
 }
+/*  STOP GENERATED SOURCE HERE */
