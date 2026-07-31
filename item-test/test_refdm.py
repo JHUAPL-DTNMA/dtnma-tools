@@ -427,23 +427,42 @@ class TestRefdmSocket(BaseRefdm):
 
         resp = self._req.post(
             self._base_url + 'agents',
-            data='file:/tmp/invalid1\r\n',
+            data='file:/tmp/agent1\r\n',
             headers={
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
+        self.assertIsNotNone(resp.headers.get('location'))
+        agent1_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
+
+        self.assertTrue(agent1_base.endswith('/'))
+        resp = self._req.head(agent1_base)
+        self.assertTrue(resp.ok)
+        # append separator and redirect
+        resp = self._req.head(agent1_base[:-1])
+        self.assertEqual(308, resp.status_code)
+        self.assertEqual(
+            agent1_base.casefold(),
+            urllib.parse.urljoin(resp.url, resp.headers['location']).casefold()
+        )
 
         resp = self._req.post(
             self._base_url + 'agents',
-            data='\r\nfile:/tmp/invalid2\r\n',
+            data='\r\nfile:/tmp/agent2\r\n',
             headers={
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
+        self.assertIsNotNone(resp.headers.get('location'))
+        agent2_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
+        self.assertNotEqual(agent1_base.casefold(), agent2_base.casefold())
 
-        self.assertSetEqual(set(['file:/tmp/invalid1', 'file:/tmp/invalid2']), self._get_agent_names())
+        resp = self._req.head(agent2_base)
+        self.assertTrue(resp.ok)
+
+        self.assertSetEqual(set(['file:/tmp/agent1', 'file:/tmp/agent2']), self._get_agent_names())
 
     def test_rest_agents_add_invalid(self):
         self._start()
@@ -483,23 +502,28 @@ class TestRefdmSocket(BaseRefdm):
 
         resp = self._req.post(
             self._base_url + 'agents',
-            data='file:/tmp/invalid\r\n',
+            data='file:/tmp/agent\r\n',
             headers={
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
+        agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
+        # duplicate request gets a redirect to same location
         resp = self._req.post(
             self._base_url + 'agents',
-            data='file:/tmp/invalid\r\n',
+            data='file:/tmp/agent\r\n',
             headers={
                 'content-type': 'text/plain',
-            }
+            },
+            allow_redirects=False
         )
-        self.assertEqual(400, resp.status_code)
+        self.assertEqual(303, resp.status_code)
+        self.assertIsNotNone(resp.headers.get('location'))
+        self.assertEqual(agent_base, urllib.parse.urljoin(resp.url, resp.headers['location']))
 
-        self.assertSetEqual(set(['file:/tmp/invalid']), self._get_agent_names())
+        self.assertSetEqual(set(['file:/tmp/agent']), self._get_agent_names())
 
     def test_agents_eid_missing(self):
         self._start()
@@ -561,11 +585,15 @@ class TestRefdmSocket(BaseRefdm):
                 timer.finish()
                 break
 
+        agent_base = urllib.parse.urljoin(self._base_url, f'agents/eid/{eid_seg}/')
+        resp = self._req.head(agent_base)
+        self.assertTrue(resp.ok)
+
         # valid agent but invalid form
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=other')
+        resp = self._req.get(urllib.parse.urljoin(agent_base, 'reports?form=other'))
         self.assertEqual(400, resp.status_code)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cbor')
+        resp = self._req.get(urllib.parse.urljoin(agent_base, 'reports?form=cbor'))
         self.assertEqual(200, resp.status_code)
         lastmod = resp.headers.get('last-modified')
         self.assertIsNotNone(lastmod)
@@ -573,7 +601,7 @@ class TestRefdmSocket(BaseRefdm):
         items = self._cbor_items(resp.content)
         self.assertEqual(rptset_count, len(items))
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cborhex')
+        resp = self._req.get(urllib.parse.urljoin(agent_base, 'reports?form=cborhex'))
         self.assertEqual(200, resp.status_code)
         self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
@@ -583,14 +611,14 @@ class TestRefdmSocket(BaseRefdm):
             cbor2.loads(bytes.fromhex(line))
 
         # Verify query handling
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cborhex&test=ignored')
+        resp = self._req.get(urllib.parse.urljoin(agent_base, 'reports?form=cborhex&test=ignored'))
         self.assertEqual(200, resp.status_code)
         self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
         other_lines = resp.text.splitlines()
         self.assertEqual(lines, other_lines)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=uri')
+        resp = self._req.get(urllib.parse.urljoin(agent_base, 'reports?form=uri'))
         self.assertEqual(200, resp.status_code)
         self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
@@ -617,7 +645,11 @@ class TestRefdmSocket(BaseRefdm):
 
         self._wait_for_db_table('ari_rptset', rptset_count)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cbor')
+        agent_base = urllib.parse.urljoin(self._base_url, f'agents/eid/{eid_seg}/')
+        resp = self._req.head(agent_base)
+        self.assertTrue(resp.ok)
+
+        resp = self._req.get(urllib.parse.urljoin(agent_base, 'reports?form=cbor'))
         self.assertEqual(200, resp.status_code)
         lastmod = resp.headers.get('last-modified')
         self.assertIsNotNone(lastmod)
@@ -625,7 +657,7 @@ class TestRefdmSocket(BaseRefdm):
         items = self._cbor_items(resp.content)
         self.assertEqual(rptset_count, len(items))
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=cborhex')
+        resp = self._req.get(urllib.parse.urljoin(agent_base, 'reports?form=cborhex'))
         self.assertEqual(200, resp.status_code)
         self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
@@ -642,7 +674,7 @@ class TestRefdmSocket(BaseRefdm):
         other_lines = resp.text.splitlines()
         self.assertEqual(lines, other_lines)
 
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg}/reports?form=uri')
+        resp = self._req.get(urllib.parse.urljoin(agent_base, 'reports?form=uri'))
         self.assertEqual(200, resp.status_code)
         self.assertEqual(lastmod, resp.headers.get('last-modified'))
         self.assertEqual('text/uri-list', split_content_type(resp.headers['content-type']))
@@ -667,35 +699,37 @@ class TestRefdmSocket(BaseRefdm):
             [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')]
         )
         eid_seg0 = quote('file:' + sock_path)
+        agent0_base = self._base_url + f'agents/eid/{eid_seg0}/'
 
         sock_path = self._send_msg(
             [self._ari_text_to_obj('ari:/RPTSET/n=null;r=/TP/20240102T030407Z;(t=/TD/PT;s=//ietf/dtnma-agent/CTRL/inspect;(null))')],
             agent_ix=1
         )
         eid_seg1 = quote('file:' + sock_path)
+        agent1_base = self._base_url + f'agents/eid/{eid_seg1}/'
 
         self._wait_for_db_table('ari_rptset', 2)
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=cborhex')
+        resp = self._req.get(urllib.parse.urljoin(agent0_base, 'reports?form=cborhex'))
         self.assertEqual(200, resp.status_code)
         self.assertEqual(1, len(resp.text.splitlines()))
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=cborhex')
+        resp = self._req.get(urllib.parse.urljoin(agent1_base, 'reports?form=cborhex'))
         self.assertEqual(200, resp.status_code)
         self.assertEqual(1, len(resp.text.splitlines()))
 
         # clear RPTSETs explicitly
-        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg0}/clear_reports')
+        resp = self._req.post(urllib.parse.urljoin(agent0_base, 'clear_reports'))
         self.assertEqual(204, resp.status_code)
         self._wait_for_db_table('ari_rptset', 1)
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg0}/reports?form=cborhex')
+        resp = self._req.get(urllib.parse.urljoin(agent0_base, 'reports?form=cborhex'))
         self.assertEqual(204, resp.status_code)
         # repeats do nothing
-        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg0}/clear_reports')
+        resp = self._req.post(urllib.parse.urljoin(agent0_base, 'clear_reports'))
         self.assertEqual(204, resp.status_code)
 
-        resp = self._req.post(self._base_url + f'agents/eid/{eid_seg1}/clear_reports')
+        resp = self._req.post(urllib.parse.urljoin(agent1_base, 'clear_reports'))
         self.assertEqual(204, resp.status_code)
         self._wait_for_db_table('ari_rptset', 0)
-        resp = self._req.get(self._base_url + f'agents/eid/{eid_seg1}/reports?form=cborhex')
+        resp = self._req.get(urllib.parse.urljoin(agent1_base, 'reports?form=cborhex'))
         self.assertEqual(204, resp.status_code)
 
     def test_agents_send_cbor(self):
@@ -712,21 +746,21 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
+        agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
         send_ari = self._ari_text_to_obj(textform)
         send_data = self._ari_obj_to_cbor(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=cbor',
+            urllib.parse.urljoin(agent_base, 'send?form=cbor'),
             data=send_data,
             headers={
                 'content-type': 'application/cbor-seq',
             }
         )
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        self.assertTrue(resp.ok)
 
         msg_vals = self._wait_msg(agent_ix=0)
         self.assertEqual([send_ari], msg_vals)
@@ -749,21 +783,21 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
+        agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
         send_ari = self._ari_text_to_obj(textform)
         send_data = self._ari_obj_to_cbor(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=cborhex',
+            urllib.parse.urljoin(agent_base, 'send?form=cborhex'),
             data=f'{send_data.hex()}\r\n',
             headers={
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        self.assertTrue(resp.ok)
 
         msg_vals = self._wait_msg(agent_ix=0)
         self.assertEqual([send_ari], msg_vals)
@@ -786,21 +820,21 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
+        agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
         send_ari = self._ari_text_to_obj(textform)
         send_text = self._ari_obj_to_text(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=uri',
+            urllib.parse.urljoin(agent_base, 'send?form=uri'),
             data=f'{send_text}\r\n',
             headers={
                 'content-type': 'text/uri-list',
             }
         )
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        self.assertTrue(resp.ok)
 
         msg_vals = self._wait_msg(agent_ix=0)
         self.assertEqual([send_ari], msg_vals)
@@ -823,7 +857,8 @@ class TestRefdmSocket(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
+        agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         # each primitive type of nonce
         send_text = "\
@@ -832,14 +867,13 @@ ari:/EXECSET/n=1234;(//ietf/dtnma-agent/CTRL/inspect)\r\n\
 ari:/EXECSET/n='test';(//ietf/dtnma-agent/CTRL/inspect)\r\n\
 "
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=uri',
+            urllib.parse.urljoin(agent_base, 'send?form=uri'),
             data=send_text,
             headers={
                 'content-type': 'text/uri-list',
             }
         )
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        self.assertTrue(resp.ok)
 
         self._wait_for_db_table('execution_set', 3)
 
@@ -1070,21 +1104,21 @@ class TestRefdmProxy(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
+        agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
         send_ari = self._ari_text_to_obj(textform)
         send_data = self._ari_obj_to_cbor(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=cborhex',
+            urllib.parse.urljoin(agent_base, 'send?form=cborhex'),
             data=f'{send_data.hex()}\r\n',
             headers={
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('text/plain', split_content_type(resp.headers['content-type']))
+        self.assertTrue(resp.ok)
 
         msg_vals = self._wait_msg(agent_eid)
         self.assertEqual([send_ari], msg_vals)
@@ -1111,14 +1145,15 @@ class TestRefdmProxy(BaseRefdm):
                 'content-type': 'text/plain',
             }
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
+        agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
         textform = "ari:/EXECSET/n=h'6869';(//ietf/dtnma-agent/CTRL/inspect)"
         send_ari = self._ari_text_to_obj(textform)
         send_data = self._ari_obj_to_cbor(send_ari)
 
         resp = self._req.post(
-            self._base_url + f'agents/eid/{eid_seg}/send?form=cbor',
+            urllib.parse.urljoin(agent_base, 'send?form=cbor'),
             data=send_data,
             headers={
                 'content-type': 'application/cbor-seq',

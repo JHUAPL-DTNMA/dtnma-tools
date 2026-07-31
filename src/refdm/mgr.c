@@ -177,15 +177,23 @@ int refdm_mgr_stop(refdm_mgr_t *mgr)
     return 0;
 }
 
-refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
+refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid, bool *is_new)
 {
     CHKNULL(mgr);
     CHKNULL(agent_eid);
 
     CACE_MUTEX_LOCK(&(mgr->agent_mutex));
 
+    refdm_agent_t *const *agent_ptr = refdm_agent_dict_get(mgr->agent_dict, agent_eid);
+
+    const bool created = !agent_ptr;
+    // create if not present
     refdm_agent_t *agent = NULL;
-    if (!refdm_agent_dict_get(mgr->agent_dict, agent_eid))
+    if (agent_ptr)
+    {
+        agent = *agent_ptr;
+    }
+    else
     {
         // agent does not already exist
         agent = CACE_MALLOC(sizeof(refdm_agent_t));
@@ -200,22 +208,27 @@ refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid)
 
     CACE_MUTEX_UNLOCK(&(mgr->agent_mutex));
 
-    if (agent)
+    if (is_new)
     {
-        refdm_agent_rotate_log(agent, &mgr->agent_log_cfg, true);
+        *is_new = created;
     }
 
-#if POSTGRESQL_FOUND
-    /* Copy the message group to the database tables */
-    CACE_LOG_INFO("logging agent in db started");
+    if (created && agent)
+    {
+        refdm_agent_rotate_log(agent, &mgr->agent_log_cfg, true);
 
-    m_string_t eid;
-    m_string_init(eid);
-    m_string_set_cstr(eid, agent_eid);
-    refdm_db_insert_agent(eid);
-    m_string_clear(eid);
-    CACE_LOG_INFO("logging agent in db finished");
+#if POSTGRESQL_FOUND
+        /* Copy the message group to the database tables */
+        CACE_LOG_INFO("logging agent in db started");
+
+        m_string_t eid;
+        m_string_init(eid);
+        m_string_set_cstr(eid, agent_eid);
+        refdm_db_insert_agent(eid);
+        m_string_clear(eid);
+        CACE_LOG_INFO("logging agent in db finished");
 #endif // POSTGRESQL_FOUND
+    }
 
     return agent;
 }

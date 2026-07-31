@@ -169,10 +169,12 @@ int refdm_mgr_stop(refdm_mgr_t *mgr);
  *
  * @param[in] mgr The manager to update.
  * @param[in] agent_eid The unique agent EID.
- * Adding will fail if the EID already exists in the agent list.
+ * Adding short-circuit if the EID already exists in the agent list.
+ * @param[out] is_new If provided, will be set to false if the agent was
+ * already present and true if it was newly added.
  * @return The new manager, or NULL if adding failed.
  */
-refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid);
+refdm_agent_t *refdm_mgr_agent_add(refdm_mgr_t *mgr, const char *agent_eid, bool *is_new);
 
 refdm_agent_t *refdm_mgr_agent_get_eid(refdm_mgr_t *mgr, const char *agent_eid);
 
