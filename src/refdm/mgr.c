@@ -240,11 +240,15 @@ refdm_agent_t *refdm_mgr_agent_get_index(refdm_mgr_t *mgr, size_t index)
 
     CACE_MUTEX_LOCK(&(mgr->agent_mutex));
 
-    refdm_agent_t **got = refdm_agent_list_get(mgr->agent_list, index);
+    refdm_agent_t *got = NULL;
+    if (index < refdm_agent_list_size(mgr->agent_list))
+    {
+        got = *refdm_agent_list_get(mgr->agent_list, index);
+    }
 
     CACE_MUTEX_UNLOCK(&(mgr->agent_mutex));
 
-    return got ? *got : NULL;
+    return got;
 }
 
 void refdm_mgr_clear_reports(refdm_mgr_t *mgr _U_, refdm_agent_t *agent)

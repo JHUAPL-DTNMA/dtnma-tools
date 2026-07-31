@@ -993,8 +993,8 @@ static int getAgentFromIdx(struct mg_connection *conn, const char *prefix, refdm
     if (seg_idx_used < seg_idx_end)
     {
         // the entire segment was not converted
-        mg_send_http_error(conn, HTTP_BAD_REQUEST, "Invalid agent index text: %s", seg_idx_begin);
-        return HTTP_BAD_REQUEST;
+        mg_send_http_error(conn, HTTP_NOT_FOUND, "Invalid agent index text: %s", seg_idx_begin);
+        return HTTP_NOT_FOUND;
     }
 
     refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
