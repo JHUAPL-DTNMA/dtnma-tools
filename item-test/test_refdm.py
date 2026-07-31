@@ -510,14 +510,18 @@ class TestRefdmSocket(BaseRefdm):
         self.assertEqual(201, resp.status_code)
         agent_base = urllib.parse.urljoin(resp.url, resp.headers['location'])
 
+        # duplicate request gets a redirect to same location
         resp = self._req.post(
             self._base_url + 'agents',
             data='file:/tmp/agent\r\n',
             headers={
                 'content-type': 'text/plain',
-            }
+            },
+            allow_redirects=False
         )
-        self.assertEqual(400, resp.status_code)
+        self.assertEqual(303, resp.status_code)
+        self.assertIsNotNone(resp.headers.get('location'))
+        self.assertEqual(agent_base, urllib.parse.urljoin(resp.url, resp.headers['location']))
 
         self.assertSetEqual(set(['file:/tmp/agent']), self._get_agent_names())
 

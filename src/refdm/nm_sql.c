@@ -797,7 +797,7 @@ void refdm_db_load_agents(refdm_mgr_t *mgr)
     for (int row = 0; row < num_rows; row++)
     {
         const char *eid = PQgetvalue(res, 0, name_fnum);
-        refdm_mgr_agent_add(mgr, eid);
+        refdm_mgr_agent_add(mgr, eid, NULL);
     }
 
     PQclear(res);

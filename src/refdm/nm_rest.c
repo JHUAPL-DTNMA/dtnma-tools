@@ -39,8 +39,6 @@
 #define REQUEST_BODY_CHUNK 4096
 
 #define BASE_API_URI      "/nm/api"
-#define VERSION_URI       BASE_API_URI "/version$"
-#define AGENTS_URI        BASE_API_URI "/agents$"
 #define AGENTS_IDX_PREFIX BASE_API_URI "/agents/idx/"
 #define AGENTS_EID_PREFIX BASE_API_URI "/agents/eid/"
 
@@ -117,7 +115,14 @@ static int versionHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
 
-    if (0 == strcasecmp(ri->request_method, "GET"))
+    if (0 == strcasecmp(ri->request_method, "OPTIONS"))
+    {
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_add(conn, "Allow", "OPTIONS,GET", -1);
+        mg_response_header_send(conn);
+        return HTTP_NO_CONTENT;
+    }
+    else if (0 == strcasecmp(ri->request_method, "GET"))
     {
         cJSON *obj = cJSON_CreateObject();
         if (!obj)
@@ -233,21 +238,24 @@ static int agentsPostHandler(struct mg_connection *conn)
         }
     }
 
+    bool is_new = false;
     if (!retval)
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
 
-        refdm_agent_t *agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(eid));
+        refdm_agent_t *agent = refdm_mgr_agent_add(mgr, m_string_get_cstr(eid), &is_new);
         if (!agent)
         {
-            mg_send_http_error(conn, HTTP_BAD_REQUEST, "Unable to register agent");
-            retval = HTTP_BAD_REQUEST;
+            mg_send_http_error(conn, HTTP_INTERNAL_ERROR, "Unable to register agent");
+            retval = HTTP_INTERNAL_ERROR;
         }
     }
 
     if (!retval)
-    {
-        mg_response_header_start(conn, HTTP_CREATED);
+    { // the agent is valid
+        retval = is_new ? HTTP_CREATED : HTTP_SEE_OTHER;
+
+        mg_response_header_start(conn, retval);
         {
             size_t perc_eid_len = 3 * m_string_size(eid) + 1;
             char   perc_eid[perc_eid_len];
@@ -260,7 +268,6 @@ static int agentsPostHandler(struct mg_connection *conn)
             m_string_clear(url);
         }
         mg_response_header_send(conn);
-        retval = HTTP_CREATED;
     }
 
     m_string_clear(eid);
@@ -272,7 +279,14 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
 
-    if (0 == strcasecmp(ri->request_method, "GET"))
+    if (0 == strcasecmp(ri->request_method, "OPTIONS"))
+    {
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_add(conn, "Allow", "OPTIONS,GET,POST", -1);
+        mg_response_header_send(conn);
+        return HTTP_NO_CONTENT;
+    }
+    else if (0 == strcasecmp(ri->request_method, "GET"))
     {
         return agentsGetHandler(conn);
     }
@@ -829,7 +843,14 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
         return retval;
     }
 
-    if (0 == strcasecmp(ri->request_method, "POST"))
+    if (0 == strcasecmp(ri->request_method, "OPTIONS"))
+    {
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_add(conn, "Allow", "OPTIONS,POST", -1);
+        mg_response_header_send(conn);
+        return HTTP_NO_CONTENT;
+    }
+    else if (0 == strcasecmp(ri->request_method, "POST"))
     {
         cace_ari_list_t tosend;
         cace_ari_list_init(tosend);
@@ -953,7 +974,14 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
         return res;
     }
 
-    if (0 == strcasecmp(ri->request_method, "POST"))
+    if (0 == strcasecmp(ri->request_method, "OPTIONS"))
+    {
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_add(conn, "Allow", "OPTIONS,POST", -1);
+        mg_response_header_send(conn);
+        return HTTP_NO_CONTENT;
+    }
+    else if (0 == strcasecmp(ri->request_method, "POST"))
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
@@ -983,7 +1011,14 @@ static int agentAnyReportsHandler(struct mg_connection *conn, refdm_agent_t *age
         return retval;
     }
 
-    if (0 == strcasecmp(ri->request_method, "GET"))
+    if (0 == strcasecmp(ri->request_method, "OPTIONS"))
+    {
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_add(conn, "Allow", "OPTIONS,GET", -1);
+        mg_response_header_send(conn);
+        return HTTP_NO_CONTENT;
+    }
+    else if (0 == strcasecmp(ri->request_method, "GET"))
     {
         retval = agentShowReports(conn, agent, form);
     }
@@ -1094,7 +1129,14 @@ static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata 
         return res;
     }
 
-    if (0 == strcasecmp(ri->request_method, "POST"))
+    if (0 == strcasecmp(ri->request_method, "OPTIONS"))
+    {
+        mg_response_header_start(conn, HTTP_NO_CONTENT);
+        mg_response_header_add(conn, "Allow", "OPTIONS,POST", -1);
+        mg_response_header_send(conn);
+        return HTTP_NO_CONTENT;
+    }
+    else if (0 == strcasecmp(ri->request_method, "POST"))
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
         refdm_mgr_clear_reports(mgr, agent);
@@ -1197,8 +1239,8 @@ int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
     }
 
     /* Add URL Handlers.   */
-    mg_set_request_handler(*ctx, VERSION_URI, versionHandler, 0);
-    mg_set_request_handler(*ctx, AGENTS_URI, agentsHandler, 0);
+    mg_set_request_handler(*ctx, BASE_API_URI "/version$", versionHandler, 0);
+    mg_set_request_handler(*ctx, BASE_API_URI "/agents$", agentsHandler, 0);
 
     mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*$", agentEidInfoHandler, 0);
     mg_set_request_handler(*ctx, AGENTS_EID_PREFIX "*/$", agentEidInfoHandler, 0);
