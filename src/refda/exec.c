@@ -259,7 +259,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
     }
 
     // execs queue may still be empty if deferred callbacks were run
-    if (atomic_load(&agent->execs_enable) && refda_msgdata_queue_pop(&item, agent->execs))
+    if (atomic_load(&agent->execs_enable) && refda_msgdata_queue_pop_move(&item, agent->execs))
     {
         // sentinel for end-of-input
         const bool at_end = cace_ari_is_undefined(&(item.value));

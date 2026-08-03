@@ -22,6 +22,7 @@
 
 #include <m-atomic.h>
 #include <m-buffer.h>
+#include <m-shared-ptr.h>
 #include <m-string.h>
 
 #include <pthread.h>
@@ -32,8 +33,9 @@
 #include <time.h>
 
 /// Number of events to buffer to I/O thread
-#define BSL_LOG_QUEUE_SIZE 100
+#define CACE_LOG_QUEUE_SIZE 100
 
+// NOLINTBEGIN
 static const char *sev_names[] = {
     NULL,      // LOG_EMERG
     NULL,      // LOG_ALERT
@@ -44,6 +46,7 @@ static const char *sev_names[] = {
     "INFO",    // LOG_INFO
     "DEBUG",   // LOG_DEBUG
 };
+// NOLINTEND
 
 /// A single event for the log
 typedef struct
@@ -51,7 +54,7 @@ typedef struct
     /// Source thread ID
     pthread_t thread;
     /// Source event timestamp
-    struct timeval timestamp;
+    struct timespec timestamp;
     /// Event severity enumeration
     int severity;
     /// File and function context
@@ -62,38 +65,11 @@ typedef struct
 
 void cace_log_event_init(cace_log_event_t *obj)
 {
-    obj->thread = pthread_self();
-    gettimeofday(&(obj->timestamp), NULL);
-    obj->severity = LOG_DEBUG;
+    obj->thread    = pthread_self();
+    obj->timestamp = (struct timespec) { 0 };
+    obj->severity  = LOG_DEBUG;
     m_string_init(obj->context);
     m_string_init(obj->message);
-}
-
-static void cace_log_event_init_set(cace_log_event_t *obj, const cace_log_event_t *src)
-{
-    obj->thread    = src->thread;
-    obj->timestamp = src->timestamp;
-    obj->severity  = src->severity;
-    m_string_init_set(obj->context, src->context);
-    m_string_init_set(obj->message, src->message);
-}
-
-static void cace_log_event_init_move(cace_log_event_t *obj, cace_log_event_t *src)
-{
-    obj->thread    = src->thread;
-    obj->timestamp = src->timestamp;
-    obj->severity  = src->severity;
-    m_string_init_move(obj->context, src->context);
-    m_string_init_move(obj->message, src->message);
-}
-
-static void cace_log_event_set(cace_log_event_t *obj, const cace_log_event_t *src)
-{
-    obj->thread    = src->thread;
-    obj->timestamp = src->timestamp;
-    obj->severity  = src->severity;
-    m_string_set(obj->context, src->context);
-    m_string_set(obj->message, src->message);
 }
 
 void cace_log_event_deinit(cace_log_event_t *obj)
@@ -103,12 +79,15 @@ void cace_log_event_deinit(cace_log_event_t *obj)
 }
 
 /// OPLIST for cace_log_event_t
-#define M_OPL_cace_log_event_t()                                                 \
-    (INIT(API_2(cace_log_event_init)), INIT_SET(API_6(cace_log_event_init_set)), \
-     INIT_MOVE(API_6(cace_log_event_init_move)), SET(API_6(cace_log_event_set)), CLEAR(API_2(cace_log_event_deinit)))
+#define M_OPL_cace_log_event_t() \
+    (INIT(API_2(cace_log_event_init)), INIT_SET(0), SET(0), CLEAR(API_2(cace_log_event_deinit)))
 
 /// @cond Doxygen_Suppress
-M_BUFFER_DEF(cace_log_queue, cace_log_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_PUSH_INIT_POP_MOVE)
+// GCOV_EXCL_START
+M_SHARED_WEAK_PTR_DEF(cace_log_event_ptr, cace_log_event_t)
+#define M_OPL_cace_log_event_ptr_t() M_SHARED_PTR_OPLIST(cace_log_event_ptr, M_OPL_cace_log_event_t())
+M_BUFFER_DEF(cace_log_queue, cace_log_event_ptr_t *, CACE_LOG_QUEUE_SIZE, M_BUFFER_QUEUE, M_OPL_cace_log_event_ptr_t())
+// GCOV_EXCL_STOP
 /// @endcond
 
 /// Shared least severity
@@ -127,9 +106,9 @@ static void write_log(const cace_log_event_t *event)
 {
     CHKVOID(event);
     // already domain validated
-    const char *prioname = sev_names[event->severity];
+    const char *severity_name = sev_names[event->severity];
 
-    char tmbuf[32];
+    char tmbuf[32]; // NOLINT
     {
         time_t    nowtime = event->timestamp.tv_sec;
         struct tm nowtm;
@@ -140,21 +119,22 @@ static void write_log(const cace_log_event_t *event)
         size_t len    = strftime(curs, remain, "%Y-%m-%dT%H:%M:%S", &nowtm);
         curs += len;
         remain -= len;
-        snprintf(curs, remain, ".%06ld", event->timestamp.tv_usec);
+        snprintf(curs, remain, ".%06ldZ", event->timestamp.tv_nsec / 1000);
     }
     char thrbuf[2 * sizeof(pthread_t) + 1];
     {
-        const uint8_t *data = (const void *)&(event->thread);
-        char          *out  = thrbuf;
+        const uint8_t *data   = (const void *)&(event->thread);
+        char          *out    = thrbuf;
+        size_t         remain = sizeof(thrbuf);
         for (size_t ix = 0; ix < sizeof(pthread_t); ++ix)
         {
-            sprintf(out, "%02X", *data);
+            snprintf(out, remain, "%02X", *data);
             data++;
             out += 2;
         }
         *out = '\0';
     }
-    fprintf(stderr, "%s T:%s <%s> [%s] %s\n", tmbuf, thrbuf, prioname, m_string_get_cstr(event->context),
+    fprintf(stderr, "%s T:%s <%s> [%s] %s\n", tmbuf, thrbuf, severity_name, m_string_get_cstr(event->context),
             m_string_get_cstr(event->message));
     fflush(stderr);
 }
@@ -164,24 +144,25 @@ static void *work_sink(void *arg _U_)
     bool running = true;
     while (running)
     {
-        cace_log_event_t event;
-        cace_log_queue_pop(&event, event_queue);
-        if (m_string_empty_p(event.message))
+        cace_log_event_ptr_t *event_ptr;
+        cace_log_queue_pop_move(&event_ptr, event_queue);
+        const cace_log_event_t *event = cace_log_event_ptr_cref(event_ptr);
+        if (m_string_empty_p(event->message))
         {
             running = false;
         }
         else
         {
-            write_log(&event);
+            write_log(event);
         }
-        cace_log_event_deinit(&event);
+        cace_log_event_ptr_release(event_ptr);
     }
     return NULL;
 }
 
 void cace_openlog(void)
 {
-    cace_log_queue_init(event_queue, BSL_LOG_QUEUE_SIZE);
+    cace_log_queue_init(event_queue, CACE_LOG_QUEUE_SIZE);
 
     if (pthread_create(&thr_sink, NULL, work_sink, NULL))
     {
@@ -202,10 +183,8 @@ void cace_openlog(void)
 void cace_closelog(void)
 {
     // sentinel empty message
-    cace_log_event_t event;
-    cace_log_event_init(&event);
-    cace_log_queue_push(event_queue, event);
-    cace_log_event_deinit(&event);
+    cace_log_event_ptr_t *event_ptr = cace_log_event_ptr_new();
+    cace_log_queue_push_move(event_queue, &event_ptr);
 
     int res = pthread_join(thr_sink, NULL);
     if (res)
@@ -277,9 +256,11 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
         return;
     }
 
-    cace_log_event_t event;
-    cace_log_event_init(&event);
-    event.severity = severity;
+    cace_log_event_ptr_t *event_ptr = cace_log_event_ptr_new();
+    // set the full state
+    cace_log_event_t *event = cace_log_event_ptr_ref(event_ptr);
+
+    event->severity = severity;
 
     if (filename)
     {
@@ -294,21 +275,25 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
         {
             pos = filename;
         }
-        m_string_printf(event.context, "%s:%d:%s", pos, lineno, funcname);
+        m_string_printf(event->context, "%s:%d:%s", pos, lineno, funcname);
     }
 
     {
         va_list val;
         va_start(val, format);
-        m_string_vprintf(event.message, format, val);
+        m_string_vprintf(event->message, format, val);
         va_end(val);
     }
     // ignore empty messages
-    if (!m_string_empty_p(event.message))
+    if (m_string_empty_p(event->message))
+    {
+        cace_log_event_ptr_release(event_ptr);
+    }
+    else
     {
         if (atomic_load(&thr_valid))
         {
-            cace_log_queue_push(event_queue, event);
+            cace_log_queue_push_move(event_queue, &event_ptr);
         }
         else
         {
@@ -323,8 +308,8 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
 
                 atomic_store(&did_crit, true);
             }
-            write_log(&event);
+            write_log(event);
+            cace_log_event_ptr_release(event_ptr);
         }
     }
-    cace_log_event_deinit(&event);
 }

@@ -32,7 +32,7 @@ void *refda_egress_worker(void *arg)
         refda_msgdata_t item;
 
         sem_wait(&(agent->rptgs_sem));
-        if (!refda_msgdata_queue_pop(&item, agent->rptgs))
+        if (!refda_msgdata_queue_pop_move(&item, agent->rptgs))
         {
             // shouldn't happen
             CACE_LOG_WARNING("failed to pop from rptgs queue");
