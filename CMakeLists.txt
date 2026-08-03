@@ -16,7 +16,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 cmake_minimum_required(VERSION 3.12)
-cmake_policy(SET CMP0144 OLD)
+if(POLICY CMP0144)
+    cmake_policy(SET CMP0144 OLD)
+endif(POLICY CMP0144)
+message(STATUS "Build mode ${CMAKE_BUILD_TYPE}")
 
 # PROJECT_VERSION may be specified as a parameter to allow an application
 # to define a project version independent of the git tags
@@ -69,9 +72,12 @@ if(NOT PROJECT_VERSION)
 endif(NOT PROJECT_VERSION)
 
 project(dtnma-tools
-    LANGUAGES C CXX
+    LANGUAGES C
     VERSION ${PROJECT_VERSION}
 )
+if(BUILD_UNITTEST OR BUILD_FUZZING)
+    enable_language(CXX)
+endif(BUILD_UNITTEST OR BUILD_FUZZING)
 
 # Language options
 set(CMAKE_C_STANDARD 11)
@@ -80,7 +86,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 # Force specific POSIX compatibility version
 add_definitions(
   -D_DEFAULT_SOURCE
-  -D_XOPEN_SOURCE
+  -D_XOPEN_SOURCE # needed for strptime()
   -D_POSIX_C_SOURCE=200809L
 )
 # CXX used for compilation tests
@@ -116,16 +122,23 @@ endif()
 
 # Library dependencies
 include(CheckSymbolExists)
-check_symbol_exists(posix_memalign "stdlib.h" HAVE_POSIX_MEMALIGN)
-check_symbol_exists(memalign "malloc.h" HAVE_MEMALIGN)
-check_symbol_exists(timespec_get "time.h" HAVE_TIMESPEC_GET)
+include(CMakePushCheckState)
+cmake_push_check_state(RESET)
+list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_XOPEN_SOURCE" "-D_POSIX_C_SOURCE=200809L")
 check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
 check_symbol_exists(getopt_long "getopt.h" HAVE_GETOPT_LONG)
-
+check_symbol_exists(strptime "time.h" HAVE_STRPTIME)
+cmake_pop_check_state()
+if(NOT HAVE_CLOCK_GETTIME)
+    message(FATAL_ERROR "clock_gettime not found")
+endif()
+if(NOT HAVE_STRPTIME)
+    message(FATAL_ERROR "strptime not found")
+endif()
 
 if(BUILD_UNITTEST)
   if(TEST_MEMCHECK)
-    find_program(MEMCHECK_CMD valgrind)
+    find_program(MEMCHECK_CMD valgrind REQUIRED)
     message(STATUS "Using valgrind memcheck for tests: ${MEMCHECK_CMD}")
     set(MEMCHECK_OPTIONS
       "--tool=memcheck"
@@ -220,7 +233,8 @@ include(GNUInstallDirs)
 include(FindPkgConfig)
 
 # Libaries in deps but built separately
-find_package(QCBOR REQUIRED)
+find_package(qcbor REQUIRED)
+    message(STATUS "Using QCBOR ${qcbor_VERSION}")
 find_package(MLIB REQUIRED)
 find_package(timespec REQUIRED)
 pkg_search_module(PCRE libpcre2-8 REQUIRED IMPORTED_TARGET)
