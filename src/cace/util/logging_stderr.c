@@ -260,6 +260,7 @@ void cace_log(int severity, const char *filename, int lineno, const char *funcna
     // set the full state
     cace_log_event_t *event = cace_log_event_ptr_ref(event_ptr);
 
+    (void)clock_gettime(CLOCK_REALTIME, &event->timestamp);
     event->severity = severity;
 
     if (filename)

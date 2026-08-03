@@ -883,7 +883,7 @@ bool cace_ari_equal(const cace_ari_t *left, const cace_ari_t *right)
                     }
                     break;
                 case CACE_ARI_PRIM_TIMESPEC:
-                    if (!M_MEMCMP_POD(left->as_lit.value.as_timespec, right->as_lit.value.as_timespec))
+                    if (!M_MEMEQ_POD(left->as_lit.value.as_timespec, right->as_lit.value.as_timespec))
                     {
                         result = false;
                     }

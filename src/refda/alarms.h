@@ -186,8 +186,8 @@ int refda_alarms_entry_key_cmp(const refda_alarms_entry_key_t *left, const refda
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
 M_SHARED_WEAK_PTR_DEF(refda_alarms_entry_ptr, refda_alarms_entry_t)
-M_ARRAY_DEF(refda_alarms_entry_list, refda_alarms_entry_ptr_t *,
-            M_SHARED_PTR_OPLIST(refda_alarms_entry_ptr, M_OPL_refda_alarms_entry_t()))
+#define M_OPL_refda_alarms_entry_ptr_t() M_SHARED_PTR_OPLIST(refda_alarms_entry_ptr, M_OPL_refda_alarms_entry_t())
+M_ARRAY_DEF(refda_alarms_entry_list, refda_alarms_entry_ptr_t *, M_OPL_refda_alarms_entry_ptr_t())
 M_DICT_DEF2(refda_alarms_entry_index, refda_alarms_entry_key_t, M_OPL_refda_alarms_entry_key_t(),
             refda_alarms_entry_t *, M_PTR_OPLIST)
 // GCOV_EXCL_STOP
