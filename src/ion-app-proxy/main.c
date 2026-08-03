@@ -60,13 +60,6 @@ static void prox_item_deinit(prox_item_t *obj)
     cace_ari_deinit(&obj->peer);
 }
 
-/// M*LIB oplist for prox_item_t
-#define M_OPL_prox_item_t() \
-    (INIT(API_2(prox_item_init)), CLEAR(API_2(prox_item_deinit)), INIT_SET(0), INIT_MOVE(0), SET(0), MOVE(0))
-
-// Thread-unsafe shared pointer for move semantics
-M_SHARED_WEAK_PTR_DEF(prox_item_ptr, prox_item_t)
-
 /// thread safe running state
 static cace_daemon_run_t running;
 /// logging filter
@@ -82,10 +75,19 @@ static char *arg_eid = NULL;
 /// ION interface struct
 static BpSAP ion_sap;
 
+/// Depth of the proxy message queue
 #define PROX_ITEM_QUEUE_DEPTH 10
-// Thread safe queue of shared pointers
-M_BUFFER_DEF(prox_item_queue, prox_item_ptr_t *, PROX_ITEM_QUEUE_DEPTH, M_BUFFER_QUEUE | M_BUFFER_PUSH_INIT_POP_MOVE,
-             M_SHARED_PTR_OPLIST(prox_item_ptr, M_OPL_prox_item_t()))
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+// M*LIB oplist for prox_item_t
+#define M_OPL_prox_item_t() \
+    (INIT(API_2(prox_item_init)), CLEAR(API_2(prox_item_deinit)), INIT_SET(0), INIT_MOVE(0), SET(0), MOVE(0))
+// Thread-unsafe shared pointer for move semantics
+M_SHARED_WEAK_PTR_DEF(prox_item_ptr, prox_item_t)
+#define M_OPL_prox_item_ptr_t() M_SHARED_PTR_OPLIST(prox_item_ptr, M_OPL_prox_item_t())
+M_BUFFER_DEF(prox_item_queue, prox_item_ptr_t *, PROX_ITEM_QUEUE_DEPTH, M_BUFFER_QUEUE, M_OPL_prox_item_ptr_t())
+// GCOV_EXCL_STOP
+/// @endcond
 
 /// Items outgoing to the BPA
 static prox_item_queue_t outgoing;
