@@ -571,7 +571,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
     return retval;
 }
 
-static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *agent, const char *form)
+static int agentShowReports(struct mg_connection *conn, refdm_agent_t *agent, const char *form)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
     CHKRET(form, HTTP_INTERNAL_ERROR);
