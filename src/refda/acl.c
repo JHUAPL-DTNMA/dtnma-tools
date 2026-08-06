@@ -80,11 +80,18 @@ void refda_acl_access_get_str_id(m_string_t out, const refda_acl_access_t *obj, 
     }
 }
 
+#define REFDA_ACL_PERMISSIONS_NULL                                                                       \
+    (refda_acl_permissions_t)                                                                            \
+    {                                                                                                    \
+        .base = NULL, .execute = NULL, .produce = NULL, .modify_var = NULL, .modify_rule_enabled = NULL, \
+        .ensure_odm = NULL, .obsolete_odm = NULL, .ensure_obj = NULL, .obsolete_obj = NULL               \
+    }
+
 void refda_acl_init(refda_acl_t *obj)
 {
     CHKVOID(obj);
     atomic_store(&obj->generation, 0);
-    obj->permissions = (refda_acl_permissions_t) { NULL };
+    obj->permissions = REFDA_ACL_PERMISSIONS_NULL;
     refda_acl_group_list_init(obj->groups);
     refda_acl_access_list_init(obj->access);
     refda_acl_access_by_group_init(obj->access_by_group);
@@ -96,7 +103,7 @@ void refda_acl_deinit(refda_acl_t *obj)
     refda_acl_access_by_group_clear(obj->access_by_group);
     refda_acl_access_list_clear(obj->access);
     refda_acl_group_list_clear(obj->groups);
-    obj->permissions = (refda_acl_permissions_t) { NULL };
+    obj->permissions = REFDA_ACL_PERMISSIONS_NULL;
 }
 
 /**
