@@ -73,7 +73,7 @@ jobs:
               git rsync \
               cmake ninja-build ruby 'ruby(rubygems)' \
               pkg-config gcc gcc-c++ ccache patch autoconf libtool \
-              ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
+              ${{matrix.compiler=='clang' && 'clang llvm compiler-rt' || ''}} \
               ${{matrix.deps=='full' && 'flex libfl-static bison civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel' || ''}} pcre2-devel \
               valgrind xmlstarlet \
               python3 python3-pip python3-wheel
@@ -185,7 +185,7 @@ jobs:
               git rsync \
               cmake ninja-build ruby 'ruby(rubygems)' \
               pkg-config gcc gcc-c++ ccache patch autoconf libtool \
-              ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
+              ${{matrix.compiler=='clang' && 'clang llvm compiler-rt' || ''}} \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               binutils \
               valgrind xmlstarlet \
