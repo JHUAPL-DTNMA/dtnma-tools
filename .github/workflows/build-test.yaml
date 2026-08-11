@@ -130,7 +130,7 @@ jobs:
           - name: 'ubuntu-24.04'
             image: 'ubuntu:24.04'
           - name: 'ubuntu-26.04'
-            image: null
+            image: 'ubuntu:26.04'
           - name: 'centos-9'
             image: 'quay.io/centos/centos:stream9'
           - name: 'centos-10'
