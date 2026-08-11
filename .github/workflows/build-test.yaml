@@ -56,8 +56,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-              cmake ninja-build \
-              ruby pkg-config gcc g++ ccache patch autoconf libtool \
+              cmake ninja-build ruby \
+              pkg-config gcc g++ ccache patch autoconf libtool \
               ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
               ${{matrix.deps=='full' && 'flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev' || ''}} libpcre2-dev \
               valgrind xmlstarlet \
@@ -71,8 +71,8 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y \
               git rsync \
-              cmake ninja-build \
-              ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
+              cmake ninja-build ruby 'ruby(rubygems)' \
+              pkg-config gcc gcc-c++ ccache patch autoconf libtool \
               ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
               ${{matrix.deps=='full' && 'flex libfl-static bison civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel' || ''}} pcre2-devel \
               valgrind xmlstarlet \
@@ -167,8 +167,8 @@ jobs:
           apt-get update
           apt-get install -y \
               git rsync \
-              cmake ninja-build \
-              ruby pkg-config gcc g++ ccache patch autoconf libtool \
+              cmake ninja-build ruby \
+              pkg-config gcc g++ ccache patch autoconf libtool \
               ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
               flex libfl-dev bison civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev libpcre2-dev \
               binutils \
@@ -183,8 +183,8 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y \
               git rsync \
-              cmake ninja-build \
-              ruby pkg-config gcc gcc-c++ ccache patch autoconf libtool \
+              cmake ninja-build ruby 'ruby(rubygems)' \
+              pkg-config gcc gcc-c++ ccache patch autoconf libtool \
               ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               binutils \

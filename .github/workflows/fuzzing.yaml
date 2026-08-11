@@ -55,8 +55,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-              cmake ninja-build \
-              ruby pkg-config ccache patch \
+              cmake ninja-build ruby \
+              pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               flex libfl-dev bison libpcre2-dev civetweb libcivetweb-dev libssl-dev libcjson-dev libsystemd-dev libpq-dev \
               valgrind xmlstarlet python3-pip
@@ -70,8 +70,8 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y \
               git rsync \
-              cmake ninja-build \
-              ruby pkg-config ccache patch \
+              cmake ninja-build ruby 'ruby(rubygems)' \
+              pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               valgrind xmlstarlet python3-pip
