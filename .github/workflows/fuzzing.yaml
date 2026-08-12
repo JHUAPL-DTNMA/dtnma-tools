@@ -65,14 +65,13 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os.name, 'centos')
         run: |
-          echo "install_weak_deps=False" >>/etc/dnf/dnf.conf
           dnf install -y 'dnf-command(config-manager)' epel-release
           dnf config-manager --set-enabled crb
           dnf install -y \
               git rsync \
-              cmake ninja-build ruby 'ruby(rubygems)' \
+              cmake ninja-build ruby \
               pkg-config ccache patch \
-              ${{matrix.compiler=='clang' && 'clang llvm compiler-rt' || 'gcc gcc-c++'}} \
+              ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               flex libfl-static bison pcre2-devel civetweb civetweb-devel openssl-devel cjson-devel systemd-devel libpq-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
