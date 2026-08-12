@@ -27,8 +27,7 @@ This library is meant to implement logical behaviors defined in Section 2.3 and 
 
 The application-side interface of the REFDM is provided by a RESTful API operating over HTTP 1.1, with the REFDM acting as the HTTP server.
 
-
-The following APIs are available from the base URI of `http://localhost:8089/nm/api/` (_i.e._ the first endpoint `http://localhost:8089/nm/api/version`).
+The following APIs are available from the base URI of `http://localhost:8089/nm/api` (_i.e._ the first endpoint in the table expands to `http://localhost:8089/nm/api/version`).
 
 The URI template parameter `{/TYPE,ID}` below refers to a unique identifier for an Agent as one of either:
 
@@ -41,15 +40,15 @@ The template parameter `{?form}` below refers to a choice of encoded form for AR
  * The form "cbor" meaning a sequence of CBOR-encoded form of ARIs consistent with the "application/cbor-seq" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
  * The form "cborhex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
 
- | Method | Path                               | Description                                  |
- |--------|------------------------------------|----------------------------------------------|
- | GET    | `/version`                         | Return version information as a JSON object. |
- | GET    | `/agents`                          | Get a listing of registered agents as a JSON object. |
- | POST   | `/agents`                          | Register a new Agent at specified EID. The EID is encoded as a URI in request body. |
- | HEAD   | `/agents/{/TYPE,ID}/`              | Determine if an Agent is registered by status code 204 or 404. |
- | PUT    | `/agents/{/TYPE,ID}/clear_reports` | Clear all available reports for given Agent. |
- | PUT    | `/agents/{/TYPE,ID}/send{?form}`   | Send one or more EXECSET to the specific Agent. The encoded form is in the request body. |
- | GET    | `/agents/{/TYPE,ID}/reports{?form}`| Retrieve list of RPTSET for a specific Agent. The encoded form is in the response body. |
+ | Method | Path                                      | Description                                  |
+ |--------|-------------------------------------------|----------------------------------------------|
+ | GET    | `{+base}/version`                         | Return version information as a JSON object. |
+ | GET    | `{+base}/agents`                          | Get a listing of registered agents as a JSON object. |
+ | POST   | `{+base}/agents`                          | Register a new Agent at specified EID. The EID is encoded as a URI in request body. |
+ | HEAD   | `{+base}/agents/{/TYPE,ID}/`              | Determine if an Agent is registered by status code 204 or 404. |
+ | POST   | `{+base}/agents/{/TYPE,ID}/clear_reports` | Clear all available reports for given Agent. |
+ | POST   | `{+base}/agents/{/TYPE,ID}/send{?form}`   | Send one or more EXECSET to the specific Agent. The encoded form is in the request body. |
+ | GET    | `{+base}/agents/{/TYPE,ID}/reports{?form}`| Retrieve list of RPTSET for a specific Agent. The encoded form is in the response body. |
 
 # Transport Interface
 
