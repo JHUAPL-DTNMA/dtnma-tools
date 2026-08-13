@@ -130,8 +130,8 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
             }
         }
         int res = m_string_printf(filepath, "%s/%s%c%d.log", cfg->dir, m_string_get_cstr(eid_path_seg),
-                           agent_autologging_sep, // Set to "/" to use separate directories per agent
-                           agent->log_file_num);
+                                  agent_autologging_sep, // Set to "/" to use separate directories per agent
+                                  agent->log_file_num);
         if (res < 0)
         {
             CACE_LOG_ERR("Failed to write file path, got size %d", res);
