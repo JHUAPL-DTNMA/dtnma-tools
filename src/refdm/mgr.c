@@ -143,7 +143,6 @@ int refdm_mgr_start(refdm_mgr_t *mgr)
 {
     cace_threadinfo_t threadinfo[3] = {
         { &refdm_ingress_worker, "refdm_ingress" },
-        //        { &ui_thread, "nm_mgr_ui" },
         { NULL, NULL },
     };
 

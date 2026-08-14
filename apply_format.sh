@@ -33,6 +33,11 @@ else
 fi
 clang-format --style=file -i $ARGS
 
+if which jq
+then
+    OPENAPI="src/refdm/openapi.json"
+    jq . <${OPENAPI} | sponge ${OPENAPI}
+fi
 
 # Python test fixtures
 pushd item-test/
