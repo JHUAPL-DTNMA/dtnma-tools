@@ -17,8 +17,10 @@ limitations under the License.
 ]]
 
 if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
-    add_unity_test(SOURCE "test_nm_rest.c")
-    target_link_libraries(test_nm_rest PUBLIC refdm)
+    if(civetweb_FOUND)
+        add_unity_test(SOURCE "test_nm_rest.c")
+        target_link_libraries(test_nm_rest PUBLIC refdm)
+    endif(civetweb_FOUND)
 
     # Test just being able to compile and link a C++ user with the refdm library
     add_executable(test_refdm_cpp)
