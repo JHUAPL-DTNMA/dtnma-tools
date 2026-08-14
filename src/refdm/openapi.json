@@ -8,6 +8,12 @@
       "name": "Apache-2.0"
     }
   },
+  "servers": [
+    {
+      "url": "/nm/api",
+      "description": "mount path for gateway"
+    }
+  ],
   "paths": {
     "/version": {
       "get": {
