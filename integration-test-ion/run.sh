@@ -149,4 +149,6 @@ then
     CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=cbor | ace_ari --log-level=warning --inform cbor --outform text"
     echo $CMD | ${DEXEC} bash
 
+    # introspective API check
+    ${DEXEC} schemathesis run ${URIBASE}/openapi.json
 fi
