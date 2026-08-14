@@ -35,7 +35,9 @@ import urllib.parse
 from typing import List, Set
 
 import cbor2
+from hypothesis import given
 import requests
+import schemathesis
 import sqlalchemy
 from ace import ARI, AdmSet, ari, ari_cbor, ari_text, nickname
 
@@ -421,6 +423,15 @@ class TestRefdmSocket(BaseRefdm):
         self._mgr.proc.send_signal(signal.SIGINT)
         self.assertEqual(0, self._mgr.proc.wait(timeout=5))
         self.assertEqual(0, self._mgr.proc.returncode)
+
+    def test_openapi_json(self):
+        self._start()
+        resp = self._req.get(self._base_url + "openapi.json")
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual("application/json", split_content_type(resp.headers["content-type"]))
+        self.assertLess(0, len(resp.content))
+        # actual content is valid
+        schemathesis.openapi.from_file(resp.text)
 
     def test_rest_version(self):
         self._start()

@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
 
 #if POSTGRESQL_FOUND
 #include "nm_sql.h"
@@ -1171,67 +1172,110 @@ static int agentIdxReportsHandler(struct mg_connection *conn, void *cbdata _U_)
     return agentAnyReportsHandler(conn, agent);
 }
 
+void refdm_nm_rest_get_docroot(m_string_t docroot_path)
+{
+    const char *dirs = getenv("XDG_DATA_DIRS");
+    if (!dirs || (dirs[0] == '\0'))
+    {
+        dirs = "/usr/local/share/:/usr/share/";
+    }
+
+    const char *curs = dirs;
+    size_t      len;
+    // stop on the first found path
+    for (; *curs != '\0'; curs += len)
+    {
+        while (*curs == ':')
+        {
+            ++curs;
+        }
+
+        len = strcspn(curs, ":");
+        if (len == 0)
+        {
+            // nothing left
+            break;
+        }
+        // must have absolute path
+        if (*curs != '/')
+        {
+            CACE_LOG_WARNING("ignoring non-absolute path %.*s", len, curs);
+            continue;
+        }
+
+        // need trailing separator
+        const char *sep = (*(curs + len - 1) == '/') ? "" : "/";
+
+        // append required suffix
+        m_string_printf(docroot_path, "%.*s%srefdm", len, curs, sep);
+        { // check it
+            struct stat stats;
+            if (stat(m_string_get_cstr(docroot_path), &stats) == 0)
+            {
+                if (S_ISDIR(stats.st_mode))
+                {
+                    CACE_LOG_DEBUG("Using docroot path %s", m_string_get_cstr(docroot_path));
+                    return;
+                }
+                else
+                {
+                    CACE_LOG_WARNING("ignoring non-directory path %s", m_string_get_cstr(docroot_path));
+                }
+            }
+            else
+            {
+                CACE_LOG_DEBUG("ignoring missing path %s", m_string_get_cstr(docroot_path));
+            }
+        }
+
+        m_string_reset(docroot_path);
+        // try next part
+    }
+    // none found, leave empty
+    CACE_LOG_WARNING("No docroot found from XDG_DATA_DIRS");
+}
+
 int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
 {
     CHKERR1(ctx);
     CHKERR1(mgr);
 
-    char port_buf[6]; // holds uint16_t
-    snprintf(port_buf, sizeof(port_buf), "%" PRIu16, mgr->rest_listen_port);
-
-    const char *options[] = { "listening_ports",
-                              port_buf,
-                              "request_timeout_ms",
-                              "10000",
-                              "error_log_file",
-                              "error.log",
-#if CIVETWEB_USE_SSL
-                              "ssl_certificate",
-                              "../../resources/cert/server.pem",
-                              "ssl_protocol_version",
-                              "3",
-                              "ssl_cipher_list",
-                              "DES-CBC3-SHA:AES128-SHA:AES128-GCM-SHA256",
-#endif
-                              "decode_url",
-                              "no",
-                              "enable_auth_domain_check",
-                              "no",
-                              0 };
-
     struct mg_callbacks callbacks;
     unsigned            features = 0;
-    int                 err      = 0;
 
-/* Check if libcivetweb has been built with all required features. */
-#if CIVETWEB_USE_SSL
-    if (!mg_check_feature(MG_FEATURES_SSL))
-    {
-        CACE_LOG_ERR("Embedded example built with SSL support, "
-                     "but civetweb library build without.");
-        err = 3;
-    }
-    features |= MG_FEATURES_SSL;
-#endif
-
+    /* Check if libcivetweb has been built with all required features. */
     unsigned got = mg_init_library(features);
     if (got != features)
     {
         CACE_LOG_ERR("REST server failed to start with requested feature flags %u got %u", features, got);
-        err = 2;
-    }
-
-    if (err)
-    {
-        return err;
+        return 2;
     }
 
     /* Callback will print error messages to console */
     memset(&callbacks, 0, sizeof(callbacks));
     callbacks.log_message = log_message;
 
+    char port_buf[6]; // holds uint16_t
+    snprintf(port_buf, sizeof(port_buf), "%" PRIu16, mgr->rest_listen_port);
+    m_string_t docroot_path;
+    m_string_init(docroot_path);
+    refdm_nm_rest_get_docroot(docroot_path);
+    // options ingested and copied where necessary during startup
+    const char *options[] = { "listening_ports",
+                              port_buf,
+                              "document_root",
+                              m_string_get_cstr(docroot_path),
+                              "request_timeout_ms",
+                              "10000",
+                              "decode_url",
+                              "no", // percent decode in handler functions
+                              "enable_auth_domain_check",
+                              "no",
+                              0 };
+
     /* Start CivetWeb web server */
     *ctx = mg_start(&callbacks, (void *)mgr, options);
+    m_string_clear(docroot_path);
 
     /* Check return value: */
     if (*ctx == NULL)
@@ -1240,7 +1284,7 @@ int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
         return 4;
     }
 
-    /* Add URL Handlers.   */
+    /* Add URL Handlers to override document_root */
     mg_set_request_handler(*ctx, BASE_API_URI "/version$", versionHandler, 0);
     mg_set_request_handler(*ctx, BASE_API_URI "/agents$", agentsHandler, 0);
 
