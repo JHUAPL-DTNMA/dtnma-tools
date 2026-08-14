@@ -1199,7 +1199,7 @@ void refdm_nm_rest_get_docroot(m_string_t docroot_path)
         // must have absolute path
         if (*curs != '/')
         {
-            CACE_LOG_WARNING("ignoring non-absolute path %.*s", len, curs);
+            CACE_LOG_WARNING("ignoring non-absolute path %.*s", (int)len, curs);
             continue;
         }
 
@@ -1207,7 +1207,7 @@ void refdm_nm_rest_get_docroot(m_string_t docroot_path)
         const char *sep = (*(curs + len - 1) == '/') ? "" : "/";
 
         // append required suffix
-        m_string_printf(docroot_path, "%.*s%srefdm", len, curs, sep);
+        m_string_printf(docroot_path, "%.*s%srefdm", (int)len, curs, sep);
         { // check it
             struct stat stats;
             if (stat(m_string_get_cstr(docroot_path), &stats) == 0)
