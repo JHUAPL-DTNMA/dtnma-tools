@@ -571,7 +571,7 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
     return retval;
 }
 
-static int agentShowReports(struct mg_connection *conn, const refdm_agent_t *agent, const char *form)
+static int agentShowReports(struct mg_connection *conn, refdm_agent_t *agent, const char *form)
 {
     CHKRET(agent, HTTP_INTERNAL_ERROR);
     CHKRET(form, HTTP_INTERNAL_ERROR);
@@ -1177,7 +1177,7 @@ int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
     CHKERR1(mgr);
 
     char port_buf[6]; // holds uint16_t
-    snprintf(port_buf, sizeof(port_buf), "%u", mgr->rest_listen_port);
+    snprintf(port_buf, sizeof(port_buf), "%" PRIu16, mgr->rest_listen_port);
 
     const char *options[] = { "listening_ports",
                               port_buf,

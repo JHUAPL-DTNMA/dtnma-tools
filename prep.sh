@@ -24,10 +24,16 @@ set -e
 
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 source ${SELFDIR}/setenv.sh
+cd "${SELFDIR}"
 
-cmake -S ${SELFDIR} -B ${SELFDIR}/build/default \
+if test -d .git && ! git describe --always 2>/dev/null >/dev/null
+then
+    git config --global --add safe.directory ${PWD}
+fi
+
+cmake -S . -B ./build/default \
   -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
   -DCMAKE_INSTALL_PREFIX=${PREFIX} \
   -DCMAKE_BUILD_TYPE=Debug \
   -G Ninja \
-  $@
+  "$@"
