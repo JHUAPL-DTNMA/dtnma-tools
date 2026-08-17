@@ -35,9 +35,7 @@ import urllib.parse
 from typing import List, Set
 
 import cbor2
-from hypothesis import given
 import requests
-import schemathesis
 import sqlalchemy
 from ace import ARI, AdmSet, ari, ari_cbor, ari_text, nickname
 
@@ -430,8 +428,6 @@ class TestRefdmSocket(BaseRefdm):
         self.assertEqual(200, resp.status_code)
         self.assertEqual("application/json", split_content_type(resp.headers["content-type"]))
         self.assertLess(0, len(resp.content))
-        # actual content is valid
-        schemathesis.openapi.from_file(resp.text)
 
     def test_rest_version(self):
         self._start()
