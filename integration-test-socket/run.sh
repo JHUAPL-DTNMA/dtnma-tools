@@ -29,14 +29,14 @@ then
     
     ${DOCKER} compose build
     ${DOCKER} compose create --force-recreate --remove-orphans
-    ${DOCKER} compose up --detach
+    ${DOCKER} compose up --detach --wait
 elif [ "$1" = "stop" ]
 then
     ${DOCKER} compose down --rmi local --volumes
     ${DOCKER} compose rm --force --volumes
 elif [ "$1" = "logs" ]
 then
-    ${DOCKER} compose logs --name manager agent
+    ${DOCKER} compose logs manager agent
 elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
