@@ -28,55 +28,21 @@ then
     export DOCKER_BUILDKIT=1
     
     ${DOCKER} compose build
-    ${DOCKER} compose up --detach --force-recreate --remove-orphans
+    ${DOCKER} compose create --force-recreate --remove-orphans
+    ${DOCKER} compose up --detach
 elif [ "$1" = "stop" ]
 then
     ${DOCKER} compose down --rmi local --volumes
     ${DOCKER} compose rm --force --volumes
+elif [ "$1" = "logs" ]
+then
+    ${DOCKER} compose logs --name manager agent
 elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
 
     DEXEC="${DOCKER} compose exec -T manager"
     AEXEC="${DOCKER} compose exec -T agent"
-
-    # Wait for necessary daemons to start
-    for IX in $(seq 10)
-    do
-        sleep 1
-
-        WAITING=0
-        for SVC in refdm-socket
-        do
-              echo
-              if ! ${DEXEC} service_is_running ${SVC}
-              then
-                WAITING=$((WAITING + 1))
-                echo "Logs for ${SVC}:"
-                ${DEXEC} journalctl --unit ${SVC}
-              fi
-        done
-        for SVC in refda-socket
-        do
-              echo
-              if ! ${AEXEC} service_is_running ${SVC}
-              then
-                WAITING=$((WAITING + 1))
-                echo "Logs for ${SVC}:"
-                ${AEXEC} journalctl --unit ${SVC}
-              fi
-        done
-        echo "Waiting on ${WAITING} services"
-        if [[ ${WAITING} -eq 0 ]]
-        then
-            break
-        fi
-    done
-    if [[ ${WAITING} -ne 0 ]]
-    then
-        echo "Services did not all start"
-        exit 2
-    fi
 
     CURLOPTS="-svf --variable '%REFDA_EID'"
     # All manager actions operate with this base
