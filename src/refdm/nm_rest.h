@@ -64,8 +64,8 @@ void refdm_nm_rest_stop(struct mg_context *ctx);
 #define HTTP_NO_SERVICE         503
 #define HTTP_GATEWAY_TIMEOUT    504
 
-/** Search using XDG_DATA_DIRS for a "refdm" path.
- * @note This is exposed for unit testing only.
+/** Search using @c XDG_DATA_DIRS environment for a "refdm" path.
+ * @note This function uses @c getenv() so it is not thread safe.
  * @param[out] docroot_path The output path, which may be left empty if not found.
  */
 void refdm_nm_rest_get_docroot(m_string_t docroot_path);

@@ -116,12 +116,14 @@ static int log_message(const struct mg_connection *conn _U_, const char *message
 
 static int versionHandler(struct mg_connection *conn, void *cbdata _U_)
 {
+    static const char *allow_val = "OPTIONS,GET";
+
     const struct mg_request_info *ri = mg_get_request_info(conn);
 
     if (0 == strcasecmp(ri->request_method, "OPTIONS"))
     {
         mg_response_header_start(conn, HTTP_NO_CONTENT);
-        mg_response_header_add(conn, "Allow", "OPTIONS,GET", -1);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
         mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
@@ -147,7 +149,9 @@ static int versionHandler(struct mg_connection *conn, void *cbdata _U_)
     }
     else
     {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported");
+        mg_response_header_start(conn, HTTP_METHOD_NOT_ALLOWED);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
+        mg_response_header_send(conn);
         return HTTP_METHOD_NOT_ALLOWED;
     }
 }
@@ -280,12 +284,14 @@ static int agentsPostHandler(struct mg_connection *conn)
 
 static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
 {
+    static const char *allow_val = "OPTIONS,GET,POST";
+
     const struct mg_request_info *ri = mg_get_request_info(conn);
 
     if (0 == strcasecmp(ri->request_method, "OPTIONS"))
     {
         mg_response_header_start(conn, HTTP_NO_CONTENT);
-        mg_response_header_add(conn, "Allow", "OPTIONS,GET,POST", -1);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
         mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
@@ -299,7 +305,9 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
     }
     else
     {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET and POST methods supported");
+        mg_response_header_start(conn, HTTP_METHOD_NOT_ALLOWED);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
+        mg_response_header_send(conn);
         return HTTP_METHOD_NOT_ALLOWED;
     }
 }
@@ -836,6 +844,8 @@ static int getFormParam(struct mg_connection *conn, char *form, size_t form_len)
  */
 static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
 {
+    static const char *allow_val = "OPTIONS,POST";
+
     const struct mg_request_info *ri = mg_get_request_info(conn);
 
     char form[10] = "uri"; // size enough to hold valid values
@@ -849,7 +859,7 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
     if (0 == strcasecmp(ri->request_method, "OPTIONS"))
     {
         mg_response_header_start(conn, HTTP_NO_CONTENT);
-        mg_response_header_add(conn, "Allow", "OPTIONS,POST", -1);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
         mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
@@ -905,7 +915,9 @@ static int agentAnySendHandler(struct mg_connection *conn, refdm_agent_t *agent)
     }
     else
     {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only POST method supported");
+        mg_response_header_start(conn, HTTP_METHOD_NOT_ALLOWED);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
+        mg_response_header_send(conn);
         return HTTP_METHOD_NOT_ALLOWED;
     }
 }
@@ -967,6 +979,8 @@ static int agentEidSendHandler(struct mg_connection *conn, void *cbdata _U_)
  */
 static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata _U_)
 {
+    static const char *allow_val = "OPTIONS,POST";
+
     const struct mg_request_info *ri = mg_get_request_info(conn);
     CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
     refdm_agent_t *agent = NULL;
@@ -980,7 +994,7 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
     if (0 == strcasecmp(ri->request_method, "OPTIONS"))
     {
         mg_response_header_start(conn, HTTP_NO_CONTENT);
-        mg_response_header_add(conn, "Allow", "OPTIONS,POST", -1);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
         mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
@@ -995,7 +1009,9 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
     }
     else
     {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only POST method supported");
+        mg_response_header_start(conn, HTTP_METHOD_NOT_ALLOWED);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
+        mg_response_header_send(conn);
         return HTTP_METHOD_NOT_ALLOWED;
     }
 }
@@ -1004,6 +1020,8 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
  */
 static int agentAnyReportsHandler(struct mg_connection *conn, refdm_agent_t *agent)
 {
+    static const char *allow_val = "OPTIONS,GET";
+
     const struct mg_request_info *ri = mg_get_request_info(conn);
 
     char form[10] = "uri"; // size enough to hold valid values
@@ -1017,7 +1035,7 @@ static int agentAnyReportsHandler(struct mg_connection *conn, refdm_agent_t *age
     if (0 == strcasecmp(ri->request_method, "OPTIONS"))
     {
         mg_response_header_start(conn, HTTP_NO_CONTENT);
-        mg_response_header_add(conn, "Allow", "OPTIONS,GET", -1);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
         mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
@@ -1027,7 +1045,9 @@ static int agentAnyReportsHandler(struct mg_connection *conn, refdm_agent_t *age
     }
     else
     {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only GET method supported");
+        mg_response_header_start(conn, HTTP_METHOD_NOT_ALLOWED);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
+        mg_response_header_send(conn);
         retval = HTTP_METHOD_NOT_ALLOWED;
     }
     return retval;
@@ -1122,6 +1142,8 @@ static int agentIdxInfoHandler(struct mg_connection *conn, void *cbdata _U_)
  */
 static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata _U_)
 {
+    static const char *allow_val = "OPTIONS,POST";
+
     const struct mg_request_info *ri = mg_get_request_info(conn);
     CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
     refdm_agent_t *agent = NULL;
@@ -1135,7 +1157,7 @@ static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata 
     if (0 == strcasecmp(ri->request_method, "OPTIONS"))
     {
         mg_response_header_start(conn, HTTP_NO_CONTENT);
-        mg_response_header_add(conn, "Allow", "OPTIONS,POST", -1);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
         mg_response_header_send(conn);
         return HTTP_NO_CONTENT;
     }
@@ -1150,7 +1172,9 @@ static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata 
     }
     else
     {
-        mg_send_http_error(conn, HTTP_METHOD_NOT_ALLOWED, "Only POST method supported");
+        mg_response_header_start(conn, HTTP_METHOD_NOT_ALLOWED);
+        mg_response_header_add(conn, "Allow", allow_val, -1);
+        mg_response_header_send(conn);
         return HTTP_METHOD_NOT_ALLOWED;
     }
 }
@@ -1257,14 +1281,11 @@ int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
 
     char port_buf[6]; // holds uint16_t
     snprintf(port_buf, sizeof(port_buf), "%" PRIu16, mgr->rest_listen_port);
-    m_string_t docroot_path;
-    m_string_init(docroot_path);
-    refdm_nm_rest_get_docroot(docroot_path);
     // options ingested and copied where necessary during startup
     const char *options[] = { "listening_ports",
                               port_buf,
                               "document_root",
-                              m_string_get_cstr(docroot_path),
+                              m_string_get_cstr(mgr->docroot_path),
                               "request_timeout_ms",
                               "10000",
                               "decode_url",
@@ -1275,7 +1296,6 @@ int refdm_nm_rest_start(struct mg_context **ctx, refdm_mgr_t *mgr)
 
     /* Start CivetWeb web server */
     *ctx = mg_start(&callbacks, (void *)mgr, options);
-    m_string_clear(docroot_path);
 
     /* Check return value: */
     if (*ctx == NULL)
