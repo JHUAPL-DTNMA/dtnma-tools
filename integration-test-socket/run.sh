@@ -23,6 +23,8 @@ cd "${SELFDIR}"
 
 DOCKER=${DOCKER:-docker}
 
+CEXEC="${DOCKER} compose exec -T client"
+
 if [ "$1" = "start" ]
 then
     export DOCKER_BUILDKIT=1
@@ -41,14 +43,33 @@ elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
 
-    CEXEC="${DOCKER} compose exec -T client"
-
     CURLOPTS="-svf --variable '%REFDA_EID'"
     # All manager actions operate with this base
     URIBASE="http://manager:8089/nm/api"
 
+    # Probe HTTP API
+    for IX in $(seq 10)
+    do
+        sleep 1
+
+        CMD="curl ${CURLOPTS} -XOPTIONS ${URIBASE}/version"
+        FAILURE=0
+        echo $CMD | ${CEXEC} bash || FAILURE=$?
+        if [[ ${FAILURE} -eq 0 ]]
+        then
+            echo "HTTP service available"
+            echo
+            break
+        fi
+    done
+    if [[ ${FAILURE} -ne 0 ]]
+    then
+        echo "HTTP service did not all start"
+        exit 2
+    fi
+
     CMD="curl ${CURLOPTS} -XPOST ${URIBASE}/agents -H 'Content-Type: text/plain' --expand-data '{{REFDA_EID}}'"
-    echo $CMD | ${CEXEC} bash || true
+    echo $CMD | ${CEXEC} bash
     echo
 
     CMD="curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/clear_reports"

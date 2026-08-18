@@ -23,7 +23,7 @@ cd "${SELFDIR}"
 
 DOCKER=${DOCKER:-docker}
 
-DEXEC="${DOCKER} compose exec -T -e REFDA_EID=ipn:2.6 amp-manager"
+CEXEC="${DOCKER} compose exec -T -e REFDA_EID=ipn:2.6 client"
 MEXEC="${DOCKER} compose exec -T ion-manager"
 AEXEC="${DOCKER} compose exec -T agent1"
 
@@ -32,7 +32,8 @@ then
     export DOCKER_BUILDKIT=1
     
     ${DOCKER} compose build
-    ${DOCKER} compose up --detach --force-recreate --remove-orphans
+    ${DOCKER} compose create --force-recreate --remove-orphans
+    ${DOCKER} compose up --detach --wait
 elif [ "$1" = "stop" ]
 then
     ${DOCKER} compose down --rmi local --volumes
@@ -40,7 +41,7 @@ then
 elif [ "$1" = "logs" ]
 then
     echo "Manager log..."
-    ${MEXEC} journalctl --unit refdm-proxy
+    ${DOCKER} compose logs amp-manager
     echo
 
     echo "Agent log..."
@@ -56,16 +57,6 @@ then
         sleep 1
 
         WAITING=0
-        for SVC in refdm-proxy
-        do
-              echo
-              if ! ${DEXEC} service_is_running ${SVC}
-              then
-                WAITING=$((WAITING + 1))
-                echo "Logs for ${SVC}:"
-                ${DEXEC} journalctl --unit ${SVC}
-              fi
-        done
         for SVC in ion ion-app-proxy
         do
               echo
@@ -102,17 +93,38 @@ then
     # All manager actions operate with this base
     URIBASE="http://amp-manager:8089/nm/api"
 
+    # Probe HTTP API
+    for IX in $(seq 10)
+    do
+        sleep 1
+
+        CMD="curl ${CURLOPTS} -XOPTIONS ${URIBASE}/version"
+        FAILURE=0
+        echo $CMD | ${CEXEC} bash || FAILURE=$?
+        if [[ ${FAILURE} -eq 0 ]]
+        then
+            echo "HTTP service available"
+            echo
+            break
+        fi
+    done
+    if [[ ${FAILURE} -ne 0 ]]
+    then
+        echo "HTTP service did not all start"
+        exit 2
+    fi
+
     CMD="curl ${CURLOPTS} -XPOST ${URIBASE}/agents -H 'Content-Type: text/plain' --expand-data '{{REFDA_EID}}'"
-    echo $CMD | ${DEXEC} bash || true
+    echo $CMD | ${CEXEC} bash
     echo
 
     CMD="curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/clear_reports"
-    echo $CMD | ${DEXEC} bash
+    echo $CMD | ${CEXEC} bash
     echo
 
     # Verify empty listing
     CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=uri"
-    RPTLINES=$(echo $CMD | ${DEXEC} bash)
+    RPTLINES=$(echo $CMD | ${CEXEC} bash)
     if [ -n "${RPTLINES}" ]
     then
         exit 4
@@ -122,9 +134,9 @@ then
 
     # send an inspect execution with a nonce, expecting a report back
     CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/report-on(/ac/(//ietf/dtnma-agent/EDD/sw-version)))' | \
-        ace_ari --log-level=warning --inform text --outform cbor --must-nickname | \
+        ace_ari --log-level=error --inform uri --outform cbor --must-nickname | \
         curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/send?form=cbor -H 'Content-Type: application/cbor-seq' --data-binary @-; echo"
-    echo $CMD | ${DEXEC} bash
+    echo $CMD | ${CEXEC} bash
     echo
 
     ${MEXEC} bping -c1 -q1 ipn:1.1 ipn:2.4
@@ -136,7 +148,7 @@ then
         sleep 1
 
         CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=uri"
-        RPTLINES=$(echo $CMD | ${DEXEC} bash)
+        RPTLINES=$(echo $CMD | ${CEXEC} bash)
         LINECOUNT=$(echo "${RPTLINES}" | wc -l)
         echo "Got ${LINECOUNT} lines"
         if [ ${LINECOUNT} -ge 2 ]
@@ -157,9 +169,11 @@ then
     fi
 
     # view the hex-binary version also
-    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=cbor | ace_ari --log-level=warning --inform cbor --outform text"
-    echo $CMD | ${DEXEC} bash
+    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=cbor | \
+        ace_ari --log-level=error --inform cbor --outform uri"
+    echo $CMD | ${CEXEC} bash
 
     # introspective API check
-    ${DEXEC} schemathesis run ${URIBASE}/openapi.json
+    ${CEXEC} schemathesis --config-file schemathesis.toml \
+        run -w auto ${URIBASE}/openapi.json
 fi
