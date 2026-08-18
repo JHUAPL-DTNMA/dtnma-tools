@@ -214,6 +214,29 @@ static int agentsGetHandler(struct mg_connection *conn)
     return HTTP_OK;
 }
 
+/// Sanity-check URI structure
+static bool isEidValid(const m_string_t eid)
+{
+    size_t sep = m_string_search_char(eid, ':', 0);
+    // missing, scheme less than 1 byte, or SSP less than 1 byte
+    if ((sep == M_STRING_FAILURE) || (sep < 1) || (m_string_size(eid) - sep <= 1))
+    {
+        return false;
+    }
+
+    // valid scheme characters
+    for (size_t ix = 0; ix < sep; ++ix)
+    {
+        const char schar = m_string_get_char(eid, ix);
+        if (!(isalpha(schar) || isdigit(schar) || (schar == '+') || (schar == '-') || (schar == '.')))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // This may be called via POST /agents
 static int agentsPostHandler(struct mg_connection *conn)
 {
@@ -238,25 +261,10 @@ static int agentsPostHandler(struct mg_connection *conn)
         m_string_set_cstr(eid, (const char *)m_bstring_view(body, 0, m_bstring_size(body)));
         m_string_strim(eid);
 
-        // Sanity-check URI structure
-        size_t sep = m_string_search_char(eid, ':', 0);
-        if (sep == M_STRING_FAILURE)
+        if (!isEidValid(eid))
         {
-            mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "Invalid request body (need URI separator)");
+            mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "Invalid URI in body");
             retval = HTTP_UNPROCESSABLE_CNT;
-        }
-        else
-        {
-            // valid scheme characters
-            for (size_t ix = 0; ix < sep; ++ix)
-            {
-                const char schar = m_string_get_char(eid, ix);
-                if (!(isalpha(schar) || isdigit(schar) || (schar == '+') || (schar == '-') || (schar == '.')))
-                {
-                    mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "Invalid request body (bad URI scheme)");
-                    retval = HTTP_UNPROCESSABLE_CNT;
-                }
-            }
         }
     }
 

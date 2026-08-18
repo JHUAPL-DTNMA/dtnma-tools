@@ -525,15 +525,17 @@ class TestRefdmSocket(BaseRefdm):
         )
         self.assertEqual(415, resp.status_code)
 
-        # no name content
-        resp = self._req.post(
-            self._base_url + "agents",
-            data="\r\n",
-            headers={
-                "content-type": "text/plain",
-            },
-        )
-        self.assertEqual(422, resp.status_code)
+        # invalid URI content
+        for uri in {"", "\r\n", "scheme\r\n", ":\r\n", "s:\r\n", ":v\r\n"}:
+            with self.subTest(uri):
+                resp = self._req.post(
+                    self._base_url + "agents",
+                    data=uri,
+                    headers={
+                        "content-type": "text/plain",
+                    },
+                )
+                self.assertEqual(422, resp.status_code)
 
     def test_rest_agents_add_duplicate(self):
         self._start()
@@ -551,7 +553,7 @@ class TestRefdmSocket(BaseRefdm):
         # duplicate request gets a redirect to same location
         resp = self._req.post(
             self._base_url + "agents",
-            data="file:/tmp/agent\r\n",
+            data="file:/tmp/agent",
             headers={
                 "content-type": "text/plain",
             },
