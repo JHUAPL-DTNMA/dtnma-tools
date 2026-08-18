@@ -36,11 +36,14 @@ services:
       - "postgres-data:/var/lib/postgresql/data"
 
   client:
+    hostname: client
     build:
       context: ..
       dockerfile: integration-test-socket/Containerfile
       target: client
-    depends_on: {}
+    depends_on:
+      manager:
+        condition: service_started
     environment:
       DTNMA_LOGLEVEL: debug
       REFDA_EID: "file:${SOCKDIR}/refda.sock"
