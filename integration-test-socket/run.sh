@@ -41,24 +41,23 @@ elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
 
-    DEXEC="${DOCKER} compose exec -T manager"
-    AEXEC="${DOCKER} compose exec -T agent"
+    CEXEC="${DOCKER} compose exec -T client"
 
     CURLOPTS="-svf --variable '%REFDA_EID'"
     # All manager actions operate with this base
     URIBASE="http://manager:8089/nm/api"
 
     CMD="curl ${CURLOPTS} -XPOST ${URIBASE}/agents -H 'Content-Type: text/plain' --expand-data '{{REFDA_EID}}'"
-    echo $CMD | ${DEXEC} bash || true
+    echo $CMD | ${CEXEC} bash || true
     echo
 
     CMD="curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/clear_reports"
-    echo $CMD | ${DEXEC} bash
+    echo $CMD | ${CEXEC} bash
     echo
 
     # Verify empty listing
     CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=uri"
-    RPTLINES=$(echo $CMD | ${DEXEC} bash)
+    RPTLINES=$(echo $CMD | ${CEXEC} bash)
     if [ -n "${RPTLINES}" ]
     then
         exit 4
@@ -66,9 +65,9 @@ then
 
     # send an inspect execution with a nonce, expecting a report back
     CMD="echo 'ari:/EXECSET/n=12345;(//ietf/dtnma-agent/CTRL/report-on(/ac/(//ietf/dtnma-agent/EDD/sw-version)))' | \
-        ace_ari --log-level=warning --inform text --outform cbor --must-nickname | \
+        ace_ari --log-level=error --inform uri --outform cbor --must-nickname | \
         curl ${CURLOPTS} -XPOST --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/send?form=cbor -H 'Content-Type: application/cbor-seq' --data-binary @-; echo"
-    echo $CMD | ${DEXEC} bash
+    echo $CMD | ${CEXEC} bash
     echo
 
     RPTOBJ=""
@@ -78,7 +77,7 @@ then
         sleep 1
 
         CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=uri"
-        RPTLINES=$(echo $CMD | ${DEXEC} bash)
+        RPTLINES=$(echo $CMD | ${CEXEC} bash)
         LINECOUNT=$(echo "${RPTLINES}" | wc -l)
         echo "Got ${LINECOUNT} lines"
         if [ ${LINECOUNT} -ge 2 ]
@@ -99,9 +98,11 @@ then
     fi
 
     # view the hex-binary version also
-    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=cbor | ace_ari --log-level=warning --inform cbor --outform text"
-    echo $CMD | ${DEXEC} bash
+    CMD="curl ${CURLOPTS} -XGET --expand-url ${URIBASE}/agents/eid/{{REFDA_EID:trim:url}}/reports?form=cbor | \
+        ace_ari --log-level=error --inform cbor --outform uri"
+    echo $CMD | ${CEXEC} bash
 
     # introspective API check
-    ${DEXEC} schemathesis run ${URIBASE}/openapi.json
+    ${CEXEC} schemathesis --config-file schemathesis.toml \
+        run -w auto ${URIBASE}/openapi.json
 fi

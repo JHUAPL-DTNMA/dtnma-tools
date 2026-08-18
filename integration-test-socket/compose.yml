@@ -35,6 +35,16 @@ services:
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
 
+  client:
+    build:
+      context: ..
+      dockerfile: integration-test-socket/Containerfile
+      target: client
+    depends_on: {}
+    environment:
+      DTNMA_LOGLEVEL: debug
+      REFDA_EID: "file:${SOCKDIR}/refda.sock"
+
   manager:
     build:
       context: ..
@@ -45,16 +55,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    privileged: true
-    tty: true
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-      - SYS_NICE
+      agent:
+        condition: service_started
     environment:
-      container: docker
       DTNMA_LOGLEVEL: debug
-      REFDA_EID: "file:${SOCKDIR}/refda.sock"
       REFDA_SOCKET: "${SOCKDIR}/refda.sock"
       REFDM_SOCKET: "${SOCKDIR}/refdm.sock"
       DB_HOST: postgres
@@ -69,14 +73,8 @@ services:
       context: ..
       dockerfile: integration-test-socket/Containerfile
       target: agent
-    privileged: true
-    tty: true
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-      - SYS_NICE
+    depends_on: {}
     environment:
-      container: docker
       DTNMA_LOGLEVEL: debug
       REFDA_SOCKET: "${SOCKDIR}/refda.sock"
       REFDM_SOCKET: "${SOCKDIR}/refdm.sock"
