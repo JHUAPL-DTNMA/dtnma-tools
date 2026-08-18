@@ -558,6 +558,13 @@ static int agentSendItems(struct mg_connection *conn, refdm_agent_t *agent, cace
     int retval = 0;
     CACE_LOG_INFO("Sending message with %d EXECSETs", cace_ari_list_size(tosend));
 
+    if (cace_ari_list_empty_p(tosend))
+    {
+        mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "No items to send");
+        retval = HTTP_UNPROCESSABLE_CNT;
+    }
+
+    if (!retval)
     {
         refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
 
