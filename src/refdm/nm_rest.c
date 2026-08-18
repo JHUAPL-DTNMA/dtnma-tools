@@ -1229,14 +1229,15 @@ void refdm_nm_rest_get_docroot(m_string_t docroot_path)
         dirs = "/usr/local/share/:/usr/share/";
     }
 
-    const char *curs = dirs;
-    size_t      len;
+    size_t len = 0;
     // stop on the first found path
-    for (; *curs != '\0'; curs += len)
+    for (const char *curs = dirs; *curs != '\0'; curs += len)
     {
-        while (*curs == ':')
+        // skip duplicate separators
+        len = strspn(curs, ":");
+        if (len > 0)
         {
-            ++curs;
+            continue;
         }
 
         len = strcspn(curs, ":");
