@@ -56,7 +56,9 @@
               "schema": {
                 "$ref": "#/components/schemas/TextEid"
               },
-              "example": "ipn:0.1.2"
+              "examples": {
+                "$ref": "#/components/examples/TextEid"
+              }
             }
           }
         },
@@ -130,6 +132,9 @@
             "required": true,
             "schema": {
               "$ref": "#/components/schemas/TextEid"
+            },
+            "examples": {
+              "$ref": "#/components/examples/TextEid"
             }
           }
         ],
@@ -153,12 +158,16 @@
             "required": true,
             "schema": {
               "$ref": "#/components/schemas/TextEid"
+            },
+            "examples": {
+              "$ref": "#/components/examples/TextEid"
             }
           },
           {
             "name": "form",
             "in": "query",
             "required": false,
+            "description": "If not provided, the default form \"ari\" is used.",
             "schema": {
               "$ref": "#/components/schemas/AriForm"
             }
@@ -230,12 +239,16 @@
             "required": true,
             "schema": {
               "$ref": "#/components/schemas/TextEid"
+            },
+            "examples": {
+              "$ref": "#/components/examples/TextEid"
             }
           },
           {
             "name": "form",
             "in": "query",
             "required": false,
+            "description": "If not provided, the default form \"ari\" is used.",
             "schema": {
               "$ref": "#/components/schemas/AriForm"
             }
@@ -281,6 +294,9 @@
             "required": true,
             "schema": {
               "$ref": "#/components/schemas/TextEid"
+            },
+            "examples": {
+              "$ref": "#/components/examples/TextEid"
             }
           }
         ],
@@ -343,9 +359,9 @@
         }
       },
       "TextEid": {
-        "description": "Simplified URI syntax forced to not end with a period",
+        "description": "Simplified URI syntax forced to not end path segments with a period (x2E)",
         "type": "string",
-        "pattern": "^[a-zA-Z][a-zA-Z0-9+-\\.]*:\\S+[^\\.]$"
+        "pattern": "^[a-zA-Z][a-zA-Z0-9+-]*:[\\x21-\\x7E]+[\\x21-\\x2D\\x2F-\\x7E]$"
       },
       "AriForm": {
         "type": "string",
@@ -356,12 +372,24 @@
         ]
       },
       "AriFormUri": {
+        "description": "Simplified URI syntax with  a fixed scheme and arbitrary SSP, separated by CRLF",
         "type": "string",
-        "pattern": "^(ari:.+\\r\\n)+$"
+        "pattern": "^(ari:[\\x21-\\x7E]+\\r\\n)+$"
       },
       "AriFormCborHex": {
+        "description": "Hexadecimal pairs with an optional 0x prefix, separated by CRLF",
         "type": "string",
         "pattern": "^((0x)?([0-9a-fA-F]{2})+\\r\\n)+$"
+      }
+    },
+    "examples": {
+      "TextEid": {
+        "file-scheme": {
+          "value": "file:/var/run/agent.sock"
+        },
+        "ipn-scheme": {
+          "value": "ipn:0.1.2"
+        }
       }
     }
   }
