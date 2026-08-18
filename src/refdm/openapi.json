@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
     "title": "REFDM REST API",
     "version": "2.0",
@@ -16,11 +16,6 @@
   ],
   "paths": {
     "/version": {
-      "trace": {
-        "responses": {
-          "400": {}
-        }
-      },
       "get": {
         "responses": {
           "200": {
@@ -31,6 +26,270 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/agents": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agents"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No agents"
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "description": "The agent EID to create or redirect to",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "$ref": "#/components/schemas/TextEid"
+              },
+              "example": "ipn:0.1.2"
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created new",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri-reference"
+                },
+                "example": "./agents/eid/some-eid"
+              }
+            },
+            "links": {
+              "AgentHead": {
+                "operationId": "agentHead",
+                "parameters": {
+                  "agentEid": "$request.body"
+                }
+              },
+              "AgentSend": {
+                "operationId": "agentSend",
+                "parameters": {
+                  "agentEid": "$request.body"
+                }
+              },
+              "AgentReports": {
+                "operationId": "agentReports",
+                "parameters": {
+                  "agentEid": "$request.body"
+                }
+              },
+              "AgentClearReports": {
+                "operationId": "agentClearReports",
+                "parameters": {
+                  "agentEid": "$request.body"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Response after redirect to existing"
+          },
+          "303": {
+            "description": "Redirect to existing",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri-reference"
+                },
+                "example": "./agents/eid/some-eid"
+              }
+            }
+          },
+          "422": {
+            "description": "Missing or invalid EID"
+          }
+        }
+      }
+    },
+    "/agents/eid/{agentEid}/": {
+      "head": {
+        "operationId": "agentHead",
+        "parameters": [
+          {
+            "name": "agentEid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TextEid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Agent is registered"
+          },
+          "404": {
+            "description": "Agent is not registered"
+          }
+        }
+      }
+    },
+    "/agents/eid/{agentEid}/send": {
+      "post": {
+        "operationId": "agentSend",
+        "parameters": [
+          {
+            "name": "agentEid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TextEid"
+            }
+          },
+          {
+            "name": "form",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AriForm"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "text/uri-list": {
+              "schema": {
+                "$ref": "#/components/schemas/AriFormUri"
+              },
+              "examples": {
+                "no-nonce": {
+                  "value": "ari:/EXECSET/n=null;(//ietf/dtnma-agent/CTRL/report-on(/ac/(//ietf/dtnma-agent/EDD/sw-version)))\r\n"
+                }
+              }
+            },
+            "application/cbor": {
+              "examples": {
+                "no-nonce": {
+                  "summary": "This example is in diagnostic notation",
+                  "value": "[20, [null, [1, 1, -3, 6, [[17, [[1, 1, -4, 1]]]]]]]"
+                }
+              }
+            },
+            "application/cbor-seq": {},
+            "text/plain": {
+              "schema": {
+                "$ref": "#/components/schemas/AriFormCborHex"
+              },
+              "examples": {
+                "no-nonce": {
+                  "value": "821482F68501012206818211818401012301\r\n"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Agent is registered, sent correctly"
+          },
+          "400": {
+            "description": "Bad form parameter or body content"
+          },
+          "404": {
+            "description": "Agent is not registered"
+          },
+          "415": {
+            "description": "Unacceptable media type"
+          },
+          "422": {
+            "description": "Something wrong with request body"
+          },
+          "504": {
+            "description": "The transport failed to send the message"
+          }
+        }
+      }
+    },
+    "/agents/eid/{agentEid}/reports": {
+      "get": {
+        "operationId": "agentReports",
+        "parameters": [
+          {
+            "name": "agentEid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TextEid"
+            }
+          },
+          {
+            "name": "form",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AriForm"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Some reports available",
+            "content": {
+              "text/uri-list": {
+                "schema": {
+                  "$ref": "#/components/schemas/AriFormUri"
+                }
+              },
+              "application/cbor": {},
+              "application/cbor-seq": {},
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AriFormCborHex"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No reports available"
+          },
+          "400": {
+            "description": "Bad form parameter"
+          },
+          "404": {
+            "description": "Agent is not registered"
+          }
+        }
+      }
+    },
+    "/agents/eid/{agentEid}/clear_reports": {
+      "post": {
+        "operationId": "agentClearReports",
+        "parameters": [
+          {
+            "name": "agentEid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TextEid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful"
+          },
+          "404": {
+            "description": "Agent is not registered"
           }
         }
       }
@@ -56,6 +315,53 @@
             "type": "string"
           }
         }
+      },
+      "Agents": {
+        "type": "object",
+        "required": [
+          "agents"
+        ],
+        "properties": {
+          "agents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "rpts_count"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "rpts_count": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "TextEid": {
+        "description": "Simplified URI syntax forced to not end with a period",
+        "type": "string",
+        "pattern": "^[a-zA-Z][a-zA-Z0-9+-\\.]*:\\S+[^\\.]$"
+      },
+      "AriForm": {
+        "type": "string",
+        "enum": [
+          "uri",
+          "cbor",
+          "cborhex"
+        ]
+      },
+      "AriFormUri": {
+        "type": "string",
+        "pattern": "^(ari:.+\\r\\n)+$"
+      },
+      "AriFormCborHex": {
+        "type": "string",
+        "pattern": "^((0x)?([0-9a-fA-F]{2})+\\r\\n)+$"
       }
     }
   }

@@ -101,29 +101,40 @@ RUN cd /usr/local/src/nm && \
       -G Ninja && \
     cmake --build build/default && \
     cmake --install build/default && \
-    ldconfig
-# keep build artifacts for debuginfo
+    ldconfig && \
+    rm -rf build
 
 
-FROM os-base AS manager
+FROM os-base AS client
 
 # Helper utilities
 RUN --mount=type=cache,target=/var/lib/apt/lists \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
+    curl git \
     python3 python3-pip python3-wheel
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip3 install schemathesis
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip3 install git+https://github.com/JHUAPL-DTNMA/dtnma-ace.git@main
+RUN git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-adms.git /usr/local/share/ace/adms
+
+# test config
+COPY integration-test-socket/schemathesis.toml integration-test-socket/serializers.py /root/
+
+WORKDIR "/root"
+CMD ["sh", "-c", "trap \"exit\" TERM; while true; do sleep 1; done"]
+
+
+FROM os-base AS manager
 
 # Test tools
 RUN --mount=type=cache,target=/var/lib/apt/lists \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
-    curl git tshark postgresql-client
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip3 install git+https://github.com/JHUAPL-DTNMA/dtnma-ace.git@main
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip3 install schemathesis
-RUN git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-adms.git /usr/local/share/ace/adms
+    curl postgresql-client
 
+# REFDM
 RUN --mount=type=cache,target=/var/lib/apt/lists \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
@@ -140,6 +151,7 @@ FROM os-base AS agent
 # Runtime config for this container
 COPY integration-test-socket/startup.uri /etc/refda/startup.uri
 
+# REFDA
 COPY --from=build-local /usr/local /usr/local
 RUN ldconfig
 CMD ["sh", "-c", "refda-socket -l ${DTNMA_LOGLEVEL} -s /etc/refda/startup.uri -a file:${REFDA_SOCKET} -m file:${REFDM_SOCKET}"]
