@@ -25,7 +25,7 @@ DOCKER=${DOCKER:-docker}
 
 CEXEC="${DOCKER} compose exec -T -e REFDA_EID=ipn:2.6 client"
 MEXEC="${DOCKER} compose exec -T ion-manager"
-AEXEC="${DOCKER} compose exec -T agent1"
+AEXEC="${DOCKER} compose exec -T amp-agent1"
 
 if [ "$1" = "start" ]
 then
@@ -40,54 +40,10 @@ then
     ${DOCKER} compose rm --force --volumes
 elif [ "$1" = "logs" ]
 then
-    echo "Manager log..."
-    ${DOCKER} compose logs amp-manager
-    echo
-
-    echo "Agent log..."
-    ${AEXEC} journalctl --unit refda-ion
-    echo
+    ${DOCKER} compose logs amp-manager amp-agent1
 elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
-
-    # Wait for necessary daemons to start
-    for IX in $(seq 10)
-    do
-        sleep 1
-
-        WAITING=0
-        for SVC in ion ion-app-proxy
-        do
-              echo
-              if ! ${MEXEC} service_is_running ${SVC}
-              then
-                WAITING=$((WAITING + 1))
-                echo "Logs for ${SVC}:"
-                ${MEXEC} journalctl --unit ${SVC}
-              fi
-        done
-        for SVC in refda-ion
-        do
-              echo
-              if ! ${AEXEC} service_is_running ${SVC}
-              then
-                WAITING=$((WAITING + 1))
-                echo "Logs for ${SVC}:"
-                ${AEXEC} journalctl --unit ${SVC}
-              fi
-        done
-        echo "Waiting on ${WAITING} services"
-        if [[ ${WAITING} -eq 0 ]]
-        then
-            break
-        fi
-    done
-    if [[ ${WAITING} -ne 0 ]]
-    then
-        echo "Services did not all start"
-        exit 2
-    fi
 
     CURLOPTS="-svf --variable '%REFDA_EID'"
     # All manager actions operate with this base

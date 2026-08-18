@@ -184,32 +184,46 @@ RUN ldconfig
 
 # Systemd services
 COPY integration-test-ion/tmpfiles.conf /etc/tmpfiles.d/ion.conf
-COPY --chmod=644 systemd/ion.service systemd/ion-app-proxy.service systemd/bpecho@.service systemd/dumpcap.service \
+COPY --chmod=644 systemd/ion.service systemd/ion-app-proxy.service systemd/bpecho@.service \
     /usr/local/lib/systemd/system/
-RUN systemctl enable ion bpecho@4 ion-app-proxy dumpcap && \
+RUN systemctl enable ion bpecho@4 ion-app-proxy && \
     mkdir -p /var/run/ion
 
 # Runtime config for this container
 COPY integration-test-ion/node-*.rc /etc/ion/
 
+HEALTHCHECK --start-period=10s --interval=10s --timeout=5s --retries=5 \
+    CMD ["service_is_running", "ion", "ion-app-proxy"]
 EXPOSE 4556/udp
 
 
-FROM systemd-base AS agent
+FROM systemd-base AS ion-agent
 
-# REFDA
+# ION files
 COPY --from=build-local /usr/local /usr/local
 RUN ldconfig
 
 # Systemd services
 COPY integration-test-ion/tmpfiles.conf /etc/tmpfiles.d/ion.conf
-COPY --chmod=644 systemd/ion.service systemd/refda-ion.service systemd/bpecho@.service systemd/dumpcap.service \
+COPY --chmod=644 systemd/ion.service systemd/bpecho@.service systemd/dumpcap.service \
     /usr/local/lib/systemd/system/
-RUN systemctl enable ion bpecho@4 refda-ion dumpcap && \
+RUN systemctl enable ion bpecho@4 dumpcap && \
     mkdir -p /var/run/ion
 
 # Runtime config for this container
-COPY integration-test-ion/startup.uri /etc/refda/startup.uri
 COPY integration-test-ion/node-*.rc /etc/ion/
 
+HEALTHCHECK --start-period=10s --interval=10s --timeout=5s --retries=5 \
+    CMD ["service_is_running", "ion"]
 EXPOSE 4556/udp
+
+
+FROM os-base AS amp-agent
+
+# REFDA
+COPY --from=build-local /usr/local /usr/local
+RUN ldconfig
+CMD ["sh", "-c", "refda-ion -l ${DTNMA_LOGLEVEL} -s /etc/refda/startup.uri -a ipn:${ION_NODE_NUM}.6 -m ipn:${MGR_NODE_NUM}.7"]
+
+# Runtime config for this container
+COPY integration-test-ion/startup.uri /etc/refda/startup.uri
