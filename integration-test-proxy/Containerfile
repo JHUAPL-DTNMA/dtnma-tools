@@ -205,9 +205,9 @@ RUN ldconfig
 
 # Systemd services
 COPY integration-test-ion/tmpfiles.conf /etc/tmpfiles.d/ion.conf
-COPY --chmod=644 systemd/ion.service systemd/bpecho@.service systemd/dumpcap.service \
+COPY --chmod=644 systemd/ion.service systemd/bpecho@.service \
     /usr/local/lib/systemd/system/
-RUN systemctl enable ion bpecho@4 dumpcap && \
+RUN systemctl enable ion bpecho@4 && \
     mkdir -p /var/run/ion
 
 # Runtime config for this container
