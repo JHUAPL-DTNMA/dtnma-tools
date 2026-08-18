@@ -232,16 +232,31 @@ static int agentsPostHandler(struct mg_connection *conn)
     m_string_init(eid);
     if (!retval)
     {
+        // guarantee null terminator for text conversion
         m_bstring_push_back(body, '\0');
 
         m_string_set_cstr(eid, (const char *)m_bstring_view(body, 0, m_bstring_size(body)));
         m_string_strim(eid);
 
-        // Sanity-check string length
-        if (m_string_size(eid) <= 1)
+        // Sanity-check URI structure
+        size_t sep = m_string_search_char(eid, ':', 0);
+        if (sep == M_STRING_FAILURE)
         {
-            mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "Invalid request body data (expect EID name)");
+            mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "Invalid request body (need URI separator)");
             retval = HTTP_UNPROCESSABLE_CNT;
+        }
+        else
+        {
+            // valid scheme characters
+            for (size_t ix = 0; ix < sep; ++ix)
+            {
+                const char schar = m_string_get_char(eid, ix);
+                if (!(isalpha(schar) || isdigit(schar) || (schar == '+') || (schar == '-') || (schar == '.')))
+                {
+                    mg_send_http_error(conn, HTTP_UNPROCESSABLE_CNT, "Invalid request body (bad URI scheme)");
+                    retval = HTTP_UNPROCESSABLE_CNT;
+                }
+            }
         }
     }
 
@@ -287,6 +302,7 @@ static int agentsHandler(struct mg_connection *conn, void *cbdata _U_)
     static const char *allow_val = "OPTIONS,GET,POST";
 
     const struct mg_request_info *ri = mg_get_request_info(conn);
+    CACE_LOG_DEBUG("Handling %s to %s", ri->request_method, ri->local_uri);
 
     if (0 == strcasecmp(ri->request_method, "OPTIONS"))
     {
@@ -810,6 +826,7 @@ static int getAgentFromEid(struct mg_connection *conn, const char *prefix, refdm
     refdm_mgr_t *mgr = mg_get_user_data(mg_get_context(conn));
 
     *agent = refdm_mgr_agent_get_eid(mgr, m_string_get_cstr(eid));
+    CACE_LOG_DEBUG("Lookup agent %s result %p", m_string_get_cstr(eid), *agent);
     m_string_clear(eid);
     if (*agent == NULL)
     {
@@ -947,7 +964,7 @@ static int agentAnyInfoHandler(struct mg_connection *conn, refdm_agent_t *agent 
 static int agentEidInfoHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    CACE_LOG_DEBUG("Handling %s to %s", ri->request_method, ri->local_uri);
     refdm_agent_t *agent = NULL;
 
     int retval = getAgentFromEid(conn, AGENTS_EID_PREFIX, &agent);
@@ -963,7 +980,7 @@ static int agentEidInfoHandler(struct mg_connection *conn, void *cbdata _U_)
 static int agentEidSendHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    CACE_LOG_DEBUG("Handling %s to %s", ri->request_method, ri->local_uri);
     refdm_agent_t *agent = NULL;
 
     int retval = getAgentFromEid(conn, AGENTS_EID_PREFIX, &agent);
@@ -982,7 +999,7 @@ static int agentEidClearReportsHandler(struct mg_connection *conn, void *cbdata 
     static const char *allow_val = "OPTIONS,POST";
 
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    CACE_LOG_DEBUG("Handling %s to %s", ri->request_method, ri->local_uri);
     refdm_agent_t *agent = NULL;
 
     int res = getAgentFromEid(conn, AGENTS_EID_PREFIX, &agent);
@@ -1058,7 +1075,7 @@ static int agentAnyReportsHandler(struct mg_connection *conn, refdm_agent_t *age
 static int agentEidReportsHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    CACE_LOG_DEBUG("Handling %s to %s", ri->request_method, ri->local_uri);
     refdm_agent_t *agent = NULL;
 
     int res = getAgentFromEid(conn, AGENTS_EID_PREFIX, &agent);
@@ -1110,7 +1127,7 @@ static int getAgentFromIdx(struct mg_connection *conn, const char *prefix, refdm
 static int agentIdxSendHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    CACE_LOG_DEBUG("Handling %s to %s", ri->request_method, ri->local_uri);
     refdm_agent_t *agent = NULL;
 
     int res = getAgentFromIdx(conn, AGENTS_IDX_PREFIX, &agent);
@@ -1127,7 +1144,7 @@ static int agentIdxSendHandler(struct mg_connection *conn, void *cbdata _U_)
 static int agentIdxInfoHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    CACE_LOG_DEBUG("Handling %s to %s", ri->request_method, ri->local_uri);
     refdm_agent_t *agent = NULL;
 
     int res = getAgentFromIdx(conn, AGENTS_IDX_PREFIX, &agent);
@@ -1145,7 +1162,7 @@ static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata 
     static const char *allow_val = "OPTIONS,POST";
 
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    CACE_LOG_DEBUG("Handling %s to %s", ri->request_method, ri->local_uri);
     refdm_agent_t *agent = NULL;
 
     int res = getAgentFromIdx(conn, AGENTS_IDX_PREFIX, &agent);
@@ -1184,7 +1201,7 @@ static int agentIdxClearReportsHandler(struct mg_connection *conn, void *cbdata 
 static int agentIdxReportsHandler(struct mg_connection *conn, void *cbdata _U_)
 {
     const struct mg_request_info *ri = mg_get_request_info(conn);
-    CACE_LOG_DEBUG("Handling local_uri %s", ri->local_uri);
+    CACE_LOG_DEBUG("Handling %s to %s", ri->request_method, ri->local_uri);
     refdm_agent_t *agent = NULL;
 
     int res = getAgentFromIdx(conn, AGENTS_IDX_PREFIX, &agent);
