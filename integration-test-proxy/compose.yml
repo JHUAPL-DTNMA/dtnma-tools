@@ -91,7 +91,6 @@ services:
       - NET_RAW
       - SYS_NICE
     volumes:
-      - "/var/tmp/pcap:/var/log/pcap"
       - "sockdir:${SOCKDIR}"
     environment:
       container: docker
@@ -99,20 +98,19 @@ services:
       AMP_PROXY_SOCKET: "${SOCKDIR}/proxy.sock"
       ION_NODE_NUM: 1
       MGR_NODE_NUM: 1
-      DUMPCAP_OUTFILE: /var/log/pcap/manager.pcap
-      DUMPCAP_OPTS: -i lo -i eth0
     networks:
       default:
         ipv4_address: 10.5.0.101
 
-  agent1:
-    hostname: agent1
+  ion-agent1:
+    hostname: ion-agent1
     build:
       context: ..
       dockerfile: integration-test-proxy/Containerfile
-      target: agent
+      target: ion-agent
     depends_on:
       ion-manager:
+        # for startup messaging
         condition: service_started
     privileged: true
     tty: true
@@ -120,15 +118,28 @@ services:
       - NET_ADMIN
       - NET_RAW
       - SYS_NICE
-    volumes:
-      - "/var/tmp/pcap:/var/log/pcap"
     environment:
       container: docker
       DTNMA_LOGLEVEL: debug
       ION_NODE_NUM: 2
       MGR_NODE_NUM: 1
-      DUMPCAP_OUTFILE: /var/log/pcap/agent1.pcap
-      DUMPCAP_OPTS: -i lo -i eth0
     networks:
       default:
         ipv4_address: 10.5.0.102
+    ipc: shareable
+
+  amp-agent1:
+    build:
+      context: ..
+      dockerfile: integration-test-proxy/Containerfile
+      target: amp-agent
+    depends_on:
+      ion-agent1:
+        condition: service_healthy
+    volumes:
+      - "sockdir:${SOCKDIR}"
+    environment:
+      DTNMA_LOGLEVEL: debug
+      ION_NODE_NUM: 2
+      MGR_NODE_NUM: 1
+    ipc: "service:ion-agent1"
