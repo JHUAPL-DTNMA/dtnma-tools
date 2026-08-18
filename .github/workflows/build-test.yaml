@@ -258,7 +258,10 @@ jobs:
       - name: Start
         run: ./run.sh start
       - name: Test
-        run: ./run.sh check || ./run.sh logs
+        run: ./run.sh check
+      - name: Logs
+        if: failure()
+        run: ./run.sh logs
       - name: Stop
         if: always()
         run: ./run.sh stop
