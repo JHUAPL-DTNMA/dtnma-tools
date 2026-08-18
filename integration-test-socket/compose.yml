@@ -42,13 +42,14 @@ services:
       dockerfile: integration-test-socket/Containerfile
       target: client
     depends_on:
-      manager:
+      amp-manager:
         condition: service_started
     environment:
       DTNMA_LOGLEVEL: debug
       REFDA_EID: "file:${SOCKDIR}/refda.sock"
 
-  manager:
+  amp-manager:
+    hostname: amp-manager
     build:
       context: ..
       dockerfile: integration-test-socket/Containerfile
@@ -58,8 +59,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      agent:
-        condition: service_started
     environment:
       DTNMA_LOGLEVEL: debug
       REFDA_SOCKET: "${SOCKDIR}/refda.sock"
@@ -71,7 +70,8 @@ services:
     volumes:
       - "sockdir:${SOCKDIR}"
 
-  agent:
+  amp-agent1:
+    hostname: amp-agent1
     build:
       context: ..
       dockerfile: integration-test-socket/Containerfile

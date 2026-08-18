@@ -38,14 +38,14 @@ then
     ${DOCKER} compose rm --force --volumes
 elif [ "$1" = "logs" ]
 then
-    ${DOCKER} compose logs manager agent
+    ${DOCKER} compose logs amp-manager amp-agent1
 elif [ "$1" = "check" ]
 then
     ${DOCKER} compose ps
 
     CURLOPTS="-svf --variable '%REFDA_EID'"
     # All manager actions operate with this base
-    URIBASE="http://manager:8089/nm/api"
+    URIBASE="http://amp-manager:8089/nm/api"
 
     # Probe HTTP API
     for IX in $(seq 10)

@@ -129,6 +129,7 @@ services:
     ipc: shareable
 
   amp-agent1:
+    hostname: amp-agent1
     build:
       context: ..
       dockerfile: integration-test-proxy/Containerfile
@@ -136,8 +137,6 @@ services:
     depends_on:
       ion-agent1:
         condition: service_healthy
-    volumes:
-      - "sockdir:${SOCKDIR}"
     environment:
       DTNMA_LOGLEVEL: debug
       ION_NODE_NUM: 2
