@@ -526,7 +526,7 @@ class TestRefdmSocket(BaseRefdm):
         self.assertEqual(415, resp.status_code)
 
         # invalid URI content
-        for uri in {"", "\r\n", "scheme\r\n", ":\r\n", "s:\r\n", ":v\r\n"}:
+        for uri in ("", "\r\n", "scheme\r\n", ":\r\n", "s:\r\n", ":v\r\n"):
             with self.subTest(uri):
                 resp = self._req.post(
                     self._base_url + "agents",

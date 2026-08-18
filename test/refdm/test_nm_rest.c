@@ -72,7 +72,8 @@ TEST_CASE("", NULL)
 TEST_CASE("::", NULL)
 TEST_CASE("{tmp}/share", "{tmp}/share/refdm")
 TEST_CASE("{tmp}/share/", "{tmp}/share/refdm")
-TEST_CASE("rel:{tmp}/share:/other", "{tmp}/share/refdm")              // ignore relative
+TEST_CASE("rel:{tmp}/share:/other", "{tmp}/share/refdm") // ignore relative
+TEST_CASE("::rel::::{tmp}/share:/other", "{tmp}/share/refdm")
 TEST_CASE("{tmp}/local/share:{tmp}/share", "{tmp}/local/share/refdm") // first valid
 void test_get_docroot(const char *env_fmt, const char *expect_fmt)
 {
