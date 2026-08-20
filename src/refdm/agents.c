@@ -79,7 +79,6 @@ void refdm_agent_deinit(refdm_agent_t *obj)
 void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_cfg_t *cfg, bool force)
 {
     static char agent_autologging_sep = '_';
-    char        filepath[1024];
 
     CACE_MUTEX_LOCK(&agent->log_mutex);
 
@@ -99,9 +98,9 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
             }
         }
 
-        // Ensure EID is encoded to filesystem-compatible character set
         m_string_t eid_path_seg;
         m_string_init(eid_path_seg);
+        // Ensure EID is encoded to filesystem-compatible character set
         {
             cace_data_t eid_bytes;
             cace_data_init_view(&eid_bytes, m_string_size(agent->eid) + 1,
@@ -109,6 +108,8 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
             cace_uri_percent_encode(eid_path_seg, &eid_bytes, NULL);
         }
 
+        m_string_t filepath;
+        m_string_init(filepath);
         // Create sub-directories if required (first file only)
         if (cfg->agent_dirs)
         {
@@ -116,28 +117,28 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
 
             if (agent->log_fd_cnt == 0)
             {
-                int res = snprintf(filepath, sizeof(filepath), "%s/%s", cfg->dir, m_string_get_cstr(eid_path_seg));
-                if (res >= (int)sizeof(filepath))
+                int res = m_string_printf(filepath, "%s/%s", cfg->dir, m_string_get_cstr(eid_path_seg));
+                if (res < 0)
                 {
                     CACE_LOG_ERR("Failed to write file path, got size %d", res);
                 }
                 else
                 {
                     // This will fail if directory already exists, which is acceptable
-                    mkdir(filepath, 0770);
+                    mkdir(m_string_get_cstr(filepath), 0770);
                 }
             }
         }
-        int res = snprintf(filepath, sizeof(filepath), "%s/%s%c%d.log", cfg->dir, m_string_get_cstr(eid_path_seg),
-                           agent_autologging_sep, // Set to "/" to use separate directories per agent
-                           agent->log_file_num);
-        if (res >= (int)sizeof(filepath))
+        int res = m_string_printf(filepath, "%s/%s%c%d.log", cfg->dir, m_string_get_cstr(eid_path_seg),
+                                  agent_autologging_sep, // Set to "/" to use separate directories per agent
+                                  agent->log_file_num);
+        if (res < 0)
         {
             CACE_LOG_ERR("Failed to write file path, got size %d", res);
         }
         else
         {
-            agent->log_fd = fopen(filepath, "a");
+            agent->log_fd = fopen(m_string_get_cstr(filepath), "a");
             if (agent->log_fd != NULL)
             {
                 agent->log_fd_cnt = 0;
@@ -145,11 +146,12 @@ void refdm_agent_rotate_log(refdm_agent_t *agent, const refdm_agent_autologging_
             }
             else
             {
-                CACE_LOG_ERR("Failed to open report log file (%s) for agent %s", filepath,
+                CACE_LOG_ERR("Failed to open report log file (%s) for agent %s", m_string_get_cstr(filepath),
                              m_string_get_cstr(agent->eid));
             }
         }
 
+        m_string_clear(filepath);
         m_string_clear(eid_path_seg);
     }
     else if (agent->log_fd != NULL)
