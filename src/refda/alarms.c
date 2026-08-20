@@ -218,9 +218,12 @@ void refda_alarms_set_refs(refda_agent_t *agent, const cace_ari_t *resource, con
     }
     else
     {
-        refda_alarms_entry_ptr_t *entry_ptr = *refda_alarms_entry_list_push_new(agent->alarms.alarm_list);
+        refda_alarms_entry_ptr_t *entry_ptr = refda_alarms_entry_ptr_new();
+        refda_alarms_entry_list_push_back(agent->alarms.alarm_list, entry_ptr);
         // new entry with default non-key fields
         entry = refda_alarms_entry_ptr_ref(entry_ptr);
+        refda_alarms_entry_ptr_release(entry_ptr);
+
         refda_amm_ident_base_set_move(&entry->resource, &res_ref);
         refda_amm_ident_base_set_move(&entry->category, &cat_ref);
 

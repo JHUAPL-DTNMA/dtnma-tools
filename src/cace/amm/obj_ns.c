@@ -72,8 +72,12 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, cace_ari_typ
 
         cace_ari_deinit(&ref);
     }
-    cace_amm_obj_ns_ctr_t *ctr =
-        cace_amm_obj_ns_ctr_ptr_ref(*cace_amm_obj_ns_ctr_dict_safe_get(ns->object_types, obj_type));
+    cace_amm_obj_ns_ctr_ptr_t **ctr_ptr = cace_amm_obj_ns_ctr_dict_safe_get(ns->object_types, obj_type);
+    if (!*ctr_ptr)
+    {
+        *ctr_ptr = cace_amm_obj_ns_ctr_ptr_new();
+    }
+    cace_amm_obj_ns_ctr_t *ctr = cace_amm_obj_ns_ctr_ptr_ref(*ctr_ptr);
 
     cace_amm_obj_desc_t **found = cace_amm_obj_desc_by_name_get(ctr->obj_by_name, obj_id.name);
     if (found)
@@ -91,8 +95,9 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, cace_ari_typ
         }
     }
 
-    cace_amm_obj_desc_ptr_t **ptr = cace_amm_obj_desc_list_push_back_new(ctr->obj_list);
-    cace_amm_obj_desc_t      *obj = cace_amm_obj_desc_ptr_ref(*ptr);
+    cace_amm_obj_desc_ptr_t *obj_ptr = cace_amm_obj_desc_ptr_new();
+    cace_amm_obj_desc_list_push_back(ctr->obj_list, obj_ptr);
+    cace_amm_obj_desc_t *obj = cace_amm_obj_desc_ptr_ref(obj_ptr);
     cace_amm_idseg_val_set_fromref(&obj->obj_id, &obj_id);
 
     cace_amm_obj_desc_by_name_set_at(ctr->obj_by_name, m_string_get_cstr(obj->obj_id.name), obj);
@@ -101,6 +106,8 @@ cace_amm_obj_desc_t *cace_amm_obj_ns_add_obj(cace_amm_obj_ns_t *ns, cace_ari_typ
         cace_amm_obj_desc_by_enum_set_at(ctr->obj_by_enum, obj->obj_id.intenum, obj);
     }
 
+    // the container keeps a reference to this
+    cace_amm_obj_desc_ptr_release(obj_ptr);
     return obj;
 }
 

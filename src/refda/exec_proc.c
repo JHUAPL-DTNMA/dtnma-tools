@@ -342,7 +342,7 @@ static int refda_exec_proc_exp_ref(refda_runctx_t *runctx, refda_exec_seq_t *seq
                         retval = REFDA_EXEC_ERR_NO_ACCESS;
                     }
                 }
-                refda_exec_item_ptr_clear(ptr);
+                refda_exec_item_ptr_release(ptr);
                 break;
             }
             case CACE_ARI_TYPE_CONST:

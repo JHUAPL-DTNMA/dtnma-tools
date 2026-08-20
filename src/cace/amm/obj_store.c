@@ -98,8 +98,9 @@ cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const 
 
     CACE_LOG_INFO("Adding namespace org-ID %s (%" PRId64 "), model-ID %s (%" PRId64 "), revision %s", org_id.name,
                   org_id.intenum, model_id.name, model_id.intenum, revision);
-    cace_amm_obj_ns_ptr_t **ns_ptr = cace_amm_obj_ns_list_push_back_new(store->ns_list);
-    cace_amm_obj_ns_t      *ns     = cace_amm_obj_ns_ptr_ref(*ns_ptr);
+    cace_amm_obj_ns_ptr_t *ns_ptr = cace_amm_obj_ns_ptr_new();
+    cace_amm_obj_ns_list_push_back(store->ns_list, ns_ptr);
+    cace_amm_obj_ns_t *ns = cace_amm_obj_ns_ptr_ref(ns_ptr);
 
     cace_amm_idseg_val_set_fromref(&ns->org_id, &org_id);
     cace_amm_idseg_val_set_fromref(&ns->model_id, &model_id);
@@ -115,6 +116,8 @@ cace_amm_obj_ns_t *cace_amm_obj_store_add_ns(cace_amm_obj_store_t *store, const 
         cace_amm_obj_ns_by_enum_set_at(org->ns_by_enum, model_id.intenum, ns);
     }
 
+    // store keeps a reference
+    cace_amm_obj_ns_ptr_release(ns_ptr);
     return ns;
 }
 

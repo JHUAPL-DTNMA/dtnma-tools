@@ -219,7 +219,7 @@ void test_refda_reporting_target(const char *targethex, int expect_res, const ch
     // extract agent state
     TEST_ASSERT_EQUAL_INT(1, refda_msgdata_queue_size(agent.rptgs));
     refda_msgdata_t got_rptset;
-    TEST_ASSERT_TRUE(refda_msgdata_queue_pop(&got_rptset, agent.rptgs));
+    TEST_ASSERT_TRUE(refda_msgdata_queue_pop_move(&got_rptset, agent.rptgs));
     cace_ari_report_t *rpt = assert_rptset_items(&got_rptset.value);
     TEST_ASSERT_NOT_NULL(rpt);
 

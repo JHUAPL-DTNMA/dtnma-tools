@@ -153,13 +153,17 @@ static void check_execute(const char *refhex, const char *outhex)
     refda_exec_seq_init(&eseq);
     refda_runctx_ptr_set(&eseq.runctx, ctxptr);
 
-    refda_exec_item_ptr_t **eitem_ptr = refda_exec_item_list_push_new(eseq.items);
+    refda_exec_item_ptr_t *eitem_ptr = refda_exec_item_ptr_new();
     TEST_ASSERT_NOT_NULL(eitem_ptr);
-    refda_exec_item_t *eitem = refda_exec_item_ptr_ref(*eitem_ptr);
-    TEST_ASSERT_NOT_NULL(eitem);
-    eitem->seq = &eseq;
-    cace_ari_set_move(&eitem->ref, &inref);
-    cace_amm_lookup_set_move(&eitem->deref, &deref);
+    refda_exec_item_list_push_back(eseq.items, eitem_ptr);
+    {
+        refda_exec_item_t *eitem = refda_exec_item_ptr_ref(eitem_ptr);
+        TEST_ASSERT_NOT_NULL(eitem);
+        eitem->seq = &eseq;
+        cace_ari_set_move(&eitem->ref, &inref);
+        cace_amm_lookup_set_move(&eitem->deref, &deref);
+    }
+    refda_exec_item_ptr_release(eitem_ptr);
 
     cace_ari_t outval = CACE_ARI_INIT_UNDEFINED;
     TEST_ASSERT_EQUAL_INT(0, test_util_ari_decode(&outval, outhex));

@@ -44,9 +44,10 @@ int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target,
 
     CACE_MUTEX_LOCK(&(agent->exec_state_mutex));
 
-    refda_exec_seq_ptr_t **seq_ptr = refda_exec_seq_list_push_back_new(agent->exec_state);
+    refda_exec_seq_ptr_t *seq_ptr = refda_exec_seq_ptr_new();
+    refda_exec_seq_list_push_back(agent->exec_state, seq_ptr);
 
-    refda_exec_seq_t *seq = refda_exec_seq_ptr_ref(*seq_ptr);
+    refda_exec_seq_t *seq = refda_exec_seq_ptr_ref(seq_ptr);
 
     refda_runctx_ptr_set(&seq->runctx, runctxp);
     seq->pid = agent->exec_next_pid++;
@@ -70,6 +71,8 @@ int refda_exec_add_target(refda_runctx_ptr_t *runctxp, const cace_ari_t *target,
         // clean up useless sequence
         refda_exec_seq_list_pop_back(NULL, agent->exec_state);
     }
+
+    refda_exec_seq_ptr_release(seq_ptr);
 
     CACE_MUTEX_UNLOCK(&(agent->exec_state_mutex));
 
@@ -97,7 +100,7 @@ static int refda_exec_add_execset(refda_agent_t *agent, const refda_msgdata_t *m
         // errors in one target do not inhibit other targets
         refda_exec_add_target(ctxptr, tgt, NULL);
 
-        refda_runctx_ptr_clear(ctxptr); // Clean up extra reference
+        refda_runctx_ptr_release(ctxptr); // Clean up extra reference
     }
 
     return 0;
@@ -259,7 +262,7 @@ bool refda_exec_worker_iteration(refda_agent_t *agent)
     }
 
     // execs queue may still be empty if deferred callbacks were run
-    if (atomic_load(&agent->execs_enable) && refda_msgdata_queue_pop(&item, agent->execs))
+    if (atomic_load(&agent->execs_enable) && refda_msgdata_queue_pop_move(&item, agent->execs))
     {
         // sentinel for end-of-input
         const bool at_end = cace_ari_is_undefined(&(item.value));
