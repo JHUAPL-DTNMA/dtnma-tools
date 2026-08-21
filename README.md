@@ -17,6 +17,9 @@ limitations under the License.
 -->
 # DTNMA Tools
 
+[![Documentation](https://github.com/JHUAPL-DTNMA/dtnma-tools/actions/workflows/docs.yaml/badge.svg)](https://jhuapl-dtnma.github.io/dtnma-tools/)
+[![Sonar Coverage](https://img.shields.io/sonar/coverage/JHUAPL-DTNMA_dtnma-tools?server=https%3A%2F%2Fsonarcloud.io)](https://sonarcloud.io/project/overview?id=JHUAPL-DTNMA_dtnma-tools)
+
 This software package contains tools related to the Delay-Tolerant Networking Management Architecture (DTNMA), specifically an implementation of the DTNMA Agent and Manager.
 
 The current tools are based on the following specifications:
