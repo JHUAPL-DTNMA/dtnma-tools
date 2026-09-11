@@ -116,6 +116,9 @@
               }
             }
           },
+          "415": {
+            "description": "Need text/plain body"
+          },
           "422": {
             "description": "Missing or invalid EID"
           }
