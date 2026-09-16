@@ -42,6 +42,7 @@ The template parameter `{?form}` below refers to a choice of encoded form for AR
 
  | Method | Path                                      | Description                                  |
  |--------|-------------------------------------------|----------------------------------------------|
+ | GET    | `{+base}/openapi.json`                    | Get an OpenAPI specification of this service. |
  | GET    | `{+base}/version`                         | Return version information as a JSON object. |
  | GET    | `{+base}/agents`                          | Get a listing of registered agents as a JSON object. |
  | POST   | `{+base}/agents`                          | Register a new Agent at specified EID. The EID is encoded as a URI in request body. |
