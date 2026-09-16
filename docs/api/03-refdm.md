@@ -37,7 +37,7 @@ The URI template parameter `{/TYPE,ID}` below refers to a unique identifier for 
 
 The template parameter `{?form}` below refers to a choice of encoded form for ARIs to be sent or retrieved, as one of either:
  * The form "uri" meaning a newline-separated, URI-encoded form of ARIs consistent with the "application/uri-list" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
- * The form "cbor" meaning a sequence of CBOR-encoded form of ARIs consistent with the "application/cbor-seq" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
+ * The form "cbor" meaning a sequence of CBOR-encoded form of ARIs consistent with the "application/cbor-seq" media type (or "application/cbor" if there is only one top item) and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
  * The form "cborhex" meaning a newline-separated, base16-encoded, CBOR-encoded form of ARIs consistent with the "text/plain" media type and Section 9.2 of ARI @cite draft-ietf-dtn-ari.
 
  | Method | Path                                      | Description                                  |
@@ -48,8 +48,8 @@ The template parameter `{?form}` below refers to a choice of encoded form for AR
  | POST   | `{+base}/agents`                          | Register a new Agent at specified EID. The EID is encoded as a URI in request body. |
  | HEAD   | `{+base}/agents/{/TYPE,ID}/`              | Determine if an Agent is registered by status code 204 or 404. |
  | POST   | `{+base}/agents/{/TYPE,ID}/clear_reports` | Clear all available reports for given Agent. |
- | POST   | `{+base}/agents/{/TYPE,ID}/send{?form}`   | Send one or more EXECSET to the specific Agent. The encoded form is in the request body. |
- | GET    | `{+base}/agents/{/TYPE,ID}/reports{?form}`| Retrieve list of RPTSET for a specific Agent. The encoded form is in the response body. |
+ | POST   | `{+base}/agents/{/TYPE,ID}/send{?form}`   | Send one or more EXECSET to the specific Agent. The encoded form is in the request body, which must have a matching Content-Type. The `form` query parameter is optional when the Content-Type is not "text/plain". |
+ | GET    | `{+base}/agents/{/TYPE,ID}/reports{?form}`| Retrieve list of RPTSET for a specific Agent. The encoded form is in the response body. The `form` query parameter should always be present, but has a default of "uri". |
 
 # Transport Interface
 
