@@ -326,7 +326,8 @@ class TestRefdmSocket(BaseRefdm):
         self._req = None
 
         # assert after all other shutdown
-        self.assertEqual(0, mgr_exit)
+        if mgr_exit is not None:
+            self.assertEqual(0, mgr_exit)
 
     def _start(self, *cmd_args: str, do_wait: bool = True) -> None:
         """Spawn the REFDM process."""
@@ -423,21 +424,32 @@ class TestRefdmSocket(BaseRefdm):
 
         return values
 
-    def test_get_help(self):
+    def test_arg_help(self):
         self._start("-h", do_wait=False)
         self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
 
-    def test_get_version(self):
+    def test_arg_version(self):
         self._start("-v", do_wait=False)
         self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_bad_log_level(self):
+        self._start("-l", "invalid", do_wait=False)
+        self.assertEqual(1, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_unknown(self):
+        self._start("-Z", do_wait=False)
+        self.assertEqual(1, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
 
     def test_start_terminate(self):
         self._start()
-
         LOGGER.info("Sending SIGINT")
         self._mgr.proc.send_signal(signal.SIGINT)
         self.assertEqual(0, self._mgr.proc.wait(timeout=5))
-        self.assertEqual(0, self._mgr.proc.returncode)
+        self._mgr = None
 
     def test_openapi_json(self):
         self._start()
@@ -1045,7 +1057,8 @@ class TestRefdmProxy(BaseRefdm):
         self._req = None
 
         # assert after all other shutdown
-        self.assertEqual(0, mgr_exit)
+        if mgr_exit is not None:
+            self.assertEqual(0, mgr_exit)
 
     def _proxy_listen(self):
         self._proxy_sock = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
@@ -1154,21 +1167,32 @@ class TestRefdmProxy(BaseRefdm):
 
         return values
 
-    def test_get_help(self):
+    def test_arg_help(self):
         self._start("-h", do_wait=False)
         self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
 
-    def test_get_version(self):
+    def test_arg_version(self):
         self._start("-v", do_wait=False)
         self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_bad_log_level(self):
+        self._start("-l", "invalid", do_wait=False)
+        self.assertEqual(1, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_unknown(self):
+        self._start("-Z", do_wait=False)
+        self.assertEqual(1, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
 
     def test_start_terminate(self):
         self._start()
-
         LOGGER.info("Sending SIGINT")
         self._mgr.proc.send_signal(signal.SIGINT)
         self.assertEqual(0, self._mgr.proc.wait(timeout=5))
-        self.assertEqual(0, self._mgr.proc.returncode)
+        self._mgr = None
 
     def test_rest_version(self):
         self._start()

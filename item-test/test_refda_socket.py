@@ -184,7 +184,8 @@ class TestRefdaSocket(unittest.TestCase):
         self._tmp = None
 
         # assert after all other shutdown
-        self.assertEqual(0, agent_exit)
+        if agent_exit is not None:
+            self.assertEqual(0, agent_exit)
 
     def _read_mgr(self, mgr_bind: List[BindInstance]):
         LOGGER.debug("Starting reader thread")
@@ -379,29 +380,39 @@ class TestRefdaSocket(unittest.TestCase):
         LOGGER.debug("stopping with %d reports", len(reports))
         return reports
 
-    def test_get_help(self):
+    def test_arg_help(self):
         self._start("-h", do_wait=False)
         self.assertEqual(0, self._agent.proc.wait(timeout=1))
+        self._agent = None
 
-    def test_get_version(self):
+    def test_arg_version(self):
         self._start("-v", do_wait=False)
         self.assertEqual(0, self._agent.proc.wait(timeout=1))
+        self._agent = None
+
+    def test_arg_bad_log_level(self):
+        self._start("-l", "invalid", do_wait=False)
+        self.assertEqual(1, self._agent.proc.wait(timeout=1))
+        self._agent = None
+
+    def test_arg_unknown(self):
+        self._start("-Z", do_wait=False)
+        self.assertEqual(1, self._agent.proc.wait(timeout=1))
+        self._agent = None
 
     def test_start_sigint(self):
         self._start()
-
         LOGGER.info("Sending SIGINT")
         self._agent.proc.send_signal(signal.SIGINT)
         self.assertEqual(0, self._agent.proc.wait(timeout=5))
-        self.assertEqual(0, self._agent.proc.returncode)
+        self._agent = None
 
     def test_start_sigterm(self):
         self._start()
-
         LOGGER.info("Sending SIGTERM")
         self._agent.proc.send_signal(signal.SIGTERM)
         self.assertEqual(0, self._agent.proc.wait(timeout=5))
-        self.assertEqual(0, self._agent.proc.returncode)
+        self._agent = None
 
     def test_exec_inspect(self):
         self._start()

@@ -264,15 +264,14 @@ int main(int argc, char *argv[])
     string_list_t startup_execs;
     string_list_init(startup_execs);
     {
-        int opt;
-        while (cont)
+        int opt = 0;
+        while (cont && (opt != -1))
         {
             opt = getopt(argc, argv, ":hvl:s:a:");
             switch (opt)
             {
                 case -1:
                     // done
-                    cont = false;
                     break;
                 case 'l':
                     if (cace_log_get_severity(&log_limit, optarg))

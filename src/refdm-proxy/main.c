@@ -72,15 +72,14 @@ int main(int argc, char *argv[])
     // starup socket timeout
     long timeout_s = 10;
     {
-        int opt;
-        while (cont)
+        int opt = 0;
+        while (cont && (opt != -1))
         {
             opt = getopt(argc, argv, ":hvl:a:t:");
             switch (opt)
             {
                 case -1:
                     // done
-                    cont = false;
                     break;
                 case 'l':
                     if (cace_log_get_severity(&log_limit, optarg))

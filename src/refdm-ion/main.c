@@ -60,15 +60,14 @@ int main(int argc, char *argv[])
     m_string_t own_eid;
     m_string_init(own_eid);
     {
-        int opt;
-        while (cont)
+        int opt = 0;
+        while (cont && (opt != -1))
         {
             opt = getopt(argc, argv, ":hvl:a:");
             switch (opt)
             {
                 case -1:
                     // done
-                    cont = false;
                     break;
                 case 'l':
                     if (cace_log_get_severity(&log_limit, optarg))
