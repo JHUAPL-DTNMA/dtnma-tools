@@ -43,13 +43,16 @@ static void daemon_signal_handler(int signum)
     cace_daemon_run_stop(&agent.running);
 }
 
-static void show_usage(const char *argv0)
+static void show_usage(FILE *out, const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} {-s <startup-file>} -a <listen-EID> {-m <hello-EID>}\n", argv0);
+    // Syntax of POSIX
+    // https://pubs.opengroup.org/onlinepubs/9699919799.2008edition/basedefs/V1_chap12.html#tag_12_01
+    fprintf(out, "Usage: %s [-h] [-v] [-l <log-level>] [-s <startup-file>] -a <listen-EID> [-m <hello-EID>]\n", argv0);
 }
 
 int main(int argc, char *argv[])
 {
+    bool cont = true;
     // keep track of failure state
     int retval = 0;
 
@@ -66,60 +69,83 @@ int main(int argc, char *argv[])
     string_list_t hello_eids;
     string_list_init(hello_eids);
     {
+        int opt = 0;
+        while (cont && (opt != -1))
         {
-            int opt;
-            while ((opt = getopt(argc, argv, ":hl:s:a:m:")) != -1)
+            opt = getopt(argc, argv, ":hvl:s:a:m:");
+            switch (opt)
             {
-                switch (opt)
-                {
-                    case 'l':
-                        if (cace_log_get_severity(&log_limit, optarg))
-                        {
-                            show_usage(argv[0]);
-                            retval = 1;
-                        }
-                        break;
-                    case 's':
+                case -1:
+                    // done
+                    break;
+                case 'l':
+                    if (cace_log_get_severity(&log_limit, optarg))
                     {
-                        m_string_t *argstr = string_list_push_back_new(startup_execs);
-                        m_string_set_cstr(*argstr, optarg);
-                        break;
-                    }
-                    case 'a':
-                        if (!m_string_empty_p(own_eid))
-                        {
-                            fprintf(stderr, "Multiple endpoint URIs are supplied\n");
-                            retval = 1;
-                        }
-                        else
-                        {
-                            m_string_set_cstr(own_eid, optarg);
-                        }
-                        break;
-                    case 'm':
-                    {
-                        m_string_t *argstr = string_list_push_back_new(hello_eids);
-                        m_string_set_cstr(*argstr, optarg);
-                        break;
-                    }
-                    case 'h':
-                    default:
-                        show_usage(argv[0]);
+                        show_usage(stderr, argv[0]);
                         retval = 1;
-                        break;
+                    }
+                    break;
+                case 's':
+                {
+                    m_string_t *argstr = string_list_push_back_new(startup_execs);
+                    m_string_set_cstr(*argstr, optarg);
+                    break;
                 }
+                case 'a':
+                    if (!m_string_empty_p(own_eid))
+                    {
+                        fprintf(stderr, "Multiple endpoint URIs are supplied\n");
+                        retval = 1;
+                    }
+                    else
+                    {
+                        m_string_set_cstr(own_eid, optarg);
+                    }
+                    break;
+                case 'm':
+                {
+                    m_string_t *argstr = string_list_push_back_new(hello_eids);
+                    m_string_set_cstr(*argstr, optarg);
+                    break;
+                }
+                case 'v':
+                    // build and runtime version
+                    fprintf(stdout, "%s %s\nlibcace %s\n", argv[0], CACE_VERSION, cace_version());
+                    cont = false;
+                    // still exit code zero
+                    break;
+                case 'h':
+                    show_usage(stdout, argv[0]);
+                    cont = false;
+                    // still exit code zero
+                    break;
+                default:
+                    show_usage(stderr, argv[0]);
+                    retval = 1;
+                    cont   = false;
+                    break;
             }
         }
+        // check arguments
+        if (!retval && m_string_empty_p(own_eid))
+        {
+            fprintf(stderr, "A socket endpoint URI must be supplied\n");
+            show_usage(stderr, argv[0]);
+            retval = 1;
+        }
+    }
+    if (!cont || retval)
+    {
+        // early exit
+        string_list_clear(hello_eids);
+        m_string_clear(own_eid);
+        string_list_clear(startup_execs);
+        refda_agent_deinit(&agent);
+        cace_closelog();
+        return retval;
     }
     cace_log_set_least_severity(log_limit);
     CACE_LOG_DEBUG("Agent starting up with log limit %d", log_limit);
-
-    // check arguments
-    if (!retval && m_string_empty_p(own_eid))
-    {
-        fprintf(stderr, "A socket endpoint URI must be supplied\n");
-        retval = 1;
-    }
 
     cace_amp_socket_state_t sock;
     cace_amp_socket_state_init(&sock);

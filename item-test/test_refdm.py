@@ -301,18 +301,14 @@ class TestRefdmSocket(BaseRefdm):
 
         self._agent_bind = [bound_sock(f"agent{index}.sock") for index in range(3)]
 
-        # fmt: off
-        args = compose_args([
-            'refdm-socket',
-            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
-            '-a', self._mgr_sock_path
-        ])
-        # fmt: on
-        self._mgr = CmdRunner(args)
+        self._mgr = None
 
     def tearDown(self) -> None:
-        mgr_exit = self._mgr.stop()
-        self._mgr = None
+        if self._mgr:
+            mgr_exit = self._mgr.stop()
+            self._mgr = None
+        else:
+            mgr_exit = None
 
         for bind in self._agent_bind:
             sock = bind["sock"]
@@ -330,12 +326,26 @@ class TestRefdmSocket(BaseRefdm):
         self._req = None
 
         # assert after all other shutdown
-        self.assertEqual(0, mgr_exit)
+        if mgr_exit is not None:
+            self.assertEqual(0, mgr_exit)
 
-    def _start(self) -> None:
+    def _start(self, *cmd_args: str, do_wait: bool = True) -> None:
         """Spawn the REFDM process."""
+        # fmt: off
+        base_args = (
+            'refdm-socket',
+            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
+            '-a', self._mgr_sock_path
+        )
+        # fmt: on
+        args = compose_args(list(base_args + cmd_args))
+        self._mgr = CmdRunner(args)
         self._mgr.start()
+        if do_wait:
+            self._wait_mgr()
 
+    def _wait_mgr(self):
+        """Wait for the manager interfaces to be active"""
         delay = 0.1
         timer = Timer(10)
         while timer:
@@ -354,7 +364,7 @@ class TestRefdmSocket(BaseRefdm):
 
             if sock_ready and rest_ready:
                 timer.finish()
-                return
+                return self._mgr
 
             if not sock_ready:
                 LOGGER.info("waiting for manager socket at %s", self._mgr_sock_path)
@@ -414,13 +424,32 @@ class TestRefdmSocket(BaseRefdm):
 
         return values
 
+    def test_arg_help(self):
+        self._start("-h", do_wait=False)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_version(self):
+        self._start("-v", do_wait=False)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_bad_log_level(self):
+        self._start("-l", "invalid", do_wait=False)
+        self.assertEqual(1, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_unknown(self):
+        self._start("-Z", do_wait=False)
+        self.assertEqual(1, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
     def test_start_terminate(self):
         self._start()
-
         LOGGER.info("Sending SIGINT")
         self._mgr.proc.send_signal(signal.SIGINT)
         self.assertEqual(0, self._mgr.proc.wait(timeout=5))
-        self.assertEqual(0, self._mgr.proc.returncode)
+        self._mgr = None
 
     def test_openapi_json(self):
         self._start()
@@ -1002,18 +1031,14 @@ class TestRefdmProxy(BaseRefdm):
         # Name for accepted connection
         self._proxy_sock_conn = None
 
-        # fmt: off
-        args = compose_args([
-            'refdm-proxy',
-            '-l', 'debug',
-            '-a', self._proxy_sock_path,
-        ])
-        # fmt: on
-        self._mgr = CmdRunner(args)
+        self._mgr = None
 
     def tearDown(self) -> None:
-        mgr_exit = self._mgr.stop()
-        self._mgr = None
+        if self._mgr:
+            mgr_exit = self._mgr.stop()
+            self._mgr = None
+        else:
+            mgr_exit = None
 
         if self._proxy_sock_conn:
             self._proxy_sock_conn.close()
@@ -1032,7 +1057,8 @@ class TestRefdmProxy(BaseRefdm):
         self._req = None
 
         # assert after all other shutdown
-        self.assertEqual(0, mgr_exit)
+        if mgr_exit is not None:
+            self.assertEqual(0, mgr_exit)
 
     def _proxy_listen(self):
         self._proxy_sock = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
@@ -1040,11 +1066,23 @@ class TestRefdmProxy(BaseRefdm):
         self._proxy_sock.bind(self._proxy_sock_path)
         self._proxy_sock.listen(1)
 
-    def _start(self) -> None:
+    def _start(self, *cmd_args: str, do_proxy: bool = True, do_wait: bool = True) -> None:
         """Spawn the REFDM process."""
-        self._proxy_listen()
+        if do_proxy:
+            self._proxy_listen()
+
+        # fmt: off
+        base_args = (
+            'refdm-proxy',
+            '-l', 'debug',
+            '-a', self._proxy_sock_path,
+        )
+        # fmt: on
+        args = compose_args(list(base_args + cmd_args))
+        self._mgr = CmdRunner(args)
         self._mgr.start()
-        self._wait_mgr()
+        if do_wait:
+            self._wait_mgr()
 
     def _wait_mgr(self):
         """Wait for the manager interfaces to be active"""
@@ -1129,13 +1167,32 @@ class TestRefdmProxy(BaseRefdm):
 
         return values
 
+    def test_arg_help(self):
+        self._start("-h", do_wait=False)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_version(self):
+        self._start("-v", do_wait=False)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_bad_log_level(self):
+        self._start("-l", "invalid", do_wait=False)
+        self.assertEqual(1, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
+    def test_arg_unknown(self):
+        self._start("-Z", do_wait=False)
+        self.assertEqual(1, self._mgr.proc.wait(timeout=1))
+        self._mgr = None
+
     def test_start_terminate(self):
         self._start()
-
         LOGGER.info("Sending SIGINT")
         self._mgr.proc.send_signal(signal.SIGINT)
         self.assertEqual(0, self._mgr.proc.wait(timeout=5))
-        self.assertEqual(0, self._mgr.proc.returncode)
+        self._mgr = None
 
     def test_rest_version(self):
         self._start()
@@ -1188,7 +1245,7 @@ class TestRefdmProxy(BaseRefdm):
 
     def test_start_before_proxy(self):
         # start daemon before listen
-        self._mgr.start()
+        self._start(do_proxy=False, do_wait=False)
 
         time.sleep(0.1)
         # want to see this fail twice

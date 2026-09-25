@@ -27,6 +27,23 @@
 extern "C" {
 #endif
 
+/** Compile-time library version based on SemVer-2.0.0 conventions.
+ * @sa Use cace_version() to get run-time version.
+ */
+#define CACE_VERSION "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"
+/** Compile-time major version number */
+#define CACE_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+/** Compile-time minor version number */
+#define CACE_VERSION_MINOR @PROJECT_VERSION_MINOR@
+/** Compile-time patch version number */
+#define CACE_VERSION_PATCH @PROJECT_VERSION_PATCH@
+
+/** Run-time library version based on SemVer-2.0.0 conventions.
+ * @note This may be different than #CACE_VERSION if using dynamic linking.
+ * @return The text form of the library version linked at runtime.
+ */
+const char * cace_version(void);
+
 /**Enable text-form parsing based on Flex+Bison (lex+yacc) configuration. */
 #cmakedefine01 ARI_TEXT_PARSE
 
