@@ -70,10 +70,15 @@ int main(int argc, char *argv[])
     string_list_init(hello_eids);
     {
         int opt;
-        while (cont && (opt = getopt(argc, argv, ":hvl:s:a:m:")) != -1)
+        while (cont)
         {
+            opt = getopt(argc, argv, ":hvl:s:a:m:");
             switch (opt)
             {
+                case -1:
+                    // done
+                    cont = false;
+                    break;
                 case 'l':
                     if (cace_log_get_severity(&log_limit, optarg))
                     {

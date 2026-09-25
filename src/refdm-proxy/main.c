@@ -73,10 +73,15 @@ int main(int argc, char *argv[])
     long timeout_s = 10;
     {
         int opt;
-        while (cont && (opt = getopt(argc, argv, ":hvl:a:t:")) != -1)
+        while (cont)
         {
+            opt = getopt(argc, argv, ":hvl:a:t:");
             switch (opt)
             {
+                case -1:
+                    // done
+                    cont = false;
+                    break;
                 case 'l':
                     if (cace_log_get_severity(&log_limit, optarg))
                     {
