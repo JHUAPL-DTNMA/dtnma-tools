@@ -60,60 +60,65 @@ int main(int argc, char *argv[])
     m_string_t own_eid;
     m_string_init(own_eid);
     {
+        int opt;
+        while (cont && (opt = getopt(argc, argv, ":hvl:a:")) != -1)
         {
-            int opt;
-            while (cont && (opt = getopt(argc, argv, ":hvl:a:")) != -1)
+            switch (opt)
             {
-                switch (opt)
-                {
-                    case 'l':
-                        if (cace_log_get_severity(&log_limit, optarg))
-                        {
-                            show_usage(stderr, argv[0]);
-                            retval = 1;
-                        }
-                        break;
-                    case 'a':
-                        if (!m_string_empty_p(own_eid))
-                        {
-                            fprintf(stderr, "Multiple endpoint URIs are supplied\n");
-                            retval = 1;
-                            break;
-                        }
-                        m_string_set_cstr(own_eid, optarg);
-                        break;
-                    case 'v':
-                        // build and runtime version
-                        fprintf(stdout, "%s %s\nlibcace %s\n", argv[0], CACE_VERSION, cace_version());
-                        cont = false;
-                        // still exit code zero
-                        break;
-                    case 'h':
-                        show_usage(stdout, argv[0]);
-                        cont = false;
-                        // still exit code zero
-                        break;
-                    default:
+                case 'l':
+                    if (cace_log_get_severity(&log_limit, optarg))
+                    {
                         show_usage(stderr, argv[0]);
                         retval = 1;
-                        cont   = false;
+                    }
+                    break;
+                case 'a':
+                    if (!m_string_empty_p(own_eid))
+                    {
+                        fprintf(stderr, "Multiple endpoint URIs are supplied\n");
+                        retval = 1;
                         break;
-                }
+                    }
+                    m_string_set_cstr(own_eid, optarg);
+                    break;
+                case 'v':
+                    // build and runtime version
+                    fprintf(stdout, "%s %s\nlibcace %s\n", argv[0], CACE_VERSION, cace_version());
+                    cont = false;
+                    // still exit code zero
+                    break;
+                case 'h':
+                    show_usage(stdout, argv[0]);
+                    cont = false;
+                    // still exit code zero
+                    break;
+                default:
+                    show_usage(stderr, argv[0]);
+                    retval = 1;
+                    cont   = false;
+                    break;
             }
         }
+        // check arguments
+        if (!retval && m_string_empty_p(own_eid))
+        {
+            fprintf(stderr, "An EID URI must be supplied");
+            retval = 1;
+        }
+    }
+    if (!cont || retval)
+    {
+        // early exit
+        m_string_clear(own_eid);
+        refdm_mgr_deinit(&mgr);
+        cace_closelog();
+        return retval;
     }
     cace_log_set_least_severity(log_limit);
     CACE_LOG_DEBUG("Manager starting up with log limit %d", log_limit);
 
-    // check arguments
-    if (cont && !retval && m_string_empty_p(own_eid))
-    {
-        fprintf(stderr, "An EID URI must be supplied");
-        retval = 1;
-    }
-
     // Attach to ION endpoint
-    if (cont && !retval)
+    if (!retval)
     {
         if (bp_attach())
         {
@@ -123,7 +128,7 @@ int main(int argc, char *argv[])
 
     cace_amp_ion_bp_state_t app;
     cace_amp_ion_bp_state_init(&app);
-    if (cont && !retval)
+    if (!retval)
     {
         if (cace_amp_ion_bp_state_bind(&app, own_eid))
         {
@@ -132,7 +137,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (cont && !retval)
+    if (!retval)
     {
         CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(own_eid));
         mgr.mif.send = cace_amp_ion_bp_send;
@@ -141,7 +146,7 @@ int main(int argc, char *argv[])
     }
     m_string_clear(own_eid);
 
-    if (cont && !retval)
+    if (!retval)
     {
         /* Register signal handlers. */
         struct sigaction act;
@@ -152,7 +157,7 @@ int main(int argc, char *argv[])
     }
 
     /* Start manager threads. */
-    if (cont && !retval)
+    if (!retval)
     {
         if (refdm_mgr_start(&mgr))
         {
@@ -170,7 +175,7 @@ int main(int argc, char *argv[])
 #endif
     CACE_LOG_INFO("READY");
 
-    if (cont && !retval)
+    if (!retval)
     {
         // Block until stopped
         cace_daemon_run_wait(&mgr.running);
@@ -182,7 +187,7 @@ int main(int argc, char *argv[])
 #endif
 
     /* Join threads and wait for them to complete. */
-    if (cont && !retval)
+    if (!retval)
     {
         if (refdm_mgr_stop(&mgr))
         {

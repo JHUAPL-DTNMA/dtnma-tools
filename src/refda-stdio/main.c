@@ -264,55 +264,61 @@ int main(int argc, char *argv[])
     string_list_t startup_execs;
     string_list_init(startup_execs);
     {
+        int opt;
+        while (cont && (opt = getopt(argc, argv, ":hvl:s:a:")) != -1)
         {
-            int opt;
-            while (cont && (opt = getopt(argc, argv, ":hvl:s:a:")) != -1)
+            switch (opt)
             {
-                switch (opt)
-                {
-                    case 'l':
-                        if (cace_log_get_severity(&log_limit, optarg))
-                        {
-                            show_usage(stderr, argv[0]);
-                            retval = 1;
-                        }
-                        break;
-                    case 's':
+                case 'l':
+                    if (cace_log_get_severity(&log_limit, optarg))
                     {
-                        m_string_t *argstr = string_list_push_back_new(startup_execs);
-                        m_string_set_cstr(*argstr, optarg);
-                        break;
-                    }
-                    case 'a':
-                        if (!m_string_empty_p(agent.agent_eid))
-                        {
-                            fprintf(stderr, "Multiple endpoint URIs are supplied\n");
-                            retval = 1;
-                        }
-                        else
-                        {
-                            m_string_set_cstr(agent.agent_eid, optarg);
-                        }
-                        break;
-                    case 'v':
-                        // build and runtime version
-                        fprintf(stdout, "%s %s\nlibcace %s\n", argv[0], CACE_VERSION, cace_version());
-                        cont = false;
-                        // still exit code zero
-                        break;
-                    case 'h':
-                        show_usage(stdout, argv[0]);
-                        cont = false;
-                        // still exit code zero
-                        break;
-                    default:
                         show_usage(stderr, argv[0]);
                         retval = 1;
-                        cont   = false;
-                        break;
+                    }
+                    break;
+                case 's':
+                {
+                    m_string_t *argstr = string_list_push_back_new(startup_execs);
+                    m_string_set_cstr(*argstr, optarg);
+                    break;
                 }
+                case 'a':
+                    if (!m_string_empty_p(agent.agent_eid))
+                    {
+                        fprintf(stderr, "Multiple endpoint URIs are supplied\n");
+                        retval = 1;
+                    }
+                    else
+                    {
+                        m_string_set_cstr(agent.agent_eid, optarg);
+                    }
+                    break;
+                case 'v':
+                    // build and runtime version
+                    fprintf(stdout, "%s %s\nlibcace %s\n", argv[0], CACE_VERSION, cace_version());
+                    cont = false;
+                    // still exit code zero
+                    break;
+                case 'h':
+                    show_usage(stdout, argv[0]);
+                    cont = false;
+                    // still exit code zero
+                    break;
+                default:
+                    show_usage(stderr, argv[0]);
+                    retval = 1;
+                    cont   = false;
+                    break;
             }
         }
+    }
+    if (!cont || retval)
+    {
+        // early exit
+        string_list_clear(startup_execs);
+        refda_agent_deinit(&agent);
+        cace_closelog();
+        return retval;
     }
     cace_log_set_least_severity(log_limit);
     CACE_LOG_DEBUG("Agent starting up with log limit %d", log_limit);
@@ -324,7 +330,7 @@ int main(int argc, char *argv[])
         agent.mif.recv = stdin_recv;
     }
 
-    if (cont && !retval)
+    if (!retval)
     {
         if (refda_loader_basemods(&agent))
         {
@@ -333,7 +339,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (cont && !retval)
+    if (!retval)
     {
         /* Register signal handlers. */
         struct sigaction act;
@@ -344,7 +350,7 @@ int main(int argc, char *argv[])
     }
 
     /* Start agent threads. */
-    if (cont && !retval)
+    if (!retval)
     {
         int failures = refda_agent_bindrefs(&agent);
         if (failures)
@@ -358,7 +364,7 @@ int main(int argc, char *argv[])
             CACE_LOG_INFO("ADM reference binding succeeded");
         }
     }
-    if (cont && !retval)
+    if (!retval)
     {
         if (refda_agent_init_objs(&agent))
         {
@@ -370,7 +376,7 @@ int main(int argc, char *argv[])
             CACE_LOG_INFO("Agent object initialization completed");
         }
     }
-    if (cont && !retval)
+    if (!retval)
     {
         if (refda_agent_start(&agent))
         {
@@ -385,7 +391,7 @@ int main(int argc, char *argv[])
 
     CACE_LOG_INFO("READY");
 
-    if (cont && !retval && !string_list_empty_p(startup_execs))
+    if (!retval && !string_list_empty_p(startup_execs))
     {
 #if ARI_TEXT_PARSE
         string_list_it_t startup_it;
@@ -427,7 +433,7 @@ int main(int argc, char *argv[])
 
     refda_agent_enable_exec(&agent);
 
-    if (cont && !retval)
+    if (!retval)
     {
         // Block until stopped
         cace_daemon_run_wait(&agent.running);
@@ -436,7 +442,7 @@ int main(int argc, char *argv[])
     CACE_LOG_INFO("Agent is shutting down");
 
     /* Join threads and wait for them to complete. */
-    if (cont && !retval)
+    if (!retval)
     {
         if (refda_agent_stop(&agent))
         {
