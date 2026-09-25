@@ -1053,9 +1053,10 @@ class TestRefdmProxy(BaseRefdm):
         self._proxy_sock.bind(self._proxy_sock_path)
         self._proxy_sock.listen(1)
 
-    def _start(self, *cmd_args: str, do_wait: bool = True) -> None:
+    def _start(self, *cmd_args: str, do_proxy: bool = True, do_wait: bool = True) -> None:
         """Spawn the REFDM process."""
-        self._proxy_listen()
+        if do_proxy:
+            self._proxy_listen()
 
         # fmt: off
         base_args = (
@@ -1220,7 +1221,7 @@ class TestRefdmProxy(BaseRefdm):
 
     def test_start_before_proxy(self):
         # start daemon before listen
-        self._mgr.start()
+        self._start(do_proxy=False, do_wait=False)
 
         time.sleep(0.1)
         # want to see this fail twice
