@@ -244,7 +244,9 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
 
 static void show_usage(FILE *out, const char *argv0)
 {
-    fprintf(out, "Usage: %s [-h] [-v] {-l <log-level>} {-s <startup-file>} -a <agent EID>\n", argv0);
+    // Syntax of POSIX
+    // https://pubs.opengroup.org/onlinepubs/9699919799.2008edition/basedefs/V1_chap12.html#tag_12_01
+    fprintf(out, "Usage: %s [-h] [-v] [-l <log-level>] [-s <startup-file>] -a <agent EID>\n", argv0);
 }
 
 int main(int argc, char *argv[])

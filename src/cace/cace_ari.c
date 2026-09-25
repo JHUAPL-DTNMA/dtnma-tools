@@ -355,15 +355,19 @@ static int write_cborhex(const cace_ari_t *val, FILE *dest)
 
 static void show_usage(FILE *out, const char *argv0)
 {
+    // Syntax of POSIX
+    // https://pubs.opengroup.org/onlinepubs/9699919799.2008edition/basedefs/V1_chap12.html#tag_12_01
     fprintf(out,
-            "Usage: %s {--log-level,-l <log-level>} "
-            "[--source,-s {filename or -}] "
+            "Usage: %s "
+            "[--help,-h] [--version,-v] "
+            "[--log-level,-l <log-level>] "
+            "\n       [--source,-s {<filename>,-}] "
 #if ARI_TEXT_PARSE
             "[--inform,-i {auto,uri,cbor,cborhex}] "
 #else
             "[--inform,-i {cbor,cborhex}] "
 #endif /* ARI_TEXT_PARSE */
-            "[--dest,-d {filename or -}] "
+            "\n       [--dest,-d {<filename>,-}] "
             "[--outform,-o {auto,uri,cbor,cborhex}]\n",
             argv0);
 }
