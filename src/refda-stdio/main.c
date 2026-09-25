@@ -242,13 +242,14 @@ static int stdin_recv(cace_ari_list_t data, cace_amm_msg_if_metadata_t *meta, ca
     return 0;
 }
 
-static void show_usage(const char *argv0)
+static void show_usage(FILE *out, const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} {-l <log-level>} {-s <startup-file>} -a <agent EID>\n", argv0);
+    fprintf(out, "Usage: %s [-h] [-v] {-l <log-level>} {-s <startup-file>} -a <agent EID>\n", argv0);
 }
 
 int main(int argc, char *argv[])
 {
+    bool cont = true;
     // keep track of failure state
     int retval = 0;
 
@@ -263,14 +264,14 @@ int main(int argc, char *argv[])
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, ":hl:s:a:")) != -1)
+            while (cont && (opt = getopt(argc, argv, ":hvl:s:a:")) != -1)
             {
                 switch (opt)
                 {
                     case 'l':
                         if (cace_log_get_severity(&log_limit, optarg))
                         {
-                            show_usage(argv[0]);
+                            show_usage(stderr, argv[0]);
                             retval = 1;
                         }
                         break;
@@ -285,14 +286,27 @@ int main(int argc, char *argv[])
                         {
                             fprintf(stderr, "Multiple endpoint URIs are supplied\n");
                             retval = 1;
-                            break;
                         }
-                        m_string_set_cstr(agent.agent_eid, optarg);
+                        else
+                        {
+                            m_string_set_cstr(agent.agent_eid, optarg);
+                        }
+                        break;
+                    case 'v':
+                        // build and runtime version
+                        fprintf(stdout, "%s %s\nlibcace %s\n", argv[0], CACE_VERSION, cace_version());
+                        cont = false;
+                        // still exit code zero
                         break;
                     case 'h':
+                        show_usage(stdout, argv[0]);
+                        cont = false;
+                        // still exit code zero
+                        break;
                     default:
-                        show_usage(argv[0]);
+                        show_usage(stderr, argv[0]);
                         retval = 1;
+                        cont   = false;
                         break;
                 }
             }
@@ -308,7 +322,7 @@ int main(int argc, char *argv[])
         agent.mif.recv = stdin_recv;
     }
 
-    if (!retval)
+    if (cont && !retval)
     {
         if (refda_loader_basemods(&agent))
         {
@@ -317,7 +331,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!retval)
+    if (cont && !retval)
     {
         /* Register signal handlers. */
         struct sigaction act;
@@ -328,7 +342,7 @@ int main(int argc, char *argv[])
     }
 
     /* Start agent threads. */
-    if (!retval)
+    if (cont && !retval)
     {
         int failures = refda_agent_bindrefs(&agent);
         if (failures)
@@ -342,7 +356,7 @@ int main(int argc, char *argv[])
             CACE_LOG_INFO("ADM reference binding succeeded");
         }
     }
-    if (!retval)
+    if (cont && !retval)
     {
         if (refda_agent_init_objs(&agent))
         {
@@ -354,7 +368,7 @@ int main(int argc, char *argv[])
             CACE_LOG_INFO("Agent object initialization completed");
         }
     }
-    if (!retval)
+    if (cont && !retval)
     {
         if (refda_agent_start(&agent))
         {
@@ -369,7 +383,7 @@ int main(int argc, char *argv[])
 
     CACE_LOG_INFO("READY");
 
-    if (!retval && !string_list_empty_p(startup_execs))
+    if (cont && !retval && !string_list_empty_p(startup_execs))
     {
 #if ARI_TEXT_PARSE
         string_list_it_t startup_it;
@@ -411,7 +425,7 @@ int main(int argc, char *argv[])
 
     refda_agent_enable_exec(&agent);
 
-    if (!retval)
+    if (cont && !retval)
     {
         // Block until stopped
         cace_daemon_run_wait(&agent.running);
@@ -420,7 +434,7 @@ int main(int argc, char *argv[])
     CACE_LOG_INFO("Agent is shutting down");
 
     /* Join threads and wait for them to complete. */
-    if (!retval)
+    if (cont && !retval)
     {
         if (refda_agent_stop(&agent))
         {

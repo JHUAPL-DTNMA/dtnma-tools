@@ -301,18 +301,14 @@ class TestRefdmSocket(BaseRefdm):
 
         self._agent_bind = [bound_sock(f"agent{index}.sock") for index in range(3)]
 
-        # fmt: off
-        args = compose_args([
-            'refdm-socket',
-            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
-            '-a', self._mgr_sock_path
-        ])
-        # fmt: on
-        self._mgr = CmdRunner(args)
+        self._mgr = None
 
     def tearDown(self) -> None:
-        mgr_exit = self._mgr.stop()
-        self._mgr = None
+        if self._mgr:
+            mgr_exit = self._mgr.stop()
+            self._mgr = None
+        else:
+            mgr_exit = None
 
         for bind in self._agent_bind:
             sock = bind["sock"]
@@ -332,10 +328,23 @@ class TestRefdmSocket(BaseRefdm):
         # assert after all other shutdown
         self.assertEqual(0, mgr_exit)
 
-    def _start(self) -> None:
+    def _start(self, *cmd_args: str, do_wait: bool = True) -> None:
         """Spawn the REFDM process."""
+        # fmt: off
+        base_args = (
+            'refdm-socket',
+            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
+            '-a', self._mgr_sock_path
+        )
+        # fmt: on
+        args = compose_args(list(base_args + cmd_args))
+        self._mgr = CmdRunner(args)
         self._mgr.start()
+        if do_wait:
+            self._wait_mgr()
 
+    def _wait_mgr(self):
+        """Wait for the manager interfaces to be active"""
         delay = 0.1
         timer = Timer(10)
         while timer:
@@ -354,7 +363,7 @@ class TestRefdmSocket(BaseRefdm):
 
             if sock_ready and rest_ready:
                 timer.finish()
-                return
+                return self._mgr
 
             if not sock_ready:
                 LOGGER.info("waiting for manager socket at %s", self._mgr_sock_path)
@@ -413,6 +422,14 @@ class TestRefdmSocket(BaseRefdm):
                 values.append(val)
 
         return values
+
+    def test_get_help(self):
+        self._start("-h", do_wait=False)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+
+    def test_get_version(self):
+        self._start("-v", do_wait=False)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=1))
 
     def test_start_terminate(self):
         self._start()
@@ -1002,18 +1019,14 @@ class TestRefdmProxy(BaseRefdm):
         # Name for accepted connection
         self._proxy_sock_conn = None
 
-        # fmt: off
-        args = compose_args([
-            'refdm-proxy',
-            '-l', 'debug',
-            '-a', self._proxy_sock_path,
-        ])
-        # fmt: on
-        self._mgr = CmdRunner(args)
+        self._mgr = None
 
     def tearDown(self) -> None:
-        mgr_exit = self._mgr.stop()
-        self._mgr = None
+        if self._mgr:
+            mgr_exit = self._mgr.stop()
+            self._mgr = None
+        else:
+            mgr_exit = None
 
         if self._proxy_sock_conn:
             self._proxy_sock_conn.close()
@@ -1040,11 +1053,22 @@ class TestRefdmProxy(BaseRefdm):
         self._proxy_sock.bind(self._proxy_sock_path)
         self._proxy_sock.listen(1)
 
-    def _start(self) -> None:
+    def _start(self, *cmd_args: str, do_wait: bool = True) -> None:
         """Spawn the REFDM process."""
         self._proxy_listen()
+
+        # fmt: off
+        base_args = (
+            'refdm-proxy',
+            '-l', 'debug',
+            '-a', self._proxy_sock_path,
+        )
+        # fmt: on
+        args = compose_args(list(base_args + cmd_args))
+        self._mgr = CmdRunner(args)
         self._mgr.start()
-        self._wait_mgr()
+        if do_wait:
+            self._wait_mgr()
 
     def _wait_mgr(self):
         """Wait for the manager interfaces to be active"""
@@ -1128,6 +1152,14 @@ class TestRefdmProxy(BaseRefdm):
                 values.append(val)
 
         return values
+
+    def test_get_help(self):
+        self._start("-h", do_wait=False)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=1))
+
+    def test_get_version(self):
+        self._start("-v", do_wait=False)
+        self.assertEqual(0, self._mgr.proc.wait(timeout=1))
 
     def test_start_terminate(self):
         self._start()

@@ -122,8 +122,8 @@ class TestRefdaSocket(unittest.TestCase):
 
         mgr0_pat = quote('"' + re.escape("file:" + self._mgr_bind[0].path) + '"')
         mgr1_pat = quote('"' + re.escape("file:" + self._mgr_bind[1].path) + '"')
-        startup_path = os.path.join(self._tmp.name, "startup.uri")
-        with open(startup_path, "w") as startup_file:
+        self._startup_path = os.path.join(self._tmp.name, "startup.uri")
+        with open(self._startup_path, "w") as startup_file:
             startup_file.writelines(
                 [
                     # group 1 (mgr0) has all access
@@ -161,23 +161,17 @@ class TestRefdaSocket(unittest.TestCase):
                 ]
             )
         if LOGGER.isEnabledFor(logging.DEBUG):
-            with open(startup_path, "r") as startup_file:
+            with open(self._startup_path, "r") as startup_file:
                 LOGGER.debug("Startup macro:\n%s", startup_file.read())
 
-        # fmt: off
-        args = compose_args([
-            'refda-socket',
-            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
-            '-s', startup_path,
-            '-a', ('file:' + self._agent_sock_path),
-            '-m', ('file:' + self._mgr_bind[0].path),
-        ])
-        # fmt: on
-        self._agent = CmdRunner(args)
+        self._agent = None
 
     def tearDown(self) -> None:
-        agent_exit = self._agent.stop()
-        self._agent = None
+        if self._agent:
+            agent_exit = self._agent.stop()
+            self._agent = None
+        else:
+            agent_exit = None
 
         for bind in self._mgr_bind:
             bind.sock.shutdown(socket.SHUT_RDWR)
@@ -245,9 +239,23 @@ class TestRefdaSocket(unittest.TestCase):
 
         LOGGER.debug("Stopping reader thread")
 
-    def _start(self) -> None:
+    def _start(self, *cmd_args: str, do_wait: bool = True) -> None:
         """Spawn the process and wait for the startup report."""
+        # fmt: off
+        base_args = (
+            'refda-socket',
+            '-l', os.environ.get('TEST_LOG_LEVEL', 'debug'),
+            '-s', self._startup_path,
+            '-a', ('file:' + self._agent_sock_path),
+            '-m', ('file:' + self._mgr_bind[0].path),
+        )
+        # fmt: on
+        args = compose_args(list(base_args + cmd_args))
+        self._agent = CmdRunner(args)
         self._agent.start()
+
+        if not do_wait:
+            return
 
         delay = 0.1
         timer = Timer(10)
@@ -370,6 +378,14 @@ class TestRefdaSocket(unittest.TestCase):
 
         LOGGER.debug("stopping with %d reports", len(reports))
         return reports
+
+    def test_get_help(self):
+        self._start("-h", do_wait=False)
+        self.assertEqual(0, self._agent.proc.wait(timeout=1))
+
+    def test_get_version(self):
+        self._start("-v", do_wait=False)
+        self.assertEqual(0, self._agent.proc.wait(timeout=1))
 
     def test_start_sigint(self):
         self._start()

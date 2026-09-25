@@ -1,0 +1,11 @@
+/** @file
+ * @ingroup group_cace
+ * Run-time static configuration for the library.
+ */
+
+#include "config.h"
+
+const char * cace_version(void)
+{
+    return CACE_VERSION;
+}

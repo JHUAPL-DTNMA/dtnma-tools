@@ -38,13 +38,14 @@ static void daemon_signal_handler(int signum)
     cace_daemon_run_stop(&mgr.running);
 }
 
-static void show_usage(const char *argv0)
+static void show_usage(FILE *out, const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} -a <listen-EID>\n", argv0);
+    fprintf(out, "Usage: %s [-h] [-v] [-l <log-level>] -a <listen-EID>\n", argv0);
 }
 
 int main(int argc, char *argv[])
 {
+    bool cont = true;
     // keep track of failure state
     int retval = 0;
 
@@ -59,14 +60,14 @@ int main(int argc, char *argv[])
     {
         {
             int opt;
-            while ((opt = getopt(argc, argv, ":hl:a:")) != -1)
+            while (cont && (opt = getopt(argc, argv, ":hvl:a:")) != -1)
             {
                 switch (opt)
                 {
                     case 'l':
                         if (cace_log_get_severity(&log_limit, optarg))
                         {
-                            show_usage(argv[0]);
+                            show_usage(stderr, argv[0]);
                             retval = 1;
                         }
                         break;
@@ -79,10 +80,21 @@ int main(int argc, char *argv[])
                         }
                         m_string_set_cstr(own_eid, optarg);
                         break;
+                    case 'v':
+                        // build and runtime version
+                        fprintf(stdout, "%s %s\nlibcace %s\n", argv[0], CACE_VERSION, cace_version());
+                        cont = false;
+                        // still exit code zero
+                        break;
                     case 'h':
+                        show_usage(stdout, argv[0]);
+                        cont = false;
+                        // still exit code zero
+                        break;
                     default:
-                        show_usage(argv[0]);
+                        show_usage(stderr, argv[0]);
                         retval = 1;
+                        cont   = false;
                         break;
                 }
             }
@@ -92,7 +104,7 @@ int main(int argc, char *argv[])
     CACE_LOG_DEBUG("Manager starting up with log limit %d", log_limit);
 
     // check arguments
-    if (!retval && m_string_empty_p(own_eid))
+    if (cont && !retval && m_string_empty_p(own_eid))
     {
         fprintf(stderr, "A socket endpoint URI must be supplied\n");
         retval = 1;
@@ -100,7 +112,7 @@ int main(int argc, char *argv[])
 
     cace_amp_socket_state_t sock;
     cace_amp_socket_state_init(&sock);
-    if (!retval)
+    if (cont && !retval)
     {
         const char *sock_path = cace_amp_socket_strip_scheme(m_string_get_cstr(own_eid));
         if (cace_amp_socket_state_bind(&sock, sock_path))
@@ -109,7 +121,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!retval)
+    if (cont && !retval)
     {
         CACE_LOG_DEBUG("Running as endpoint %s", m_string_get_cstr(own_eid));
         mgr.mif.send = cace_amp_socket_send;
@@ -118,7 +130,7 @@ int main(int argc, char *argv[])
     }
     m_string_clear(own_eid);
 
-    if (!retval)
+    if (cont && !retval)
     {
         /* Register signal handlers. */
         struct sigaction act;
@@ -129,7 +141,7 @@ int main(int argc, char *argv[])
     }
 
     /* Start manager threads. */
-    if (!retval)
+    if (cont && !retval)
     {
         if (refdm_mgr_start(&mgr))
         {
@@ -147,7 +159,7 @@ int main(int argc, char *argv[])
 #endif
     CACE_LOG_INFO("READY");
 
-    if (!retval)
+    if (cont && !retval)
     {
         // Block until stopped
         cace_daemon_run_wait(&mgr.running);
@@ -159,7 +171,7 @@ int main(int argc, char *argv[])
 #endif
 
     /* Join threads and wait for them to complete. */
-    if (!retval)
+    if (cont && !retval)
     {
         if (refdm_mgr_stop(&mgr))
         {

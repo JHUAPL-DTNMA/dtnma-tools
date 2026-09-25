@@ -353,9 +353,9 @@ static int write_cborhex(const cace_ari_t *val, FILE *dest)
     return 0;
 }
 
-static void show_usage(const char *argv0)
+static void show_usage(FILE *out, const char *argv0)
 {
-    fprintf(stderr,
+    fprintf(out,
             "Usage: %s {--log-level,-l <log-level>} "
             "[--source,-s {filename or -}] "
 #if ARI_TEXT_PARSE
@@ -382,6 +382,7 @@ int main(int argc, char *argv[])
 #if HAVE_GETOPT_LONG
     static const struct option longopts[] = {
         { "help", no_argument, NULL, 'h' },
+        { "version", no_argument, NULL, 'v' },
         { "log-level", required_argument, NULL, 'l' },
         { "source", required_argument, NULL, 's' },
         { "inform", required_argument, NULL, 'i' },
@@ -391,15 +392,16 @@ int main(int argc, char *argv[])
     };
 #endif /* HAVE_GETOPT_LONG */
 
-    bool cont   = true;
-    int  retval = 0;
+    bool cont = true;
+    // keep track of failure state
+    int retval = 0;
     while (cont)
     {
 #if HAVE_GETOPT_LONG
         int option_index = 0;
-        int res          = getopt_long(argc, argv, ":hl:s:i:d:o:", longopts, &option_index);
+        int res          = getopt_long(argc, argv, ":hvl:s:i:d:o:", longopts, &option_index);
 #else
-        int res = getopt(argc, argv, ":hl:s:i:d:o:");
+        int res = getopt(argc, argv, ":hvl:s:i:d:o:");
 #endif /* HAVE_GETOPT_LONG */
 
         if (res == -1)
@@ -463,8 +465,14 @@ int main(int argc, char *argv[])
                     cont   = false;
                 }
                 break;
+            case 'v':
+                // build and runtime version
+                fprintf(stdout, "%s %s\nlibcace %s\n", argv[0], CACE_VERSION, cace_version());
+                cont = false;
+                // still exit code zero
+                break;
             case 'h':
-                show_usage(argv[0]);
+                show_usage(stdout, argv[0]);
                 cont = false;
                 // still exit code zero
                 break;
@@ -477,7 +485,7 @@ int main(int argc, char *argv[])
     if (retval)
     {
         fprintf(stderr, "Failed to handle program options\n\n");
-        show_usage(argv[0]);
+        show_usage(stderr, argv[0]);
         cont = false;
     }
     cace_log_set_least_severity(log_limit);
