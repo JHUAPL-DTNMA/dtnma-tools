@@ -28,10 +28,10 @@
 
 #include <pthread.h>
 
-/** @struct cace_threadset_t 
-* A list of thread handles used for work threads.
-* @sa cace_threadset_start(), cace_threadset_join()
-*/
+/** @struct cace_threadset_t
+ * A list of thread handles used for work threads.
+ * @sa cace_threadset_start(), cace_threadset_join()
+ */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
 M_LIST_DEF(cace_threadset, pthread_t)

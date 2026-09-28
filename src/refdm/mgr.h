@@ -100,9 +100,9 @@ typedef enum mgr_ui_mode_enum
 
 /** @struct refdm_agent_list_t
  * A linked list of pointers to ::refdm_agent_t instances.
- * Lifecycles are managed outside of this container.
+ * Instance lifetimes are managed outside of this container.
  */
-/** @struct refdm_agent_dict_t 
+/** @struct refdm_agent_dict_t
  * A map from case-sensitive agent identities to ::refdm_agent_t pointers.
  */
 /// @cond Doxygen_Suppress
