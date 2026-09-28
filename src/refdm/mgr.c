@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/** @file
+ * @ingroup group_refdm
+ * DM state keeping definitions.
+ */
 /*****************************************************************************
- ** \file nm_mgr.c
- **
  ** File Name: nm_mgr.c
  **
  ** Subsystem:

@@ -54,6 +54,7 @@ M_DEQUE_DEF(string_list, m_string_t, M_STRING_OPLIST)
 /// @endcond
 
 /** State of a DTNMA Agent.
+ * @sa refda_agent_init(), refda_agent_deinit(), refda_agent_start(), refda_agent_stop()
  */
 typedef struct refda_agent_s
 {

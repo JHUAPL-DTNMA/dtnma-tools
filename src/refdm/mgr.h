@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @file
+ * @ingroup group_refdm
+ * DM state keeping declarations.
+ */
 /*****************************************************************************
- ** \file nm_mgr.h
- **
  ** File Name: nm_mgr.h
  **
  ** Subsystem:
@@ -96,11 +98,23 @@ typedef enum mgr_ui_mode_enum
 #define MGR_UI_DEFAULT MGR_UI_STANDARD
 #endif
 
+/** @struct refdm_agent_list_t
+ * A linked list of pointers to ::refdm_agent_t instances.
+ * Lifecycles are managed outside of this container.
+ */
+/** @struct refdm_agent_dict_t 
+ * A map from case-sensitive agent identities to ::refdm_agent_t pointers.
+ */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_DEQUE_DEF(refdm_agent_list, refdm_agent_t *, M_PTR_OPLIST)
 M_DICT_DEF2(refdm_agent_dict, const char *, M_CSTR_OPLIST, refdm_agent_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 
+/** State of a DTNMA Manager.
+ * @sa refdm_mgr_init(), refdm_mgr_deinit(), refdm_mgr_start(), refdm_mgr_stop()
+ */
 typedef struct refdm_mgr_s
 {
     // FIXME: this is not thread safe storage
@@ -143,18 +157,25 @@ typedef struct refdm_mgr_s
 } refdm_mgr_t;
 
 /** Initialize a new manager state with default config.
+ * This does not perform any processing, that happens in refdm_mgr_start().
  *
- * @param[in,out] mgr The manager state.
+ * @param[out] mgr The manager state.
  */
 void refdm_mgr_init(refdm_mgr_t *mgr);
 
+/** Deinitialize the state.
+ * @param[in] mgr The manager state.
+ */
 void refdm_mgr_deinit(refdm_mgr_t *mgr);
 
 /** Begin the REFDM daemon operation.
+ * This includes making connection to persistent storage database if
+ * compiled with ::POSTGRESQL_FOUND.
  *
  * @pre The manager must have set values for:
  *  * refdm_mgr_t::agent_log_cfg
- *  * refdm_mgr_t::rest_listen_port
+ *  * refdm_mgr_t::rest_listen_port if REST is enabled.
+ *  * refdm_mgr_t::sql_info if SQL storage is enabled.
  *
  * @param[in] mgr The manager to start.
  * @sa refdm_mgr_stop()
