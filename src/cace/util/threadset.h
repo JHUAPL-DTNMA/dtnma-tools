@@ -28,18 +28,35 @@
 
 #include <pthread.h>
 
+/** @struct cace_threadset_t
+ * A list of thread handles used for work threads.
+ * @sa cace_threadset_start(), cace_threadset_join()
+ */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_LIST_DEF(cace_threadset, pthread_t)
+// GCOV_EXCL_STOP
 /// @endcond
 
+/**
+ * A thread descriptor used to spawn and join work threads.
+ */
 typedef struct
 {
+    /** The actual work function compatible with POSIX thread APIs.
+     */
     void *(*func)(void *);
+    /// The distinct short name to associate with the thread instance
     const char *name;
 } cace_threadinfo_t;
 
+/** Start a set of work threads.
+ */
 int cace_threadset_start(cace_threadset_t tset, const cace_threadinfo_t *info, size_t count, void *arg);
 
+/** Join a set of work threads.
+ * The thread work functions must be returned from by separate control.
+ */
 int cace_threadset_join(cace_threadset_t tset);
 
 #endif /* CACE_UTIL_THREADSET_H_ */

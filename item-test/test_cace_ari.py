@@ -95,6 +95,10 @@ class TestCaceAri(unittest.TestCase):
         runner = self._start("-h")
         self.assertEqual(0, runner.proc.wait(timeout=1))
 
+    def test_get_version(self):
+        runner = self._start("-v")
+        self.assertEqual(0, runner.proc.wait(timeout=1))
+
     def test_start_sigint(self):
         runner = self._start()
 

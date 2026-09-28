@@ -18,6 +18,7 @@ limitations under the License.
 
 # AMM and ARI handling library
 configure_file("config.h.in" "config.h")
+configure_file("config.c.in" "config.c")
 set(HFILES
     "${CMAKE_CURRENT_BINARY_DIR}/config.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/cace_data.h"
@@ -65,6 +66,7 @@ set(HFILES
     "${CMAKE_CURRENT_SOURCE_DIR}/amp/proxy_msg.h"
 )
 set(CFILES
+    "${CMAKE_CURRENT_BINARY_DIR}/config.c"
     "cace_data.c"
     "util/logging_stderr.c"
     "util/range.c"

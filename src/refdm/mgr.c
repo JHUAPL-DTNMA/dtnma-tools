@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/** @file
+ * @ingroup group_refdm
+ * DM state keeping definitions.
+ */
 /*****************************************************************************
- ** \file nm_mgr.c
- **
  ** File Name: nm_mgr.c
  **
  ** Subsystem:
@@ -103,12 +104,6 @@ void refdm_mgr_init(refdm_mgr_t *mgr)
     mgr->sql_info.database = refdm_envdup("DB_NAME");
 
     pthread_mutex_init(&(mgr->sql_lock), NULL);
-    int res = refdm_db_mgt_init(&(mgr->sql_info), 0, 1);
-    if (!res)
-    {
-        CACE_LOG_INFO("Initializing agents from DB");
-        refdm_db_load_agents(mgr);
-    }
 #endif // POSTGRESQL_FOUND
 }
 
@@ -146,6 +141,16 @@ void refdm_mgr_deinit(refdm_mgr_t *mgr)
 
 int refdm_mgr_start(refdm_mgr_t *mgr)
 {
+#if POSTGRESQL_FOUND
+    int res = refdm_db_mgt_init(&(mgr->sql_info), 0, 1);
+    if (res)
+    {
+        return 4;
+    }
+    CACE_LOG_INFO("Initializing agents from DB");
+    refdm_db_load_agents(mgr);
+#endif // POSTGRESQL_FOUND
+
     cace_threadinfo_t threadinfo[3] = {
         { &refdm_ingress_worker, "refdm_ingress" },
         { NULL, NULL },

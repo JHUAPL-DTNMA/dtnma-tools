@@ -48,13 +48,16 @@ static void daemon_signal_handler(int signum)
     }
 }
 
-static void show_usage(const char *argv0)
+static void show_usage(FILE *out, const char *argv0)
 {
-    fprintf(stderr, "Usage: %s {-h} -a <listen-path> {-t <startup-timeout>}\n", argv0);
+    // Syntax of POSIX
+    // https://pubs.opengroup.org/onlinepubs/9699919799.2008edition/basedefs/V1_chap12.html#tag_12_01
+    fprintf(out, "Usage: %s [-h] [-v] [-l <log-level>] -a <listen-path> [-t <startup-timeout>]\n", argv0);
 }
 
 int main(int argc, char *argv[])
 {
+    bool cont = true;
     // keep track of failure state
     int retval = 0;
 
@@ -66,60 +69,80 @@ int main(int argc, char *argv[])
 
     m_string_t sock_path;
     m_string_init(sock_path);
-
+    // starup socket timeout
     long timeout_s = 10;
     {
+        int opt = 0;
+        while (cont && (opt != -1))
         {
-            int opt;
-            while ((opt = getopt(argc, argv, ":hl:a:t:")) != -1)
+            opt = getopt(argc, argv, ":hvl:a:t:");
+            switch (opt)
             {
-                switch (opt)
-                {
-                    case 'l':
-                        if (cace_log_get_severity(&log_limit, optarg))
-                        {
-                            show_usage(argv[0]);
-                            retval = 1;
-                        }
-                        break;
-                    case 'a':
-                        if (!m_string_empty_p(sock_path))
-                        {
-                            fprintf(stderr, "Multiple socket paths are supplied\n");
-                            retval = 1;
-                            break;
-                        }
-                        m_string_set_cstr(sock_path, optarg);
-                        break;
-                    case 't':
+                case -1:
+                    // done
+                    break;
+                case 'l':
+                    if (cace_log_get_severity(&log_limit, optarg))
                     {
-                        char *end = NULL;
-                        timeout_s = strtol(optarg, &end, 10);
-                        if ((end == optarg) || (timeout_s <= 0))
-                        {
-                            fprintf(stderr, "A connection timeout must be positive value in seconds");
-                            retval = 1;
-                        }
-                        break;
+                        show_usage(stderr, argv[0]);
+                        retval = 1;
                     }
-                    case 'h':
-                    default:
-                        show_usage(argv[0]);
+                    break;
+                case 'a':
+                    if (!m_string_empty_p(sock_path))
+                    {
+                        fprintf(stderr, "Multiple socket paths are supplied\n");
                         retval = 1;
                         break;
+                    }
+                    m_string_set_cstr(sock_path, optarg);
+                    break;
+                case 't':
+                {
+                    char *end = NULL;
+                    timeout_s = strtol(optarg, &end, 10);
+                    if ((end == optarg) || (timeout_s <= 0))
+                    {
+                        fprintf(stderr, "A connection timeout must be positive value in seconds");
+                        retval = 1;
+                    }
+                    break;
                 }
+                case 'v':
+                    // build and runtime version
+                    fprintf(stdout, "%s %s\nlibcace %s\n", argv[0], CACE_VERSION, cace_version());
+                    cont = false;
+                    // still exit code zero
+                    break;
+                case 'h':
+                    show_usage(stdout, argv[0]);
+                    cont = false;
+                    // still exit code zero
+                    break;
+                default:
+                    show_usage(stderr, argv[0]);
+                    retval = 1;
+                    cont   = false;
+                    break;
             }
         }
+        // check arguments
+        if (!retval && m_string_empty_p(sock_path))
+        {
+            fprintf(stderr, "A proxy socket path must be supplied");
+            retval = 1;
+        }
+    }
+    if (!cont || retval)
+    {
+        // early exit
+        m_string_clear(sock_path);
+        refdm_mgr_deinit(&mgr);
+        cace_closelog();
+        return retval;
     }
     cace_log_set_least_severity(log_limit);
     CACE_LOG_DEBUG("Manager starting up with log limit %d", log_limit);
-
-    // check arguments
-    if (!retval && m_string_empty_p(sock_path))
-    {
-        fprintf(stderr, "A proxy socket path must be supplied");
-        retval = 1;
-    }
 
     cace_amp_proxy_cli_state_init(&proxy);
     if (!retval)
