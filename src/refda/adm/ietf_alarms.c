@@ -521,7 +521,6 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
-        (void)obj;
 
         /**
          * Register IDENT objects
@@ -699,6 +698,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                             // FIXME unhandled constraint IdentRefBase(base_text='./ident/resource',
                             // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
                             // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                            (void)cnst;
                         }
                     }
                 }
@@ -737,6 +737,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                                     // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms',
                                     // model_rev=None, type_id=<StructType.IDENT: -1>, obj_id='category'), params=None),
                                     // base_ident=None)
+                                    (void)cnst;
                                 }
                             }
                         }
@@ -896,6 +897,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                             // FIXME unhandled constraint IdentRefBase(base_text='./ident/resource',
                             // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
                             // type_id=<StructType.IDENT: -1>, obj_id='resource'), params=None), base_ident=None)
+                            (void)cnst;
                         }
                     }
                 }
@@ -934,6 +936,7 @@ int refda_adm_ietf_alarms_init(refda_agent_t *agent)
                             // FIXME unhandled constraint IdentRefBase(base_text='./ident/category',
                             // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='alarms', model_rev=None,
                             // type_id=<StructType.IDENT: -1>, obj_id='category'), params=None), base_ident=None)
+                            (void)cnst;
                         }
                     }
                 }

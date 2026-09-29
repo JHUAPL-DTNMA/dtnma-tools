@@ -7155,7 +7155,6 @@ int refda_adm_ietf_dtnma_agent_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
-        (void)obj;
 
         /**
          * Register TYPEDEF objects

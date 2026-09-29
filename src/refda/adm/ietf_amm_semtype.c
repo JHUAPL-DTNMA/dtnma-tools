@@ -68,7 +68,6 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
-        (void)obj;
 
         /**
          * Register IDENT objects
@@ -511,6 +510,7 @@ int refda_adm_ietf_amm_semtype_init(refda_agent_t *agent)
                     // FIXME unhandled constraint IdentRefBase(base_text='./IDENT/semtype',
                     // base_ari=ReferenceARI(ident=Identity(org_id='ietf', model_id='amm-semtype', model_rev=None,
                     // type_id=<StructType.IDENT: -1>, obj_id='semtype'), params=None), base_ident=None)
+                    (void)cnst;
                 }
             }
 

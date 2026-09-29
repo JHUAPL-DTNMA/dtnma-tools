@@ -68,7 +68,6 @@ int refda_adm_iana_display_hints_init(refda_agent_t *agent)
     if (adm)
     {
         cace_amm_obj_desc_t *obj;
-        (void)obj;
 
         /**
          * Register IDENT objects
