@@ -770,9 +770,9 @@ static int cace_ari_text_encode_objref(cace_ari_text_enc_state_t *state, const c
 
 static int cace_ari_text_encode_stream(cace_ari_text_enc_state_t *state, const cace_ari_t *ari)
 {
-    if (state->depth > CACE_ARI_TEXT_MAX_DEPTH)
+    if (state->depth > CACE_ARI_CODEC_MAX_DEPTH)
     {
-        CACE_LOG_ERR("ARI nesting depth exceeds limit %d", CACE_ARI_TEXT_MAX_DEPTH);
+        CACE_LOG_ERR("ARI nesting depth exceeds limit %d", CACE_ARI_CODEC_MAX_DEPTH);
         return 2;
     }
 

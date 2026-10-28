@@ -256,7 +256,7 @@ static void build_nested_ac(cace_ari_t *ari, size_t depth)
 void test_ari_text_encode_lit_typed_ac_nested_at_limit(void)
 {
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
-    build_nested_ac(&ari, CACE_ARI_TEXT_MAX_DEPTH);
+    build_nested_ac(&ari, CACE_ARI_CODEC_MAX_DEPTH);
 
     m_string_t got;
     m_string_init(got);
@@ -267,7 +267,7 @@ void test_ari_text_encode_lit_typed_ac_nested_at_limit(void)
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE(CACE_ARI_TEXT_MAX_DEPTH + 1)
+TEST_CASE(CACE_ARI_CODEC_MAX_DEPTH + 1)
 TEST_CASE(2000)
 void test_ari_text_encode_lit_typed_ac_nested_too_deep(size_t depth)
 {
@@ -1522,7 +1522,7 @@ void test_ari_text_decode_lit_typed_ac_nested_at_limit(void)
 {
     m_string_t inbuf;
     m_string_init(inbuf);
-    build_nested_ac_text(inbuf, CACE_ARI_TEXT_MAX_DEPTH);
+    build_nested_ac_text(inbuf, CACE_ARI_CODEC_MAX_DEPTH);
 
     cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
     int        ret = cace_ari_text_decode(&ari, inbuf, &errm);
@@ -1540,7 +1540,7 @@ void test_ari_text_decode_lit_typed_ac_nested_at_limit(void)
     cace_ari_deinit(&ari);
 }
 
-TEST_CASE(CACE_ARI_TEXT_MAX_DEPTH + 1)
+TEST_CASE(CACE_ARI_CODEC_MAX_DEPTH + 1)
 TEST_CASE(5000)
 void test_ari_text_decode_lit_typed_ac_nested_too_deep(size_t depth)
 {

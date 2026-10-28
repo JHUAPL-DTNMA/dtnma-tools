@@ -62,6 +62,13 @@ const char * cace_version(void);
 /** Able to use GNU Getopt extensions. */
 #cmakedefine01 HAVE_GETOPT_LONG
 
+/** Maximum container nesting depth accepted by cace_ari_text_encode() and
+ * cace_ari_text_decode().
+ * Deeper input is rejected with an error instead of recursing until the
+ * call stack is exhausted.
+ */
+#define CACE_ARI_CODEC_MAX_DEPTH @CACE_ARI_CODEC_MAX_DEPTH@
+
 #ifndef CACE_MALLOC
 /** Uses the same function signature as C99 malloc().
  */

@@ -124,15 +124,6 @@ typedef struct
         .bstr_form = CACE_ARI_TEXT_BSTR_BASE16, .time_text = true,                                \
     }
 
-#ifndef CACE_ARI_TEXT_MAX_DEPTH
-/** Maximum container nesting depth accepted by cace_ari_text_encode() and
- * cace_ari_text_decode().
- * Deeper input is rejected with an error instead of recursing until the
- * call stack is exhausted.
- */
-#define CACE_ARI_TEXT_MAX_DEPTH 64
-#endif
-
 /** Encode an ARI to text form.
  *
  * @param[out] text The data buffer to modify and write the result into.
@@ -141,7 +132,7 @@ typedef struct
  * @param opts Encoding parameters.
  * @return Zero upon success.
  * Non-zero if the ARI could not be encoded, including when containers are
- * nested deeper than ::CACE_ARI_TEXT_MAX_DEPTH.
+ * nested deeper than ::CACE_ARI_CODEC_MAX_DEPTH.
  */
 int cace_ari_text_encode(m_string_t text, const cace_ari_t *ari, cace_ari_text_enc_opts_t opts);
 
