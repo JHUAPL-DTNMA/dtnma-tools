@@ -1165,6 +1165,14 @@ int cace_ari_cbor_encode_stream(QCBOREncodeContext *enc, const cace_ari_t *ari)
 {
     CHKERR1(enc);
     CHKERR1(ari);
+    // Stop descending once the encoder has failed, which includes nesting
+    // deeper than QCBOR_MAX_ARRAY_NESTING, rather than recursing until the
+    // call stack is exhausted.
+    if (QCBOREncode_GetErrorState(enc) != QCBOR_SUCCESS)
+    {
+        return 2;
+    }
+
     if (ari->is_ref)
     {
         const cace_ari_ref_t *obj = &(ari->as_ref);

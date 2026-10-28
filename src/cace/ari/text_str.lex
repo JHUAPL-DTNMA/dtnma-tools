@@ -7,6 +7,7 @@
 
 %{
 #include "cace/ari/text_str_parse.h"
+#include "cace/ari/text.h"
 #include "cace/ari/text_util.h"
 #include "cace/config.h"
 #include "cace/util/defs.h"
@@ -29,8 +30,23 @@ VALSEG ([a-zA-Z0-9\-\._~\!\"\'\*\+\:@]|%[0-9a-fA-F]{2})+
 
 [ \t\n] // ignore all whitespace
 
-"(" { BEGIN(INITIAL); return T_LPAREN; }
-")" { BEGIN(INITIAL); return T_RPAREN; }
+"(" {
+    BEGIN(INITIAL);
+    if (++(yyextra->depth) > CACE_ARI_TEXT_MAX_DEPTH)
+    {
+        cace_ari_text_str_error(yyscanner, yyextra, "ARI nesting depth exceeds limit %d", CACE_ARI_TEXT_MAX_DEPTH);
+        return YYerror;
+    }
+    return T_LPAREN;
+}
+")" {
+    BEGIN(INITIAL);
+    if (yyextra->depth > 0)
+    {
+        --(yyextra->depth);
+    }
+    return T_RPAREN;
+}
 "," { BEGIN(INITIAL); return T_COMMA; }
 "=" { return T_EQ; }
 ";" { return T_SC; }
