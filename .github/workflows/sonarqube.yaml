@@ -22,11 +22,10 @@ on:
       - main
   pull_request:
     types: [opened, synchronize, reopened]
-# Sonar token only accessible from this repo
-if: github.repository == 'JHUAPL-DTNMA/dtnma-tools'
-
 jobs:
   build:
+    # Sonar token only accessible from this repo
+    if: github.repository == 'JHUAPL-DTNMA/dtnma-tools'
     name: Build and analyze
     services:
       postgres:
