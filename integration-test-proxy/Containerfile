@@ -145,7 +145,7 @@ RUN --mount=type=cache,target=/var/lib/apt/lists \
     python3 python3-pip python3-wheel
 COPY integration-test-socket/requirements.txt /root/
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip3 install /root/requirements.txt
+    pip3 install -r /root/requirements.txt
 RUN git clone --branch main https://github.com/JHUAPL-DTNMA/dtnma-adms.git /usr/local/share/ace/adms
 
 # test config
