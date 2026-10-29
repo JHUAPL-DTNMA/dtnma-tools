@@ -24,6 +24,8 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   build:
+    # Sonar token only accessible from main repo
+    if: github.event.pull_request.head.repo.full_name == github.repository
     name: Build and analyze
     services:
       postgres:
