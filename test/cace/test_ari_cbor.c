@@ -176,6 +176,44 @@ void test_cace_ari_cbor_encode_lit_typed_ac_1item(void)
     }
 }
 
+/** Build an AC nested @c depth levels deep around a single null item.
+ */
+static void build_nested_ac(cace_ari_t *ari, size_t depth)
+{
+    cace_ari_t *cur = ari;
+    for (size_t ix = 0; ix < depth; ++ix)
+    {
+        cace_ari_ac_t *ctr = cace_ari_set_ac(cur, NULL);
+        cur                = cace_ari_list_push_back_new(ctr->items);
+    }
+    cace_ari_set_null(cur);
+}
+
+// Each typed AC level uses two CBOR arrays
+TEST_CASE(QCBOR_MAX_ARRAY_NESTING / 2, 0)
+TEST_CASE(QCBOR_MAX_ARRAY_NESTING / 2 + 1, 1)
+TEST_CASE(2000, 1)
+void test_cace_ari_cbor_encode_lit_typed_ac_nested(size_t depth, int expect_fail)
+{
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    build_nested_ac(&ari, depth);
+
+    cace_data_t buf;
+    cace_data_init(&buf);
+    int res = cace_ari_cbor_encode(&buf, &ari);
+    if (expect_fail)
+    {
+        TEST_ASSERT_NOT_EQUAL_INT(0, res);
+    }
+    else
+    {
+        TEST_ASSERT_EQUAL_INT(0, res);
+    }
+    cace_data_deinit(&buf);
+
+    cace_ari_deinit(&ari);
+}
+
 TEST_CASE("example", "adm-a", "2024-06-25", false, 0, NULL,
           "85676578616D706C656561646D2D61D903EC6A323032342D30362D3235F6F6") // ari://example/adm-a@2024-06-25/
 TEST_CASE("example", "adm-a", NULL, false, 0, NULL, "84676578616D706C656561646D2D61F6F6")    // ari://example/adm-a/

@@ -40,6 +40,7 @@ option(BUILD_UNITTEST "Enable building unit tests" ON)
 option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
 option(BUILD_COVERAGE "Enable runtime coverage logging and reporting" OFF)
 option(BUILD_FUZZING "Enable building fuzzing executables" OFF)
+set(CACE_ARI_CODEC_MAX_DEPTH 64 CACHE STRING "Maximum ARI container nesting depth for text-form encoding and decoding")
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
