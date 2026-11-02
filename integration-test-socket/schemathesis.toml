@@ -22,6 +22,7 @@ max-examples = 10
 [checks]
 positive_data_acceptance.expected-statuses = [
     "200", "201", "202", "204",
+    "303", # redirect to valid resource
     "400", # ARI content is just bad
     "404", # no such EID
     "415", # mismatch between query and content-type
