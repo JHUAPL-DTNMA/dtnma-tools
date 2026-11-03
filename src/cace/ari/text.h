@@ -131,6 +131,8 @@ typedef struct
  * @param ari The ARI to encode from.
  * @param opts Encoding parameters.
  * @return Zero upon success.
+ * Non-zero if the ARI could not be encoded, including when containers are
+ * nested deeper than ::CACE_ARI_CODEC_MAX_DEPTH.
  */
 int cace_ari_text_encode(m_string_t text, const cace_ari_t *ari, cace_ari_text_enc_opts_t opts);
 

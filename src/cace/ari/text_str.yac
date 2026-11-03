@@ -46,6 +46,8 @@ typedef struct {
     
     /// Storage for container parameters
     size_t tbl_c;
+    /// Current parenthesis nesting depth
+    size_t depth;
 } cace_ari_text_str_t;
 
 // Match the definition in generated C file

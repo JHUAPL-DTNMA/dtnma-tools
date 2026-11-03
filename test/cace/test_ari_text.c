@@ -22,6 +22,7 @@
 #include <cace/ari/text.h>
 #include <cace/ari/text_util.h>
 
+#include <string.h>
 #include <unity.h>
 
 // Allow this macro
@@ -237,6 +238,69 @@ void test_ari_text_encode_lit_typed_ac_2item(void)
         }
         cace_ari_deinit(&ari);
     }
+}
+
+/** Build an AC nested @c depth levels deep around a single null item.
+ */
+static void build_nested_ac(cace_ari_t *ari, size_t depth)
+{
+    cace_ari_t *cur = ari;
+    for (size_t ix = 0; ix < depth; ++ix)
+    {
+        cace_ari_ac_t *ctr = cace_ari_set_ac(cur, NULL);
+        cur                = cace_ari_list_push_back_new(ctr->items);
+    }
+    cace_ari_set_null(cur);
+}
+
+void test_ari_text_encode_lit_typed_ac_nested_at_limit(void)
+{
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    build_nested_ac(&ari, CACE_ARI_CODEC_MAX_DEPTH);
+
+    m_string_t got;
+    m_string_init(got);
+    int res = cace_ari_text_encode(got, &ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    TEST_ASSERT_EQUAL_INT(0, res);
+    m_string_clear(got);
+
+    cace_ari_deinit(&ari);
+}
+
+TEST_CASE(CACE_ARI_CODEC_MAX_DEPTH + 1)
+TEST_CASE(2000)
+void test_ari_text_encode_lit_typed_ac_nested_too_deep(size_t depth)
+{
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    build_nested_ac(&ari, depth);
+
+    m_string_t got;
+    m_string_init(got);
+    int res = cace_ari_text_encode(got, &ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    TEST_ASSERT_NOT_EQUAL_INT(0, res);
+    m_string_clear(got);
+
+    cace_ari_deinit(&ari);
+}
+
+void test_ari_text_encode_lit_typed_execset_nested_too_deep(void)
+{
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+
+    cace_ari_execset_t *ctr = cace_ari_set_execset(&ari);
+    cace_ari_set_prim_uint64(&(ctr->nonce), 1);
+    {
+        cace_ari_t *item = cace_ari_list_push_back_new(ctr->targets);
+        build_nested_ac(item, 2000);
+    }
+
+    m_string_t got;
+    m_string_init(got);
+    int res = cace_ari_text_encode(got, &ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    TEST_ASSERT_NOT_EQUAL_INT(0, res);
+    m_string_clear(got);
+
+    cace_ari_deinit(&ari);
 }
 
 void test_ari_text_encode_lit_typed_am_2item(void)
@@ -1436,6 +1500,61 @@ void test_ari_text_decode_invalid(const char *intext)
     TEST_ASSERT_NULL(errm);
 
     TEST_ASSERT_FALSE_MESSAGE(cace_amm_builtin_validate(&ari), "cace_amm_builtin_validate() succeeded");
+    cace_ari_deinit(&ari);
+}
+
+/** Build text for an AC nested @c depth levels deep.
+ */
+static void build_nested_ac_text(m_string_t text, size_t depth)
+{
+    m_string_set_cstr(text, "ari:");
+    for (size_t ix = 0; ix < depth; ++ix)
+    {
+        m_string_cat_cstr(text, "/AC/(");
+    }
+    for (size_t ix = 0; ix < depth; ++ix)
+    {
+        m_string_push_back(text, ')');
+    }
+}
+
+void test_ari_text_decode_lit_typed_ac_nested_at_limit(void)
+{
+    m_string_t inbuf;
+    m_string_init(inbuf);
+    build_nested_ac_text(inbuf, CACE_ARI_CODEC_MAX_DEPTH);
+
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    int        ret = cace_ari_text_decode(&ari, inbuf, &errm);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, errm);
+
+    // anything accepted by the decoder can be encoded again
+    m_string_t outbuf;
+    m_string_init(outbuf);
+    ret = cace_ari_text_encode(outbuf, &ari, CACE_ARI_TEXT_ENC_OPTS_DEFAULT);
+    TEST_ASSERT_EQUAL_INT(0, ret);
+    TEST_ASSERT_EQUAL_STRING(m_string_get_cstr(inbuf), m_string_get_cstr(outbuf));
+
+    m_string_clear(outbuf);
+    m_string_clear(inbuf);
+    cace_ari_deinit(&ari);
+}
+
+TEST_CASE(CACE_ARI_CODEC_MAX_DEPTH + 1)
+TEST_CASE(5000)
+void test_ari_text_decode_lit_typed_ac_nested_too_deep(size_t depth)
+{
+    m_string_t inbuf;
+    m_string_init(inbuf);
+    build_nested_ac_text(inbuf, depth);
+
+    cace_ari_t ari = CACE_ARI_INIT_UNDEFINED;
+    int        ret = cace_ari_text_decode(&ari, inbuf, &errm);
+    TEST_ASSERT_NOT_EQUAL_INT(0, ret);
+    TEST_ASSERT_NOT_NULL(errm);
+    TEST_ASSERT_NOT_NULL(strstr(errm, "nesting depth"));
+
+    m_string_clear(inbuf);
     cace_ari_deinit(&ari);
 }
 

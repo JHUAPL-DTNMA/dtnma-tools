@@ -199,6 +199,7 @@ realloc
 REALLOC
 recurse
 recurses
+recursing
 recv
 RECV
 refda
